@@ -1,0 +1,28 @@
+{
+  "title": "Theory of Incidence — A Fourth Foundation",
+  "upload_type": "software",
+  "creators": [
+    { "name": "Junkawasaki" }
+  ],
+  "description": "A proposed fourth foundational framework for mathematics and computation where relations (incidences) are the sole primitives. This repository contains the theory overview, Lean4 formalization scaffold, and project roadmap as defined in story.jsonnet.",
+  "license": "Apache-2.0",
+  "access_right": "open",
+  "language": "eng",
+  "keywords": [
+    "foundations of mathematics",
+    "incidence",
+    "Lean4",
+    "category theory",
+    "type theory",
+    "set theory"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/junkawasaki/theory-of-incidence",
+      "relation": "isSupplementTo",
+      "resource_type": "software"
+    }
+  ]
+}
+
+
