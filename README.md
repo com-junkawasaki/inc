@@ -78,9 +78,11 @@ The Lean formalization currently covers:
 - **Examples**:
   - Simple incidence structures with trivial boundaries.
   - Graph structures: Nodes (nullary incidences) and edges (binary incidences with boundary connections).
-  - Verification that `approx` distinguishes incidences based on boundary differences.
+  - Type distinction: Incidences with different type tags (e.g., `node` vs. `edge`) where `approx` requires both type and boundary equality.
+  - Complex gluing: Boundary merging operations that combine incidences into composites with merged boundaries.
+  - Verification that `approx` distinguishes incidences based on boundary and type differences.
 
-**Coverage**: ~10% of the full Incidence Theory (A1-A17 axioms and semantic models). Focus is on minimal core with type safety and basic equivalence proofs.
+**Coverage**: ~15% of the full Incidence Theory (A1-A17 axioms and semantic models). Includes core structure, equivalence proofs, and examples demonstrating relational composition and type safety.
 
 ### Viewing the Paper
 
