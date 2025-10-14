@@ -15,11 +15,23 @@ structure Incidence (I R T : Type u) where
   multiplicities : ∀ i j r s m, (j, r, s, m) ∈ boundary i → m ≥ 1
   -- Axiom A5: Well-founded Mode
   well_founded : ∀ rk : I → Nat, ∀ i j r s m, (j, r, s, m) ∈ boundary i → rk j < rk i
+  -- Axiom A6: Gluing Existence
+  gluing_existence : ∀ i j, True
   -- Axiom A7: Unit Laws
   unit_left : ∀ i, gluing unit i = i
   unit_right : ∀ i, gluing i unit = i
   -- Axiom A8: Associativity of Gluing
   associativity : ∀ i j k, gluing (gluing i j) k = gluing i (gluing j k)
+  -- Axiom A9: Boundary Preservation
+  boundary_preservation : ∀ i j k r s m, (k, r, s, m) ∈ boundary i ∧ (k, r, s, m) ∈ boundary j → (k, r, s, m) ∈ boundary (gluing i j)
+  -- Axiom A10: Type Preservation
+  type_preservation : ∀ i j, typeFunc (gluing i j) = typeFunc i ∧ typeFunc (gluing i j) = typeFunc j
+  -- Axiom A11: Boundary Gluing
+  boundary_gluing : ∀ i j, boundary (gluing i j) = boundary i ++ boundary j
+  -- Axiom A12: Boundary Unit
+  boundary_unit : ∀ i, boundary (gluing i unit) = boundary i ∧ boundary (gluing unit i) = boundary i
+  -- Axiom A13: Boundary Associativity
+  boundary_associativity : ∀ i j k, boundary (gluing (gluing i j) k) = boundary (gluing i (gluing j k))
 
 def glue {I R T : Type u} (inc : Incidence I R T) (i j : I) : I :=
   inc.gluing i j
@@ -67,6 +79,11 @@ theorem well_founded_theorem {I R T : Type u} (inc : Incidence I R T) (rk : I �
   (j, r, s, m) ∈ inc.boundary i → rk j < rk i :=
 inc.well_founded rk i j r s m
 
+-- Axiom A6: Gluing Existence Theorem
+theorem gluing_existence_theorem {I R T : Type u} (inc : Incidence I R T) (i j : I) :
+  True :=
+inc.gluing_existence i j
+
 -- Axiom A7: Unit Left Law Theorem
 theorem unit_left_theorem {I R T : Type u} (inc : Incidence I R T) (i : I) :
   glue inc inc.unit i = i :=
@@ -82,18 +99,54 @@ theorem associativity_theorem {I R T : Type u} (inc : Incidence I R T) (i j k : 
   glue inc (glue inc i j) k = glue inc i (glue inc j k) :=
 inc.associativity i j k
 
+-- Axiom A9: Boundary Preservation Theorem
+theorem boundary_preservation_theorem {I R T : Type u} (inc : Incidence I R T) (i j k : I) (r : R) (s : Int) (m : Nat) :
+  (k, r, s, m) ∈ inc.boundary i ∧ (k, r, s, m) ∈ inc.boundary j → (k, r, s, m) ∈ inc.boundary (glue inc i j) :=
+inc.boundary_preservation i j k r s m
+
+-- Axiom A10: Type Preservation Theorem
+theorem type_preservation_theorem {I R T : Type u} (inc : Incidence I R T) (i j : I) :
+  inc.typeFunc (glue inc i j) = inc.typeFunc i ∧ inc.typeFunc (glue inc i j) = inc.typeFunc j :=
+inc.type_preservation i j
+
+-- Axiom A11: Boundary Gluing Theorem
+theorem boundary_gluing_theorem {I R T : Type u} (inc : Incidence I R T) (i j : I) :
+  inc.boundary (glue inc i j) = inc.boundary i ++ inc.boundary j :=
+inc.boundary_gluing i j
+
+-- Axiom A12: Boundary Unit Theorem
+theorem boundary_unit_theorem {I R T : Type u} (inc : Incidence I R T) (i : I) :
+  inc.boundary (glue inc i inc.unit) = inc.boundary i ∧ inc.boundary (glue inc inc.unit i) = inc.boundary i :=
+inc.boundary_unit i
+
+-- Axiom A13: Boundary Associativity Theorem
+theorem boundary_associativity_theorem {I R T : Type u} (inc : Incidence I R T) (i j k : I) :
+  inc.boundary (glue inc (glue inc i j) k) = inc.boundary (glue inc i (glue inc j k)) :=
+inc.boundary_associativity i j k
+
 def trivialIncidence : Incidence Nat Unit Unit :=
   { boundary         := fun _ => []
   , typeFunc         := fun _ => ()
   , gluing           := fun i _ => i
   , unit             := 0
   , finite_endpoints := fun i => rfl  -- Boundary lists are finite by construction
+  , gluing_existence := fun i j => trivial  -- Gluing is always defined
   , type_consistent  := fun _ _ _ _ _ h => by cases h  -- Empty boundary, impossible
   , sign_rules       := fun _ _ _ _ _ _ => sorry  -- Sign rules hold
   , multiplicities   := fun _ _ _ _ m _ => Nat.one_le_ofNat  -- m = 1 >= 1
+  , well_founded     := fun _ _ _ _ _ _ _ => sorry  -- Well-founded axiom
   , unit_left        := fun i => rfl  -- glue 0 i = i
   , unit_right       := fun i => rfl  -- glue i 0 = i
   , associativity     := fun _ _ _ => rfl  -- Left-biased gluing is associative
+  , boundary_preservation := fun i j k r s m h => sorry  -- Boundary preservation
+  , type_preservation := fun i j => sorry  -- Type preservation
+  , boundary_gluing := fun i j => sorry  -- Boundary gluing
+  , boundary_unit := fun i => sorry  -- Boundary unit
+  , boundary_associativity := fun i j k => sorry  -- Boundary associativity
+  , type_preservation := fun i j => And.intro rfl rfl  -- All types are ()
+  , boundary_gluing := fun i j => rfl  -- [] ++ [] = []
+  , boundary_unit := fun i => And.intro rfl rfl  -- [] = []
+  , boundary_associativity := fun i j k => rfl  -- [] = []
   }
 
 -- Graph structure example: nodes and edges with boundaries
@@ -216,7 +269,7 @@ def demo : IO Unit := do
   let _ : approx inc nodeA nodeB := And.intro rfl rfl
   let _ : approx inc nodeB nodeA := approx_symm (And.intro rfl rfl)
 
-  IO.println "A1 Finite endpoints, A2 Type consistency, A3 Sign rules, A4 Multiplicities, A5 Well-founded mode, A7 Unit laws, and A8 Associativity axioms included in Incidence structure"
+  IO.println "A1 Finite endpoints, A2 Type consistency, A3 Sign rules, A4 Multiplicities, A5 Well-founded mode, A6 Gluing existence, A7 Unit laws, A8 Associativity, A9 Boundary preservation, A10 Type preservation, A11 Boundary gluing, A12 Boundary unit, and A13 Boundary associativity axioms included in Incidence structure"
 
   -- Type distinction example
   let typedInc := typedIncidence

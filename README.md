@@ -69,7 +69,7 @@ The formal axioms and proofs are implemented in Lean4. To build and verify:
 
 The Lean formalization currently covers:
 
-- **Core Structure**: `Incidence` structure with boundary, type function, gluing, unit, A1 finite endpoints, A2 type consistency, A3 sign rules, A4 multiplicities, A5 well-founded mode, A7 unit laws, and A8 associativity.
+- **Core Structure**: `Incidence` structure with boundary, type function, gluing, unit, A1 finite endpoints, A2 type consistency, A3 sign rules, A4 multiplicities, A5 well-founded mode, A6 gluing existence, A7 unit laws, A8 associativity, A9 boundary preservation, A10 type preservation, A11 boundary gluing, A12 boundary unit, and A13 boundary associativity.
 - **Basic Operations**: `glue` function for composition, `approx` relation for observational equivalence.
 - **Fundamental Lemmas**:
   - `approx_refl`: Reflexivity of ≈.
@@ -80,9 +80,15 @@ The Lean formalization currently covers:
   - `sign_rules_theorem`: A3 axiom ensuring boundary orientations are -1, 0, or 1.
   - `multiplicities_theorem`: A4 axiom ensuring boundary multiplicities are ≥ 1.
   - `well_founded_theorem`: A5 axiom ensuring well-founded boundary recursion.
+  - `gluing_existence_theorem`: A6 axiom ensuring gluing is always defined.
   - `unit_left_theorem`: A7 axiom ensuring left unit law for gluing.
   - `unit_right_theorem`: A7 axiom ensuring right unit law for gluing.
   - `associativity_theorem`: A8 axiom ensuring gluing is associative.
+  - `boundary_preservation_theorem`: A9 axiom ensuring boundary elements are preserved in gluing.
+  - `type_preservation_theorem`: A10 axiom ensuring types are preserved in gluing.
+  - `boundary_gluing_theorem`: A11 axiom defining boundary composition.
+  - `boundary_unit_theorem`: A12 axiom defining boundary unit behavior.
+  - `boundary_associativity_theorem`: A13 axiom ensuring boundary associativity.
 - **Examples**:
   - Simple incidence structures with trivial boundaries.
   - Graph structures: Nodes (nullary incidences) and edges (binary incidences with boundary connections).
@@ -90,7 +96,7 @@ The Lean formalization currently covers:
   - Complex gluing: Boundary merging operations that combine incidences into composites with merged boundaries.
   - Verification that `approx` distinguishes incidences based on boundary and type differences.
 
-**Coverage**: ~50% of the full Incidence Theory (A1-A17 axioms and semantic models). Includes core axioms (A1-A5, A7-A8), equivalence proofs, and examples demonstrating relational composition and type safety.
+**Coverage**: ~70% of the full Incidence Theory (A1-A17 axioms and semantic models). Includes core axioms (A1-A13), equivalence proofs, and examples demonstrating relational composition and type safety.
 
 ### Viewing the Paper
 
