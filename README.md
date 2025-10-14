@@ -1,4 +1,4 @@
-# Theory of Incidence — Set, Category, Type, and Inc
+# Theory of Incidence — Set, Category, Type, and Incidence
 
 > A Fourth Foundation for Mathematics and Computation, where relations are the sole primitive entity.
 
