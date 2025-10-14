@@ -65,3 +65,44 @@ axiom A11 (i j : I) : approx i j ↔ (τ i = τ j ∧ ∂ i ≈ ∂ j)  -- Simpl
 
 -- Theorem: ≈ is reflexive
 theorem approx_refl (i : I) : approx i i := sorry
+
+-- Axiom A3: Sign rules
+axiom A3 {∂ : Boundary} (i : I) : ∀ (i1, r1, σ1, m1) ∈ (∂ i), σ1 = Σ_type.neg ∨ σ1 = Σ_type.zero ∨ σ1 = Σ_type.pos
+
+-- Axiom A4: Multiplicities
+axiom A4 {∂ : Boundary} (i : I) : ∀ (i1, r1, σ1, m1) ∈ (∂ i), m1 ≥ 1
+
+-- Axiom A5: Well-founded mode (simplified)
+axiom A5_wf {rk : I → Nat} (i : I) : ∀ (i1, _, _, _) ∈ (∂ i), rk i1 < rk i
+
+-- Axiom A9: Type preservation in gluing
+axiom A9 {θ φ : Type u} (i j : I) : τ (glue i j) = θ  -- Simplified
+
+-- Axiom A10: Guard preservation (coinductive)
+axiom A10 {g : I → Bool} (i j : I) : g i ∧ g j → g (glue i j)
+
+-- Axiom A12: Congruence with gluing
+axiom A12 {θ φ ψ : Type u} (i1 i2 j1 j2 k : I) : approx i1 i2 ∧ approx j1 j2 → approx (glue i1 j1) (glue i2 j2)
+
+-- Axiom A13: Normalization (simplified)
+axiom A13 {∂ : Boundary} (i : I) : true  -- Placeholder for normalization
+
+-- Axiom A14: Shooting
+axiom A14 {F : I → I} (i : I) : true  -- Placeholder for functoriality
+
+-- Axiom A15: Colimits
+axiom A15 : true  -- Placeholder
+
+-- Axiom A16: Boundary matrix
+axiom A16 {B : Matrix} : true  -- Placeholder
+
+-- Axiom A17: Laplacian
+axiom A17 {L : Matrix} : true  -- Placeholder
+
+-- Enhanced associativity proof
+theorem gluing_associative_enhanced {θ φ ψ : Type u} (i j k : I) :
+  glue (glue i j) k = glue i (glue j k) :=
+begin
+  apply A8 θ φ ψ i j k,
+  -- Add more reasoning if possible
+end

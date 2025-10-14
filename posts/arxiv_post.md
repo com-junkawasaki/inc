@@ -28,7 +28,22 @@ Classical foundations separate objects from relations. Incidence Theory unifies 
 
 ### 3. Axioms (A1–A17)
 A1: Finite Endpoints - For all i, ∂(i) is finite.
-... (detail each axiom with explanations and implications)
+A2: Type Consistency - Boundary incidences share the same type as the parent.
+A3: Sign Rules - Orientations are restricted to -1, 0, +1.
+A4: Multiplicities - Each boundary entry has multiplicity ≥1.
+A5: Mode Selection - Well-founded or guarded coinductive modes.
+A6: Gluing Existence - Gluing operation exists for compatible incidences.
+A7: Unit Laws - Unit incidences satisfy left and right identity.
+A8: Associativity - Gluing is associative.
+A9: Type Preservation - Gluing preserves types.
+A10: Guard Preservation - Coinductive guards are maintained under gluing.
+A11: Observational Equivalence - Bisimulation based on types and boundaries.
+A12: Congruence - Equivalence is preserved under gluing.
+A13: Normalization - Structures can be normalized to canonical forms.
+A14: Functoriality - Morphisms preserve boundaries.
+A15: Colimits - Existence of pushouts and sums.
+A16: Boundary Matrix - Defines spectral properties.
+A17: Laplacian - Ensures positive semidefiniteness for analysis.
 
 ### 4. Relations to Set, Category, and Type Theories
 Prove embeddings: Sets as nullary incidences, with membership as gluing. Categories via morphism incidences. Types through inductive definitions.
