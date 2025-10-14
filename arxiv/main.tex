@@ -27,7 +27,7 @@
 \maketitle
 
 % DOI and repository information
-This paper is available at Zenodo with DOI: \href{https://doi.org/10.5281/zenodo.17345516}{10.5281/zenodo.17345516}. The complete formalization in Lean 4, including all proofs and examples, is available at the GitHub repository: \href{https://github.com/junkawasaki/theory-of-incidence}{https://github.com/junkawasaki/theory-of-incidence}.
+This paper is available at Zenodo with DOI: \url{https://doi.org/10.5281/zenodo.17345516}. The complete formalization in Lean 4, including all proofs and examples, is available at the GitHub repository: \url{https://github.com/com-junkawasaki/inc}.
 
 \begin{abstract}
 Classical mathematical foundations—set theory, category theory, and type theory—provide distinct but compatible paradigms for representing mathematical and computational structure. Yet all share a fundamental limitation: they presuppose a separation between objects and relations. Sets collect elements, categories connect objects, and types classify terms, but none take relation itself as the primitive entity.
@@ -102,7 +102,7 @@ A set $S$ is represented by an incidence $i_S$ where:
 \item Extensionality: Two sets are equal iff they have the same elements
 \end{itemize}
 
-This embedding is formalized in Lean as \texttt{represents\_set} and \texttt{set\_embedding\_extensionality} in \texttt{IncidenceTheory/Basic.lean}.
+This embedding is formalized in Lean as \texttt{represents\_set} and \texttt{set\_embedding\_extensionality} in \path{IncidenceTheory/Basic.lean}.
 \end{proof}
 
 \begin{theorem}[Category Embedding]
@@ -118,7 +118,7 @@ Categories arise naturally from incidence structures closed under gluing operati
 \item Identity morphisms are represented by unit incidences (A7)
 \end{itemize}
 
-The associativity of composition follows directly from \texttt{gluing\_associative} in \texttt{IncidenceTheory/Basic.lean}.
+The associativity of composition follows directly from \texttt{gluing\_associative} in \path{IncidenceTheory/Basic.lean}.
 \end{proof}
 
 \begin{theorem}[Type Embedding]
@@ -133,7 +133,7 @@ Inductive and coinductive types can be represented through recursive incidence s
 \item Coinductive types allow infinite unfoldings controlled by observational equivalence
 \end{itemize}
 
-This is formalized through \texttt{is\_inductive\_form}, \texttt{is\_coinductive\_form}, and related theorems in \texttt{IncidenceTheory/Basic.lean}.
+This is formalized through \texttt{is\_inductive\_form}, \texttt{is\_coinductive\_form}, and related theorems in \path{IncidenceTheory/Basic.lean}.
 \end{proof}
 
 \begin{theorem}[Set Operations Preservation]
@@ -142,7 +142,7 @@ Basic set operations (union, intersection, etc.) are preserved under the inciden
 \end{theorem}
 
 \begin{proof}
-Set operations are implemented via gluing operations on incidence structures. Union corresponds to boundary merging, intersection to boundary filtering. Formalized as \texttt{set\_operations\_preserved} in \texttt{IncidenceTheory/Basic.lean}.
+Set operations are implemented via gluing operations on incidence structures. Union corresponds to boundary merging, intersection to boundary filtering. Formalized as \texttt{set\_operations\_preserved} in \path{IncidenceTheory/Basic.lean}.
 \end{proof}
 
 \begin{theorem}[Category Laws]
@@ -160,7 +160,7 @@ Inductive incidences support structural recursion principles.
 \end{theorem}
 
 \begin{proof}
-Recursion is implemented through boundary traversal and gluing operations, formalized as \texttt{inductive\_recursion\_principle} in \texttt{IncidenceTheory/Basic.lean}.
+Recursion is implemented through boundary traversal and gluing operations, formalized as \texttt{inductive\_recursion\_principle} in \path{IncidenceTheory/Basic.lean}.
 \end{proof}
 
 \begin{theorem}[Coinductive Corecursion]
@@ -224,7 +224,7 @@ Boundary incidences share the same type as their parent incidence.
 \end{theorem}
 
 \begin{proof}
-This follows directly from axiom A2, formalized as the \texttt{type\_consistent} property of the Incidence structure and proved as \texttt{type\_consistency} theorem in \texttt{IncidenceTheory/Basic.lean}.
+This follows directly from axiom A2, formalized as the \texttt{type\_consistent} property of the Incidence structure and proved as \texttt{type\_consistency} theorem in \path{IncidenceTheory/Basic.lean}.
 \end{proof}
 
 \begin{theorem}[Observational Equivalence as Bisimulation]
@@ -233,7 +233,7 @@ The relation $\approx$ defined by type and boundary equality forms a bisimulatio
 \end{theorem}
 
 \begin{proof}
-Observational equivalence is reflexive, symmetric, and transitive, as established by theorems \texttt{approx\_refl}, \texttt{approx\_symm}, and \texttt{approx\_trans} in \texttt{IncidenceTheory/Basic.lean}. The bisimulation property ensures that equivalent incidences cannot be distinguished by their observable behavior.
+Observational equivalence is reflexive, symmetric, and transitive, as established by theorems \texttt{approx\_refl}, \texttt{approx\_symm}, and \texttt{approx\_trans} in \path{IncidenceTheory/Basic.lean}. The bisimulation property ensures that equivalent incidences cannot be distinguished by their observable behavior.
 \end{proof}
 
 \section{Linear Semantics}
@@ -246,7 +246,7 @@ Boundary matrices are well-defined for finite incidence systems.
 \end{theorem}
 
 \begin{proof}
-For a list of incidences, the boundary matrix $B[i,j]$ encodes the incidence coefficients between incidences $i$ and $j$. Formally defined as \texttt{boundary\_matrix} in \texttt{IncidenceTheory/Basic.lean}, with well-definedness established by \texttt{boundary\_matrix\_well\_defined}.
+For a list of incidences, the boundary matrix $B[i,j]$ encodes the incidence coefficients between incidences $i$ and $j$. Formally defined as \texttt{boundary\_matrix} in \path{IncidenceTheory/Basic.lean}, with well-definedness established by \texttt{boundary\_matrix\_well\_defined}.
 \end{proof}
 
 \begin{theorem}[Laplacian Well-Defined]
@@ -382,9 +382,8 @@ An AI tool (Grok-4, xAI) was used for language editing, outline refinement, and 
 \appendix
 \section{Lean Artifacts and Reproducibility}
 The accompanying Lean4 artifacts (axioms, lemmas, and examples) are provided in
-the repository under \texttt{IncidenceTheory/}. For precise reproducibility, we
-refer to commit \texttt{REPLACE\_WITH\_COMMIT}. The paper references concepts
-that are mirrored in the code; symbol names may differ slightly across commits.
+the repository under \path{IncidenceTheory/}. For precise reproducibility, refer
+to the repository release '251014'.
 
 \bibliographystyle{alpha}
 \bibliography{references}

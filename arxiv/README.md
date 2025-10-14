@@ -39,7 +39,7 @@ If figures are present, append them to the command (e.g., `figures/*.pdf`).
 
 ## Code and data availability
 
-- Project overview and source repository: [REPLACE_WITH_GITHUB_URL]
+- Project overview and source repository: https://github.com/junkawasaki/theory-of-incidence
 - Archived artifacts (Zenodo DOI): https://doi.org/10.5281/zenodo.17345516
 
 Selected Lean theorems and definitions are provided in the repository; the arXiv
