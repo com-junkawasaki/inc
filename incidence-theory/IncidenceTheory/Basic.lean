@@ -44,3 +44,24 @@ axiom A7_right {θ : Type u} (i : I) : glue i e = i
 -- Theorem: Unit laws
 theorem unit_left {θ : Type u} (i : I) : glue e i = i := A7_left θ i
 theorem unit_right {θ : Type u} (i : I) : glue i e = i := A7_right θ i
+
+-- Types for incidences
+variable {T : Type u}  -- Type set
+
+-- Type function
+def τ : I → T
+
+-- Axiom A2: Type consistency
+axiom A2 {∂ : Boundary} (i : I) : ∀ (i1, r1, σ1, m1) ∈ (∂ i), τ i1 = τ i  -- Simplified
+
+-- Theorem: Type consistency
+theorem type_consistency {∂ : Boundary} (i : I) : true := sorry  -- Placeholder
+
+-- Observational equivalence relation
+def approx : I → I → Prop := sorry  -- Placeholder
+
+-- Axiom A11: Observational equivalence (simplified)
+axiom A11 (i j : I) : approx i j ↔ (τ i = τ j ∧ ∂ i ≈ ∂ j)  -- Simplified
+
+-- Theorem: ≈ is reflexive
+theorem approx_refl (i : I) : approx i i := sorry
