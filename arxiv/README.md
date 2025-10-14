@@ -1,66 +1,56 @@
-# Incidence Theory - ArXiv Submission
+# Incidence Theory — arXiv Submission (Source Bundle)
 
-This directory contains the necessary files for submitting the paper "Theory of Incidence — A Fourth Foundation Beyond Set, Category, and Type" to arXiv.
+This directory contains the LaTeX sources for the preprint:
 
-## Contents
+"Theory of Incidence — A Fourth Foundation Beyond Set, Category, and Type"
 
-- `main.tex`: The main LaTeX source file for the paper with complete formalization and examples.
-- `incidence-theory/`: A directory containing the complete Lean4 project for the formalization of the theory.
+## What to include in the arXiv source
 
-## Paper Overview
+Include only the minimal files required to build the PDF:
 
-The paper presents Incidence Theory as a fourth mathematical foundation that unifies Set, Category, and Type theories through a relational primitive. Key features:
+- `main.tex`
+- `references.bib` (and any figures if added later)
 
-### Core Theory
-- **Incidence Structure**: Relations as primitive entities with boundary operators
-- **Gluing Operations**: Composition via relational merging
-- **Observational Equivalence**: Bisimulation-based equality
-- **17 Axioms**: Complete formal system (A1-A17)
+Do not include the Lean/`mathlib4` codebase in the arXiv source bundle. The
+formalization and artifacts are referenced via DOI/URL instead (see below).
 
-### Embeddings
-- **Set Theory**: Nullary incidences as elements, gluing as set operations
-- **Category Theory**: Incidence structures as categories, gluing as composition
-- **Type Theory**: Recursive incidences as inductive/coinductive types
+## Building locally
 
-### Semantic Models
-- **ZF Set Theory**: Relative consistency proof
-- **Adhesive Categories**: Gluing as pushouts
-- **Homotopy Type Theory**: Recursive incidences as types
-
-### Applications
-- **Graph Theory**: Natural representation of graphs and hypergraphs
-- **Process Calculus**: Concurrent systems via incidence composition
-- **Metabolic Networks**: Biological pathways as structured incidences
-- **Self-Referential Systems**: Controlled recursion without paradoxes
-
-### Linear Algebraic Layer
-- **Boundary Matrices**: Combinatorial structure encoding
-- **Laplacian Operators**: Spectral analysis of incidence systems
-- **Normalization**: Canonical representations
-- **Categorical Properties**: Functoriality and colimits
-
-## Submission Instructions
-
-To submit to arXiv, create a `.tar.gz` archive of this directory's contents.
+We recommend latexmk for reproducible local builds.
 
 ```bash
-tar -czvf incidence_theory_arxiv.tar.gz .
+latexmk -pdf -interaction=nonstopmode main.tex
 ```
 
-The full project, including its Git history, is available at [GitHub Repository URL - please replace].
+Notes:
 
-## Building the Lean Code
+- Tested with TeX Live 2023+ and pdfLaTeX.
+- If you add figures, prefer PDF/PNG and keep file sizes small.
 
-The Lean code can be verified by following the instructions in `incidence-theory/README.md` or by running `lake build` within the `arxiv/incidence-theory` directory after installing Lean4.
+## Create the arXiv source bundle
 
-## Lean Formalization Status
+Create a clean archive containing only TeX sources (and figures, if any):
 
-- ✅ **Core Theory**: Complete Incidence structure with all 17 axioms
-- ✅ **Embeddings**: Set, Category, and Type theory embeddings
-- ✅ **ZF Model**: Relative consistency proof
-- ✅ **Applications**: Graph theory, process calculus, metabolic networks
-- ✅ **Linear Algebra**: Boundary matrices and Laplacians
-- ✅ **Examples**: Concrete implementations and theorems
+```bash
+tar -czvf incidence_theory_arxiv_src.tar.gz main.tex references.bib
+```
 
-All major theorems are formally verified in Lean4, providing machine-checkable proofs for the theoretical results.
+If figures are present, append them to the command (e.g., `figures/*.pdf`).
+
+## Code and data availability
+
+- Project overview and source repository: [REPLACE_WITH_GITHUB_URL]
+- Archived artifacts (Zenodo DOI): https://doi.org/10.5281/zenodo.17345516
+
+Selected Lean theorems and definitions are provided in the repository; the arXiv
+manuscript cites the corresponding files and a commit hash in an appendix.
+
+## Paper overview (short)
+
+The paper presents Incidence Theory as a fourth mathematical foundation that
+unifies Set, Category, and Type theories through a relational primitive. Topics
+include the axioms (A1–A17), gluing/composition, observational equivalence,
+semantic models (ZF, adhesive categories, HoTT), and a linear-algebraic layer
+via boundary/Laplacian operators. Examples cover graphs/hypergraphs, concurrent
+processes, and biological networks.
 
