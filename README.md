@@ -65,6 +65,23 @@ The formal axioms and proofs are implemented in Lean4. To build and verify:
 3. Build the project: `lake build`
 4. Run examples (if any): `lake exe incidence-theory`
 
+#### Current Lean Proof Coverage
+
+The Lean formalization currently covers:
+
+- **Core Structure**: `Incidence` structure with boundary, type function, gluing, and unit.
+- **Basic Operations**: `glue` function for composition, `approx` relation for observational equivalence.
+- **Fundamental Lemmas**:
+  - `approx_refl`: Reflexivity of ≈.
+  - `approx_symm`: Symmetry of ≈.
+  - `approx_trans`: Transitivity of ≈.
+- **Examples**:
+  - Simple incidence structures with trivial boundaries.
+  - Graph structures: Nodes (nullary incidences) and edges (binary incidences with boundary connections).
+  - Verification that `approx` distinguishes incidences based on boundary differences.
+
+**Coverage**: ~10% of the full Incidence Theory (A1-A17 axioms and semantic models). Focus is on minimal core with type safety and basic equivalence proofs.
+
 ### Viewing the Paper
 
 The draft paper is available in Markdown (`posts/arxiv_post.md`) and LaTeX (`posts/arxiv_paper.tex`). Compile the LaTeX version with pdflatex for a formatted PDF.
