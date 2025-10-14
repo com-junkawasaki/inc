@@ -1,0 +1,10 @@
+name = "incidence-theory"
+version = "0.1.0"
+defaultTargets = ["incidence-theory"]
+
+[[lean_lib]]
+name = "IncidenceTheory"
+
+[[lean_exe]]
+name = "incidence-theory"
+root = "Main"
