@@ -1,0 +1,18 @@
+\begin{thebibliography}{{The}13}
+
+\bibitem[Lac05]{LackAdhesive}
+Stephen Lack.
+\newblock Adhesive categories.
+\newblock {\em Rewriting Techniques and Applications}, 2005.
+
+\bibitem[Lei04]{LeinsterOperads}
+Tom Leinster.
+\newblock {\em Higher Operads, Higher Categories}.
+\newblock Cambridge University Press, 2004.
+
+\bibitem[{The}13]{HoTTBook}
+{The Univalent Foundations Program}.
+\newblock {\em Homotopy Type Theory: Univalent Foundations of Mathematics}.
+\newblock Institute for Advanced Study, 2013.
+
+\end{thebibliography}

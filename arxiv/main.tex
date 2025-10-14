@@ -291,7 +291,7 @@ We demonstrate the practical applicability of Incidence Theory through concrete 
 
 \begin{example}[Graph Theory]
 \label{ex:graph-theory}
-Consider a directed triangle graph with nodes A, B, C and edges A→B, B→C, C→A. In Incidence Theory:
+Consider a directed triangle graph with nodes A, B, C and edges $A\to B$, $B\to C$, $C\to A$. In Incidence Theory:
 
 \begin{itemize}
 \item Each node is represented as a nullary incidence (\texttt{make\_node})
@@ -307,7 +307,7 @@ Graph isomorphism reduces to observational equivalence of the representing incid
 Hypergraphs generalize graphs by allowing edges to connect multiple vertices simultaneously. In Incidence Theory, hyperedges are naturally represented as n-ary incidences:
 
 \begin{itemize}
-\item A hyperedge connecting vertices v₁,…,vₙ is an incidence whose boundary contains all vᵢ
+\item A hyperedge connecting vertices $v_1, \\dots, v_n$ is an incidence whose boundary contains all $v_i$
 \item The \texttt{make\_hyperedge} function constructs such structures
 \item Complex graphs like the Petersen graph can be represented using hyperedges
 \end{itemize}
@@ -338,7 +338,7 @@ Concurrent processes can be modeled using incidences:
 \item Communication occurs through shared boundary incidences (\texttt{communicate})
 \end{itemize}
 
-The embedding is formalized in \texttt{process\_calculus\_embedding}, showing how π-calculus operations translate to incidence operations.
+The embedding is formalized in \texttt{process\_calculus\_embedding}, showing how $\pi$-calculus operations translate to incidence operations.
 \end{example}
 
 \begin{example}[Metabolic Networks]
@@ -366,7 +366,7 @@ The examples above demonstrate that diverse structures—graphs, processes, meta
 \section{Related Work}
 Incidence Theory builds upon and extends several established areas:
 
-- \textbf{Higher Operads and ∞-Categories}: Our recursive boundary operator and gluing align with the structure of higher operads and ω-categories~\cite{LeinsterOperads}, providing a concrete realization for abstract ∞-dimensional structures.
+- \textbf{Higher Operads and $\\infty$-Categories}: Our recursive boundary operator and gluing align with the structure of higher operads and $\\omega$-categories~\cite{LeinsterOperads}, providing a concrete realization for abstract $\\infty$-dimensional structures.
 - \textbf{Adhesive Categories and DPO Rewriting}: Gluing semantics correspond to pushouts in adhesive categories~\cite{LackAdhesive}, enabling formal model transformation.
 - \textbf{Coalgebra and Coinduction}: The coinductive mode and observational equivalence draw from bisimulation in coalgebraic systems~\cite{RuttenUniversalCoalgebra}, adapted to relational structures.
 - \textbf{Homotopy Type Theory}: Inductive/coinductive families in Inc mirror HoTT's types~\cite{HoTTBook}, with incidence boundaries as paths.
