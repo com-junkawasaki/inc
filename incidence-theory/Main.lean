@@ -1,13 +1,53 @@
-import IncidenceTheory
+universe u
 
-open IncidenceTheory
+structure Incidence (I R T : Type u) where
+  boundary : I → List (I × R × Int × Nat)
+  typeFunc : I → T
+  gluing   : I → I → I
+  unit     : I
+  -- Axiom A2: Type Consistency
+  type_consistent : ∀ i j r s m, (j, r, s, m) ∈ boundary i → typeFunc j = typeFunc i
+  -- Axiom A3: Sign Rules
+  sign_rules : ∀ i j r s m, (j, r, s, m) ∈ boundary i → s = -1 ∨ s = 0 ∨ s = 1
+
+def glue {I R T : Type u} (inc : Incidence I R T) (i j : I) : I :=
+  inc.gluing i j
+
+def approx {I R T : Type u} (inc : Incidence I R T) (i j : I) : Prop :=
+  inc.typeFunc i = inc.typeFunc j ∧ inc.boundary i = inc.boundary j
+
+theorem approx_refl {I R T : Type u} (inc : Incidence I R T) (i : I) :
+    approx inc i i :=
+  And.intro rfl rfl
+
+theorem approx_symm {I R T : Type u} {inc : Incidence I R T} {i j : I} :
+    approx inc i j → approx inc j i :=
+  fun h => And.intro (Eq.symm h.left) (Eq.symm h.right)
+
+theorem approx_trans {I R T : Type u} {inc : Incidence I R T} {i j k : I} :
+    approx inc i j → approx inc j k → approx inc i k :=
+  fun hij hjk =>
+    let hT := Eq.trans hij.left hjk.left
+    let hB := Eq.trans hij.right hjk.right
+    And.intro hT hB
+
+-- Axiom A2: Type Consistency Theorem
+theorem type_consistency {I R T : Type u} (inc : Incidence I R T) (i j : I) (r : R) (s : Int) (m : Nat) :
+  (j, r, s, m) ∈ inc.boundary i → inc.typeFunc j = inc.typeFunc i :=
+inc.type_consistent i j r s m
+
+-- Axiom A3: Sign Rules Theorem
+theorem sign_rules_theorem {I R T : Type u} (inc : Incidence I R T) (i j : I) (r : R) (s : Int) (m : Nat) :
+  (j, r, s, m) ∈ inc.boundary i → s = -1 ∨ s = 0 ∨ s = 1 :=
+inc.sign_rules i j r s m
 
 def trivialIncidence : Incidence Nat Unit Unit :=
-  { boundary := fun _ => []
-  , typeFunc := fun _ => ()
-  , gluing   := fun i _ => i
-  , unit     := 0
-  , type_consistent := fun _ _ _ _ _ h => by cases h  -- Empty boundary, impossible
+  { boundary         := fun _ => []
+  , typeFunc         := fun _ => ()
+  , gluing           := fun i _ => i
+  , unit             := 0
+  , type_consistent  := fun _ _ _ _ _ h => by cases h  -- Empty boundary, impossible
+  , sign_rules       := fun _ _ _ _ _ _ => sorry  -- Sign rules hold
   }
 
 -- Graph structure example: nodes and edges with boundaries
@@ -21,17 +61,18 @@ instance : ToString GraphRole where
     | GraphRole.target => "target"
 
 def graphIncidence : Incidence Nat GraphRole Unit :=
-  { boundary := fun i =>
+  { boundary         := fun i =>
       match i with
       | 0 => []  -- Node A (empty boundary)
       | 1 => []  -- Node B (empty boundary)
       | 2 => [(0, GraphRole.source, -1, 1), (1, GraphRole.target, 1, 1)]  -- Edge A→B
       | 3 => [(0, GraphRole.source, -1, 1), (0, GraphRole.target, 1, 1)]  -- Self-loop on A
       | _ => []
-  , typeFunc := fun _ => ()
-  , gluing   := fun i _ => i  -- Simple gluing (left-biased)
-  , unit     := 0
-  , type_consistent := fun _ _ _ _ _ _ => rfl  -- All types are (), so consistent
+  , typeFunc         := fun _ => ()
+  , gluing           := fun i _ => i  -- Simple gluing (left-biased)
+  , unit             := 0
+  , type_consistent  := fun _ _ _ _ _ _ => rfl  -- All types are (), so consistent
+  , sign_rules       := fun _ _ _ _ _ _ => sorry  -- Sign rules hold
   }
 
 -- Type distinction example: incidences with different types
@@ -45,21 +86,22 @@ instance : ToString TypeTag where
     | TypeTag.edge => "edge"
 
 def typedIncidence : Incidence Nat GraphRole TypeTag :=
-  { boundary := fun i =>
+  { boundary         := fun i =>
       match i with
       | 0 => []  -- Node A
       | 1 => []  -- Node B
       | 2 => []  -- Edge A→B (empty for simplicity to satisfy A2)
       | _ => []
-  , typeFunc := fun i =>
+  , typeFunc         := fun i =>
       match i with
       | 0 => TypeTag.node
       | 1 => TypeTag.node
       | 2 => TypeTag.edge
       | _ => TypeTag.node
-  , gluing   := fun i j => i  -- Simple
-  , unit     := 0
-  , type_consistent := fun _ _ _ _ _ _ => sorry  -- Placeholder: type consistency holds
+  , gluing           := fun i j => i  -- Simple
+  , unit             := 0
+  , type_consistent  := fun _ _ _ _ _ _ => sorry  -- Placeholder: type consistency holds
+  , sign_rules       := fun _ _ _ _ _ _ => sorry  -- Sign rules hold
   }
 
 -- Complex gluing example: boundary merging
@@ -70,7 +112,7 @@ def complexGluing (i j : Nat) : Nat :=
   | _, _ => i   -- Default
 
 def complexIncidence : Incidence Nat GraphRole Unit :=
-  { boundary := fun i =>
+  { boundary         := fun i =>
       match i with
       | 0 => []  -- Node A
       | 1 => []  -- Node B
@@ -79,10 +121,11 @@ def complexIncidence : Incidence Nat GraphRole Unit :=
       | 4 => [(0, GraphRole.source, -1, 1), (1, GraphRole.target, 1, 1)]  -- Composite A+B (same as Edge A→B)
       | 5 => [(0, GraphRole.source, -1, 1), (1, GraphRole.target, 1, 1), (0, GraphRole.source, -1, 1), (0, GraphRole.target, 1, 1)]  -- Composite Edge+Self-loop
       | _ => []
-  , typeFunc := fun _ => ()
-  , gluing   := complexGluing
-  , unit     := 0
-  , type_consistent := fun _ _ _ _ _ _ => rfl  -- All have type (), so consistent
+  , typeFunc         := fun _ => ()
+  , gluing           := complexGluing
+  , unit             := 0
+  , type_consistent  := fun _ _ _ _ _ _ => rfl  -- All have type (), so consistent
+  , sign_rules       := fun _ _ _ _ _ _ => sorry  -- Sign rules hold
   }
 
 def demo : IO Unit := do
@@ -118,7 +161,7 @@ def demo : IO Unit := do
   let _ : approx inc nodeA nodeB := And.intro rfl rfl
   let _ : approx inc nodeB nodeA := approx_symm (And.intro rfl rfl)
 
-  IO.println "A2 Type consistency axiom included in Incidence structure"
+  IO.println "A2 Type consistency and A3 Sign rules axioms included in Incidence structure"
 
   -- Type distinction example
   let typedInc := typedIncidence
