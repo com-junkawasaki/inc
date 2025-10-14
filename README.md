@@ -2,6 +2,10 @@
 
 > A Fourth Foundation for Mathematics and Computation, where relations are the sole primitive entity.
 
+## DOI
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17345516.svg)](https://doi.org/10.5281/zenodo.17345516)
+
 ## Overview
 
 This repository hosts the development of the **Theory of Incidence (Inc)**, a proposed fourth foundational framework for mathematics and computation. It stands alongside Set Theory, Category Theory, and Type Theory, offering a new perspective where relations, or "incidences," are the primary building blocks of all structures.
