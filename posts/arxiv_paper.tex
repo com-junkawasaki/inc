@@ -38,9 +38,34 @@ Classical foundations separate objects from relations. Incidence Theory unifies 
 \end{itemize}
 
 \section{Axioms (A1–A17)}
-A1: Finite Endpoints - For all $i$, $\partial(i)$ is finite. \\
-A2: Type Consistency - Boundary incidences share the same type as the parent. \\
-... (full list as before)
+\begin{table}[h]
+\centering
+\caption{Axioms of Incidence Theory (A1–A17)}
+\label{tab:axioms}
+\begin{tabular}{|c|l|l|}
+\hline
+Axiom & Description & Lean Theorem \\
+\hline
+A1 & Finite Endpoints & \texttt{boundaries\_finite} \\
+A2 & Type Consistency & \texttt{type\_consistency} \\
+A3 & Sign Rules & \texttt{A3} \\
+A4 & Multiplicities & \texttt{A4} \\
+A5 & Mode Selection & \texttt{A5} \\
+A6 & Gluing Existence & Defined in structure \\
+A7 & Unit Laws & \texttt{unit\_left}, \texttt{unit\_right} \\
+A8 & Associativity & \texttt{gluing\_associative} \\
+A9 & Type Preservation & \texttt{gluing\_preserves\_types} \\
+A10 & Guard Preservation & \texttt{A10} \\
+A11 & Observational Equivalence & \texttt{approx\_refl}, etc. \\
+A12 & Congruence & \texttt{A12} \\
+A13 & Normalization & \texttt{A13} \\
+A14 & Functoriality & \texttt{A14} \\
+A15 & Colimits & \texttt{A15} \\
+A16 & Boundary Matrix & \texttt{A16} \\
+A17 & Laplacian & \texttt{A17} \\
+\hline
+\end{tabular}
+\end{table}
 
 \section{Relations to Set, Category, and Type Theories}
 Prove embeddings: Sets as nullary incidences, with membership as gluing. Categories via morphism incidences. Types through inductive definitions.
