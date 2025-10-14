@@ -4,16 +4,16 @@
 
 ## Overview
 
-This repository hosts the development of the **Theory of Incidence (IncF)**, a proposed fourth foundational framework for mathematics and computation. It stands alongside Set Theory, Category Theory, and Type Theory, offering a new perspective where relations, or "incidences," are the primary building blocks of all structures.
+This repository hosts the development of the **Theory of Incidence (Inc)**, a proposed fourth foundational framework for mathematics and computation. It stands alongside Set Theory, Category Theory, and Type Theory, offering a new perspective where relations, or "incidences," are the primary building blocks of all structures.
 
-Conventional foundations separate entities from the relationships between them. IncF unifies them by treating every mathematical object—from numbers and sets to functions and categories—as a configuration of incidences. This relational-first approach provides a native language for describing systems with dynamic, recursive, or self-referential structures, which are common in computer science, physics, and biology but are often cumbersome to model in existing frameworks.
+Conventional foundations separate entities from the relationships between them. Inc unifies them by treating every mathematical object—from numbers and sets to functions and categories—as a configuration of incidences. This relational-first approach provides a native language for describing systems with dynamic, recursive, or self-referential structures, which are common in computer science, physics, and biology but are often cumbersome to model in existing frameworks.
 
 ## The Vision: Beyond Set, Category, and Type
 
-The goal of IncF is not to replace existing foundations but to provide a unifying substrate that claIncFies their connections and addresses their limitations:
+The goal of Inc is not to replace existing foundations but to provide a unifying substrate that claIncies their connections and addresses their limitations:
 
-1.  **Unifying Objects and Relations**: IncF eliminates the object-relation dualism. An "object" is simply a stable pattern of relations (a zero-ary or fixed-point incidence).
-2.  **Native Support for Dynamic Structures**: Through its coinductive mode, IncF can formally model systems that change their own structure over time, such as evolving networks or computational processes.
+1.  **Unifying Objects and Relations**: Inc eliminates the object-relation dualism. An "object" is simply a stable pattern of relations (a zero-ary or fixed-point incidence).
+2.  **Native Support for Dynamic Structures**: Through its coinductive mode, Inc can formally model systems that change their own structure over time, such as evolving networks or computational processes.
 3.  **Bridging Logic and Geometry**: The theory's axiomatic connection between its relational syntax and linear-algebraic semantics (via Boundary Matrices and Laplacians) creates a direct bridge between formal proof and numerical analysis.
 
 ## Core Concepts
@@ -27,18 +27,18 @@ The theory is built upon a few simple but powerful ideas:
 
 ## Project Roadmap
 
-The development of IncF is guided by the process network defined in `story.jsonnet`. The project is divided into four main stages:
+The development of Inc is guided by the process network defined in `story.jsonnet`. The project is divided into four main stages:
 
 1.  **Theoretical Foundation**:
     -   Formalize the core axioms (A1-A17).
-    -   Develop **Incidence Logic (IL)**, the formal proof system for IncF.
+    -   Develop **Incidence Logic (IL)**, the formal proof system for Inc.
     -   Establish consistency by constructing models in ZF, Adhesive Categories, and HoTT.
-    -   Formalize the translation between IncF and other foundations.
+    -   Formalize the translation between Inc and other foundations.
 
 2.  **Reference Implementation**:
     -   Implement the core data structures and operators in a suitable language (e.g., Lean/Agda for formalization, Julia/Python for computation).
     -   Develop the linear-algebraic backend for numerical analysis.
-    -   Formalize the theory in a proof assistant to veIncFy its properties.
+    -   Formalize the theory in a proof assistant to veIncy its properties.
 
 3.  **Academic Publication**:
     -   Publish a foundational paper outlining the theory.
@@ -46,7 +46,7 @@ The development of IncF is guided by the process network defined in `story.jsonn
     -   Target journals in mathematical logic (`math.LO`), category theory (`math.CT`), and logic in computer science (`cs.LO`).
 
 4.  **Application & Validation**:
-    -   Apply IncF to model complex systems in various domains, such as computational processes, mathematical structures (e.g., simplicial homology), and biological networks.
+    -   Apply Inc to model complex systems in various domains, such as computational processes, mathematical structures (e.g., simplicial homology), and biological networks.
 
 ## Getting Started
 
