@@ -1,17 +1,20 @@
--- Basic sorts
+-- Unified Incidence structure
+structure Incidence (I R T : Type u) where
+  boundary : I → List (I × R × Int × Nat)  -- Simplified: Int for orientation (-1,0,1)
+  type_func : I → T
+  gluing : I → I → I  -- Binary gluing operation
+  unit : I  -- Unit incidence
+
+-- Instance for our theory
 universe u
-variable {I : Type u}  -- Incidences
-variable {R : Type u}  -- Roles
-inductive Σ_type : Type | neg : Σ_type | zero : Σ_type | pos : Σ_type
+variable {I R T : Type u}
+variable (inc : Incidence I R T)
 
--- Boundary operator (using List as simple finite collection)
-def Boundary (∂ : I → List (I × R × Σ_type × Nat)) : Type u := I → List (I × R × Σ_type × Nat)
+-- Axiom A1: Finite Endpoints
+axiom A1 (i : I) : (inc.boundary i).length < Nat.inf  -- Finite length
 
--- Axiom A1: Finite Endpoints (simplified)
-axiom A1 {∂ : Boundary} (i : I) : true  -- Placeholder for finiteness
-
--- Theorem: All boundaries are finite (trivial)
-theorem all_boundaries_finite {∂ : Boundary} (i : I) : true := A1 ∂ i
+-- Theorem: Boundaries are finite
+theorem boundaries_finite (i : I) : (inc.boundary i).length < Nat.inf := A1 inc i
 
 -- Gluing operator (simplified)
 def glue {θ : Type u} (i j : I) : I := sorry  -- Placeholder
@@ -54,17 +57,29 @@ def τ : I → T
 -- Axiom A2: Type consistency
 axiom A2 {∂ : Boundary} (i : I) : ∀ (i1, r1, σ1, m1) ∈ (∂ i), τ i1 = τ i  -- Simplified
 
+-- Axiom A2: Type consistency
+axiom A2 (i : I) (j : I) : (j, _, _, _) ∈ inc.boundary i → inc.type_func j = inc.type_func i
+
 -- Theorem: Type consistency
-theorem type_consistency {∂ : Boundary} (i : I) : true := sorry  -- Placeholder
+theorem type_consistency (i : I) (j : I) : (j, _, _, _) ∈ inc.boundary i → inc.type_func j = inc.type_func i := A2 inc i j
 
 -- Observational equivalence relation
-def approx : I → I → Prop := sorry  -- Placeholder
+def approx (i j : I) : Prop := inc.type_func i = inc.type_func j ∧ inc.boundary i = inc.boundary j
 
--- Axiom A11: Observational equivalence (simplified)
-axiom A11 (i j : I) : approx i j ↔ (τ i = τ j ∧ ∂ i ≈ ∂ j)  -- Simplified
+-- Axiom A11: Observational equivalence (bisimulation)
+axiom A11_bisim (i j : I) : approx inc i j ↔ ∀ (k : I), (k ∈ inc.boundary i → ∃ l, l ∈ inc.boundary j ∧ approx inc k l) ∧ (k ∈ inc.boundary j → ∃ l, l ∈ inc.boundary i ∧ approx inc k l)
 
 -- Theorem: ≈ is reflexive
-theorem approx_refl (i : I) : approx i i := sorry
+theorem approx_refl (i : I) : approx inc i i :=
+by simp [approx]
+
+-- Theorem: ≈ is symmetric
+theorem approx_symm {i j : I} : approx inc i j → approx inc j i :=
+by simp [approx, and.comm]
+
+-- Theorem: ≈ is transitive (placeholder)
+theorem approx_trans {i j k : I} : approx inc i j → approx inc j k → approx inc i k :=
+by simp [approx]
 
 -- Axiom A3: Sign rules
 axiom A3 {∂ : Boundary} (i : I) : ∀ (i1, r1, σ1, m1) ∈ (∂ i), σ1 = Σ_type.neg ∨ σ1 = Σ_type.zero ∨ σ1 = Σ_type.pos

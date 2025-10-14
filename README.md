@@ -52,4 +52,17 @@ The development of Inc is guided by the process network defined in `story.jsonne
 
 This project is currently in the foundational stage. The primary document guiding the work is [`story.jsonnet`](./story.jsonnet), which contains the formal project plan as a Merkle DAG.
 
+### Building the Lean Formalization
+
+The formal axioms and proofs are implemented in Lean4. To build and verify:
+
+1. Install Lean4 via elan: `curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y`
+2. Clone the repository and navigate to the Lean project: `cd incidence-theory`
+3. Build the project: `lake build`
+4. Run examples (if any): `lake exe incidence-theory`
+
+### Viewing the Paper
+
+The draft paper is available in Markdown (`posts/arxiv_post.md`) and LaTeX (`posts/arxiv_paper.tex`). Compile the LaTeX version with pdflatex for a formatted PDF.
+
 Further details on the theory and its axiomatization can be found in the project's working documents. (Further links to be added).

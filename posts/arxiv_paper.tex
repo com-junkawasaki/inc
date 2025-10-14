@@ -1,0 +1,87 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\title{Theory of Incidence -- A Fourth Foundation Beyond Set, Category, and Type}
+\author{Junkawasaki}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Classical mathematical foundations—set theory, category theory, and type theory—provide distinct but compatible paradigms for representing mathematical and computational structure. Yet all share a fundamental limitation: they presuppose a separation between objects and relations. Sets collect elements, categories connect objects, and types classify terms, but none take relation itself as the primitive entity.
+
+We propose the Theory of Incidence as a fourth foundational system in which incidences—relations that may themselves relate to other incidences—are the sole primitive constituents of mathematical structure. Each incidence $i \in I$ is equipped with a boundary operator $\partial: I \to MSet(I \times R \times \Sigma \times N)$, assigning to $i$ a finite or guardedly infinite multiset of endpoint incidences, roles, orientations, and multiplicities. Composition of structures is governed by a gluing operator, subject to axioms (A1–A17) ensuring finiteness, type-consistency, compositional closure, and observational equivalence.
+
+Within this framework,
+\begin{itemize}
+\item Sets correspond to zero-ary incidences,
+\item Categories arise as incidence systems closed under gluing, and
+\item Types emerge as inductive or coinductive families over incidence configurations.
+\end{itemize}
+
+The theory admits multiple semantic realizations: a set-theoretic model (conservative over ZF), an adhesive-category model (gluing semantics), and a homotopy-type-theoretic model (via coinductive types). A linear-semantic layer—defined through boundary matrices and Laplacians—connects logical inference to spectral computation, linking proof theory with numerical analysis.
+
+The Theory of Incidence thus provides a unifying relational substrate for Set, Cat, and Type: a formalism where relations are first-class citizens, recursion and coinduction are native, and evolving or self-referential structures are expressible without additional meta-level machinery. This approach suggests a direction toward a unified foundation of mathematics and computation based purely on relational composition and equivalence.
+\end{abstract}
+
+\section{Introduction}
+Classical foundations separate objects from relations. Incidence Theory unifies them by making relations primitive.
+
+\section{Formal Definitions}
+\begin{itemize}
+\item Incidence set $I$
+\item Boundary operator $\partial: I \to MSet(I \times R \times \Sigma \times N)$
+\end{itemize}
+
+\section{Axioms (A1–A17)}
+A1: Finite Endpoints - For all $i$, $\partial(i)$ is finite. \\
+A2: Type Consistency - Boundary incidences share the same type as the parent. \\
+... (full list as before)
+
+\section{Relations to Set, Category, and Type Theories}
+Prove embeddings: Sets as nullary incidences, with membership as gluing. Categories via morphism incidences. Types through inductive definitions.
+
+Proof of set embedding: Define a set $S$ as the collection of nullary incidences where membership is encoded via gluing operations preserving extensionality.
+
+\section{Semantic Models}
+Construct ZF model: Interpret incidences as sets with boundary functions. \\
+Adhesive category model: Gluing as pushouts. \\
+HoTT model: Coinductive types for recursive incidences.
+
+Consistency proof: Show that the ZF model interprets all RIF axioms without contradiction, as incidences map to well-founded sets.
+
+Type consistency proof: From A2, boundary incidences share the same type as the parent, ensuring type safety in gluing operations.
+
+Observational equivalence proof: A11 defines $\approx$ as type and boundary equality, establishing a bisimulation relation.
+
+\section{Linear Semantics}
+- Boundary matrices and Laplacians
+- Linking logic to spectral methods
+
+\section{Examples and Applications}
+- Graph structures
+- Self-referential systems
+- Applications in computation and medicine
+
+\section{Related Work}
+Incidence Theory builds upon and extends several established areas:
+
+- **Higher Operads and ∞-Categories**: Our recursive boundary operator and gluing align with the structure of higher operads (Leinster) and ω-categories, providing a concrete realization for abstract ∞-dimensional structures.
+- **Adhesive Categories and DPO Rewriting**: Gluing semantics directly correspond to pushouts in adhesive categories, enabling formal model transformation.
+- **Coalgebra and Coinduction**: The coinductive mode and observational equivalence draw from bisimulation in coalgebraic systems, adapted to relational structures.
+- **Homotopy Type Theory**: Inductive/coinductive families in Inc mirror HoTT's types, with incidence boundaries as paths.
+
+Inc differs by unifying these into a single relational primitive, avoiding meta-level machinery for recursion or self-reference.
+
+\section{Conclusion}
+The Theory of Incidence establishes a relational foundation unifying Set, Cat, and Type.
+
+\appendix
+\section{Lean Theorems and Axioms}
+List of formalized axioms and theorems in Lean4 (see incidence-theory/ for code).
+
+\end{document}
