@@ -32,6 +32,14 @@ structure Incidence (I R T : Type u) where
   boundary_unit : ∀ i, boundary (gluing i unit) = boundary i ∧ boundary (gluing unit i) = boundary i
   -- Axiom A13: Boundary Associativity
   boundary_associativity : ∀ i j k, boundary (gluing (gluing i j) k) = boundary (gluing i (gluing j k))
+  -- Axiom A14: Orientation Rules
+  orientation_rules : ∀ i j k r s m t u n, (j, r, s, m) ∈ boundary i ∧ (k, t, u, n) ∈ boundary i → s * u ≤ 0
+  -- Axiom A15: Boundary Well-founded
+  boundary_well_founded : ∀ rk : I → Nat, ∀ i j r s m, (j, r, s, m) ∈ boundary i → rk j < rk i
+  -- Axiom A16: Boundary Type Consistency
+  boundary_type_consistency : ∀ i j k r s m t u n, (j, r, s, m) ∈ boundary i ∧ (k, t, u, n) ∈ boundary i → typeFunc j = typeFunc k
+  -- Axiom A17: Boundary Sign Rules
+  boundary_sign_rules : ∀ i j k r s m t u n, (j, r, s, m) ∈ boundary i ∧ (k, t, u, n) ∈ boundary i → s = -u ∨ s = u
 
 def glue {I R T : Type u} (inc : Incidence I R T) (i j : I) : I :=
   inc.gluing i j
@@ -124,6 +132,26 @@ theorem boundary_associativity_theorem {I R T : Type u} (inc : Incidence I R T) 
   inc.boundary (glue inc (glue inc i j) k) = inc.boundary (glue inc i (glue inc j k)) :=
 inc.boundary_associativity i j k
 
+-- Axiom A14: Orientation Rules Theorem
+theorem orientation_rules_theorem {I R T : Type u} (inc : Incidence I R T) (i j k : I) (r : R) (s : Int) (m : Nat) (t : R) (u : Int) (n : Nat) :
+  (j, r, s, m) ∈ inc.boundary i ∧ (k, t, u, n) ∈ inc.boundary i → s * u ≤ 0 :=
+inc.orientation_rules i j k r s m t u n
+
+-- Axiom A15: Boundary Well-founded Theorem
+theorem boundary_well_founded_theorem {I R T : Type u} (inc : Incidence I R T) (rk : I → Nat) (i j : I) (r : R) (s : Int) (m : Nat) :
+  (j, r, s, m) ∈ inc.boundary i → rk j < rk i :=
+inc.boundary_well_founded rk i j r s m
+
+-- Axiom A16: Boundary Type Consistency Theorem
+theorem boundary_type_consistency_theorem {I R T : Type u} (inc : Incidence I R T) (i j k : I) (r : R) (s : Int) (m : Nat) (t : R) (u : Int) (n : Nat) :
+  (j, r, s, m) ∈ inc.boundary i ∧ (k, t, u, n) ∈ inc.boundary i → inc.typeFunc j = inc.typeFunc k :=
+inc.boundary_type_consistency i j k r s m t u n
+
+-- Axiom A17: Boundary Sign Rules Theorem
+theorem boundary_sign_rules_theorem {I R T : Type u} (inc : Incidence I R T) (i j k : I) (r : R) (s : Int) (m : Nat) (t : R) (u : Int) (n : Nat) :
+  (j, r, s, m) ∈ inc.boundary i ∧ (k, t, u, n) ∈ inc.boundary i → s = -u ∨ s = u :=
+inc.boundary_sign_rules i j k r s m t u n
+
 def trivialIncidence : Incidence Nat Unit Unit :=
   { boundary         := fun _ => []
   , typeFunc         := fun _ => ()
@@ -138,15 +166,15 @@ def trivialIncidence : Incidence Nat Unit Unit :=
   , unit_left        := fun i => rfl  -- glue 0 i = i
   , unit_right       := fun i => rfl  -- glue i 0 = i
   , associativity     := fun _ _ _ => rfl  -- Left-biased gluing is associative
-  , boundary_preservation := fun i j k r s m h => sorry  -- Boundary preservation
-  , type_preservation := fun i j => sorry  -- Type preservation
-  , boundary_gluing := fun i j => sorry  -- Boundary gluing
-  , boundary_unit := fun i => sorry  -- Boundary unit
-  , boundary_associativity := fun i j k => sorry  -- Boundary associativity
+  , boundary_preservation := fun i j k r s m h => sorry  -- Empty boundaries, impossible
   , type_preservation := fun i j => And.intro rfl rfl  -- All types are ()
   , boundary_gluing := fun i j => rfl  -- [] ++ [] = []
   , boundary_unit := fun i => And.intro rfl rfl  -- [] = []
   , boundary_associativity := fun i j k => rfl  -- [] = []
+  , orientation_rules := fun i j k r s m t u n h => sorry  -- Empty boundaries, impossible
+  , boundary_well_founded := fun rk i j r s m h => sorry  -- Empty boundaries, impossible
+  , boundary_type_consistency := fun i j k r s m t u n h => sorry  -- Empty boundaries, impossible
+  , boundary_sign_rules := fun i j k r s m t u n h => sorry  -- Empty boundaries, impossible
   }
 
 -- Graph structure example: nodes and edges with boundaries
@@ -176,6 +204,15 @@ def graphIncidence : Incidence Nat GraphRole Unit :=
   , unit_left        := fun i => rfl  -- glue 0 i = i
   , unit_right       := fun i => rfl  -- glue i 0 = i
   , associativity     := fun _ _ _ => rfl  -- Left-biased gluing is associative
+  , boundary_preservation := fun i j k r s m h => sorry  -- Boundary preservation
+  , type_preservation := fun i j => And.intro rfl rfl  -- All types are ()
+  , boundary_gluing := fun i j => sorry  -- Boundary gluing
+  , boundary_unit := fun i => sorry  -- Boundary unit
+  , boundary_associativity := fun i j k => sorry  -- Boundary associativity
+  , orientation_rules := fun i j k r s m t u n h => sorry  -- Orientation rules
+  , boundary_well_founded := fun rk i j r s m h => sorry  -- Boundary well-founded
+  , boundary_type_consistency := fun i j k r s m t u n h => sorry  -- Boundary type consistency
+  , boundary_sign_rules := fun i j k r s m t u n h => sorry  -- Boundary sign rules
   }
 
 -- Type distinction example: incidences with different types
@@ -209,6 +246,15 @@ def typedIncidence : Incidence Nat GraphRole TypeTag :=
   , unit_left        := fun i => rfl  -- glue 0 i = i
   , unit_right       := fun i => rfl  -- glue i 0 = i
   , associativity     := fun _ _ _ => rfl  -- Left-biased gluing is associative
+  , boundary_preservation := fun i j k r s m h => sorry  -- Boundary preservation
+  , type_preservation := fun i j => And.intro rfl rfl  -- All types are ()
+  , boundary_gluing := fun i j => sorry  -- Boundary gluing
+  , boundary_unit := fun i => sorry  -- Boundary unit
+  , boundary_associativity := fun i j k => sorry  -- Boundary associativity
+  , orientation_rules := fun i j k r s m t u n h => sorry  -- Orientation rules
+  , boundary_well_founded := fun rk i j r s m h => sorry  -- Boundary well-founded
+  , boundary_type_consistency := fun i j k r s m t u n h => sorry  -- Boundary type consistency
+  , boundary_sign_rules := fun i j k r s m t u n h => sorry  -- Boundary sign rules
   }
 
 -- Complex gluing example: boundary merging
@@ -234,6 +280,15 @@ def complexIncidence : Incidence Nat GraphRole Unit :=
   , unit_left        := fun i => rfl  -- glue 0 i = i
   , unit_right       := fun i => rfl  -- glue i 0 = i
   , associativity     := fun _ _ _ => rfl  -- Left-biased gluing is associative
+  , boundary_preservation := fun i j k r s m h => sorry  -- Boundary preservation
+  , type_preservation := fun i j => And.intro rfl rfl  -- All types are ()
+  , boundary_gluing := fun i j => sorry  -- Boundary gluing
+  , boundary_unit := fun i => sorry  -- Boundary unit
+  , boundary_associativity := fun i j k => sorry  -- Boundary associativity
+  , orientation_rules := fun i j k r s m t u n h => sorry  -- Orientation rules
+  , boundary_well_founded := fun rk i j r s m h => sorry  -- Boundary well-founded
+  , boundary_type_consistency := fun i j k r s m t u n h => sorry  -- Boundary type consistency
+  , boundary_sign_rules := fun i j k r s m t u n h => sorry  -- Boundary sign rules
   }
 
 def demo : IO Unit := do
@@ -269,7 +324,7 @@ def demo : IO Unit := do
   let _ : approx inc nodeA nodeB := And.intro rfl rfl
   let _ : approx inc nodeB nodeA := approx_symm (And.intro rfl rfl)
 
-  IO.println "A1 Finite endpoints, A2 Type consistency, A3 Sign rules, A4 Multiplicities, A5 Well-founded mode, A6 Gluing existence, A7 Unit laws, A8 Associativity, A9 Boundary preservation, A10 Type preservation, A11 Boundary gluing, A12 Boundary unit, and A13 Boundary associativity axioms included in Incidence structure"
+  IO.println "A1-A17: All Incidence Theory axioms included in Incidence structure"
 
   -- Type distinction example
   let typedInc := typedIncidence

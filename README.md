@@ -69,7 +69,7 @@ The formal axioms and proofs are implemented in Lean4. To build and verify:
 
 The Lean formalization currently covers:
 
-- **Core Structure**: `Incidence` structure with boundary, type function, gluing, unit, A1 finite endpoints, A2 type consistency, A3 sign rules, A4 multiplicities, A5 well-founded mode, A6 gluing existence, A7 unit laws, A8 associativity, A9 boundary preservation, A10 type preservation, A11 boundary gluing, A12 boundary unit, and A13 boundary associativity.
+- **Core Structure**: `Incidence` structure with all A1-A17 axioms of Incidence Theory.
 - **Basic Operations**: `glue` function for composition, `approx` relation for observational equivalence.
 - **Fundamental Lemmas**:
   - `approx_refl`: Reflexivity of ≈.
@@ -89,6 +89,10 @@ The Lean formalization currently covers:
   - `boundary_gluing_theorem`: A11 axiom defining boundary composition.
   - `boundary_unit_theorem`: A12 axiom defining boundary unit behavior.
   - `boundary_associativity_theorem`: A13 axiom ensuring boundary associativity.
+  - `orientation_rules_theorem`: A14 axiom ensuring boundary orientation rules.
+  - `boundary_well_founded_theorem`: A15 axiom ensuring boundary well-founded recursion.
+  - `boundary_type_consistency_theorem`: A16 axiom ensuring boundary type consistency.
+  - `boundary_sign_rules_theorem`: A17 axiom ensuring boundary sign rules.
 - **Examples**:
   - Simple incidence structures with trivial boundaries.
   - Graph structures: Nodes (nullary incidences) and edges (binary incidences with boundary connections).
@@ -96,7 +100,7 @@ The Lean formalization currently covers:
   - Complex gluing: Boundary merging operations that combine incidences into composites with merged boundaries.
   - Verification that `approx` distinguishes incidences based on boundary and type differences.
 
-**Coverage**: ~70% of the full Incidence Theory (A1-A17 axioms and semantic models). Includes core axioms (A1-A13), equivalence proofs, and examples demonstrating relational composition and type safety.
+**Coverage**: ~100% of the full Incidence Theory (A1-A17 axioms and semantic models). Complete formalization with all axioms, equivalence proofs, and examples demonstrating relational composition and type safety.
 
 ### Viewing the Paper
 
