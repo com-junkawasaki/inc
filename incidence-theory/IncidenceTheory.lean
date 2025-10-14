@@ -7,6 +7,8 @@ structure Incidence (I R T : Type u) where
   typeFunc : I → T
   gluing   : I → I → I
   unit     : I
+  -- Axiom A2: Type Consistency
+  type_consistent : ∀ i j r s m, (j, r, s, m) ∈ boundary i → typeFunc j = typeFunc i
 
 def glue {I R T : Type u} (inc : Incidence I R T) (i j : I) : I :=
   inc.gluing i j
@@ -28,5 +30,10 @@ theorem approx_trans {I R T : Type u} {inc : Incidence I R T} {i j k : I} :
     let hT := Eq.trans hij.left hjk.left
     let hB := Eq.trans hij.right hjk.right
     And.intro hT hB
+
+-- Axiom A2: Type Consistency Theorem
+theorem type_consistency {I R T : Type u} (inc : Incidence I R T) (i j : I) (r : R) (s : Int) (m : Nat) :
+  (j, r, s, m) ∈ inc.boundary i → inc.typeFunc j = inc.typeFunc i :=
+inc.type_consistent i j r s m
 
 end IncidenceTheory

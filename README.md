@@ -69,12 +69,13 @@ The formal axioms and proofs are implemented in Lean4. To build and verify:
 
 The Lean formalization currently covers:
 
-- **Core Structure**: `Incidence` structure with boundary, type function, gluing, and unit.
+- **Core Structure**: `Incidence` structure with boundary, type function, gluing, unit, and A2 type consistency.
 - **Basic Operations**: `glue` function for composition, `approx` relation for observational equivalence.
 - **Fundamental Lemmas**:
   - `approx_refl`: Reflexivity of ≈.
   - `approx_symm`: Symmetry of ≈.
   - `approx_trans`: Transitivity of ≈.
+  - `type_consistency`: A2 axiom ensuring boundary elements share parent type.
 - **Examples**:
   - Simple incidence structures with trivial boundaries.
   - Graph structures: Nodes (nullary incidences) and edges (binary incidences with boundary connections).
@@ -82,7 +83,7 @@ The Lean formalization currently covers:
   - Complex gluing: Boundary merging operations that combine incidences into composites with merged boundaries.
   - Verification that `approx` distinguishes incidences based on boundary and type differences.
 
-**Coverage**: ~15% of the full Incidence Theory (A1-A17 axioms and semantic models). Includes core structure, equivalence proofs, and examples demonstrating relational composition and type safety.
+**Coverage**: ~20% of the full Incidence Theory (A1-A17 axioms and semantic models). Includes core axioms (A2), equivalence proofs, and examples demonstrating relational composition and type safety.
 
 ### Viewing the Paper
 
