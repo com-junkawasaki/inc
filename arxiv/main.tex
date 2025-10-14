@@ -1,11 +1,26 @@
 \documentclass{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{graphicx}
+\usepackage{microtype}
 \usepackage{hyperref}
+\usepackage[nameinlink]{cleveref}
+
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+% theorem-like environments
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}
 
 \title{Theory of Incidence -- A Fourth Foundation Beyond Set, Category, and Type}
-\author{Junkawasaki}
-\date{\today}
+\author{Jun Kawasaki\thanks{Affiliation and contact: REPLACE}}
+\date{October 2025}
 
 \begin{document}
 
@@ -167,17 +182,13 @@ The Theory of Incidence can be consistently interpreted in ZF set theory.
 \end{theorem}
 
 \begin{proof}
-We construct a ZF model using the \texttt{ZFSet} inductive type and \texttt{ZF\_interpretation} structure in \texttt{IncidenceTheory/Basic.lean}. The model interprets:
-\begin{itemize}
-\item Incidences as ZF sets with encoded boundary information (\texttt{incidence\_as\_set})
-\item Boundary lists as ZF sets (\texttt{boundary\_as\_set})
-\item Gluing as set union (\texttt{ZFSet.union})
-\item Unit as the empty set (\texttt{ZFSet.empty})
-\end{itemize}
-
-All axioms are satisfied: finite boundaries (A1) via ZF's finite set construction, type consistency (A2) through set encoding, associativity (A8) via ZF's union associativity, and unit laws (A7) via empty set properties.
-
-This establishes relative consistency of Incidence Theory with respect to ZF set theory, as formalized in \texttt{incidence\_theory\_consistent\_relative\_to\_ZF}.
+We sketch a ZF interpretation in which incidences are encoded as sets that carry
+boundary information, boundaries are represented by suitable set-theoretic
+encodings, gluing corresponds to a set-theoretic composition (e.g., union on
+encoded boundaries), and the unit corresponds to the empty set. Under this
+interpretation, the axioms (A1--A8, A11) hold by standard ZF constructions
+and properties (finite set formation, extensionality, associativity of union,
+etc.). A detailed formal development is provided in the accompanying codebase.
 \end{proof}
 
 \begin{theorem}[Adhesive Category Model]
@@ -355,10 +366,10 @@ The examples above demonstrate that diverse structures—graphs, processes, meta
 \section{Related Work}
 Incidence Theory builds upon and extends several established areas:
 
-- \textbf{Higher Operads and ∞-Categories}: Our recursive boundary operator and gluing align with the structure of higher operads (Leinster) and ω-categories, providing a concrete realization for abstract ∞-dimensional structures.
-- \textbf{Adhesive Categories and DPO Rewriting}: Gluing semantics directly correspond to pushouts in adhesive categories, enabling formal model transformation.
-- \textbf{Coalgebra and Coinduction}: The coinductive mode and observational equivalence draw from bisimulation in coalgebraic systems, adapted to relational structures.
-- \textbf{Homotopy Type Theory}: Inductive/coinductive families in Inc mirror HoTT's types, with incidence boundaries as paths.
+- \textbf{Higher Operads and ∞-Categories}: Our recursive boundary operator and gluing align with the structure of higher operads and ω-categories~\cite{LeinsterOperads}, providing a concrete realization for abstract ∞-dimensional structures.
+- \textbf{Adhesive Categories and DPO Rewriting}: Gluing semantics correspond to pushouts in adhesive categories~\cite{LackAdhesive}, enabling formal model transformation.
+- \textbf{Coalgebra and Coinduction}: The coinductive mode and observational equivalence draw from bisimulation in coalgebraic systems~\cite{RuttenUniversalCoalgebra}, adapted to relational structures.
+- \textbf{Homotopy Type Theory}: Inductive/coinductive families in Inc mirror HoTT's types~\cite{HoTTBook}, with incidence boundaries as paths.
 
 Inc differs by unifying these into a single relational primitive, avoiding meta-level machinery for recursion or self-reference.
 
@@ -366,7 +377,13 @@ Inc differs by unifying these into a single relational primitive, avoiding meta-
 The Theory of Incidence establishes a relational foundation unifying Set, Cat, and Type.
 
 \appendix
-\section{Lean Theorems and Axioms}
-List of formalized axioms and theorems in Lean4 (see incidence-theory/ for code).
+\section{Lean Artifacts and Reproducibility}
+The accompanying Lean4 artifacts (axioms, lemmas, and examples) are provided in
+the repository under \texttt{IncidenceTheory/}. For precise reproducibility, we
+refer to commit \texttt{REPLACE\_WITH\_COMMIT}. The paper references concepts
+that are mirrored in the code; symbol names may differ slightly across commits.
+
+\bibliographystyle{alpha}
+\bibliography{references}
 
 \end{document}
