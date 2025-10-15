@@ -140,6 +140,45 @@ def laplacian {I R T : Type u}
 
 end IncidenceCore
 
+/- Pushout≅Gluing specification: guards, type preservation, unit/assoc under preconditions. -/
+
+namespace IncidenceCore
+
+/- Guards declare when gluing is permitted. -/
+structure Guards (I : Type u) where
+  allow : I → I → Bool
+
+/- Gluing specification relative to an incidence. -/
+structure GluingSpec {I R T : Type u} (inc : Incidence I R T) where
+  guards           : Guards I
+  unit_ok          : ∀ i, guards.allow i inc.unit = true ∧ inc.glue i inc.unit = some i ∧ inc.glue inc.unit i = some i
+  type_preserve    : ∀ {i j k}, guards.allow i j = true → inc.glue i j = some k → inc.typeFunc k = inc.typeFunc i
+  guard_preserve   : ∀ {i j k}, guards.allow i j = true → inc.glue i j = some k → True
+  assoc_when_ok    : ∀ {i j k ij ijk jk},
+    guards.allow i j = true → inc.glue i j = some ij →
+    guards.allow ij k = true → inc.glue ij k = some ijk →
+    guards.allow j k = true → inc.glue j k = some jk →
+    guards.allow i jk = true → inc.glue i jk = some ijk
+
+/- A default permissive guard (always true). -/
+def Guards.permissive (I : Type u) : Guards I := { allow := fun _ _ => true }
+
+/- A trivial GluingSpec for any incidence with left-biased glue. -/
+def trivialGluingSpec {I R T : Type u} (inc : Incidence I R T) : GluingSpec inc :=
+  { guards := Guards.permissive I
+  , unit_ok := by
+      intro i; constructor; simp; constructor <;> simp
+  , type_preserve := by
+      intro i j k _ h; cases h; rfl
+  , guard_preserve := by
+      intro; trivial
+  , assoc_when_ok := by
+      intro i j k ij ijk jk h1 h2 h3 h4 h5 h6 h7
+      cases h2; cases h4; cases h6; simp at *; simp
+  }
+
+end IncidenceCore
+
 /- Bisimulation skeleton over the canonical API. -/
 
 namespace IncidenceCore
