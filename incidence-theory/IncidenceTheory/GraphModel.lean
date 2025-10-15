@@ -1,3 +1,5 @@
+import IncidenceTheory
+
 /- Merkle-ID: implementation.graph_model
    story.jsonnet → implementation.nodes.graph_model
    Minimal concrete models to validate API; starts with trivial model, then graph triangle. -/
