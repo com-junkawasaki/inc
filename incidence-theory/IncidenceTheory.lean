@@ -52,28 +52,14 @@ structure Incidence (I R T : Type u) where
 def approxEq {I R T : Type u} (inc : Incidence I R T) (i j : I) : Prop :=
   inc.typeFunc i = inc.typeFunc j ∧ inc.boundary i = inc.boundary j
 
-/- Legacy: explicit equality reflexivity for approxEq (kept for internal bridging). -/
-theorem approxEq_refl_eq {I R T : Type u} (inc : Incidence I R T) (i : I) :
-  approxEq inc i i := And.intro rfl rfl
-
 /- New API: reflexivity stated for approxBisim. -/
 theorem approxEq_refl {I R T : Type u} (inc : Incidence I R T) (i : I) :
   approxBisim inc i i := approxBisim_refl inc i
-
-/- Legacy: equality-based symmetry for approxEq (kept for internal bridging). -/
-theorem approxEq_symm_eq {I R T : Type u} {inc : Incidence I R T} {i j : I} :
-  approxEq inc i j → approxEq inc j i :=
-  fun h => And.intro (Eq.symm h.left) (Eq.symm h.right)
 
 /- New API: symmetry stated for approxBisim. -/
 theorem approxEq_symm {I R T : Type u} {inc : Incidence I R T} {i j : I} :
   approxBisim inc i j → approxBisim inc j i :=
   fun h => approxBisim_symm h
-
-/- Legacy: equality-based transitivity for approxEq (kept for internal bridging). -/
-theorem approxEq_trans_eq {I R T : Type u} {inc : Incidence I R T} {i j k : I} :
-  approxEq inc i j → approxEq inc j k → approxEq inc i k :=
-  fun hij hjk => And.intro (Eq.trans hij.left hjk.left) (Eq.trans hij.right hjk.right)
 
 /- New API: transitivity stated for approxBisim. -/
 theorem approxEq_trans {I R T : Type u} {inc : Incidence I R T} {i j k : I} :
@@ -95,21 +81,15 @@ theorem isBisimulation_approxEq {I R T : Type u} (inc : Incidence I R T) :
       simpa [hB] using he
     · -- endpoint matches itself
       unfold boundaryCompatible; simp
-    · exact approxEq_refl_eq inc e.i
+    · exact And.intro rfl rfl
   · intro e' he'
     refine ⟨e', ?he, ?hC, ?hRel⟩
     · -- transport membership in the other direction
       simpa [hB.symm] using he'
     · unfold boundaryCompatible; simp
-    · exact approxEq_refl_eq inc e'.i
+    · exact And.intro rfl rfl
 
-/- Merkle-ID: foundation.logic
-   Bridge: approxEq ⇒ approxBisim (for incremental migration). -/
-theorem approxEq_implies_approxBisim {I R T : Type u}
-  (inc : Incidence I R T) {i j : I} :
-  approxEq inc i j → approxBisim inc i j := by
-  intro h
-  exact ⟨(approxEq inc), isBisimulation_approxEq inc, h⟩
+-- Bridge approxEq ⇒ approxBisim removed (migration complete).
 
 /- Convenience to apply guarded gluing. -/
 /- Merkle-ID: implementation.core
