@@ -48,6 +48,13 @@ local implementation = {
     core: {
       description: 'Implement core Inc data structures and operators.',
       details: 'Includes Incidence, Boundary Operator (∂), Gluing, and Equivalence Checking (≈). Language choice: Lean/Agda for formal veIncication, Julia/Python for numerical computation.',
+      deps: ['foundation.nodes.axiomatization', 'implementation.nodes.api_freeze'],
+    },
+
+    // Merkle-ID: implementation.api_freeze
+    api_freeze: {
+      description: 'Freeze A1–A17 in a canonical Incidence API (Lean names/fields/invariants).',
+      details: 'Consolidate duplicated structures, normalize naming (boundary/typeFunc/gluing/unit), and encode invariants as fields/axioms with minimal surface.',
       deps: ['foundation.nodes.axiomatization'],
     },
 
@@ -55,7 +62,14 @@ local implementation = {
     linear_algebra: {
       description: 'Implement the linear-algebraic semantics.',
       details: 'Sparse matrix representation for Boundary Matrix (B) and Laplacian (L). Provide functions for spectral analysis, Hodge decomposition, and diffusion models.',
-      deps: ['implementation.nodes.core'],
+      deps: ['implementation.nodes.core', 'implementation.nodes.lin_alg_signatures'],
+    },
+
+    // Merkle-ID: implementation.lin_alg_signatures
+    lin_alg_signatures: {
+      description: 'Specify boundary matrix (B) and Laplacian (L) types and signatures.',
+      details: 'Define abstract matrix interfaces and identify minimal requirements for downstream analysis without committing to a backend.',
+      deps: ['implementation.nodes.api_freeze'],
     },
 
     // Merkle-ID: implementation.proof_assistant
@@ -63,6 +77,41 @@ local implementation = {
       description: 'Formalize Inc in a proof assistant.',
       details: 'Target: Lean 4 or Agda. Implement the axioms, proof rules of IL, and the standard library of foundational structures (N, Lists, etc.).',
       deps: ['foundation.nodes.logic', 'implementation.nodes.core'],
+    },
+
+    // Merkle-ID: implementation.il_skeleton
+    il_skeleton: {
+      description: 'Incidence Logic (IL) sequent skeleton and (co)induction rules.',
+      details: 'Provide a minimal sequent calculus and proof rules needed to derive core equivalences and (co)inductive reasoning.',
+      deps: ['foundation.nodes.logic', 'implementation.nodes.api_freeze'],
+    },
+
+    // Merkle-ID: implementation.graph_model
+    graph_model: {
+      description: 'Provide concrete model graphIncidence and discharge remaining obligations.',
+      details: 'Use simple graph roles to instantiate Incidence; eliminate placeholders/sorries and validate axioms in the model.',
+      deps: ['implementation.nodes.proof_assistant', 'implementation.nodes.api_freeze'],
+    },
+
+    // Merkle-ID: implementation.core_refactor
+    core_refactor: {
+      description: 'Refactor Lean modules to single public API; remove duplicate Incidence defs.',
+      details: 'Unify `Incidence` definitions, re-export from a single module, and enforce a stable import surface.',
+      deps: ['implementation.nodes.api_freeze'],
+    },
+
+    // Merkle-ID: implementation.lean_green
+    lean_green: {
+      description: 'Make Lean build green by removing sorries and proving approx/glue laws.',
+      details: 'Close remaining proof gaps and ensure CI build success before publication steps.',
+      deps: ['implementation.nodes.graph_model', 'implementation.nodes.core_refactor'],
+    },
+
+    // Merkle-ID: implementation.visualization_stub
+    visualization_stub: {
+      description: 'Minimal visualization/CLI stub for incidences.',
+      details: 'Provide a small CLI or IO demo to inspect boundaries and gluing results; optional for paper.',
+      deps: ['implementation.nodes.api_freeze'],
     },
 
     // Merkle-ID: implementation.visualization
@@ -89,7 +138,7 @@ local publication = {
     paper: {
       description: 'Write the main foundational paper.',
       details: 'Structure: Introduction, Axioms of Inc, Models, Comparison with other foundations, Applications, Conclusion. Target journals: LMCS, MSCS.',
-      deps: ['publication.nodes.abstract', 'implementation.nodes.proof_assistant'],
+      deps: ['publication.nodes.abstract', 'implementation.nodes.proof_assistant', 'implementation.nodes.lean_green'],
     },
     // Merkle-ID: publication.arxiv
     arxiv: {
