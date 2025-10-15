@@ -60,13 +60,25 @@ theorem approxEq_refl_eq {I R T : Type u} (inc : Incidence I R T) (i : I) :
 theorem approxEq_refl {I R T : Type u} (inc : Incidence I R T) (i : I) :
   approxBisim inc i i := approxBisim_refl inc i
 
-theorem approxEq_symm {I R T : Type u} {inc : Incidence I R T} {i j : I} :
+/- Legacy: equality-based symmetry for approxEq (kept for internal bridging). -/
+theorem approxEq_symm_eq {I R T : Type u} {inc : Incidence I R T} {i j : I} :
   approxEq inc i j → approxEq inc j i :=
   fun h => And.intro (Eq.symm h.left) (Eq.symm h.right)
 
-theorem approxEq_trans {I R T : Type u} {inc : Incidence I R T} {i j k : I} :
+/- New API: symmetry stated for approxBisim. -/
+theorem approxEq_symm {I R T : Type u} {inc : Incidence I R T} {i j : I} :
+  approxBisim inc i j → approxBisim inc j i :=
+  fun h => approxBisim_symm h
+
+/- Legacy: equality-based transitivity for approxEq (kept for internal bridging). -/
+theorem approxEq_trans_eq {I R T : Type u} {inc : Incidence I R T} {i j k : I} :
   approxEq inc i j → approxEq inc j k → approxEq inc i k :=
   fun hij hjk => And.intro (Eq.trans hij.left hjk.left) (Eq.trans hij.right hjk.right)
+
+/- New API: transitivity stated for approxBisim. -/
+theorem approxEq_trans {I R T : Type u} {inc : Incidence I R T} {i j k : I} :
+  approxBisim inc i j → approxBisim inc j k → approxBisim inc i k :=
+  fun hij hjk => approxBisim_trans hij hjk
 
 /- Merkle-ID: foundation.logic
    approxEq is a bisimulation (strict equality on boundaries). -/
