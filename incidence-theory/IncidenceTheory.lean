@@ -1,5 +1,11 @@
+/- Merkle-ID: implementation.api_freeze
+   Maps to story.jsonnet → implementation.nodes.api_freeze
+   Purpose: Consolidate a minimal surface API for incidence structures. -/
 universe u
 
+/- Merkle-ID: implementation.core
+   story.jsonnet → implementation.nodes.core
+   Core incidence structure (legacy-compatible surface). -/
 structure Incidence (I R T : Type u) where
   boundary : I → List (I × R × Int × Nat)
   typeFunc : I → T
@@ -12,9 +18,14 @@ structure Incidence (I R T : Type u) where
   -- Axiom A3: Sign Rules
   sign_rules : ∀ i j r s m, (j, r, s, m) ∈ boundary i → s = -1 ∨ s = 0 ∨ s = 1
 
+/- Merkle-ID: implementation.core
+   helper glue wrapper -/
 def glue {I R T : Type u} (inc : Incidence I R T) (i j : I) : I :=
   inc.gluing i j
 
+/- Merkle-ID: foundation.logic
+   story.jsonnet → foundation.nodes.logic
+   Approx (legacy equality-based; replaced later by bisimulation). -/
 def approx {I R T : Type u} (inc : Incidence I R T) (i j : I) : Prop :=
   inc.typeFunc i = inc.typeFunc j ∧ inc.boundary i = inc.boundary j
 
@@ -43,17 +54,15 @@ theorem sign_rules_theorem {I R T : Type u} (inc : Incidence I R T) (i j : I) (r
   (j, r, s, m) ∈ inc.boundary i → s = -1 ∨ s = 0 ∨ s = 1 :=
 inc.sign_rules i j r s m
 
-/-
-  Canonical Incidence API (namespaced) — toward multiset boundaries and guarded gluing.
-  This section does not replace legacy defs above yet; it provides a stable surface
-  to migrate callers incrementally without breaking existing files.
--/
+/- Merkle-ID: implementation.core_refactor
+   story.jsonnet → implementation.nodes.core_refactor
+   Canonical Incidence API (namespaced) — multiset-like boundary & guarded gluing. -/
 
 namespace IncidenceCore
 
-universe u
-
 /- Signs for oriented endpoints. -/
+/- Merkle-ID: foundation.axiomatization
+   Sign domain (A3). -/
 inductive Sign where
   | neg
   | zero
@@ -61,6 +70,8 @@ inductive Sign where
 deriving DecidableEq, Repr
 
 /- Endpoint of an incidence boundary with role, sign, and multiplicity. -/
+/- Merkle-ID: foundation.axiomatization
+   Endpoint with role/sign/multiplicity (A2/A3/A4). -/
 structure Endpoint (I R : Type u) where
   i    : I
   role : R
@@ -70,9 +81,13 @@ deriving Repr
 
 /- For now we model a multiset as a list with multiset semantics.
    Future: swap to Multiset once the dependency is available. -/
+/- Merkle-ID: implementation.core
+   boundary as list with multiset semantics; swap to Multiset later. -/
 abbrev Boundary (I R : Type u) := List (Endpoint I R)
 
 /- Canonical Incidence structure with guarded gluing. -/
+/- Merkle-ID: implementation.core
+   canonical incidence with guarded gluing. -/
 structure Incidence (I R T : Type u) where
   boundary        : I → Boundary I R
   typeFunc        : I → T
@@ -83,6 +98,8 @@ structure Incidence (I R T : Type u) where
 
 /- Observational equivalence (temporary, equality-based; to be replaced by bisimulation).
    Uses exact boundary equality; callers should not rely on order sensitivity. -/
+/- Merkle-ID: foundation.logic
+   equality-based approx (temporary). -/
 def approxEq {I R T : Type u} (inc : Incidence I R T) (i j : I) : Prop :=
   inc.typeFunc i = inc.typeFunc j ∧ inc.boundary i = inc.boundary j
 
@@ -98,6 +115,8 @@ theorem approxEq_trans {I R T : Type u} {inc : Incidence I R T} {i j k : I} :
   fun hij hjk => And.intro (Eq.trans hij.left hjk.left) (Eq.trans hij.right hjk.right)
 
 /- Convenience to apply guarded gluing. -/
+/- Merkle-ID: implementation.core
+   guarded gluing helper. -/
 def applyGlue {I R T : Type u} (inc : Incidence I R T) (i j : I) : Option I :=
   inc.glue i j
 
@@ -109,10 +128,11 @@ namespace IncidenceCore
 
 /- Minimal matrix abstraction using functions over finite indices.
    We avoid external deps; users can later replace with mathlib `Matrix`. -/
+universe u
 def Matrix (m n : Type u) (α : Type u) := m → n → α
 
 /- Boundary matrix over a chosen finite index set of incidences. -/
-def boundaryMatrix {I R T : Type u}
+def boundaryMatrix {I R T : Type u} [DecidableEq I]
   (inc : Incidence I R T)
   (idx : List I) : Matrix I I Int :=
   fun i j =>
@@ -123,7 +143,7 @@ def boundaryMatrix {I R T : Type u}
       | Sign.neg  => - (Int.ofNat e.mult)
       | Sign.zero => 0
       | Sign.pos  => Int.ofNat e.mult
-    entries.foldl (fun acc e => if e.i = j then acc + signed e else acc) 0
+    entries.foldl (fun acc e => if Decidable.decEq e.i j then acc + signed e else acc) 0
 
 /- Laplacian L = Bᵀ ⬝ B with naive multiplication over Int. -/
 def laplacian {I R T : Type u}
@@ -179,31 +199,42 @@ def trivialGluingSpec {I R T : Type u} (inc : Incidence I R T) : GluingSpec inc 
 
 end IncidenceCore
 
-/- Bisimulation skeleton over the canonical API. -/
+/- Merkle-ID: foundation.logic
+   bisimulation skeleton over canonical API. -/
 
 namespace IncidenceCore
 
 /- Endpoint compatibility (role/sign/mult preserved). -/
+/- Merkle-ID: foundation.axiomatization
+   endpoint compatibility notion for ≈. -/
 def boundaryCompatible {I R T : Type u} (inc : Incidence I R T)
   (e₁ e₂ : Endpoint I R) : Prop :=
   e₁.role = e₂.role ∧ e₁.sign = e₂.sign ∧ e₁.mult = e₂.mult
 
 /- Boundary matching w.r.t. a relation rel on incidences. -/
+/- Merkle-ID: foundation.logic
+   boundary matching definition for bisimulation. -/
 def boundaryMatched {I R T : Type u} (inc : Incidence I R T)
   (rel : I → I → Prop) (i j : I) : Prop :=
   (∀ e ∈ inc.boundary i, ∃ e', e' ∈ inc.boundary j ∧ boundaryCompatible inc e e' ∧ rel e.i e'.i) ∧
   (∀ e' ∈ inc.boundary j, ∃ e, e ∈ inc.boundary i ∧ boundaryCompatible inc e e' ∧ rel e.i e'.i)
 
 /- A bisimulation is a relation preserved by types and boundary matching. -/
+/- Merkle-ID: foundation.logic
+   bisimulation predicate. -/
 def IsBisimulation {I R T : Type u} (inc : Incidence I R T)
   (rel : I → I → Prop) : Prop :=
   ∀ i j, rel i j → inc.typeFunc i = inc.typeFunc j ∧ boundaryMatched inc rel i j
 
 /- Bisimilarity: related by some bisimulation. -/
+/- Merkle-ID: foundation.logic
+   bisimilarity. -/
 def approxBisim {I R T : Type u} (inc : Incidence I R T) (i j : I) : Prop :=
   ∃ rel, IsBisimulation inc rel ∧ rel i j
 
 /- Equality relation is a bisimulation. -/
+/- Merkle-ID: foundation.models
+   base bisimulation instance (equality). -/
 theorem isBisimulation_rfl {I R T : Type u} (inc : Incidence I R T) :
   IsBisimulation inc (fun a b => a = b) := by
   intro i j hij
@@ -221,11 +252,15 @@ theorem isBisimulation_rfl {I R T : Type u} (inc : Incidence I R T) :
       · simpa using he
       · simp
 
+/- Merkle-ID: foundation.logic
+   reflexivity of bisimilarity. -/
 theorem approxBisim_refl {I R T : Type u} (inc : Incidence I R T) (i : I) :
   approxBisim inc i i := by
   refine ⟨(fun a b => a = b), isBisimulation_rfl inc, rfl⟩
 
 /- Symmetry: if rel is a bisimulation then its converse is also. -/
+/- Merkle-ID: foundation.logic
+   symmetry of bisimulation. -/
 theorem isBisimulation_symm {I R T : Type u} {inc : Incidence I R T}
   {rel : I → I → Prop} (h : IsBisimulation inc rel) :
   IsBisimulation inc (fun a b => rel b a) := by
@@ -242,6 +277,8 @@ theorem isBisimulation_symm {I R T : Type u} {inc : Incidence I R T}
     rcases hM.left e' he' with ⟨e, he, hC, hRel⟩
     exact ⟨e, he, hC, hRel⟩
 
+/- Merkle-ID: foundation.logic
+   symmetry of bisimilarity. -/
 theorem approxBisim_symm {I R T : Type u} {inc : Incidence I R T} {i j : I} :
   approxBisim inc i j → approxBisim inc j i := by
   intro ⟨rel, hRel, hij⟩

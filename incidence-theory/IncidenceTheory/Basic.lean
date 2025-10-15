@@ -1,4 +1,5 @@
--- Legacy Incidence structure (deprecated in favor of IncidenceCore.Incidence)
+/- Merkle-ID: implementation.core_refactor.legacy
+   Legacy surface kept temporarily to ease migration; prefer IncidenceCore.Incidence. -/
 structure LegacyIncidence (I R T : Type u) where
   boundary : I → List (I × R × Int × Nat)  -- Simplified: Int for orientation (-1,0,1)
   typeFunc : I → T
@@ -10,19 +11,23 @@ universe u
 variable {I R T : Type u}
 variable (inc : LegacyIncidence I R T)
 
--- Axiom A1 (legacy placeholder removed; boundaries are lists and thus finite)
+/- Merkle-ID: foundation.axiomatization
+   A1 legacy note: list boundaries are finite by construction. -/
 
 -- Gluing operator (from structure)
 def glue (i j : I) : I := inc.gluing i j
 
--- Axiom A6: Existence of gluing (now defined via structure)
+/- Merkle-ID: foundation.axiomatization
+   A6 legacy: existence encoded by structure field. -/
 -- Theorem: Gluing preserves types (assume typed gluing)
 axiom gluing_preserves_types (i j : I) : inc.typeFunc (glue i j) = inc.typeFunc i  -- Simplified
 
--- Axiom A7: Unit incidences exist
+/- Merkle-ID: foundation.axiomatization
+   A7 legacy form. -/
 axiom A7 {t : Type u} : ∃ (e : I), true  -- Simplified unit
 
--- Axiom A8: Associativity of gluing (simplified)
+/- Merkle-ID: foundation.axiomatization
+   A8 legacy form. -/
 axiom A8 {θ φ ψ : Type u} (i j k : I) : glue (glue i j) k = glue i (glue j k)  -- Associativity
 
 -- Proof of associativity preservation (sketch)
@@ -41,13 +46,15 @@ axiom A7_right {θ : Type u} (i : I) : glue i e = i
 theorem unit_left {θ : Type u} (i : I) : glue e i = i := A7_left θ i
 theorem unit_right {θ : Type u} (i : I) : glue i e = i := A7_right θ i
 
--- Axiom A2: Type consistency (legacy form)
+/- Merkle-ID: foundation.axiomatization
+   A2 legacy form. -/
 axiom A2 (i : I) (j : I) : (j, _, _, _) ∈ inc.boundary i → inc.typeFunc j = inc.typeFunc i
 
 -- Theorem: Type consistency
 theorem type_consistency (i : I) (j : I) : (j, _, _, _) ∈ inc.boundary i → inc.typeFunc j = inc.typeFunc i := A2 inc i j
 
--- Observational equivalence relation
+/- Merkle-ID: foundation.logic
+   legacy approx (equality-based). -/
 def approx (i j : I) : Prop := inc.typeFunc i = inc.typeFunc j ∧ inc.boundary i = inc.boundary j
 
 -- Axiom A11: Observational equivalence (bisimulation)
@@ -70,10 +77,12 @@ by simp [approx]
 -- Spectral example: simple 2-node graph
 -- B would be [[-1, 1], [1, -1]] for undirected edge, L = [1, -1; -1, 1], eigenvalues 0 and 2.
 
--- Axiom A3: Sign rules (legacy Int-based)
+/- Merkle-ID: foundation.axiomatization
+   A3 legacy form. -/
 axiom A3 (i : I) : ∀ (i1 r1 : _ ) (σ1 : Int) (m1 : Nat), (i1, r1, σ1, m1) ∈ (inc.boundary i) → σ1 = -1 ∨ σ1 = 0 ∨ σ1 = 1
 
--- Axiom A4: Multiplicities
+/- Merkle-ID: foundation.axiomatization
+   A4 legacy form. -/
 axiom A4 {∂ : Boundary} (i : I) : ∀ (i1, r1, σ1, m1) ∈ (∂ i), m1 ≥ 1
 
 -- Axiom A5: Well-founded mode (simplified)
