@@ -200,6 +200,13 @@ def boundaryCompatible {I R T : Type u} (inc : Incidence I R T)
   (e₁ e₂ : Endpoint I R) : Prop :=
   e₁.role = e₂.role ∧ e₁.sign = e₂.sign ∧ e₁.mult = e₂.mult
 
+/- boundaryCompatible is symmetric. -/
+theorem boundaryCompatible_symm {I R T : Type u} {inc : Incidence I R T} {e1 e2 : Endpoint I R} :
+  boundaryCompatible inc e1 e2 → boundaryCompatible inc e2 e1 := by
+  intro h
+  unfold boundaryCompatible
+  simp [h.left, h.right.left, h.right.right]
+
 /- Boundary matching w.r.t. a relation rel on incidences. -/
 /- Merkle-ID: foundation.logic
    boundary matching definition for bisimulation. -/
@@ -228,7 +235,7 @@ theorem isBisimulation_rfl {I R T : Type u} (inc : Incidence I R T) :
   IsBisimulation inc (fun a b => a = b) := by
   intro i j hij
   cases hij with
-  | rfl =>
+  | refl =>
     refine And.intro rfl ?_
     unfold boundaryMatched boundaryCompatible
     constructor
@@ -262,10 +269,10 @@ theorem isBisimulation_symm {I R T : Type u} {inc : Incidence I R T}
   constructor
   · intro e he
     rcases hM.right e he with ⟨e', he', hC, hRel⟩
-    exact ⟨e', he', hC, hRel⟩
+    exact ⟨e', he', boundaryCompatible_symm hC, hRel⟩
   · intro e' he'
     rcases hM.left e' he' with ⟨e, he, hC, hRel⟩
-    exact ⟨e, he, hC, hRel⟩
+    exact ⟨e, he, boundaryCompatible_symm hC, hRel⟩
 
 /- Merkle-ID: foundation.logic
    symmetry of bisimilarity. -/

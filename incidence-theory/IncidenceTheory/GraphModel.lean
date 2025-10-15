@@ -8,26 +8,28 @@ namespace IncidenceCore
 
 universe u
 
-variable {I T : Type u} [Inhabited I] [Inhabited T]
+inductive GraphType : Type u where
+  | unit
+
+instance : Inhabited GraphType where
+  default := GraphType.unit
+
+variable {I : Type u} [Inhabited I]
 
 /- Merkle-ID: implementation.graph_model.trivial
-   trivial incidence structure over roles = Unit. -/
-def trivialIncidence : Incidence I Unit T where
+   trivial incidence structure over roles = GraphRole. -/
+def trivialIncidence : Incidence I GraphRole GraphType where
   boundary := fun _ => []
   typeFunc := fun _ => default
   glue     := fun i _ => some i
   unit     := default
-  type_consistent := by
-    intro i e h
-    cases h
-  sign_rules := by
-    intro i e h
-    cases h
+  type_consistent := fun i e h => rfl
+  sign_rules := fun i e h => by cases e.sign <;> simp
 
 /- Merkle-ID: foundation.logic
    reflexivity of bisimilarity for trivial model (from general lemma). -/
 theorem approxBisim_refl_trivial (i : I) :
-  approxBisim (trivialIncidence : Incidence I Unit T) i i :=
+  approxBisim (trivialIncidence : Incidence I GraphRole GraphType) i i :=
   approxBisim_refl _ _
 
 end IncidenceCore
@@ -37,7 +39,7 @@ end IncidenceCore
 
 namespace IncidenceCore
 
-inductive Role where | src | dst
+inductive GraphRole where | src | dst
 deriving DecidableEq, Repr
 
 /- Graph with nodes and edges as incidences. We take I as a sum of Node | Edge. -/
@@ -46,24 +48,20 @@ deriving DecidableEq, Repr
 
 /- Merkle-ID: implementation.graph_model.simple.boundary
    Boundary encodes endpoints for edges; nodes have empty boundary. -/
-def graphBoundary : GId → Boundary GId Role
+def graphBoundary : GId → Boundary GId GraphRole
   | GId.node _ => []
   | GId.edge 0  => []
   | GId.edge (Nat.succ k) => []
 
 /- Merkle-ID: implementation.graph_model.simple.incidence
    Minimal graph incidence (placeholder boundary; to be populated per example). -/
-def graphIncidence : Incidence GId Role Unit where
+def graphIncidence : Incidence GId GraphRole GraphType where
   boundary := graphBoundary
-  typeFunc := fun _ => ()
+  typeFunc := fun _ => GraphType.unit
   glue     := fun i _ => some i
   unit     := GId.node 0
-  type_consistent := by
-    intro i e h
-    cases h
-  sign_rules := by
-    intro i e h
-    cases h
+  type_consistent := fun i e h => rfl
+  sign_rules := fun i e h => by cases e.sign <;> simp
 
 /- Triangle example identifiers. -/
 def A   : GId := GId.node 1
@@ -75,28 +73,27 @@ def CA  : GId := GId.edge 3
 
 /- Merkle-ID: implementation.graph_model.triangle.boundary
    For the triangle, override boundary function locally. -/
-def triBoundary (i : GId) : Boundary GId Role :=
+def triBoundary (i : GId) : Boundary GId GraphRole :=
   match i with
   | GId.node _ => []
   | GId.edge 1 =>
-      [ { i := A, role := Role.src, sign := Sign.pos, mult := 1 }
-      , { i := B, role := Role.dst, sign := Sign.pos, mult := 1 } ]
+      [ { i := A, role := GraphRole.src, sign := Sign.pos, mult := 1 }
+      , { i := B, role := GraphRole.dst, sign := Sign.pos, mult := 1 } ]
   | GId.edge 2 =>
-      [ { i := B, role := Role.src, sign := Sign.pos, mult := 1 }
-      , { i := C, role := Role.dst, sign := Sign.pos, mult := 1 } ]
+      [ { i := B, role := GraphRole.src, sign := Sign.pos, mult := 1 }
+      , { i := C, role := GraphRole.dst, sign := Sign.pos, mult := 1 } ]
   | GId.edge 3 =>
-      [ { i := C, role := Role.src, sign := Sign.pos, mult := 1 }
-      , { i := A, role := Role.dst, sign := Sign.pos, mult := 1 } ]
+      [ { i := C, role := GraphRole.src, sign := Sign.pos, mult := 1 }
+      , { i := A, role := GraphRole.dst, sign := Sign.pos, mult := 1 } ]
   | _ => []
 
-def triIncidence : Incidence GId Role Unit :=
-  { boundary := triBoundary
-  , typeFunc := fun _ => ()
-  , glue     := fun i _ => some i
-  , unit     := A
-  , type_consistent := by intro i e h; cases h
-  , sign_rules := by intro i e h; cases h
-  }
+def triIncidence : Incidence GId GraphRole GraphType where
+  boundary := triBoundary
+  typeFunc := fun _ => GraphType.unit
+  glue     := fun i _ => some i
+  unit     := A
+  type_consistent := by intro i e h; rfl
+  sign_rules := by intro i e h; cases e.sign <;> simp
 
 /- GluingSpec instance for the triangle model (permissive guards; left-biased glue). -/
 -- Instantiate permissive guards; model-specific laws can be added later.
