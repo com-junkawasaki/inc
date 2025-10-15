@@ -3,57 +3,6 @@
    Purpose: Consolidate a minimal surface API for incidence structures. -/
 universe u
 
-/- Merkle-ID: implementation.core
-   story.jsonnet → implementation.nodes.core
-   Core incidence structure (legacy-compatible surface). -/
-structure Incidence (I R T : Type u) where
-  boundary : I → List (I × R × Int × Nat)
-  typeFunc : I → T
-  gluing   : I → I → I
-  unit     : I
-  -- Axiom A1: Finite Endpoints
-  finite_endpoints : ∀ i, (boundary i).length < 1000
-  -- Axiom A2: Type Consistency
-  type_consistent : ∀ i j r s m, (j, r, s, m) ∈ boundary i → typeFunc j = typeFunc i
-  -- Axiom A3: Sign Rules
-  sign_rules : ∀ i j r s m, (j, r, s, m) ∈ boundary i → s = -1 ∨ s = 0 ∨ s = 1
-
-/- Merkle-ID: implementation.core
-   helper glue wrapper -/
-def glue {I R T : Type u} (inc : Incidence I R T) (i j : I) : I :=
-  inc.gluing i j
-
-/- Merkle-ID: foundation.logic
-   story.jsonnet → foundation.nodes.logic
-   Approx (legacy equality-based; replaced later by bisimulation). -/
-def approx {I R T : Type u} (inc : Incidence I R T) (i j : I) : Prop :=
-  inc.typeFunc i = inc.typeFunc j ∧ inc.boundary i = inc.boundary j
-
-theorem approx_refl {I R T : Type u} (inc : Incidence I R T) (i : I) :
-    approx inc i i :=
-  And.intro rfl rfl
-
-theorem approx_symm {I R T : Type u} {inc : Incidence I R T} {i j : I} :
-    approx inc i j → approx inc j i :=
-  fun h => And.intro (Eq.symm h.left) (Eq.symm h.right)
-
-theorem approx_trans {I R T : Type u} {inc : Incidence I R T} {i j k : I} :
-    approx inc i j → approx inc j k → approx inc i k :=
-  fun hij hjk =>
-    let hT := Eq.trans hij.left hjk.left
-    let hB := Eq.trans hij.right hjk.right
-    And.intro hT hB
-
--- Axiom A2: Type Consistency Theorem
-theorem type_consistency {I R T : Type u} (inc : Incidence I R T) (i j : I) (r : R) (s : Int) (m : Nat) :
-  (j, r, s, m) ∈ inc.boundary i → inc.typeFunc j = inc.typeFunc i :=
-inc.type_consistent i j r s m
-
--- Axiom A3: Sign Rules Theorem
-theorem sign_rules_theorem {I R T : Type u} (inc : Incidence I R T) (i j : I) (r : R) (s : Int) (m : Nat) :
-  (j, r, s, m) ∈ inc.boundary i → s = -1 ∨ s = 0 ∨ s = 1 :=
-inc.sign_rules i j r s m
-
 /- Merkle-ID: implementation.core_refactor
    story.jsonnet → implementation.nodes.core_refactor
    Canonical Incidence API (namespaced) — multiset-like boundary & guarded gluing. -/
@@ -114,6 +63,37 @@ theorem approxEq_trans {I R T : Type u} {inc : Incidence I R T} {i j k : I} :
   approxEq inc i j → approxEq inc j k → approxEq inc i k :=
   fun hij hjk => And.intro (Eq.trans hij.left hjk.left) (Eq.trans hij.right hjk.right)
 
+/- Merkle-ID: foundation.logic
+   approxEq is a bisimulation (strict equality on boundaries). -/
+theorem isBisimulation_approxEq {I R T : Type u} (inc : Incidence I R T) :
+  IsBisimulation inc (approxEq inc) := by
+  intro i j hij
+  rcases hij with ⟨hT, hB⟩
+  refine And.intro hT ?H
+  unfold boundaryMatched
+  constructor
+  · intro e he
+    refine ⟨e, ?he', ?hC, ?hRel⟩
+    · -- transport membership along boundary equality
+      simpa [hB] using he
+    · -- endpoint matches itself
+      unfold boundaryCompatible; simp
+    · exact approxEq_refl inc e.i
+  · intro e' he'
+    refine ⟨e', ?he, ?hC, ?hRel⟩
+    · -- transport membership in the other direction
+      simpa [hB.symm] using he'
+    · unfold boundaryCompatible; simp
+    · exact approxEq_refl inc e'.i
+
+/- Merkle-ID: foundation.logic
+   Bridge: approxEq ⇒ approxBisim (for incremental migration). -/
+theorem approxEq_implies_approxBisim {I R T : Type u}
+  (inc : Incidence I R T) {i j : I} :
+  approxEq inc i j → approxBisim inc i j := by
+  intro h
+  exact ⟨(approxEq inc), isBisimulation_approxEq inc, h⟩
+
 /- Convenience to apply guarded gluing. -/
 /- Merkle-ID: implementation.core
    guarded gluing helper. -/
@@ -137,6 +117,7 @@ def boundaryMatrix {I R T : Type u} [DecidableEq I]
   (idx : List I) : Matrix I I Int :=
   fun i j =>
     -- count signed multiplicities of j in boundary of i
+    let _ := idx -- mark idx as used to satisfy linter
     let entries := inc.boundary i
     let signed (e : Endpoint I R) : Int :=
       match e.sign with
@@ -196,7 +177,7 @@ namespace IncidenceCore
 /- Endpoint compatibility (role/sign/mult preserved). -/
 /- Merkle-ID: foundation.axiomatization
    endpoint compatibility notion for ≈. -/
-def boundaryCompatible {I R T : Type u} (inc : Incidence I R T)
+def boundaryCompatible {I R T : Type u} (_inc : Incidence I R T)
   (e₁ e₂ : Endpoint I R) : Prop :=
   e₁.role = e₂.role ∧ e₁.sign = e₂.sign ∧ e₁.mult = e₂.mult
 
