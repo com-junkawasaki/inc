@@ -19,6 +19,7 @@ local foundation = {
     logic: {
       description: 'Develop Incidence Logic (IL) and its proof theory.',
       details: 'Sequent calculus, induction/corecursion rules aligned with modes; bisimulation principles for ≈; normalization preserving ≈; conditions ensuring gluing respects typing/guards. Optional: Incidence-Univalence (equating bisimilar normalized incidences).',
+      status: 'in_progress',
       deps: ['foundation.nodes.axiomatization'],
     },
 
@@ -48,6 +49,7 @@ local implementation = {
     core: {
       description: 'Implement core Inc data structures and operators.',
       details: 'Introduce Endpoint (i, role, sign, mult) and boundary as Multiset Endpoint; define Sign ∈ {neg, zero, pos}. Implement typed, guarded gluing glue : I → I → Option I with unit; provide normalization and equivalence (≈) as bisimulation checker over boundary multiset isomorphisms.',
+      status: 'completed',
       deps: ['foundation.nodes.axiomatization', 'implementation.nodes.api_freeze'],
     },
 
@@ -55,6 +57,7 @@ local implementation = {
     api_freeze: {
       description: 'Freeze A1–A17 in a canonical Incidence API (Lean names/fields/invariants).',
       details: 'Consolidate duplicated structures, normalize naming (boundary/typeFunc/gluing/unit), and encode invariants as fields/axioms with minimal surface.',
+      status: 'completed',
       deps: ['foundation.nodes.axiomatization'],
     },
 
@@ -90,6 +93,7 @@ local implementation = {
     graph_model: {
       description: 'Provide concrete model graphIncidence and discharge remaining obligations.',
       details: 'Use simple graph roles to instantiate Incidence; eliminate placeholders/sorries and validate axioms in the model.',
+      status: 'completed',
       deps: ['implementation.nodes.proof_assistant', 'implementation.nodes.api_freeze'],
     },
 
@@ -97,6 +101,7 @@ local implementation = {
     core_refactor: {
       description: 'Refactor Lean modules to single public API; remove duplicate Incidence defs.',
       details: 'Unify `Incidence` definitions, re-export from a single module, and enforce a stable import surface.',
+      status: 'completed',
       deps: ['implementation.nodes.api_freeze'],
     },
 
@@ -104,6 +109,7 @@ local implementation = {
     lean_green: {
       description: 'Make Lean build green by removing sorries and proving approx/glue laws.',
       details: 'Close remaining proof gaps and ensure CI build success before publication steps.',
+      status: 'completed',
       deps: ['implementation.nodes.graph_model', 'implementation.nodes.core_refactor'],
     },
 
