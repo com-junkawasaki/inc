@@ -11,28 +11,28 @@ local foundation = {
     // Merkle-ID: foundation.axiomatization
     axiomatization: {
       description: 'Define the core axioms of Inc (A1-A17).',
-      details: 'Based on the final axiomatic system defined in the canvas, including modes (Well-founded vs. Coinductive), gluing, and equivalence.',
+      details: 'Refine axioms with: boundaries as Multiset of Endpoint(I,R,Sign,Multiplicity); observational equivalence as greatest bisimulation (boundary multiset isomorphism + recursive matching); two modes: well-founded (induction/normalization) and guarded coinductive (corecursion).',
       deps: [],
     },
 
     // Merkle-ID: foundation.logic
     logic: {
       description: 'Develop Incidence Logic (IL) and its proof theory.',
-      details: 'Formalize the sequent calculus, (co)induction principles, and the optional Incidence-Univalence axiom.',
+      details: 'Sequent calculus, induction/corecursion rules aligned with modes; bisimulation principles for ≈; normalization preserving ≈; conditions ensuring gluing respects typing/guards. Optional: Incidence-Univalence (equating bisimilar normalized incidences).',
       deps: ['foundation.nodes.axiomatization'],
     },
 
     // Merkle-ID: foundation.models
     models: {
       description: 'Establish semantic models to prove relative consistency.',
-      details: 'Construct models in ZF Set Theory, Adhesive Categories (for gluing semantics), and Homotopy Type Theory (for (co)inductive aspects).',
+      details: 'Models in: (a) ZF (incidences as sets with encoded boundaries), (b) adhesive categories (gluing ≅ pushouts; Van Kampen), (c) HoTT (inductive/coinductive families). Prove that ≈ is bisimulation in each model and invariant under relabeling of endpoints.',
       deps: ['foundation.nodes.logic'],
     },
 
     // Merkle-ID: foundation.comparison
     comparison: {
       description: 'Formalize the translation to/from Set, Category, and Type theories.',
-      details: 'Show how Inc can conservatively extend or embed existing foundations, establishing it as a unified framework.',
+      details: 'Embeddings: Sets as nullary incidences; Categories via gluing-based composition with unit/associativity under typing/guard preconditions; Types as (co)inductive incidence families. Show conservative extension and preservation of operations.',
       deps: ['foundation.nodes.models'],
     },
   },
@@ -47,7 +47,7 @@ local implementation = {
     // Merkle-ID: implementation.core
     core: {
       description: 'Implement core Inc data structures and operators.',
-      details: 'Includes Incidence, Boundary Operator (∂), Gluing, and Equivalence Checking (≈). Language choice: Lean/Agda for formal veIncication, Julia/Python for numerical computation.',
+      details: 'Introduce Endpoint (i, role, sign, mult) and boundary as Multiset Endpoint; define Sign ∈ {neg, zero, pos}. Implement typed, guarded gluing glue : I → I → Option I with unit; provide normalization and equivalence (≈) as bisimulation checker over boundary multiset isomorphisms.',
       deps: ['foundation.nodes.axiomatization', 'implementation.nodes.api_freeze'],
     },
 
@@ -61,7 +61,7 @@ local implementation = {
     // Merkle-ID: implementation.linear_algebra
     linear_algebra: {
       description: 'Implement the linear-algebraic semantics.',
-      details: 'Sparse matrix representation for Boundary Matrix (B) and Laplacian (L). Provide functions for spectral analysis, Hodge decomposition, and diffusion models.',
+      details: 'Define boundaryMatrix and laplacian with typed indices (Matrix (Fin n) (Fin n) α). Ensure invariance under endpoint relabeling; provide spectral tools (eigen, clustering), Hodge decompositions, and checks that linear invariants are preserved by ≈.',
       deps: ['implementation.nodes.core', 'implementation.nodes.lin_alg_signatures'],
     },
 
@@ -75,7 +75,7 @@ local implementation = {
     // Merkle-ID: implementation.proof_assistant
     proof_assistant: {
       description: 'Formalize Inc in a proof assistant.',
-      details: 'Target: Lean 4 or Agda. Implement the axioms, proof rules of IL, and the standard library of foundational structures (N, Lists, etc.).',
+      details: 'Target: Lean 4. Refactor Incidence API (typeFunc naming, remove Nat.inf); implement Multiset boundaries and Endpoint; restate A2/A3 over Multiset; define ≈ as greatest bisimulation; prove unit/associativity under typing/guard hypotheses; implement boundaryMatrix/laplacian and their invariance lemmas.',
       deps: ['foundation.nodes.logic', 'implementation.nodes.core'],
     },
 
@@ -117,7 +117,7 @@ local implementation = {
     // Merkle-ID: implementation.visualization
     visualization: {
       description: 'Develop tools for visualizing Inc structures.',
-      details: 'Since Inc structures are abstract, provide projections to 2D/3D graphs, hypergraphs, or bipartite V-I graphs.',
+      details: 'Provide projections to 2D/3D graphs, hypergraphs, and bipartite V–I graphs with boundary multiset rendering, role/sign styling, and overlays for ≈-classes and spectral features.',
       deps: ['implementation.nodes.core'],
     },
   },
@@ -190,12 +190,19 @@ local application = {
     // A real build system would compute this from the dependency graph.
     execution_path: [
       'foundation.axiomatization',
+      'implementation.api_freeze',
       'foundation.logic',
+      'implementation.il_skeleton',
       'foundation.models',
       'implementation.core',
+      'implementation.core_refactor',
       'foundation.comparison',
+      'implementation.lin_alg_signatures',
       'implementation.linear_algebra',
       'implementation.proof_assistant',
+      'implementation.graph_model',
+      'implementation.lean_green',
+      'implementation.visualization_stub',
       'implementation.visualization',
       'publication.abstract',
       'application.case_study_cs',

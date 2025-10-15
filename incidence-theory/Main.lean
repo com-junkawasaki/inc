@@ -125,7 +125,7 @@ inc.boundary_unit i
 
 -- Axiom A13: Boundary Associativity Theorem
 theorem boundary_associativity_theorem {I R T : Type u} (inc : Incidence I R T) (i j k : I) :
-  inc.boundary (gluing (gluing i j) k) = inc.boundary (gluing i (gluing j k)) :=
+  inc.boundary (glue inc (glue inc i j) k) = inc.boundary (glue inc i (glue inc j k)) :=
 inc.boundary_associativity i j k
 
 -- Axiom A14: Orientation Rules Theorem
