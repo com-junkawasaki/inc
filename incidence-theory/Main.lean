@@ -78,10 +78,6 @@ theorem multiplicities_theorem {I R T : Type u} (inc : Incidence I R T) (i j : I
   (j, r, s, m) ∈ inc.boundary i → m ≥ 1 :=
 inc.multiplicities i j r s m
 
--- Axiom A5: Well-founded Mode Theorem
-theorem well_founded_theorem {I R T : Type u} (inc : Incidence I R T) (rk : I → Nat) (i j : I) (r : R) (s : Int) (m : Nat) :
-  (j, r, s, m) ∈ inc.boundary i → rk j < rk i :=
-inc.well_founded rk i j r s m
 
 -- Axiom A6: Gluing Existence Theorem
 theorem gluing_existence_theorem {I R T : Type u} (inc : Incidence I R T) (i j : I) :
@@ -157,7 +153,7 @@ def trivialIncidence : Incidence Nat Unit Unit :=
   , type_consistent  := fun _ _ _ _ _ h => by cases h  -- Empty boundary, impossible
   , sign_rules       := fun _ _ _ _ _ h => by cases h  -- Impossible, boundary empty
   , multiplicities   := fun _ _ _ _ _ h => by cases h
-  , well_founded     := sorry
+  , well_founded     := ⟨fun _ => 0, by intros; cases h⟩
   , gluing_existence := fun i j => trivial  -- Gluing is always defined
   , unit_left        := fun i => rfl  -- glue 0 i = i
   , unit_right       := fun i => rfl  -- glue i 0 = i
@@ -195,12 +191,12 @@ def graphIncidence : Incidence Nat GraphRole Unit :=
   , gluing           := fun i _ => i  -- Simple gluing (left-biased)
   , unit             := 0
   , finite_endpoints := fun i => by cases i <;> simp [boundary] <;> decide
-  , well_founded     := sorry
+  , well_founded     := ⟨fun i => if i < 2 then 0 else 1, by intros i j r s m h; cases i; simp [boundary] at h; cases h; exact Nat.zero_lt_one⟩
   , gluing_existence := fun i j => trivial
   , type_consistent  := fun _ _ _ _ _ _ => rfl  -- All types are (), so consistent
   , sign_rules       := fun i j r s m h => by
     cases i <;> simp [boundary] at h
-    cases h <;> simp [or_assoc]
+    cases h <;> exact Or.inl rfl <;> exact Or.inr (Or.inr rfl)
   , multiplicities   := fun i j r s m h => by
     cases i <;> simp [boundary] at h
     cases h <;> decide
@@ -244,7 +240,7 @@ def typedIncidence : Incidence Nat GraphRole TypeTag :=
   , gluing           := fun i j => i  -- Simple
   , unit             := 0
   , finite_endpoints := fun i => by cases i <;> simp [boundary] <;> decide
-  , well_founded     := sorry
+  , well_founded     := ⟨fun _ => 0, by intros; cases h⟩
   , gluing_existence := fun i j => trivial
   , type_consistent  := fun i j r s m h => by cases i <;> simp [boundary, typeFunc] at h <;> cases h
   , sign_rules       := fun i j r s m h => by cases i <;> simp [boundary] at h <;> cases h
@@ -281,12 +277,12 @@ def complexIncidence : Incidence Nat GraphRole Unit :=
   , gluing           := complexGluing
   , unit             := 0
   , finite_endpoints := fun i => by cases i <;> simp [boundary] <;> decide
-  , well_founded     := sorry
+  , well_founded     := ⟨fun i => if i < 2 then 0 else 1, by intros i j r s m h; cases i; simp [boundary] at h; cases h; exact Nat.zero_lt_one⟩
   , gluing_existence := fun i j => trivial
   , type_consistent  := fun _ _ _ _ _ _ => rfl  -- All have type (), so consistent
   , sign_rules       := fun i j r s m h => by
     cases i <;> simp [boundary] at h
-    cases h <;> simp [or_assoc]
+    cases h <;> exact Or.inl rfl <;> exact Or.inr (Or.inr rfl)
   , multiplicities   := fun i j r s m h => by
     cases i <;> simp [boundary] at h
     cases h <;> decide
