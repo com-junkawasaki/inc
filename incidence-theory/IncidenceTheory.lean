@@ -5,6 +5,8 @@ structure Incidence (I R T : Type u) where
   typeFunc : I → T
   gluing   : I → I → I
   unit     : I
+  -- Axiom A1: Finite Endpoints
+  finite_endpoints : ∀ i, (boundary i).length < 1000
   -- Axiom A2: Type Consistency
   type_consistent : ∀ i j r s m, (j, r, s, m) ∈ boundary i → typeFunc j = typeFunc i
   -- Axiom A3: Sign Rules
