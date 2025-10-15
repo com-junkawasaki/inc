@@ -119,17 +119,17 @@ inc.type_preservation i j
 
 -- Axiom A11: Boundary Gluing Theorem
 theorem boundary_gluing_theorem {I R T : Type u} (inc : Incidence I R T) (i j : I) :
-  inc.boundary (glue inc i j) = inc.boundary i ++ inc.boundary j :=
+  inc.boundary (gluing i j) = inc.boundary i ++ inc.boundary j :=
 inc.boundary_gluing i j
 
 -- Axiom A12: Boundary Unit Theorem
 theorem boundary_unit_theorem {I R T : Type u} (inc : Incidence I R T) (i : I) :
-  inc.boundary (glue inc i inc.unit) = inc.boundary i ∧ inc.boundary (glue inc inc.unit i) = inc.boundary i :=
+  inc.boundary (gluing i unit) = inc.boundary i ∧ inc.boundary (gluing unit i) = inc.boundary i :=
 inc.boundary_unit i
 
 -- Axiom A13: Boundary Associativity Theorem
 theorem boundary_associativity_theorem {I R T : Type u} (inc : Incidence I R T) (i j k : I) :
-  inc.boundary (glue inc (glue inc i j) k) = inc.boundary (glue inc i (glue inc j k)) :=
+  inc.boundary (gluing (gluing i j) k) = inc.boundary (gluing i (gluing j k)) :=
 inc.boundary_associativity i j k
 
 -- Axiom A14: Orientation Rules Theorem
@@ -166,15 +166,15 @@ def trivialIncidence : Incidence Nat Unit Unit :=
   , unit_left        := fun i => rfl  -- glue 0 i = i
   , unit_right       := fun i => rfl  -- glue i 0 = i
   , associativity     := fun _ _ _ => rfl  -- Left-biased gluing is associative
-  , boundary_preservation := fun i j k r s m h => sorry  -- Empty boundaries, impossible
-  , type_preservation := fun i j => And.intro rfl rfl  -- All types are ()
-  , boundary_gluing := fun i j => rfl  -- [] ++ [] = []
-  , boundary_unit := fun i => And.intro rfl rfl  -- [] = []
-  , boundary_associativity := fun i j k => rfl  -- [] = []
-  , orientation_rules := fun i j k r s m t u n h => sorry  -- Empty boundaries, impossible
-  , boundary_well_founded := fun rk i j r s m h => sorry  -- Empty boundaries, impossible
-  , boundary_type_consistency := fun i j k r s m t u n h => sorry  -- Empty boundaries, impossible
-  , boundary_sign_rules := fun i j k r s m t u n h => sorry  -- Empty boundaries, impossible
+  , boundary_preservation := fun i j k r s m h => by cases h.1  -- Empty boundaries
+  , type_preservation := fun i j => And.intro rfl rfl
+  , boundary_gluing := fun i j => rfl
+  , boundary_unit := fun i => And.intro rfl rfl
+  , boundary_associativity := fun i j k => rfl
+  , orientation_rules := fun i j k r s m t u n h => by cases h.1
+  , boundary_well_founded := fun rk i j r s m h => by cases h
+  , boundary_type_consistency := fun i j k r s m t u n h => by cases h.1
+  , boundary_sign_rules := fun i j k r s m t u n h => by cases h.1
   }
 
 -- Graph structure example: nodes and edges with boundaries
@@ -246,15 +246,15 @@ def typedIncidence : Incidence Nat GraphRole TypeTag :=
   , unit_left        := fun i => rfl  -- glue 0 i = i
   , unit_right       := fun i => rfl  -- glue i 0 = i
   , associativity     := fun _ _ _ => rfl  -- Left-biased gluing is associative
-  , boundary_preservation := fun i j k r s m h => sorry  -- Boundary preservation
-  , type_preservation := fun i j => And.intro rfl rfl  -- All types are ()
-  , boundary_gluing := fun i j => sorry  -- Boundary gluing
-  , boundary_unit := fun i => sorry  -- Boundary unit
-  , boundary_associativity := fun i j k => sorry  -- Boundary associativity
-  , orientation_rules := fun i j k r s m t u n h => sorry  -- Orientation rules
-  , boundary_well_founded := fun rk i j r s m h => sorry  -- Boundary well-founded
-  , boundary_type_consistency := fun i j k r s m t u n h => sorry  -- Boundary type consistency
-  , boundary_sign_rules := fun i j k r s m t u n h => sorry  -- Boundary sign rules
+  , boundary_preservation := fun i j k r s m h => sorry
+  , type_preservation := fun i j => sorry  -- Type preservation (needs proper impl)
+  , boundary_gluing := fun i j => rfl  -- [] ++ [] = []
+  , boundary_unit := fun i => And.intro rfl rfl  -- [] = []
+  , boundary_associativity := fun i j k => rfl  -- [] = []
+  , orientation_rules := fun i j k r s m t u n h => sorry
+  , boundary_well_founded := fun rk i j r s m h => sorry
+  , boundary_type_consistency := fun i j k r s m t u n h => sorry
+  , boundary_sign_rules := fun i j k r s m t u n h => sorry
   }
 
 -- Complex gluing example: boundary merging
