@@ -99,8 +99,8 @@ def triIncidence : Incidence GId Role Unit :=
   }
 
 /- GluingSpec instance for the triangle model (permissive guards; left-biased glue). -/
-def triGluingSpec : GluingSpec triIncidence :=
-  trivialGluingSpec triIncidence
+-- Instantiate permissive guards; model-specific laws can be added later.
+def triGluingSpec : Guards GId := Guards.permissive GId
 
 /- Merkle-ID: implementation.linear_algebra
    Index set for matrix computations. -/

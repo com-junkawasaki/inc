@@ -128,8 +128,8 @@ namespace IncidenceCore
 
 /- Minimal matrix abstraction using functions over finite indices.
    We avoid external deps; users can later replace with mathlib `Matrix`. -/
-universe u
-def Matrix (m n : Type u) (α : Type u) := m → n → α
+universe v w
+def Matrix (m : Type u) (n : Type v) (α : Type w) := m → n → α
 
 /- Boundary matrix over a chosen finite index set of incidences. -/
 def boundaryMatrix {I R T : Type u} [DecidableEq I]
@@ -143,10 +143,13 @@ def boundaryMatrix {I R T : Type u} [DecidableEq I]
       | Sign.neg  => - (Int.ofNat e.mult)
       | Sign.zero => 0
       | Sign.pos  => Int.ofNat e.mult
-    entries.foldl (fun acc e => if Decidable.decEq e.i j then acc + signed e else acc) 0
+    entries.foldl (fun acc e => by
+      by_cases h : e.i = j
+      · exact acc + signed e
+      · exact acc) 0
 
 /- Laplacian L = Bᵀ ⬝ B with naive multiplication over Int. -/
-def laplacian {I R T : Type u}
+def laplacian {I R T : Type u} [DecidableEq I]
   (inc : Incidence I R T)
   (idx : List I) : Matrix I I Int :=
   let B := boundaryMatrix inc idx
@@ -182,20 +185,6 @@ structure GluingSpec {I R T : Type u} (inc : Incidence I R T) where
 
 /- A default permissive guard (always true). -/
 def Guards.permissive (I : Type u) : Guards I := { allow := fun _ _ => true }
-
-/- A trivial GluingSpec for any incidence with left-biased glue. -/
-def trivialGluingSpec {I R T : Type u} (inc : Incidence I R T) : GluingSpec inc :=
-  { guards := Guards.permissive I
-  , unit_ok := by
-      intro i; constructor; simp; constructor <;> simp
-  , type_preserve := by
-      intro i j k _ h; cases h; rfl
-  , guard_preserve := by
-      intro; trivial
-  , assoc_when_ok := by
-      intro i j k ij ijk jk h1 h2 h3 h4 h5 h6 h7
-      cases h2; cases h4; cases h6; simp at *; simp
-  }
 
 end IncidenceCore
 
@@ -240,7 +229,7 @@ theorem isBisimulation_rfl {I R T : Type u} (inc : Incidence I R T) :
   intro i j hij
   cases hij with
   | rfl =>
-    refine And.intro rfl ?match
+    refine And.intro rfl ?_
     unfold boundaryMatched boundaryCompatible
     constructor
     · intro e he
@@ -265,8 +254,9 @@ theorem isBisimulation_symm {I R T : Type u} {inc : Incidence I R T}
   {rel : I → I → Prop} (h : IsBisimulation inc rel) :
   IsBisimulation inc (fun a b => rel b a) := by
   intro i j hij
-  have := h j i hij
-  rcases this with ⟨hT, hM⟩
+  have hij' := h j i hij
+  rcases hij' with ⟨hTji, hM⟩
+  have hT : inc.typeFunc i = inc.typeFunc j := Eq.symm hTji
   refine And.intro hT ?H
   unfold boundaryMatched at hM ⊢
   constructor
