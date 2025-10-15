@@ -131,19 +131,19 @@ local publication = {
     // Merkle-ID: publication.abstract
     abstract: {
       description: 'Write a compelling abstract for the foundational paper.',
-      details: 'Tailor abstracts for different venues (math.LO, cs.LO, math.CT). Finalize title: "Theory of Incidence — Toward a Unified Foundation of Set, Category, and Type".',
+      details: 'Tailor to math.LO, cs.LO, math.CT; emphasize: multiset boundaries, bisimulation-based ≈, guarded gluing, and typed linear layer. Title: "Theory of Incidence — Toward a Unified Foundation of Set, Category, and Type".',
       deps: ['foundation.nodes.comparison'],
     },
     // Merkle-ID: publication.paper
     paper: {
       description: 'Write the main foundational paper.',
-      details: 'Structure: Introduction, Axioms of Inc, Models, Comparison with other foundations, Applications, Conclusion. Target journals: LMCS, MSCS.',
+      details: 'Structure: Intro; Axioms with multiset/Endpoint, ≈ as bisimulation; Logic (induction/corecursion, normalization); Models (ZF/adhesive/HoTT); Linear layer (B/L, invariants); Comparison; Applications; Conclusion. Target: LMCS, MSCS.',
       deps: ['publication.nodes.abstract', 'implementation.nodes.proof_assistant', 'implementation.nodes.lean_green'],
     },
     // Merkle-ID: publication.arxiv
     arxiv: {
       description: 'Publish a preprint to ArXiv.',
-      details: 'Category: math.LO / cs.LO. Title: "Theory of Incidence — A Fourth Foundation Beyond Set, Category, and Type".',
+      details: 'Category: math.LO / cs.LO. Title: "Theory of Incidence — A Fourth Foundation Beyond Set, Category, and Type". Sync artifacts and Lean proofs to the updated axioms and semantics.',
       deps: ['publication.nodes.paper'],
     },
   },
@@ -157,19 +157,19 @@ local application = {
     // Merkle-ID: application.case_study_cs
     case_study_cs: {
       description: 'Case Study: Model a computational system.',
-      details: 'Represent a process calculus (like pi-calculus) or a dynamic network topology using Inc to demonstrate its expressive power for dynamic structures.',
+      details: 'Represent π-calculus with parallel composition as guarded gluing and communication via shared endpoints; verify safety/liveness via ≈ and spectral criteria.',
       deps: ['implementation.nodes.core'],
     },
     // Merkle-ID: application.case_study_math
     case_study_math: {
       description: 'Case Study: Reconstruct a mathematical theory.',
-      details: 'Re-formalize a portion of graph theory or simplicial homology within Inc to show its unifying power.',
+      details: 'Graph/hypergraph isomorphism via ≈; rewrite systems via pushout; small homology-style invariants via B/L on incidence structures.',
       deps: ['implementation.nodes.proof_assistant'],
     },
     // Merkle-ID: application.case_study_medicine
     case_study_medicine: {
       description: 'Case Study: Model a biological network.',
-      details: 'Use Inc to model a metabolic pathway or a neural network, leveraging its ability to handle dynamic changes in topology and its connection to linear analysis (Laplacian).',
+      details: 'Model metabolic pathways: reactions as incidences; use L to detect cycles/flows; compare pathway variants up to ≈.',
       deps: ['implementation.nodes.linear_algebra'],
     },
   },
