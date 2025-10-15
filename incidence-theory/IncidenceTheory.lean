@@ -52,8 +52,13 @@ structure Incidence (I R T : Type u) where
 def approxEq {I R T : Type u} (inc : Incidence I R T) (i j : I) : Prop :=
   inc.typeFunc i = inc.typeFunc j ∧ inc.boundary i = inc.boundary j
 
-theorem approxEq_refl {I R T : Type u} (inc : Incidence I R T) (i : I) :
+/- Legacy: explicit equality reflexivity for approxEq (kept for internal bridging). -/
+theorem approxEq_refl_eq {I R T : Type u} (inc : Incidence I R T) (i : I) :
   approxEq inc i i := And.intro rfl rfl
+
+/- New API: reflexivity stated for approxBisim. -/
+theorem approxEq_refl {I R T : Type u} (inc : Incidence I R T) (i : I) :
+  approxBisim inc i i := approxBisim_refl inc i
 
 theorem approxEq_symm {I R T : Type u} {inc : Incidence I R T} {i j : I} :
   approxEq inc i j → approxEq inc j i :=
@@ -78,13 +83,13 @@ theorem isBisimulation_approxEq {I R T : Type u} (inc : Incidence I R T) :
       simpa [hB] using he
     · -- endpoint matches itself
       unfold boundaryCompatible; simp
-    · exact approxEq_refl inc e.i
+    · exact approxEq_refl_eq inc e.i
   · intro e' he'
     refine ⟨e', ?he, ?hC, ?hRel⟩
     · -- transport membership in the other direction
       simpa [hB.symm] using he'
     · unfold boundaryCompatible; simp
-    · exact approxEq_refl inc e'.i
+    · exact approxEq_refl_eq inc e'.i
 
 /- Merkle-ID: foundation.logic
    Bridge: approxEq ⇒ approxBisim (for incremental migration). -/
@@ -188,6 +193,16 @@ theorem boundaryCompatible_symm {I R T : Type u} {inc : Incidence I R T} {e1 e2 
   unfold boundaryCompatible
   simp [h.left, h.right.left, h.right.right]
 
+/- Chaining compatibility through an intermediate endpoint. -/
+theorem boundaryCompatible_trans {I R T : Type u} {inc : Incidence I R T}
+  {e₁ e₂ e₃ : Endpoint I R} :
+  boundaryCompatible inc e₁ e₂ → boundaryCompatible inc e₂ e₃ → boundaryCompatible inc e₁ e₃ := by
+  intro h12 h23
+  unfold boundaryCompatible at h12 h23 ⊢
+  rcases h12 with ⟨hr12, hs12, hm12⟩
+  rcases h23 with ⟨hr23, hs23, hm23⟩
+  exact And.intro (hr12.trans hr23) (And.intro (hs12.trans hs23) (hm12.trans hm23))
+
 /- Boundary matching w.r.t. a relation rel on incidences. -/
 /- Merkle-ID: foundation.logic
    boundary matching definition for bisimulation. -/
@@ -261,5 +276,47 @@ theorem approxBisim_symm {I R T : Type u} {inc : Incidence I R T} {i j : I} :
   approxBisim inc i j → approxBisim inc j i := by
   intro ⟨rel, hRel, hij⟩
   exact ⟨(fun a b => rel b a), isBisimulation_symm hRel, hij⟩
+
+/- Composition of two bisimulations is a bisimulation. -/
+theorem isBisimulation_comp {I R T : Type u} {inc : Incidence I R T}
+  {rel₁ rel₂ : I → I → Prop}
+  (h₁ : IsBisimulation inc rel₁) (h₂ : IsBisimulation inc rel₂) :
+  IsBisimulation inc (fun a c => ∃ b, rel₁ a b ∧ rel₂ b c) := by
+  intro i k hik
+  rcases hik with ⟨j, hij, hjk⟩
+  have hTij := (h₁ i j hij).left
+  have hMj := (h₁ i j hij).right
+  have hTjk := (h₂ j k hjk).left
+  have hMk := (h₂ j k hjk).right
+  -- Types align transitively
+  have hTik : inc.typeFunc i = inc.typeFunc k := hTij.trans hTjk
+  -- Boundary matching by chaining matches through j
+  refine And.intro hTik ?H
+  unfold boundaryMatched at hMj hMk ⊢
+  constructor
+  · intro e he
+    rcases hMj.left e he with ⟨e2, he2, hC12, hRel12⟩
+    rcases hMk.left e2 he2 with ⟨e3, he3, hC23, hRel23⟩
+    refine ⟨e3, he3, ?hC13, ?hRel13⟩
+    · exact boundaryCompatible_trans hC12 hC23
+    · exact ⟨e2.i, hRel12, hRel23⟩
+  · intro e3 he3
+    rcases hMk.right e3 he3 with ⟨e2, he2, hC32, hRel32⟩
+    rcases hMj.right e2 he2 with ⟨e, he, hC21, hRel21⟩
+    refine ⟨e, he, ?hC31, ?hRel31⟩
+    · -- hC31 : boundaryCompatible e e3
+      -- We have hC21 : compat e2 e and hC32 : compat e3 e2; chain via symmetry+trans
+      have hC23 : boundaryCompatible inc e2 e3 := boundaryCompatible_symm hC32
+      have hC13 : boundaryCompatible inc e e2 := boundaryCompatible_symm hC21
+      exact boundaryCompatible_trans hC13 hC23
+    · exact ⟨e2.i, hRel21, hRel32⟩
+
+/- Transitivity of bisimilarity via composition. -/
+theorem approxBisim_trans {I R T : Type u} {inc : Incidence I R T} {i j k : I} :
+  approxBisim inc i j → approxBisim inc j k → approxBisim inc i k := by
+  intro hIJ hJK
+  rcases hIJ with ⟨rel₁, h₁, hij⟩
+  rcases hJK with ⟨rel₂, h₂, hjk⟩
+  exact ⟨(fun a c => ∃ b, rel₁ a b ∧ rel₂ b c), isBisimulation_comp h₁ h₂, ⟨j, hij, hjk⟩⟩
 
 end IncidenceCore
