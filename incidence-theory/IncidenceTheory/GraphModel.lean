@@ -76,14 +76,14 @@ def CA  : GId := GId.edge 3
 def triBoundary (i : GId) : Boundary GId GraphRole :=
   match i with
   | GId.node _ => []
-  | GId.edge 1 =>
-      [ { i := A, role := GraphRole.src, sign := Sign.pos, mult := 1 }
+  | GId.edge 1 =>  -- AB: A → B
+      [ { i := A, role := GraphRole.src, sign := Sign.neg, mult := 1 }
       , { i := B, role := GraphRole.dst, sign := Sign.pos, mult := 1 } ]
-  | GId.edge 2 =>
-      [ { i := B, role := GraphRole.src, sign := Sign.pos, mult := 1 }
+  | GId.edge 2 =>  -- BC: B → C
+      [ { i := B, role := GraphRole.src, sign := Sign.neg, mult := 1 }
       , { i := C, role := GraphRole.dst, sign := Sign.pos, mult := 1 } ]
-  | GId.edge 3 =>
-      [ { i := C, role := GraphRole.src, sign := Sign.pos, mult := 1 }
+  | GId.edge 3 =>  -- CA: C → A
+      [ { i := C, role := GraphRole.src, sign := Sign.neg, mult := 1 }
       , { i := A, role := GraphRole.dst, sign := Sign.pos, mult := 1 } ]
   | _ => []
 

@@ -9,3 +9,4 @@ lean_lib "IncidenceTheory" where
 
 lean_exe "incidence-theory" where
   root := `Main
+  supportInterpreter := true
