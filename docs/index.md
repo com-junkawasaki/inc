@@ -13,6 +13,28 @@ description: A Fourth Foundation for Mathematics and Computation
 
 ## 🌟 Live Demonstration
 
+<div style="margin: 1rem 0; display: flex; gap: .5rem; flex-wrap: wrap;">
+  <a class="btn" href="https://live.lean-lang.org/" target="_blank" rel="noopener">Open in Lean4 Web ▶</a>
+  <a class="btn btn-secondary" href="https://github.com/leanprover-community/lean4web" target="_blank" rel="noopener">lean4web Repo</a>
+</div>
+
+<div style="margin: 1rem 0;">
+  <details>
+    <summary><strong>Lean4 Web Inline Playground (live.lean-lang.org)</strong></summary>
+    <div style="margin-top: .75rem;">
+      <iframe
+        src="https://live.lean-lang.org/"
+        title="Lean 4 Web Playground"
+        style="width: 100%; height: 70vh; border: 1px solid #e0e0e0; border-radius: 8px;"
+        loading="lazy"
+      ></iframe>
+      <p style="font-size: .9rem; color: #666; margin-top: .5rem;">
+        This embeds the official Lean 4 web editor. Use it to try small Lean4 snippets.
+      </p>
+    </div>
+  </details>
+</div>
+
 Experience Incidence Theory in action with our interactive examples:
 
 ### 🔍 Triangle Graph Analysis
@@ -281,4 +303,4 @@ Incidence Theory has achieved mathematical maturity and is ready for academic pe
 
 ---
 
-*Built with Lean 4, Jekyll, and mathematics. View source on [GitHub](https://github.com/com-junkawasaki/inc).*"
+*Built with Lean 4, Jekyll, and mathematics. View source on [GitHub](https://github.com/com-junkawasaki/inc).*
