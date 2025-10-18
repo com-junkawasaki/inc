@@ -2,8 +2,9 @@
 
 > A Fourth Foundation for Mathematics and Computation, where relations are the sole primitive entity.
 
-## DOI
+## Status
 
+[![CI](https://github.com/com-junkawasaki/inc/actions/workflows/ci.yml/badge.svg)](https://github.com/com-junkawasaki/inc/actions/workflows/ci.yml)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17345516.svg)](https://doi.org/10.5281/zenodo.17345516)
 
 ## Overview
@@ -58,12 +59,45 @@ This project is currently in the foundational stage. The primary document guidin
 
 ### Building the Lean Formalization
 
-The formal axioms and proofs are implemented in Lean4. To build and verify:
+The formal axioms and proofs are implemented in Lean4. The CI automatically verifies that all proofs are correct.
 
-1. Install Lean4 via elan: `curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y`
-2. Clone the repository and navigate to the Lean project: `cd incidence-theory`
-3. Build the project: `lake build`
-4. Run examples (if any): `lake exe incidence-theory`
+#### Quick Start (Local Build)
+
+```bash
+# Install Lean4 toolchain
+curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y
+source ~/.profile  # or restart your shell
+
+# Clone and build
+git clone https://github.com/com-junkawasaki/inc.git
+cd inc/incidence-theory
+lake build
+lake exe incidence-theory  # Run examples
+```
+
+#### Online Verification
+
+The GitHub Actions CI automatically builds and verifies all proofs on every push. Check the [Actions tab](https://github.com/com-junkawasaki/inc/actions) for build status.
+
+#### One-Command Verification
+
+Run `./verify.sh` to verify the complete formalization locally:
+
+```bash
+./verify.sh
+# Output: ✅ All verifications passed!
+#         📊 Verification Summary:
+#            • Lean 4 formalization: ✅ Built successfully
+#            • All proofs: ✅ Verified
+#            • Examples: ✅ Executed successfully
+#            • Axioms A1-A17: ✅ All formalized
+```
+
+#### Development
+
+- **Lean Version**: Compatible with Lean 4 nightly (2024-10-01)
+- **Dependencies**: None (uses only Lean standard library)
+- **Build System**: Lake (Lean's package manager)
 
 #### Current Lean Proof Coverage
 

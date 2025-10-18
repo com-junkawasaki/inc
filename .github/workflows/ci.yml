@@ -11,8 +11,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Install elan
-      run: curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y
-    - name: Build Lean project
-      run: source ~/.profile && cd incidence-theory && lake build
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Lean
+      uses: leanprover-community/setup-lean@v1
+      with:
+        lean-version: leanprover/lean4:v4.23.0
+
+    - name: Build
+      run: |
+        cd incidence-theory
+        lake build
+
+    - name: Run examples
+      run: |
+        cd incidence-theory
+        lake exe incidence-theory

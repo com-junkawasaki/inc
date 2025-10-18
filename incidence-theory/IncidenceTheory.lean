@@ -1,70 +1,42 @@
 /- Merkle-ID: implementation.api_freeze
    Maps to story.jsonnet → implementation.nodes.api_freeze
    Purpose: Consolidate a minimal surface API for incidence structures. -/
-universe u
+import IncidenceTheory.Axioms
 
 /- Merkle-ID: implementation.core_refactor
    story.jsonnet → implementation.nodes.core_refactor
-   Canonical Incidence API (namespaced) — multiset-like boundary & guarded gluing. -/
+   Canonical Incidence API (namespaced) — modularized axioms. -/
 
 namespace IncidenceCore
 
-/- Signs for oriented endpoints. -/
-/- Merkle-ID: foundation.axiomatization
-   Sign domain (A3). -/
-inductive Sign where
-  | neg
-  | zero
-  | pos
-deriving DecidableEq, Repr
-
-/- Endpoint of an incidence boundary with role, sign, and multiplicity. -/
-/- Merkle-ID: foundation.axiomatization
-   Endpoint with role/sign/multiplicity (A2/A3/A4). -/
-structure Endpoint (I R : Type u) where
-  i    : I
-  role : R
-  sign : Sign
-  mult : Nat
-deriving Repr
-
-/- For now we model a multiset as a list with multiset semantics.
-   Future: swap to Multiset once the dependency is available. -/
+/- Canonical Incidence structure with modular axioms. -/
 /- Merkle-ID: implementation.core
-   boundary as list with multiset semantics; swap to Multiset later. -/
-abbrev Boundary (I R : Type u) := List (Endpoint I R)
-
-/- Canonical Incidence structure with guarded gluing. -/
-/- Merkle-ID: implementation.core
-   canonical incidence with guarded gluing. -/
-structure Incidence (I R T : Type u) where
-  boundary        : I → Boundary I R
-  typeFunc        : I → T
-  glue            : I → I → Option I
-  unit            : I
-  type_consistent : ∀ (i : I), ∀ (e : Endpoint I R), e ∈ boundary i → typeFunc e.i = typeFunc i
-  sign_rules      : ∀ (i : I), ∀ (e : Endpoint I R), e ∈ boundary i → (e.sign = Sign.neg ∨ e.sign = Sign.zero ∨ e.sign = Sign.pos)
+   canonical incidence using modular axioms. -/
+-- Use the full modular Incidence structure from Axioms.lean
+-- This provides all A1-A17 axioms in a clean, modular way
 
 /- Observational equivalence (temporary, equality-based; to be replaced by bisimulation).
    Uses exact boundary equality; callers should not rely on order sensitivity. -/
 /- Merkle-ID: foundation.logic
    equality-based approx (temporary). -/
-def approxEq {I R T : Type u} (inc : Incidence I R T) (i j : I) : Prop :=
+def approxEq {I R T : Type u} [DecidableEq I] (inc : IncidenceAlgebraic I R T) (i j : I) : Prop :=
   inc.typeFunc i = inc.typeFunc j ∧ inc.boundary i = inc.boundary j
 
-/- New API: reflexivity stated for approxBisim. -/
-theorem approxEq_refl {I R T : Type u} (inc : Incidence I R T) (i : I) :
-  approxBisim inc i i := approxBisim_refl inc i
+/- Temporary: reflexivity for approxEq (will be replaced when approxBisim is defined) -/
+theorem approxEq_refl {I R T : Type u} [DecidableEq I] (inc : IncidenceAlgebraic I R T) (i : I) :
+  approxEq inc i i := by simp [approxEq]
 
-/- New API: symmetry stated for approxBisim. -/
-theorem approxEq_symm {I R T : Type u} {inc : Incidence I R T} {i j : I} :
-  approxBisim inc i j → approxBisim inc j i :=
-  fun h => approxBisim_symm h
+/- Temporary: symmetry for approxEq (will be replaced when approxBisim is defined) -/
+theorem approxEq_symm {I R T : Type u} [DecidableEq I] {inc : IncidenceAlgebraic I R T} {i j : I} :
+  approxEq inc i j → approxEq inc j i := by
+  intro h
+  simp [approxEq, h.left, h.right.symm]
 
-/- New API: transitivity stated for approxBisim. -/
-theorem approxEq_trans {I R T : Type u} {inc : Incidence I R T} {i j k : I} :
-  approxBisim inc i j → approxBisim inc j k → approxBisim inc i k :=
-  fun hij hjk => approxBisim_trans hij hjk
+/- Temporary: transitivity for approxEq (will be replaced when approxBisim is defined) -/
+theorem approxEq_trans {I R T : Type u} [DecidableEq I] {inc : IncidenceAlgebraic I R T} {i j k : I} :
+  approxEq inc i j → approxEq inc j k → approxEq inc i k := by
+  intro hij hjk
+  simp [approxEq, hij.left.trans hjk.left, hij.right.trans hjk.right]
 
 /- Merkle-ID: foundation.logic
    approxEq is a bisimulation (strict equality on boundaries). -/
@@ -76,14 +48,14 @@ theorem isBisimulation_approxEq {I R T : Type u} (inc : Incidence I R T) :
   unfold boundaryMatched
   constructor
   · intro e he
-    refine ⟨e, ?he', ?hC, ?hRel⟩
+    refine ⟨e, ?_, ?_, ?_⟩
     · -- transport membership along boundary equality
       simpa [hB] using he
     · -- endpoint matches itself
       unfold boundaryCompatible; simp
     · exact And.intro rfl rfl
   · intro e' he'
-    refine ⟨e', ?he, ?hC, ?hRel⟩
+    refine ⟨e', ?_, ?_, ?_⟩
     · -- transport membership in the other direction
       simpa [hB.symm] using he'
     · unfold boundaryCompatible; simp
@@ -297,10 +269,9 @@ theorem isBisimulation_comp {I R T : Type u} {inc : Incidence I R T}
     rcases hMj.right e2 he2 with ⟨e, he, hC21, hRel21⟩
     refine ⟨e, he, ?hC31, ?hRel31⟩
     · -- hC31 : boundaryCompatible e e3
-      -- We have hC21 : compat e2 e and hC32 : compat e3 e2; chain via symmetry+trans
-      have hC23 : boundaryCompatible inc e2 e3 := boundaryCompatible_symm hC32
+      -- We have hC21 : compat e2 e and hC32 : compat e2 e3; chain via trans
       have hC13 : boundaryCompatible inc e e2 := boundaryCompatible_symm hC21
-      exact boundaryCompatible_trans hC13 hC23
+      exact boundaryCompatible_trans hC13 hC32
     · exact ⟨e2.i, hRel21, hRel32⟩
 
 /- Transitivity of bisimilarity via composition. -/
