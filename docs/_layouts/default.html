@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if page.title %}{{ page.title }} - {% endif %}{{ site.title }}</title>
+  <meta name="description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}">
+
+  <!-- SEO -->
+  <meta property="og:title" content="{% if page.title %}{{ page.title }} - {% endif %}{{ site.title }}">
+  <meta property="og:description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}">
+  <meta property="og:url" content="{{ site.url }}{{ page.url }}">
+  <meta property="og:type" content="website">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
+  <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧮</text></svg>">
+
+  <!-- MathJax for mathematical expressions -->
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrapper">
+      <h1 class="site-title">{{ site.title }}</h1>
+      <p class="site-subtitle">{{ site.description }}</p>
+      <div class="badges">
+        {% if site.github_username %}
+          <a href="https://github.com/{{ site.github_username }}/inc" class="btn">View on GitHub</a>
+        {% endif %}
+        <a href="https://doi.org/10.5281/zenodo.17345516" class="btn btn-secondary">DOI</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrapper">
+    {{ content }}
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrapper">
+      <p>&copy; {{ site.time | date: '%Y' }} Jun Kawasaki. Built with <a href="https://jekyllrb.com/">Jekyll</a> and mathematics.</p>
+      <p><a href="https://github.com/com-junkawasaki/inc">View source on GitHub</a></p>
+    </div>
+  </footer>
+
+  <!-- Custom JavaScript for interactive elements -->
+  <script src="{{ '/assets/js/interactive.js' | relative_url }}"></script>
+</body>
+</html>

@@ -1,0 +1,291 @@
+/* Incidence Theory GitHub Pages Styles */
+
+:root {
+  --primary-color: #4CAF50;
+  --secondary-color: #2196F3;
+  --accent-color: #FF9800;
+  --text-color: #333;
+  --bg-color: #f8f9fa;
+  --card-bg: #ffffff;
+  --border-color: #e0e0e0;
+  --success-color: #4CAF50;
+  --verified-bg: #e8f5e8;
+}
+
+/* Base Styles */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  margin: 0;
+  padding: 0;
+}
+
+.wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Header */
+.site-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  padding: 2rem 0;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.site-title {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.site-subtitle {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin-bottom: 1rem;
+}
+
+.badges {
+  margin-top: 1rem;
+}
+
+/* Demo Container */
+.demo-container {
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 2rem 0;
+  overflow: hidden;
+}
+
+.triangle-visualization {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  padding: 2rem;
+}
+
+@media (max-width: 768px) {
+  .triangle-visualization {
+    grid-template-columns: 1fr;
+  }
+}
+
+.graph-display h4,
+.computation-results h4 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+}
+
+.graph-diagram {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+/* Matrix Tables */
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.matrix-table th,
+.matrix-table td {
+  padding: 8px 12px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+}
+
+.matrix-table th {
+  background: #f8f9fa;
+  font-weight: bold;
+}
+
+.matrix-table .non-zero {
+  background: #fff3cd;
+  color: #856404;
+  font-weight: bold;
+}
+
+.matrix-table .zero {
+  color: #6c757d;
+}
+
+/* Theorem Boxes */
+.theorem-box {
+  background: var(--card-bg);
+  border: 2px solid var(--primary-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  position: relative;
+}
+
+.theorem-box h4 {
+  color: var(--primary-color);
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.theorem-box p {
+  margin: 0.5rem 0;
+}
+
+.proof-status {
+  color: var(--success-color);
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+/* Verification Summary */
+.verification-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.metric {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.metric .number {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  display: block;
+}
+
+.metric .label {
+  font-size: 0.9rem;
+  color: var(--text-color);
+  margin-top: 0.5rem;
+}
+
+/* Verification Results */
+.verification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.verification-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.verification-item.verified {
+  background: var(--verified-bg);
+  border-left: 4px solid var(--success-color);
+}
+
+.verification-item.failed {
+  background: #ffebee;
+  border-left: 4px solid #f44336;
+}
+
+.verification-item .status {
+  font-weight: bold;
+  margin-right: 1rem;
+  min-width: 80px;
+}
+
+.verification-item .name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.verification-item .detail {
+  color: #666;
+  font-style: italic;
+  margin-left: 1rem;
+}
+
+/* Buttons and Links */
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color);
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background 0.3s ease;
+  margin: 0.5rem;
+}
+
+.btn:hover {
+  background: #45a049;
+  color: white;
+  text-decoration: none;
+}
+
+.btn-secondary {
+  background: var(--secondary-color);
+}
+
+.btn-secondary:hover {
+  background: #1976d2;
+}
+
+/* Footer */
+.site-footer {
+  text-align: center;
+  padding: 2rem 0;
+  color: #666;
+  border-top: 1px solid var(--border-color);
+  margin-top: 3rem;
+}
+
+/* Code blocks */
+.highlight {
+  background: #f8f9fa;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 1rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+pre {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .site-title {
+    font-size: 2rem;
+  }
+
+  .verification-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .matrix-table {
+    font-size: 0.8rem;
+  }
+
+  .matrix-table th,
+  .matrix-table td {
+    padding: 4px 6px;
+  }
+}

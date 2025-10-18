@@ -1,0 +1,36 @@
+title: "Incidence Theory - A Fourth Foundation"
+description: "Theory of Incidence: Relations as the sole primitive for mathematics and computation"
+url: "https://com-junkawasaki.github.io"
+baseurl: "/inc"
+repository: com-junkawasaki/inc
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+theme: minima
+
+# Collections
+collections:
+  theorems:
+    output: true
+    permalink: /theorems/:name/
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor/
+  - .bundle/
+  - .sass-cache/
+  - .jekyll-cache/
+  - gemfiles/
+
+# Include
+include:
+  - _pages

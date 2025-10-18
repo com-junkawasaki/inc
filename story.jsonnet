@@ -34,7 +34,16 @@ local foundation = {
     comparison: {
       description: 'Formalize the translation to/from Set, Category, and Type theories.',
       details: 'Embeddings: Sets as nullary incidences; Categories via gluing-based composition with unit/associativity under typing/guard preconditions; Types as (co)inductive incidence families. Show conservative extension and preservation of operations.',
+      status: 'completed',
       deps: ['foundation.nodes.models'],
+    },
+
+    // Merkle-ID: foundation.core_theorems
+    core_theorems: {
+      description: 'Prove the five core theorems establishing Inc as a foundation.',
+      details: 'T1: Glue universality (pushout property); T2: Congruence (≈ preserved under operations); T3: Linear semantics soundness (∂→boundary operator); T4: Completeness (linear observations determine equivalence); T5: Translation preservation (limits/colimits preserved).',
+      status: 'completed',
+      deps: ['foundation.nodes.comparison'],
     },
   },
 };
@@ -149,7 +158,8 @@ local publication = {
     // Merkle-ID: publication.arxiv
     arxiv: {
       description: 'Publish a preprint to ArXiv.',
-      details: 'Category: math.LO / cs.LO. Title: "Theory of Incidence — A Fourth Foundation Beyond Set, Category, and Type". Sync artifacts and Lean proofs to the updated axioms and semantics.',
+      details: 'Category: math.LO / cs.LO. Title: "Theory of Incidence — A Fourth Foundation Beyond Set, Category, and Type". Includes: A1-A17 formalization, five core theorems (T1-T5), concrete triangle graph example, boundary matrices & Laplacians, bisimulation proofs.',
+      status: 'ready',
       deps: ['publication.nodes.paper'],
     },
   },
@@ -169,7 +179,8 @@ local application = {
     // Merkle-ID: application.case_study_math
     case_study_math: {
       description: 'Case Study: Reconstruct a mathematical theory.',
-      details: 'Graph/hypergraph isomorphism via ≈; rewrite systems via pushout; small homology-style invariants via B/L on incidence structures.',
+      details: 'Graph/hypergraph isomorphism via ≈; rewrite systems via pushout; small homology-style invariants via B/L on incidence structures. Triangle graph example demonstrates ∂²=0 and boundary matrices.',
+      status: 'completed',
       deps: ['implementation.nodes.proof_assistant'],
     },
     // Merkle-ID: application.case_study_medicine
@@ -203,6 +214,7 @@ local application = {
       'implementation.core',
       'implementation.core_refactor',
       'foundation.comparison',
+      'foundation.core_theorems',
       'implementation.lin_alg_signatures',
       'implementation.linear_algebra',
       'implementation.proof_assistant',
