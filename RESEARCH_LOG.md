@@ -1416,24 +1416,91 @@ reuse `not_approxBisim_of_boundary_mismatch`/`not_approxBisim_empty_nonempty`
 directly, the same payoff pattern as `single_link`/`two_link`
 (cycles 9/17) and `boundaryMatched_of_two_entries`/`_symm` (cycle 18).
 
-**Next hypothesis (cycle 22, not yet attempted)**: two options are on
-the table, deliberately not pre-committed to one. (1) The exhaustive
-`simplexToShape ↔ approxBisim` iff, explicitly deferred this cycle --
-worth attempting only with a cleaner strategy than raw 49-case bashing,
-e.g. splitting into a `reflects` half (translate-equal → approxBisim,
-likely easy given `simplexEdgeVertexRel_isBisimulation` already covers
-all same-shape pairs) and a `distinguishes` half (approxBisim →
-translate-equal, i.e. the contrapositive of cross-shape non-
-bisimilarity, needing the *other* 6 shape-pair representative facts this
-cycle didn't build: `v1`/`v2` vs. edges/face, `e02`/`e12` vs. `face`) --
-scope explicitly before starting, per this cycle's own lesson about
-not force-fitting a stronger statement than the finding warrants.
-(2) Untested elsewhere: does `not_approxBisim_of_boundary_mismatch`
-apply usefully to any *other* existing instance -- e.g., is
-`natIncidence`'s `0` (the unique leaf) provably non-bisimilar to every
-successor, as a cleaner replacement for however that fact is currently
-established (if it even needs re-establishing -- cycle 4's faithfulness
-theorem already gives `≈ ↔ =` there, which is strictly stronger and
-likely makes a separate non-bisimilarity proof redundant; worth checking
-which existing claims this new machinery could *simplify*, not just
-where it could prove something new)?
+## Cycle 22
+
+**Hypothesis**: (option 1 of cycle 21's queue) attempt the exhaustive
+`simplexToShape x = simplexToShape y ↔ approxBisim simplexIncidence x
+y` theorem, using the cleaner split strategy queued: a `reflects` half
+(translate-equal → `approxBisim`) and a `distinguishes` half
+(`approxBisim` → translate-equal), building the extra representative
+facts (`v1`/`v2` vs. edges/face, `e02`/`e12` vs. `face`) as needed.
+
+**Method**: built a general `simplexIncidence_nonempty_not_vertex`
+helper first (any nonempty-boundary element vs. any vertex, using
+`List.exists_mem_of_ne_nil` to extract a witness automatically rather
+than hand-picking one per element) and a `simplexIncidence_srcneg_not_face`
+helper (any element with a `(src, neg)`-tagged boundary entry vs.
+`face`) -- both generalizing cycle 21's one-off concrete facts to cover
+all 3 vertices / all 3 edges uniformly. Tested the `reflects` half
+alone first (`cases x <;> cases y <;> simp [simplexToShape] at h <;>
+first | approxBisim_refl | ⟨simplexEdgeVertexRel, ...⟩`) -- **succeeded
+immediately**, no issues. Then attempted `distinguishes`
+(`cases x <;> cases y <;> simp [simplexToShape] <;> first | t1 | t2 |
+t3 | t4`, four templates covering direct/symm × vertex/face cases) --
+this is where the cycle's real content turned out to be.
+
+**Result**: **`reflects` lands cleanly (zero issues, standard axioms);
+`distinguishes` hit genuine, reproducible Lean-elaboration friction that
+was diagnosed but not forced through.** Isolated minimal reproductions
+confirmed each of the four closing templates works correctly *alone*
+against its matching goal (e.g. the `(v0, e01)` case closes fine via
+`exact absurd (approxBisim_symm h) (simplexIncidence_nonempty_not_vertex
+...)` in a standalone `example`). But combined via `first | t1 | t2 |
+t3 | t4` across all 49 `cases`-generated goals, the SAME goal that
+closes fine standalone started failing -- and the failure mode was
+identical across three different combinator strategies tried in
+sequence (`first`, sequential `try ... <;> try ...`, and
+`apply`/`exact`-splitting): whichever template's *inference* legitimately
+fails first (e.g. trying the "no-symm" form on a goal that actually
+needs "symm") appears to leave metavariable state that then breaks the
+very next, otherwise-valid alternative attempted on that *same* goal --
+even under `try`, which is supposed to fully roll back on failure. This
+was tracked down to the specific *mechanism* (not just "it doesn't
+work") via minimal bulk-vs-isolated comparisons, ruling out several
+wrong hypotheses (backtracking pollution specific to `first`; `simp`
+touching `h` in the goal-only `simp [simplexToShape]` call; positional
+`x`/`y` no longer being referenceable post-`cases`) before landing on
+underscore-inferred lemma arguments interacting badly with sibling
+alternatives sharing a goal. A verbose fully-explicit 30-arm `match`
+would sidestep the issue entirely (no ambiguous inference), but was
+judged not worth building: cycle 21 already established the substantive
+mathematical content (exact 3-way `≈`-separation, proven robustly with
+concrete term-mode facts) -- the exhaustive iff would strengthen the
+*statement*'s form, not add new *content*, and the friction is a tooling
+quirk in this specific combinator pattern, not a gap in the underlying
+math. `#print axioms simplexToShape_reflects`: standard `propext`/
+`Quot.sound`. Full `lake build`: 38/38 jobs. Repo-wide `sorry`-as-tactic
+grep: none. Landed `SimplexShape`/`simplexToShape`/`simplexToShape_reflects`
+in `Simplex.lean`; `distinguishes` left unattempted-and-documented, not
+silently dropped.
+
+**Synthesis**: this cycle is the project's first documented case of
+"tried multiple tactic strategies, all failed the same reproducible way,
+diagnosed the mechanism, declined to force a workaround" -- distinct
+from prior stalls (cycle 9/12's stalls were genuinely *not yet solved*
+proof-engineering gaps; cycle 20's decline was about *scope*, not a
+failed attempt). Worth naming as its own category: sometimes the
+blocker isn't the mathematics or the proof strategy but the *tactic
+combinator's* interaction with a specific proof shape, and the right
+response is the same principle as always -- record honestly what was
+tried, what happened, and why forcing further wasn't worth it -- applied
+to a tooling-level obstacle rather than a mathematical one.
+
+**Next hypothesis (cycle 23, not yet attempted)**: option 2 from cycle
+21's queue, not reached this cycle: does `not_approxBisim_of_boundary_mismatch`
+apply usefully to any *other* existing instance in a way that
+*simplifies* an existing claim, rather than only proving something new?
+Quick scoping note carried forward: `natIncidence`, `pairIncidenceChained`,
+and `pathIncidenceChained` are all *fully* `≈`-faithful (`≈ ↔ =`,
+cycles 4/14), so any non-bisimilarity fact there is already implied
+(and superseded) by the existing iff theorems -- the new machinery's
+distinctive value is specifically for *non*-faithful instances, of which
+`simplexIncidence` is currently the only one, meaning this avenue may
+turn out to have *no* untapped instance to apply to right now (a
+legitimate, checkable-in-one-step negative finding, not requiring deep
+proof engineering either way). If that's confirmed quickly, a good use
+of the remaining cycle would be revisiting whether the `distinguishes`
+half's tooling friction has a known simpler workaround worth a fresh,
+short attempt (e.g. `rcases` chained differently, or Lean's `omega`-
+adjacent `decide`-based dispatch instead of unification-heavy lemma
+application) before concluding it's a genuine dead end.

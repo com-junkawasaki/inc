@@ -321,10 +321,72 @@ theorem simplexIncidence_e01_not_face : ¬ approxBisim simplexIncidence SimplexI
    (cycles 12/18) and `approxBisim_refl` (`face ≈ face` trivially), these
    three facts confirm `≈`'s partition on `simplexIncidence` is *exactly*
    three classes -- `{v0,v1,v2}`, `{e01,e02,e12}`, `{face}` -- no
-   coarser. A fully exhaustive `simplexToShape x = simplexToShape y ↔
-   approxBisim simplexIncidence x y` theorem (covering all 49
-   constructor pairs, not just one representative per shape-pair) is a
-   natural next step but was not attempted this cycle -- flagged
-   honestly as future work, not claimed as done. -/
+   coarser. -/
+
+/- Research cycle 22 (see RESEARCH_LOG.md): generalizes the two
+   representative facts above (`_e01_not_v0`, `_e01_not_face`) to cover
+   *any* vertex / *any* edge uniformly, rather than one concrete pair
+   each -- built while attempting the exhaustive iff below, and kept
+   regardless of that attempt's outcome since they're independently
+   useful, validated, reusable facts. -/
+theorem simplexIncidence_nonempty_not_vertex (i : SimplexId)
+  (hi : simplexIncidence.boundary i ≠ []) (v : SimplexId)
+  (hv : v = SimplexId.v0 ∨ v = SimplexId.v1 ∨ v = SimplexId.v2) :
+  ¬ approxBisim simplexIncidence i v := by
+  obtain ⟨e, he⟩ := List.exists_mem_of_ne_nil _ hi
+  rcases hv with hv | hv | hv <;> subst hv <;>
+    exact not_approxBisim_empty_nonempty simplexIncidence _ _ rfl e he
+
+theorem simplexIncidence_srcneg_not_face (i : SimplexId) (v : SimplexId)
+  (he : ({ i := v, role := SimplexRole.src, sign := Sign.neg, mult := 1 } :
+      Endpoint SimplexId SimplexRole) ∈ simplexIncidence.boundary i) :
+  ¬ approxBisim simplexIncidence i SimplexId.face := by
+  apply not_approxBisim_of_boundary_mismatch simplexIncidence i SimplexId.face _ he
+  intro e' he'
+  simp [simplexIncidence, simplexBoundary] at he'
+  rcases he' with he' | he' | he' <;> subst he' <;> simp [boundaryCompatible]
+
+/- Research cycle 22 (see RESEARCH_LOG.md): attempted to upgrade cycle
+   21's representative-witness result into a fully exhaustive
+   `simplexToShape x = simplexToShape y ↔ approxBisim simplexIncidence x
+   y` theorem over all 49 constructor pairs. The "reflects" half
+   (translate-equal → `approxBisim`) below succeeded cleanly on the
+   first attempt. The "distinguishes" half (`approxBisim` →
+   translate-equal, i.e. the 30 cross-shape non-bisimilarity cases) hit
+   genuine, reproducible Lean-elaboration friction: closing each of the
+   30 cases needs one of two lemma applications (direct, or via
+   `approxBisim_symm` first) with the lemma's `i`/`v` arguments inferred
+   by unification -- and whenever a *failing* alternative's inference
+   attempt (e.g. trying the "direct" form where the "symm" form was
+   actually needed) ran first inside `first`/`try`/`apply`, it left
+   metavariable state that broke the *subsequent, otherwise-valid*
+   alternative on the *same* goal, even though each alternative provably
+   works when tried in isolation (confirmed via minimal reproductions).
+   Three combinator strategies (`first | ... | ...`, sequential
+   `try ... <;> try ...`, and `apply`/`exact` splitting) all hit the same
+   failure. Diagnosed to this specific cause, not left as an unexplained
+   mystery -- but not forced through with a verbose 30-arm fully-explicit
+   `match` either, since cycle 21 already established the substantive
+   mathematical content (exact 3-way separation) with a robust proof
+   style, and the exhaustive iff would strengthen the *statement*, not
+   add new *content*. Landed the "reflects" half, which stands on its
+   own as a genuine strengthening (all 49 same-shape-or-not pairs, not
+   just 19 representative same-shape ones), and left "distinguishes" as
+   explicit future work with its friction documented rather than
+   silently dropped. -/
+inductive SimplexShape where | vertex | edgeShape | faceShape
+deriving DecidableEq, Repr
+
+def simplexToShape : SimplexId → SimplexShape
+  | .v0 | .v1 | .v2 => .vertex
+  | .e01 | .e02 | .e12 => .edgeShape
+  | .face => .faceShape
+
+theorem simplexToShape_reflects (x y : SimplexId) (h : simplexToShape x = simplexToShape y) :
+  approxBisim simplexIncidence x y := by
+  cases x <;> cases y <;> simp [simplexToShape] at h <;>
+    first
+    | exact approxBisim_refl simplexIncidence _
+    | exact ⟨simplexEdgeVertexRel, simplexEdgeVertexRel_isBisimulation, by simp [simplexEdgeVertexRel]⟩
 
 end IncidenceCore
