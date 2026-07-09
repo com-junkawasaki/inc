@@ -1762,17 +1762,88 @@ rather than merely "a measure exists but two elements happen to share
 the same value under it" (empty boundary = measure value zero, shared
 by multiple elements).
 
-**Next hypothesis (cycle 27, not yet attempted)**: no mandatory item
-carries over. `cycleIncidence` opens a few natural but unattempted
-follow-ups, none committed to: (1) does `cycleIncidence` admit a
-"fixed" variant analogous to the `_Chained` pattern (cycles 3/14) that
-recovers `≈`-faithfulness -- and if so, does the fix necessarily break
-something else the way it did for `pairIncidenceChained`/
-`pathIncidenceChained` (cycles 8/16), or does a cycle's closed structure
-behave differently? (2) `glue`'s group structure (`Z/4Z`) is new --
-does `cycleIncidence` have an interesting *translation* (T5) story,
-given `glue` here is genuinely invertible unlike every prior instance
-(a translation into an actual `ZMod`-like target, if buildable without
-mathlib, might reveal something `natToFiniteSet`/`pairToShape`/
-`pathToNatBool` didn't need to consider)? Either is a reasonable next
-step; neither is scoped yet.
+## Cycle 27
+
+**Hypothesis**: (option 1 of cycle 26's queue) does `cycleIncidence`
+admit a faithfulness-recovering "fixed" variant, the way `pairIncidence`
+→ `pairIncidenceChained` (cycle 3) and `pathIncidence` →
+`pathIncidenceChained` (cycle 14) did -- and if so, does the fix
+necessarily pay the same `∂² ≠ 0` price (cycles 8/16)? The established
+fix ("give elements a well-founded predecessor chain reaching a base
+case") doesn't directly transplant: a *closed cycle* has no base case
+at all, by construction.
+
+**Method**: rather than trying to force the chain-based fix onto a
+structure that has nowhere for a chain to terminate, looked for a
+*different* mechanism that could still recover faithfulness. Key
+observation: `boundaryMatched`'s compatibility check depends on `role`
+(along with `sign`/`mult`), and every prior instance reused a small,
+shared role set (1-3 constructors) across many elements. What if,
+instead, each of the four cycle positions got its *own*, structurally
+distinct role -- `cycleRoleOf : CycleId → CycleRoleFixed` literally
+injective? Built `cycleIncidenceFixed` with the *same* `c0→c3→c2→c1→c0`
+topology and the *same* `Z/4Z` `glue`, differing only in this role
+labeling. Tested faithfulness via cycle 21's `not_approxBisim_of_boundary_mismatch`
+directly (not cycle 4's `incidence_bisim_faithful`, which needs a
+well-founded *measure* -- something a closed cycle cannot have, since
+nothing ever strictly decreases around a loop): if `x ≠ y`, their
+boundary entries carry different roles, so no relation can ever match
+them, blocking bisimilarity structurally. One tooling snag along the
+way: `by_contra` (attempted first, matching how the hard direction of
+an iff is usually structured) is unavailable without mathlib -- rewritten
+as `by_cases` instead, a known, previously-hit gotcha in this project,
+resolved immediately rather than re-diagnosed from scratch.
+
+**Result**: **confirmed on the first full attempt after the `by_contra`
+fix -- full faithfulness (`≈ ↔ =`) recovered via a genuinely new proof
+route, and the predicted price paid a fourth time.**
+`cycleIncidenceFixed_approxBisim_iff` proves with *only* `propext` --
+no `Classical.choice` at all, fully constructive, since role-
+discrimination needs no induction or measure, just a direct structural
+mismatch argument. `cycleIncidenceFixed_not_boundary_square_zero`/
+`_c0_composition_ne_zero` confirm `∂² = 0` fails here too, via the exact
+same `single_link_composition_ne_zero` (cycle 9) already used for
+`natIncidence`/`pairIncidenceChained` (cycle 8) and
+`pathIncidenceChained` (cycle 16) -- the theorem never cared about
+roles, only about the single-link shape, so the fix's *mechanism*
+(chain vs. role-labeling) turns out to be irrelevant to whether the
+price gets paid. `#print axioms`: `propext` alone on three of four new
+theorems, standard three on the one routing through
+`single_link_composition_ne_zero`. Full `lake build`: 40/40 jobs.
+Repo-wide `sorry`-as-tactic grep: none. Added to `Cycle.lean`, wired
+into `Main.lean`.
+
+**Synthesis**: two things worth separating clearly. First, the
+"faithfulness-fix necessarily breaks `∂² = 0`" tension (cycles 8/16, now
+also 27) is sharper than previously stated: it was never about *how* the
+distinguishing structure is encoded (a predecessor chain reaching a
+leaf, or unique role tags on a closed cycle) -- it's purely about
+*keeping the single-link boundary shape*, which is exactly
+`single_link_composition_ne_zero`'s hypothesis regardless of mechanism.
+Second, and more novel: this project now has **two independent, general
+routes to full `≈`-faithfulness** -- `incidence_bisim_faithful` (cycle
+4, well-founded measure + boundary extensionality, needed for the three
+acyclic chain/tree instances) and `not_approxBisim_of_boundary_mismatch`
+(cycle 21, role-discrimination, usable even where no well-founded
+measure could possibly exist). Neither subsumes the other: a cycle has
+no measure for the first route to use, and a chain-based instance
+(where every element shares the *same* role) has no role-mismatch for
+the second route to use unless the roles are made unique too. Which
+route applies is a genuine structural fact about the instance, not a
+matter of proof-engineering preference.
+
+**Next hypothesis (cycle 28, not yet attempted)**: option 2 of cycle
+26's queue, not reached this cycle: does `cycleIncidence`'s genuinely
+invertible `glue` (`Z/4Z`) open an interesting T5 translation story,
+given every prior translation (`natToFiniteSet`/`pairToShape`/
+`pathToNatBool`) only ever needed injectivity, never anything about
+`glue`'s algebraic structure? A natural candidate: a translation that
+is also a `glue`-homomorphism (unlike cycles 6/7/15's cross-*instance*
+maps, which were never expected to preserve `glue`) -- e.g. does
+`cycleToNat : CycleId → Nat` (already defined, used internally for
+`cycleAdd`) satisfy `cycleToNat (cycleAdd x y) = (cycleToNat x +
+cycleToNat y) % 4` as a clean, single-*instance* `glue`-homomorphism
+into `(Nat, +, %4)`, something no prior translation attempted or needed
+to check since no prior `glue` had interesting algebraic structure to
+preserve? Worth checking concretely (`#eval`/`decide`) before
+formalizing, per discipline -- not yet scoped beyond this description.

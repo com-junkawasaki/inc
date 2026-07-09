@@ -147,4 +147,106 @@ theorem cycleIncidence_glue_has_inverse (x : CycleId) :
   · exact ⟨CycleId.c2, by decide⟩
   · exact ⟨CycleId.c1, by decide⟩
 
+/- Research cycle 27 (see RESEARCH_LOG.md): does `cycleIncidence` admit a
+   faithfulness-recovering "fixed" variant, the way `pairIncidence` →
+   `pairIncidenceChained` (cycle 3) and `pathIncidence` →
+   `pathIncidenceChained` (cycle 14) did? The established fix
+   (cycles 3/13/14) was "give elements a well-founded distinguishing
+   predecessor chain reaching a base case" -- but a *cycle* has no base
+   case at all, so that fix doesn't directly transplant. This tests a
+   genuinely different mechanism instead: give each of the four
+   positions its *own*, structurally distinct `role`, rather than
+   reusing one uniform role everywhere. -/
+inductive CycleRoleFixed where | r0 | r1 | r2 | r3
+deriving DecidableEq, Repr
+
+def cycleRoleOf : CycleId → CycleRoleFixed
+  | .c0 => .r0 | .c1 => .r1 | .c2 => .r2 | .c3 => .r3
+
+def cycleBoundaryFixed : CycleId → Boundary CycleId CycleRoleFixed
+  | ci => [{ i := cyclePred ci, role := cycleRoleOf ci, sign := Sign.neg, mult := 1 }]
+
+def cycleIncidenceFixed : Incidence CycleId CycleRoleFixed GraphType where
+  boundary := cycleBoundaryFixed
+  typeFunc := fun _ => GraphType.unit
+  glue     := fun i j => some (cycleAdd i j)
+  unit     := CycleId.c0
+  guards   := Guards.permissive CycleId
+  boundaryMatrix := fun _ _ => 0
+  laplacian := fun _ _ => 0
+  type_consistent := fun i e h => rfl
+  sign_rules := by
+    intro i e h
+    cases i <;> simp [cycleBoundaryFixed] at h <;> subst h <;> simp
+  multiplicities := by
+    intro i e h
+    cases i <;> simp [cycleBoundaryFixed] at h <;> subst h <;> simp
+  well_founded := by
+    rintro i ⟨e, he, hei⟩
+    cases i <;> simp [cycleBoundaryFixed, cyclePred] at he <;> subst he <;> simp_all
+  unit_left := by intro i; cases i <;> simp [cycleAdd, cycleToNat, cycleOfNat]
+  unit_right := by intro i; cases i <;> simp [cycleAdd, cycleToNat, cycleOfNat]
+  type_preserve := fun _ _ => rfl
+
+/- The fix works, but via a **genuinely new proof route**: not
+   `incidence_bisim_faithful` (cycle 4, which needs a well-founded
+   *measure* -- something a closed cycle structurally cannot have,
+   since nothing ever "decreases" around a loop) but
+   `not_approxBisim_of_boundary_mismatch` (cycle 21) directly. Distinct
+   elements' boundary entries now carry *distinct* roles
+   (`cycleRoleOf` is injective by construction), so no relation can ever
+   match them -- faithfulness follows from role-discrimination alone,
+   with no induction and no measure needed at all. Every ordinary role
+   in every other instance in this project only ever needed 1-3
+   constructors; this is the first fix whose entire mechanism *is* the
+   role type's cardinality matching the carrier's. -/
+theorem cycleIncidenceFixed_not_bisim_of_ne (x y : CycleId) (hne : x ≠ y) :
+  ¬ approxBisim cycleIncidenceFixed x y := by
+  apply not_approxBisim_of_boundary_mismatch cycleIncidenceFixed x y
+    { i := cyclePred x, role := cycleRoleOf x, sign := Sign.neg, mult := 1 }
+    (by simp [cycleIncidenceFixed, cycleBoundaryFixed])
+  intro e' he'
+  cases y <;> simp [cycleIncidenceFixed, cycleBoundaryFixed] at he' <;> subst he' <;>
+    cases x <;> simp_all [boundaryCompatible, cycleRoleOf]
+
+/- Full faithfulness (`≈ ↔ =`), proved via role-discrimination rather
+   than well-founded induction -- and, notably, with only `propext`, no
+   `Classical.choice` at all (checked, not assumed): a genuinely
+   constructive alternative to the well-founded-measure route for
+   instances where no such measure can exist. -/
+theorem cycleIncidenceFixed_approxBisim_iff (x y : CycleId) :
+  approxBisim cycleIncidenceFixed x y ↔ x = y := by
+  constructor
+  · intro h
+    by_cases hne : x = y
+    · exact hne
+    · exact absurd h (cycleIncidenceFixed_not_bisim_of_ne x y hne)
+  · intro h
+    subst h
+    exact approxBisim_refl cycleIncidenceFixed x
+
+def cycleIdxFixed : List CycleId := [CycleId.c0, CycleId.c1, CycleId.c2, CycleId.c3]
+
+theorem cycleIncidenceFixed_not_boundary_square_zero :
+  verify_boundary_composition cycleIncidenceFixed cycleIdxFixed = false := by decide
+
+/- The predicted price, confirmed a fourth time (after `natIncidence`/
+   `pairIncidenceChained`, cycle 8; `pathIncidenceChained`, cycle 16):
+   the faithfulness fix breaks `∂² = 0` here too -- via the *same*
+   general theorem (`single_link_composition_ne_zero`, cycle 9), which
+   never cared about roles, only about the single-link *shape*. This
+   sharpens the tension further: it isn't specific to "chain reaching a
+   base case" fixes -- ANY fix keeping the single-link shape pays the
+   same price, regardless of how the distinguishing information is
+   encoded (a predecessor chain, or unique role tags on a closed
+   cycle). -/
+theorem cycleIncidenceFixed_c0_composition_ne_zero (idx : List CycleId) (hmem : CycleId.c3 ∈ idx) :
+  boundary_composition cycleIncidenceFixed idx CycleId.c0 CycleId.c2 ≠ 0 :=
+  single_link_composition_ne_zero cycleIncidenceFixed idx CycleId.c0 CycleId.c3 CycleId.c2
+    { i := CycleId.c3, role := cycleRoleOf CycleId.c0, sign := Sign.neg, mult := 1 }
+    { i := CycleId.c2, role := cycleRoleOf CycleId.c3, sign := Sign.neg, mult := 1 }
+    rfl rfl (by simp)
+    rfl rfl (by simp)
+    hmem
+
 end IncidenceCore
