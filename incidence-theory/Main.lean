@@ -1,4 +1,5 @@
 import IncidenceTheory.GraphModel
+import IncidenceTheory.Peano
 
 open IncidenceCore
 
@@ -96,3 +97,8 @@ def main : IO Unit := do
   IO.println "  • Five core theorems framework ✅"
   IO.println "  • Triangle graph concrete example ✅"
   IO.println "  • CI/CD automated verification ✅"
+
+  IO.println "\n🔢 Peano Naturals as an Incidence (glue = addition, unit = 0):"
+  IO.println s!"  glue 2 1 = {natIncidence.glue 2 1} (successor of 2, via glue)"
+  IO.println "  ✓ successor injective, zero not a successor, induction principle proved"
+  IO.println "  ✓ ≈ (bisimilarity) coincides exactly with = on this instance (faithfulness)"
