@@ -107,6 +107,7 @@ def main : IO Unit := do
 
   IO.println "\n🔗 Ordered Pairs as an Incidence (boundary = projections):"
   IO.println "  ✓ pairing is jointly injective; projections recoverable from boundary"
-  IO.println "  ⚠ negative finding: bare atoms are NOT separated by ≈ (atom 0 ≈ atom 1,"
-  IO.println "    since both have boundary = []) -- faithfulness needs distinguishing"
-  IO.println "    boundary structure, it isn't automatic. See RESEARCH_LOG.md."
+  IO.println "  ⚠ negative finding (flat atoms): atom 0 ≈ atom 1 even though unequal,"
+  IO.println "    since bare atoms all have boundary = [] -- faithfulness isn't automatic"
+  IO.println "  ✓ fix (chained atoms): giving atoms a role-tagged predecessor chain"
+  IO.println "    recovers FULL faithfulness (≈ ↔ =) for the whole nested pair type"

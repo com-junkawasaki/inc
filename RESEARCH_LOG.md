@@ -101,3 +101,65 @@ that "give every leaf a canonical predecessor-style boundary" is a
 *general* recipe for faithfulness in Inc, not a Peano-specific accident
 — worth stating as a lemma (e.g. "any well-founded, boundary-injective
 carrier is ≈-faithful") rather than re-deriving per instance.
+
+## Cycle 3
+
+**Hypothesis**: (as queued above) fixing atom-distinguishability with a
+predecessor chain recovers full `≈ ↔ =` faithfulness for the whole
+`PairId` type (atoms *and* arbitrarily nested pairs, not just atoms in
+isolation) — evidence of a general recipe, not a Peano-specific fluke.
+
+**Method**: extended `PairRole` with a third constructor `chain`, kept
+disjoint from `fst`/`snd` specifically so a bisimulation can never
+mistake an atom-chain-link for a pair-projection-link (`boundaryCompatible`
+requires matching `role`). `pairBoundaryChained (atom (n+1))` points at
+`atom n` via a `chain`-role endpoint (`atom 0` unchanged, still `[]`,
+the chain's base case) — same shape as `peanoBoundary`. Built
+`pairIncidenceChained : Incidence PairId PairRole GraphType`, then
+attempted the full theorem by structural induction on `x : PairId`,
+using the role split to rule out atom-vs-pair mismatches at each step
+and the induction hypotheses on `a`/`b` for the pair-vs-pair case.
+
+**Result**: **confirmed, hypothesis holds**. `pairIncidenceChained_rel_eq`
+proves `∀ x y, rel x y → x = y` for *any* bisimulation `rel` on the
+whole `PairId` type — atoms distinguished via the chain (reusing
+`natIncidence_rel_eq`'s exact argument, factored out as
+`pairIncidenceChained_atom_rel_eq`), pairs distinguished by recursing
+into both projections via the structural induction hypotheses.
+Packaged cleanly as `pairIncidenceChained_approxBisim_iff : approxBisim
+pairIncidenceChained x y ↔ x = y`. `#print axioms`: `propext`/
+`Classical.choice`/`Quot.sound` only, no `sorryAx`, on every theorem in
+this cycle. Both the broken (`pairIncidence`) and fixed
+(`pairIncidenceChained`) instances are kept in `Pairs.lean` side by
+side, deliberately — the contrast (proven collapse vs. proven
+faithfulness from one structural change) is the actual finding, more
+useful than deleting the broken one now that it served its purpose.
+
+This is enough evidence across three instances (`triIncidence`,
+`natIncidence`, `pairIncidenceChained`) to tentatively state the general
+principle in prose: **an `Incidence`'s `≈` is faithful (coincides with
+`=`) when every element's `boundary` structure — role-tagged so
+different "kinds" of edges can't be confused — uniquely and
+well-foundedly determines that element from the boundaries of smaller
+elements.** Not yet stated/proved as an actual general Lean theorem
+(that would quantify over an arbitrary `Incidence` and some formal
+"distinguishing" hypothesis on `boundary`, which needs care to phrase
+precisely) — that formalization is the next real step, not more
+instance-by-instance confirmation.
+
+**Next hypothesis (cycle 4, not yet attempted)**: state and prove the
+general theorem sketched above, roughly: given `inc : Incidence I R T`
+and a well-founded measure `μ : I → Nat` such that (a) `∀ i, ∀ e ∈
+boundary i, μ e.i < μ i` (boundaries strictly decrease the measure) and
+(b) `boundary` is "injective enough" at each level (two elements with
+the same `μ` and pairwise-`boundaryCompatible`-and-`μ`-matching
+boundaries, in bijection, are equal) — then `approxBisim inc x y → x =
+y`. This is real risk, not a guaranteed win: the precise "injective
+enough" hypothesis is exactly the part cycles 1-3 didn't have to state
+formally (they baked it in by direct case analysis per concrete
+instance), and getting the induction to go through generically, without
+a concrete carrier type's `cases`/`sizeOf` to lean on, may need a
+genuinely different proof strategy (well-founded recursion on `μ`
+instead of structural induction on `I`). If it turns out false or
+needs a much stronger hypothesis to be true, that itself is the
+result — record it, don't force a fake generalization.
