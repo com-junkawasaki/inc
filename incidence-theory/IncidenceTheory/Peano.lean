@@ -231,4 +231,67 @@ theorem natIncidence_boundary_composition_witness :
   boundary_composition natIncidence natIdx6 2 0 = 1 := by
   decide
 
+/- Research cycle 9 (see RESEARCH_LOG.md): classical simplicial homology
+   fixes exactly cycle 8's failure by *alternating* the boundary sign by
+   degree parity. `altIncidence` tests that directly: `n+1 → n` is
+   `Sign.neg` when `n` is even, `Sign.pos` when `n` is odd (unlike
+   `natIncidence`, which uses `Sign.neg` uniformly). Algebraic reasoning
+   first (see root file's `single_link_composition_ne_zero`): a
+   single-face chain can never achieve cancellation via sign choice
+   alone, since composing two links always multiplies two nonzero
+   numbers together -- there's only ever one term, nothing to cancel
+   against. Confirmed empirically (`#eval`, still `false`) before
+   formalizing, then formalized as the general theorem in the root
+   file rather than a one-off instance check. -/
+def altPeanoBoundary : Nat → Boundary Nat PeanoRole
+  | 0 => []
+  | n + 1 =>
+    [ { i := n, role := PeanoRole.pred
+      , sign := if n % 2 = 0 then Sign.neg else Sign.pos
+      , mult := 1 } ]
+
+def altIncidence : Incidence Nat PeanoRole GraphType where
+  boundary := altPeanoBoundary
+  typeFunc := fun _ => GraphType.unit
+  glue     := fun i j => some (i + j)
+  unit     := 0
+  guards   := Guards.permissive Nat
+  boundaryMatrix := fun _ _ => 0
+  laplacian := fun _ _ => 0
+  type_consistent := fun i e h => rfl
+  sign_rules := by
+    intro i e h
+    cases i with
+    | zero => simp [altPeanoBoundary] at h
+    | succ n => simp [altPeanoBoundary] at h; subst h; split <;> simp
+  multiplicities := by
+    intro i e h
+    cases i with
+    | zero => simp [altPeanoBoundary] at h
+    | succ n => simp [altPeanoBoundary] at h; subst h; simp
+  well_founded := by
+    rintro i ⟨e, he, hei⟩
+    cases i with
+    | zero => simp [altPeanoBoundary] at he
+    | succ n => simp [altPeanoBoundary] at he; subst he; simp_all
+  unit_left := by intro i; simp
+  unit_right := by intro i; simp
+  type_preserve := fun _ _ => rfl
+
+/- Not just the alternating-sign guess refuted -- the general theorem
+   proves it fails for ALL n at once, no per-instance `decide` needed
+   (this is the practical payoff of having generalized cycle 8's
+   one-off refutation into a real theorem). -/
+theorem altIncidence_not_boundary_square_zero (n : Nat) (idx : List Nat)
+  (hmem : n + 1 ∈ idx) :
+  boundary_composition altIncidence idx (n + 2) n ≠ 0 :=
+  single_link_composition_ne_zero altIncidence idx (n + 2) (n + 1) n
+    { i := n + 1, role := PeanoRole.pred
+    , sign := if (n + 1) % 2 = 0 then Sign.neg else Sign.pos, mult := 1 }
+    { i := n, role := PeanoRole.pred
+    , sign := if n % 2 = 0 then Sign.neg else Sign.pos, mult := 1 }
+    rfl rfl (by split <;> simp)
+    rfl rfl (by split <;> simp)
+    hmem
+
 end IncidenceCore

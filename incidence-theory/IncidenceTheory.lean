@@ -322,6 +322,123 @@ theorem boundary_operator_square_zero {I R T : Type u} [DecidableEq I]
   have hk' := List.all_eq_true.mp hi' k hk
   exact of_decide_eq_true hk'
 
+/- Research cycle 9 (see RESEARCH_LOG.md): cycle 8 found ∂² ≠ 0 for
+   `natIncidence`'s chain and hypothesized the classical simplicial fix
+   (alternate the boundary sign by degree parity) might restore it.
+   Algebraic reasoning first, before touching Lean: a chain complex's
+   ∂² = 0 works via *cancellation among multiple faces of the same
+   simplex* -- but a single-face chain (each nonzero element has exactly
+   one boundary endpoint) never has more than one term to cancel
+   against, so composing two such links always multiplies two nonzero
+   numbers, which is never zero, *no matter what signs are chosen*.
+   This generalizes cycle 8's one-off refutation (and its planned
+   alternating-sign variant, confirmed empirically to also fail) into a
+   single theorem about *any* `Incidence`: cancellation requires more
+   than one face per element, full stop -- it is not a matter of
+   picking the right sign convention. -/
+
+/- Extracted helper: with a single boundary endpoint, `boundaryMatrix`
+   is exactly that endpoint's signed value at its target and 0
+   elsewhere. -/
+theorem boundaryMatrix_single_link {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i j : I) (e1 : Endpoint I R)
+  (hb1 : inc.boundary i = [e1]) (he1i : e1.i = j) (x : I) :
+  boundaryMatrix inc idx i x =
+    if x = j then
+      (match e1.sign with
+       | Sign.neg => -(Int.ofNat e1.mult)
+       | Sign.zero => 0
+       | Sign.pos => Int.ofNat e1.mult)
+    else 0 := by
+  unfold boundaryMatrix
+  dsimp only
+  rw [hb1]
+  simp only [List.foldl_cons, List.foldl_nil]
+  by_cases h : x = j
+  · subst h
+    rw [dif_pos he1i]
+    rw [if_pos rfl, Int.zero_add]
+  · have hne : e1.i ≠ x := fun hc => h (hc.symm.trans he1i)
+    rw [dif_neg hne]
+    simp [h]
+
+/- Extracted helper: folding `(+f y)` over a list where `f` vanishes
+   except at one target reduces to (count of the target) × (its value). -/
+theorem foldl_add_eq_count_mul {I : Type u} [DecidableEq I]
+  (idx : List I) (x : I) (f : I → Int)
+  (hother : ∀ y ∈ idx, y ≠ x → f y = 0) :
+  ∀ acc, idx.foldl (fun a y => a + f y) acc = acc + (idx.count x) * f x := by
+  induction idx with
+  | nil => intro acc; simp
+  | cons hd tl ih =>
+    intro acc
+    simp only [List.foldl_cons]
+    have ih' : ∀ y ∈ tl, y ≠ x → f y = 0 := fun y hy => hother y (List.mem_cons_of_mem _ hy)
+    rw [ih ih' (acc + f hd)]
+    by_cases h : hd = x
+    · subst h
+      rw [List.count_cons_self]
+      push_cast
+      rw [Int.add_mul, Int.one_mul]
+      omega
+    · have hz := hother hd List.mem_cons_self h
+      rw [List.count_cons_of_ne h, hz]
+      omega
+
+/- Extracted helper: a nonzero-sign, positive-multiplicity endpoint's
+   signed value is nonzero, regardless of which of the two nonzero signs
+   it is. -/
+theorem signed_ne_zero {I R : Type u} (e : Endpoint I R)
+  (hs : e.sign ≠ Sign.zero) (hm : e.mult ≥ 1) :
+    (match e.sign with
+     | Sign.neg => -(Int.ofNat e.mult)
+     | Sign.zero => (0 : Int)
+     | Sign.pos => Int.ofNat e.mult) ≠ 0 := by
+  revert hs
+  cases e.sign with
+  | neg => intro hs; simp; omega
+  | zero => intro hs; exact absurd rfl hs
+  | pos => intro hs; simp; omega
+
+/- The main impossibility theorem: no choice of (nonzero) signs on a
+   single-face chain can make two consecutive links compose to zero. -/
+/- Merkle-ID: foundation.axiomatization.single_link_impossibility
+   ∂² ≠ 0 for any single-face chain, independent of the sign convention. -/
+theorem single_link_composition_ne_zero {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i j k : I)
+  (e1 e2 : Endpoint I R)
+  (hb1 : inc.boundary i = [e1]) (he1i : e1.i = j) (he1s : e1.sign ≠ Sign.zero)
+  (hb2 : inc.boundary j = [e2]) (he2i : e2.i = k) (he2s : e2.sign ≠ Sign.zero)
+  (hij : j ∈ idx) :
+  boundary_composition inc idx i k ≠ 0 := by
+  have hm1 : e1.mult ≥ 1 := inc.multiplicities i e1 (by rw [hb1]; exact List.mem_singleton_self e1)
+  have hm2 : e2.mult ≥ 1 := inc.multiplicities j e2 (by rw [hb2]; exact List.mem_singleton_self e2)
+  unfold boundary_composition
+  have hother : ∀ y ∈ idx, y ≠ j →
+      boundaryMatrix inc idx i y * boundaryMatrix inc idx y k = 0 := by
+    intro y _ hy
+    rw [boundaryMatrix_single_link inc idx i j e1 hb1 he1i y, if_neg hy]
+    simp
+  rw [foldl_add_eq_count_mul idx j
+      (fun y => boundaryMatrix inc idx i y * boundaryMatrix inc idx y k) hother 0]
+  have hBij : boundaryMatrix inc idx i j =
+      (match e1.sign with
+       | Sign.neg => -(Int.ofNat e1.mult)
+       | Sign.zero => 0
+       | Sign.pos => Int.ofNat e1.mult) := by
+    rw [boundaryMatrix_single_link inc idx i j e1 hb1 he1i j, if_pos rfl]
+  have hBjk : boundaryMatrix inc idx j k =
+      (match e2.sign with
+       | Sign.neg => -(Int.ofNat e2.mult)
+       | Sign.zero => 0
+       | Sign.pos => Int.ofNat e2.mult) := by
+    rw [boundaryMatrix_single_link inc idx j k e2 hb2 he2i k, if_pos rfl]
+  have hcount : idx.count j ≥ 1 := List.count_pos_iff.mpr hij
+  have hne1 := signed_ne_zero e1 he1s hm1
+  have hne2 := signed_ne_zero e2 he2s hm2
+  simp only [Int.zero_add, hBij, hBjk]
+  exact Int.mul_ne_zero (by omega) (Int.mul_ne_zero hne1 hne2)
+
 /- Glue operation matrix correspondence -/
 /- Merkle-ID: implementation.linear_algebra.glue_matrix
    How glue operations correspond to matrix operations on boundary matrices. -/

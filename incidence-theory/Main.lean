@@ -143,3 +143,7 @@ def main : IO Unit := do
   IO.println "  → unlike the triangle (2-graded: edges→nodes, nodes have no further"
   IO.println "    boundary), unbounded-depth chains compose nonzero -- confirms the"
   IO.println "    bug-fix PR's conditional (not unconditional) ∂²=0 hypothesis was right"
+  IO.println "  ✗ tried the classical fix (alternating sign by parity) -- still fails,"
+  IO.println "    and single_link_composition_ne_zero proves WHY, generally: a single-"
+  IO.println "    face chain can never cancel (only one term, nothing to cancel against),"
+  IO.println "    for ANY sign choice on ANY Incidence -- not just this one instance"

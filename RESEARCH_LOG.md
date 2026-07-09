@@ -475,3 +475,88 @@ useful too (it would mean Inc's `boundaryMatrix`/`Int`-multiplication
 setup doesn't actually reproduce the classical telescoping mechanism,
 which would be worth knowing precisely, and probably worth understanding
 why before cycle 10).
+
+## Cycle 9
+
+**Hypothesis**: (as queued above) alternating the boundary sign by
+parity, the classical simplicial-homology fix, recovers `∂² = 0` for
+the Peano chain.
+
+**Method**: before writing any Lean, reasoned about it algebraically.
+Real simplicial `∂² = 0` works via *cancellation among multiple faces of
+the same simplex* (e.g. a 2-simplex's 3 faces cancel pairwise in the
+alternating sum). `peanoBoundary` gives each nonzero element exactly
+*one* boundary endpoint — a single-face chain, not a multi-face simplex.
+Composing two such links multiplies exactly two nonzero numbers
+(`boundaryMatrix(n+2,n+1) * boundaryMatrix(n+1,n)`), and a product of
+two nonzero numbers is never zero, *regardless of which signs are
+chosen* — there is only ever one term, nothing to cancel it against.
+This predicted the alternating-sign fix cannot work, for a specific,
+checkable reason, before touching code.
+
+**Result**: **prediction confirmed**, on two levels:
+- Empirically first (per this project's `#eval`-before-formalizing
+  discipline): built `altIncidence` (`n+1 → n` alternates `Sign.neg`/
+  `Sign.pos` by `n`'s parity) and checked — still `false`, as predicted.
+- Then generalized past a one-off refutation into an actual theorem,
+  `single_link_composition_ne_zero` (root file): for *any* `Incidence`,
+  if `i`'s boundary is exactly one nonzero-sign link to `j`, and `j`'s
+  boundary is exactly one nonzero-sign link to `k`, then composing
+  boundary twice from `i` to `k` is nonzero — independent of which
+  signs were picked. This directly proves `altIncidence` (and any other
+  single-face chain, present or future) fails `∂² = 0` for *every* `n`
+  at once (`altIncidence_not_boundary_square_zero`), not just the one
+  index list a `decide` call would check.
+
+This was the most proof-engineering-heavy cycle so far — getting there
+required two supporting lemmas (`boundaryMatrix_single_link`: with a
+single boundary endpoint, `boundaryMatrix` is exactly that endpoint's
+signed value at its target and 0 elsewhere; `foldl_add_eq_count_mul`: a
+`List.foldl` summing a function that vanishes off one target reduces to
+count-times-value), plus real friction reasoning about `boundaryMatrix`'s
+internal `by_cases`-generated term *symbolically* for an abstract
+`[DecidableEq I]` — noticeably harder than the `decide`-driven concrete
+proofs every earlier cycle relied on, where the kernel just computes
+through everything for a concrete type. Recorded as a genuine, if minor,
+finding about this codebase: reasoning abstractly about `boundaryMatrix`
+is currently more awkward than reasoning about it concretely; a future
+cleanup redefining it via an explicit `if h : e.i = j then ... else ...`
+term (rather than a tactic-mode `by_cases` inside a `foldl` lambda) might
+make this kind of general proof easier to write next time.
+
+`#print axioms`: `boundaryMatrix_single_link` needs only `propext`;
+`foldl_add_eq_count_mul` adds `Quot.sound`; the rest add
+`Classical.choice` (all standard, no `sorryAx`). Added to root
+`IncidenceTheory.lean` (the general theorem, next to
+`boundary_operator_square_zero`) and `Peano.lean` (`altIncidence` +
+its application), wired into `Main.lean`.
+
+**What this settles**: cycles 1-3 established that `≈`-faithfulness
+needs the *right kind* of distinguishing structure (not automatic).
+Cycles 8-9 establish the analogous fact for `∂² = 0`: it needs the
+*right kind* of multi-face structure (not automatic, and — now proven —
+not fixable by sign convention alone for a single-face chain). Both are
+instances of the same shape of finding: Inc's abstract machinery
+(`boundaryMatrix`, `≈`) is expressive enough to state strong properties,
+but satisfying them is a real, checkable constraint on the instance, not
+a free consequence of "being an `Incidence`".
+
+**Next hypothesis (cycle 10, not yet attempted)**: `single_link_composition_
+ne_zero` shows *why* single-face chains can't achieve `∂² = 0`, which
+implies the fix has to add a genuine second face per element, not adjust
+signs. Concretely: build a *filled* structure with an actual 2-graded
+shape but *infinite* extent, unlike the (finite, 3-node) triangle -- e.g.
+an infinite "path complex" `PathId := node (n : Nat) | edge (n : Nat)`
+where `edge n` connects `node n` and `node (n+1)` via *two* boundary
+endpoints (signed +/-, mirroring `triIncidence`'s edges exactly), and
+`node n` has empty boundary. Hypothesis: this satisfies `∂² = 0` for the
+*same* trivial dimension-exhaustion reason the triangle does (nodes have
+no further boundary) -- if so, that's not surprising, but is a useful
+sanity check that the *finite-vs-infinite* distinction was never the
+real issue (cycles 8-9 already located the real issue as single-face
+vs. multi-face). If confirmed cheaply, more interesting to then check
+whether `single_link_composition_ne_zero`'s *converse* direction has any
+clean statement: is there a minimal *sufficient* condition (beyond "has
+≥2 faces") under which a chain-shaped Inc instance provably satisfies
+`∂² = 0`? That would be the genuinely new content for cycle 10, not
+just re-confirming the 2-graded pattern again.
