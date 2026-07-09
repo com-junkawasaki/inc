@@ -1276,17 +1276,90 @@ this way tend to be cheap to close (this one was, having already-proven
 lemmas do almost all the work) precisely because the hard infrastructure
 was already built for a different purpose.
 
-**Next hypothesis (cycle 20, not yet attempted)**: item 2 of cycle 18's
-audit queue, not yet attempted: does `boundaryMatched_of_two_entries`
-have a natural three-(or-more)-entry generalization? Motivating case:
-`simplexIncidence`'s `face` element has a genuine *three*-entry boundary
-(the alternating sum `∂[0,1,2] = [1,2]-[0,2]+[0,1]`) that no existing
-bisimulation-matching lemma covers -- unlike `e01`/`e02`/`e12` (two
-entries each, cycle 18's target), `face` was left untouched by cycle
-18's relation entirely. Worth checking concretely first (does `face`
-even have a plausible bisimulation partner to test against, given it's
-the unique top-dimensional element -- or is the three-entry lemma
-premature abstraction until a second 3-entry instance exists to
-validate it against, the same caution this project applied to
-`single_link`/`two_link` generalizing only after 2+ real instances
-needed each one)?
+## Cycle 20
+
+**Hypothesis**: (item 2 of cycle 18's audit queue) does
+`boundaryMatched_of_two_entries` have a natural three-(or-more)-entry
+generalization, motivated by `simplexIncidence.face`'s genuine 3-entry
+boundary? Queued explicitly with a caution attached: check concretely
+first whether `face` even has a plausible bisimulation partner, rather
+than assuming the generalization is warranted.
+
+**Method**: did the concrete check the hypothesis asked for, before
+writing any Lean. Grepped every `boundary`-defining function in the
+project (`peanoBoundary`, `pairBoundary`/`pairBoundaryChained`,
+`pathBoundary`/`pathBoundaryChained`, `simplexBoundary`, `triBoundary`)
+for any element with 3+ boundary entries besides `face` itself.
+
+**Result**: **none found -- the generalization is premature, and
+declined rather than built speculatively.** `PairId.pair`,
+`pathIncidenceChained`'s edges, and `simplexIncidence`'s own edges
+(`e01`/`e02`/`e12`) are all 2-entry; `face` is the *only* 3-entry
+element anywhere in this codebase, and (being the unique top-dimensional
+element of a single fixed 2-simplex) has no natural peer to test a
+bisimulation-collapse conjecture against the way `v0`/`v1`/`v2` and
+`e01`/`e02`/`e12` did. Building a 3-entry `boundaryMatched` lemma now
+would validate against zero real instances, the same premature-
+abstraction risk this project deliberately avoided twice already:
+`single_link_composition_ne_zero` (cycle 9) waited for `altIncidence` as
+a second data point before being trusted as general, and
+`two_link_composition_value` (cycle 17) was itself motivated by an
+*existing* concrete need (`pathIncidenceChained`'s edges), not built on
+spec. Recording a declined generalization is itself a valid research
+output under this project's discipline -- consistent with, not a
+departure from, "don't force scope."
+
+With that item closed (as "not now," not "abandoned" -- it can be
+revisited if a second 3-entry instance ever arises), used the remaining
+cycle budget on a different, well-scoped, definitely-not-premature task:
+T5 (translation faithfulness) had only ever been exercised on two
+instances (`natToFiniteSet` for `natIncidence`, `pairToShape` for
+`pairIncidenceChained`, both cycle 5); `pathIncidenceChained` (fully
+faithful since cycle 14, so the same "injective translation reflects
+≈" pattern applies cleanly) never got one. Built `pathToNatBool : PathId
+→ Nat × Bool` (`node n ↦ (n, false)`, `edge n ↦ (n, true)`), proved
+injective by a direct `cases`/`simp` (no induction needed, unlike
+`natToFiniteSet`'s length-counting or `pairToShape`'s structural
+recursion), and `pathToNatBool_reflects_approxBisim` via the same
+one-line composition with `pathIncidenceChained_approxBisim_iff` cycle
+5's two instances used. All three theorems typecheck; `#print axioms`:
+`pathToNatBool_injective` needs only `propext`, `_reflects_approxBisim`
+adds the standard `Classical.choice`/`Quot.sound`. Full `lake build`:
+38/38 jobs. Repo-wide `sorry`-as-tactic grep: none (a broad text grep
+for the *word* "sorry" now also matches cycle 18's demo-text string in
+`Main.lean`, describing "zero sorry" -- distinguished by grepping for
+the tactic form specifically, not just the substring, since cycle 19
+first hit this false positive).
+
+**Synthesis**: `pathToNatBool`'s near-triviality compared to
+`pairToShape`'s genuine structural recursion is itself a small but real
+data point, not just an easy win -- translation-construction *effort*
+tracks the *carrier type's own structure* (is it recursively nested, or
+just a tagged index?), not whether the instance satisfies `Incidence` or
+is `≈`-faithful. `PathId`'s simplicity (a bare `Nat`-tagged sum) made
+this cycle's second half almost mechanical once the first half's audit
+question was answered -- appropriate, since the point of this cycle was
+closing two small open items cleanly, not chasing a new phenomenon.
+
+**Next hypothesis (cycle 21, not yet attempted)**: no mandatory item
+carries over -- both of cycle 18's audit questions are now resolved
+(one closed with a new theorem in cycle 19, one explicitly declined this
+cycle) and T5 now has three confirming instances (`natIncidence`,
+`pairIncidenceChained`, `pathIncidenceChained`), which is enough to
+treat that thread as established without a fourth repeat, matching how
+prior 3-confirmation threads (cycles 8-10's faithfulness-fix tension,
+cycles 6-7/15's cross-instance boundary/glue split) were closed. Fresh
+ground worth considering, raised but not pursued this cycle since it
+would need real proof-engineering budget of its own: `simplexIncidence`
+is NOT `≈`-faithful (`v0 ≈ v1`, `e01 ≈ e02`, both proven, cycles 12/18)
+-- unlike the T5 pattern above (which only ever needs injectivity + an
+existing faithfulness theorem), could a translation for `simplexIncidence`
+be built that reflects the *quotient* structure exactly -- i.e. constant
+on each `≈`-class and *injective across* classes, so translation-equal
+would be *equivalent* to (not just imply) `approxBisim`, not merely
+one-directional? This is a genuinely different, harder claim than
+anything T5 has tested so far (it requires characterizing `≈`'s classes
+completely, including `face`'s status, not just proving one map
+injective) -- worth scoping carefully as its own hypothesis rather than
+assumed easy, and abandoning honestly if it stalls rather than forcing
+it, per this project's standing discipline.

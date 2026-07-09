@@ -415,4 +415,44 @@ theorem pathIncidenceChained_edge_node_next_zero (n : Nat) :
   rw [pathIncidenceChained_node_forward_zero, pathIncidenceChained_node_self_boundary_zero]
   simp
 
+/- Research cycle 20 (see RESEARCH_LOG.md): cycle 19 queued a second
+   audit item -- does `boundaryMatched_of_two_entries` (cycle 18) want a
+   three-entry generalization, motivated by `simplexIncidence.face`'s
+   genuine 3-entry boundary? Checked concretely first, without writing
+   any Lean: grepped every `boundary`-defining function in the codebase
+   (`peanoBoundary`, `pairBoundary`/`pairBoundaryChained`,
+   `pathBoundary`/`pathBoundaryChained`, `simplexBoundary`,
+   `triBoundary`) for any element besides `face` with 3+ boundary
+   entries. Found none -- `PairId.pair`, `pathIncidenceChained`'s edges,
+   and `simplexIncidence`'s own edges are all 2-entry; `face` is the
+   *only* 3-entry element anywhere in this project. Building a general
+   3-entry lemma now would validate against a single instance with no
+   second data point, the same premature-abstraction risk this project
+   deliberately avoided for `single_link`/`two_link` (both cycles 9/17
+   waited for a second real instance -- `altIncidence`,
+   `pathIncidenceChained` respectively -- before trusting the
+   generalization). Declined, honestly, rather than built speculatively.
+
+   Picked up T5 (translation faithfulness) instead: cycle 5 built
+   `natToFiniteSet`/`pairToShape` for `natIncidence`/`pairIncidenceChained`
+   but `pathIncidenceChained` (fully faithful since cycle 14, so the
+   pattern applies cleanly) was never given one. Notable contrast, not
+   just repetition: `PairId` is a genuinely recursive nested type, so
+   `pairToShape` had to recurse structurally; `PathId` is just a tagged
+   `Nat` (`node n | edge n`), so its faithful translation is the trivial
+   `Nat × Bool` pairing below -- translation-construction effort tracks
+   the carrier type's own structure, not `Incidence`-satisfaction. -/
+def pathToNatBool : PathId → Nat × Bool
+  | PathId.node n => (n, false)
+  | PathId.edge n => (n, true)
+
+theorem pathToNatBool_injective {x y : PathId} (h : pathToNatBool x = pathToNatBool y) :
+  x = y := by
+  cases x <;> cases y <;> simp [pathToNatBool] at h <;> simp [h]
+
+theorem pathToNatBool_reflects_approxBisim {x y : PathId}
+  (h : pathToNatBool x = pathToNatBool y) : approxBisim pathIncidenceChained x y := by
+  rw [pathIncidenceChained_approxBisim_iff]
+  exact pathToNatBool_injective h
+
 end IncidenceCore
