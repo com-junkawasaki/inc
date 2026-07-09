@@ -4,6 +4,7 @@ import IncidenceTheory.Pairs
 import IncidenceTheory.CrossInstance
 import IncidenceTheory.PathComplex
 import IncidenceTheory.Simplex
+import IncidenceTheory.Cycle
 
 /- `main`'s `do` block accumulates one `IO.println` per research cycle
    (18 so far); Lean's `do`-notation desugaring is right-recursive and
@@ -305,3 +306,17 @@ def main : IO Unit := do
   IO.println "    cycle 18, 7 alternatives/9 goals) structurally resembles the risky shape --"
   IO.println "    but it worked cleanly on its first attempt, no recorded friction. NOT rewritten:"
   IO.println "    this project doesn't rewrite working code for its own sake"
+
+  IO.println "\n🔄 A Genuinely New Instance: A Closed Cycle, No Base Case At All (cycle 26):"
+  IO.println "  ✓ cycleIncidence: c0→c3→c2→c1→c0, every element has exactly one boundary entry,"
+  IO.println "    NONE is empty -- Incidence's own well_founded field only forbids a DIRECT"
+  IO.println "    self-loop, not a longer cycle, so this is a legitimate, buildable instance"
+  IO.println "  ✓ ALL FOUR elements collapse into ONE ≈-class -- the SAME 'everything related to"
+  IO.println "    everything' relation cycles 2/12/13/18 used for shared-EMPTY boundary also"
+  IO.println "    works here, where NOTHING is empty -- 'flat leaves collapse' was never really"
+  IO.println "    about emptiness, it's about lacking a well-founded distinguishing measure"
+  IO.println "  ✓ ∂² still fails (single_link_composition_ne_zero applies 'for free' -- the"
+  IO.println "    theorem's reach isn't accidentally tied to acyclicity)"
+  IO.println "  ✓ glue is Z/4Z addition -- the FIRST genuine group-structured glue in this"
+  IO.println "    project (commutative, every element invertible), unlike natIncidence's"
+  IO.println "    infinite monoid or every other instance's non-group left-biased selection"

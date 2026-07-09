@@ -1688,15 +1688,91 @@ correctly not escalated into unnecessary rewriting once the evidence
 didn't support it. Both outcomes match this project's stated discipline
 rather than manufacturing more work than the findings warranted.
 
-**Next hypothesis (cycle 26, not yet attempted)**: no mandatory item
-carries over -- both cycle 24 queue items are closed. This is a natural
-point for either (a) a genuinely fresh instance/phenomenon (the
-research log hasn't introduced a new `Incidence` carrier type since
-`simplexIncidence`, cycle 11 -- worth considering whether another
-concrete mathematical structure would surface a new phenomenon the way
-each prior new instance did), or (b) continuing to mine the now-
-substantial general-theorem library for further audits in the spirit of
-cycle 19/20/25's "check whether an existing theorem's free parameters
-have all been exercised" pattern -- neither is queued as mandatory;
-worth deciding fresh next cycle based on what seems most likely to
-surface a genuine finding rather than repeat a now-familiar pattern.
+## Cycle 26
+
+**Hypothesis**: (option (a) of cycle 25's queue) introduce a genuinely
+new `Incidence` carrier type -- the first since `simplexIncidence`
+(cycle 11). Every existing instance is fundamentally *acyclic* (a
+well-founded chain, or a finite tree/simplex with at least one empty-
+boundary leaf). Does a genuine *cycle* -- every element pointing to a
+"predecessor" with no base case at all -- even satisfy `Incidence`'s
+own structural requirements, and if so, does the "flat leaves collapse"
+pattern (cycles 2/12/13/18) generalize beyond *shared emptiness*
+specifically?
+
+**Method**: read `Incidence`'s own `well_founded` field first, before
+writing any construction: `∀ i, ¬∃ e ∈ boundary i, e.i = i` -- this
+forbids only a *direct* self-loop (an element in its own boundary), not
+a longer cycle, so a genuine multi-step cycle is legitimate, not a
+workaround. Built `CycleId := c0 | c1 | c2 | c3` with `boundary ci =
+[{cyclePred ci, chain, neg, 1}]` (`c0→c3→c2→c1→c0`), and `glue` as
+`Z/4Z` addition (via `Nat ↔ CycleId` helper functions and `% 4`) rather
+than reusing the left-biased-selection pattern every other instance
+used, specifically to get a *group*-structured `glue` (commutative,
+invertible) for the first time. Built the full `Incidence` instance
+(all 7 proof obligations) before testing anything else -- it typechecked
+on the first attempt, confirming the structural legitimacy question
+immediately. Then tested the collapse conjecture: does the same
+"everything related to everything" relation from cycles 2/12/13/18
+witness a bisimulation here too, where (unlike those cycles) *no*
+element has empty boundary?
+
+**Result**: **confirmed on essentially the first attempt (one minor fix:
+explicit witness endpoints instead of underscore-inferred ones, a
+smaller version of cycle 22's lesson) -- ALL FOUR elements collapse into
+a single `≈`-class, proving with only `propext` (no `Classical.choice`,
+fully constructive).** `cycleIncidence_isBisimulation_full` shows the
+uniform relation satisfies `IsBisimulation`: since every element's
+single boundary entry has an *identical* shape (`chain`, `neg`, `1`),
+`boundaryMatched` only ever needs *some* compatible, related counterpart
+to exist, and the fully-related relation trivially supplies one
+regardless of which specific element it is -- structurally the same
+argument as the shared-empty-boundary cases, just with a non-empty
+uniform shape instead of an empty one. This confirms the hypothesis:
+**"flat leaves collapse" was never really about *emptiness* -- it's
+about *lacking a well-founded, distinguishing measure*, and a uniform
+cycle is a second, structurally different way to lack one.** Also
+confirmed, as expected rather than surprising: `single_link_composition_ne_zero`
+(cycle 9) applies "for free" to `cycleIncidence` too (∂² still fails,
+via the exact same general theorem, confirming its reach isn't
+accidentally tied to acyclicity), and `glue`'s new algebraic properties
+both hold (`cycleIncidence_glue_comm`, `cycleIncidence_glue_has_inverse`
+-- the first genuinely *group*-structured `glue` in this project, unlike
+`natIncidence`'s inverse-free monoid or every other instance's non-group
+left-biased selection). `#print axioms` across all seven new theorems:
+`propext` alone on five of them, standard three on the two that route
+through `two_link`/`single_link`-family general theorems. Full `lake
+build`: 40/40 jobs (new file `Cycle.lean`, wired into `Main.lean`).
+Repo-wide `sorry`-as-tactic grep: none.
+
+**Synthesis**: this is the strongest form of the "flat collapse" pattern
+seen yet -- not "some pair of elements collapse" (cycles 2/12) or "some
+pair collapses, but not others" (`simplexIncidence`, where vertices/
+edges/face stay separated, cycles 12/18/23) but *every* element in the
+entire carrier type collapsing into one class, because there's no
+substructure anywhere to distinguish any element from any other. This
+sharpens the general lesson first stated informally back when the fix
+for `natIncidence`/`pairIncidenceChained`/`pathIncidenceChained`'s
+collapse was "give elements a well-founded distinguishing chain" (cycles
+2/3/13/14): the *actual* content of that fix was never about filling in
+empty boundaries specifically -- it was about establishing a
+well-founded *measure*, and cycle 26 is the first instance where "no
+measure exists at all" is demonstrated directly (via a genuine cycle)
+rather than merely "a measure exists but two elements happen to share
+the same value under it" (empty boundary = measure value zero, shared
+by multiple elements).
+
+**Next hypothesis (cycle 27, not yet attempted)**: no mandatory item
+carries over. `cycleIncidence` opens a few natural but unattempted
+follow-ups, none committed to: (1) does `cycleIncidence` admit a
+"fixed" variant analogous to the `_Chained` pattern (cycles 3/14) that
+recovers `≈`-faithfulness -- and if so, does the fix necessarily break
+something else the way it did for `pairIncidenceChained`/
+`pathIncidenceChained` (cycles 8/16), or does a cycle's closed structure
+behave differently? (2) `glue`'s group structure (`Z/4Z`) is new --
+does `cycleIncidence` have an interesting *translation* (T5) story,
+given `glue` here is genuinely invertible unlike every prior instance
+(a translation into an actual `ZMod`-like target, if buildable without
+mathlib, might reveal something `natToFiniteSet`/`pairToShape`/
+`pathToNatBool` didn't need to consider)? Either is a reasonable next
+step; neither is scoped yet.
