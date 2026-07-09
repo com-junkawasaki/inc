@@ -722,3 +722,81 @@ Alternatively, revisit cycle 5's translation-faithfulness question for
 worked instances exist to test a translation against. Genuinely open
 which is more promising -- decide at the start of cycle 12 based on
 which has a cheaper first empirical check.
+
+## Cycle 12
+
+**Hypothesis**: went with the translation-faithfulness direction (the
+cheaper-looking first check): validate cycle 4's general
+`incidence_bisim_faithful` theorem against `simplexIncidence` as a
+third, genuinely 3-graded (vertex/edge/face) data point -- expected a
+confirmation, since cycles 4/8's method (assign a dimension/measure,
+prove boundary strictly decreases it, prove boundary-extensionality)
+looked like it should transfer directly.
+
+**Result**: **the expectation was wrong, and the reason is a genuine,
+useful discovery, not a dead end**. Attempting `hext` for
+`simplexIncidence` hit an immediate wall: `v0`, `v1`, `v2` all have
+*empty* boundary with *nothing* distinguishing one from another (unlike
+`natIncidence`'s `0`, which is uniquely the only empty-boundary element
+in its chain -- every other natural has *some* nonempty boundary
+telling it apart). This means `boundaryMatched simplexIncidence (=) v0
+v1` holds *vacuously* (both sides empty), so `hext` as stated is simply
+false for this instance. This is cycle 2's "flat atoms collapse"
+pattern (`pairIncidence_atoms_collapse`) -- independently rediscovered
+here in a structurally unrelated third instance, confirming it is a
+*general* phenomenon (any `Incidence` with 2+ elements sharing identical
+boundary, not just an artifact of how `PairId`'s atoms happened to be
+built) rather than something specific to the earlier two instances.
+
+Proved the collapse concretely rather than asserting it:
+`simplexIncidence_vertices_collapse` (`approxBisim simplexIncidence v0
+v1`) via the same bisimulation-relation-construction technique as
+`pairIncidence_atoms_collapse`, plus `simplexIncidence_vertices_not_eq`
+as the contrasting fact (`v0 ≠ v1`). `#print axioms`: `propext`/
+`Quot.sound`, no `sorryAx`.
+
+Attempted one natural extension -- does the collapse *propagate* up a
+dimension? `e01`/`e02`/`e12` only differ in *which* (now pairwise-
+bisimilar) vertices they connect, so plausibly they collapse too. A
+first attempt at `e01 ≈ e02` hit real proof-engineering friction (a
+9-way case split from combining vertex- and edge-level relation
+clauses, plus reaching for `tauto`, unavailable without mathlib) that
+didn't resolve in reasonable time. **Left honestly unproved rather than
+forced through** -- recorded in `Simplex.lean` as a stated, plausible,
+but explicitly *not formalized* conjecture, not claimed as established.
+This is the same discipline as leaving `glue_preserves_boundary_operator`
+etc. as honest placeholders in the original bug-fix PR: a claim without
+a proof is not a theorem here, regardless of how likely it looks.
+
+**What this adds to the running picture**: cycles 1-4 already
+established that faithfulness needs the right distinguishing structure
+and isn't automatic; this cycle's contribution isn't a new *mechanism*,
+it's evidence about *scope* -- three independent, structurally unrelated
+instances (`pairIncidence`'s bare atoms, and now `simplexIncidence`'s
+bare vertices) hit the identical failure mode, while the *fixed*
+versions (`natIncidence`'s chain, `pairIncidenceChained`'s tagged
+atoms) all succeed via the identical fix (give every element enough
+boundary structure to be recovered uniquely). That's a stronger
+confirmation of cycle 3-4's "general recipe" than any single instance
+could provide on its own -- convergent failure and convergent fix
+across unrelated constructions.
+
+**Next hypothesis (cycle 13, not yet attempted)**: two candidates,
+either legitimate:
+(a) finish what this cycle left open -- prove
+`simplexIncidence_edges_collapse` (or the full three-class
+characterization: `≈` on `simplexIncidence` coincides exactly with
+"same dimension") with a cleaner proof strategy than the 9-way case
+split that stalled this cycle, e.g. building the relation as a single
+`simplexMeasure x = simplexMeasure y` predicate (matching cycle 4's
+measure-based framing) rather than an explicit disjunction of specific
+element names, which may sidestep the case explosion entirely; or
+(b) the translation-faithfulness direction originally queued for cycle
+12, now revisited for `pathIncidence` specifically (cheaper than
+`simplexIncidence` since `pathIncidence`'s nodes, like `natIncidence`'s,
+are *not* uniformly empty-boundary -- only `node 0` needs checking,
+not three interchangeable leaves), rather than assumed to work the same
+way `natIncidence`'s did. Lean toward (a) if the `simplexMeasure`-based
+relation looks like a quick win once attempted; toward (b) if it
+doesn't, rather than re-fighting the same case split that already
+stalled once.

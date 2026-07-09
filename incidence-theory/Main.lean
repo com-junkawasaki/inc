@@ -157,3 +157,10 @@ def main : IO Unit := do
   IO.println "    (multi-face AND non-leaf faces), satisfies ∂²=0 via REAL cancellation"
   IO.println "    with the classical alternating-sum convention -- not accidental:"
   IO.println "    drop the alternation (wrongSimplexIncidence) and it breaks (-2 ≠ 0)"
+
+  IO.println "\n🔍 A Third Instance of the Collapse Pattern (cycle 12):"
+  IO.println "  ⚠ v0/v1/v2 all have empty boundary with nothing distinguishing them --"
+  IO.println "    cycle 2's 'flat atoms collapse' pattern, independently rediscovered"
+  IO.println "    in simplexIncidence: v0 ≈ v1 even though v0 ≠ v1 (proven, not assumed)"
+  IO.println "  → not a Peano/Pairs-specific quirk: a general phenomenon whenever an"
+  IO.println "    Incidence has multiple elements sharing identical boundary"

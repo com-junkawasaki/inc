@@ -140,4 +140,40 @@ theorem wrongSimplexIncidence_witness :
   boundary_composition wrongSimplexIncidence simplexIdx SimplexId.face SimplexId.v0 = -2 := by
   decide
 
+/- Research cycle 12 (see RESEARCH_LOG.md): tried to validate cycle 4's
+   general faithfulness theorem against `simplexIncidence` as a third,
+   genuinely 3-graded (vertex/edge/face) data point -- and hit a real
+   surprise instead of a confirmation. `v0`, `v1`, `v2` all have empty
+   boundary with *no* structure distinguishing one from another (unlike
+   `natIncidence`'s `0`, uniquely the only empty-boundary element in its
+   chain). This is exactly cycle 2's "flat atoms collapse" pattern,
+   independently rediscovered in a third, structurally unrelated
+   instance -- not a Peano/Pairs-specific quirk, but a general
+   phenomenon whenever an `Incidence` has *multiple* elements sharing
+   empty (or otherwise identical) boundary. -/
+theorem simplexIncidence_vertices_collapse :
+  approxBisim simplexIncidence SimplexId.v0 SimplexId.v1 := by
+  refine ⟨fun x y =>
+    (x = SimplexId.v0 ∨ x = SimplexId.v1 ∨ x = SimplexId.v2) ∧
+    (y = SimplexId.v0 ∨ y = SimplexId.v1 ∨ y = SimplexId.v2), ?_, ?_⟩
+  · intro x y ⟨hx, hy⟩
+    refine ⟨rfl, ?_, ?_⟩ <;>
+      (rcases hx with hx | hx | hx <;> subst hx <;>
+       rcases hy with hy | hy | hy <;> subst hy <;>
+        simp [simplexIncidence, simplexBoundary])
+  · exact ⟨Or.inl rfl, Or.inr (Or.inl rfl)⟩
+
+theorem simplexIncidence_vertices_not_eq :
+  (SimplexId.v0 : SimplexId) ≠ SimplexId.v1 := by simp
+
+/- Plausible but *not formalized*: the collapse likely propagates up a
+   dimension too -- `e01`/`e02`/`e12` only differ in *which* (now
+   pairwise-bisimilar) vertices they connect, so the same relation,
+   extended with an edge-level disjunct, should relate them as well. A
+   first attempt at `e01 ≈ e02` hit real proof-engineering friction (a
+   9-way case split from combining the vertex- and edge-level clauses,
+   and `tauto`, unavailable without mathlib) that didn't resolve
+   quickly. Left honestly unproved rather than forced -- stated here as
+   an open conjecture for a future cycle, not claimed as established. -/
+
 end IncidenceCore
