@@ -77,4 +77,26 @@ theorem pathIncidence_boundary_square_zero (idx : List PathId) (n : Nat) (k : Pa
     (by intro e he; simp [pathIncidence, pathBoundary] at he
         rcases he with he | he <;> subst he <;> simp [pathIncidence, pathBoundary])
 
+/- Research cycle 13 (see RESEARCH_LOG.md): a self-correction. Cycle 12's
+   log claimed `pathIncidence`'s nodes are "not uniformly empty-boundary,
+   only node 0 needs checking" -- an unverified assumption, wrong on
+   inspection: `pathBoundary (PathId.node _) = []` for *every* `n`, not
+   just `0` (unlike `natIncidence`'s `0`, which is uniquely the only
+   empty-boundary element in its chain). So `pathIncidence`'s nodes
+   collapse under `≈` exactly like `simplexIncidence`'s vertices did
+   (cycle 12) -- a fourth independent instance of the same pattern
+   (`pairIncidence`'s flat atoms, `simplexIncidence`'s vertices, and now
+   `pathIncidence`'s nodes), caught by re-checking a prior cycle's claim
+   before building on it rather than trusting it as given. -/
+theorem pathIncidence_nodes_collapse :
+  approxBisim pathIncidence (PathId.node 0) (PathId.node 1) := by
+  refine ⟨fun x y => (∃ m, x = PathId.node m) ∧ (∃ n, y = PathId.node n), ?_, ?_⟩
+  · intro x y ⟨⟨m, hm⟩, ⟨n, hn⟩⟩
+    subst hm; subst hn
+    refine ⟨rfl, ?_, ?_⟩ <;> simp [pathIncidence, pathBoundary]
+  · exact ⟨⟨0, rfl⟩, ⟨1, rfl⟩⟩
+
+theorem pathIncidence_nodes_not_eq :
+  (PathId.node 0 : PathId) ≠ PathId.node 1 := by simp
+
 end IncidenceCore

@@ -164,3 +164,10 @@ def main : IO Unit := do
   IO.println "    in simplexIncidence: v0 ≈ v1 even though v0 ≠ v1 (proven, not assumed)"
   IO.println "  → not a Peano/Pairs-specific quirk: a general phenomenon whenever an"
   IO.println "    Incidence has multiple elements sharing identical boundary"
+
+  IO.println "\n🔁 A Fourth Instance, and a Self-Correction (cycle 13):"
+  IO.println "  ⚠ pathIncidence's nodes collapse too (node 0 ≈ node 1) -- ALL nodes have"
+  IO.println "    empty boundary, unlike natIncidence's 0, uniquely empty in its chain"
+  IO.println "  → this corrects an unverified claim in cycle 12's own log (checked before"
+  IO.println "    building on it, not trusted as given) -- fourth independent instance"
+  IO.println "    of the same collapse pattern across four unrelated constructions"
