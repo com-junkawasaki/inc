@@ -237,3 +237,63 @@ in the original file, just a `True := trivial` for the generic case) —
 expect to spend part of the cycle just deciding what "translation
 preserves structure" should even mean for a concrete instance before
 attempting to prove anything.
+
+## Cycle 5
+
+**Hypothesis**: (as queued above) a *better* translation than the
+generic `inc_to_set` — one that actually reads the instance's `boundary`
+recursively instead of just checking "empty or not" — can be shown
+injective, hence (via cycle 4's faithfulness theorems) reflects `≈`
+rather than erasing it, for both `natIncidence` and `pairIncidenceChained`.
+
+**Method, and an early course-correction**: first checked whether
+`Fintype`/`Equiv` (the natural Mathlib tools for "translated sets are
+the same size ⇒ originals are equal") are available — they are not (no
+mathlib dependency, confirmed via `#check`). Pivoted to an elementary,
+self-contained target instead:
+- `natToFiniteSet : Nat → List Unit`, built by *exactly* `peanoBoundary`'s
+  own recursion (`n+1` recurses on `n`) — not an unrelated relabeling.
+  `List.length` recovers `n`, giving injectivity directly.
+- `PairShape` (`leaf (n : Nat) | node (l r : PairShape)`) and
+  `pairToShape : PairId → PairShape`, again built by exactly
+  `pairBoundaryChained`'s recursion (atom → leaf, pair → node of the two
+  recursive translations) — the real test, since a naive translation
+  could plausibly flatten/confuse nesting.
+
+**Result**: confirmed for both. `natToFiniteSet_injective` and
+`pairToShape_injective` both hold, composed with cycle 4's
+`natIncidence_approxBisim_iff`/`pairIncidenceChained_approxBisim_iff`
+into `natToFiniteSet_reflects_approxBisim`/`pairToShape_reflects_approxBisim`
+— translation agreement now provably implies `≈` (indeed `=`), the
+opposite of `inc_to_set`'s behavior (which collapses everything nonzero
+into one type regardless of value). `#print axioms`: `propext` alone for
+the two injectivity proofs (pure structural induction, no bisimulation
+machinery needed), the usual three for the `approxBisim`-composed
+versions. No `sorryAx`. Added to `Peano.lean`/`Pairs.lean`, wired into
+`Main.lean`.
+
+Honesty check on scope, since it's easy to oversell this: `pairToShape`
+is close to a straight relabeling of `PairId` (swap `atom`/`pair` for
+`leaf`/`node`), so its injectivity proof is nearly as easy as
+`PairId`'s own constructor injectivity — this cycle demonstrates the
+*shape* of what a faithful T5 translation looks like and that it's
+achievable without mathlib, not a deep independent confirmation. The
+root file's `inc_to_set`/`preserves_limits` are left untouched
+(still honestly labeled unformalized for the fully general case) —
+this is instance-level content, same pattern as `triangle_translation_concrete`,
+not a claim about arbitrary `Incidence` translations.
+
+**Next hypothesis (cycle 6, not yet attempted)**: everything so far
+(cycles 1-5) has worked within a single `Incidence` instance at a time.
+Untouched: T1/T2's *cross-instance* content — e.g., does `glue`
+compose sensibly *between* `natIncidence` and `pairIncidenceChained`
+(there's no operation connecting them right now; `pair (atom n) (atom m)`
+and `natIncidence.glue n m` are unrelated constructions that happen to
+share underlying data). Concretely: is there a meaningful `Incidence`
+homomorphism notion (a map `f : I → I'` commuting with `glue`/`boundary`
+in some precise sense) that would let a statement like "pairing preserves
+sums" (`pairToShape (pair (atom (m+n)) x) ~ combine (pairToShape (atom m))
+(pairToShape (atom n))`-ish) be *stated*, let alone proved? This is more
+exploratory than prior cycles — may spend the cycle just on what the
+right definition is, same as cycle 5's Fintype/Equiv pivot, and that's
+an acceptable outcome to record rather than force through.

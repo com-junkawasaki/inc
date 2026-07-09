@@ -119,3 +119,10 @@ def main : IO Unit := do
   IO.println "  ✓ validated non-vacuously against natIncidence and pairIncidenceChained,"
   IO.println "    replacing their bespoke inductions -- real generalization, not just"
   IO.println "    an abstract curiosity"
+
+  IO.println "\n🗺️  Translation Faithfulness (T5, concretely):"
+  IO.println s!"  natToFiniteSet 3 has length {(natToFiniteSet 3).length} (List Unit target)"
+  IO.println "  ✓ natToFiniteSet is injective ⇒ reflects ≈, unlike the generic"
+  IO.println "    inc_to_set (root file), which collapses all nonzero naturals together"
+  IO.println "  ✓ pairToShape (leaf/node tree target) is injective on the whole nested"
+  IO.println "    pair type too ⇒ reflects ≈ there as well, not just for flat Peano"

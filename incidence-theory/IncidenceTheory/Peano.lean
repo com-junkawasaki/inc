@@ -164,4 +164,40 @@ def natGluingSpec : GluingSpec natIncidence :=
       omega
   }
 
+/- Research cycle 5 (co-scientist step, see RESEARCH_LOG.md): T5
+   ("translation preserves structure") was never given real content in
+   this repo -- `TranslationPreservation.inc_to_set` (root file) maps
+   every element to one of just two trivial types (`ULift Bool`/`ULift
+   Unit`) based only on whether `boundary` is empty, collapsing all of
+   `natIncidence`'s nonzero elements together. This is a concrete,
+   *better* translation to a Set-like target (`List Unit`, built by the
+   same recursion `peanoBoundary` uses: `n+1` recurses on `n`) that
+   doesn't collapse anything -- it's injective, hence (combined with
+   cycle 4's faithfulness theorem) reflects `≈` faithfully rather than
+   erasing it. Elementary (no `Fintype`/`Equiv`, unavailable without
+   mathlib) but honest: this is what T5 "soundness of translation"
+   should actually mean for a concrete instance, demonstrated rather
+   than asserted. -/
+def natToFiniteSet : Nat → List Unit
+  | 0 => []
+  | n + 1 => () :: natToFiniteSet n
+
+theorem natToFiniteSet_length (n : Nat) : (natToFiniteSet n).length = n := by
+  induction n with
+  | zero => rfl
+  | succ k ih => simp [natToFiniteSet, ih]
+
+theorem natToFiniteSet_injective {m n : Nat} (h : natToFiniteSet m = natToFiniteSet n) :
+  m = n := by
+  have hlen := congrArg List.length h
+  rwa [natToFiniteSet_length, natToFiniteSet_length] at hlen
+
+/- T5, concretely: the translation doesn't lose information relevant to
+   `≈` -- agreeing translations imply bisimilar (indeed equal)
+   originals. -/
+theorem natToFiniteSet_reflects_approxBisim {m n : Nat}
+  (h : natToFiniteSet m = natToFiniteSet n) : approxBisim natIncidence m n := by
+  rw [natIncidence_approxBisim_iff]
+  exact natToFiniteSet_injective h
+
 end IncidenceCore

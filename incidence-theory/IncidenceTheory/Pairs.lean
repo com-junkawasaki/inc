@@ -285,4 +285,42 @@ theorem pairIncidenceChained_approxBisim_iff (x y : PairId) :
       pairIncidenceChained_hdec pairIncidenceChained_hext hbisim x y hxy
   · intro h; subst h; exact approxBisim_refl pairIncidenceChained x
 
+/- Research cycle 5 (co-scientist step, see RESEARCH_LOG.md): the same
+   T5 translation-faithfulness question as `natToFiniteSet` in
+   `Peano.lean`, but for the richer nested-pair structure -- a genuine
+   test since a naive translation could plausibly flatten/confuse
+   nesting. `pairToShape` is built by exactly `pairBoundaryChained`'s own
+   recursion (atom -> leaf, pair -> node of the two recursive
+   translations) and is injective, so it reflects `≈` rather than
+   erasing it, for atoms *and* arbitrarily nested pairs. -/
+inductive PairShape where
+  | leaf (n : Nat)
+  | node (l r : PairShape)
+deriving DecidableEq, Repr
+
+def pairToShape : PairId → PairShape
+  | PairId.atom n => PairShape.leaf n
+  | PairId.pair a b => PairShape.node (pairToShape a) (pairToShape b)
+
+theorem pairToShape_injective {x y : PairId} (h : pairToShape x = pairToShape y) :
+  x = y := by
+  induction x generalizing y with
+  | atom m =>
+    cases y with
+    | atom n => simp [pairToShape] at h; rw [h]
+    | pair a b => simp [pairToShape] at h
+  | pair a b iha ihb =>
+    cases y with
+    | atom n => simp [pairToShape] at h
+    | pair a' b' =>
+      simp [pairToShape] at h
+      have ha : a = a' := iha h.1
+      have hb : b = b' := ihb h.2
+      rw [ha, hb]
+
+theorem pairToShape_reflects_approxBisim {x y : PairId}
+  (h : pairToShape x = pairToShape y) : approxBisim pairIncidenceChained x y := by
+  rw [pairIncidenceChained_approxBisim_iff]
+  exact pairToShape_injective h
+
 end IncidenceCore
