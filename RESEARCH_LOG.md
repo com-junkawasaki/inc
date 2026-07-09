@@ -997,24 +997,93 @@ Three data points now agree; this thread doesn't need a fourth
 confirmation of the same shape either, similar to how cycle 14 closed
 out the "flat leaves collapse" thread.
 
-**Next hypothesis (cycle 16, not yet attempted)**: two threads
-(collapse-and-fix, cross-instance boundary/glue split) have each run
-their course across 3-4 confirming instances and don't need more
-repeats. Two genuinely open items remain on the books instead of
-picking a new direction cold: (1) cycle 12's still-unformalized
-conjecture that `simplexIncidence`'s edges (`e01`/`e02`/`e12`) collapse
-under `≈` the same way its vertices did, which stalled twice on
-proof-engineering friction (9-way case splits, no `tauto`) -- worth a
-third attempt only with a different strategy, e.g. proving a reusable
-"boundary-entries-pairwise-related ⇒ elements bisimilar" lemma first
-instead of hand-rolling the relation per case; (2) whether
-`pathIncidenceChained` (now fully faithful, cycle 14) satisfies `∂² = 0`
-the way `pathIncidence` (cycle 10, unfixed) trivially does via leaf-
-reaching boundaries -- `pathIncidenceChained`'s nodes are no longer
-leaves (each carries a `chain` link), so cycle 10's
-`boundary_composition_zero_of_leaf_boundary` sufficiency theorem no
-longer straightforwardly applies, and cycle 9's impossibility theorem
-(`single_link_composition_ne_zero`) may instead predict failure at the
-node level, the same way it did for plain `natIncidence`'s chain in
-cycle 9 -- an under-explored intersection of the two threads rather than
-a repeat of either.
+## Cycle 16
+
+**Hypothesis**: (item 2 queued above) does `pathIncidenceChained` (fully
+faithful since cycle 14) satisfy `∂² = 0`? Its nodes are no longer
+leaves (each carries a `chain` link to its predecessor), so cycle 10's
+leaf-boundary sufficiency theorem shouldn't straightforwardly apply --
+and the node-chain's shape looks like it should instead trigger cycle
+9's impossibility theorem, the same way it did for `natIncidence` and
+`pairIncidenceChained` (cycle 8).
+
+**Method**: `#eval` first. Confirmed `boundary_composition
+pathIncidenceChained pcIdx (node 2) (node 0) = 1` and
+`verify_boundary_composition ... = false` on a 3-node index set --
+matches the prediction. Before formalizing a bespoke proof, checked
+whether the node-chain literally matches
+`single_link_composition_ne_zero`'s hypothesis shape (root file, cycle
+9: `boundary i = [e1]`, `e1.i = j`, `sign ≠ 0`, `boundary j = [e2]`,
+`e2.i = k`, `sign ≠ 0`, `j ∈ idx`): `pathBoundaryChained (node (n+2)) =
+[{node (n+1), chain, neg, 1}]` and `pathBoundaryChained (node (n+1)) =
+[{node n, chain, neg, 1}]` -- an exact match, term for term, the same
+shape `altIncidence_not_boundary_square_zero` (cycle 9) used for a
+different instance. Applied the general theorem directly rather than
+re-deriving. Also scanned wider than the queued question asked, on a
+7-element index (nodes 0-3, edges 0-2) including edges, to check
+honestly whether the failure was confined to the chain or not, before
+writing up a claim either way.
+
+**Result**: **confirmed, and cheaply** -- `pathIncidenceChained_not_boundary_square_zero`
+is a direct one-line application of `single_link_composition_ne_zero`,
+generalized over all `n` (not just a `decide`-checked instance), because
+the fix's chain shape *is* the general theorem's hypothesis shape
+exactly. Zero new proof engineering needed; this is the actual payoff of
+having generalized `single_link_composition_ne_zero` in cycle 9 instead
+of leaving it as one bespoke instance proof. `#print axioms`: standard
+three, no `sorryAx`.
+
+The wider scan surfaced something **not implied by the queued
+question**: `pathIncidenceChained`'s edges *also* compose nonzero --
+`edge 1` against `node 0` gives `1`, `edge 1` against `node 1` gives
+`-1`, and this pattern repeats down the chain. Neither `natIncidence`
+nor `pairIncidenceChained` has a multi-entry element at all, so this is
+a genuinely richer failure surface than either of the two prior
+instances -- and it is *not* covered by `single_link_composition_ne_zero`
+(which requires a singleton boundary at the source), so generalizing it
+would need new machinery, not a corollary. Reported as a concrete
+`decide`-checked witness (`pathIncidenceChained_edge_witness`) rather
+than forced into a general theorem the discipline doesn't support yet --
+left as an explicit open item below rather than glossed over. Added to
+`PathComplex.lean`, wired into `Main.lean`. Full `lake build`: 38/38
+jobs. Repo-wide `sorry` grep: none.
+
+**Synthesis -- the faithfulness-fix's price, now confirmed three times**:
+`natIncidence` (never broken, but exhibits the shape), `pairIncidenceChained`
+(cycle 8), and now `pathIncidenceChained` (this cycle) all received the
+identical remedy for the collapse problem -- a single, nonzero-signed,
+measure-decreasing chain link per element -- and all three, independently,
+fail `∂² = 0` for the same reason: that remedy's shape *is*
+`single_link_composition_ne_zero`'s hypothesis. This isn't a coincidence
+needing three separate discoveries; it's a single provable fact
+(`single_link_composition_ne_zero` itself) that keeps re-manifesting
+because the ≈-faithfulness fix and the ∂²-impossibility theorem share a
+hypothesis shape. Put plainly: **making elements distinguishable enough
+to be `≈`-faithful, via the specific single-link-chain remedy this
+codebase keeps reaching for, structurally forces `∂² ≠ 0`** on those same
+elements. Whether *some other* remedy could fix faithfulness without
+this cost is open -- not attempted here, and not implied by anything
+proved so far.
+
+**Where the "faithfulness-fix vs. ∂²=0" tension now stands (cycles 8-10,
+16)**: three confirming instances via the same general theorem is enough
+to treat this connection as established, not needing a fourth repeat.
+`pathIncidenceChained`'s edge-level failure remains a genuinely open,
+unformalized item (see below), distinct from this now-closed thread.
+
+**Next hypothesis (cycle 17, not yet attempted)**: two open items
+remain on the books. (1) cycle 12's still-unformalized conjecture that
+`simplexIncidence`'s edges (`e01`/`e02`/`e12`) collapse under `≈` the
+same way its vertices did, which stalled twice on proof-engineering
+friction (9-way case splits, no `tauto`) -- worth a third attempt only
+with a different strategy, e.g. proving a reusable "boundary-entries-
+pairwise-related ⇒ elements bisimilar" lemma first instead of hand-
+rolling the relation per case; (2) new this cycle: generalize
+`pathIncidenceChained`'s edge-level `∂² ≠ 0` failure (currently only a
+concrete `decide` witness at `edge 1`) into a `∀ n` statement the way
+the node-chain case was -- this needs new machinery beyond
+`single_link_composition_ne_zero` (a "two-entry-boundary composition"
+lemma, analogous in spirit to cycle 9/10's `foldl`-generalization
+lemmas but for a length-2 rather than length-1 boundary), not a direct
+corollary, so budget real proof-engineering time rather than expecting
+a one-liner.

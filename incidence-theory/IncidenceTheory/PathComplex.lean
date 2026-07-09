@@ -255,4 +255,61 @@ theorem pathIncidenceChained_approxBisim_iff (x y : PathId) :
       pathIncidenceChained_hdec pathIncidenceChained_hext hbisim x y hxy
   · intro h; subst h; exact approxBisim_refl pathIncidenceChained x
 
+/- Research cycle 16 (see RESEARCH_LOG.md): cycle 14 fixed the collapse
+   by giving each `node (n+1)` a single-link chain boundary to
+   `node n`. But that shape -- an element whose boundary is exactly one
+   nonzero-signed link, pointing to another element with the same shape
+   -- is *precisely* `single_link_composition_ne_zero`'s (cycle 9,
+   root file) hypothesis: consecutive single-link chains can never
+   cancel. So the fix that makes `pathIncidenceChained` faithful should,
+   for the same structural reason as `natIncidence`'s and
+   `pairIncidenceChained`'s chains (cycle 8), make it fail `∂² = 0`.
+
+   Confirmed, and *for free*: this is a direct application of cycle 9's
+   general theorem to `node`'s chain shape, not a new proof -- the
+   payoff of having generalized in the first place. Also checked wider
+   (via `#eval`, honestly reported rather than silently narrowed): the
+   failure isn't confined to the node-chain. `edge n`'s two-entry
+   boundary (`node n`/`node (n+1)`, both now non-leaves for `n ≥ 1`)
+   *also* composes nonzero -- e.g. `edge 1` against `node 0` gives `1`,
+   `edge 1` against `node 1` gives `-1`. This is a genuinely richer
+   failure surface than `natIncidence`/`pairIncidenceChained` ever had
+   (neither has a multi-entry element at all), and it isn't covered by
+   `single_link_composition_ne_zero` (which needs a *singleton*
+   boundary at the source) -- left as a concrete witness rather than a
+   forced general theorem, since generalizing the two-entry case would
+   need genuinely new machinery, not a quick corollary. -/
+theorem pathIncidenceChained_not_boundary_square_zero (n : Nat) (idx : List PathId)
+  (hmem : PathId.node (n + 1) ∈ idx) :
+  boundary_composition pathIncidenceChained idx (PathId.node (n + 2)) (PathId.node n) ≠ 0 :=
+  single_link_composition_ne_zero pathIncidenceChained idx
+    (PathId.node (n + 2)) (PathId.node (n + 1)) (PathId.node n)
+    { i := PathId.node (n + 1), role := PathRole.chain, sign := Sign.neg, mult := 1 }
+    { i := PathId.node n, role := PathRole.chain, sign := Sign.neg, mult := 1 }
+    rfl rfl (by simp)
+    rfl rfl (by simp)
+    hmem
+
+def pathChainedIdx : List PathId :=
+  [PathId.node 0, PathId.node 1, PathId.node 2, PathId.node 3,
+   PathId.edge 0, PathId.edge 1, PathId.edge 2]
+
+theorem pathIncidenceChained_not_boundary_square_zero_check :
+  verify_boundary_composition pathIncidenceChained pathChainedIdx = false := by
+  decide
+
+/- The node-chain witness, concretely (an instance of the general
+   theorem above, at n = 0). -/
+theorem pathIncidenceChained_node_witness :
+  boundary_composition pathIncidenceChained pathChainedIdx
+    (PathId.node 2) (PathId.node 0) = 1 := by
+  decide
+
+/- The edge witness: multi-entry elements fail too, not just the
+   chain -- the wider failure surface noted above, concretely. -/
+theorem pathIncidenceChained_edge_witness :
+  boundary_composition pathIncidenceChained pathChainedIdx
+    (PathId.edge 1) (PathId.node 0) = 1 := by
+  decide
+
 end IncidenceCore
