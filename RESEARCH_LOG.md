@@ -1567,22 +1567,73 @@ it was genuinely non-trivial (unlike the three fully-`≈`-faithful
 instances, where `simplexToShape`-style translations would be
 comparatively uninteresting, per this cycle's option-2 finding).
 
-**Next hypothesis (cycle 24, not yet attempted)**: no mandatory item
-carries over -- both halves of cycle 21's queue are now resolved (option
-1 completed this cycle, option 2 closed as a quick negative finding),
-and the `simplexIncidence` characterization thread is fully closed. This
-is a natural point to survey the whole research log for what's
-genuinely still open rather than manufacture a new question: the
-remaining honestly-flagged items are (1) whether `pairIncidenceChained`'s
-`glue`/boundary interaction has any untested corner analogous to
-`pathIncidenceChained`'s (cycles 15-20 built substantial `PathId`-side
-machinery `PairId` never received the same depth of treatment on, e.g.
-a `two_link_composition_value`-style closed-form ∂² characterization
-for `pairIncidenceChained`'s `pair` nodes, which -- unlike `PathId`'s
-`edge`, a genuinely 2-entry *leaf-adjacent* structure -- would test the
-machinery against a *recursively nested* 2-entry structure instead);
-(2) whether `not_approxBisim_of_boundary_mismatch`'s term-mode-vs-
-tactic-mode lesson generalizes -- are there other stalled or awkward
-tactic-mode proofs earlier in this project's history that a term-mode
-rewrite would clean up, now that this pattern is understood (worth a
-quick survey, not a forced rewrite of everything).
+## Cycle 24
+
+**Hypothesis**: (option 1 of cycle 23's queue) extend `two_link_composition_value`-
+style closed-form ∂² characterization to `pairIncidenceChained`'s `pair`
+nodes, which -- unlike `PathId`'s `edge` (a two-entry-boundary element
+whose targets are always plain nodes, never elements with boundaries of
+their own reaching back into the same territory) -- can genuinely
+*nest* (`pair (pair a b) c`), testing the machinery against a
+recursively nested structure for the first time.
+
+**Method**: `#eval` first, per discipline. Built `Outer = pair (pair
+(atom n) (atom (n+1))) (atom (n+2))` and scanned its `boundary_composition`
+against `atom n`, `atom (n+1)`, `atom (n+2)` for `n = 0`. Result: `1, 0,
+0` -- the middle value being exactly `0` was not predicted going in, and
+warranted a hand-derivation to understand *why* before trusting it:
+`atom (n+1)` is reached BOTH via the inner pair's `snd` projection
+(value `+1`) AND via `atom (n+2)`'s own predecessor-chain link (value
+`-1`), and these are the *only* two paths, so they sum to exactly zero.
+Checked this wasn't a coincidence specific to `n = 0` by re-running the
+scan at `n = 3` and `n = 7` before writing any proof -- both gave the
+same `0`, confirming a genuine parametrized family.
+
+**Result**: **confirmed and fully generalized over all `n`, using
+existing cycle 17 machinery with only new instance-specific glue
+(no new general theorems needed)**. Built four small helper facts
+(`pairIncidenceChained_atom_chain_boundary`/`_zero`,
+`pairIncidenceChained_pair_fst_boundary`/`_snd_boundary`, mirroring
+`PathComplex`'s cycle 16/17/19 helpers but for `PairId`'s `fst`/`snd`
+roles instead of `PathRole.chain`/`edgeEnd`), then composed them via
+`two_link_composition_value` into two theorems: `_nested_pair_witness`
+(nonzero at `atom n`, same "only one term" shape as any chain) and
+`_nested_pair_cancellation` (exactly zero at `atom (n+1)`, the new
+result). `#print axioms`: standard three throughout, no `sorryAx`. Full
+`lake build`: 38/38 jobs. Repo-wide `sorry`-as-tactic grep: none. Added
+to `Pairs.lean`, wired into `Main.lean`.
+
+**Synthesis**: this is the project's first confirmed instance of `∂²`
+cancellation arising from *converging paths through recursive nesting*,
+a third, structurally distinct route to cancellation alongside the two
+already on record: `simplexIncidence.face`'s cancellation (cycle 11) is
+a *deliberately chosen* alternating-sum convention on a *single*
+element's own boundary entries; `pathIncidenceChained`'s "elsewhere
+zero" (cycle 19) is zero by *structural absence* -- no path reaches that
+target at all. Here, `pair`'s recursive nesting creates a genuine
+*algebraic* cancellation between two *independently-reached, unrelated*
+paths (one through a child's own projection, one through a different
+child's predecessor chain) that happen to converge on the same
+grandchild -- not designed for cancellation the way `face`'s
+alternating sum was, and not trivially zero the way `edge`'s "other"
+targets were. Whether this generalizes further (e.g. does *every*
+`pair (pair a b) c` where `c`'s chain-predecessor equals `b` exhibit
+this, for `b`/`c` chosen more freely than the `atom n`/`atom(n+1)`/
+`atom(n+2)` family tested here?) is open but not attempted -- the
+family tested is itself a genuine, non-trivial, fully generalized
+result and doesn't need to become maximally general to be a real
+finding.
+
+**Next hypothesis (cycle 25, not yet attempted)**: option 2 of cycle
+23's queue, not reached this cycle: a quick survey of whether the
+term-mode-vs-tactic-mode lesson (cycle 22→23) would clean up other
+awkward or historically-friction-heavy tactic-mode proofs in this
+project -- e.g. `simplexIncidence_isBisimulation`-style proofs (cycle
+18) that used `first | ... | ...` over many cases and worked, but might
+be *more robust* (not necessarily shorter) as term-mode matches; worth
+a quick audit for "did this actually stall/need retries when first
+written" rather than rewriting anything that already works cleanly
+(rewriting working code for its own sake isn't this project's style).
+Also open, not yet scoped: whether `pairIncidenceChained_nested_pair_cancellation`'s
+family generalizes beyond the specific `atom n`/`atom (n+1)`/
+`atom (n+2)` construction tested this cycle.

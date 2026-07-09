@@ -345,4 +345,91 @@ theorem pairIncidenceChained_boundary_composition_witness :
     (PairId.pair (PairId.atom 0) (PairId.atom 1)) (PairId.atom 0) = -1 := by
   decide
 
+/- Research cycle 24 (see RESEARCH_LOG.md): cycle 8's ∂² check above only
+   ever composed through a single-level `pair`. `PathId`'s `edge` (cycles
+   16-19) is also a two-entry-boundary element, but its two targets are
+   always plain `Nat`-indexed nodes, never elements with boundaries of
+   their own reaching back into the same territory -- so `edge`'s
+   "elsewhere zero" picture (cycle 19) was zero by *structural absence*
+   of any path, not by algebraic cancellation. `PairId.pair` is
+   different: it can nest (`pair (pair a b) c`), so two *different*
+   entries of an outer `pair`'s boundary can have boundaries of their
+   own that *converge* on the same target. Tested concretely first
+   (`#eval`): `pair (pair (atom n) (atom (n+1))) (atom (n+2))` composed
+   against `atom (n+1)` -- the inner pair's `snd` targets `atom (n+1)`
+   directly (`+1`), and `atom (n+2)`'s own predecessor-chain link *also*
+   targets `atom (n+1)` (`-1`) -- checked for `n = 0, 3, 7` before
+   formalizing, confirming a genuine parametrized family, not a
+   coincidence at one specific value. -/
+theorem pairIncidenceChained_atom_chain_boundary (idx : List PairId) (n : Nat) :
+  boundaryMatrix pairIncidenceChained idx (PairId.atom (n + 1)) (PairId.atom n) = -1 := by
+  simp [boundaryMatrix_eq_foldl, pairIncidenceChained, pairBoundaryChained]
+
+theorem pairIncidenceChained_atom_chain_boundary_zero (idx : List PairId) (n : Nat) :
+  boundaryMatrix pairIncidenceChained idx (PairId.atom (n + 2)) (PairId.atom n) = 0 := by
+  simp [boundaryMatrix_eq_foldl, pairIncidenceChained, pairBoundaryChained]
+
+theorem pairIncidenceChained_pair_fst_boundary (idx : List PairId) (a b : PairId) (hne : a ≠ b) :
+  boundaryMatrix pairIncidenceChained idx (PairId.pair a b) a = 1 := by
+  rw [boundaryMatrix_two_link pairIncidenceChained idx (PairId.pair a b) a b
+    { i := a, role := PairRole.fst, sign := Sign.pos, mult := 1 }
+    { i := b, role := PairRole.snd, sign := Sign.pos, mult := 1 }
+    rfl rfl rfl hne a]
+  simp [hne]
+
+theorem pairIncidenceChained_pair_snd_boundary (idx : List PairId) (a b : PairId) (hne : a ≠ b) :
+  boundaryMatrix pairIncidenceChained idx (PairId.pair a b) b = 1 := by
+  rw [boundaryMatrix_two_link pairIncidenceChained idx (PairId.pair a b) a b
+    { i := a, role := PairRole.fst, sign := Sign.pos, mult := 1 }
+    { i := b, role := PairRole.snd, sign := Sign.pos, mult := 1 }
+    rfl rfl rfl hne b]
+  simp [Ne.symm hne]
+
+/- The failure, generalized over all `n`: composing against the
+   innermost pair's *first* atom is nonzero (the chain from `atom (n+2)`
+   never reaches back that far, so there's nothing to cancel against --
+   the same "only one term" shape `single_link_composition_ne_zero`
+   (cycle 9) captures, just reached here via `two_link_composition_value`
+   since the source has two entries). -/
+theorem pairIncidenceChained_nested_pair_witness (n : Nat) :
+  boundary_composition pairIncidenceChained
+    [PairId.pair (PairId.atom n) (PairId.atom (n + 1)), PairId.atom (n + 2)]
+    (PairId.pair (PairId.pair (PairId.atom n) (PairId.atom (n + 1))) (PairId.atom (n + 2)))
+    (PairId.atom n) = 1 := by
+  rw [two_link_composition_value pairIncidenceChained
+    [PairId.pair (PairId.atom n) (PairId.atom (n + 1)), PairId.atom (n + 2)]
+    (PairId.pair (PairId.pair (PairId.atom n) (PairId.atom (n + 1))) (PairId.atom (n + 2)))
+    (PairId.pair (PairId.atom n) (PairId.atom (n + 1))) (PairId.atom (n + 2)) (PairId.atom n)
+    { i := PairId.pair (PairId.atom n) (PairId.atom (n + 1)), role := PairRole.fst, sign := Sign.pos, mult := 1 }
+    { i := PairId.atom (n + 2), role := PairRole.snd, sign := Sign.pos, mult := 1 }
+    rfl rfl rfl (by simp)]
+  rw [pairIncidenceChained_pair_fst_boundary _ (PairId.atom n) (PairId.atom (n + 1)) (by simp),
+      pairIncidenceChained_atom_chain_boundary_zero]
+  simp
+
+/- The genuinely new finding, generalized over all `n`: composing
+   against `atom (n+1)` -- reached BOTH via the inner pair's `snd`
+   AND via `atom (n+2)`'s chain link -- vanishes by real cancellation
+   (`1 + (-1) = 0`), the first instance in this project of `∂²`
+   canceling via *converging paths from recursive nesting*, distinct
+   from `simplexIncidence.face`'s cancellation (cycle 11, a deliberately
+   chosen alternating-sum convention on a *single* element's own
+   boundary) and from `pathIncidenceChained`'s "elsewhere zero" (cycle
+   19, structural absence of any path at all). -/
+theorem pairIncidenceChained_nested_pair_cancellation (n : Nat) :
+  boundary_composition pairIncidenceChained
+    [PairId.pair (PairId.atom n) (PairId.atom (n + 1)), PairId.atom (n + 2)]
+    (PairId.pair (PairId.pair (PairId.atom n) (PairId.atom (n + 1))) (PairId.atom (n + 2)))
+    (PairId.atom (n + 1)) = 0 := by
+  rw [two_link_composition_value pairIncidenceChained
+    [PairId.pair (PairId.atom n) (PairId.atom (n + 1)), PairId.atom (n + 2)]
+    (PairId.pair (PairId.pair (PairId.atom n) (PairId.atom (n + 1))) (PairId.atom (n + 2)))
+    (PairId.pair (PairId.atom n) (PairId.atom (n + 1))) (PairId.atom (n + 2)) (PairId.atom (n + 1))
+    { i := PairId.pair (PairId.atom n) (PairId.atom (n + 1)), role := PairRole.fst, sign := Sign.pos, mult := 1 }
+    { i := PairId.atom (n + 2), role := PairRole.snd, sign := Sign.pos, mult := 1 }
+    rfl rfl rfl (by simp)]
+  rw [pairIncidenceChained_pair_snd_boundary _ (PairId.atom n) (PairId.atom (n + 1)) (by simp),
+      pairIncidenceChained_atom_chain_boundary]
+  simp
+
 end IncidenceCore
