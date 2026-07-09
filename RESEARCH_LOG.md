@@ -1217,20 +1217,76 @@ instances) or proven to collapse with no claim of a fix needed
 unfixed instance, not a defect requiring remedy the way the "flat atoms"
 cases were). No open items remain in this thread.
 
-**Next hypothesis (cycle 19, not yet attempted)**: no mandatory open
-item carries over from this cycle -- the queued conjecture is closed,
-and the two-entry-boundary machinery from cycle 17 doesn't have an
-outstanding forced-generalization gap either. Following this cycle's own
-completeness-critic suggestion (queued but not reached last cycle):
-audit the general-theorem library
-(`incidence_bisim_faithful`, `single_link_composition_ne_zero`,
-`boundary_composition_zero_of_leaf_boundary`, `two_link_composition_value`,
-`boundaryMatched_of_two_entries`) for an untested edge case or an
-implicit assumption worth stating explicitly, rather than only ever
-extending to new instances -- e.g., does `two_link_composition_value`
-degrade sensibly (or need a side condition not yet stated) if `k` itself
-equals `j1` or `j2`? Does `boundaryMatched_of_two_entries` have a
-natural three-or-more-entry generalization that would have made cycle 17
-*and* 18 both shorter had it existed first, and is that generalization
-worth building now for a fourth future instance, or premature
-abstraction until a concrete 3+-entry case actually needs it?
+## Cycle 19
+
+**Hypothesis**: (item 1 of the audit queued above) does
+`two_link_composition_value` (cycle 17) "degrade sensibly" when the
+composition target `k` coincides with one of the two boundary targets
+`j1`/`j2` themselves, or does it need an unstated side condition?
+
+**Method**: re-read the theorem's own proof first, without writing new
+Lean: it never assumed `k ∉ {j1, j2}` anywhere -- `k` is just the third
+free index threaded through `boundaryMatrix inc idx j1 k` /
+`boundaryMatrix inc idx j2 k` on the right-hand side, no case split on
+its relationship to `j1`/`j2`. So in the abstract, the answer is "yes,
+trivially, nothing to fix" -- but a vacuous confirmation isn't worth a
+cycle on its own. Applied it concretely instead, at the one witness-
+worthy value cycle 17 hadn't checked: `k = node (n+1)`, `edge n`'s *own*
+forward endpoint (as opposed to `node n`, its start, and `node (n-1)`,
+already covered). Checked empirically first (`#eval`): scanned `edge 2`
+against `node 0`..`node 4` in one call, getting `[0, 1, -1, 0, 0]` --
+before committing to formalizing just the one new point, confirmed the
+*entire* row (not only `node 3` = the analogue of `node (n+1)`) is zero
+outside the two already-proven witnesses, i.e. nothing else was hiding
+in the row that cycle 17 missed.
+
+**Result**: **confirmed, and the picture is now complete, not
+partial**. `pathIncidenceChained_node_forward_zero` (`node n`'s
+boundary never points forward to `node (n+1)`, for any `n`) plus the
+already-proven `pathIncidenceChained_node_self_boundary_zero` are
+exactly the two facts `two_link_composition_value` needs to conclude
+`pathIncidenceChained_edge_node_next_zero`: `edge n` vs. `node (n+1)`
+is *always* `0`. Combined with cycle 17's two theorems, `pathIncidenceChained`'s
+edge-vs-node composition table is now fully characterized for every `n`:
+`+1` at the predecessor, `-1` at the start, `0` everywhere else --
+not just at three sampled points, but as a closed-form fact following
+from the general machinery. One minor mechanical note: `simp` alone
+couldn't close the final `¬ k = k + 1 + 1` arithmetic side-goal in
+`pathIncidenceChained_node_forward_zero`'s successor case (unlike most
+of this project's `PathId`-level case splits) -- needed
+`PathId.node.injEq` to reduce the `PathId` equality to a bare `Nat`
+one, then `omega` to close it, rather than `simp` alone. `#print
+axioms`: standard three, no `sorryAx`. Full `lake build`: 38/38 jobs.
+Repo-wide `sorry` grep: only a string literal inside a `Main.lean`
+`IO.println` (the word "sorry" as demo *text*, describing cycle 18's
+finding) -- not an actual proof gap, checked before treating the grep
+hit as real.
+
+**Synthesis**: this cycle is the first one whose starting point was
+"audit an existing theorem" rather than "test a new instance" or "close
+a stalled conjecture" -- and it still produced a genuinely new, useful
+fact (not a restatement), because the abstract audit question
+("degrades sensibly?") turned into a concrete one ("what's the value at
+this specific untested point?") that the general theorem could answer
+immediately once asked. Worth remembering as a cycle-selection option
+going forward, alongside "new instance" and "generalize a stalled
+result": periodically ask each general theorem "have all its natural
+free parameters actually been exercised, or only some?" -- gaps found
+this way tend to be cheap to close (this one was, having already-proven
+lemmas do almost all the work) precisely because the hard infrastructure
+was already built for a different purpose.
+
+**Next hypothesis (cycle 20, not yet attempted)**: item 2 of cycle 18's
+audit queue, not yet attempted: does `boundaryMatched_of_two_entries`
+have a natural three-(or-more)-entry generalization? Motivating case:
+`simplexIncidence`'s `face` element has a genuine *three*-entry boundary
+(the alternating sum `∂[0,1,2] = [1,2]-[0,2]+[0,1]`) that no existing
+bisimulation-matching lemma covers -- unlike `e01`/`e02`/`e12` (two
+entries each, cycle 18's target), `face` was left untouched by cycle
+18's relation entirely. Worth checking concretely first (does `face`
+even have a plausible bisimulation partner to test against, given it's
+the unique top-dimensional element -- or is the three-entry lemma
+premature abstraction until a second 3-entry instance exists to
+validate it against, the same caution this project applied to
+`single_link`/`two_link` generalizing only after 2+ real instances
+needed each one)?

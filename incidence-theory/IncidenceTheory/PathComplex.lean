@@ -375,4 +375,44 @@ theorem pathIncidenceChained_edge_prev_node_witness (n : Nat) :
   rw [pathIncidenceChained_node_chain_boundary, pathIncidenceChained_node_chain_boundary_zero]
   simp
 
+/- Research cycle 19 (see RESEARCH_LOG.md): cycle 18's closing synthesis
+   queued an audit question for `two_link_composition_value` (cycle 17):
+   does it "degrade sensibly" when the composition target `k` coincides
+   with one of the two boundary targets `j1`/`j2` themselves? The
+   theorem's proof never assumed `k ∉ {j1, j2}`, so nothing new needed
+   proving in the abstract -- but applying it concretely at
+   `k = node (n + 1)` (`edge n`'s *own* forward endpoint, the one other
+   witness-worthy value cycle 17 hadn't checked) surfaces a genuinely
+   new, previously unstated fact rather than a vacuous confirmation:
+   `edge n` composes to exactly `0` there, not merely "some value".
+   Checked empirically first (`#eval`, scanning `edge 2` against nodes
+   `0`-`4`): `[0, 1, -1, 0, 0]` -- confirms `0` at every node except the
+   two already-proven witnesses, i.e. cycle 17's two theorems already
+   account for the *entire* nonzero part of this row, not just a
+   sampled fragment of it. -/
+theorem pathIncidenceChained_node_forward_zero (idx : List PathId) (n : Nat) :
+  boundaryMatrix pathIncidenceChained idx (PathId.node n) (PathId.node (n + 1)) = 0 := by
+  cases n with
+  | zero => simp [boundaryMatrix_eq_foldl, pathIncidenceChained, pathBoundaryChained]
+  | succ k =>
+    simp only [boundaryMatrix_eq_foldl, pathIncidenceChained, pathBoundaryChained,
+      List.foldl_cons, List.foldl_nil]
+    simp only [PathId.node.injEq]
+    omega
+
+/- Completes cycle 17's picture: `edge n` vs. its own forward endpoint
+   (`node (n+1)`) is exactly `0`, the same way it's `-1` at `node n`
+   (`pathIncidenceChained_edge_node_witness`) and `+1` at `node (n-1)`
+   (`pathIncidenceChained_edge_prev_node_witness`, relabeled). -/
+theorem pathIncidenceChained_edge_node_next_zero (n : Nat) :
+  boundary_composition pathIncidenceChained [PathId.node n, PathId.node (n + 1)]
+    (PathId.edge n) (PathId.node (n + 1)) = 0 := by
+  rw [two_link_composition_value pathIncidenceChained [PathId.node n, PathId.node (n + 1)]
+    (PathId.edge n) (PathId.node n) (PathId.node (n + 1)) (PathId.node (n + 1))
+    { i := PathId.node n, role := PathRole.edgeEnd, sign := Sign.neg, mult := 1 }
+    { i := PathId.node (n + 1), role := PathRole.edgeEnd, sign := Sign.pos, mult := 1 }
+    rfl rfl rfl (by simp)]
+  rw [pathIncidenceChained_node_forward_zero, pathIncidenceChained_node_self_boundary_zero]
+  simp
+
 end IncidenceCore

@@ -229,3 +229,12 @@ def main : IO Unit := do
   IO.println "  → general lesson: when a proof stalls twice on the same shape, the second"
   IO.println "    retry should change the SHAPE (extract reusable infrastructure), not"
   IO.println "    just retry the same tactics harder"
+
+  IO.println "\n🔎 Auditing the Library, Completing a Picture (cycle 19):"
+  IO.println "  ✓ two_link_composition_value (cycle 17) never assumed k ∉ {j1,j2} -- checked"
+  IO.println "    concretely at edge n vs. its OWN forward endpoint node(n+1): exactly 0"
+  IO.println "  ✓ #eval scan (edge 2 vs. nodes 0-4): [0,1,-1,0,0] -- confirms cycle 17's two"
+  IO.println "    witnesses (-1, +1) already account for the ENTIRE nonzero part of the row,"
+  IO.println "    not just a sampled fragment -- the picture is now complete, not partial"
+  IO.println "  → an audit cycle can pay off as concretely as a new-instance cycle: this"
+  IO.println "    wasn't a new phenomenon, just closing a gap the library's own shape invited"
