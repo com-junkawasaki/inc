@@ -1,5 +1,6 @@
 import IncidenceTheory.GraphModel
 import IncidenceTheory.Peano
+import IncidenceTheory.Pairs
 
 open IncidenceCore
 
@@ -102,3 +103,10 @@ def main : IO Unit := do
   IO.println s!"  glue 2 1 = {natIncidence.glue 2 1} (successor of 2, via glue)"
   IO.println "  ✓ successor injective, zero not a successor, induction principle proved"
   IO.println "  ✓ ≈ (bisimilarity) coincides exactly with = on this instance (faithfulness)"
+  IO.println "  ✓ glue is commutative; GluingSpec reused across two unrelated instances"
+
+  IO.println "\n🔗 Ordered Pairs as an Incidence (boundary = projections):"
+  IO.println "  ✓ pairing is jointly injective; projections recoverable from boundary"
+  IO.println "  ⚠ negative finding: bare atoms are NOT separated by ≈ (atom 0 ≈ atom 1,"
+  IO.println "    since both have boundary = []) -- faithfulness needs distinguishing"
+  IO.println "    boundary structure, it isn't automatic. See RESEARCH_LOG.md."

@@ -56,3 +56,48 @@ comprehension yet. Concretely: define a `PairRole` (`fst`/`snd`), a
 well-defined and jointly injective (`pair a b = pair a' b' → a = a' ∧ b
 = b'`) the same way `natIncidence_rel_eq`/faithfulness was proved for
 Peano — by induction on the bisimulation witness, not by assumption.
+
+## Cycle 2
+
+**Hypothesis**: (as queued above) ordered pairs encodable via `boundary`
+alone, with projections recoverable structurally and pairing jointly
+injective, proved the same faithfulness way as Peano's cycle.
+
+**Method**: `PairId := atom (n : Nat) | pair (a b : PairId)`,
+`pairBoundary` gives an atom `[]` and a pair its two role-tagged
+endpoints, `pairIncidence : Incidence PairId PairRole GraphType`. Then
+attempted the Peano-style full faithfulness theorem
+(`approxBisim pairIncidence x y ↔ x = y`).
+
+**Result**: partially confirmed, and the *refutation* is itself the
+interesting finding — this is what a co-scientist loop is for, not just
+banking wins:
+- ✅ `pairIncidence` is a valid `Incidence` (all 14 fields).
+- ✅ `pairIncidence_pair_injective`: pairing is jointly injective.
+- ✅ `pairIncidence_boundary_pair`: projections literally = `boundary`,
+  not a separate accessor.
+- ❌ Full faithfulness (`≈` ↔ `=`) is **false** for this instance, and
+  `pairIncidence_atoms_collapse` proves a concrete counterexample:
+  `atom 0 ≈ atom 1` even though `atom 0 ≠ atom 1`. Cause: unlike
+  `natIncidence` (where the predecessor chain gives every element a
+  unique "distance from zero"), a bare atom's boundary is `[]`
+  regardless of *which* atom — nothing in `boundary`/`typeFunc`
+  distinguishes `atom 3` from `atom 999`, so the relation "any atom ≈
+  any atom, and pairs of related things ≈ each other" is a genuine
+  bisimulation. Faithfulness needs distinguishing structure; it is not
+  automatic just because an instance "looks well-founded".
+
+Added to `IncidenceTheory/Pairs.lean` (stacked onto PR #3, unmerged).
+`#print axioms` on every theorem here: `propext`/`Classical.choice`/
+`Quot.sound` only (`pairIncidence_pair_injective` needs no axioms at
+all — it's pure `injection` on the carrier type), no `sorryAx`.
+
+**Next hypothesis (cycle 3, not yet attempted)**: fix atom-distinguishability
+by giving atoms the same predecessor-chain trick `natIncidence` used —
+i.e., index atoms so `boundary (atom (n+1))` points at `atom n` (reusing
+`peanoBoundary`'s shape) instead of `[]` uniformly. If that recovers full
+`≈ ↔ =` faithfulness for `PairId` built over such atoms, it's evidence
+that "give every leaf a canonical predecessor-style boundary" is a
+*general* recipe for faithfulness in Inc, not a Peano-specific accident
+— worth stating as a lemma (e.g. "any well-founded, boundary-injective
+carrier is ≈-faithful") rather than re-deriving per instance.
