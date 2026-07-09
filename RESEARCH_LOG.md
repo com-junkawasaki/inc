@@ -639,3 +639,86 @@ now has two contributing routes instead of zero) -- or more simply,
 build a small finite instance by hand (3-4 elements) with a deliberately
 mixed shape and `#eval` it before committing to any formalization
 effort, matching cycles 8-9's method precisely.
+
+## Cycle 11
+
+**Hypothesis**: (as queued above) find a genuinely "middle ground"
+instance -- multi-face, faces not leaves -- and check whether `∂² = 0`
+holds, fails, or depends on the specific construction.
+
+**Method**: the most natural, well-motivated middle-ground candidate is
+also the textbook one -- a genuine *filled 2-simplex*: 3 vertices
+(leaves), 3 edges (`∂[i,j] = [j] - [i]`, each edge a leaf-reaching
+2-endpoint element, same as `triIncidence`'s), and 1 `face` whose
+boundary is the classical *alternating sum of edges*,
+`∂[0,1,2] = [1,2] - [0,2] + [0,1]`. `face` has 3 endpoints (multi-face,
+cycle 9 doesn't apply) pointing at *edges*, which have their own
+nonempty boundary (not leaves, cycle 10 doesn't apply). This is exactly
+the construction that makes `∂² = 0` a real theorem in simplicial
+homology, not folklore -- worth testing whether this codebase's
+`Int`-multiplication `boundaryMatrix` machinery actually reproduces
+that mechanism. Checked empirically (`#eval`) before formalizing: by
+hand, `∂∂(face, v0) = (+1)·(0) + (-1)·(-1) + (+1)·(-1) = 0`, matching
+the classical computation. Also built `wrongSimplexIncidence` -- the
+identical shape with the alternation *dropped* (all `+` on `face`'s
+boundary) -- as a sensitivity check: does *any* multi-face, non-leaf
+construction happen to cancel, or does it need the alternation
+specifically?
+
+**Result**: **confirmed, with real (not accidental) cancellation**.
+`simplexIncidence_boundary_square_zero` proves `∂² = 0` for the whole
+table (not just `face`, via `verify_boundary_composition = true`), via
+`decide` -- matching the classical hand-computation exactly, e.g.
+`(+1)·(0) + (-1)·(-1) + (+1)·(-1) = 0` at `v0`. And the sensitivity
+check earns its keep: `wrongSimplexIncidence_not_boundary_square_zero`
+proves the alternation-dropped variant *fails*
+(`wrongSimplexIncidence_witness`: `boundary_composition ... face v0 =
+-2`, a concrete nonzero witness) -- so this is not a degenerate case
+where any sign choice would have worked; getting the alternating
+convention right is load-bearing, exactly as classical simplicial
+homology says it should be.
+
+Chose `decide` over another general theorem this cycle, deliberately:
+cycles 9-10 already delivered two solid general theorems (necessary and
+sufficient conditions for the *single-face* and *leaf-reaching* extremes
+respectively); a fully general "alternating multi-face sum cancels"
+theorem would need to formalize what "alternating sum over a list of
+faces" means abstractly first, a substantially larger undertaking than
+either of those, for a single confirming instance. `decide` (the
+triangle's own, already-proven-effective pattern) was the proportionate
+choice here -- concrete, honest, fully verified, without inflating the
+cycle's scope just to produce a third general theorem.
+
+`#print axioms` on all three theorems: `propext` only, no `sorryAx`.
+Added as a new file, `Simplex.lean`, wired into `Main.lean`.
+
+**Where this leaves the ∂² = 0 thread (cycles 8-11)**: the picture is
+now genuinely complete at the level this project can currently reach --
+necessary condition (single-face chains always fail, cycle 9),
+sufficient condition (leaf-reaching boundaries always succeed, cycle
+10), and a worked confirmation that the *real* middle ground (proper
+multi-level simplicial structure) succeeds via the actual classical
+mechanism, not a coincidence (cycle 11, with the sensitivity check as
+the falsifiable control). A general theorem covering the alternating
+multi-face case remains open but is now a well-scoped, well-motivated
+target rather than a vague "check something in the middle" — worth
+attempting in a future cycle if there's a concrete need for it (e.g. if
+a future instance wants ∂²=0 with more than 3 faces and hand-verifying
+becomes impractical), rather than for its own sake.
+
+**Next hypothesis (cycle 12, not yet attempted)**: the ∂² = 0 thread
+(cycles 8-11) has reached a natural resting point. Shift back to a
+different open thread from earlier cycles: cycle 6 found `PairId.atom`
+preserves `boundary`/`unit` but not `glue` (algebraic vs. coalgebraic
+layers don't automatically travel together); cycle 7 quantified that
+gap precisely for `sizeOf`. Untested: does `simplexIncidence`
+(this cycle's new instance) or `pathIncidence` (cycle 10's) offer a
+*third* data point for that same question -- e.g. is there a natural
+boundary-preserving embedding from `pathIncidence` into
+`simplexIncidence`-like structures (both being edge/node-shaped), and
+does *its* `glue` fail to compose for the same or a different reason?
+Alternatively, revisit cycle 5's translation-faithfulness question for
+`simplexIncidence`/`pathIncidence` specifically, now that two more
+worked instances exist to test a translation against. Genuinely open
+which is more promising -- decide at the start of cycle 12 based on
+which has a cheaper first empirical check.

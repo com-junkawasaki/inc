@@ -3,6 +3,7 @@ import IncidenceTheory.Peano
 import IncidenceTheory.Pairs
 import IncidenceTheory.CrossInstance
 import IncidenceTheory.PathComplex
+import IncidenceTheory.Simplex
 
 open IncidenceCore
 
@@ -152,3 +153,7 @@ def main : IO Unit := do
   IO.println "    whenever an element's boundary only reaches leaves -- pathIncidence"
   IO.println "    (an INFINITE 2-graded path complex) satisfies it for every edge at"
   IO.println "    once, confirming finite-vs-infinite was never the real variable"
+  IO.println "  ✓ the middle ground: simplexIncidence, a genuine filled 2-simplex"
+  IO.println "    (multi-face AND non-leaf faces), satisfies ∂²=0 via REAL cancellation"
+  IO.println "    with the classical alternating-sum convention -- not accidental:"
+  IO.println "    drop the alternation (wrongSimplexIncidence) and it breaks (-2 ≠ 0)"
