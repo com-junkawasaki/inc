@@ -312,4 +312,67 @@ theorem pathIncidenceChained_edge_witness :
     (PathId.edge 1) (PathId.node 0) = 1 := by
   decide
 
+/- Research cycle 17 (see RESEARCH_LOG.md): cycle 16 left the edge-level
+   failure as a concrete `decide` witness (`pathIncidenceChained_edge_witness`
+   above) rather than a general theorem, since `edge n`'s two-entry
+   boundary didn't fit `single_link_composition_ne_zero`'s (singleton-
+   boundary) hypothesis. Closed that gap by extending the root file's
+   machinery one step: `boundaryMatrix_two_link` +
+   `foldl_add_eq_count_mul_two` + `two_link_composition_value` (all fully
+   general, not `PathComplex`-specific) give an exact closed-form value
+   for a two-entry-boundary composition, the same way
+   `single_link_composition_ne_zero` did for one entry. These three small
+   lemmas needed the exact `dif`/`ite`-unfolding and generalized-
+   accumulator induction techniques from cycle 9/10 (re-applied, not
+   rediscovered), plus care with `if`-condition orientation (`a = b` vs.
+   `b = a`) that `rw`/`simp` don't treat as interchangeable -- the main
+   source of iteration in this cycle. -/
+
+/- `node n` never appears in its own boundary (the chain always points
+   strictly backward), so its self-composition term is always zero --
+   needed as a building block for the edge witness below. -/
+theorem pathIncidenceChained_node_self_boundary_zero (idx : List PathId) (n : Nat) :
+  boundaryMatrix pathIncidenceChained idx (PathId.node n) (PathId.node n) = 0 := by
+  cases n with
+  | zero => simp [boundaryMatrix_eq_foldl, pathIncidenceChained, pathBoundaryChained]
+  | succ k => simp [boundaryMatrix_eq_foldl, pathIncidenceChained, pathBoundaryChained]
+
+theorem pathIncidenceChained_node_chain_boundary (idx : List PathId) (n : Nat) :
+  boundaryMatrix pathIncidenceChained idx (PathId.node (n + 1)) (PathId.node n) = -1 := by
+  simp [boundaryMatrix_eq_foldl, pathIncidenceChained, pathBoundaryChained]
+
+/- `node (n+2)`'s chain link points only to `node (n+1)`, never to
+   `node n` two steps back. -/
+theorem pathIncidenceChained_node_chain_boundary_zero (idx : List PathId) (n : Nat) :
+  boundaryMatrix pathIncidenceChained idx (PathId.node (n + 2)) (PathId.node n) = 0 := by
+  simp [boundaryMatrix_eq_foldl, pathIncidenceChained, pathBoundaryChained]
+
+/- The wider failure, now general over ALL n (not just the n = 1
+   instance cycle 16 checked): every `edge n` composes to exactly -1
+   against its own start node. -/
+theorem pathIncidenceChained_edge_node_witness (n : Nat) :
+  boundary_composition pathIncidenceChained [PathId.node n, PathId.node (n + 1)]
+    (PathId.edge n) (PathId.node n) = -1 := by
+  rw [two_link_composition_value pathIncidenceChained [PathId.node n, PathId.node (n + 1)]
+    (PathId.edge n) (PathId.node n) (PathId.node (n + 1)) (PathId.node n)
+    { i := PathId.node n, role := PathRole.edgeEnd, sign := Sign.neg, mult := 1 }
+    { i := PathId.node (n + 1), role := PathRole.edgeEnd, sign := Sign.pos, mult := 1 }
+    rfl rfl rfl (by simp)]
+  rw [pathIncidenceChained_node_self_boundary_zero, pathIncidenceChained_node_chain_boundary]
+  simp
+
+/- ...and every `edge (n+1)` composes to exactly +1 against its
+   predecessor's start node, matching cycle 16's `edge 1` vs. `node 0`
+   witness as the n = 0 instance of this general fact. -/
+theorem pathIncidenceChained_edge_prev_node_witness (n : Nat) :
+  boundary_composition pathIncidenceChained [PathId.node (n + 1), PathId.node (n + 2)]
+    (PathId.edge (n + 1)) (PathId.node n) = 1 := by
+  rw [two_link_composition_value pathIncidenceChained [PathId.node (n + 1), PathId.node (n + 2)]
+    (PathId.edge (n + 1)) (PathId.node (n + 1)) (PathId.node (n + 2)) (PathId.node n)
+    { i := PathId.node (n + 1), role := PathRole.edgeEnd, sign := Sign.neg, mult := 1 }
+    { i := PathId.node (n + 2), role := PathRole.edgeEnd, sign := Sign.pos, mult := 1 }
+    rfl rfl rfl (by simp)]
+  rw [pathIncidenceChained_node_chain_boundary, pathIncidenceChained_node_chain_boundary_zero]
+  simp
+
 end IncidenceCore

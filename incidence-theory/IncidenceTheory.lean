@@ -547,6 +547,107 @@ theorem boundary_composition_zero_of_leaf_boundary {I R T : Type u} [DecidableEq
     have hz : inc.boundary j = [] := hei ▸ hleaf e he
     simp [boundaryMatrix_eq_zero_of_leaf inc idx j k hz]
 
+/- Research cycle 17 (see RESEARCH_LOG.md): `single_link_composition_ne_zero`
+   (cycle 9) only applies to a *singleton*-boundary source. Cycle 16 found
+   `pathIncidenceChained`'s multi-entry `edge` elements also break ∂²=0,
+   but could only report a `decide`-checked concrete witness, not a
+   general theorem, since no existing lemma covered a two-entry boundary.
+   This extends the same `boundaryMatrix`/`foldl` technique
+   (`boundaryMatrix_single_link` + `foldl_add_eq_count_mul`, cycle 9) one
+   step further: a *two*-entry boundary, still fully general over any
+   `Incidence`, not tied to `PathComplex`. -/
+
+/- Two-entry analogue of `boundaryMatrix_single_link`: when `i`'s boundary
+   is exactly `[e1, e2]` pointing at two *distinct* elements `j1 ≠ j2`,
+   `boundaryMatrix inc idx i x` is the sum of the two entries' signed
+   contributions, gated by which of `j1`/`j2` (if either) `x` equals. -/
+theorem boundaryMatrix_two_link {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i j1 j2 : I) (e1 e2 : Endpoint I R)
+  (hb : inc.boundary i = [e1, e2]) (he1i : e1.i = j1) (he2i : e2.i = j2)
+  (hne : j1 ≠ j2) (x : I) :
+  boundaryMatrix inc idx i x =
+    (if x = j1 then
+      (match e1.sign with | Sign.neg => -(Int.ofNat e1.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e1.mult)
+     else 0) +
+    (if x = j2 then
+      (match e2.sign with | Sign.neg => -(Int.ofNat e2.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e2.mult)
+     else 0) := by
+  rw [boundaryMatrix_eq_foldl, hb]
+  simp only [List.foldl_cons, List.foldl_nil, he1i, he2i]
+  by_cases h1 : x = j1
+  · subst h1
+    simp only [hne, hne.symm, if_pos, if_neg, not_false_eq_true, Int.zero_add, Int.add_zero]
+  · by_cases h2 : x = j2
+    · subst h2
+      simp only [hne, hne.symm, if_pos, if_neg, not_false_eq_true, Int.zero_add]
+    · simp [Ne.symm h1, Ne.symm h2, h1, h2]
+
+/- Two-target analogue of `foldl_add_eq_count_mul`: a `foldl` sum where
+   `f` is known to vanish off two designated points collapses to just
+   those two points' contributions, weighted by their multiplicities in
+   `idx`. Same induction shape as the single-target version (cycle 9),
+   extended by one more case split. -/
+theorem foldl_add_eq_count_mul_two {I : Type u} [DecidableEq I]
+  (idx : List I) (x1 x2 : I) (hne : x1 ≠ x2) (f : I → Int)
+  (hother : ∀ y ∈ idx, y ≠ x1 → y ≠ x2 → f y = 0) :
+  ∀ acc, idx.foldl (fun a y => a + f y) acc = acc + (idx.count x1) * f x1 + (idx.count x2) * f x2 := by
+  induction idx with
+  | nil => intro acc; simp
+  | cons hd tl ih =>
+    intro acc
+    simp only [List.foldl_cons]
+    have ih' : ∀ y ∈ tl, y ≠ x1 → y ≠ x2 → f y = 0 := fun y hy => hother y (List.mem_cons_of_mem _ hy)
+    rw [ih ih' (acc + f hd)]
+    by_cases h1 : hd = x1
+    · subst h1
+      rw [List.count_cons_self, List.count_cons_of_ne hne]
+      push_cast
+      rw [Int.add_mul, Int.one_mul]
+      omega
+    · by_cases h2 : hd = x2
+      · subst h2
+        rw [List.count_cons_self, List.count_cons_of_ne h1]
+        push_cast
+        rw [Int.add_mul, Int.one_mul]
+        omega
+      · have hz := hother hd List.mem_cons_self h1 h2
+        rw [List.count_cons_of_ne h1, List.count_cons_of_ne h2, hz]
+        omega
+
+/- The payoff: `∂²` at a two-entry-boundary element reduces to an exact,
+   closed-form value (not merely "nonzero" like cycle 9's theorem) --
+   the two boundary entries' signed contributions, each weighted by how
+   many times its target appears in `idx` and by the target's own
+   boundary row at `k`. Composed from the two lemmas above the same way
+   `single_link_composition_ne_zero` composed from their single-entry
+   counterparts. -/
+theorem two_link_composition_value {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i j1 j2 k : I)
+  (e1 e2 : Endpoint I R)
+  (hb : inc.boundary i = [e1, e2]) (he1i : e1.i = j1) (he2i : e2.i = j2)
+  (hne : j1 ≠ j2) :
+  boundary_composition inc idx i k =
+    (idx.count j1) * ((match e1.sign with | Sign.neg => -(Int.ofNat e1.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e1.mult) * boundaryMatrix inc idx j1 k) +
+    (idx.count j2) * ((match e2.sign with | Sign.neg => -(Int.ofNat e2.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e2.mult) * boundaryMatrix inc idx j2 k) := by
+  unfold boundary_composition
+  have hother : ∀ y ∈ idx, y ≠ j1 → y ≠ j2 →
+      boundaryMatrix inc idx i y * boundaryMatrix inc idx y k = 0 := by
+    intro y _ hy1 hy2
+    rw [boundaryMatrix_two_link inc idx i j1 j2 e1 e2 hb he1i he2i hne y, if_neg hy1, if_neg hy2]
+    simp
+  rw [foldl_add_eq_count_mul_two idx j1 j2 hne
+      (fun y => boundaryMatrix inc idx i y * boundaryMatrix inc idx y k) hother 0]
+  have hBij1 : boundaryMatrix inc idx i j1 =
+      (match e1.sign with | Sign.neg => -(Int.ofNat e1.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e1.mult) := by
+    rw [boundaryMatrix_two_link inc idx i j1 j2 e1 e2 hb he1i he2i hne j1, if_pos rfl, if_neg hne]
+    simp
+  have hBij2 : boundaryMatrix inc idx i j2 =
+      (match e2.sign with | Sign.neg => -(Int.ofNat e2.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e2.mult) := by
+    rw [boundaryMatrix_two_link inc idx i j1 j2 e1 e2 hb he1i he2i hne j2, if_neg (Ne.symm hne), if_pos rfl]
+    simp
+  rw [hBij1, hBij2]
+  simp [Int.zero_add]
+
 /- Glue operation matrix correspondence -/
 /- Merkle-ID: implementation.linear_algebra.glue_matrix
    How glue operations correspond to matrix operations on boundary matrices. -/

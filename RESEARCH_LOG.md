@@ -1071,19 +1071,89 @@ to treat this connection as established, not needing a fourth repeat.
 `pathIncidenceChained`'s edge-level failure remains a genuinely open,
 unformalized item (see below), distinct from this now-closed thread.
 
-**Next hypothesis (cycle 17, not yet attempted)**: two open items
-remain on the books. (1) cycle 12's still-unformalized conjecture that
+## Cycle 17
+
+**Hypothesis**: (item 2 queued above) generalize `pathIncidenceChained`'s
+edge-level `∂² ≠ 0` failure (cycle 16's `decide`-checked concrete
+witness at `edge 1`) into a `∀ n` statement, by building the "two-entry-
+boundary composition" machinery `single_link_composition_ne_zero`
+doesn't cover.
+
+**Method**: extended cycle 9/10's exact techniques one entry further,
+rather than inventing something new. (1) `boundaryMatrix_two_link`:
+the two-entry analogue of `boundaryMatrix_single_link` -- given
+`inc.boundary i = [e1, e2]` with `e1.i ≠ e2.i`, `boundaryMatrix inc idx
+i x` is the sum of each entry's signed contribution, gated by which of
+the two targets `x` matches. (2) `foldl_add_eq_count_mul_two`: the two-
+target analogue of `foldl_add_eq_count_mul`, same induction shape with
+one more case split. (3) `two_link_composition_value`: composes the
+first two into an exact closed-form `∂²` value at a two-entry-boundary
+element, the same way `single_link_composition_ne_zero` composed its
+single-entry counterparts -- except this one yields a *value*, not just
+a nonzero-ness fact, since cycle 16's witnesses were exact numbers
+(`-1`, `+1`), not merely "nonzero". Iterated each piece in a scratch
+file against `lake env lean` before touching the project, per
+discipline.
+
+**Result**: **confirmed and fully generalized**, but with real proof-
+engineering friction along the way, exactly as anticipated when this was
+queued -- not a one-liner. The recurring obstacle was `if`-condition
+*orientation*: `rw`/`simp only` treat `if a = b then _` and `if b = a
+then _` as syntactically different targets even though propositionally
+equivalent, and `boundaryMatrix_eq_foldl`'s fold produces one specific
+orientation per branch that doesn't match either the hypothesis's or the
+goal's orientation for free. Diagnosed each mismatch by deliberately
+forcing an error (`simp` instead of `sorry`, so the elaborator prints
+the exact residual goal) rather than guessing blind -- far faster than
+reasoning about `dite`/fold unfolding on paper, and a better version of
+the same lesson cycle 9 first hit with `dite` friction. One more surprise:
+after transcribing into the *root* file, the same `simp only [...]`
+calls needed no trailing `rfl` there (unlike the scratch file against
+`PathComplex.lean`), and Lean reported "no goals to be solved" when the
+now-redundant `rfl` was left in -- removed once caught by the build,
+not assumed away. All three general lemmas verify with `propext`
+(`Quot.sound` on two of them) only, no `Classical.choice`, no
+`sorryAx` -- cleaner even than most instance-specific proofs in this
+project. The five `PathComplex.lean`-specific corollaries built on top
+(`pathIncidenceChained_node_self_boundary_zero`,
+`_node_chain_boundary`, `_node_chain_boundary_zero`,
+`_edge_node_witness`, `_edge_prev_node_witness`) verify with the
+standard three axioms. `pathIncidenceChained_edge_node_witness` proves
+`edge n` vs. `node n` is *always* `-1`, and
+`pathIncidenceChained_edge_prev_node_witness` proves `edge (n+1)` vs.
+`node n` is *always* `+1` -- for every `n`, not just cycle 16's `edge 1`
+instance. Full `lake build`: 38/38 jobs. Repo-wide `sorry` grep: none.
+
+Added `boundaryMatrix_two_link`/`foldl_add_eq_count_mul_two`/
+`two_link_composition_value` to the root file (general, reusable
+infrastructure, same placement convention as cycle 9/10's lemmas); the
+five corollaries to `PathComplex.lean`; wired into `Main.lean`.
+
+**Where the "two-entry-boundary ∂²" thread now stands (cycle 17)**:
+one instance (`pathIncidenceChained`'s edges) fully generalized, and the
+machinery is explicitly built instance-agnostic (parametrized over any
+`Incidence`, not `PathId`-specific) so it's available for reuse --
+`simplexIncidence`'s edges (`e01`/`e02`/`e12`, also two-entry boundaries)
+are a natural next candidate for this exact machinery if a future cycle
+wants a second confirming instance, though not queued as mandatory (one
+clean general theorem may be enough, similar to how cycle 9's single-
+link theorem needed only `altIncidence` as a second data point before
+being trusted as general).
+
+**Next hypothesis (cycle 18, not yet attempted)**: one open item
+remains on the books, unchanged from before this cycle since it wasn't
+today's focus: cycle 12's still-unformalized conjecture that
 `simplexIncidence`'s edges (`e01`/`e02`/`e12`) collapse under `≈` the
 same way its vertices did, which stalled twice on proof-engineering
 friction (9-way case splits, no `tauto`) -- worth a third attempt only
 with a different strategy, e.g. proving a reusable "boundary-entries-
 pairwise-related ⇒ elements bisimilar" lemma first instead of hand-
-rolling the relation per case; (2) new this cycle: generalize
-`pathIncidenceChained`'s edge-level `∂² ≠ 0` failure (currently only a
-concrete `decide` witness at `edge 1`) into a `∀ n` statement the way
-the node-chain case was -- this needs new machinery beyond
-`single_link_composition_ne_zero` (a "two-entry-boundary composition"
-lemma, analogous in spirit to cycle 9/10's `foldl`-generalization
-lemmas but for a length-2 rather than length-1 boundary), not a direct
-corollary, so budget real proof-engineering time rather than expecting
-a one-liner.
+rolling the relation per case. If that still doesn't yield within one
+cycle's budget, it's reasonable to record it as a permanently open
+conjecture (two stalls plus a third would be a real signal, not bad
+luck) and let the co-scientist loop pick fresh ground instead -- e.g.
+auditing whether any of the now-substantial general-theorem library
+(`incidence_bisim_faithful`, `single_link_composition_ne_zero`,
+`boundary_composition_zero_of_leaf_boundary`, `two_link_composition_value`)
+has an untested edge case or an implicit assumption worth stating
+explicitly, rather than only ever extending to new instances.
