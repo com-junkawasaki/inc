@@ -7,6 +7,7 @@ package "incidence-theory" where
 lean_lib "IncidenceTheory" where
   -- builds modules under IncidenceTheory/
 
+@[default_target]
 lean_exe "incidence-theory" where
   root := `Main
   supportInterpreter := true
