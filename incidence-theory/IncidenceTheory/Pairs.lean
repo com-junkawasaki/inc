@@ -432,4 +432,43 @@ theorem pairIncidenceChained_nested_pair_cancellation (n : Nat) :
       pairIncidenceChained_atom_chain_boundary]
   simp
 
+/- Research cycle 25 (see RESEARCH_LOG.md): cycle 24 flagged, but didn't
+   attempt, whether the cancellation above generalizes beyond the
+   specific `atom n`/`atom (n+1)`/`atom (n+2)` family. Checked
+   concretely first: does `pair`'s *first* component (`a` above,
+   `atom n` in cycle 24's version) matter to the mechanism at all, or
+   only the *second* component's relationship to the outer `atom`
+   chain? Tested with `a` set to an entirely unrelated nested pair
+   (`pair (atom 5) (atom 6)`, sharing no atoms with the rest of the
+   construction) via `pair (pair (pair (atom 5) (atom 6)) (atom 3))
+   (atom 4)` against `atom 3` -- still `0`. Re-examining
+   `pairIncidenceChained_pair_snd_boundary`'s proof confirms why: it
+   never used anything about `a` beyond `a ≠ b`, so the cancellation was
+   never actually about the atom chain reaching *two levels* deep --
+   it's a purely structural fact about `pair`'s `fst`/`snd` shape
+   meeting *any* chain-reaching element, regardless of what's nested via
+   `a`. -/
+theorem pairIncidenceChained_nested_pair_cancellation_general (a : PairId) (n : Nat)
+  (ha : a ≠ PairId.atom n) :
+  boundary_composition pairIncidenceChained
+    [PairId.pair a (PairId.atom n), PairId.atom (n + 1)]
+    (PairId.pair (PairId.pair a (PairId.atom n)) (PairId.atom (n + 1)))
+    (PairId.atom n) = 0 := by
+  rw [two_link_composition_value pairIncidenceChained
+    [PairId.pair a (PairId.atom n), PairId.atom (n + 1)]
+    (PairId.pair (PairId.pair a (PairId.atom n)) (PairId.atom (n + 1)))
+    (PairId.pair a (PairId.atom n)) (PairId.atom (n + 1)) (PairId.atom n)
+    { i := PairId.pair a (PairId.atom n), role := PairRole.fst, sign := Sign.pos, mult := 1 }
+    { i := PairId.atom (n + 1), role := PairRole.snd, sign := Sign.pos, mult := 1 }
+    rfl rfl rfl (by simp)]
+  rw [pairIncidenceChained_pair_snd_boundary _ a (PairId.atom n) ha,
+      pairIncidenceChained_atom_chain_boundary]
+  simp
+
+/- `pairIncidenceChained_nested_pair_cancellation` (cycle 24) is now a
+   special case of this (`a := atom n`, reindexed by one) -- kept
+   alongside rather than deleted, since it's a genuine, independently
+   readable instance illustrating the phenomenon concretely, not a
+   broken or superseded construction. -/
+
 end IncidenceCore

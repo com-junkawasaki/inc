@@ -1624,16 +1624,79 @@ family tested is itself a genuine, non-trivial, fully generalized
 result and doesn't need to become maximally general to be a real
 finding.
 
-**Next hypothesis (cycle 25, not yet attempted)**: option 2 of cycle
-23's queue, not reached this cycle: a quick survey of whether the
-term-mode-vs-tactic-mode lesson (cycle 22→23) would clean up other
-awkward or historically-friction-heavy tactic-mode proofs in this
-project -- e.g. `simplexIncidence_isBisimulation`-style proofs (cycle
-18) that used `first | ... | ...` over many cases and worked, but might
-be *more robust* (not necessarily shorter) as term-mode matches; worth
-a quick audit for "did this actually stall/need retries when first
-written" rather than rewriting anything that already works cleanly
-(rewriting working code for its own sake isn't this project's style).
-Also open, not yet scoped: whether `pairIncidenceChained_nested_pair_cancellation`'s
-family generalizes beyond the specific `atom n`/`atom (n+1)`/
-`atom (n+2)` construction tested this cycle.
+## Cycle 25
+
+**Hypothesis**: two items queued at the end of cycle 24. (1, primary)
+does `pairIncidenceChained_nested_pair_cancellation`'s family generalize
+beyond the specific `atom n`/`atom (n+1)`/`atom (n+2)` construction? (2,
+secondary) a quick survey of whether the term-mode-vs-tactic-mode lesson
+(cycle 22→23) would clean up other historically-friction-heavy
+tactic-mode proofs -- explicitly scoped as an audit, not a rewrite
+mandate.
+
+**Method for (1)**: re-read the existing proof of
+`pairIncidenceChained_pair_snd_boundary` before writing any new Lean, to
+ask a specific question: does the cancellation's mechanism actually
+depend on the outer pair's *first* component (`a`, instantiated as
+`atom n` in cycle 24) being an atom in the same chain, or only on the
+*second* component's relationship to what's composed against? The
+lemma's own proof only ever uses `a ≠ b` -- never anything about *what*
+`a` is. Tested this concretely before trusting the reading: built `a :=
+pair (atom 5) (atom 6)` (an unrelated nested pair sharing no atoms with
+the rest of the construction) and checked `pair (pair a (atom 3))
+(atom 4)` against `atom 3` via `#eval` -- still `0`.
+
+**Result for (1)**: **confirmed and proven fully general.**
+`pairIncidenceChained_nested_pair_cancellation_general (a : PairId) (n :
+Nat) (ha : a ≠ atom n)` holds for *any* `a`, not just atoms -- the
+cancellation was never about atom-chain depth at all, it's a purely
+structural fact about `pair`'s `fst`/`snd` shape meeting any chain-
+reaching element. Proof reuses the exact same helper lemmas from cycle
+24 unchanged (they were already general in `a`; only the *theorem
+statement* cycle 24 wrote was needlessly specific). `#print axioms`:
+standard three, no `sorryAx`. `pairIncidenceChained_nested_pair_cancellation`
+(cycle 24's specific instance) is now a special case of this (`a := atom
+n`, reindexed) -- kept alongside rather than deleted, since it's a
+genuine, independently-readable concrete illustration, not a broken or
+superseded construction (the same "keep both, not just the general
+one" choice this project made for `natIncidence`/`altIncidence` and
+others).
+
+**Method/Result for (2)**: delegated a read-only grep survey (no file
+modifications) across the whole codebase for `cases <;> first | ...`
+patterns. Found exactly four sites, all in `Simplex.lean`: two use only
+2 alternatives with no recorded friction (the `Incidence` field proofs,
+and cycle 22's `simplexToShape_reflects`); one (cycle 23's
+`simplexToShape_distinguishes`) is the tactic-mode version that *already*
+hit the pollution bug and was *already* replaced by the term-mode
+`match` now in the file; the remaining one --
+`simplexEdgeVertexRel_isBisimulation` (cycle 18, 7 alternatives across 9
+`cases`-generated goals) -- is structurally the closest match to the
+risky shape and the natural audit target, but cycle 18's own writeup
+records it working on the *first* full attempt with no friction. **No
+rewrite performed** -- this project doesn't rewrite working code for its
+own sake, and the audit found no evidence (recorded or freshly
+uncovered) that this specific proof is actually fragile, only that it
+*structurally could be*. A clean, quick negative-ish finding: the
+audit's value was ruling out a latent risk, not finding a bug.
+
+**Synthesis**: two closed items, appropriately scoped to their actual
+size -- (1) was a real generalization worth formalizing (removes an
+unnecessary hypothesis, strengthens a genuine finding, cheap given the
+groundwork was already general); (2) was genuinely just an audit,
+correctly not escalated into unnecessary rewriting once the evidence
+didn't support it. Both outcomes match this project's stated discipline
+rather than manufacturing more work than the findings warranted.
+
+**Next hypothesis (cycle 26, not yet attempted)**: no mandatory item
+carries over -- both cycle 24 queue items are closed. This is a natural
+point for either (a) a genuinely fresh instance/phenomenon (the
+research log hasn't introduced a new `Incidence` carrier type since
+`simplexIncidence`, cycle 11 -- worth considering whether another
+concrete mathematical structure would surface a new phenomenon the way
+each prior new instance did), or (b) continuing to mine the now-
+substantial general-theorem library for further audits in the spirit of
+cycle 19/20/25's "check whether an existing theorem's free parameters
+have all been exercised" pattern -- neither is queued as mandatory;
+worth deciding fresh next cycle based on what seems most likely to
+surface a genuine finding rather than repeat a now-familiar pattern.
