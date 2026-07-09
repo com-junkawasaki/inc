@@ -1,5 +1,6 @@
 import IncidenceTheory.Peano
 import IncidenceTheory.Pairs
+import IncidenceTheory.PathComplex
 
 /- Merkle-ID: implementation.graph_model.cross_instance
    story.jsonnet → implementation.nodes.cross_instance
@@ -94,5 +95,56 @@ theorem sizeOf_pair_eq_succ_glue (a b : PairId) :
 theorem sizeOf_pair_ne_glue (a b : PairId) :
   some (sizeOf (PairId.pair a b)) ≠ natIncidence.glue (sizeOf a) (sizeOf b) := by
   simp [natIncidence, PairId.pair.sizeOf_spec]
+
+/- Research cycle 15 (see RESEARCH_LOG.md): cycle 14 fixed
+   `pathIncidenceChained`'s collapse (cycle 13) the same way cycle 3 fixed
+   `pairIncidenceChained`'s (a role-tagged predecessor chain), and asked
+   the queued question: does `PathId.node : Nat → PathId` -- the obvious
+   embedding into a *second*, independently-built chain-shaped instance
+   -- reproduce cycle 6's exact mixed result (boundary/unit natural, glue
+   not), or does something different happen now that source and target
+   are both single-link `Nat`-indexed chains with near-identical shape
+   (unlike `PairId`, a richer nested type)?
+
+   Finding: the SAME qualitative outcome, term for term. `node`
+   preserves `boundary` (up to the same `pred → chain` role-relabeling
+   pattern as `atom`) and `unit`, but not `glue` --
+   `pathIncidenceChained.glue` is the same left-biased-selection
+   placeholder as `pairIncidenceChained.glue`, still structurally
+   unrelated to `natIncidence.glue` (addition). This is a genuine
+   confirmation, not a foregone conclusion: it shows the boundary/glue
+   split from cycle 6 isn't an artifact of `PairId`'s richer shape --
+   it persists even between two *maximally similar* chain instances,
+   because the real cause is the algebraic *kind* of `glue` (addition
+   vs. selection), not any structural dissimilarity between the carrier
+   types. -/
+theorem node_boundary_natural (n : Nat) :
+  pathIncidenceChained.boundary (PathId.node n) =
+    (natIncidence.boundary n).map (fun e =>
+      ({ i := PathId.node e.i, role := PathRole.chain, sign := e.sign, mult := e.mult }
+        : Endpoint PathId PathRole)) := by
+  cases n with
+  | zero => simp [natIncidence, peanoBoundary, pathIncidenceChained, pathBoundaryChained]
+  | succ k => simp [natIncidence, peanoBoundary, pathIncidenceChained, pathBoundaryChained]
+
+theorem node_unit_natural :
+  PathId.node natIncidence.unit = pathIncidenceChained.unit := by
+  simp [natIncidence, pathIncidenceChained]
+
+/- Concrete witness, same shape as `atom_glue_not_natural`: `node 2`
+   `glue` `node 3` would have to be `node 5` for glue-naturality, but
+   it's `node 2` (left-biased, `node 2 ≠ node 0`). -/
+theorem node_glue_not_natural :
+  ¬ (∀ m n, pathIncidenceChained.glue (PathId.node m) (PathId.node n) =
+       some (PathId.node (m + n))) := by
+  intro h
+  have h23 := h 2 3
+  simp [pathIncidenceChained] at h23
+
+theorem node_approxBisim_iff (m n : Nat) :
+  approxBisim pathIncidenceChained (PathId.node m) (PathId.node n) ↔
+  approxBisim natIncidence m n := by
+  rw [pathIncidenceChained_approxBisim_iff, natIncidence_approxBisim_iff]
+  exact ⟨fun h => by injection h, fun h => by rw [h]⟩
 
 end IncidenceCore

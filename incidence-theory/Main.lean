@@ -178,3 +178,12 @@ def main : IO Unit := do
   IO.println "    and pairIncidenceChained, applied to a third broken instance"
   IO.println "  ✓ pathIncidenceChained_approxBisim_iff: FULL faithfulness (≈ ↔ =) recovered"
   IO.println "    for the whole PathId type, via the general theorem from cycle 4"
+
+  IO.println "\n🔀 A Second Cross-Instance Homomorphism (PathId.node : Nat → PathId, cycle 15):"
+  IO.println "  ✓ preserves boundary (naturally) and unit, same as PairId.atom (cycle 6)"
+  IO.println "  ✗ still does NOT preserve glue -- confirms the split is about glue's"
+  IO.println "    algebraic KIND (addition vs. left-biased selection), not about"
+  IO.println "    structural dissimilarity: pathIncidenceChained is a chain just like"
+  IO.println "    natIncidence, yet the same mixed result reproduces exactly"
+  IO.println "  ✓ node_approxBisim_iff: ≈-agreement transfers faithfully across both"
+  IO.println "    instances despite the failed glue-homomorphism"

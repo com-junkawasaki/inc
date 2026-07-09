@@ -942,21 +942,79 @@ attempts have already stalled on it -- worth revisiting only with a
 genuinely different strategy, not a third repeat of the same case-split
 approach.
 
-**Next hypothesis (cycle 15, not yet attempted)**: the "flat leaves
-collapse ⇒ fix with a role-tagged chain" thread has now run its course
-across four instances and doesn't need a fifth confirmation. Fresh
-ground, picking up an old thread instead of starting a new one:
-cycle 6/7 asked whether `boundary`-preserving maps between *different*
-Incidence instances preserve `glue` too, and found they generally don't
-(algebraic vs. coalgebraic layers). With `pathIncidenceChained` now
-built and fully faithful, is there a natural boundary-preserving
-embedding from `natIncidence` into `pathIncidenceChained` (both are
-`Nat`-indexed chains with the identical `PeanoRole.pred`/`chain`-style
-single-link structure) -- and does *this* pair's `glue` compose any
-differently than `natIncidence`/`pairIncidenceChained`'s did, given
-`pathIncidenceChained`'s `glue` is left-biased selection (same "shape"
-mismatch against `natIncidence`'s addition that doomed cycle 6), or is
-there possibly a *better* map this time given how structurally similar
-the two chains are? Check via the same boundary/unit/glue three-way
-split cycle 6 used, expecting -- but not assuming -- the same
-qualitative outcome.
+## Cycle 15
+
+**Hypothesis**: (as queued above) test `PathId.node : Nat → PathId` as a
+boundary/unit/glue-naturality candidate between `natIncidence` and
+`pathIncidenceChained`, via the exact three-theorem template cycle 6
+used for `PairId.atom` -- expecting, but not assuming, the same
+qualitative mixed result (boundary/unit natural, glue not).
+
+**Method**: `#eval`/inspection first, per discipline. Compared
+`pathBoundaryChained`'s `node (n+1)` case (`[{node n, chain, neg, 1}]`)
+against `peanoBoundary`'s `succ n` case (`[{n, pred, neg, 1}]`) --
+identical shape modulo the `pred → chain` role relabeling, exactly the
+same relationship cycle 3 built between `pairBoundaryChained`'s atom
+case and `peanoBoundary`. Compared `pathIncidenceChained.glue` (`if i =
+node 0 then some j else some i`, left-biased selection) against
+`natIncidence.glue` (addition) -- structurally unrelated, same as
+`pairIncidenceChained.glue` vs. `natIncidence.glue` in cycle 6. Wrote
+the four theorems (`node_boundary_natural`, `node_unit_natural`,
+`node_glue_not_natural` with the `m=2,n=3` witness,
+`node_approxBisim_iff` composing cycle 4's general faithfulness for both
+instances) in a scratch file (`/tmp/test_path_hom.lean`) against
+`lake env lean` before touching the project, then diffed against the
+transcribed version in `CrossInstance.lean` before committing (cycle
+14's transcription-slip lesson, applied).
+
+**Result**: **confirmed -- the same qualitative outcome, term for
+term**, not a foregone conclusion but a genuine (if expected) empirical
+match. All four theorems typecheck with zero `sorry`; `#print axioms`
+on each: `propext`, `Classical.choice`, `Quot.sound` only, no `sorryAx`.
+`node` preserves `boundary` (up to the same `pred → chain` relabeling
+pattern) and `unit`, and fails to preserve `glue` with the same shape of
+witness (`node 2 glue node 3 = node 2 ≠ node 5`). The value of this
+cycle isn't the individual theorems (each is a near-syntactic copy of
+cycle 6's) but what running the *same test twice, on a deliberately more
+structurally-similar pair*, rules out: it shows the boundary/glue split
+from cycle 6 was never about `PairId` being a richer nested type than
+`natIncidence` -- `pathIncidenceChained` is a bare `Nat`-indexed chain,
+as structurally close to `natIncidence` as two independently-built
+instances get, and the same split still holds. The real invariant is
+`glue`'s algebraic *kind* (addition vs. left-biased selection is a
+mismatch regardless of carrier shape), not any structural distance
+between source and target. Added to `CrossInstance.lean` (now importing
+`PathComplex.lean` alongside `Peano.lean`/`Pairs.lean`), wired into
+`Main.lean`. Full `lake build`: 38/38 jobs, clean. Repo-wide `sorry`
+grep: none.
+
+**Where the "cross-instance homomorphism" thread now stands (cycles
+6-7, 15)**: two independently-built `Nat`-indexed embeddings
+(`PairId.atom`, `PathId.node`) into two independently-built target
+instances both land on the identical mixed result, plus one independent
+confirmation via a completely different function (`sizeOf`, cycle 7).
+Three data points now agree; this thread doesn't need a fourth
+confirmation of the same shape either, similar to how cycle 14 closed
+out the "flat leaves collapse" thread.
+
+**Next hypothesis (cycle 16, not yet attempted)**: two threads
+(collapse-and-fix, cross-instance boundary/glue split) have each run
+their course across 3-4 confirming instances and don't need more
+repeats. Two genuinely open items remain on the books instead of
+picking a new direction cold: (1) cycle 12's still-unformalized
+conjecture that `simplexIncidence`'s edges (`e01`/`e02`/`e12`) collapse
+under `≈` the same way its vertices did, which stalled twice on
+proof-engineering friction (9-way case splits, no `tauto`) -- worth a
+third attempt only with a different strategy, e.g. proving a reusable
+"boundary-entries-pairwise-related ⇒ elements bisimilar" lemma first
+instead of hand-rolling the relation per case; (2) whether
+`pathIncidenceChained` (now fully faithful, cycle 14) satisfies `∂² = 0`
+the way `pathIncidence` (cycle 10, unfixed) trivially does via leaf-
+reaching boundaries -- `pathIncidenceChained`'s nodes are no longer
+leaves (each carries a `chain` link), so cycle 10's
+`boundary_composition_zero_of_leaf_boundary` sufficiency theorem no
+longer straightforwardly applies, and cycle 9's impossibility theorem
+(`single_link_composition_ne_zero`) may instead predict failure at the
+node level, the same way it did for plain `natIncidence`'s chain in
+cycle 9 -- an under-explored intersection of the two threads rather than
+a repeat of either.
