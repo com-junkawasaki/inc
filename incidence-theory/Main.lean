@@ -171,3 +171,10 @@ def main : IO Unit := do
   IO.println "  → this corrects an unverified claim in cycle 12's own log (checked before"
   IO.println "    building on it, not trusted as given) -- fourth independent instance"
   IO.println "    of the same collapse pattern across four unrelated constructions"
+
+  IO.println "\n🔧 The Fix, Reapplied a Third Time (cycle 14):"
+  IO.println "  ✓ pathIncidenceChained: node n now carries a chain link to node (n-1),"
+  IO.println "    role-tagged apart from edge endpoints -- same remedy as natIncidence"
+  IO.println "    and pairIncidenceChained, applied to a third broken instance"
+  IO.println "  ✓ pathIncidenceChained_approxBisim_iff: FULL faithfulness (≈ ↔ =) recovered"
+  IO.println "    for the whole PathId type, via the general theorem from cycle 4"

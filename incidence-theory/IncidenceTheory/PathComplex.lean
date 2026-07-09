@@ -99,4 +99,160 @@ theorem pathIncidence_nodes_collapse :
 theorem pathIncidence_nodes_not_eq :
   (PathId.node 0 : PathId) ≠ PathId.node 1 := by simp
 
+/- Research cycle 14 (see RESEARCH_LOG.md): the fix cycle 13 queued --
+   apply cycle 3's exact remedy (give the collapsing leaves a
+   distinguishing chain-style boundary, tagged with a role disjoint from
+   the existing edge-endpoint role so the two can never be confused) to
+   `pathIncidence`'s nodes. `PathRole` is a fresh role type (not reusing
+   `PeanoRole`, which has only one constructor, `pred` -- not enough
+   room to keep edge-endpoints and node-chain-links role-disjoint).
+   `node 0` stays the chain's base case (still `[]`); `node (n+1)`
+   gains a single `chain`-role link to `node n`; edges keep their
+   original two-endpoint shape, now tagged `edgeEnd` instead of `pred`.
+   `pathIncidence` itself (cycle 10) is left untouched -- its own
+   `pathIncidence_boundary_square_zero` still holds and doesn't need
+   this fix; this is a new, separate instance, same relationship as
+   `pairIncidence`/`pairIncidenceChained` (cycle 2/3). -/
+inductive PathRole where | edgeEnd | chain
+deriving DecidableEq, Repr
+
+def pathBoundaryChained : PathId → Boundary PathId PathRole
+  | PathId.node 0 => []
+  | PathId.node (n + 1) =>
+    [ { i := PathId.node n, role := PathRole.chain, sign := Sign.neg, mult := 1 } ]
+  | PathId.edge n =>
+    [ { i := PathId.node n, role := PathRole.edgeEnd, sign := Sign.neg, mult := 1 }
+    , { i := PathId.node (n + 1), role := PathRole.edgeEnd, sign := Sign.pos, mult := 1 } ]
+
+def pathIncidenceChained : Incidence PathId PathRole GraphType where
+  boundary := pathBoundaryChained
+  typeFunc := fun _ => GraphType.unit
+  glue     := fun i j => if i = PathId.node 0 then some j else some i
+  unit     := PathId.node 0
+  guards   := Guards.permissive PathId
+  boundaryMatrix := fun _ _ => 0
+  laplacian := fun _ _ => 0
+  type_consistent := fun i e h => rfl
+  sign_rules := by
+    intro i e h
+    cases i with
+    | node n => cases n with
+      | zero => simp [pathBoundaryChained] at h
+      | succ k => simp [pathBoundaryChained] at h; subst h; simp
+    | edge n => simp [pathBoundaryChained] at h; rcases h with h | h <;> subst h <;> simp
+  multiplicities := by
+    intro i e h
+    cases i with
+    | node n => cases n with
+      | zero => simp [pathBoundaryChained] at h
+      | succ k => simp [pathBoundaryChained] at h; subst h; simp
+    | edge n => simp [pathBoundaryChained] at h; rcases h with h | h <;> subst h <;> simp
+  well_founded := by
+    rintro i ⟨e, he, hei⟩
+    cases i with
+    | node n => cases n with
+      | zero => simp [pathBoundaryChained] at he
+      | succ k => simp [pathBoundaryChained] at he; subst he; simp_all
+    | edge n =>
+      simp [pathBoundaryChained] at he
+      rcases he with he | he <;> subst he <;> simp_all
+  unit_left := by intro i; simp
+  unit_right := by
+    intro i
+    by_cases h : i = PathId.node 0 <;> simp [h]
+  type_preserve := fun _ _ => rfl
+
+/- Measure: node n < edge n < node (n+1), giving a genuine well-founded
+   decrease for both the node-chain links and the edge-to-node links. -/
+def pathMeasure : PathId → Nat
+  | .node n => n
+  | .edge n => n + 2
+
+theorem pathIncidenceChained_hdec :
+  ∀ i e, e ∈ pathIncidenceChained.boundary i → pathMeasure e.i < pathMeasure i := by
+  intro i e h
+  cases i with
+  | node n => cases n with
+    | zero => simp [pathIncidenceChained, pathBoundaryChained] at h
+    | succ k =>
+      simp [pathIncidenceChained, pathBoundaryChained] at h
+      subst h
+      simp [pathMeasure]
+  | edge n =>
+    simp [pathIncidenceChained, pathBoundaryChained] at h
+    rcases h with h | h <;> subst h <;> simp [pathMeasure]
+
+theorem pathIncidenceChained_hext :
+  ∀ x y, pathIncidenceChained.typeFunc x = pathIncidenceChained.typeFunc y →
+    boundaryMatched pathIncidenceChained (· = ·) x y → x = y := by
+  intro x y _ ⟨hL, hR⟩
+  cases x with
+  | node m =>
+    cases y with
+    | node n =>
+      cases m with
+      | zero =>
+        cases n with
+        | zero => rfl
+        | succ j =>
+          exfalso
+          obtain ⟨e, he, -⟩ := hR { i := PathId.node j, role := PathRole.chain, sign := Sign.neg, mult := 1 }
+            (by simp [pathIncidenceChained, pathBoundaryChained])
+          simp [pathIncidenceChained, pathBoundaryChained] at he
+      | succ k =>
+        cases n with
+        | zero =>
+          exfalso
+          obtain ⟨e, he, -⟩ := hL { i := PathId.node k, role := PathRole.chain, sign := Sign.neg, mult := 1 }
+            (by simp [pathIncidenceChained, pathBoundaryChained])
+          simp [pathIncidenceChained, pathBoundaryChained] at he
+        | succ j =>
+          obtain ⟨e', he', -, heq⟩ := hL { i := PathId.node k, role := PathRole.chain, sign := Sign.neg, mult := 1 }
+            (by simp [pathIncidenceChained, pathBoundaryChained])
+          simp [pathIncidenceChained, pathBoundaryChained] at he'
+          subst he'
+          simp at heq
+          rw [heq]
+    | edge n =>
+      exfalso
+      cases m with
+      | zero =>
+        obtain ⟨e, he, -⟩ := hR { i := PathId.node n, role := PathRole.edgeEnd, sign := Sign.neg, mult := 1 }
+          (by simp [pathIncidenceChained, pathBoundaryChained])
+        simp [pathIncidenceChained, pathBoundaryChained] at he
+      | succ k =>
+        obtain ⟨e, he, hcompat, -⟩ := hL { i := PathId.node k, role := PathRole.chain, sign := Sign.neg, mult := 1 }
+          (by simp [pathIncidenceChained, pathBoundaryChained])
+        simp [pathIncidenceChained, pathBoundaryChained] at he
+        rcases he with he | he <;> subst he <;> simp [boundaryCompatible] at hcompat
+  | edge m =>
+    cases y with
+    | node n =>
+      exfalso
+      obtain ⟨e, he, hcompat, -⟩ := hL { i := PathId.node m, role := PathRole.edgeEnd, sign := Sign.neg, mult := 1 }
+        (by simp [pathIncidenceChained, pathBoundaryChained])
+      cases n with
+      | zero => simp [pathIncidenceChained, pathBoundaryChained] at he
+      | succ k =>
+        simp [pathIncidenceChained, pathBoundaryChained] at he
+        subst he
+        simp [boundaryCompatible] at hcompat
+    | edge n =>
+      obtain ⟨e1, he1, hcompat1, heq1⟩ := hL { i := PathId.node m, role := PathRole.edgeEnd, sign := Sign.neg, mult := 1 }
+        (by simp [pathIncidenceChained, pathBoundaryChained])
+      simp [pathIncidenceChained, pathBoundaryChained] at he1
+      rcases he1 with he1 | he1
+      · subst he1; simp at heq1; rw [heq1]
+      · subst he1; simp [boundaryCompatible] at hcompat1
+
+/- The fix works: full faithfulness recovered for the whole PathId type
+   once nodes carry the same distinguishing chain natIncidence's do. -/
+theorem pathIncidenceChained_approxBisim_iff (x y : PathId) :
+  approxBisim pathIncidenceChained x y ↔ x = y := by
+  constructor
+  · rintro ⟨rel, hbisim, hxy⟩
+    exact incidence_bisim_faithful pathIncidenceChained pathMeasure
+      pathIncidenceChained_hdec pathIncidenceChained_hext hbisim x y hxy
+  · intro h; subst h; exact approxBisim_refl pathIncidenceChained x
+
 end IncidenceCore

@@ -876,3 +876,87 @@ well-understood recipe at this point, low risk, and would round out
 broken-then-fixed pair (cycle 2 → cycle 3) rather than leaving it as
 the one instance in this project with a known, permanent, undiagnosed-until-now
 collapse and no accompanying fix.
+
+## Cycle 14
+
+**Hypothesis**: (as queued above) apply cycle 3's exact remedy to
+`pathIncidence`'s nodes -- a distinguishing chain-style boundary, role-
+tagged apart from the existing edge-endpoint structure -- and recover
+full `≈`-faithfulness for the fixed instance.
+
+**Method**: `PeanoRole` couldn't be reused directly for the fix (it has
+only one constructor, `pred` -- not enough room to keep edge-endpoints
+and the new node-chain-links role-disjoint, which is exactly the
+disambiguation cycle 3 needed for `PairRole`). Defined a fresh
+`PathRole` (`edgeEnd | chain`) instead: `node 0` stays the chain's base
+case, `node (n+1)` gains one `chain`-role link to `node n`, and edges
+keep their original two-endpoint shape now tagged `edgeEnd`. Built
+`pathIncidenceChained` as a genuinely separate instance (`pathIncidence`
+from cycle 10 untouched, its own `pathIncidence_boundary_square_zero`
+still holds and doesn't need this fix) -- the same broken/fixed-sibling
+relationship as `pairIncidence`/`pairIncidenceChained` (cycle 2/3).
+Measure for cycle 4's general theorem: `pathMeasure (node n) = n`,
+`pathMeasure (edge n) = n + 2`, chosen so both the node-chain link and
+an edge's two endpoints strictly decrease it.
+
+**Result**: **confirmed, this time without new proof-engineering
+surprises** -- this was the smoothest of the three "fix + reprove
+faithfulness" cycles (2→3, 12/13→14) so far, likely because the recipe
+is now genuinely well-understood rather than being worked out fresh.
+Two small mechanical slips did surface and get caught by the compiler
+immediately: (1) `rcases X with X | X` against what turned out to be a
+*singleton*-list membership (no disjunction to split, since the target
+node's boundary at that point was a base case, not the general
+successor case) -- fixed by dropping the `rcases`, matching the same
+pattern `natIncidence_hext`/`pairIncidenceChained_hext` already used;
+(2) `omega` asked to close a `PathId`-constructor-level goal (`edge m =
+edge n`) from a `Nat` fact (`m = n`) -- `omega` only proves arithmetic
+goals, not this; needed `rw [heq]` instead. Neither took long to
+diagnose from the actual error message. `pathIncidenceChained_hdec`/
+`_hext`/`_approxBisim_iff` all typecheck; `#print axioms`: the standard
+`propext`/`Classical.choice`/`Quot.sound`, no `sorryAx`. Added to
+`PathComplex.lean`, wired into `Main.lean`.
+
+While transcribing the verified scratch proof into the project file, a
+small extra case-split I'd added by hand (not present in the version
+that actually compiled) slipped in and needed to be caught by diffing
+against the verified source before committing -- a reminder that
+"verified in isolation" and "correctly copied into place" are two
+different checks, both worth doing, not one implying the other.
+
+`PathComplex.lean` now matches `Pairs.lean`'s shape exactly: one broken
+instance with a proven, concrete collapse witness, one fixed instance
+with proven full faithfulness, both kept side by side rather than the
+broken one being deleted once superseded -- the contrast is itself part
+of the record.
+
+**Where the "flat leaves collapse" thread now stands (cycles 2-3,
+12-14)**: four independent constructions hit the failure
+(`pairIncidence`, `simplexIncidence`, `pathIncidence`), three of which
+now have a completed, proven fix alongside them (`natIncidence` was
+never broken to begin with, but demonstrates the same chain-based
+remedy; `pairIncidenceChained`; `pathIncidenceChained`). The
+`simplexIncidence` fix (the still-open "edges collapse too" question
+from cycle 12) is the only remaining loose end in this thread, and two
+attempts have already stalled on it -- worth revisiting only with a
+genuinely different strategy, not a third repeat of the same case-split
+approach.
+
+**Next hypothesis (cycle 15, not yet attempted)**: the "flat leaves
+collapse ⇒ fix with a role-tagged chain" thread has now run its course
+across four instances and doesn't need a fifth confirmation. Fresh
+ground, picking up an old thread instead of starting a new one:
+cycle 6/7 asked whether `boundary`-preserving maps between *different*
+Incidence instances preserve `glue` too, and found they generally don't
+(algebraic vs. coalgebraic layers). With `pathIncidenceChained` now
+built and fully faithful, is there a natural boundary-preserving
+embedding from `natIncidence` into `pathIncidenceChained` (both are
+`Nat`-indexed chains with the identical `PeanoRole.pred`/`chain`-style
+single-link structure) -- and does *this* pair's `glue` compose any
+differently than `natIncidence`/`pairIncidenceChained`'s did, given
+`pathIncidenceChained`'s `glue` is left-biased selection (same "shape"
+mismatch against `natIncidence`'s addition that doomed cycle 6), or is
+there possibly a *better* map this time given how structurally similar
+the two chains are? Check via the same boundary/unit/glue three-way
+split cycle 6 used, expecting -- but not assuming -- the same
+qualitative outcome.
