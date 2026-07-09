@@ -133,3 +133,6 @@ def main : IO Unit := do
   IO.println "  ✗ does NOT preserve glue (addition vs. left-biased selection) --"
   IO.println "    a genuine mixed result: boundary is coalgebraic, glue is algebraic,"
   IO.println "    and a map respecting one doesn't automatically respect the other"
+  IO.println "  ✓ sizeOf (pre-existing, not designed for this test) IS a glue-"
+  IO.println "    homomorphism up to a precise +1 cost per pair node -- a quantified,"
+  IO.println "    non-circular confirmation of the same finding via an independent route"

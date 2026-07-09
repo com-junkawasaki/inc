@@ -362,3 +362,54 @@ definitional (choosing `count` specifically to make it work) rather than
 a substantive test, the same concern flagged and set aside in this
 cycle for a "sum" map — worth checking whether there's a non-circular
 way to state it before spending much time on the proof itself.
+
+## Cycle 7
+
+**Hypothesis**: (as queued above) a "count"-style map from `PairId` to
+`Nat` composes naturally with `natIncidence.glue` via `PairId.pair`.
+Flagged as at-risk for circularity — a map *defined* to be additive over
+`pair` would trivially satisfy the property by construction, proving
+nothing.
+
+**Method, addressing the circularity directly**: instead of inventing a
+new count function, tested `sizeOf` — it already exists (Lean's
+auto-derived structural size, used for `well_founded` proofs since
+cycle 3), was never defined with this test in mind, and its exact
+formula (`PairId.pair.sizeOf_spec : sizeOf (pair a b) = 1 + sizeOf a +
+sizeOf b`) is whatever Lean's `deriving` mechanism happened to produce.
+Whatever relationship it has to `glue` is *discovered by checking*, not
+designed to hold.
+
+**Result**: `sizeOf` is **not** a strict `glue`-homomorphism
+(`sizeOf_pair_ne_glue`, confirming cycle 6's qualitative finding via a
+completely independent route — a different map, a different reason) —
+but it *is* one up to a precise, constant correction:
+`sizeOf_pair_eq_succ_glue : sizeOf (pair a b) = 1 + natIncidence.glue
+(sizeOf a) (sizeOf b)`. Not just "doesn't match" (cycle 6's finding) but
+"matches exactly once the pairing operation's own unit cost is
+accounted for" — a sharper, quantified version of the same underlying
+fact, arrived at without touching the circularity risk this cycle was
+flagged for. `#print axioms`: `propext`/`Classical.choice`/`Quot.sound`
+on both, no `sorryAx`. Added to `CrossInstance.lean`, wired into
+`Main.lean`.
+
+**Next hypothesis (cycle 8, not yet attempted)**: seven cycles have now
+covered faithfulness (2-4), translation (5), and cross-instance maps
+(6-7) for `natIncidence`/`pairIncidenceChained`/`triIncidence`. Still
+completely untouched: the three explicitly-labeled-unformalized
+placeholders in the root file (`glue_preserves_boundary_operator`,
+`linear_invariants_preserved`, `preserves_limits`, all `True := trivial`
+by design, per the original bug-fix PR's honesty policy) and T3's
+`boundary_functor_soundness`/`linear_completeness` machinery, which has
+never been exercised against `natIncidence`/`pairIncidenceChained` at
+all (only the triangle graph, via `triangle_boundary_square_zero` and
+`triangle_completeness_concrete`). Concretely: does `boundary_composition`
+(root file's ∂² check) actually equal zero for a nontrivial index set
+drawn from `natIncidence` or `pairIncidenceChained` -- i.e., can
+`boundary_operator_square_zero`/`verify_boundary_composition` be
+exercised on *these* instances the way `triangle_boundary_square_zero`
+exercised them on the triangle, or does the chain/tree shape make the
+check trivially pass (all products zero because chains don't "return")
+in a way that's less interesting than the triangle's genuine cycle?
+Worth checking what the check even *means* for a non-cyclic (tree/chain)
+structure before assuming it's informative.

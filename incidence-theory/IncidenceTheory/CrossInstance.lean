@@ -70,4 +70,29 @@ theorem atom_approxBisim_iff (m n : Nat) :
   rw [pairIncidenceChained_approxBisim_iff, natIncidence_approxBisim_iff]
   exact ⟨fun h => by injection h, fun h => by rw [h]⟩
 
+/- Research cycle 7 (see RESEARCH_LOG.md): cycle 6 flagged a circularity
+   risk for testing "pair-up"-style compatibility with `natIncidence.glue`
+   -- defining a new count function specifically so it works would prove
+   nothing. Sidestepped that by testing `sizeOf` instead: it already
+   exists (used for `well_founded` proofs since cycle 3), wasn't defined
+   for this purpose, and its exact formula (`PairId.pair.sizeOf_spec`) is
+   whatever Lean's deriving mechanism happened to produce -- so whatever
+   relationship it has to `glue` is discovered, not designed.
+
+   Finding: `sizeOf` is *not* a strict `glue`-homomorphism (confirms
+   cycle 6's finding via an independent route), but it IS one up to a
+   precise, constant "cost" of 1 per `pair` node -- not just "doesn't
+   match", but "matches exactly once you account for the pairing
+   operation's own cost". A cleaner, quantified negative than cycle 6's
+   qualitative one. -/
+theorem sizeOf_pair_eq_succ_glue (a b : PairId) :
+  sizeOf (PairId.pair a b) = 1 + (natIncidence.glue (sizeOf a) (sizeOf b)).getD 0 := by
+  rw [PairId.pair.sizeOf_spec]
+  simp [natIncidence]
+  omega
+
+theorem sizeOf_pair_ne_glue (a b : PairId) :
+  some (sizeOf (PairId.pair a b)) ≠ natIncidence.glue (sizeOf a) (sizeOf b) := by
+  simp [natIncidence, PairId.pair.sizeOf_spec]
+
 end IncidenceCore
