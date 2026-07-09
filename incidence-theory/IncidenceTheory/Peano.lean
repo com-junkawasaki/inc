@@ -136,4 +136,27 @@ theorem natIncidence_approxBisim_iff (m n : Nat) :
     exact natIncidence_rel_eq hbisim m n hmn
   · intro h; subst h; exact approxBisim_refl natIncidence m
 
+/- Research cycle 1 (co-scientist step): does the same GluingSpec
+   abstraction used for triIncidence (left-biased, non-commutative glue)
+   also fit a genuinely commutative-monoid instance? Hypothesis: yes --
+   natIncidence's glue-as-addition is commutative and satisfies
+   GluingSpec's guarded associativity, exercising the abstraction across
+   two structurally different concrete incidences. -/
+theorem natIncidence_glue_comm (i j : Nat) :
+  natIncidence.glue i j = natIncidence.glue j i := by
+  simp [natIncidence, Nat.add_comm]
+
+/- Merkle-ID: implementation.graph_model.peano.gluing_spec
+   GluingSpec instance for natIncidence (permissive guards; addition). -/
+def natGluingSpec : GluingSpec natIncidence :=
+  { guards := Guards.permissive Nat
+  , unit_ok := by intro i; refine ⟨rfl, ?_, ?_⟩ <;> simp [natIncidence]
+  , type_preserve := by intro i j k _ _; rfl
+  , guard_preserve := by intro i j k _ _; trivial
+  , assoc_when_ok := by
+      intro i j k ij ijk jk _ h2 _ h4 _ h6 _
+      simp [natIncidence] at h2 h4 h6 ⊢
+      omega
+  }
+
 end IncidenceCore
