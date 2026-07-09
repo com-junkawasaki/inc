@@ -166,14 +166,115 @@ theorem simplexIncidence_vertices_collapse :
 theorem simplexIncidence_vertices_not_eq :
   (SimplexId.v0 : SimplexId) ≠ SimplexId.v1 := by simp
 
-/- Plausible but *not formalized*: the collapse likely propagates up a
-   dimension too -- `e01`/`e02`/`e12` only differ in *which* (now
-   pairwise-bisimilar) vertices they connect, so the same relation,
-   extended with an edge-level disjunct, should relate them as well. A
-   first attempt at `e01 ≈ e02` hit real proof-engineering friction (a
-   9-way case split from combining the vertex- and edge-level clauses,
-   and `tauto`, unavailable without mathlib) that didn't resolve
-   quickly. Left honestly unproved rather than forced -- stated here as
-   an open conjecture for a future cycle, not claimed as established. -/
+/- Research cycle 18 (see RESEARCH_LOG.md): the collapse conjectured
+   here in cycle 12 -- confirmed, on the third attempt, with a
+   genuinely different strategy rather than a third repeat of the
+   hand-rolled existential case split that stalled twice before. The
+   relation below relates any two vertices to each other AND any two
+   edges to each other (leaving `face` untouched); `boundaryMatched` for
+   an edge pair then reduces to exhibiting the positional pairing
+   between their two boundary entries and invoking the root file's new
+   `boundaryMatched_of_two_entries`/`boundaryMatched_symm` (cycle 18)
+   instead of unfolding existentials by hand. -/
+def simplexEdgeVertexRel (x y : SimplexId) : Prop :=
+  (x = SimplexId.v0 ∨ x = SimplexId.v1 ∨ x = SimplexId.v2) ∧
+  (y = SimplexId.v0 ∨ y = SimplexId.v1 ∨ y = SimplexId.v2) ∨
+  (x = SimplexId.e01 ∨ x = SimplexId.e02 ∨ x = SimplexId.e12) ∧
+  (y = SimplexId.e01 ∨ y = SimplexId.e02 ∨ y = SimplexId.e12)
+
+theorem simplexEdgeVertexRel_symm : ∀ a b, simplexEdgeVertexRel a b → simplexEdgeVertexRel b a := by
+  intro a b h
+  unfold simplexEdgeVertexRel at h ⊢
+  rcases h with ⟨ha, hb⟩ | ⟨ha, hb⟩
+  · exact Or.inl ⟨hb, ha⟩
+  · exact Or.inr ⟨hb, ha⟩
+
+theorem simplexCompat_refl (e : Endpoint SimplexId SimplexRole) :
+  boundaryCompatible simplexIncidence e e := ⟨rfl, rfl, rfl⟩
+
+/- The vertex case is vacuous (both boundaries empty, as in cycle 12's
+   proof); the edge case is nine ordered pairs, each closed by a direct
+   `boundaryMatched_of_two_entries` term (three "self" pairs, three
+   canonical unordered pairs, and their three reverses via
+   `boundaryMatched_symm`) -- `first | ... | ...` tries each candidate
+   term per generated goal, so this is nine deterministic term-mode
+   proofs, not a search. -/
+theorem simplexEdgeVertexRel_isBisimulation :
+  IsBisimulation simplexIncidence simplexEdgeVertexRel := by
+  intro i j hij
+  refine ⟨rfl, ?_⟩
+  rcases hij with ⟨hi, hj⟩ | ⟨hi, hj⟩
+  · rcases hi with hi | hi | hi <;> subst hi <;> rcases hj with hj | hj | hj <;> subst hj <;>
+      simp [boundaryMatched, simplexIncidence, simplexBoundary]
+  · rcases hi with hi | hi | hi <;> subst hi <;> rcases hj with hj | hj | hj <;> subst hj <;>
+      first
+      | exact boundaryMatched_of_two_entries simplexIncidence simplexEdgeVertexRel _ _ _ _ _ _
+          rfl rfl (simplexCompat_refl _) (Or.inl ⟨Or.inl rfl, Or.inl rfl⟩)
+          (simplexCompat_refl _) (Or.inl ⟨Or.inr (Or.inl rfl), Or.inr (Or.inl rfl)⟩)
+      | exact boundaryMatched_of_two_entries simplexIncidence simplexEdgeVertexRel _ _ _ _ _ _
+          rfl rfl (simplexCompat_refl _) (Or.inl ⟨Or.inl rfl, Or.inl rfl⟩)
+          (simplexCompat_refl _) (Or.inl ⟨Or.inr (Or.inr rfl), Or.inr (Or.inr rfl)⟩)
+      | exact boundaryMatched_of_two_entries simplexIncidence simplexEdgeVertexRel _ _ _ _ _ _
+          rfl rfl (simplexCompat_refl _) (Or.inl ⟨Or.inr (Or.inl rfl), Or.inr (Or.inl rfl)⟩)
+          (simplexCompat_refl _) (Or.inl ⟨Or.inr (Or.inr rfl), Or.inr (Or.inr rfl)⟩)
+      | exact boundaryMatched_of_two_entries simplexIncidence simplexEdgeVertexRel
+          SimplexId.e01 SimplexId.e02
+          { i := SimplexId.v0, role := SimplexRole.src, sign := Sign.neg, mult := 1 }
+          { i := SimplexId.v1, role := SimplexRole.dst, sign := Sign.pos, mult := 1 }
+          { i := SimplexId.v0, role := SimplexRole.src, sign := Sign.neg, mult := 1 }
+          { i := SimplexId.v2, role := SimplexRole.dst, sign := Sign.pos, mult := 1 }
+          rfl rfl (simplexCompat_refl _) (Or.inl ⟨Or.inl rfl, Or.inl rfl⟩)
+          (simplexCompat_refl _) (Or.inl ⟨Or.inr (Or.inl rfl), Or.inr (Or.inr rfl)⟩)
+      | exact boundaryMatched_symm simplexIncidence simplexEdgeVertexRel _ _ simplexEdgeVertexRel_symm
+          (boundaryMatched_of_two_entries simplexIncidence simplexEdgeVertexRel
+            SimplexId.e01 SimplexId.e02
+            { i := SimplexId.v0, role := SimplexRole.src, sign := Sign.neg, mult := 1 }
+            { i := SimplexId.v1, role := SimplexRole.dst, sign := Sign.pos, mult := 1 }
+            { i := SimplexId.v0, role := SimplexRole.src, sign := Sign.neg, mult := 1 }
+            { i := SimplexId.v2, role := SimplexRole.dst, sign := Sign.pos, mult := 1 }
+            rfl rfl (simplexCompat_refl _) (Or.inl ⟨Or.inl rfl, Or.inl rfl⟩)
+            (simplexCompat_refl _) (Or.inl ⟨Or.inr (Or.inl rfl), Or.inr (Or.inr rfl)⟩))
+      | exact boundaryMatched_of_two_entries simplexIncidence simplexEdgeVertexRel
+          SimplexId.e01 SimplexId.e12
+          { i := SimplexId.v0, role := SimplexRole.src, sign := Sign.neg, mult := 1 }
+          { i := SimplexId.v1, role := SimplexRole.dst, sign := Sign.pos, mult := 1 }
+          { i := SimplexId.v1, role := SimplexRole.src, sign := Sign.neg, mult := 1 }
+          { i := SimplexId.v2, role := SimplexRole.dst, sign := Sign.pos, mult := 1 }
+          rfl rfl (simplexCompat_refl _) (Or.inl ⟨Or.inl rfl, Or.inr (Or.inl rfl)⟩)
+          (simplexCompat_refl _) (Or.inl ⟨Or.inr (Or.inl rfl), Or.inr (Or.inr rfl)⟩)
+      | exact boundaryMatched_symm simplexIncidence simplexEdgeVertexRel _ _ simplexEdgeVertexRel_symm
+          (boundaryMatched_of_two_entries simplexIncidence simplexEdgeVertexRel
+            SimplexId.e01 SimplexId.e12
+            { i := SimplexId.v0, role := SimplexRole.src, sign := Sign.neg, mult := 1 }
+            { i := SimplexId.v1, role := SimplexRole.dst, sign := Sign.pos, mult := 1 }
+            { i := SimplexId.v1, role := SimplexRole.src, sign := Sign.neg, mult := 1 }
+            { i := SimplexId.v2, role := SimplexRole.dst, sign := Sign.pos, mult := 1 }
+            rfl rfl (simplexCompat_refl _) (Or.inl ⟨Or.inl rfl, Or.inr (Or.inl rfl)⟩)
+            (simplexCompat_refl _) (Or.inl ⟨Or.inr (Or.inl rfl), Or.inr (Or.inr rfl)⟩))
+      | exact boundaryMatched_of_two_entries simplexIncidence simplexEdgeVertexRel
+          SimplexId.e02 SimplexId.e12
+          { i := SimplexId.v0, role := SimplexRole.src, sign := Sign.neg, mult := 1 }
+          { i := SimplexId.v2, role := SimplexRole.dst, sign := Sign.pos, mult := 1 }
+          { i := SimplexId.v1, role := SimplexRole.src, sign := Sign.neg, mult := 1 }
+          { i := SimplexId.v2, role := SimplexRole.dst, sign := Sign.pos, mult := 1 }
+          rfl rfl (simplexCompat_refl _) (Or.inl ⟨Or.inl rfl, Or.inr (Or.inl rfl)⟩)
+          (simplexCompat_refl _) (Or.inl ⟨Or.inr (Or.inr rfl), Or.inr (Or.inr rfl)⟩)
+      | exact boundaryMatched_symm simplexIncidence simplexEdgeVertexRel _ _ simplexEdgeVertexRel_symm
+          (boundaryMatched_of_two_entries simplexIncidence simplexEdgeVertexRel
+            SimplexId.e02 SimplexId.e12
+            { i := SimplexId.v0, role := SimplexRole.src, sign := Sign.neg, mult := 1 }
+            { i := SimplexId.v2, role := SimplexRole.dst, sign := Sign.pos, mult := 1 }
+            { i := SimplexId.v1, role := SimplexRole.src, sign := Sign.neg, mult := 1 }
+            { i := SimplexId.v2, role := SimplexRole.dst, sign := Sign.pos, mult := 1 }
+            rfl rfl (simplexCompat_refl _) (Or.inl ⟨Or.inl rfl, Or.inr (Or.inl rfl)⟩)
+            (simplexCompat_refl _) (Or.inl ⟨Or.inr (Or.inr rfl), Or.inr (Or.inr rfl)⟩))
+
+theorem simplexIncidence_edges_collapse :
+  approxBisim simplexIncidence SimplexId.e01 SimplexId.e02 := by
+  refine ⟨simplexEdgeVertexRel, simplexEdgeVertexRel_isBisimulation, ?_⟩
+  exact Or.inr ⟨Or.inl rfl, Or.inr (Or.inl rfl)⟩
+
+theorem simplexIncidence_edges_not_eq :
+  (SimplexId.e01 : SimplexId) ≠ SimplexId.e02 := by simp
 
 end IncidenceCore

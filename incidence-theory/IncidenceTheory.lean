@@ -47,6 +47,61 @@ def boundaryMatched {I R T : Type u} [DecidableEq I] (inc : Incidence I R T)
   (∀ e ∈ inc.boundary i, ∃ e', e' ∈ inc.boundary j ∧ boundaryCompatible inc e e' ∧ rel e.i e'.i) ∧
   (∀ e' ∈ inc.boundary j, ∃ e, e ∈ inc.boundary i ∧ boundaryCompatible inc e e' ∧ rel e.i e'.i)
 
+/- Research cycle 18 (see RESEARCH_LOG.md): cycle 12's `simplexIncidence`
+   edges-collapse conjecture stalled twice on hand-rolled `boundaryMatched`
+   existentials (9-way case splits, `simp_all`/`tauto` friction). The
+   third attempt's fix wasn't a cleverer tactic on the same proof shape --
+   it was avoiding the hand-rolling entirely: a *reusable* lemma that
+   turns "I already know how each boundary entry pairs up" into
+   `boundaryMatched` directly, term-mode, so each instance case becomes
+   one `exact` call instead of an existential-witness dance. Works for
+   any two-entry-boundary pair on any `Incidence`, not just
+   `simplexIncidence`'s edges. -/
+
+/- Given an explicit *positional pairing* between two elements' (both
+   length-2) boundaries -- each pair already known compatible and
+   `rel`-related -- `boundaryMatched` holds between them. Skips the
+   existential search: the caller supplies the witnesses directly. -/
+theorem boundaryMatched_of_two_entries {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (rel : I → I → Prop) (i j : I)
+  (e1 e2 f1 f2 : Endpoint I R)
+  (hbi : inc.boundary i = [e1, e2]) (hbj : inc.boundary j = [f1, f2])
+  (hc1 : boundaryCompatible inc e1 f1) (hr1 : rel e1.i f1.i)
+  (hc2 : boundaryCompatible inc e2 f2) (hr2 : rel e2.i f2.i) :
+  boundaryMatched inc rel i j := by
+  unfold boundaryMatched
+  rw [hbi, hbj]
+  constructor
+  · intro e he
+    simp only [List.mem_cons, List.not_mem_nil, or_false] at he
+    rcases he with he | he
+    · subst he; exact ⟨f1, by simp, hc1, hr1⟩
+    · subst he; exact ⟨f2, by simp, hc2, hr2⟩
+  · intro e' he'
+    simp only [List.mem_cons, List.not_mem_nil, or_false] at he'
+    rcases he' with he' | he'
+    · subst he'; exact ⟨e1, by simp, hc1, hr1⟩
+    · subst he'; exact ⟨e2, by simp, hc2, hr2⟩
+
+/- `boundaryMatched` at `(i, j)` gives `boundaryMatched` at `(j, i)` for
+   free once `rel` is known symmetric -- halves the casework needed for
+   a symmetric relation over several elements (only the "canonical"
+   unordered pairs need a direct proof; the rest follow from this). -/
+theorem boundaryMatched_symm {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (rel : I → I → Prop) (i j : I)
+  (hsymm : ∀ a b, rel a b → rel b a)
+  (h : boundaryMatched inc rel i j) :
+  boundaryMatched inc rel j i := by
+  unfold boundaryMatched at h ⊢
+  obtain ⟨h1, h2⟩ := h
+  constructor
+  · intro e he
+    obtain ⟨e', he', hcomp, hrel⟩ := h2 e he
+    exact ⟨e', he', boundaryCompatible_symm hcomp, hsymm _ _ hrel⟩
+  · intro e' he'
+    obtain ⟨e, he, hcomp, hrel⟩ := h1 e' he'
+    exact ⟨e, he, boundaryCompatible_symm hcomp, hsymm _ _ hrel⟩
+
 /- A bisimulation is a relation preserved by types and boundary matching. -/
 /- Merkle-ID: foundation.logic
    bisimulation predicate. -/

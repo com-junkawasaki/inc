@@ -5,6 +5,13 @@ import IncidenceTheory.CrossInstance
 import IncidenceTheory.PathComplex
 import IncidenceTheory.Simplex
 
+/- `main`'s `do` block accumulates one `IO.println` per research cycle
+   (18 so far); Lean's `do`-notation desugaring is right-recursive and
+   hits the default elaborator recursion limit around this size. Raised
+   with headroom for future cycles rather than re-hit and re-raised
+   incrementally each time. -/
+set_option maxRecDepth 4096
+
 open IncidenceCore
 
 /- ToString instance for GId -/
@@ -210,3 +217,15 @@ def main : IO Unit := do
   IO.println "  → reusable infrastructure, same payoff pattern as cycle 9's generalization:"
   IO.println "    any future two-entry-boundary instance (e.g. simplexIncidence's edges)"
   IO.println "    can reuse this directly instead of re-deriving it"
+
+  IO.println "\n🏆 The Twice-Stalled Conjecture, Closed on the Third Attempt (cycle 18):"
+  IO.println "  ✓ simplexIncidence's edges (e01/e02/e12) DO collapse under ≈, confirming"
+  IO.println "    cycle 12's conjecture -- but the fix was strategy, not persistence:"
+  IO.println "    two prior attempts hand-rolled boundaryMatched existentials (9-way case"
+  IO.println "    splits, simp_all/tauto friction); this one built two small REUSABLE"
+  IO.println "    lemmas first (boundaryMatched_of_two_entries, boundaryMatched_symm,"
+  IO.println "    root file) so each of the 9 cases became one term-mode exact call"
+  IO.println "  ✓ zero sorry, zero Classical.choice even -- cleaner than most instance proofs"
+  IO.println "  → general lesson: when a proof stalls twice on the same shape, the second"
+  IO.println "    retry should change the SHAPE (extract reusable infrastructure), not"
+  IO.println "    just retry the same tactics harder"

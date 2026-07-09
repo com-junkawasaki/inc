@@ -1140,20 +1140,97 @@ clean general theorem may be enough, similar to how cycle 9's single-
 link theorem needed only `altIncidence` as a second data point before
 being trusted as general).
 
-**Next hypothesis (cycle 18, not yet attempted)**: one open item
-remains on the books, unchanged from before this cycle since it wasn't
-today's focus: cycle 12's still-unformalized conjecture that
-`simplexIncidence`'s edges (`e01`/`e02`/`e12`) collapse under `≈` the
-same way its vertices did, which stalled twice on proof-engineering
-friction (9-way case splits, no `tauto`) -- worth a third attempt only
-with a different strategy, e.g. proving a reusable "boundary-entries-
-pairwise-related ⇒ elements bisimilar" lemma first instead of hand-
-rolling the relation per case. If that still doesn't yield within one
-cycle's budget, it's reasonable to record it as a permanently open
-conjecture (two stalls plus a third would be a real signal, not bad
-luck) and let the co-scientist loop pick fresh ground instead -- e.g.
-auditing whether any of the now-substantial general-theorem library
+## Cycle 18
+
+**Hypothesis**: (queued above) attempt cycle 12's stalled
+`simplexIncidence` edges-collapse conjecture a third time, but only with
+a genuinely different strategy -- specifically, build a reusable
+"boundary-entries-pairwise-related ⇒ elements bisimilar" lemma first,
+rather than repeating the hand-rolled existential case split that
+stalled twice.
+
+**Method**: the two prior attempts (cycle 12) worked directly with
+`boundaryMatched`'s raw existential definition (`∃ e', e' ∈ ... ∧
+boundaryCompatible ... ∧ rel ...`), which meant re-deriving the witness
+existence proof by hand inside every one of a 9-way case split, with
+`simp_all`/`tauto` (the latter unavailable without mathlib) fighting the
+combinatorics. This attempt inverted the approach: build a lemma that
+takes an *already-known* positional pairing between two length-2
+boundaries (which entry corresponds to which, already proven compatible
+and `rel`-related) and concludes `boundaryMatched` directly --
+`boundaryMatched_of_two_entries`. Paired with `boundaryMatched_symm`
+(free `(i,j) → (j,i)` for a symmetric `rel`, cutting the 9 edge-pair
+cases to 3 "canonical" ones + their 3 symm-derived reverses + 3
+self-pairs), each of the 9 post-`rcases`-`subst` goals became one
+concrete term-mode `exact` call, tried via `first | ... | ...` against
+all nine generated goals. Iterated in a scratch file against `lake env
+lean` before touching the project, testing the two general lemmas in
+isolation first, then the full 9-case proof, then the final
+`approxBisim` derivation -- each stage confirmed working before moving
+to the next, rather than writing the whole thing at once and debugging
+blind.
+
+**Result**: **confirmed on the first full attempt with the new
+strategy** -- a sharp contrast with the two stalls, and a real
+confirmation that the *shape* of the proof, not the *effort* put into
+the old shape, was the blocker. `simplexEdgeVertexRel_isBisimulation`
+(the 9-case proof) and `simplexIncidence_edges_collapse` (`e01 ≈ e02`,
+`e01 ≠ e02`, both proven) typecheck cleanly on the first complete
+transcription. `#print axioms`: `boundaryMatched_of_two_entries` and
+`boundaryMatched_symm` need only `propext` -- not even
+`Classical.choice`, cleaner than most instance-specific proofs in this
+project; the full simplex proof adds only `Quot.sound`. No `sorryAx`
+anywhere. One unrelated build snag surfaced while wiring into
+`Main.lean`: `main`'s `do` block (one `IO.println` per cycle, 18 cycles
+now) hit Lean's default `do`-notation recursion depth limit -- a known
+consequence of long linear `do` sequences being desugared right-
+recursively, not a bug in any proof. Fixed with `set_option maxRecDepth
+4096` at the top of `Main.lean`, with headroom for future cycles rather
+than re-hitting and re-raising it incrementally each time. Full `lake
+build`: 38/38 jobs. Repo-wide `sorry` grep: none.
+
+Added `boundaryMatched_of_two_entries`/`boundaryMatched_symm` to the
+root file (general, reusable -- same placement convention as prior
+cycles' infrastructure lemmas); `simplexEdgeVertexRel`/
+`simplexEdgeVertexRel_symm`/`simplexCompat_refl`/
+`simplexEdgeVertexRel_isBisimulation`/`simplexIncidence_edges_collapse`/
+`simplexIncidence_edges_not_eq` to `Simplex.lean`, replacing the old
+"plausible but not formalized" comment; wired into `Main.lean`.
+
+**Synthesis -- a methodology lesson, not just a proof result**: this
+project's own stated discipline ("worth a third attempt only with a
+different strategy") is what made the difference here, concretely, not
+just in principle. The first two attempts and this one all targeted the
+*same true fact*; only the proof *strategy* changed, and that alone was
+the entire difference between two stalls and a first-try success. Worth
+carrying forward explicitly: **when a proof stalls twice on the same
+tactic shape, the next attempt should change the shape (extract
+reusable infrastructure that turns the hard part into a direct term)
+before trying again with more tactic firepower on the same shape.**
+
+**Where the "flat leaves collapse" thread now stands (cycles 2-3,
+12-14, 18)**: all four originally-identified collapse instances
+(`pairIncidence`'s atoms, `simplexIncidence`'s vertices AND now edges,
+`pathIncidence`'s nodes) are fully resolved -- either fixed (three
+instances) or proven to collapse with no claim of a fix needed
+(`simplexIncidence`, where the collapse is simply a true fact about the
+unfixed instance, not a defect requiring remedy the way the "flat atoms"
+cases were). No open items remain in this thread.
+
+**Next hypothesis (cycle 19, not yet attempted)**: no mandatory open
+item carries over from this cycle -- the queued conjecture is closed,
+and the two-entry-boundary machinery from cycle 17 doesn't have an
+outstanding forced-generalization gap either. Following this cycle's own
+completeness-critic suggestion (queued but not reached last cycle):
+audit the general-theorem library
 (`incidence_bisim_faithful`, `single_link_composition_ne_zero`,
-`boundary_composition_zero_of_leaf_boundary`, `two_link_composition_value`)
-has an untested edge case or an implicit assumption worth stating
-explicitly, rather than only ever extending to new instances.
+`boundary_composition_zero_of_leaf_boundary`, `two_link_composition_value`,
+`boundaryMatched_of_two_entries`) for an untested edge case or an
+implicit assumption worth stating explicitly, rather than only ever
+extending to new instances -- e.g., does `two_link_composition_value`
+degrade sensibly (or need a side condition not yet stated) if `k` itself
+equals `j1` or `j2`? Does `boundaryMatched_of_two_entries` have a
+natural three-or-more-entry generalization that would have made cycle 17
+*and* 18 both shorter had it existed first, and is that generalization
+worth building now for a fourth future instance, or premature
+abstraction until a concrete 3+-entry case actually needs it?
