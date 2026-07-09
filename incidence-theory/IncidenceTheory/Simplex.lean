@@ -366,14 +366,13 @@ theorem simplexIncidence_srcneg_not_face (i : SimplexId) (v : SimplexId)
    `try ... <;> try ...`, and `apply`/`exact` splitting) all hit the same
    failure. Diagnosed to this specific cause, not left as an unexplained
    mystery -- but not forced through with a verbose 30-arm fully-explicit
-   `match` either, since cycle 21 already established the substantive
-   mathematical content (exact 3-way separation) with a robust proof
-   style, and the exhaustive iff would strengthen the *statement*, not
-   add new *content*. Landed the "reflects" half, which stands on its
-   own as a genuine strengthening (all 49 same-shape-or-not pairs, not
-   just 19 representative same-shape ones), and left "distinguishes" as
-   explicit future work with its friction documented rather than
-   silently dropped. -/
+   `match` *that cycle*, since cycle 21 already established the
+   substantive mathematical content (exact 3-way separation) with a
+   robust proof style. Landed the "reflects" half only, with
+   "distinguishes" left as documented future work. Cycle 23 closed that
+   gap with a different combinator (term-mode pattern matching instead
+   of tactic-mode `cases <;> first`) -- see `simplexToShape_distinguishes`
+   below. -/
 inductive SimplexShape where | vertex | edgeShape | faceShape
 deriving DecidableEq, Repr
 
@@ -388,5 +387,88 @@ theorem simplexToShape_reflects (x y : SimplexId) (h : simplexToShape x = simple
     first
     | exact approxBisim_refl simplexIncidence _
     | exact ⟨simplexEdgeVertexRel, simplexEdgeVertexRel_isBisimulation, by simp [simplexEdgeVertexRel]⟩
+
+/- Research cycle 23 (see RESEARCH_LOG.md): `distinguishes`, deferred at
+   the end of cycle 22 after `cases <;> ... <;> first/try/apply`
+   combinators all hit the same metavariable-pollution friction. The
+   fresh strategy that resolved it: **term-mode pattern matching
+   instead of tactic combinators.** Each of the 49 arms below is its own
+   independent elaboration problem (Lean's equation compiler, not
+   `cases <;> first`), so there is no shared tactic state for one arm's
+   failed alternative to pollute another's -- the exact mechanism that
+   broke the tactic-mode attempt structurally cannot occur here. This is
+   more text (49 explicit arms vs. a four-template `first`) but every
+   arm typechecks independently and predictably; confirmed via a small
+   6-arm prototype before committing to writing out all 49. Same
+   underlying facts as cycle 22 (`simplexIncidence_nonempty_not_vertex`,
+   `simplexIncidence_srcneg_not_face`, `approxBisim_symm` for the
+   reversed-order cases) -- only the *combinator*, not the
+   *mathematics*, changed. -/
+theorem simplexToShape_distinguishes : (x y : SimplexId) →
+    approxBisim simplexIncidence x y → simplexToShape x = simplexToShape y
+  -- same-shape: 19 cases, all definitional (simplexToShape collapses both sides identically)
+  | .v0, .v0, _ => rfl
+  | .v0, .v1, _ => rfl
+  | .v0, .v2, _ => rfl
+  | .v1, .v0, _ => rfl
+  | .v1, .v1, _ => rfl
+  | .v1, .v2, _ => rfl
+  | .v2, .v0, _ => rfl
+  | .v2, .v1, _ => rfl
+  | .v2, .v2, _ => rfl
+  | .e01, .e01, _ => rfl
+  | .e01, .e02, _ => rfl
+  | .e01, .e12, _ => rfl
+  | .e02, .e01, _ => rfl
+  | .e02, .e02, _ => rfl
+  | .e02, .e12, _ => rfl
+  | .e12, .e01, _ => rfl
+  | .e12, .e02, _ => rfl
+  | .e12, .e12, _ => rfl
+  | .face, .face, _ => rfl
+  -- vertex vs. edge
+  | .v0, .e01, h => absurd (approxBisim_symm h) (simplexIncidence_nonempty_not_vertex .e01 (by simp [simplexIncidence, simplexBoundary]) .v0 (Or.inl rfl))
+  | .v0, .e02, h => absurd (approxBisim_symm h) (simplexIncidence_nonempty_not_vertex .e02 (by simp [simplexIncidence, simplexBoundary]) .v0 (Or.inl rfl))
+  | .v0, .e12, h => absurd (approxBisim_symm h) (simplexIncidence_nonempty_not_vertex .e12 (by simp [simplexIncidence, simplexBoundary]) .v0 (Or.inl rfl))
+  | .v1, .e01, h => absurd (approxBisim_symm h) (simplexIncidence_nonempty_not_vertex .e01 (by simp [simplexIncidence, simplexBoundary]) .v1 (Or.inr (Or.inl rfl)))
+  | .v1, .e02, h => absurd (approxBisim_symm h) (simplexIncidence_nonempty_not_vertex .e02 (by simp [simplexIncidence, simplexBoundary]) .v1 (Or.inr (Or.inl rfl)))
+  | .v1, .e12, h => absurd (approxBisim_symm h) (simplexIncidence_nonempty_not_vertex .e12 (by simp [simplexIncidence, simplexBoundary]) .v1 (Or.inr (Or.inl rfl)))
+  | .v2, .e01, h => absurd (approxBisim_symm h) (simplexIncidence_nonempty_not_vertex .e01 (by simp [simplexIncidence, simplexBoundary]) .v2 (Or.inr (Or.inr rfl)))
+  | .v2, .e02, h => absurd (approxBisim_symm h) (simplexIncidence_nonempty_not_vertex .e02 (by simp [simplexIncidence, simplexBoundary]) .v2 (Or.inr (Or.inr rfl)))
+  | .v2, .e12, h => absurd (approxBisim_symm h) (simplexIncidence_nonempty_not_vertex .e12 (by simp [simplexIncidence, simplexBoundary]) .v2 (Or.inr (Or.inr rfl)))
+  -- vertex vs. face
+  | .v0, .face, h => absurd (approxBisim_symm h) (simplexIncidence_nonempty_not_vertex .face (by simp [simplexIncidence, simplexBoundary]) .v0 (Or.inl rfl))
+  | .v1, .face, h => absurd (approxBisim_symm h) (simplexIncidence_nonempty_not_vertex .face (by simp [simplexIncidence, simplexBoundary]) .v1 (Or.inr (Or.inl rfl)))
+  | .v2, .face, h => absurd (approxBisim_symm h) (simplexIncidence_nonempty_not_vertex .face (by simp [simplexIncidence, simplexBoundary]) .v2 (Or.inr (Or.inr rfl)))
+  -- edge vs. vertex
+  | .e01, .v0, h => absurd h (simplexIncidence_nonempty_not_vertex .e01 (by simp [simplexIncidence, simplexBoundary]) .v0 (Or.inl rfl))
+  | .e01, .v1, h => absurd h (simplexIncidence_nonempty_not_vertex .e01 (by simp [simplexIncidence, simplexBoundary]) .v1 (Or.inr (Or.inl rfl)))
+  | .e01, .v2, h => absurd h (simplexIncidence_nonempty_not_vertex .e01 (by simp [simplexIncidence, simplexBoundary]) .v2 (Or.inr (Or.inr rfl)))
+  | .e02, .v0, h => absurd h (simplexIncidence_nonempty_not_vertex .e02 (by simp [simplexIncidence, simplexBoundary]) .v0 (Or.inl rfl))
+  | .e02, .v1, h => absurd h (simplexIncidence_nonempty_not_vertex .e02 (by simp [simplexIncidence, simplexBoundary]) .v1 (Or.inr (Or.inl rfl)))
+  | .e02, .v2, h => absurd h (simplexIncidence_nonempty_not_vertex .e02 (by simp [simplexIncidence, simplexBoundary]) .v2 (Or.inr (Or.inr rfl)))
+  | .e12, .v0, h => absurd h (simplexIncidence_nonempty_not_vertex .e12 (by simp [simplexIncidence, simplexBoundary]) .v0 (Or.inl rfl))
+  | .e12, .v1, h => absurd h (simplexIncidence_nonempty_not_vertex .e12 (by simp [simplexIncidence, simplexBoundary]) .v1 (Or.inr (Or.inl rfl)))
+  | .e12, .v2, h => absurd h (simplexIncidence_nonempty_not_vertex .e12 (by simp [simplexIncidence, simplexBoundary]) .v2 (Or.inr (Or.inr rfl)))
+  -- face vs. vertex
+  | .face, .v0, h => absurd h (simplexIncidence_nonempty_not_vertex .face (by simp [simplexIncidence, simplexBoundary]) .v0 (Or.inl rfl))
+  | .face, .v1, h => absurd h (simplexIncidence_nonempty_not_vertex .face (by simp [simplexIncidence, simplexBoundary]) .v1 (Or.inr (Or.inl rfl)))
+  | .face, .v2, h => absurd h (simplexIncidence_nonempty_not_vertex .face (by simp [simplexIncidence, simplexBoundary]) .v2 (Or.inr (Or.inr rfl)))
+  -- edge vs. face
+  | .e01, .face, h => absurd h (simplexIncidence_srcneg_not_face .e01 .v0 (by simp [simplexIncidence, simplexBoundary]))
+  | .e02, .face, h => absurd h (simplexIncidence_srcneg_not_face .e02 .v0 (by simp [simplexIncidence, simplexBoundary]))
+  | .e12, .face, h => absurd h (simplexIncidence_srcneg_not_face .e12 .v1 (by simp [simplexIncidence, simplexBoundary]))
+  -- face vs. edge
+  | .face, .e01, h => absurd (approxBisim_symm h) (simplexIncidence_srcneg_not_face .e01 .v0 (by simp [simplexIncidence, simplexBoundary]))
+  | .face, .e02, h => absurd (approxBisim_symm h) (simplexIncidence_srcneg_not_face .e02 .v0 (by simp [simplexIncidence, simplexBoundary]))
+  | .face, .e12, h => absurd (approxBisim_symm h) (simplexIncidence_srcneg_not_face .e12 .v1 (by simp [simplexIncidence, simplexBoundary]))
+
+/- The exhaustive characterization: `simplexIncidence`'s `≈` is
+   *exactly* `simplexToShape`-agreement, upgrading cycle 21's
+   representative-witness result (and cycle 22's `reflects`-only half)
+   into a genuine iff over all 49 constructor pairs. -/
+theorem simplexToShape_iff_approxBisim (x y : SimplexId) :
+  simplexToShape x = simplexToShape y ↔ approxBisim simplexIncidence x y :=
+  ⟨simplexToShape_reflects x y, simplexToShape_distinguishes x y⟩
 
 end IncidenceCore

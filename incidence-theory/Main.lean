@@ -271,3 +271,13 @@ def main : IO Unit := do
   IO.println "  → NOT forced through with a verbose 30-arm explicit match: cycle 21 already"
   IO.println "    proved the substantive content (exact 3-way separation) robustly; the full"
   IO.println "    iff would strengthen the STATEMENT, not add new mathematical CONTENT"
+
+  IO.println "\n🎯 The Exhaustive Iff, Closed with a Different Combinator (cycle 23):"
+  IO.println "  ✓ simplexToShape_iff_approxBisim: simplexIncidence's ≈ is EXACTLY shape-agreement,"
+  IO.println "    over all 49 constructor pairs -- the theorem cycle 22 deferred, now proven"
+  IO.println "  ✓ the fix wasn't new math: cycle 22's tactic-mode `cases <;> first` hit reproducible"
+  IO.println "    metavariable pollution; term-mode pattern matching (49 explicit arms, each its"
+  IO.println "    own independent elaboration problem) has NO shared state to pollute -- confirmed"
+  IO.println "    on a 6-arm prototype before committing to writing out all 49"
+  IO.println "  → same lesson as cycle 18, one level up: when a proof stalls on ONE combinator,"
+  IO.println "    try a genuinely different one before concluding the content is out of reach"

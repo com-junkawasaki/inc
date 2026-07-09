@@ -1486,21 +1486,103 @@ response is the same principle as always -- record honestly what was
 tried, what happened, and why forcing further wasn't worth it -- applied
 to a tooling-level obstacle rather than a mathematical one.
 
-**Next hypothesis (cycle 23, not yet attempted)**: option 2 from cycle
-21's queue, not reached this cycle: does `not_approxBisim_of_boundary_mismatch`
-apply usefully to any *other* existing instance in a way that
-*simplifies* an existing claim, rather than only proving something new?
-Quick scoping note carried forward: `natIncidence`, `pairIncidenceChained`,
-and `pathIncidenceChained` are all *fully* `≈`-faithful (`≈ ↔ =`,
-cycles 4/14), so any non-bisimilarity fact there is already implied
-(and superseded) by the existing iff theorems -- the new machinery's
-distinctive value is specifically for *non*-faithful instances, of which
-`simplexIncidence` is currently the only one, meaning this avenue may
-turn out to have *no* untapped instance to apply to right now (a
-legitimate, checkable-in-one-step negative finding, not requiring deep
-proof engineering either way). If that's confirmed quickly, a good use
-of the remaining cycle would be revisiting whether the `distinguishes`
-half's tooling friction has a known simpler workaround worth a fresh,
-short attempt (e.g. `rcases` chained differently, or Lean's `omega`-
-adjacent `decide`-based dispatch instead of unification-heavy lemma
-application) before concluding it's a genuine dead end.
+## Cycle 23
+
+**Hypothesis**: (option 2 of cycle 21's queue, quickly scoped first)
+does `not_approxBisim_of_boundary_mismatch` simplify any existing claim
+in `natIncidence`/`pairIncidenceChained`/`pathIncidenceChained`? Then
+(the queued fallback, since option 2 was expected to resolve fast): a
+fresh, short attempt at cycle 22's deferred `distinguishes` direction
+with a genuinely different combinator.
+
+**Method for option 2**: no new Lean needed -- confirmed by re-reading
+what's already proven. All three instances have a full `_approxBisim_iff`
+theorem (cycle 4's `natIncidence_approxBisim_iff`, cycle 3/4's
+`pairIncidenceChained_approxBisim_iff`, cycle 14's
+`pathIncidenceChained_approxBisim_iff`), meaning `≈` coincides with `=`
+there. Any `¬approxBisim i j` fact for `i ≠ j` on these instances is
+already a direct corollary of the iff (`rw [_approxBisim_iff]; exact
+h`), strictly simpler than invoking the boundary-mismatch machinery,
+which needs a witness entry and a compatibility argument. **Confirmed,
+quickly, as predicted**: no simplification opportunity exists on the
+three faithful instances -- the new machinery's distinctive value
+remains specifically for non-faithful instances, of which
+`simplexIncidence` was (and, after this cycle, still is) the only one.
+A clean negative finding, closed in one paragraph rather than forced
+into a search for opportunities that don't exist.
+
+**Method for the fallback**: re-attempted cycle 22's `distinguishes`
+direction with a genuinely different combinator, per the queued
+suggestion. Rather than `cases x <;> cases y <;> simp [...] <;> first |
+t1 | t2 | t3 | t4` (tactic-mode, where a failing alternative's inference
+attempt polluted a sibling's), switched to **term-mode pattern
+matching**: `theorem ... : (x y : SimplexId) → approxBisim ... →
+simplexToShape x = simplexToShape y | .v0, .v0, _ => rfl | ... `, with
+all 49 constructor pairs as separate, explicit match arms. Each arm is
+its own independent elaboration problem for Lean's equation compiler --
+there is no shared tactic state between arms for one's failure to
+pollute another, which is precisely the mechanism cycle 22 diagnosed as
+the blocker. Tested a 6-arm prototype first (covering one instance each
+of same-vertex, vertex-vs-edge both directions, edge-vs-face both
+directions) before committing to writing out all 49.
+
+**Result**: **the fallback succeeded immediately -- the 6-arm prototype
+worked on the first try, and the full 49-arm version, once written out
+mechanically, also typechecked on the first attempt.** Reused the exact
+same underlying facts as cycle 22 (`simplexIncidence_nonempty_not_vertex`,
+`simplexIncidence_srcneg_not_face`, `approxBisim_symm` for reversed-order
+cases) -- only the *combinator* changed, confirming cycle 22's own
+diagnosis that the blocker was tooling-specific, not mathematical.
+`simplexToShape_distinguishes` and the combined
+`simplexToShape_iff_approxBisim` both typecheck; `#print axioms`: the
+standard `propext`/`Quot.sound`, no `Classical.choice`, no `sorryAx`.
+`simplexIncidence`'s `≈` is now proven to be *exactly*
+`simplexToShape`-agreement -- the exhaustive characterization queued
+back in cycle 20, attempted partially in cycle 22, and completed here.
+Full `lake build`: 38/38 jobs. Repo-wide `sorry`-as-tactic grep: none.
+
+**Synthesis**: this closes the loop cycle 22 opened cleanly rather than
+leaving it as permanently-deferred future work -- the "revisit with a
+fresh, simpler approach" instinct from cycle 22's own queued next-steps
+paid off directly, and the *specific* fresh approach (term-mode instead
+of tactic-mode) was chosen *because* cycle 22's diagnosis pinpointed
+exactly what needed to change (shared combinator state) rather than
+guessing. Worth reinforcing as a general principle alongside cycle 18's
+near-identical lesson ("when a proof stalls twice on the same shape,
+change the shape") one level up: **when a proof stalls on a specific
+*combinator*, not the underlying mathematics, try a structurally
+different combinator (tactic-mode vs. term-mode, `first` vs. explicit
+case dispatch) before concluding the result is out of reach.** The 30
+extra explicit match arms (vs. 4 templates) is real verbosity, but
+mechanical, predictable verbosity beats elegant-looking tactics that
+don't actually work.
+
+**Where the `simplexIncidence` characterization thread now stands
+(cycles 12/18/20/21/22/23)**: fully closed. `≈`'s partition is proven
+exactly three classes, and translation-equality (`simplexToShape`) is
+proven *equivalent* to (not just implying) bisimilarity -- the strongest
+form of characterization this project's T5/faithfulness machinery
+supports, now achieved for the one instance (`simplexIncidence`) where
+it was genuinely non-trivial (unlike the three fully-`≈`-faithful
+instances, where `simplexToShape`-style translations would be
+comparatively uninteresting, per this cycle's option-2 finding).
+
+**Next hypothesis (cycle 24, not yet attempted)**: no mandatory item
+carries over -- both halves of cycle 21's queue are now resolved (option
+1 completed this cycle, option 2 closed as a quick negative finding),
+and the `simplexIncidence` characterization thread is fully closed. This
+is a natural point to survey the whole research log for what's
+genuinely still open rather than manufacture a new question: the
+remaining honestly-flagged items are (1) whether `pairIncidenceChained`'s
+`glue`/boundary interaction has any untested corner analogous to
+`pathIncidenceChained`'s (cycles 15-20 built substantial `PathId`-side
+machinery `PairId` never received the same depth of treatment on, e.g.
+a `two_link_composition_value`-style closed-form ∂² characterization
+for `pairIncidenceChained`'s `pair` nodes, which -- unlike `PathId`'s
+`edge`, a genuinely 2-entry *leaf-adjacent* structure -- would test the
+machinery against a *recursively nested* 2-entry structure instead);
+(2) whether `not_approxBisim_of_boundary_mismatch`'s term-mode-vs-
+tactic-mode lesson generalizes -- are there other stalled or awkward
+tactic-mode proofs earlier in this project's history that a term-mode
+rewrite would clean up, now that this pattern is understood (worth a
+quick survey, not a forced rewrite of everything).
