@@ -174,111 +174,115 @@ def pairIncidenceChained : Incidence PairId PairRole GraphType where
     by_cases h : i = PairId.atom 0 <;> simp [h]
   type_preserve := fun _ _ => rfl
 
-/- Atom-index faithfulness for the chained boundary -- same argument as
-   `natIncidence_rel_eq`, since the chain is structurally identical. -/
-theorem pairIncidenceChained_atom_rel_eq {rel : PairId → PairId → Prop}
-  (hbisim : IsBisimulation pairIncidenceChained rel) :
-  ∀ m n, rel (PairId.atom m) (PairId.atom n) → m = n := by
-  intro m
-  induction m with
-  | zero =>
-    intro n hmn
-    obtain ⟨-, hM⟩ := hbisim (PairId.atom 0) (PairId.atom n) hmn
-    match n, hM with
-    | 0, _ => rfl
-    | j + 1, hM =>
-      exfalso
-      obtain ⟨e, he, -⟩ :=
-        hM.right { i := PairId.atom j, role := PairRole.chain, sign := Sign.neg, mult := 1 }
-          (by simp [pairIncidenceChained, pairBoundaryChained])
-      simp [pairIncidenceChained, pairBoundaryChained] at he
-  | succ k ih =>
-    intro n hmn
-    obtain ⟨-, hM⟩ := hbisim (PairId.atom (k + 1)) (PairId.atom n) hmn
-    match n, hM with
-    | 0, hM =>
-      exfalso
-      obtain ⟨e, he, -⟩ :=
-        hM.left { i := PairId.atom k, role := PairRole.chain, sign := Sign.neg, mult := 1 }
-          (by simp [pairIncidenceChained, pairBoundaryChained])
-      simp [pairIncidenceChained, pairBoundaryChained] at he
-    | j + 1, hM =>
-      obtain ⟨e', he', -, hrel⟩ :=
-        hM.left { i := PairId.atom k, role := PairRole.chain, sign := Sign.neg, mult := 1 }
-          (by simp [pairIncidenceChained, pairBoundaryChained])
-      simp [pairIncidenceChained, pairBoundaryChained] at he'
-      subst he'
-      have := ih j hrel
-      omega
+/- Research cycle 4 (see RESEARCH_LOG.md): the substantive hypothesis of
+   the general `incidence_bisim_faithful` theorem (root file), applied to
+   `pairIncidenceChained` -- this replaces cycle 3's bespoke
+   induction (kept in git history, not duplicated here) with an
+   instantiation of the general theorem, exercising it against the most
+   structurally complex of the three confirming instances (atoms *and*
+   nested pairs, two disjoint edge roles). -/
+theorem pairIncidenceChained_hdec :
+  ∀ i e, e ∈ pairIncidenceChained.boundary i → sizeOf e.i < sizeOf i := by
+  intro i e h
+  cases i with
+  | atom n => cases n with
+    | zero => simp [pairIncidenceChained, pairBoundaryChained] at h
+    | succ k =>
+      simp [pairIncidenceChained, pairBoundaryChained] at h
+      subst h
+      simp
+  | pair a b =>
+    simp [pairIncidenceChained, pairBoundaryChained] at h
+    have hspec := PairId.pair.sizeOf_spec a b
+    rcases h with h | h <;> subst h <;> simp <;> omega
 
-/- Cycle 3's main result: full faithfulness recovered for the whole
-   PairId type (atoms *and* pairs, arbitrarily nested), not just atoms
-   in isolation. Proved by structural induction on `x`, using the
-   `chain`/`fst`/`snd` role split to rule out atom-vs-pair mismatches. -/
-theorem pairIncidenceChained_rel_eq {rel : PairId → PairId → Prop}
-  (hbisim : IsBisimulation pairIncidenceChained rel) :
-  ∀ x y, rel x y → x = y := by
-  intro x
-  induction x with
+theorem pairIncidenceChained_hext :
+  ∀ x y, pairIncidenceChained.typeFunc x = pairIncidenceChained.typeFunc y →
+    boundaryMatched pairIncidenceChained (· = ·) x y → x = y := by
+  intro x y _ ⟨hL, hR⟩
+  cases x with
   | atom m =>
-    intro y hxy
-    obtain ⟨-, hM⟩ := hbisim (PairId.atom m) y hxy
     cases y with
-    | atom n => exact congrArg PairId.atom (pairIncidenceChained_atom_rel_eq hbisim m n hxy)
+    | atom n =>
+      cases m with
+      | zero =>
+        cases n with
+        | zero => rfl
+        | succ j =>
+          exfalso
+          obtain ⟨e, he, -⟩ :=
+            hR { i := PairId.atom j, role := PairRole.chain, sign := Sign.neg, mult := 1 }
+              (by simp [pairIncidenceChained, pairBoundaryChained])
+          simp [pairIncidenceChained, pairBoundaryChained] at he
+      | succ k =>
+        cases n with
+        | zero =>
+          exfalso
+          obtain ⟨e, he, -⟩ :=
+            hL { i := PairId.atom k, role := PairRole.chain, sign := Sign.neg, mult := 1 }
+              (by simp [pairIncidenceChained, pairBoundaryChained])
+          simp [pairIncidenceChained, pairBoundaryChained] at he
+        | succ j =>
+          obtain ⟨e', he', -, heq⟩ :=
+            hL { i := PairId.atom k, role := PairRole.chain, sign := Sign.neg, mult := 1 }
+              (by simp [pairIncidenceChained, pairBoundaryChained])
+          simp [pairIncidenceChained, pairBoundaryChained] at he'
+          subst he'
+          simp at heq
+          rw [heq]
     | pair a b =>
       exfalso
       cases m with
       | zero =>
         obtain ⟨e, he, -⟩ :=
-          hM.right { i := a, role := PairRole.fst, sign := Sign.pos, mult := 1 }
+          hR { i := a, role := PairRole.fst, sign := Sign.pos, mult := 1 }
             (by simp [pairIncidenceChained, pairBoundaryChained])
         simp [pairIncidenceChained, pairBoundaryChained] at he
       | succ k =>
         obtain ⟨e, he, hcompat, -⟩ :=
-          hM.left { i := PairId.atom k, role := PairRole.chain, sign := Sign.neg, mult := 1 }
+          hL { i := PairId.atom k, role := PairRole.chain, sign := Sign.neg, mult := 1 }
             (by simp [pairIncidenceChained, pairBoundaryChained])
         simp [pairIncidenceChained, pairBoundaryChained] at he
         rcases he with he | he <;> subst he <;> simp [boundaryCompatible] at hcompat
-  | pair a b iha ihb =>
-    intro y hxy
-    obtain ⟨-, hM⟩ := hbisim (PairId.pair a b) y hxy
+  | pair a b =>
     cases y with
     | atom n =>
       exfalso
       cases n with
       | zero =>
         obtain ⟨e, he, -⟩ :=
-          hM.left { i := a, role := PairRole.fst, sign := Sign.pos, mult := 1 }
+          hL { i := a, role := PairRole.fst, sign := Sign.pos, mult := 1 }
             (by simp [pairIncidenceChained, pairBoundaryChained])
         simp [pairIncidenceChained, pairBoundaryChained] at he
       | succ k =>
         obtain ⟨e, he, hcompat, -⟩ :=
-          hM.right { i := PairId.atom k, role := PairRole.chain, sign := Sign.neg, mult := 1 }
+          hR { i := PairId.atom k, role := PairRole.chain, sign := Sign.neg, mult := 1 }
             (by simp [pairIncidenceChained, pairBoundaryChained])
         simp [pairIncidenceChained, pairBoundaryChained] at he
         rcases he with he | he <;> subst he <;> simp [boundaryCompatible] at hcompat
     | pair a' b' =>
-      obtain ⟨e1, he1, hcompat1, hrel1⟩ :=
-        hM.left { i := a, role := PairRole.fst, sign := Sign.pos, mult := 1 }
+      obtain ⟨e1, he1, hcompat1, heq1⟩ :=
+        hL { i := a, role := PairRole.fst, sign := Sign.pos, mult := 1 }
           (by simp [pairIncidenceChained, pairBoundaryChained])
-      obtain ⟨e2, he2, hcompat2, hrel2⟩ :=
-        hM.left { i := b, role := PairRole.snd, sign := Sign.pos, mult := 1 }
+      obtain ⟨e2, he2, hcompat2, heq2⟩ :=
+        hL { i := b, role := PairRole.snd, sign := Sign.pos, mult := 1 }
           (by simp [pairIncidenceChained, pairBoundaryChained])
       simp [pairIncidenceChained, pairBoundaryChained] at he1 he2
       rcases he1 with he1 | he1 <;> rcases he2 with he2 | he2 <;>
         subst he1 <;> subst he2 <;>
         simp [boundaryCompatible] at hcompat1 hcompat2
-      have ha : a = a' := iha a' hrel1
-      have hb : b = b' := ihb b' hrel2
-      rw [ha, hb]
+      simp at heq1 heq2
+      rw [heq1, heq2]
 
 /- Faithfulness, cleanly stated: `≈` coincides exactly with `=` on the
-   chained instance -- for atoms *and* arbitrarily nested pairs. -/
+   chained instance -- for atoms *and* arbitrarily nested pairs. Derived
+   from the general theorem rather than a bespoke induction. -/
 theorem pairIncidenceChained_approxBisim_iff (x y : PairId) :
   approxBisim pairIncidenceChained x y ↔ x = y := by
   constructor
   · rintro ⟨rel, hbisim, hxy⟩
-    exact pairIncidenceChained_rel_eq hbisim x y hxy
+    exact incidence_bisim_faithful pairIncidenceChained sizeOf
+      pairIncidenceChained_hdec pairIncidenceChained_hext hbisim x y hxy
   · intro h; subst h; exact approxBisim_refl pairIncidenceChained x
 
 end IncidenceCore

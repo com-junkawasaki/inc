@@ -163,3 +163,77 @@ genuinely different proof strategy (well-founded recursion on `μ`
 instead of structural induction on `I`). If it turns out false or
 needs a much stronger hypothesis to be true, that itself is the
 result — record it, don't force a fake generalization.
+
+## Cycle 4
+
+**Hypothesis**: (as queued above) the general theorem is provable, with
+the "injective enough" hypothesis phrased as *extensionality*:
+`∀ x y, typeFunc x = typeFunc y → boundaryMatched inc (· = ·) x y → x =
+y` — i.e. elements with literally-equal, role-matched boundaries are
+equal (the Inc analogue of ZF's set extensionality). Flagged as real
+risk in cycle 3; not assumed to work.
+
+**Method**: well-founded (strong) induction on `μ x` via
+`Nat.strongRecOn`, not structural induction on a concrete carrier type.
+At each step, `IsBisimulation`'s `boundaryMatched rel x y` gives, for
+every edge in `x`'s boundary, a `rel`-related target in `y`'s boundary
+(and symmetrically); since that target's `μ` is strictly smaller (by
+`hdec`), the induction hypothesis upgrades `rel` to literal `=` on it;
+once every edge is upgraded this way, `boundaryMatched inc (=) x y`
+holds, and `hext` closes `x = y` directly.
+
+**Result**: **confirmed, and stronger than hoped** —
+`incidence_bisim_faithful` (now in root `IncidenceTheory.lean`, next to
+the bisimulation skeleton it generalizes) proves with **zero axioms**,
+not even the `propext`/`Classical.choice`/`Quot.sound` that show up
+almost everywhere else in this file; it's a small, fully constructive
+well-founded induction. Non-vacuousness wasn't just asserted — it was
+checked by instantiating `hdec`/`hext` against two independent,
+structurally different carriers:
+- `natIncidence` (`μ := id`): `natIncidence_hext`/`natIncidence_hdec` in
+  `Peano.lean`.
+- `pairIncidenceChained` (`μ := sizeOf`, the most complex instance —
+  atoms *and* nested pairs, two disjoint edge roles): `pairIncidenceChained_hext`/
+  `pairIncidenceChained_hdec` in `Pairs.lean`.
+
+Both instantiations **replaced** their cycle 1/3 bespoke inductions
+(`natIncidence_rel_eq`, `pairIncidenceChained_atom_rel_eq`,
+`pairIncidenceChained_rel_eq` — removed, not kept redundantly; see git
+history if the old proofs are wanted) rather than sitting alongside them
+as a curiosity — real evidence the generalization has practical value,
+not just theoretical interest. `#print axioms` on every theorem in this
+cycle: `propext`/`Classical.choice`/`Quot.sound` (standard, from the
+concrete carriers' own `cases`/`Decidable` machinery) or nothing at all
+for `incidence_bisim_faithful` itself, no `sorryAx`.
+
+Caveat, stated honestly rather than oversold: `hext` (the extensionality
+hypothesis) still has to be proved *per instance*, by the same kind of
+case analysis cycles 1-3 already did — the win isn't "no more
+instance-specific proof," it's "the well-founded-induction scaffolding
+(the part that actually chases the bisimulation witness through
+`boundaryMatched`, which was the fiddliest part of every prior cycle) is
+now written exactly once." That's a real, useful generalization; it is
+not a claim that arbitrary `Incidence` instances are automatically
+faithful (cycle 2's flat-atom counterexample still stands as a case
+where no valid `hext` exists at all).
+
+**Next hypothesis (cycle 5, not yet attempted)**: everything so far has
+targeted *faithfulness* of `≈` (the M side of a possible foundational
+correspondence). The complementary, still-untouched direction from the
+original conversation's six-point list is *soundness/completeness of
+translation* — e.g., does `TranslationPreservation.inc_to_set` (root
+file, T5) actually preserve enough structure to be called a translation,
+for a *nontrivial* instance (it's currently only checked against the
+triangle graph, where every node/edge maps to a fixed `ULift Bool`/
+`ULift Unit` — not yet exercised against `natIncidence` or
+`pairIncidenceChained`, where the translation's *image* could plausibly
+carry more information, e.g. distinguishing atoms from pairs, or
+encoding the Peano order). Concretely: check whether `inc_to_set`, or a
+richer translation, can be shown *injective on ≈-classes* for
+`pairIncidenceChained` — i.e. genuinely reflects the faithfulness cycle
+4 just established, rather than collapsing everything to two trivial
+types regardless. This is exploratory (T5 was never given real content
+in the original file, just a `True := trivial` for the generic case) —
+expect to spend part of the cycle just deciding what "translation
+preserves structure" should even mean for a concrete instance before
+attempting to prove anything.

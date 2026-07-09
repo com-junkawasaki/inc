@@ -88,52 +88,57 @@ theorem natIncidence_induction (P : Nat → Prop)
   | zero => exact hzero
   | succ k ih => exact hsucc k ih (k + 1) rfl
 
-/- The hard direction of faithfulness: any bisimulation relating m and n
-   forces m = n, by induction using the boundary-predecessor-chain
-   structure (a bisimulation can't relate a zero-boundary element to a
-   nonempty-boundary one, and matching predecessors recurses). -/
-theorem natIncidence_rel_eq {rel : Nat → Nat → Prop}
-  (hbisim : IsBisimulation natIncidence rel) :
-  ∀ m n, rel m n → m = n := by
-  intro m
-  induction m with
+/- The substantive hypothesis of the general `incidence_bisim_faithful`
+   theorem (root file, cycle 4): elements with literally-equal,
+   role-matched boundaries are equal. For natIncidence this says a
+   bisimulation can't relate a zero-boundary element to a nonempty one,
+   and matching predecessors (by literal equality, not just `rel`)
+   forces the indices to match. -/
+theorem natIncidence_hext :
+  ∀ x y, natIncidence.typeFunc x = natIncidence.typeFunc y →
+    boundaryMatched natIncidence (· = ·) x y → x = y := by
+  intro x y _ ⟨hL, hR⟩
+  cases x with
   | zero =>
-    intro n hmn
-    obtain ⟨-, hM⟩ := hbisim 0 n hmn
-    match n, hM with
-    | 0, _ => rfl
-    | j + 1, hM =>
+    cases y with
+    | zero => rfl
+    | succ k =>
       exfalso
-      obtain ⟨e, he, -⟩ :=
-        hM.right { i := j, role := PeanoRole.pred, sign := Sign.neg, mult := 1 }
-          (by simp [natIncidence, peanoBoundary])
+      obtain ⟨e, he, -⟩ := hR { i := k, role := PeanoRole.pred, sign := Sign.neg, mult := 1 }
+        (by simp [natIncidence, peanoBoundary])
       simp [natIncidence, peanoBoundary] at he
-  | succ k ih =>
-    intro n hmn
-    obtain ⟨-, hM⟩ := hbisim (k + 1) n hmn
-    match n, hM with
-    | 0, hM =>
+  | succ n =>
+    cases y with
+    | zero =>
       exfalso
-      obtain ⟨e, he, -⟩ :=
-        hM.left { i := k, role := PeanoRole.pred, sign := Sign.neg, mult := 1 }
-          (by simp [natIncidence, peanoBoundary])
+      obtain ⟨e, he, -⟩ := hL { i := n, role := PeanoRole.pred, sign := Sign.neg, mult := 1 }
+        (by simp [natIncidence, peanoBoundary])
       simp [natIncidence, peanoBoundary] at he
-    | j + 1, hM =>
-      obtain ⟨e', he', -, hrel⟩ :=
-        hM.left { i := k, role := PeanoRole.pred, sign := Sign.neg, mult := 1 }
-          (by simp [natIncidence, peanoBoundary])
+    | succ k =>
+      obtain ⟨e', he', -, heq⟩ := hL { i := n, role := PeanoRole.pred, sign := Sign.neg, mult := 1 }
+        (by simp [natIncidence, peanoBoundary])
       simp [natIncidence, peanoBoundary] at he'
       subst he'
-      have := ih j hrel
+      simp at heq
       omega
 
+theorem natIncidence_hdec :
+  ∀ i e, e ∈ natIncidence.boundary i → e.i < i := by
+  intro i e h
+  cases i with
+  | zero => simp [natIncidence, peanoBoundary] at h
+  | succ k => simp [natIncidence, peanoBoundary] at h; subst h; simp
+
 /- Faithfulness: Inc's abstract bisimulation-equivalence ≈ does not
-   collapse distinct naturals -- it coincides exactly with `=`. -/
+   collapse distinct naturals -- it coincides exactly with `=`.
+   Derived from the general theorem rather than a bespoke induction
+   (compare cycle 1-3's hand-rolled version, no longer needed). -/
 theorem natIncidence_approxBisim_iff (m n : Nat) :
   approxBisim natIncidence m n ↔ m = n := by
   constructor
   · rintro ⟨rel, hbisim, hmn⟩
-    exact natIncidence_rel_eq hbisim m n hmn
+    exact incidence_bisim_faithful natIncidence id natIncidence_hdec natIncidence_hext
+      hbisim m n hmn
   · intro h; subst h; exact approxBisim_refl natIncidence m
 
 /- Research cycle 1 (co-scientist step): does the same GluingSpec

@@ -153,6 +153,49 @@ theorem approxBisim_trans {I R T : Type u} [DecidableEq I] {inc : Incidence I R 
   rcases hJK with ⟨rel₂, h₂, hjk⟩
   exact ⟨(fun a c => ∃ b, rel₁ a b ∧ rel₂ b c), isBisimulation_comp h₁ h₂, ⟨j, hij, hjk⟩⟩
 
+/- Research cycle 4 (co-scientist step, see RESEARCH_LOG.md): cycles 1-3
+   each proved faithfulness (≈ coincides with =) for a specific instance
+   by hand, via well-founded induction chasing `boundaryMatched`'s
+   existentials. This is the general theorem extracted from that
+   repeated pattern: given a well-founded measure on which boundaries
+   strictly decrease, and an "extensionality" hypothesis (elements with
+   literally-equal, role-matched boundaries are equal -- the genuinely
+   substantive assumption, analogous to ZF's set extensionality), *any*
+   bisimulation on the instance forces literal equality. Proves with
+   *zero* axioms (not even the usual propext/Classical.choice/Quot.sound
+   that show up almost everywhere else in this file) -- it's a small,
+   fully constructive well-founded induction. Validated non-vacuously
+   against two independent, structurally different instances in
+   Peano.lean and Pairs.lean (natIncidence, pairIncidenceChained). -/
+/- Merkle-ID: foundation.logic.bisim_faithful
+   General faithfulness theorem: ≈ = = whenever boundary is a
+   well-founded, extensional description of each element. -/
+theorem incidence_bisim_faithful {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (μ : I → Nat)
+  (hdec : ∀ i e, e ∈ inc.boundary i → μ e.i < μ i)
+  (hext : ∀ x y, inc.typeFunc x = inc.typeFunc y →
+    boundaryMatched inc (· = ·) x y → x = y)
+  {rel : I → I → Prop} (hbisim : IsBisimulation inc rel) :
+  ∀ x y, rel x y → x = y := by
+  have key : ∀ n x, μ x = n → ∀ y, rel x y → x = y := by
+    intro n
+    induction n using Nat.strongRecOn with
+    | _ n ih =>
+      intro x hx y hxy
+      obtain ⟨htype, hM⟩ := hbisim x y hxy
+      apply hext x y htype
+      constructor
+      · intro e he
+        obtain ⟨e', he', hcompat, hrel⟩ := hM.left e he
+        have hμe : μ e.i < n := hx ▸ hdec x e he
+        exact ⟨e', he', hcompat, ih (μ e.i) hμe e.i rfl e'.i hrel⟩
+      · intro e' he'
+        obtain ⟨e, he, hcompat, hrel⟩ := hM.right e' he'
+        have hμe : μ e.i < n := hx ▸ hdec x e he
+        exact ⟨e, he, hcompat, ih (μ e.i) hμe e.i rfl e'.i hrel⟩
+  intro x y hxy
+  exact key (μ x) x rfl y hxy
+
 /- ==========================================================================
    Linear algebra: boundary matrices and Laplacians over a chosen finite
    index set. `Matrix` itself lives in Axioms.Basic (single canonical def).

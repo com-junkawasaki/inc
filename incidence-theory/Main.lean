@@ -111,3 +111,11 @@ def main : IO Unit := do
   IO.println "    since bare atoms all have boundary = [] -- faithfulness isn't automatic"
   IO.println "  ✓ fix (chained atoms): giving atoms a role-tagged predecessor chain"
   IO.println "    recovers FULL faithfulness (≈ ↔ =) for the whole nested pair type"
+
+  IO.println "\n🧬 General Faithfulness Theorem (incidence_bisim_faithful):"
+  IO.println "  ✓ extracted from 3 instance-specific proofs: well-founded measure +"
+  IO.println "    boundary-extensionality ⇒ ≈ coincides with = on ANY Incidence"
+  IO.println "  ✓ proves with ZERO axioms (fully constructive, no Classical.choice)"
+  IO.println "  ✓ validated non-vacuously against natIncidence and pairIncidenceChained,"
+  IO.println "    replacing their bespoke inductions -- real generalization, not just"
+  IO.println "    an abstract curiosity"
