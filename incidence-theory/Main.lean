@@ -136,3 +136,10 @@ def main : IO Unit := do
   IO.println "  ✓ sizeOf (pre-existing, not designed for this test) IS a glue-"
   IO.println "    homomorphism up to a precise +1 cost per pair node -- a quantified,"
   IO.println "    non-circular confirmation of the same finding via an independent route"
+
+  IO.println "\n🧮 ∂² = 0, tested beyond the triangle (T3):"
+  IO.println "  ✗ FAILS for natIncidence's chain: boundary_composition 2 0 = 1 ≠ 0"
+  IO.println "  ✗ FAILS for pairIncidenceChained too, same root cause (atom chain)"
+  IO.println "  → unlike the triangle (2-graded: edges→nodes, nodes have no further"
+  IO.println "    boundary), unbounded-depth chains compose nonzero -- confirms the"
+  IO.println "    bug-fix PR's conditional (not unconditional) ∂²=0 hypothesis was right"

@@ -323,4 +323,26 @@ theorem pairToShape_reflects_approxBisim {x y : PairId}
   rw [pairIncidenceChained_approxBisim_iff]
   exact pairToShape_injective h
 
+/- Research cycle 8 (see RESEARCH_LOG.md, `natIncidence` finding first):
+   the same ∂² = 0 failure, independently confirmed on this instance --
+   the atom-chain inside `pairIncidenceChained` is structurally the same
+   unbounded-depth, same-sign chain as `natIncidence`'s, and it fails
+   for the same reason. Also checked whether composing *through* a
+   `pair` node behaves differently (it doesn't -- the nonzero value
+   just propagates in via the chain reachable from a `pair`'s `snd`
+   endpoint). -/
+def pairIdx6 : List PairId :=
+  [PairId.atom 0, PairId.atom 1, PairId.atom 2, PairId.atom 3,
+   PairId.pair (PairId.atom 0) (PairId.atom 1),
+   PairId.pair (PairId.atom 1) (PairId.atom 2)]
+
+theorem pairIncidenceChained_not_boundary_square_zero :
+  verify_boundary_composition pairIncidenceChained pairIdx6 = false := by
+  decide
+
+theorem pairIncidenceChained_boundary_composition_witness :
+  boundary_composition pairIncidenceChained pairIdx6
+    (PairId.pair (PairId.atom 0) (PairId.atom 1)) (PairId.atom 0) = -1 := by
+  decide
+
 end IncidenceCore

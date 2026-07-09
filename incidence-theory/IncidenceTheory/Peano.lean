@@ -200,4 +200,35 @@ theorem natToFiniteSet_reflects_approxBisim {m n : Nat}
   rw [natIncidence_approxBisim_iff]
   exact natToFiniteSet_injective h
 
+/- Research cycle 8 (see RESEARCH_LOG.md): T3's `boundary_operator_square_zero`
+   (root file) was only ever exercised against the triangle graph, where
+   it holds (`triangle_boundary_square_zero`). Hypothesis going in:
+   either this trivially holds for any well-founded structure, or it's
+   uninteresting for a chain. Checked empirically first (`#eval`) before
+   assuming either -- neither guess was right. `natIncidence`'s chain
+   *fails* ∂² = 0, genuinely and non-trivially: `boundary_composition
+   natIncidence idx 2 0 = 1 ≠ 0`. Root cause, once found: the triangle's
+   boundary only reaches *nodes*, which have no further boundary of
+   their own (a 2-graded structure: dimension 1 → dimension 0 → nothing),
+   so ∂² vanishes for the trivial reason that there's nothing beyond
+   dimension 0 to compose into. `natIncidence`'s chain has *unbounded*
+   depth (`boundary n` reaches `n-1`, which has its own boundary reaching
+   `n-2`, ...), so composing `boundary` with itself doesn't automatically
+   land outside the structure -- and the two consecutive `Sign.neg` links
+   multiply to a nonzero `Sign.pos`-equivalent value instead of
+   cancelling. This validates, retroactively, that the bug-fix PR's
+   design decision to make `boundary_operator_square_zero` *conditional*
+   on `verify_boundary_composition inc idx = true` (rather than an
+   unconditional claim) was the right call -- the hypothesis is a real,
+   non-vacuous constraint that this instance genuinely fails. -/
+def natIdx6 : List Nat := [0, 1, 2, 3, 4, 5]
+
+theorem natIncidence_not_boundary_square_zero :
+  verify_boundary_composition natIncidence natIdx6 = false := by
+  decide
+
+theorem natIncidence_boundary_composition_witness :
+  boundary_composition natIncidence natIdx6 2 0 = 1 := by
+  decide
+
 end IncidenceCore

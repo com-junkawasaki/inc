@@ -413,3 +413,65 @@ check trivially pass (all products zero because chains don't "return")
 in a way that's less interesting than the triangle's genuine cycle?
 Worth checking what the check even *means* for a non-cyclic (tree/chain)
 structure before assuming it's informative.
+
+## Cycle 8
+
+**Hypothesis**: (as queued above) one of two guesses about `∂² = 0` on
+`natIncidence`/`pairIncidenceChained`'s chain-shaped boundary: either it
+trivially holds for any well-founded structure, or it's a vacuous check
+because tree/chain shapes "don't return". Checked with `#eval` *before*
+committing to either guess, on principle (cheap to check, expensive to
+theorize wrongly about first).
+
+**Result**: **both guesses were wrong** — a genuine surprise, not a
+confirmation. `verify_boundary_composition natIncidence natIdx6 = false`
+(`#eval`, then proved with `decide`): `boundary_composition natIncidence
+natIdx6 2 0 = 1 ≠ 0`. `∂² = 0` *fails*, non-trivially, for the Peano
+chain. `pairIncidenceChained` fails the same way (`pairIncidenceChained_not_
+boundary_square_zero`), for the identical reason, since its atom-chain is
+structurally the same construction — checked composing *through* a
+`pair` node too (`pairIncidenceChained_boundary_composition_witness`,
+`= -1`), confirming the nonzero value propagates in via the chain
+reachable from a `pair`'s `snd` endpoint rather than being isolated to
+atoms.
+
+**Why, once found**: the triangle's boundary only reaches *nodes*, which
+have no boundary of their own — a 2-graded structure (dimension 1 →
+dimension 0 → nothing), so `∂²` vanishes for the trivial reason that
+there's nothing beyond dimension 0 to compose into. `natIncidence`'s
+chain has *unbounded* depth (`boundary n` reaches `n-1`, which has its
+own boundary reaching `n-2`, ...), so `∂` composed with itself doesn't
+automatically land outside the structure — and the two consecutive
+`Sign.neg` links multiply to a nonzero value instead of cancelling. This
+retroactively validates a design decision from the original bug-fix PR:
+`boundary_operator_square_zero` was made *conditional* on
+`verify_boundary_composition inc idx = true` rather than an
+unconditional claim, specifically because ∂²=0 isn't generically true —
+this cycle shows that hypothesis is a *real*, non-vacuous constraint
+that a genuine instance (not a contrived one) actually fails, not
+defensive hedging against a hypothetical.
+
+`#print axioms` on all four theorems: `propext`/`Classical.choice`/
+`Quot.sound`, no `sorryAx` (`decide` stays fully kernel-checked, no
+`native_decide`). Added to `Peano.lean`/`Pairs.lean`, wired into
+`Main.lean`.
+
+**Next hypothesis (cycle 9, not yet attempted)**: classical simplicial
+homology hits exactly this problem and fixes it by *alternating* the
+boundary sign by the element's position/degree (the standard
+"alternating sum of faces" convention), specifically so that composing
+the boundary map with itself telescopes to zero instead of accumulating.
+`peanoBoundary` currently gives every chain link the *same* sign
+(`Sign.neg`, regardless of `n`'s parity). Hypothesis: redefining the
+chain with an alternating sign (e.g. `n+1 → n` is `neg` when `n` is even,
+`pos` when `n` is odd, or some such convention) recovers `∂² = 0` for
+the Peano chain — genuinely testable via the exact same `#eval`-first
+method this cycle used, not a definition chosen post-hoc to force the
+answer (the alternating-sign convention comes from established
+mathematics, not from peeking at what would make this specific chain
+work). If it works, that's a real, exportable design principle for any
+future chain-shaped Inc instance wanting `∂²=0`; if it doesn't, that's
+useful too (it would mean Inc's `boundaryMatrix`/`Int`-multiplication
+setup doesn't actually reproduce the classical telescoping mechanism,
+which would be worth knowing precisely, and probably worth understanding
+why before cycle 10).
