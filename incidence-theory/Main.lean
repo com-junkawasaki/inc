@@ -2,6 +2,7 @@ import IncidenceTheory.GraphModel
 import IncidenceTheory.Peano
 import IncidenceTheory.Pairs
 import IncidenceTheory.CrossInstance
+import IncidenceTheory.PathComplex
 
 open IncidenceCore
 
@@ -147,3 +148,7 @@ def main : IO Unit := do
   IO.println "    and single_link_composition_ne_zero proves WHY, generally: a single-"
   IO.println "    face chain can never cancel (only one term, nothing to cancel against),"
   IO.println "    for ANY sign choice on ANY Incidence -- not just this one instance"
+  IO.println "  ✓ converse: boundary_composition_zero_of_leaf_boundary proves ∂²=0"
+  IO.println "    whenever an element's boundary only reaches leaves -- pathIncidence"
+  IO.println "    (an INFINITE 2-graded path complex) satisfies it for every edge at"
+  IO.println "    once, confirming finite-vs-infinite was never the real variable"

@@ -439,6 +439,114 @@ theorem single_link_composition_ne_zero {I R T : Type u} [DecidableEq I]
   simp only [Int.zero_add, hBij, hBjk]
   exact Int.mul_ne_zero (by omega) (Int.mul_ne_zero hne1 hne2)
 
+/- Research cycle 10 (see RESEARCH_LOG.md): cycle 9 proved single-face
+   chains can *never* satisfy ∂²=0. This is the converse-flavored
+   question: what *is* a sufficient condition? Answer: if `i`'s boundary
+   only reaches "leaves" (elements with empty boundary of their own),
+   `∂²` vanishes at `i` for the trivial dimension-exhaustion reason the
+   triangle already relied on (nodes have no further boundary) -- but
+   now stated and proved as a general theorem, not re-derived per
+   instance via `decide`. -/
+
+/- `boundaryMatrix` unfolded to a plain `List.foldl` with an `ite`
+   (rather than the `dite`-inside-a-tactic-lambda its own definition
+   uses), making it tractable to reason about symbolically. -/
+theorem boundaryMatrix_eq_foldl {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i j : I) :
+  boundaryMatrix inc idx i j =
+    (inc.boundary i).foldl (fun acc e =>
+      if e.i = j then acc + (match e.sign with
+        | Sign.neg => -(Int.ofNat e.mult)
+        | Sign.zero => 0
+        | Sign.pos => Int.ofNat e.mult)
+      else acc) 0 := by
+  unfold boundaryMatrix
+  dsimp only
+  generalize inc.boundary i = entries
+  suffices h : ∀ acc, entries.foldl (fun a e => by
+      by_cases h : e.i = j
+      · exact a + (match e.sign with
+          | Sign.neg => -(Int.ofNat e.mult)
+          | Sign.zero => 0
+          | Sign.pos => Int.ofNat e.mult)
+      · exact a) acc =
+      entries.foldl (fun acc e =>
+        if e.i = j then acc + (match e.sign with
+          | Sign.neg => -(Int.ofNat e.mult)
+          | Sign.zero => 0
+          | Sign.pos => Int.ofNat e.mult)
+        else acc) acc from h 0
+  induction entries with
+  | nil => intro acc; rfl
+  | cons hd tl ih =>
+    intro acc
+    simp only [List.foldl_cons]
+    by_cases h : hd.i = j
+    · rw [dif_pos h, if_pos h, ih]
+    · rw [dif_neg h, if_neg h, ih]
+
+/- If some column of `boundaryMatrix i` is nonzero, that column's index
+   must be an actual target of one of `i`'s boundary endpoints. -/
+theorem list_foldl_witness {I R : Type u} [DecidableEq I]
+  (entries : List (Endpoint I R)) (j : I) (g : Endpoint I R → Int)
+  (h : entries.foldl (fun acc e => if e.i = j then acc + g e else acc) 0 ≠ 0) :
+  ∃ e ∈ entries, e.i = j := by
+  induction entries with
+  | nil => simp at h
+  | cons hd tl ih =>
+    simp only [List.foldl_cons] at h
+    by_cases hc : hd.i = j
+    · exact ⟨hd, List.mem_cons_self, hc⟩
+    · rw [if_neg hc] at h
+      obtain ⟨e, he, hei⟩ := ih h
+      exact ⟨e, List.mem_cons_of_mem _ he, hei⟩
+
+theorem boundaryMatrix_ne_zero_witness {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i j : I)
+  (h : boundaryMatrix inc idx i j ≠ 0) :
+  ∃ e ∈ inc.boundary i, e.i = j := by
+  rw [boundaryMatrix_eq_foldl] at h
+  exact list_foldl_witness (inc.boundary i) j _ h
+
+/- A leaf's row of `boundaryMatrix` is all zeros. -/
+theorem boundaryMatrix_eq_zero_of_leaf {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (j k : I)
+  (hleaf : inc.boundary j = []) :
+  boundaryMatrix inc idx j k = 0 := by
+  rw [boundaryMatrix_eq_foldl, hleaf]
+  rfl
+
+theorem foldl_add_zero_of_all_zero {I : Type u} (L : List I) (f : I → Int)
+  (hz : ∀ y ∈ L, f y = 0) : L.foldl (fun a y => a + f y) 0 = 0 := by
+  induction L with
+  | nil => rfl
+  | cons hd tl ih =>
+    simp only [List.foldl_cons]
+    rw [hz hd List.mem_cons_self]
+    simp only [Int.zero_add]
+    exact ih (fun y hy => hz y (List.mem_cons_of_mem _ hy))
+
+/- The sufficient condition: if every endpoint in `i`'s boundary points
+   to a leaf (an element with no boundary of its own), ∂² vanishes at
+   `i`, for any index set and any target `k`. This is exactly the
+   property `triIncidence`'s edges have always had (their endpoints are
+   nodes, which are leaves) -- now available as a reusable theorem
+   instead of a `decide` call re-run per instance. -/
+/- Merkle-ID: foundation.axiomatization.leaf_boundary_sufficiency
+   ∂² = 0 whenever an element's boundary only reaches leaves. -/
+theorem boundary_composition_zero_of_leaf_boundary {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i k : I)
+  (hleaf : ∀ e ∈ inc.boundary i, inc.boundary e.i = []) :
+  boundary_composition inc idx i k = 0 := by
+  unfold boundary_composition
+  apply foldl_add_zero_of_all_zero
+  intro j _
+  by_cases h : boundaryMatrix inc idx i j = 0
+  · simp [h]
+  · obtain ⟨e, he, hei⟩ := boundaryMatrix_ne_zero_witness inc idx i j h
+    have hz : inc.boundary j = [] := hei ▸ hleaf e he
+    simp [boundaryMatrix_eq_zero_of_leaf inc idx j k hz]
+
 /- Glue operation matrix correspondence -/
 /- Merkle-ID: implementation.linear_algebra.glue_matrix
    How glue operations correspond to matrix operations on boundary matrices. -/

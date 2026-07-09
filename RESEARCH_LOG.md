@@ -560,3 +560,82 @@ clean statement: is there a minimal *sufficient* condition (beyond "has
 ≥2 faces") under which a chain-shaped Inc instance provably satisfies
 `∂² = 0`? That would be the genuinely new content for cycle 10, not
 just re-confirming the 2-graded pattern again.
+
+## Cycle 10
+
+**Hypothesis**: (both parts queued above) (a) an infinite 2-graded path
+complex satisfies `∂² = 0` for the same trivial reason the finite
+triangle does, confirming finite-vs-infinite was never the real
+variable; (b) there's a clean, general, provable *sufficient* condition
+for `∂² = 0`, complementing cycle 9's impossibility theorem.
+
+**Method**: went straight for (b) first, since a general theorem — if
+provable — would settle (a) as a one-line corollary rather than needing
+a separate proof. Sufficient condition: if every endpoint in `i`'s
+boundary points to a "leaf" (an element with empty boundary of its
+own), then `∂²` vanishes at `i`, for *any* index set and target. Proof
+needs two supporting facts: (1) `boundaryMatrix` unfolded to a plain
+`ite`-based `List.foldl` (`boundaryMatrix_eq_foldl`, reused across
+several lemmas below — this is exactly the abstraction gap flagged as a
+finding in cycle 9, now paid down once rather than worked around per
+proof); (2) a leaf's entire row of `boundaryMatrix` is zero (trivial:
+folding over `[]`), and any nonzero column must have a genuine witness
+endpoint (`boundaryMatrix_ne_zero_witness`) — combine: every term in
+`boundary_composition`'s sum is zero, either because `boundaryMatrix
+i j = 0` outright, or because `j` is witnessed as a leaf by `hleaf`,
+making `boundaryMatrix j k = 0`.
+
+**Result**: **both confirmed**, and (b) turned out cheaper to prove
+than cycle 9's impossibility theorem, not harder — no `List.count`
+induction needed, since the goal is "sum of zeros is zero"
+(`foldl_add_zero_of_all_zero`), simpler than cycle 9's "sum has exactly
+one nonzero term" (`foldl_add_eq_count_mul`). `boundary_composition_
+zero_of_leaf_boundary` (root file) proves the general sufficient
+condition with `#print axioms` showing `propext` only, no `sorryAx`.
+Applied it to a fresh instance, `pathIncidence` (`PathComplex.lean`) —
+an *infinite* 2-graded path complex (`node n` a leaf, `edge n` connecting
+`node n`/`node (n+1)` via two signed endpoints, exactly `triIncidence`'s
+edge shape but unbounded) — `pathIncidence_boundary_square_zero` proves
+`∂² = 0` for *every* edge, at *every* index set and target,
+simultaneously. This is a **stronger** result than
+`triangle_boundary_square_zero` ever was: that one `decide`-checks a
+single fixed 6-element index list; this one is a universally-quantified
+theorem covering infinitely many instances at once. Confirms cycles 8-9
+correctly located the real variable as single-face-vs-multi-face, not
+finiteness — the triangle's finiteness was never load-bearing for why
+it satisfies `∂² = 0`.
+
+`#print axioms` across the whole cycle: `boundaryMatrix_eq_foldl` and
+`boundaryMatrix_eq_zero_of_leaf` need **no axioms at all**; the rest
+need `propext` only (simpler dependency footprint than cycles 8-9,
+which pulled in `Classical.choice`/`Quot.sound` via `decide` and
+bisimulation machinery respectively). No `sorryAx`. Added to root
+`IncidenceTheory.lean` (general theorem, next to cycle 9's) and a new
+file `PathComplex.lean`, wired into `Main.lean`.
+
+**Where this leaves the ∂²=0 thread (cycles 8-10)**: the full picture is
+now a clean if-and-only-if-flavored pair, not just one-off checks —
+`single_link_composition_ne_zero` (necessary: single-face chains always
+fail, any sign) and `boundary_composition_zero_of_leaf_boundary`
+(sufficient: leaf-reaching boundaries always succeed). The genuinely
+open gap is the *middle* ground: instances that are neither single-face
+nor leaf-reaching (e.g. an element with 2+ faces, at least one of which
+points somewhere with *further* boundary) — do those succeed, fail, or
+depend on details (the multiplicities/signs actually chosen)? That's
+real, uncharted territory for a future cycle, not yet queued concretely
+because it needs a specific candidate instance to test against first.
+
+**Next hypothesis (cycle 11, not yet attempted)**: pick a genuinely
+"middle ground" instance -- multi-face (2+ endpoints per element, so
+cycle 9's impossibility doesn't apply) but *not* leaf-reaching (at least
+one endpoint points to something with its own nonempty boundary, so
+cycle 10's sufficiency doesn't apply either) -- and check empirically
+first (per this project's now-established discipline) whether ∂²=0
+holds, fails, or depends on the specific sign/multiplicity choice. A
+natural, cheap candidate: extend `pathIncidence` so `edge n`'s boundary
+includes *three* endpoints instead of two (e.g. add a second edge into
+`node n` from `node (n-1)`, so composing through `node n` from `edge n`
+now has two contributing routes instead of zero) -- or more simply,
+build a small finite instance by hand (3-4 elements) with a deliberately
+mixed shape and `#eval` it before committing to any formalization
+effort, matching cycles 8-9's method precisely.
