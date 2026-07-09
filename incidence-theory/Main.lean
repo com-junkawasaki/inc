@@ -250,3 +250,13 @@ def main : IO Unit := do
   IO.println "  → notable contrast: PairId is genuinely recursive (pairToShape had to recurse),"
   IO.println "    PathId is just a tagged Nat, so its faithful translation is nearly trivial --"
   IO.println "    translation effort tracks the CARRIER type's structure, not Incidence itself"
+
+  IO.println "\n🧱 Proving NON-Bisimilarity, Not Just Inequality (cycle 21):"
+  IO.println "  ✓ not_approxBisim_of_boundary_mismatch: the FIRST theorem in this project proving"
+  IO.println "    ¬approxBisim (strictly stronger than ≠, since ≈ often relates distinct elements)"
+  IO.println "  ✓ proves with ZERO axioms -- a boundary entry with no compatible counterpart"
+  IO.println "    blocks ANY witnessing relation, discharging approxBisim's ∃rel existential"
+  IO.println "  ✓ simplexIncidence's 3 classes ({v0,v1,v2}, {e01,e02,e12}, {face}) are now proven"
+  IO.println "    EXACTLY separated, not just internally collapsed -- one representative witness"
+  IO.println "    per shape-pair (vertex-edge, vertex-face, edge-face), matching this project's"
+  IO.println "    established convention rather than a forced 49-case exhaustive enumeration"

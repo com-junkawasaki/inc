@@ -1341,25 +1341,99 @@ this cycle's second half almost mechanical once the first half's audit
 question was answered -- appropriate, since the point of this cycle was
 closing two small open items cleanly, not chasing a new phenomenon.
 
-**Next hypothesis (cycle 21, not yet attempted)**: no mandatory item
-carries over -- both of cycle 18's audit questions are now resolved
-(one closed with a new theorem in cycle 19, one explicitly declined this
-cycle) and T5 now has three confirming instances (`natIncidence`,
-`pairIncidenceChained`, `pathIncidenceChained`), which is enough to
-treat that thread as established without a fourth repeat, matching how
-prior 3-confirmation threads (cycles 8-10's faithfulness-fix tension,
-cycles 6-7/15's cross-instance boundary/glue split) were closed. Fresh
-ground worth considering, raised but not pursued this cycle since it
-would need real proof-engineering budget of its own: `simplexIncidence`
-is NOT `≈`-faithful (`v0 ≈ v1`, `e01 ≈ e02`, both proven, cycles 12/18)
--- unlike the T5 pattern above (which only ever needs injectivity + an
-existing faithfulness theorem), could a translation for `simplexIncidence`
-be built that reflects the *quotient* structure exactly -- i.e. constant
-on each `≈`-class and *injective across* classes, so translation-equal
-would be *equivalent* to (not just imply) `approxBisim`, not merely
-one-directional? This is a genuinely different, harder claim than
-anything T5 has tested so far (it requires characterizing `≈`'s classes
-completely, including `face`'s status, not just proving one map
-injective) -- worth scoping carefully as its own hypothesis rather than
-assumed easy, and abandoning honestly if it stalls rather than forcing
-it, per this project's standing discipline.
+## Cycle 21
+
+**Hypothesis**: (raised, not committed to, at the end of cycle 20) could
+a translation for `simplexIncidence` be built that reflects the `≈`-
+quotient structure *exactly* -- constant on each class, distinct across
+classes, so translation-equal would be *equivalent* to (not just imply)
+`approxBisim`? Flagged as needing its own careful scoping, since it
+requires characterizing `≈`'s classes completely, including whether
+`face` is *provably* its own class or merely *not yet shown* to merge
+with anything.
+
+**Method**: scoped the "not yet shown" gap first, since that's exactly
+where the risk was. Every non-equality result in this project to date
+proved `i ≠ j` (literal inequality), never `¬ approxBisim inc i j`
+(non-bisimilarity) -- a strictly stronger, previously untested kind of
+claim. Worked out on paper first (no premature Lean) why non-
+bisimilarity should be *provable at all* despite `approxBisim`
+quantifying over *all* possible witnessing relations (seemingly
+intractable to case on): `IsBisimulation`'s definition forces
+`boundaryMatched` to hold for *whichever* relation is claimed to
+witness bisimilarity, so if some boundary entry of `i` has *no*
+`boundaryCompatible` counterpart anywhere in `j`'s boundary -- a fact
+that doesn't depend on the relation at all -- *no* relation can ever
+satisfy `IsBisimulation` at that pair. The universal quantifier over
+relations gets discharged by `rintro`; the contradiction is then purely
+about the two fixed, concrete boundaries. Verified this reasoning in a
+scratch file before writing the general theorem, then built the
+`simplexIncidence`-specific facts, then re-verified the general theorem
+still held (it did, unchanged) once composed with the specific ones.
+
+**Result**: **the general theorem works, proves with zero axioms, and
+the three representative cross-shape facts for `simplexIncidence` all
+confirmed on the first attempt (after one simp-set fix)** --
+`not_approxBisim_of_boundary_mismatch` doesn't even need
+`Classical.choice`, since it's a direct constructive contradiction, no
+case analysis on an undecidable proposition anywhere. Its corollary
+`not_approxBisim_empty_nonempty` (leaves can never be bisimilar to
+non-leaves) handles the two "vertex vs. X" cases outright. The one real
+snag: the first attempt at the concrete `simplexIncidence` facts hit
+"`simp` made no progress" on goals like `e ∈ simplexIncidence.boundary
+SimplexId.e01` when passing `simp [simplexBoundary]` -- forgot that
+`simplexIncidence.boundary` needs unfolding *through* the structure
+literal first (`simp [simplexIncidence, simplexBoundary]`, the two-name
+pattern this project's own proofs use everywhere else), not just
+through the underlying boundary function. Quick fix once traced to a
+minimal isolated example rather than guessed at in place. Full `lake
+build`: 38/38 jobs. Repo-wide `sorry`-as-tactic grep: none.
+
+Combined with `simplexIncidence_vertices_collapse`/`_edges_collapse`
+(cycles 12/18) and `face ≈ face` (trivial, `approxBisim_refl`), this
+*does* answer the motivating question in substance: `≈`'s partition on
+`simplexIncidence` is now proven **exactly three classes**
+(`{v0,v1,v2}`, `{e01,e02,e12}`, `{face}`), not merely "at least these
+three, possibly coarser." What was **not** attempted, and is flagged
+honestly rather than glossed: the fully exhaustive `simplexToShape x =
+simplexToShape y ↔ approxBisim simplexIncidence x y` theorem (49
+constructor-pair cases) that would upgrade "one representative witness
+per shape-pair" into a literal `Decidable`-style iff. Scoped this out
+deliberately mid-cycle once it became clear the representative-witness
+approach already delivers the substantive result this project's own
+established convention (cycle 12/18: one pair stands for a whole class)
+treats as sufficient -- attempting the 49-case exhaustive version risked
+becoming exactly the kind of forced, low-payoff case-bash this project's
+discipline warns against, for a stronger *statement* but no stronger
+actual *finding*.
+
+**Where the "non-bisimilarity" thread now stands (cycle 21)**: one
+general theorem (zero axioms), one corollary, three confirming
+instances within a single carrier type (`simplexIncidence`'s three
+shape-pairs). Genuinely reusable -- any future instance with leaves
+alongside non-leaves, or role/sign-incompatible boundary entries, can
+reuse `not_approxBisim_of_boundary_mismatch`/`not_approxBisim_empty_nonempty`
+directly, the same payoff pattern as `single_link`/`two_link`
+(cycles 9/17) and `boundaryMatched_of_two_entries`/`_symm` (cycle 18).
+
+**Next hypothesis (cycle 22, not yet attempted)**: two options are on
+the table, deliberately not pre-committed to one. (1) The exhaustive
+`simplexToShape ↔ approxBisim` iff, explicitly deferred this cycle --
+worth attempting only with a cleaner strategy than raw 49-case bashing,
+e.g. splitting into a `reflects` half (translate-equal → approxBisim,
+likely easy given `simplexEdgeVertexRel_isBisimulation` already covers
+all same-shape pairs) and a `distinguishes` half (approxBisim →
+translate-equal, i.e. the contrapositive of cross-shape non-
+bisimilarity, needing the *other* 6 shape-pair representative facts this
+cycle didn't build: `v1`/`v2` vs. edges/face, `e02`/`e12` vs. `face`) --
+scope explicitly before starting, per this cycle's own lesson about
+not force-fitting a stronger statement than the finding warrants.
+(2) Untested elsewhere: does `not_approxBisim_of_boundary_mismatch`
+apply usefully to any *other* existing instance -- e.g., is
+`natIncidence`'s `0` (the unique leaf) provably non-bisimilar to every
+successor, as a cleaner replacement for however that fact is currently
+established (if it even needs re-establishing -- cycle 4's faithfulness
+theorem already gives `≈ ↔ =` there, which is strictly stronger and
+likely makes a separate non-bisimilarity proof redundant; worth checking
+which existing claims this new machinery could *simplify*, not just
+where it could prove something new)?

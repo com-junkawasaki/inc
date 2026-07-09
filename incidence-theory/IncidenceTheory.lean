@@ -208,6 +208,42 @@ theorem approxBisim_trans {I R T : Type u} [DecidableEq I] {inc : Incidence I R 
   rcases hJK with ⟨rel₂, h₂, hjk⟩
   exact ⟨(fun a c => ∃ b, rel₁ a b ∧ rel₂ b c), isBisimulation_comp h₁ h₂, ⟨j, hij, hjk⟩⟩
 
+/- Research cycle 21 (see RESEARCH_LOG.md): every non-equality result in
+   this project up to this point proved `i ≠ j` (literal inequality) --
+   a strictly *weaker* claim than `¬ approxBisim inc i j` (non-
+   bisimilarity), since `≈` can (and, per cycles 2/12/13, often does)
+   relate distinct elements. This is the first general theorem proving
+   the *stronger* claim. The key observation: `IsBisimulation`'s
+   definition forces `boundaryMatched` to hold for *any* witnessing
+   relation, not just a specific one -- so if some boundary entry of `i`
+   structurally has no `boundaryCompatible` counterpart anywhere in `j`'s
+   boundary, *no* relation can ever bisimulate `i` and `j`, regardless of
+   what that relation otherwise says. This makes non-bisimilarity
+   provable *without* quantifying over all possible relations by hand
+   (which would be intractable) -- the universal quantifier in
+   `approxBisim`'s definition is discharged by `rintro`, then the
+   contradiction is purely about the fixed boundaries. -/
+theorem not_approxBisim_of_boundary_mismatch {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (i j : I) (e : Endpoint I R) (he : e ∈ inc.boundary i)
+  (hno : ∀ e' ∈ inc.boundary j, ¬ boundaryCompatible inc e e') :
+  ¬ approxBisim inc i j := by
+  rintro ⟨rel, hbisim, hij⟩
+  obtain ⟨_, hmatch⟩ := hbisim i j hij
+  obtain ⟨e', he', hcomp, _⟩ := hmatch.left e he
+  exact hno e' he' hcomp
+
+/- The most common instance of the above: an element with *any* boundary
+   entry can never be bisimilar to a leaf (empty-boundary element) --
+   `hno` is vacuous, since there's nothing in an empty list to be
+   compatible with. -/
+theorem not_approxBisim_empty_nonempty {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (i j : I)
+  (hi : inc.boundary j = []) (e : Endpoint I R) (he : e ∈ inc.boundary i) :
+  ¬ approxBisim inc i j := by
+  apply not_approxBisim_of_boundary_mismatch inc i j e he
+  rw [hi]
+  simp
+
 /- Research cycle 4 (co-scientist step, see RESEARCH_LOG.md): cycles 1-3
    each proved faithfulness (≈ coincides with =) for a specific instance
    by hand, via well-founded induction chasing `boundaryMatched`'s

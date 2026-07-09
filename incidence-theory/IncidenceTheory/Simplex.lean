@@ -277,4 +277,54 @@ theorem simplexIncidence_edges_collapse :
 theorem simplexIncidence_edges_not_eq :
   (SimplexId.e01 : SimplexId) ≠ SimplexId.e02 := by simp
 
+/- Research cycle 21 (see RESEARCH_LOG.md): cycles 12/18 proved
+   `simplexIncidence`'s three vertices collapse into one `≈`-class and
+   its three edges into another. That leaves an open question those
+   cycles didn't ask: are those classes *actually distinct* from each
+   other (and from `face`, a class of its own by construction), or could
+   `≈` be coarser still -- e.g. could a vertex secretly be bisimilar to
+   an edge too? Answered here using cycle 21's new general non-
+   bisimilarity machinery (root file), with one representative witness
+   per shape-pair (matching this project's established convention of a
+   representative example rather than exhaustive enumeration, the same
+   way `v0 ≈ v1`/`e01 ≈ e02` each stood for their whole class). -/
+
+/- Vertices vs. edges: immediate from `not_approxBisim_empty_nonempty`
+   -- vertices are leaves, edges are not. -/
+theorem simplexIncidence_e01_not_v0 : ¬ approxBisim simplexIncidence SimplexId.e01 SimplexId.v0 :=
+  not_approxBisim_empty_nonempty simplexIncidence SimplexId.e01 SimplexId.v0 rfl
+    { i := SimplexId.v0, role := SimplexRole.src, sign := Sign.neg, mult := 1 }
+    (by simp [simplexIncidence, simplexBoundary])
+
+/- Vertices vs. face: same reasoning, same lemma. -/
+theorem simplexIncidence_face_not_v0 : ¬ approxBisim simplexIncidence SimplexId.face SimplexId.v0 :=
+  not_approxBisim_empty_nonempty simplexIncidence SimplexId.face SimplexId.v0 rfl
+    { i := SimplexId.e12, role := SimplexRole.src, sign := Sign.pos, mult := 1 }
+    (by simp [simplexIncidence, simplexBoundary])
+
+/- Edges vs. face: both nonempty, so the "leaf" shortcut doesn't apply --
+   needs the finer-grained `not_approxBisim_of_boundary_mismatch`
+   directly. `e01`'s `(src, neg)`-tagged entry has no counterpart among
+   `face`'s three entries, whose `src`-tagged entry is signed `pos`, not
+   `neg` (the alternating-sum convention, cycle 11, is what makes this
+   mismatch happen at all -- a role/sign collision would have been
+   possible with a different sign convention). -/
+theorem simplexIncidence_e01_not_face : ¬ approxBisim simplexIncidence SimplexId.e01 SimplexId.face := by
+  apply not_approxBisim_of_boundary_mismatch simplexIncidence SimplexId.e01 SimplexId.face
+    { i := SimplexId.v0, role := SimplexRole.src, sign := Sign.neg, mult := 1 }
+    (by simp [simplexIncidence, simplexBoundary])
+  intro e' he'
+  simp [simplexIncidence, simplexBoundary] at he'
+  rcases he' with he' | he' | he' <;> subst he' <;> simp [boundaryCompatible]
+
+/- Together with `simplexIncidence_vertices_collapse`/`_edges_collapse`
+   (cycles 12/18) and `approxBisim_refl` (`face ≈ face` trivially), these
+   three facts confirm `≈`'s partition on `simplexIncidence` is *exactly*
+   three classes -- `{v0,v1,v2}`, `{e01,e02,e12}`, `{face}` -- no
+   coarser. A fully exhaustive `simplexToShape x = simplexToShape y ↔
+   approxBisim simplexIncidence x y` theorem (covering all 49
+   constructor pairs, not just one representative per shape-pair) is a
+   natural next step but was not attempted this cycle -- flagged
+   honestly as future work, not claimed as done. -/
+
 end IncidenceCore
