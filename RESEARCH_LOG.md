@@ -297,3 +297,68 @@ sums" (`pairToShape (pair (atom (m+n)) x) ~ combine (pairToShape (atom m))
 exploratory than prior cycles — may spend the cycle just on what the
 right definition is, same as cycle 5's Fintype/Equiv pivot, and that's
 an acceptable outcome to record rather than force through.
+
+## Cycle 6
+
+**Hypothesis**: (as queued above) `PairId.atom : Nat → PairId` is a
+natural candidate embedding of `natIncidence` into `pairIncidenceChained`
+— `pairBoundaryChained`'s atom case was deliberately built back in cycle
+3 to mirror `peanoBoundary`'s shape. Does it commute with `boundary` and
+`glue` in a precise sense, making it a genuine `Incidence` homomorphism?
+
+**Method**: checked `boundary`-naturality (does `pairIncidenceChained.boundary
+(atom n)` equal `natIncidence.boundary n` transported pointwise through
+`atom`?), `unit`-preservation, and `glue`-preservation, as three
+separate, independently checkable claims rather than assuming a bundled
+"homomorphism" notion upfront (no `IncidenceHom` structure was invented
+speculatively).
+
+**Result**: a genuine **mixed** finding, proven precisely rather than
+hand-waved:
+- ✅ `atom_boundary_natural`: boundary transports exactly, up to
+  relabeling `PeanoRole.pred` to `PairRole.chain` (which is
+  definitionally how the chain was built in the first place).
+- ✅ `atom_unit_natural`: `atom natIncidence.unit = pairIncidenceChained.unit`.
+- ❌ `atom_glue_not_natural`: **refuted** with a concrete witness —
+  `atom 2 "glue" atom 3` would have to be `atom 5` for glue-naturality,
+  but `pairIncidenceChained.glue` is left-biased selection (returns
+  `atom 2`), not addition. `natIncidence.glue` and
+  `pairIncidenceChained.glue` are structurally unrelated operations.
+
+`atom_approxBisim_iff` packages the positive part cleanly:
+`≈`-agreement on atoms inside `pairIncidenceChained` coincides exactly
+with `≈`-agreement in `natIncidence` — the embedding is fully faithful
+at the level cycles 1-5 actually established (boundary, hence `≈`),
+even though it fails to be a `glue`-homomorphism. `#print axioms`:
+`propext`/`Classical.choice`/`Quot.sound` on all four theorems (the
+first three don't even touch bisimulation), no `sorryAx`. Added as a
+new file, `CrossInstance.lean` (imports both `Peano.lean` and
+`Pairs.lean`, which don't import each other), wired into `Main.lean`.
+
+**Why this matters, not just "one operation didn't match"**: `Incidence`
+bundles two different kinds of structure that this cycle shows don't
+automatically travel together under the same map — a coalgebraic layer
+(`boundary`: "what does this element unfold into") and an algebraic
+layer (`glue`: "how do elements compose"). `PairId.atom` is a coalgebra
+homomorphism (respects the unfolding) but not an algebra homomorphism
+(doesn't respect composition). In hindsight this isn't a surprising
+result — `pairIncidenceChained.glue` was documented as a left-biased
+placeholder with no claimed relationship to `PairId.pair` (the actual
+structural combinator) as far back as cycle 2 ("`glue` isn't the focus
+here") — but it's now *proven*, with a concrete refutation witness,
+rather than merely asserted or silently assumed away.
+
+**Next hypothesis (cycle 7, not yet attempted)**: cycle 6 found that
+`pairIncidenceChained.glue` (left-biased selection, purely decorative)
+was the wrong operation to expect compatibility from — the *actual*
+structural combinator on `PairId` is the `pair` constructor itself,
+which isn't wired up as any `Incidence`'s official `.glue` field. Is
+there a *different*, real `Incidence` instance where `glue` genuinely
+means "pair up", and does *that* one compose naturally with
+`natIncidence` (e.g. via a "total atom count" map `PairId → Nat` that's
+additive over `pair`, so `count (pair a b) = natIncidence.glue (count a)
+(count b)` by construction)? Real risk: this may turn out to be almost
+definitional (choosing `count` specifically to make it work) rather than
+a substantive test, the same concern flagged and set aside in this
+cycle for a "sum" map — worth checking whether there's a non-circular
+way to state it before spending much time on the proof itself.

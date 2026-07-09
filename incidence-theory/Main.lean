@@ -1,6 +1,7 @@
 import IncidenceTheory.GraphModel
 import IncidenceTheory.Peano
 import IncidenceTheory.Pairs
+import IncidenceTheory.CrossInstance
 
 open IncidenceCore
 
@@ -126,3 +127,9 @@ def main : IO Unit := do
   IO.println "    inc_to_set (root file), which collapses all nonzero naturals together"
   IO.println "  ✓ pairToShape (leaf/node tree target) is injective on the whole nested"
   IO.println "    pair type too ⇒ reflects ≈ there as well, not just for flat Peano"
+
+  IO.println "\n🔀 Cross-Instance Homomorphism (PairId.atom : Nat → PairId):"
+  IO.println "  ✓ preserves boundary (naturally) and unit"
+  IO.println "  ✗ does NOT preserve glue (addition vs. left-biased selection) --"
+  IO.println "    a genuine mixed result: boundary is coalgebraic, glue is algebraic,"
+  IO.println "    and a map respecting one doesn't automatically respect the other"
