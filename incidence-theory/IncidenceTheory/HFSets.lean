@@ -2691,6 +2691,24 @@ theorem hfRecursiveProduct_mono {left left' right right' : HFRecursiveSet}
   exact (hfRecursiveMember_product_iff x left' right').mpr
     ⟨a, hleft a ha, b, hright b hb, hxab⟩
 
+/- Cartesian product has the expected singleton normal form.  This is an
+   equality in the recursive quotient, not equality of raw finite-set
+   presentations. -/
+theorem hfRecursiveProduct_singleton_singleton (a b : HFRecursiveSet) :
+    hfRecursiveProduct (hfRecursiveSingleton a) (hfRecursiveSingleton b) =
+      hfRecursiveSingleton (hfRecursiveOrderedPair a b) := by
+  apply hfRecursiveSet_extensionality
+  intro x
+  rw [hfRecursiveMember_product_iff, hfRecursiveMember_singleton_iff]
+  constructor
+  · rintro ⟨a', ha', b', hb', hpair⟩
+    have haa' : a' = a := (hfRecursiveMember_singleton_iff a' a).mp ha'
+    have hbb' : b' = b := (hfRecursiveMember_singleton_iff b' b).mp hb'
+    simpa [haa', hbb'] using hpair
+  · intro hpair
+    exact ⟨a, (hfRecursiveMember_singleton_iff a a).mpr rfl,
+      b, (hfRecursiveMember_singleton_iff b b).mpr rfl, hpair⟩
+
 /- For nonempty source factors, inclusion of Cartesian products reflects
    inclusion of both factors.  Nonemptiness is essential: a product with an
    empty factor carries no information about the other factor. -/

@@ -114,6 +114,8 @@ It currently establishes:
   order coordinatewise.
   Its interaction with powerset is checked at singleton representatives:
   `⟨{a},{b}⟩ ∈ P(s)×P(t)` holds exactly when `a∈s` and `b∈t`.
+  In particular, singleton products normalize exactly as
+  `{a}×{b} = {⟨a,b⟩}` on the quotient.
   The bundled recursive finite-set fragment model records product zero,
   monotonicity and union-distribution laws alongside `⋃P(s)=s`.
   Within the powerset image, unions have the exact least-upper-bound law;
