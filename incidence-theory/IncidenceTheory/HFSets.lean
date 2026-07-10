@@ -3152,6 +3152,7 @@ structure HFRecursiveSetFragmentModel where
   empty : HFRecursiveSet
   pair : HFRecursiveSet → HFRecursiveSet → HFRecursiveSet
   union : HFRecursiveSet → HFRecursiveSet → HFRecursiveSet
+  product : HFRecursiveSet → HFRecursiveSet → HFRecursiveSet
   power : HFRecursiveSet → HFRecursiveSet
   filter : HFRecursivePredicate → HFRecursiveSet → HFRecursiveSet
   bigUnion : HFRecursiveSet → HFRecursiveSet
@@ -3161,6 +3162,10 @@ structure HFRecursiveSetFragmentModel where
   pair_spec : ∀ x s t, HFRecursiveMember x (pair s t) ↔ x = s ∨ x = t
   union_spec : ∀ x s t, HFRecursiveMember x (union s t) ↔
     HFRecursiveMember x s ∨ HFRecursiveMember x t
+  product_spec : ∀ x s t, HFRecursiveMember x (product s t) ↔
+    ∃ leftMember, HFRecursiveMember leftMember s ∧
+      ∃ rightMember, HFRecursiveMember rightMember t ∧
+        x = hfRecursiveOrderedPair leftMember rightMember
   power_spec : ∀ x s, HFRecursiveMember x (power s) ↔ HFRecursiveSubset x s
   filter_spec : ∀ p x s,
     HFRecursiveMember x (filter p s) ↔ HFRecursiveMember x s ∧ p.holds x
@@ -3179,6 +3184,7 @@ def hfRecursiveSetFragmentModel : HFRecursiveSetFragmentModel where
   empty := hfRecursiveEmpty
   pair := hfRecursivePair
   union := hfRecursiveUnion
+  product := hfRecursiveProduct
   power := hfRecursivePower
   filter := hfRecursiveFilter
   bigUnion := hfRecursiveBigUnion
@@ -3187,6 +3193,7 @@ def hfRecursiveSetFragmentModel : HFRecursiveSetFragmentModel where
   pair_right := hfRecursiveMember_pair_right
   pair_spec := hfRecursiveMember_pair_iff
   union_spec := hfRecursiveMember_union_iff
+  product_spec := hfRecursiveMember_product_iff
   power_spec := hfRecursiveMember_power_iff_subset
   filter_spec := hfRecursiveMember_filter_iff
   bigUnion_intro := by

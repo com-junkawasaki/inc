@@ -258,6 +258,63 @@ def finiteGluingSpec : GluingSpec finiteIncidence where
 
 def finiteIdx : List FiniteIncidence := [.leaf, .root]
 
+/- The concrete two-point boundary matrix has one positive endpoint, hence
+   its Gram Laplacian is the rank-one diagonal matrix `diag(1, 0)`.  Naming
+   the matrices keeps the calculations below independent of the bundled
+   algebraic-model record. -/
+def finiteB : Matrix FiniteIncidence FiniteIncidence Int :=
+  boundaryMatrix finiteIncidence finiteIdx
+
+def finiteL : Matrix FiniteIncidence FiniteIncidence Int :=
+  laplacian finiteIncidence finiteIdx
+
+theorem finiteB_leaf_leaf : finiteB .leaf .leaf = 0 := by native_decide
+theorem finiteB_leaf_root : finiteB .leaf .root = 0 := by native_decide
+theorem finiteB_root_leaf : finiteB .root .leaf = 1 := by native_decide
+theorem finiteB_root_root : finiteB .root .root = 0 := by native_decide
+
+theorem finiteL_leaf_leaf : finiteL .leaf .leaf = 1 := by native_decide
+theorem finiteL_leaf_root : finiteL .leaf .root = 0 := by native_decide
+theorem finiteL_root_leaf : finiteL .root .leaf = 0 := by native_decide
+theorem finiteL_root_root : finiteL .root .root = 0 := by native_decide
+
+theorem finiteL_leaf_row_sum : finiteL .leaf .leaf + finiteL .leaf .root = 1 := by
+  native_decide
+
+theorem finiteL_root_row_sum : finiteL .root .leaf + finiteL .root .root = 0 := by
+  native_decide
+
+theorem finiteL_trace : finiteL .leaf .leaf + finiteL .root .root = 1 := by
+  native_decide
+
+/- Matrix application is written using the same finite index list as the
+   Gram product.  The root coordinate is the kernel direction, while the
+   leaf coordinate is observed exactly. -/
+def finiteLApply (x : FiniteIncidence → Int) (i : FiniteIncidence) : Int :=
+  finiteIdx.foldl (fun total j => total + finiteL i j * x j) 0
+
+theorem finiteLApply_leaf (x : FiniteIncidence → Int) :
+    finiteLApply x .leaf = x .leaf := by
+  simp [finiteLApply, finiteIdx, finiteL, laplacian, boundaryMatrix,
+    finiteIncidence, finiteBoundary]
+
+theorem finiteLApply_root (x : FiniteIncidence → Int) :
+    finiteLApply x .root = 0 := by
+  simp [finiteLApply, finiteIdx, finiteL, laplacian, boundaryMatrix,
+    finiteIncidence, finiteBoundary]
+
+theorem finiteL_kernel_iff (x : FiniteIncidence → Int) :
+    (∀ i, finiteLApply x i = 0) ↔ x .leaf = 0 := by
+  constructor
+  · intro h
+    have hleaf := h .leaf
+    simp [finiteLApply_leaf] at hleaf
+    exact hleaf
+  · intro h i
+    cases i
+    · simp [finiteLApply_leaf, h]
+    · exact finiteLApply_root x
+
 def finiteAlgebraicModel : IncidenceAlgebraic FiniteIncidence GraphRole GraphType where
   toIncidencePreservation := finiteUnitPreservation
   boundaryMatrix := boundaryMatrix finiteIncidence finiteIdx
