@@ -1475,6 +1475,18 @@ theorem triangle_laplacian_full_column_sum_zero (i : GId) :
   laplacian_columnSum_zero_of_boundaryRowBalanced triIncidence triIdx
     triangle_boundary_rows_balanced i
 
+/- The full constant potential is killed for the structural reason supplied
+   by `BoundaryRowBalanced`: applying `L` to `1` is precisely its row sum.
+   Unlike the vertex-only potential below, this statement ranges over every
+   coordinate in the finite observation index, including the three edges. -/
+def triangleFullConstantPotential (_ : GId) : Int := 1
+
+theorem triangleFullConstantPotential_in_kernel (i : GId) :
+    triIdx.foldl (fun total j =>
+      total + triL i j * triangleFullConstantPotential j) 0 = 0 := by
+  simpa [triangleFullConstantPotential, triL, laplacianRowSum, intListSum] using
+    triangle_laplacian_full_row_sum_zero i
+
 /- Checked entries of the triangle's incidence matrix and Laplacian. -/
 theorem triB_AB_A : triB AB A = -1 := by native_decide
 theorem triB_AB_B : triB AB B = 1 := by native_decide

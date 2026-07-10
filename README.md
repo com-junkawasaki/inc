@@ -145,6 +145,9 @@ It currently establishes:
   On every nonempty finite ordinal, this action is faithful: equality of
   shift graphs reflects equality of offsets and gives graph-level left
   cancellation for addition.
+  On the image of a finite shift it has a checked inverse law: output
+  `m + k` uniquely recovers the input ordinal `m`; no false total inverse is
+  asserted outside that image.
   On the quotient, binary union is idempotent, `⋃{s,t}=s∪t`, and big union
   preserves empty and distributes over binary union; binary union is also the
   least upper bound for the extensional subset order.

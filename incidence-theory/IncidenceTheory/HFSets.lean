@@ -1902,6 +1902,30 @@ theorem hfRecursiveNatShiftGraph_injective (offset n : Nat) :
   subst k
   exact hinput₁.trans hinput₂.symm
 
+/- The inverse of a finite shift is defined exactly on its image.  Supplying
+   the output `m + offset` recovers the unique source `m`; this is the
+   graph-level inverse law without claiming a total inverse outside the finite
+   image. -/
+theorem hfRecursiveNatShiftGraph_inverse_on_image_iff
+    (offset n m : Nat) (input : HFRecursiveSet) :
+    HFRecursiveMember
+      (hfRecursiveOrderedPair input (hfRecursiveNat (m + offset)))
+      (hfRecursiveNatShiftGraph offset n) ↔
+      m < n ∧ input = hfRecursiveNat m := by
+  constructor
+  · intro h
+    rcases (hfRecursiveNatShiftGraph_apply_iff offset n input
+        (hfRecursiveNat (m + offset))).mp h with
+      ⟨k, hk, hinput, houtput⟩
+    have hmk : m = k := Nat.add_right_cancel
+      (hfRecursiveNat_injective houtput)
+    subst k
+    exact ⟨hk, hinput⟩
+  · rintro ⟨hm, rfl⟩
+    exact (hfRecursiveNatShiftGraph_apply_iff offset n
+      (hfRecursiveNat m) (hfRecursiveNat (m + offset))).mpr
+      ⟨m, hm, rfl, rfl⟩
+
 /- On every nonempty finite ordinal, the internal translation graph remembers
    its offset.  Thus the graph presentation is a faithful action of natural
    addition, rather than merely a collection of functional relations. -/
