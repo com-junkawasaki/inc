@@ -2722,3 +2722,102 @@ low-payoff confirmatory result, or is there something less trivial to
 say? Separately, option (b) from cycle 37's queue (the internal-logic
 distributivity direction) remains open and untouched, still likely
 needing its own scope-down step before any cycle attempts it directly.
+
+## Cycle 39
+
+**Hypothesis**: option (a) from cycle 38's queue -- does the
+*canonical-representative* quotient variant fare any better than the
+naive lift cycle 38 refuted? Concretely: define the quotient's
+`boundary` via `inc.boundary` applied to a chosen class representative
+(`Quotient.out`-style) rather than trying to lift `inc.boundary`
+directly. Since this project has no `mathlib` dependency, `Quotient.out`
+itself isn't available and would need to be built by hand from core
+Lean's `Quotient.exists_rep` + `Classical.choice` first. Tested again
+against `cycleIncidence` (cycle 26), since `cycleIncidence_all_collapse`
+-- ALL FOUR elements already one `≈`-class -- makes it the sharpest
+available case: `Quotient (approxBisimSetoid cycleIncidence)` is a
+literal one-point type.
+
+**Method**: built the representative construction concretely first
+(`quotOut`, `cycleRep`, `cycleRep_respects_approxBisim`) to see exactly
+what would go wrong, following the "test concretely before
+generalizing" habit. While setting up the proof that `cycleRep`
+respects `≈`-classes, noticed the *shape* of the argument needed
+(`well_founded`'s `¬∃ e ∈ boundary i, e.i = i`, combined with the fact
+that a representative of `cyclePred (rep c0)` and `c0` collapse
+together since literally everything in `cycleIncidence` is `≈`-related)
+generalizes far past `cycleRep` specifically: since `Quotient
+(approxBisimSetoid cycleIncidence)` has only ONE point, `Subsingleton.elim`
+forces *any* boundary entry's `.i` field, on *any* element of that
+quotient, to equal the very element whose boundary it's attached to --
+exactly what `well_founded` forbids, regardless of how `boundary` on
+the quotient is actually defined. Proved this as a fully general,
+`cycleIncidence`-independent theorem first
+(`incidence_subsingleton_boundary_empty`: any `Incidence` structure on
+a `Subsingleton` carrier has empty boundary everywhere), then confirmed
+it genuinely applies here by establishing `Quotient
+(approxBisimSetoid cycleIncidence)` really is a `Subsingleton`
+(`Quotient.ind` twice, `Quotient.sound` via `cycleIncidence_all_collapse`).
+Kept the concrete `cycleRep`-based construction too, as a hands-on
+complement showing the literal self-loop a real representative
+construction produces, rather than discarding the work once the more
+general theorem was found.
+
+**Result**: **confirmed on the first attempt for all seven theorems** --
+`incidence_subsingleton_boundary_empty` needs only `propext`;
+`cycleIncidence_quotient_subsingleton` needs `propext`/`Quot.sound`;
+`quotOut`/`cycleRep`/the representative-based theorems need
+`Classical.choice` in addition (expected, since core Lean's substitute
+for `Quotient.out` is built from it) -- all within this project's
+accepted axiom set, no `sorryAx`. The finding is **more general than
+what was asked**: the question wasn't just "does the representative
+variant work" (no) but "does *any* possible quotient construction work
+for a fully-collapsed instance" (also no, and provably so, by
+`well_founded` alone). Full `lake build`: 48/48 jobs. Repo-wide
+`sorry`-as-tactic grep: none.
+
+**Synthesis**: this cycle is the second half of a two-cycle pair with
+cycle 38, and together they now settle the *entire* naive-quotient
+question this project's "third generic constructor" thread opened:
+cycle 38 refuted the literal lift, this cycle refutes the
+representative variant AND everything else at once via a genuinely
+cleaner argument than either individually. The generalization pattern
+here is worth naming explicitly: starting from a specific proof
+obligation (`cycleRep` respecting `≈`) and noticing that the *shape* of
+what made it provable (`cyclePred (rep c0)` and `c0` collapsing via
+totality) was really a fact about the *carrier type* (`Subsingleton`),
+not about `cycleRep` -- so the general theorem was found by
+abstracting away from an already-working concrete proof, not by
+guessing at generality up front. This is a distinct discovery mode from
+most of this project's prior cycles (which usually stated the general
+theorem first, then instantiated it) and is itself worth remembering as
+a technique: build the concrete case, then ask "what property of the
+concrete setup did this proof actually use?" This closes the "third
+generic constructor" thread's most promising branch as a genuine dead
+end for at least one class of instances (fully-collapsed ones) --
+future attempts at a quotient constructor should either restrict to
+already-faithful instances (queue item (b) from cycle 38, likely
+low-payoff but now the more clearly-motivated remaining option) or
+target instances with a nontrivial but not-fully-collapsed `≈`-quotient
+(neither tried yet, and possibly the more interesting regime -- a
+quotient that's genuinely "in between" a Subsingleton and faithful).
+
+**Next hypothesis (cycle 40, not yet attempted)**: three live threads.
+(a) Item (b) from cycle 38's queue, now better motivated by this
+cycle's contrast: for an already-`≈`-faithful instance (`natIncidence`,
+`cycleIncidenceFixed`), is the quotient-`Incidence` question trivial
+(quotient classes are singletons, so the quotient is straightforwardly
+isomorphic to the original), and if so, is that isomorphism itself
+worth stating as a clean theorem (a genuine, if low-drama, positive
+quotient-constructor result to sit alongside this cycle's negative
+one)? (b) A genuinely new regime this cycle's synthesis surfaced: does
+any EXISTING instance in this project have a `≈`-quotient that is
+neither a Subsingleton (fully collapsed) nor trivial (fully faithful)
+-- i.e. a quotient with more than one but fewer than "all" classes? No
+prior cycle has checked; `simplexIncidence` (vertices/edges/face
+"stayed separated by differing boundary shapes" per cycle 33's own
+recollection) is a plausible candidate worth auditing first before
+attempting any construction on it. (c) Still open and untouched: option
+(b) from cycle 37's queue, the internal-logic distributivity direction
+relating `incidenceProd`/`incidenceSum`, likely needing its own
+scope-down step before any cycle attempts it directly.

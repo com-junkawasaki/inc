@@ -517,6 +517,30 @@ def printCycles38plus : IO Unit := do
   IO.println "    already-faithful instances where the question is vacuous) -- scoped down"
   IO.println "    rather than attempted blind, per cycle 37's own methodological note"
 
+  IO.println "\n🕳️ The Canonical-Representative Variant Fails Too, and a General Reason Why (cycle 39):"
+  IO.println "  ✓ tested option (a) from cycle 38's queue: does picking a class representative"
+  IO.println "    (rather than naively lifting boundary/glue directly) fare any better? Checked"
+  IO.println "    against cycleIncidence again, since ALL FOUR elements are already one ≈-class"
+  IO.println "  ✓ headline finding, more general than expected: well_founded ALONE forces ANY"
+  IO.println "    Incidence structure on a Subsingleton (one-point) carrier to have EMPTY"
+  IO.println "    boundary everywhere -- if there's only one point, every boundary entry's target"
+  IO.println "    is forced (Subsingleton.elim) to equal the very point it's attached to, which"
+  IO.println "    well_founded forbids unless the list is empty. Settles the WHOLE FAMILY of"
+  IO.println "    possible quotient constructions on a fully-collapsed instance at once, not"
+  IO.println "    just the two variants (naive lift, cycle 38; representative, this cycle) tried"
+  IO.println "  ✓ confirmed cycleIncidence's ≈-quotient genuinely IS a Subsingleton (all four"
+  IO.println "    elements collapse into one class, cycleIncidence_all_collapse) -- the abstract"
+  IO.println "    theorem really applies here, not vacuously"
+  IO.println "  ✓ concrete complement: built quotOut (the honest core-Lean substitute for"
+  IO.println "    mathlib's Quotient.out, since this project has no mathlib dependency), and"
+  IO.println "    showed the REAL representative construction produces a literal self-loop at"
+  IO.println "    the chosen representative -- the concrete mechanism behind the abstract fact"
+  IO.println "  → collapsing everything into one ≈-class doesn't just make a naive quotient"
+  IO.println "    construction awkward -- it makes ANY nontrivial quotient structure impossible"
+  IO.println "    by the well_founded obligation alone. Fully collapsed instances (cycleIncidence)"
+  IO.println "    and fully faithful instances (natIncidence, cycleIncidenceFixed) sit at genuine"
+  IO.println "    opposite ends of what a quotient-Incidence constructor could ever produce"
+
 def main : IO Unit := do
   printFoundationsAndEarlyCycles
   printCycles12to19

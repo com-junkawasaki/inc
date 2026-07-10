@@ -92,4 +92,95 @@ theorem cycleIncidence_glue_not_approxBisim_invariant :
   simp only [cycleIncidence] at this
   exact absurd this (by decide)
 
+/- Research cycle 39 (see RESEARCH_LOG.md): option (a) queued from
+   cycle 38 -- does the *canonical-representative* quotient variant
+   (define the quotient's `boundary` via `inc.boundary` applied to a
+   chosen class representative, rather than naively lifting
+   `inc.boundary` directly) fare any better than the naive lift cycle
+   38 refuted? Tested against `cycleIncidence` again, since
+   `cycleIncidence_all_collapse` makes it the sharpest available case:
+   ALL FOUR elements are already one `≈`-class, so `Quotient
+   (approxBisimSetoid cycleIncidence)` is a *one-point type* -- and this
+   turns out to force a much more general fact than "the representative
+   construction happens to fail here": `well_founded` alone (`∀ i,
+   ¬∃ e ∈ boundary i, e.i = i`) forces ANY `Incidence` structure on a
+   `Subsingleton` carrier to have EMPTY boundary at every point,
+   regardless of how `boundary` is defined -- if the carrier has only
+   one point, every boundary entry's `.i` field is forced (by
+   `Subsingleton.elim`) to equal the very point whose boundary it's
+   in, which `well_founded` forbids outright unless the boundary list
+   is empty. This is not specific to representative-choice mechanics at
+   all -- it settles the *entire family* of possible quotient
+   constructions on a fully-collapsed instance at once, not just the
+   two variants (naive lift, cycle 38; canonical representative, this
+   cycle) that were tried by hand. -/
+theorem incidence_subsingleton_boundary_empty {I R T : Type u} [DecidableEq I] [Subsingleton I]
+  (inc : Incidence I R T) (i : I) : inc.boundary i = [] := by
+  match h : inc.boundary i with
+  | [] => rfl
+  | e :: rest =>
+    exact absurd (inc.well_founded i ⟨e, by simp [h], Subsingleton.elim e.i i⟩) (by simp)
+
+/- Confirms the general theorem actually applies here: `cycleIncidence`'s
+   quotient by `≈` genuinely is a one-point type, since
+   `cycleIncidence_all_collapse` makes the underlying relation total
+   (every pair of elements is related), collapsing all of `CycleId`'s
+   four elements into a single class. -/
+instance cycleIncidence_quotient_subsingleton :
+  Subsingleton (Quotient (approxBisimSetoid cycleIncidence)) := by
+  constructor
+  intro q1 q2
+  induction q1 using Quotient.ind with
+  | _ x =>
+    induction q2 using Quotient.ind with
+    | _ y =>
+      exact Quotient.sound (cycleIncidence_all_collapse x y)
+
+/- A concrete, hands-on complement to the abstract Subsingleton fact
+   above: this project has no `mathlib` dependency, so no `Quotient.out`
+   is available -- `quotOut` is the honest core-Lean substitute, built
+   directly from `Quotient.exists_rep` (core) via `Classical.choice`,
+   the same construction `Quotient.out` itself uses upstream. Reusable
+   for any future instance, not just `cycleIncidence`. -/
+noncomputable def quotOut {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+  Quotient (approxBisimSetoid inc) → I :=
+  fun q => Classical.choose (Quotient.exists_rep q)
+
+/- `cycleRep` factors through `Quotient.mk`, so it automatically only
+   depends on `x`'s `≈`-class -- exactly the "representative function
+   respecting classes" shape a real `Quotient.out ∘ Quotient.mk`
+   construction would have. -/
+noncomputable def cycleRep : CycleId → CycleId :=
+  fun x => quotOut cycleIncidence (Quotient.mk (approxBisimSetoid cycleIncidence) x)
+
+theorem cycleRep_respects_approxBisim (x y : CycleId) (h : approxBisim cycleIncidence x y) :
+  cycleRep x = cycleRep y := by
+  unfold cycleRep
+  congr 1
+  exact @Quotient.sound _ (approxBisimSetoid cycleIncidence) x y h
+
+/- The concrete mechanism behind the abstract Subsingleton fact: for
+   ANY function `rep` that respects `≈`-classes (not just `cycleRep`
+   specifically), gluing `cycleIncidence`'s own boundary shape onto a
+   chosen representative produces a boundary entry whose remapped
+   target is the representative ITSELF -- a direct self-loop -- because
+   `cycleIncidence_all_collapse` makes literally every pair of elements
+   `≈`-related, so `rep` collapses `cyclePred (rep c0)` and `c0`
+   together regardless of what `rep` otherwise does. -/
+theorem cycleIncidence_rep_quotient_self_loop
+  (rep : CycleId → CycleId) (hrep : ∀ x y, approxBisim cycleIncidence x y → rep x = rep y) :
+  ∃ e ∈ cycleIncidence.boundary (rep CycleId.c0), rep e.i = rep CycleId.c0 := by
+  refine ⟨{ i := cyclePred (rep CycleId.c0), role := CycleRole.chain, sign := Sign.neg, mult := 1 },
+    ?_, ?_⟩
+  · simp [cycleIncidence, cycleBoundary]
+  · exact hrep (cyclePred (rep CycleId.c0)) CycleId.c0
+      (cycleIncidence_all_collapse (cyclePred (rep CycleId.c0)) CycleId.c0)
+
+/- Instantiated against the real `cycleRep`: not a hypothetical worry,
+   a concrete self-loop that the actual core-Lean representative
+   construction produces for this instance. -/
+theorem cycleIncidence_real_quotient_self_loop :
+  ∃ e ∈ cycleIncidence.boundary (cycleRep CycleId.c0), cycleRep e.i = cycleRep CycleId.c0 :=
+  cycleIncidence_rep_quotient_self_loop cycleRep cycleRep_respects_approxBisim
+
 end IncidenceCore
