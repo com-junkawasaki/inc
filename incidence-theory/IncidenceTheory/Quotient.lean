@@ -1,5 +1,6 @@
 import IncidenceTheory.Cycle
 import IncidenceTheory.Peano
+import IncidenceTheory.Simplex
 
 /- Merkle-ID: implementation.graph_model.quotient
    story.jsonnet → implementation.nodes.quotient
@@ -241,5 +242,120 @@ example : ∀ x y : Nat, Quotient.mk (approxBisimSetoid natIncidence) x =
 example : ∀ x y : CycleId, Quotient.mk (approxBisimSetoid cycleIncidenceFixed) x =
     Quotient.mk (approxBisimSetoid cycleIncidenceFixed) y → x = y :=
   fun _ _ => quotient_mk_injective_of_faithful cycleIncidenceFixed cycleIncidenceFixed_approxBisim_iff
+
+/- Research cycle 41 (see RESEARCH_LOG.md): item (b) from cycle 40's
+   queue -- does any EXISTING instance in this project have a
+   `≈`-quotient in the genuinely interesting middle ground (more than
+   one class, fewer than all)? The answer was hiding in plain sight:
+   `simplexIncidence`'s `≈`-partition was already FULLY characterized
+   across cycles 12/18/21/22/23, long before this project's "third
+   generic constructor" thread (cycles 36-40) even started --
+   `simplexToShape_iff_approxBisim` proves `≈` is EXACTLY
+   `simplexToShape`-agreement, giving exactly THREE classes out of
+   SEVEN elements: `{v0,v1,v2}`, `{e01,e02,e12}`, `{face}`. This cycle
+   revisits that old result through the new quotient-construction lens
+   cycles 38-40 built, rather than reproving anything about
+   `simplexIncidence` itself. -/
+
+/- Unlike `cycleIncidence`'s `boundary`/`glue` (cycle 38), which failed
+   the well-definedness check `Quotient.lift` needs, `simplexToShape`
+   PASSES it -- this is exactly what `simplexToShape_distinguishes`
+   (cycle 23) already established (`approxBisim → shape-equal`, the
+   precise hypothesis `Quotient.lift` requires). No new proof needed,
+   only recognizing the old theorem already had this shape. -/
+noncomputable def simplexQuotientToShape :
+  Quotient (approxBisimSetoid simplexIncidence) → SimplexShape :=
+  Quotient.lift simplexToShape simplexToShape_distinguishes
+
+/- Injective: `simplexToShape`-agreement implies `≈` too
+   (`simplexToShape_reflects`, cycle 22), so two quotient classes
+   mapping to the same shape must already have been the same class. -/
+theorem simplexQuotientToShape_injective (q1 q2 : Quotient (approxBisimSetoid simplexIncidence))
+  (h : simplexQuotientToShape q1 = simplexQuotientToShape q2) : q1 = q2 := by
+  induction q1 using Quotient.ind with
+  | _ x =>
+    induction q2 using Quotient.ind with
+    | _ y =>
+      unfold simplexQuotientToShape at h
+      simp only [Quotient.lift] at h
+      exact Quotient.sound (simplexToShape_reflects x y h)
+
+/- Surjective: all three shapes are hit by a concrete element. -/
+theorem simplexQuotientToShape_surjective (s : SimplexShape) :
+  ∃ q : Quotient (approxBisimSetoid simplexIncidence), simplexQuotientToShape q = s := by
+  cases s with
+  | vertex => exact ⟨Quotient.mk _ SimplexId.v0, rfl⟩
+  | edgeShape => exact ⟨Quotient.mk _ SimplexId.e01, rfl⟩
+  | faceShape => exact ⟨Quotient.mk _ SimplexId.face, rfl⟩
+
+/- The headline positive result: a genuine `Incidence SimplexShape
+   SimplexRole GraphType` structure on the (isomorphic image of the)
+   quotient carrier, hand-built by collapsing each shape's boundary
+   entries' targets through `simplexToShape`. Crucially, `well_founded`
+   is NOT violated here the way it was for `cycleIncidence`'s
+   Subsingleton quotient (cycles 38/39): `vertex`'s boundary is empty,
+   `edgeShape`'s entries point only to `vertex` (≠ `edgeShape`), and
+   `faceShape`'s entries point only to `edgeShape` (≠ `faceShape`) --
+   the shape-grading (0-cells ← 1-cells ← 2-cells) is itself a
+   well-founded structure, so collapsing WITHIN each grade never
+   creates the kind of self-loop a total collapse (cycleIncidence)
+   forces. This is the project's first successful "quotient-shaped"
+   `Incidence` construction, a genuine contrast to cycles 38/39's
+   negative result -- the middle ground really is different from both
+   extremes, not just in how many classes it has. -/
+def shapeBoundary : SimplexShape → Boundary SimplexShape SimplexRole
+  | .vertex => []
+  | .edgeShape =>
+    [ { i := .vertex, role := SimplexRole.src, sign := Sign.neg, mult := 1 }
+    , { i := .vertex, role := SimplexRole.dst, sign := Sign.pos, mult := 1 } ]
+  | .faceShape =>
+    [ { i := .edgeShape, role := SimplexRole.src, sign := Sign.pos, mult := 1 }
+    , { i := .edgeShape, role := SimplexRole.dst, sign := Sign.neg, mult := 1 }
+    , { i := .edgeShape, role := SimplexRole.dst, sign := Sign.pos, mult := 1 } ]
+
+def shapeIncidence : Incidence SimplexShape SimplexRole GraphType where
+  boundary := shapeBoundary
+  typeFunc := fun _ => GraphType.unit
+  glue     := fun i j => if i = SimplexShape.vertex then some j else some i
+  unit     := SimplexShape.vertex
+  guards   := Guards.permissive SimplexShape
+  boundaryMatrix := fun _ _ => 0
+  laplacian := fun _ _ => 0
+  type_consistent := fun i e h => rfl
+  sign_rules := by
+    intro i e h
+    cases i <;> simp [shapeBoundary] at h <;>
+      first | (rcases h with h | h | h <;> subst h <;> simp) | (rcases h with h | h <;> subst h <;> simp)
+  multiplicities := by
+    intro i e h
+    cases i <;> simp [shapeBoundary] at h <;>
+      first | (rcases h with h | h | h <;> subst h <;> simp) | (rcases h with h | h <;> subst h <;> simp)
+  well_founded := by
+    rintro i ⟨e, he, hei⟩
+    cases i <;> simp [shapeBoundary] at he <;>
+      first
+        | (rcases he with he | he | he <;> subst he <;> simp_all)
+        | (rcases he with he | he <;> subst he <;> simp_all)
+  unit_left := by intro i; simp
+  unit_right := by intro i; by_cases h : i = SimplexShape.vertex <;> simp [h]
+  type_preserve := fun _ _ => rfl
+
+/- An honest limitation, checked rather than assumed: `simplexToShape`
+   is NOT a `glue`-homomorphism between `simplexIncidence` and
+   `shapeIncidence` -- unlike cycle 28's `cycleToNat_glue_hom` or cycle
+   34's `natToFiniteSet_glue_hom`, both of which succeeded. Concrete
+   witness: `simplexIncidence.glue v1 face = some v1` (since `v1 ≠
+   v0`), which maps to `some vertex`; but `shapeIncidence.glue vertex
+   faceShape = some faceShape` (since `vertex = vertex`) -- a genuine
+   mismatch. This is consistent with, and a more interesting instance
+   of, cycle 38's general finding that `glue` does not respect `≈`:
+   `shapeIncidence` is A valid `Incidence` structure living on the
+   quotient's carrier, hand-built independently, not one *derived* from
+   `simplexIncidence`'s own `glue` via any structure-preserving
+   transport. -/
+theorem simplexToShape_not_glue_hom :
+  (simplexIncidence.glue SimplexId.v1 SimplexId.face).map simplexToShape ≠
+    shapeIncidence.glue (simplexToShape SimplexId.v1) (simplexToShape SimplexId.face) := by
+  decide
 
 end IncidenceCore

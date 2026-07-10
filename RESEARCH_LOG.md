@@ -2901,3 +2901,114 @@ this cycle and cycles 38/39 characterized. Separately, option (c) from
 this cycle's queue (= option (b) from cycle 37's queue) remains open:
 the internal-logic distributivity direction relating
 `incidenceProd`/`incidenceSum`.
+
+## Cycle 41
+
+**Hypothesis**: item (b) from cycle 40's queue -- does any EXISTING
+instance in this project have a `≈`-quotient in the genuinely
+interesting middle ground (more than one class, fewer than "all")?
+Cycle 40's own note flagged `simplexIncidence` as the leading candidate
+based on a loose recollection ("vertices/edges/face stayed separated by
+differing boundary shapes"), but treated this as needing a fresh audit.
+
+**Method**: before auditing from scratch, searched `Simplex.lean` for
+what was already known -- and found the entire question had already
+been *definitively answered*, across cycles 12 (vertices collapse), 18
+(edges collapse, confirmed with a better proof strategy), 21/22 (the
+three shapes are pairwise non-bisimilar, first via representative
+witnesses then generalized), and 23 (the full 49-case exhaustive
+characterization). `simplexToShape_iff_approxBisim` already proves `≈`
+is *exactly* `simplexToShape`-agreement: three classes out of seven
+elements, no coarser and no finer. This meant the "audit" step was
+mostly archaeological -- recognizing that a years-old (many-cycles-old)
+result already answered the current question, rather than reproving
+anything about `simplexIncidence` itself. With the middle-ground
+instance identified, pushed forward into genuinely new territory:
+does this quotient support the same kind of construction cycles 38-40
+explored for the two extremes? Checked, in order: (1) does
+`simplexToShape` pass the `Quotient.lift` well-definedness check cycle
+38 found `boundary`/`glue` fail for `cycleIncidence`? (Recognized this
+is *exactly* what `simplexToShape_distinguishes`, cycle 23, already
+proves -- no new proof needed.) (2) Is the resulting quotient map
+`Quotient (approxBisimSetoid simplexIncidence) → SimplexShape`
+bijective, mirroring cycle 40's faithful-instance pattern? (3) Can a
+genuine fresh `Incidence` structure be built directly on `SimplexShape`
+by collapsing each shape's boundary targets through `simplexToShape`,
+succeeding where cycles 38/39 showed the fully-collapsed case must
+fail? (4) Honestly checked, not assumed: is this new structure's `glue`
+actually *derived* from `simplexIncidence`'s own `glue` (i.e. is
+`simplexToShape` a `glue`-homomorphism, the property cycles 28/34
+established for other translations)?
+
+**Result**: **confirmed on the first attempt for every piece.** (1)
+`simplexQuotientToShape := Quotient.lift simplexToShape
+simplexToShape_distinguishes` typechecks directly -- `propext`/
+`Quot.sound` only, no `Classical.choice` (a simpler axiom profile than
+cycle 39's representative-based constructions, since no `Classical.choice`-
+dependent representative-picking was needed at all here). (2) Genuine
+bijection: `simplexQuotientToShape_injective` (via
+`simplexToShape_reflects`, cycle 22, plus `Quotient.sound`) and
+`simplexQuotientToShape_surjective` (three concrete witnesses, one per
+shape) both hold. (3) **`shapeIncidence : Incidence SimplexShape
+SimplexRole GraphType`** builds cleanly with all 7 obligations
+discharged, using the SAME proof patterns `simplexIncidence`/
+`cycleIncidence` already established (`cases <;> simp <;> first | ...`)
+-- notably, `well_founded` is NOT violated the way cycle 39 found it
+must be for `cycleIncidence`'s Subsingleton quotient: `vertex`'s
+boundary is empty, `edgeShape`'s entries point only to `vertex`, and
+`faceShape`'s entries point only to `edgeShape` -- the shape-grading
+(0-cells ← 1-cells ← 2-cells) is itself well-founded, so collapsing
+*within* each grade never creates a self-loop the way collapsing
+*everything* did. (4) **`simplexToShape` is NOT a `glue`-homomorphism**
+between `simplexIncidence` and `shapeIncidence`: concrete counterexample
+via `decide`, `simplexIncidence.glue v1 face = some v1` (mapping to
+`some vertex`) vs. `shapeIncidence.glue vertex faceShape = some
+faceShape` -- a genuine mismatch, confirming (not assuming) that
+`shapeIncidence` is *a* valid structure living on the quotient's
+carrier, not one *derived* from `simplexIncidence`'s own `glue` via any
+structure-preserving transport (consistent with, and a more textured
+instance of, cycle 38's general finding that `glue` does not respect
+`≈`). `#print axioms`: `propext`/`Quot.sound` on the bijection theorems,
+`propext` only on the `glue`-homomorphism refutation, no `sorryAx`
+anywhere. Full `lake build`: 48/48 jobs (new imports wired: `Quotient.lean`
+now also imports `Simplex.lean`). Repo-wide `sorry`-as-tactic grep:
+none.
+
+**Synthesis**: this cycle closes the three-cycle arc (38, 39, 40, 41)
+that this project's "third generic constructor" thread (queued since
+cycle 36) opened, and it closes it with a genuine POSITIVE result at
+last, after three cycles that were negative (38, naive lift fails),
+negative-but-more-general (39, representative variant also fails, for a
+deeper structural reason), and negative-but-trivial (40, faithful
+instances add nothing new). The middle ground is not merely "in
+between" in class *count* -- it is different in *kind*: what determines
+whether a quotient construction can succeed is not how much collapse
+happens, but whether the collapse respects some well-founded grading
+already present in the instance. `simplexIncidence`'s shape-grading
+(vertex/edge/face) is exactly such a structure, and it happens to
+survive collapse-within-grade while `cycleIncidence`'s totally flat,
+ungraded 4-cycle cannot survive any collapse at all. This is also a
+methodological point worth naming: the "audit" step of this cycle
+turned out to be almost pure archaeology -- the hard mathematical work
+(cycles 12-23) predated the question this cycle asked by dozens of
+cycles, and the actual contribution here was recognizing an old result
+as the answer to a new question, then building the (comparatively
+mechanical, pattern-matching) new construction on top of it. Not every
+cycle's payoff is a new proof; sometimes it's a new *connection*.
+
+**Next hypothesis (cycle 42, not yet attempted)**: two live threads,
+both already queued and untouched. (a) Option (c) from cycle 41's own
+queue (= option (b) from cycle 37's queue): the internal-logic
+distributivity direction relating `incidenceProd`/`incidenceSum` --
+still the largest, most open item, likely needing its own scope-down
+step (e.g. just checking whether a natural map between the two carrier
+types exists and is well-typed, before attempting any bisimulation
+result). (b) A natural follow-up this cycle's `glue`-homomorphism
+refutation surfaces: is there a *different*, less naive definition of
+`shapeIncidence.glue` (this cycle's was a direct copy of
+`simplexIncidence`'s own unit-absorbing pattern, not derived from
+anything) under which `simplexToShape` WOULD be a genuine
+`glue`-homomorphism -- or is that structurally impossible for the same
+reason cycle 38 found `glue` doesn't respect `≈` in general, meaning no
+choice of quotient-carrier `glue` could ever be induced this way?
+Worth a short, focused check before concluding either way.
