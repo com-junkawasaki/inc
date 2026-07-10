@@ -182,6 +182,90 @@ theorem satisfies_map {Atom Atom' : Type u} (f : Atom → Atom')
     · intro h hp
       exact ihq.mpr (h (ihp.mp hp))
 
+/- Reindexing commutes not only with a single formula but with a whole
+   finite theory.  This is the propositional semantic form of simultaneous
+   atom substitution. -/
+theorem context_satisfies_map_iff {Atom Atom' : Type u} (f : Atom → Atom')
+    (valuation : Atom' → Prop) (context : List (Formula Atom)) :
+    ContextSatisfies valuation (Formula.mapContext f context) ↔
+      ContextSatisfies (fun atom => valuation (f atom)) context := by
+  constructor
+  · intro holds formula hmem
+    have hmapped : formula.map f ∈ Formula.mapContext f context :=
+      List.mem_map.mpr ⟨formula, hmem, rfl⟩
+    exact (satisfies_map f valuation formula).mp (holds _ hmapped)
+  · intro holds mapped hmem
+    rcases List.mem_map.mp hmem with ⟨formula, hformula, rfl⟩
+    exact (satisfies_map f valuation formula).mpr (holds formula hformula)
+
+theorem satisfies_map_leftInverse {Atom Atom' : Type u} (f : Atom → Atom')
+    (g : Atom' → Atom) (hgf : ∀ atom, g (f atom) = atom)
+    (valuation : Atom → Prop) : ∀ formula : Formula Atom,
+      Satisfies (fun atom' => valuation (g atom')) (formula.map f) ↔
+        Satisfies valuation formula := by
+  intro formula
+  induction formula with
+  | atom atom =>
+    change valuation (g (f atom)) ↔ valuation atom
+    rw [hgf atom]
+  | top => exact Iff.rfl
+  | bot => exact Iff.rfl
+  | and p q ihp ihq => exact and_congr ihp ihq
+  | or p q ihp ihq => exact or_congr ihp ihq
+  | imp p q ihp ihq =>
+    constructor
+    · intro h hp
+      exact ihq.mp (h (ihp.mpr hp))
+    · intro h hp
+      exact ihq.mpr (h (ihp.mp hp))
+
+theorem context_satisfies_map_leftInverse {Atom Atom' : Type u} (f : Atom → Atom')
+    (g : Atom' → Atom) (hgf : ∀ atom, g (f atom) = atom)
+    (valuation : Atom → Prop) (context : List (Formula Atom)) :
+    ContextSatisfies (fun atom' => valuation (g atom')) (Formula.mapContext f context) ↔
+      ContextSatisfies valuation context := by
+  constructor
+  · intro holds formula hmem
+    have hmapped : formula.map f ∈ Formula.mapContext f context :=
+      List.mem_map.mpr ⟨formula, hmem, rfl⟩
+    exact (satisfies_map_leftInverse f g hgf valuation formula).mp (holds _ hmapped)
+  · intro holds mapped hmem
+    rcases List.mem_map.mp hmem with ⟨formula, hformula, rfl⟩
+    exact (satisfies_map_leftInverse f g hgf valuation formula).mpr (holds formula hformula)
+
+/- Semantic entailment is invariant under a split-injective atom translation.
+   Together with `derives_map_iff_of_leftInverse`, this makes faithful
+   incidence renamings exact on both syntax and one-world semantics. -/
+theorem semantically_entails_map {Atom Atom' : Type u} (f : Atom → Atom')
+    {context : List (Formula Atom)} {formula : Formula Atom} :
+    SemanticallyEntails context formula →
+      SemanticallyEntails (Formula.mapContext f context) (formula.map f) := by
+  intro hentails valuation holds
+  have hsource : ContextSatisfies (fun atom => valuation (f atom)) context :=
+    (context_satisfies_map_iff f valuation context).mp holds
+  exact (satisfies_map f valuation formula).mpr (hentails _ hsource)
+
+theorem semantically_entails_map_reflect_of_leftInverse {Atom Atom' : Type u}
+    (f : Atom → Atom') (g : Atom' → Atom) (hgf : ∀ atom, g (f atom) = atom)
+    {context : List (Formula Atom)} {formula : Formula Atom} :
+    SemanticallyEntails (Formula.mapContext f context) (formula.map f) →
+      SemanticallyEntails context formula := by
+  intro hentails valuation holds
+  have hmapped : ContextSatisfies (fun atom' => valuation (g atom'))
+      (Formula.mapContext f context) :=
+    (context_satisfies_map_leftInverse f g hgf valuation context).mpr holds
+  exact (satisfies_map_leftInverse f g hgf valuation formula).mp
+    (hentails _ hmapped)
+
+theorem semantically_entails_map_iff_of_leftInverse {Atom Atom' : Type u}
+    (f : Atom → Atom') (g : Atom' → Atom) (hgf : ∀ atom, g (f atom) = atom)
+    {context : List (Formula Atom)} {formula : Formula Atom} :
+    SemanticallyEntails (Formula.mapContext f context) (formula.map f) ↔
+      SemanticallyEntails context formula := by
+  constructor
+  · exact semantically_entails_map_reflect_of_leftInverse f g hgf
+  · exact semantically_entails_map f
+
 inductive Derives {Atom : Type u} : List (Formula Atom) → Formula Atom → Prop where
   | ax {p} : p ∈ context → Derives context p
   | topI : Derives context .top
@@ -1409,6 +1493,31 @@ theorem kripke_forces_map_iff {Atom Atom' : Type u} (f : Atom → Atom')
     · intro h world' hle hp
       exact (ihq world').mpr (h world' hle ((ihp world').mp hp))
 
+/- A retraction also reflects forcing.  Thus a faithful change of incidence
+   atoms preserves the intuitionistic semantics, including implication's
+   quantification over all future worlds. -/
+theorem kripke_forces_map_leftInverse {Atom Atom' : Type u} (f : Atom → Atom')
+    (g : Atom' → Atom) (hgf : ∀ atom, g (f atom) = atom)
+    (model : KripkeModel Atom) (world : model.World) :
+    ∀ formula : Formula Atom,
+      KripkeForces (KripkeModel.pullback g model) world (formula.map f) ↔
+        KripkeForces model world formula := by
+  intro formula
+  induction formula generalizing world with
+  | atom atom =>
+    change model.valuation world (g (f atom)) ↔ model.valuation world atom
+    rw [hgf atom]
+  | top => exact Iff.rfl
+  | bot => exact Iff.rfl
+  | and p q ihp ihq => exact and_congr (ihp world) (ihq world)
+  | or p q ihp ihq => exact or_congr (ihp world) (ihq world)
+  | imp p q ihp ihq =>
+    constructor
+    · intro h world' hle hp
+      exact (ihq world').mp (h world' hle ((ihp world').mpr hp))
+    · intro h world' hle hp
+      exact (ihq world').mpr (h world' hle ((ihp world').mp hp))
+
 theorem kripke_context_forces_map_iff {Atom Atom' : Type u} (f : Atom → Atom')
     (model : KripkeModel Atom') (world : model.World)
     (context : List (Formula Atom)) :
@@ -1422,6 +1531,22 @@ theorem kripke_context_forces_map_iff {Atom Atom' : Type u} (f : Atom → Atom')
   · intro holds mapped hmem
     rcases List.mem_map.mp hmem with ⟨formula, hformula, rfl⟩
     exact (kripke_forces_map_iff f model world formula).mpr (holds formula hformula)
+
+theorem kripke_context_forces_map_leftInverse {Atom Atom' : Type u}
+    (f : Atom → Atom') (g : Atom' → Atom) (hgf : ∀ atom, g (f atom) = atom)
+    (model : KripkeModel Atom) (world : model.World) (context : List (Formula Atom)) :
+    KripkeContextForces (KripkeModel.pullback g model) world
+        (Formula.mapContext f context) ↔
+      KripkeContextForces model world context := by
+  constructor
+  · intro holds formula hmem
+    have hmapped : formula.map f ∈ Formula.mapContext f context :=
+      List.mem_map.mpr ⟨formula, hmem, rfl⟩
+    exact (kripke_forces_map_leftInverse f g hgf model world formula).mp (holds _ hmapped)
+  · intro holds mapped hmem
+    rcases List.mem_map.mp hmem with ⟨formula, hformula, rfl⟩
+    exact (kripke_forces_map_leftInverse f g hgf model world formula).mpr
+      (holds formula hformula)
 
 theorem kripke_forces_mono {Atom : Type u} {model : KripkeModel Atom}
     {world world' : model.World} (hww' : model.le world world') :
@@ -1512,6 +1637,27 @@ theorem kripke_entails_map {Atom Atom' : Type u} (f : Atom → Atom')
     (kripke_context_forces_map_iff f model world context).mp hcontext
   exact (kripke_forces_map_iff f model world formula).mpr
     (hentails (KripkeModel.pullback f model) world hpullback)
+
+theorem kripke_entails_map_reflect_of_leftInverse {Atom Atom' : Type u}
+    (f : Atom → Atom') (g : Atom' → Atom) (hgf : ∀ atom, g (f atom) = atom)
+    {context : List (Formula Atom)} {formula : Formula Atom} :
+    KripkeEntails.{u, v} (Formula.mapContext f context) (formula.map f) →
+      KripkeEntails.{u, v} context formula := by
+  intro hentails model world holds
+  have hmapped : KripkeContextForces (KripkeModel.pullback g model) world
+      (Formula.mapContext f context) :=
+    (kripke_context_forces_map_leftInverse f g hgf model world context).mpr holds
+  exact (kripke_forces_map_leftInverse f g hgf model world formula).mp
+    (hentails (KripkeModel.pullback g model) world hmapped)
+
+theorem kripke_entails_map_iff_of_leftInverse {Atom Atom' : Type u}
+    (f : Atom → Atom') (g : Atom' → Atom) (hgf : ∀ atom, g (f atom) = atom)
+    {context : List (Formula Atom)} {formula : Formula Atom} :
+    KripkeEntails.{u, v} (Formula.mapContext f context) (formula.map f) ↔
+      KripkeEntails.{u, v} context formula := by
+  constructor
+  · exact kripke_entails_map_reflect_of_leftInverse f g hgf
+  · exact kripke_entails_map f
 
 def emptyKripkeModel (Atom : Type u) : KripkeModel Atom where
   World := Unit

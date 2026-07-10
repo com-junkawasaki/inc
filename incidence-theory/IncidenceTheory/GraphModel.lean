@@ -975,6 +975,90 @@ def triGluingSpec : GluingSpec triIncidence where
    Index set for matrix computations. -/
 def triIdx : List GId := [A, B, C, AB, BC, CA]
 
+/- The six displayed identifiers split into the three boundary-free vertices
+   and the three directed edges.  This is deliberately a statement about the
+   finite calculation index, rather than the infinite ambient `GId`. -/
+def triVertex (i : GId) : Prop := i = A ∨ i = B ∨ i = C
+
+def triEdge (i : GId) : Prop := i = AB ∨ i = BC ∨ i = CA
+
+theorem triangle_A_approxBisim_B : approxBisim triIncidence A B :=
+  ⟨triABBCRel, triABBC_isBisimulation, Or.inr (Or.inl ⟨rfl, rfl⟩)⟩
+
+theorem triangle_B_approxBisim_C : approxBisim triIncidence B C :=
+  ⟨triABBCRel, triABBC_isBisimulation, Or.inr (Or.inr ⟨rfl, rfl⟩)⟩
+
+theorem triangle_A_approxBisim_C : approxBisim triIncidence A C :=
+  approxBisim_trans triangle_A_approxBisim_B triangle_B_approxBisim_C
+
+theorem triangle_vertices_approxBisim {i j : GId}
+    (hi : triVertex i) (hj : triVertex j) : approxBisim triIncidence i j := by
+  rcases hi with rfl | rfl | rfl
+  · rcases hj with rfl | rfl | rfl
+    · exact approxBisim_refl triIncidence A
+    · exact triangle_A_approxBisim_B
+    · exact triangle_A_approxBisim_C
+  · rcases hj with rfl | rfl | rfl
+    · exact approxBisim_symm triangle_A_approxBisim_B
+    · exact approxBisim_refl triIncidence B
+    · exact triangle_B_approxBisim_C
+  · rcases hj with rfl | rfl | rfl
+    · exact approxBisim_symm triangle_A_approxBisim_C
+    · exact approxBisim_symm triangle_B_approxBisim_C
+    · exact approxBisim_refl triIncidence C
+
+theorem triangle_edges_approxBisim {i j : GId}
+    (hi : triEdge i) (hj : triEdge j) : approxBisim triIncidence i j := by
+  rcases hi with rfl | rfl | rfl
+  · rcases hj with rfl | rfl | rfl
+    · exact approxBisim_refl triIncidence AB
+    · exact triangle_AB_approxBisim_BC
+    · exact triangle_AB_approxBisim_CA
+  · rcases hj with rfl | rfl | rfl
+    · exact triangle_BC_approxBisim_AB
+    · exact approxBisim_refl triIncidence BC
+    · exact triangle_BC_approxBisim_CA
+  · rcases hj with rfl | rfl | rfl
+    · exact triangle_CA_approxBisim_AB
+    · exact triangle_CA_approxBisim_BC
+    · exact approxBisim_refl triIncidence CA
+
+theorem tri_mem_kind {i : GId} (hi : i ∈ triIdx) : triVertex i ∨ triEdge i := by
+  simp only [triIdx, List.mem_cons, List.not_mem_nil, or_false] at hi
+  rcases hi with rfl | rfl | rfl | rfl | rfl | rfl
+  all_goals simp [triVertex, triEdge]
+
+theorem triangle_vertex_boundary_empty {i : GId}
+    (hi : triVertex i) : triIncidence.boundary i = [] := by
+  rcases hi with rfl | rfl | rfl <;> simp [triIncidence, triBoundary, A, B, C]
+
+theorem triangle_edge_boundary_nonempty {i : GId}
+    (hi : triEdge i) : triIncidence.boundary i ≠ [] := by
+  rcases hi with rfl | rfl | rfl <;> simp [triIncidence, triBoundary, AB, BC, CA]
+
+theorem triangle_vertex_not_approxBisim_edge {i j : GId}
+    (hi : triVertex i) (hj : triEdge j) : ¬ approxBisim triIncidence i j := by
+  intro h
+  exact tri_nonempty_not_approxBisim_empty (triangle_edge_boundary_nonempty hj)
+    (triangle_vertex_boundary_empty hi) (approxBisim_symm h)
+
+theorem triangle_approxBisim_iff_same_kind {i j : GId}
+    (hi : i ∈ triIdx) (hj : j ∈ triIdx) :
+    approxBisim triIncidence i j ↔
+      (triVertex i ∧ triVertex j) ∨ (triEdge i ∧ triEdge j) := by
+  constructor
+  · intro h
+    rcases tri_mem_kind hi with hiv | hie
+    · rcases tri_mem_kind hj with hjv | hje
+      · exact Or.inl ⟨hiv, hjv⟩
+      · exact False.elim (triangle_vertex_not_approxBisim_edge hiv hje h)
+    · rcases tri_mem_kind hj with hjv | hje
+      · exact False.elim (triangle_vertex_not_approxBisim_edge hjv hie (approxBisim_symm h))
+      · exact Or.inr ⟨hie, hje⟩
+  · rintro (⟨hi, hj⟩ | ⟨hi, hj⟩)
+    · exact triangle_vertices_approxBisim hi hj
+    · exact triangle_edges_approxBisim hi hj
+
 /- Merkle-ID: implementation.linear_algebra
    Boundary matrix and Laplacian for the triangle. -/
 def triB : Matrix GId GId Int := boundaryMatrix triIncidence triIdx

@@ -96,6 +96,8 @@ It currently establishes:
   extensional claim).
   Kuratowski ordered pairs and finite Cartesian products are also constructed
   syntactically, with the exact `x ∈ s × t` ordered-pair membership law.
+  Cartesian product now descends to the recursive extensional quotient too,
+  with the same exact ordered-pair membership characterization.
   Singleton and Kuratowski ordered-pair constructions also descend to the
   recursive extensional quotient, with their exact outer membership laws;
   unordered-pair equality is classified and ordered pairs are injective.

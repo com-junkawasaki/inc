@@ -875,6 +875,81 @@ theorem hfRecursiveUnion_empty_right (s : HFRecursiveSet) :
   intro s
   exact hfRecursiveUnion_empty_right_mk s
 
+/- Ordered pairs preserve every available approximation, despite using two
+   nested unordered pairs in their Kuratowski presentation. -/
+theorem hfApprox_orderedPair {n : Nat} {s s' t t' : HFSet}
+    (hs : HFApprox n s s') (ht : HFApprox n t t') :
+    HFApprox n (HFSet.orderedPair s t) (HFSet.orderedPair s' t') := by
+  have hsingleton : HFApprox n s.singleton s'.singleton :=
+    hfApprox_down (hfApprox_insert hs (hfApprox_refl (n + 1) .empty))
+  exact hfApprox_down
+    (hfApprox_pair hsingleton (hfApprox_down (hfApprox_pair hs ht)))
+
+/- Ordered pairs respect recursive extensional equality.  Keeping this raw
+   lemma separate makes the Cartesian-product construction below genuinely
+   descend through the quotient, rather than depending on presentations. -/
+theorem hfRecursive_orderedPair_congruent {s s' t t' : HFSet}
+    (hs : HFRecursiveEq s s') (ht : HFRecursiveEq t t') :
+    HFRecursiveEq (HFSet.orderedPair s t) (HFSet.orderedPair s' t') := by
+  intro n
+  exact hfApprox_orderedPair (hs n) (ht n)
+
+/- Cartesian product also respects recursive equality in both coordinates.
+   The proof uses the syntactic membership theorem only as a presentation
+   lemma; the witnesses are transported at every approximation depth. -/
+theorem hfRecursive_product_congruent {left left' right right' : HFSet}
+    (hleft : HFRecursiveEq left left') (hright : HFRecursiveEq right right') :
+    HFRecursiveEq (left.product right) (left'.product right') := by
+  intro n
+  cases n with
+  | zero => trivial
+  | succ n =>
+    constructor
+    · intro x hx
+      rcases hf_member_product.mp hx with
+        ⟨a, ha, b, hb, rfl⟩
+      rcases (hleft (n + 1)).left a ha with ⟨a', ha', haa'⟩
+      rcases (hright (n + 1)).left b hb with ⟨b', hb', hbb'⟩
+      refine ⟨HFSet.orderedPair a' b',
+        hf_member_product.mpr ⟨a', ha', b', hb', rfl⟩, ?_⟩
+      exact hfApprox_orderedPair haa' hbb'
+    · intro x hx
+      rcases hf_member_product.mp hx with
+        ⟨a', ha', b', hb', rfl⟩
+      rcases ((hfRecursiveEq_symm hleft) (n + 1)).left a' ha' with ⟨a, ha, ha'a⟩
+      rcases ((hfRecursiveEq_symm hright) (n + 1)).left b' hb' with ⟨b, hb, hb'a⟩
+      refine ⟨HFSet.orderedPair a b,
+        hf_member_product.mpr ⟨a, ha, b, hb, rfl⟩, ?_⟩
+      exact hfApprox_orderedPair (hfApprox_symm ha'a) (hfApprox_symm hb'a)
+
+/- Quotient-level finite Cartesian product. -/
+def hfRecursiveProduct (left right : HFRecursiveSet) : HFRecursiveSet :=
+  Quotient.liftOn₂ left right
+    (fun left right => Quotient.mk hfRecursiveSetoid (left.product right))
+    (by
+      intro left right left' right' hleft hright
+      exact Quotient.sound (hfRecursive_product_congruent hleft hright))
+
+theorem hfRecursiveProduct_mk (left right : HFSet) :
+    hfRecursiveProduct (Quotient.mk hfRecursiveSetoid left)
+      (Quotient.mk hfRecursiveSetoid right) =
+        Quotient.mk hfRecursiveSetoid (left.product right) := rfl
+
+theorem hfRecursiveOrderedPair_mk (s t : HFSet) :
+    hfRecursiveOrderedPair (Quotient.mk hfRecursiveSetoid s)
+      (Quotient.mk hfRecursiveSetoid t) =
+        Quotient.mk hfRecursiveSetoid (HFSet.orderedPair s t) := by
+  apply Quotient.sound
+  apply hf_recursive_pair_congruent
+  · apply hfExtensionalEq_recursive
+    intro x
+    rw [hf_member_pair, hf_member_singleton]
+    constructor
+    · rintro (h | h) <;> exact h
+    · intro h
+      exact Or.inl h
+  · exact hfRecursiveEq_refl _
+
 def HFApproxRespectful (p : HFSet → Bool) : Prop :=
   ∀ {n x y}, HFApprox n x y → p x = p y
 
@@ -1130,6 +1205,45 @@ theorem hfRecursiveMember_union_iff (x s t : HFRecursiveSet) :
     · rcases hfRecursiveMemberRaw_iff_exists.mp ht with ⟨y, hy, hxy⟩
       exact hfRecursiveMemberRaw_iff_exists.mpr
         ⟨y, hf_member_union.mpr (Or.inr hy), hxy⟩
+
+/- Membership in the quotient Cartesian product is characterized by its two
+   projections.  This is quotient-safe: equality of presentations is used
+   only through `HFRecursiveEq`, never syntactic equality of components. -/
+theorem hfRecursiveMember_product_iff (x left right : HFRecursiveSet) :
+    HFRecursiveMember x (hfRecursiveProduct left right) ↔
+      ∃ leftMember, HFRecursiveMember leftMember left ∧
+        ∃ rightMember, HFRecursiveMember rightMember right ∧
+          x = hfRecursiveOrderedPair leftMember rightMember := by
+  refine Quotient.inductionOn₃ x left right ?_
+  intro x left right
+  constructor
+  · intro hx
+    rcases hfRecursiveMemberRaw_iff_exists.mp hx with ⟨pair, hpair, hxpair⟩
+    rcases hf_member_product.mp hpair with ⟨a, ha, b, hb, rfl⟩
+    refine ⟨Quotient.mk hfRecursiveSetoid a,
+      hfRecursiveMemberRaw_iff_exists.mpr ⟨a, ha, hfRecursiveEq_refl a⟩,
+      Quotient.mk hfRecursiveSetoid b,
+      hfRecursiveMemberRaw_iff_exists.mpr ⟨b, hb, hfRecursiveEq_refl b⟩, ?_⟩
+    simpa only [hfRecursiveOrderedPair_mk] using
+      (Quotient.sound hxpair :
+        Quotient.mk hfRecursiveSetoid x =
+          Quotient.mk hfRecursiveSetoid (HFSet.orderedPair a b))
+  · rintro ⟨a, ha, b, hb, hxab⟩
+    revert ha hb hxab
+    refine Quotient.inductionOn₂ a b ?_
+    intro a b ha hb hxab
+    rcases hfRecursiveMemberRaw_iff_exists.mp ha with ⟨a', ha', haa'⟩
+    rcases hfRecursiveMemberRaw_iff_exists.mp hb with ⟨b', hb', hbb'⟩
+    have hxabRaw : HFRecursiveEq x (HFSet.orderedPair a b) := by
+      exact Quotient.exact (hxab.trans (hfRecursiveOrderedPair_mk a b))
+    have hxab' : HFRecursiveEq x (HFSet.orderedPair a' b') :=
+      hfRecursiveEq_trans hxabRaw
+        (hfRecursive_orderedPair_congruent
+          haa' hbb')
+    apply (hfRecursiveMemberRaw_target_congruent hxab').mpr
+    intro n
+    exact ⟨HFSet.orderedPair a' b',
+      hf_member_product.mpr ⟨a', ha', b', hb', rfl⟩, hfApprox_refl n _⟩
 
 theorem hfRecursiveMember_bigUnion_iff (x s : HFRecursiveSet) :
     HFRecursiveMember x (hfRecursiveBigUnion s) ↔
