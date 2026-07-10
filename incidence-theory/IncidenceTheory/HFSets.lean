@@ -1608,6 +1608,78 @@ theorem hfRecursiveNatShiftGraph_one (n : Nat) :
   | succ n ih =>
     rw [hfRecursiveNatShiftGraph, hfRecursiveNatSuccessorGraph, ih]
 
+/- Pointwise composition of finite shift graphs realizes addition of offsets. -/
+theorem hfRecursiveNatShiftGraph_compose
+    (n m firstOffset secondOffset : Nat) (hm : m < n) :
+    HFRecursiveMember
+      (hfRecursiveOrderedPair (hfRecursiveNat m) (hfRecursiveNat (m + firstOffset)))
+      (hfRecursiveNatShiftGraph firstOffset n) ∧
+    HFRecursiveMember
+      (hfRecursiveOrderedPair (hfRecursiveNat (m + firstOffset))
+        (hfRecursiveNat (m + firstOffset + secondOffset)))
+      (hfRecursiveNatShiftGraph secondOffset (n + firstOffset)) ∧
+    HFRecursiveMember
+      (hfRecursiveOrderedPair (hfRecursiveNat m)
+        (hfRecursiveNat (m + (firstOffset + secondOffset))))
+      (hfRecursiveNatShiftGraph (firstOffset + secondOffset) n) := by
+  constructor
+  · exact (hfRecursiveNatShiftGraph_apply_iff firstOffset n
+      (hfRecursiveNat m) (hfRecursiveNat (m + firstOffset))).mpr
+        ⟨m, hm, rfl, rfl⟩
+  constructor
+  · exact (hfRecursiveNatShiftGraph_apply_iff secondOffset (n + firstOffset)
+      (hfRecursiveNat (m + firstOffset))
+      (hfRecursiveNat (m + firstOffset + secondOffset))).mpr
+        ⟨m + firstOffset, Nat.add_lt_add_right hm firstOffset, rfl, rfl⟩
+  · exact (hfRecursiveNatShiftGraph_apply_iff (firstOffset + secondOffset) n
+      (hfRecursiveNat m) (hfRecursiveNat (m + (firstOffset + secondOffset)))).mpr
+        ⟨m, hm, rfl, rfl⟩
+
+/- `composite` is the relational composite of `first` followed by `second`.
+   Stating this independently of a particular finite presentation makes the
+   graph-composition theorem below usable by later relation constructions. -/
+def HFRecursiveRelationalComposite
+    (first second composite : HFRecursiveSet) : Prop :=
+  ∀ input output,
+    HFRecursiveMember (hfRecursiveOrderedPair input output) composite ↔
+      ∃ middle,
+        HFRecursiveMember (hfRecursiveOrderedPair input middle) first ∧
+        HFRecursiveMember (hfRecursiveOrderedPair middle output) second
+
+/- Translation graphs compose as genuine internal relations, not merely at a
+   selected point.  The middle object is the internally represented ordinal
+   `m + firstOffset`. -/
+theorem hfRecursiveNatShiftGraph_relationalComposite
+    (firstOffset secondOffset n : Nat) :
+    HFRecursiveRelationalComposite
+      (hfRecursiveNatShiftGraph firstOffset n)
+      (hfRecursiveNatShiftGraph secondOffset (n + firstOffset))
+      (hfRecursiveNatShiftGraph (firstOffset + secondOffset) n) := by
+  intro input output
+  constructor
+  · intro h
+    rcases (hfRecursiveNatShiftGraph_apply_iff
+      (firstOffset + secondOffset) n input output).mp h with
+      ⟨m, hm, hinput, houtput⟩
+    refine ⟨hfRecursiveNat (m + firstOffset), ?_, ?_⟩
+    · exact (hfRecursiveNatShiftGraph_apply_iff firstOffset n input
+        (hfRecursiveNat (m + firstOffset))).mpr ⟨m, hm, hinput, rfl⟩
+    · exact (hfRecursiveNatShiftGraph_apply_iff secondOffset
+        (n + firstOffset) (hfRecursiveNat (m + firstOffset)) output).mpr
+          ⟨m + firstOffset, Nat.add_lt_add_right hm firstOffset, rfl, by
+            simpa [Nat.add_assoc] using houtput⟩
+  · rintro ⟨middle, hfirst, hsecond⟩
+    rcases (hfRecursiveNatShiftGraph_apply_iff firstOffset n input middle).mp hfirst with
+      ⟨m, hm, hinput, hmiddle⟩
+    rcases (hfRecursiveNatShiftGraph_apply_iff secondOffset (n + firstOffset)
+      middle output).mp hsecond with ⟨k, hk, hmiddle', houtput⟩
+    have hmk : m + firstOffset = k :=
+      hfRecursiveNat_injective (hmiddle.symm.trans hmiddle')
+    subst k
+    exact (hfRecursiveNatShiftGraph_apply_iff (firstOffset + secondOffset) n
+      input output).mpr ⟨m, hm, hinput, by
+        simpa [Nat.add_assoc] using houtput⟩
+
 def HFRecursiveSubset (s t : HFRecursiveSet) : Prop :=
   ∀ x, HFRecursiveMember x s → HFRecursiveMember x t
 

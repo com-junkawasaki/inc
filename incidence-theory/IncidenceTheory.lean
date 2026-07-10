@@ -230,6 +230,53 @@ theorem laplacian_diagonal_nonnegative {I R T : Type u} [DecidableEq I]
       exact Int.add_nonneg hacc (square_nonnegative (b k i))
   exact fold_nonnegative idx 0 (Int.le_refl 0)
 
+/- The `BᵀB` sum is additive in the finite list of rows.  This makes the
+   derived Laplacian usable incrementally: extending a finite observation
+   list adds exactly the contribution of the new rows. -/
+theorem laplacian_append {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx extra : List I) (i j : I) :
+    laplacian inc (idx ++ extra) i j =
+      laplacian inc idx i j + laplacian inc extra i j := by
+  simp only [laplacian]
+  let b := boundaryMatrix inc idx
+  change
+    (idx ++ extra).foldl (fun total k => total + b k i * b k j) 0 =
+      idx.foldl (fun total k => total + b k i * b k j) 0 +
+        extra.foldl (fun total k => total + b k i * b k j) 0
+  have fold_add : ∀ (xs : List I) (acc : Int),
+      xs.foldl (fun total k => total + b k i * b k j) acc =
+        acc + xs.foldl (fun total k => total + b k i * b k j) 0 := by
+    intro xs acc
+    induction xs generalizing acc with
+    | nil => simp
+    | cons k xs ih =>
+      simp only [List.foldl]
+      calc
+        xs.foldl (fun total k => total + b k i * b k j)
+            (acc + b k i * b k j) =
+            (acc + b k i * b k j) +
+              xs.foldl (fun total k => total + b k i * b k j) 0 := ih _
+        _ = acc + (b k i * b k j +
+              xs.foldl (fun total k => total + b k i * b k j) 0) :=
+              Int.add_assoc _ _ _
+        _ = acc + xs.foldl (fun total k => total + b k i * b k j)
+              (0 + b k i * b k j) := by
+              rw [Int.zero_add]
+              exact congrArg (fun z => acc + z) (ih _).symm
+  rw [List.foldl_append, fold_add]
+
+/- A single observed row contributes its outer product to `BᵀB`. -/
+theorem laplacian_cons {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (k : I) (idx : List I) (i j : I) :
+    laplacian inc (k :: idx) i j =
+      boundaryMatrix inc idx k i * boundaryMatrix inc idx k j +
+        laplacian inc idx i j := by
+  simpa [laplacian] using laplacian_append inc [k] idx i j
+
+theorem laplacian_empty {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (i j : I) : laplacian inc [] i j = 0 := by
+  rfl
+
 def boundarySquareZero {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I) : Prop :=
   ∀ i k, i ∈ idx → k ∈ idx →

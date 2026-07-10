@@ -1576,6 +1576,48 @@ theorem primeTheory_imp_apply {Atom : Type u} (theory : PrimeTheory Atom)
   · exact Derives.impE (p := p) (q := q)
       (Derives.ax (by simp)) (Derives.ax (by simp))
 
+/- A prime theory cannot contain both a formula and its intuitionistic
+   negation.  The contrapositive form is useful when a relative Lindenbaum
+   extension is used as a canonical counterexample. -/
+theorem primeTheory_neg_excludes {Atom : Type u} (theory : PrimeTheory Atom)
+    {p : Formula Atom} :
+    theory.contains (Formula.neg p) → ¬ theory.contains p := by
+  intro hneg hp
+  apply theory.consistent
+  exact primeTheory_imp_apply theory hneg hp
+
+/- This is the local converse needed in the implication case: a world which
+   contains the antecedent but omits the consequent also omits the
+   implication. -/
+theorem primeTheory_not_imp_of_contains_not_contains {Atom : Type u}
+    (theory : PrimeTheory Atom) {p q : Formula Atom}
+    (hp : theory.contains p) (hnq : ¬ theory.contains q) :
+    ¬ theory.contains (.imp p q) := by
+  intro himp
+  exact hnq (primeTheory_imp_apply theory himp hp)
+
+/- The finite-base relative construction is conservative for *all* finite
+   derivations from its base, not only for the assumptions explicitly listed.
+   Thus an underivable implication has a prime-theory counterexample which
+   retains every consequence of the starting context. -/
+theorem finite_implication_failure_prime_extension_conservative {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom)
+    (context : List (Formula Atom)) (premise conclusion : Formula Atom)
+    (havoid : DerivationallyAvoids context (.imp premise conclusion)) :
+    ∃ theory : PrimeTheory Atom,
+      (∀ formula, Derives context formula → theory.contains formula) ∧
+        theory.contains premise ∧ ¬ theory.contains conclusion ∧
+          ¬ theory.contains (.imp premise conclusion) := by
+  rcases finite_implication_failure_prime_extension schedule context premise conclusion havoid with
+    ⟨theory, hcontext, hp, hnq⟩
+  refine ⟨theory, ?_, hp, hnq,
+    primeTheory_not_imp_of_contains_not_contains theory hp hnq⟩
+  intro formula hderives
+  apply theory.closed (context := context)
+  · intro assumption hassumption
+    exact hcontext assumption hassumption
+  · exact hderives
+
 theorem primeTheoryLe_refl {Atom : Type u} (theory : PrimeTheory Atom) :
     primeTheoryLe theory theory := fun _ h => h
 

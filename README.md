@@ -14,7 +14,8 @@ It currently establishes:
 - bisimilarity as an equivalence relation, with observable equality embedded
   into bisimilarity;
 - computed boundary matrices and Laplacians, with general `BᵀB` symmetry and
-  nonnegative diagonal entries; and
+  nonnegative diagonal entries; finite row-list append/cons decomposition is
+  also proved; and
 - a concrete triangle model, including checked matrix entries and a checked
   `∂² = 0` calculation.
 - a finite, well-founded, nonempty-boundary Lean model (`leaf ← root`) that
@@ -48,7 +49,8 @@ It currently establishes:
   to avoid that conclusion, yielding a closed consistent prime-theory relative
   extension of every finite base that does not derive the forbidden formula.
   In particular, a finite-context failure of `p → q` has a prime-theory
-  witness containing the context and `p`, while omitting `q`.
+  witness containing the context and `p`, while omitting `q`; this witness
+  conservatively preserves every derivable consequence of the finite context.
   Each formula has a finite subformula closure, and a consistent context has a
   finite extension deciding every formula in that closure; its disjunction
   subformulas satisfy a derivable prime-choice law.  The derivable closure of
@@ -84,6 +86,7 @@ It currently establishes:
   application `m ↦ m + 1` proved internally.
   More generally, finite shift graphs implement `m ↦ m + k`; shift by zero is
   proved equal to the identity graph and shift by one to the successor graph.
+  Their pointwise composition is proved to add offsets.
   On the quotient, binary union is idempotent, `⋃{s,t}=s∪t`, and big union
   preserves empty and distributes over binary union; binary union is also the
   least upper bound for the extensional subset order.
