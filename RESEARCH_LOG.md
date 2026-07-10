@@ -2402,3 +2402,126 @@ instances (beyond `cycleIncidenceFixed`) with the "faithful and
 leafless" property this cycle's condition needs, making
 `incidenceSum_faithful_of_faithful_no_shared_leaves` more broadly
 reusable, or is `cycleIncidenceFixed` currently unique in this respect?
+
+## Cycle 36
+
+**Hypothesis**: two items queued from cycle 35. (1) An audit: is
+`cycleIncidenceFixed` unique among every instance built so far in this
+project in being *both* fully faithful *and* leafless -- the two
+properties `incidenceSum_faithful_of_faithful_no_shared_leaves` needs
+on at least one side -- or are there other witnesses that would make
+that theorem more broadly reusable? (2) Does `incidenceSum` have a
+generic translation-pairing result mirroring cycle 34's
+`incidenceProd_translation_reflects`? The naive guess going in was
+"probably conditional, needing a leafless-side hypothesis like cycle
+35's faithfulness result, and probably via `Sum.elim t1 t2 : I1 ⊕ I2 →
+S1 ⊕ S2` sharing a single target type `S`."
+
+**Method**: (1) audited every named instance in the project against
+the two properties. `natIncidence`: faithful (cycle 4) but has exactly
+one leaf (`0`), so not leafless. `cycleIncidence` (pre-fix, cycle 26):
+leafless but *not* faithful -- that gap is the entire reason cycle 26
+built the fixed version. `incidenceProd`/`incidenceSum` themselves are
+constructors, not base instances -- they inherit leaves from whichever
+factors have them, so they can't independently break the tie.
+`cycleIncidenceFixed` (cycle 27) remains the only instance combining
+both properties. (2) Before writing any Lean, reconsidered the naive
+guess: the queued plan used `Sum.elim t1 t2`, which maps *both* sides
+into a *shared* target `S` -- the same shape that let cycle 33's
+"flat leaves collapse" happen (two elements from different sides
+landing in the same place). Switched to `Sum.map t1 t2 : I1 ⊕ I2 → S1 ⊕
+S2` instead, which keeps the two sides' images in a genuinely disjoint
+`S1 ⊕ S2`. Consequence, checked before formalizing: for `p` on the left
+and `q` on the right, `Sum.map t1 t2 p = Sum.inl (t1 _)` and `Sum.map
+t1 t2 q = Sum.inr (t2 _)` can *never* be equal, by `Sum`'s constructor
+disjointness alone -- so cross-side translate-equality is impossible to
+even hypothesize, not merely false for some instance. That leaves only
+the two same-side cases to prove, each needing "same-side `≈` in a
+factor lifts to `≈` in the sum" -- the converse of cycle 35's
+`incidenceSum_project_left`/`_right`. Built `incidenceSum_lift_left`
+and `incidenceSum_lift_right` first, in a scratch file, each
+constructing the lifted bisimulation relation directly from the
+factor's witnessing relation (`rel1`/`rel2`), matched only on the
+same-side pattern (`Sum.inl x1, Sum.inl y1 => rel1 x1 y1`, `_, _ =>
+False` otherwise) -- and found, checking the `IsBisimulation`
+obligation, that *no* `typeFunc`-equality hypothesis was needed at all
+in this direction: `incidenceSum`'s `typeFunc` is constant, so the
+type-preservation clause is `rfl` regardless of what `inc1`/`inc2`'s
+own typing says. This is the mirror image of cycle 35's subtlety (which
+needed the `typeFunc`-baking trick in the *project* direction) --
+confirming the asymmetry is about which direction of implication is
+being proved, not an inconsistency between the two cycles' approaches.
+Combined both lifts into `incidenceSum_translation_reflects` by cases
+on `p`/`q`: same-side closes via `ht1`/`ht2` composed with the
+corresponding lift; cross-side closes by deriving `False` from
+`Sum.map`'s injectivity-per-side (`Sum.inl.injEq`/`Sum.inr.injEq` on
+the same-side branches; the cross-side branches close by `simp`
+alone, since `Sum.inl _ = Sum.inr _` is already absurd).
+
+**Result**: **(1) confirmed: `cycleIncidenceFixed` is currently
+unique** among every instance built in this project in combining full
+faithfulness with zero leaves -- `incidenceSum_faithful_of_faithful_no_shared_leaves`
+is not yet reusable with a different right-hand witness, though nothing
+in its statement restricts it to `cycleIncidenceFixed` specifically,
+so a future instance with the same two properties would work
+immediately. **(2) confirmed on the first complete attempt for both
+lifts and the combined theorem** -- and, the headline finding,
+**`incidenceSum_translation_reflects` is UNCONDITIONAL**: no
+faithfulness or leafless hypothesis on `inc1`/`inc2` at all, only that
+`t1`/`t2` individually reflect translate-equality to `≈` in their own
+factor (the same hypothesis shape as cycle 34's
+`incidenceProd_translation_reflects` and the original
+`natToFiniteSet_reflects_approxBisim`). Confirmed concretely: pairing
+`natToFiniteSet` via `Sum.map` on both sides of `natIncidence ⊕
+natIncidence` still reflects translate-equality to `≈` in the sum, even
+though that very sum is *not* faithful (cycle 33's
+`incidenceSum_leaves_cross_natIncidence`). `#print axioms`: only
+`propext`/`Quot.sound` on `incidenceSum_lift_left`,
+`incidenceSum_lift_right`, and `incidenceSum_translation_reflects`. Full
+`lake build`: 46/46 jobs. Repo-wide `sorry`-as-tactic grep: none.
+
+**Synthesis**: the two halves of this cycle sharpen each other. Item
+(1) confirms `incidenceSum_faithful_of_faithful_no_shared_leaves`
+(cycle 35) is currently a *single-instance* result, not yet a broadly
+reusable pattern -- an honest limitation to record rather than paper
+over. Item (2) is the more interesting finding: it shows that
+*faithfulness-transport* and *translation-pairing* are genuinely
+different properties of the same constructor (`incidenceSum`) that
+need *different* side-conditions -- one conditional (cycle 35, needs a
+leafless side), one unconditional (this cycle, needs nothing). The
+mechanism generating the difference is not about `incidenceSum`
+per se, but about which *target type* a downstream construction is
+asked to land in: `≈`-transport is a property of the sum's *internal*
+structure (its own elements can genuinely collapse), while
+translation-pairing via `Sum.map` routes through an *external* type
+(`S1 ⊕ S2`) whose disjointness is available "for free" as soon as the
+translation avoids collapsing that external structure too (i.e.
+`Sum.elim` instead of `Sum.map`, which was the naive first guess this
+cycle explicitly avoided before writing any proof). This is also a
+methodological point worth keeping for future cycles: choosing
+`Sum.map` over `Sum.elim` at the *design* stage, before attempting a
+proof, avoided reproducing cycle 33's already-understood collapse
+mechanism inside a new theorem -- a case of applying an earlier
+cycle's finding proactively rather than rediscovering it as a second
+build failure.
+
+**Next hypothesis (cycle 37, not yet attempted)**: several threads
+remain open. (a) `incidenceProd` and `incidenceSum` are now each
+reasonably well-understood (congruence, faithfulness-transport,
+translation-pairing) -- is there a THIRD generic constructor worth
+building (e.g. an internal hom / function-space `Incidence`, or a
+quotient construction using `approxBisim` itself as the identifying
+relation, which would be a natural place to test whether the
+bisimulation machinery is well-behaved under its own quotients)? (b)
+The original large research vision (internal ℕ/set/logic/dependent-type
+construction inside `Inc`) remains largely untouched beyond
+`natIncidence`/`Peano.lean` -- `incidenceProd`/`incidenceSum` are
+plausible building blocks toward an internal logic (product ~ AND, sum
+~ OR) but no cycle has yet attempted to state or prove anything in
+that direction explicitly. (c) Narrower and more tractable: does
+`incidenceProd_translation_reflects` (cycle 34) have the same kind of
+subtlety this cycle found for the sum -- i.e., is there a "naive
+target type" choice for the product analogous to `Sum.elim` that would
+have caused trouble, and did cycle 34 avoid it by luck or by
+structure? Worth a short confirmatory audit even if the expected answer
+is "no issue, `S1×S2` was never ambiguous the way `S1⊕S2` vs `S` was."

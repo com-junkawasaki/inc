@@ -382,4 +382,157 @@ example : ∀ p q : Nat ⊕ CycleId,
     natIncidence_approxBisim_iff cycleIncidenceFixed_approxBisim_iff
     (fun b => by cases b <;> simp [cycleIncidenceFixed, cycleBoundaryFixed])
 
+/- Research cycle 36 (see RESEARCH_LOG.md), part 1 (audit): is
+   `cycleIncidenceFixed` unique among every instance built so far in
+   this project in being *both* fully faithful *and* leafless (the two
+   properties `incidenceSum_faithful_of_faithful_no_shared_leaves`
+   needs on at least one side)? Audited every named instance: `natIncidence`
+   is faithful but has exactly one leaf (`0`); `cycleIncidence` (the
+   pre-fix version, cycle 26) is leafless but NOT faithful (that's the
+   whole point of cycle 26); `incidenceProd`/`incidenceSum` themselves
+   are constructors, not base instances, and inherit leaves from
+   whichever factors have them. `cycleIncidenceFixed` remains the only
+   witness -- confirming this project has so far produced exactly one
+   instance combining both properties, so the corollary below is not
+   yet reusable with a *different* right-hand witness. -/
+
+/- Research cycle 36, part 2: does `incidenceSum` have a generic
+   translation-pairing result, mirroring cycle 34's
+   `incidenceProd_translation_reflects`? Cycle 35 showed plain
+   faithfulness-transport for the sum is conditional (needs a leafless
+   side), so the naive guess is that any sum-translation result
+   inherits the same side-condition. It does NOT: using `Sum.map t1 t2
+   : I1 ⊕ I2 → S1 ⊕ S2` (landing in a genuinely disjoint target,
+   unlike `Sum.elim t1 t2 : I1 ⊕ I2 → S` which shares a single target
+   and would reproduce cycle 33's collapse) makes CROSS-side
+   translate-equality `Sum.map t1 t2 p = Sum.map t1 t2 q` for `p, q` on
+   opposite sides *type-theoretically impossible*
+   (`Sum.inl _ ≠ Sum.inr _`, unconditionally) rather than merely false
+   for a specific instance. So the only cases the theorem must handle
+   are the two SAME-side cases, and those close via the unconditional
+   "lift" lemmas below -- the converse direction of cycle 35's
+   `incidenceSum_project_left`/`_right`, and, unlike those, needing NO
+   extra `typeFunc`-equality hypothesis: `incidenceSum`'s `typeFunc` is
+   *constant*, so in the LIFT direction (produce a `IsBisimulation` for
+   the sum from one for a factor) type-preservation is trivially `rfl`
+   with nothing to derive from `inc1`/`inc2`'s own typing -- the
+   asymmetry is specific to which direction of implication is being
+   proved, not an inconsistency with cycle 35's approach. Net result:
+   **the sum's translation-reflects property is unconditional**, in
+   direct contrast to cycle 35's conditional faithfulness-transport --
+   the two properties (faithfulness-transport vs. translation-pairing)
+   genuinely diverge in what side-conditions they need, even for the
+   same constructor. -/
+theorem incidenceSum_lift_left
+  {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+  (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+  {a b : I1} (h : approxBisim inc1 a b) :
+  approxBisim (incidenceSum inc1 inc2) (Sum.inl a) (Sum.inl b) := by
+  obtain ⟨rel1, hbisim1, hab⟩ := h
+  refine ⟨fun x y => match x, y with
+    | Sum.inl x1, Sum.inl y1 => rel1 x1 y1
+    | _, _ => False, ?_, hab⟩
+  intro x y hr
+  cases x with
+  | inl x1 =>
+    cases y with
+    | inl y1 =>
+      simp only at hr
+      obtain ⟨htype, hmatch⟩ := hbisim1 x1 y1 hr
+      refine ⟨by simp [incidenceSum], ?_, ?_⟩
+      · intro e he
+        simp only [incidenceSum, sumBoundary, List.mem_map] at he
+        obtain ⟨e1, he1, heq⟩ := he
+        subst heq
+        obtain ⟨e1', he1', hcompat, hrel'⟩ := hmatch.left e1 he1
+        exact ⟨{ i := Sum.inl e1'.i, role := Sum.inl e1'.role, sign := e1'.sign, mult := e1'.mult },
+          by simp only [incidenceSum, sumBoundary, List.mem_map]; exact ⟨e1', he1', rfl⟩,
+          ⟨congrArg Sum.inl hcompat.1, hcompat.2⟩, hrel'⟩
+      · intro e' he'
+        simp only [incidenceSum, sumBoundary, List.mem_map] at he'
+        obtain ⟨e1', he1', heq⟩ := he'
+        subst heq
+        obtain ⟨e1, he1, hcompat, hrel'⟩ := hmatch.right e1' he1'
+        exact ⟨{ i := Sum.inl e1.i, role := Sum.inl e1.role, sign := e1.sign, mult := e1.mult },
+          by simp only [incidenceSum, sumBoundary, List.mem_map]; exact ⟨e1, he1, rfl⟩,
+          ⟨congrArg Sum.inl hcompat.1, hcompat.2⟩, hrel'⟩
+    | inr y2 => simp at hr
+  | inr x2 => simp at hr
+
+theorem incidenceSum_lift_right
+  {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+  (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+  {a b : I2} (h : approxBisim inc2 a b) :
+  approxBisim (incidenceSum inc1 inc2) (Sum.inr a) (Sum.inr b) := by
+  obtain ⟨rel2, hbisim2, hab⟩ := h
+  refine ⟨fun x y => match x, y with
+    | Sum.inr x2, Sum.inr y2 => rel2 x2 y2
+    | _, _ => False, ?_, hab⟩
+  intro x y hr
+  cases x with
+  | inr x2 =>
+    cases y with
+    | inr y2 =>
+      simp only at hr
+      obtain ⟨htype, hmatch⟩ := hbisim2 x2 y2 hr
+      refine ⟨by simp [incidenceSum], ?_, ?_⟩
+      · intro e he
+        simp only [incidenceSum, sumBoundary, List.mem_map] at he
+        obtain ⟨e2, he2, heq⟩ := he
+        subst heq
+        obtain ⟨e2', he2', hcompat, hrel'⟩ := hmatch.left e2 he2
+        exact ⟨{ i := Sum.inr e2'.i, role := Sum.inr e2'.role, sign := e2'.sign, mult := e2'.mult },
+          by simp only [incidenceSum, sumBoundary, List.mem_map]; exact ⟨e2', he2', rfl⟩,
+          ⟨congrArg Sum.inr hcompat.1, hcompat.2⟩, hrel'⟩
+      · intro e' he'
+        simp only [incidenceSum, sumBoundary, List.mem_map] at he'
+        obtain ⟨e2', he2', heq⟩ := he'
+        subst heq
+        obtain ⟨e2, he2, hcompat, hrel'⟩ := hmatch.right e2' he2'
+        exact ⟨{ i := Sum.inr e2.i, role := Sum.inr e2.role, sign := e2.sign, mult := e2.mult },
+          by simp only [incidenceSum, sumBoundary, List.mem_map]; exact ⟨e2, he2, rfl⟩,
+          ⟨congrArg Sum.inr hcompat.1, hcompat.2⟩, hrel'⟩
+    | inl y1 => simp at hr
+  | inl x1 => simp at hr
+
+/- The main pairing result, combining both lifts with the cross-side
+   impossibility argument: `Sum.map`-translate-equality reflects to `≈`
+   in the sum, UNCONDITIONALLY -- no faithfulness or leaflessness
+   hypotheses on `inc1`/`inc2` at all, only that `t1`/`t2` individually
+   reflect translate-equality to `≈` in their own factor (the same
+   hypothesis shape as cycle 34's `incidenceProd_translation_reflects`
+   and the original `natToFiniteSet_reflects_approxBisim`). -/
+theorem incidenceSum_translation_reflects
+  {I1 S1 I2 S2 : Type u} [DecidableEq I1] [DecidableEq I2] {R1 T1 R2 T2 : Type u}
+  (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+  (t1 : I1 → S1) (t2 : I2 → S2)
+  (ht1 : ∀ x y, t1 x = t1 y → approxBisim inc1 x y)
+  (ht2 : ∀ x y, t2 x = t2 y → approxBisim inc2 x y)
+  {p q : I1 ⊕ I2} (h : Sum.map t1 t2 p = Sum.map t1 t2 q) :
+  approxBisim (incidenceSum inc1 inc2) p q := by
+  cases p with
+  | inl a =>
+    cases q with
+    | inl b =>
+      simp only [Sum.map_inl, Sum.inl.injEq] at h
+      exact incidenceSum_lift_left inc1 inc2 (ht1 a b h)
+    | inr b => simp at h
+  | inr a =>
+    cases q with
+    | inl b => simp at h
+    | inr b =>
+      simp only [Sum.map_inr, Sum.inr.injEq] at h
+      exact incidenceSum_lift_right inc1 inc2 (ht2 a b h)
+
+/- Concrete confirmation: pairing `natToFiniteSet` (cycle 5, itself now
+   known to be a `glue`-homomorphism, cycle 34) on both sides of a
+   `natIncidence ⊕ natIncidence` sum, translate-equality still reflects
+   to `≈` in the sum -- despite `incidenceSum natIncidence natIncidence`
+   itself NOT being faithful (cycle 33's `incidenceSum_leaves_cross_natIncidence`). -/
+example {a b : Nat ⊕ Nat}
+    (h : Sum.map natToFiniteSet natToFiniteSet a = Sum.map natToFiniteSet natToFiniteSet b) :
+    approxBisim (incidenceSum natIncidence natIncidence) a b :=
+  incidenceSum_translation_reflects natIncidence natIncidence natToFiniteSet natToFiniteSet
+    (fun _ _ => natToFiniteSet_reflects_approxBisim) (fun _ _ => natToFiniteSet_reflects_approxBisim) h
+
 end IncidenceCore

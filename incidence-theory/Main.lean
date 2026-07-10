@@ -455,6 +455,27 @@ def printCycles33plus : IO Unit := do
   IO.println "    and propagating it via each instance's OWN type_consistent obligation"
   IO.println "  → proves with ONLY propext/Quot.sound, no Classical.choice -- fully constructive"
 
+  IO.println "\n🪢 A Generic Translation for the Sum -- Unconditional, Unlike Faithfulness (cycle 36):"
+  IO.println "  ✓ audit (item 2 from cycle 35): is cycleIncidenceFixed unique among every instance"
+  IO.println "    built so far in being BOTH faithful AND leafless? Yes -- natIncidence has one leaf,"
+  IO.println "    cycleIncidence (pre-fix) is leafless but not faithful, constructors inherit leaves"
+  IO.println "    from their factors. cycleIncidenceFixed remains the only witness"
+  IO.println "  ✓ incidenceSum_translation_reflects: pairing two ≈-reflecting translations via"
+  IO.println "    Sum.map (NOT Sum.elim) reflects translate-equality to ≈ in the sum, with NO"
+  IO.println "    faithfulness or leafless side-condition at all -- Sum.map lands in a genuinely"
+  IO.println "    disjoint S1⊕S2, so cross-side translate-equality is TYPE-THEORETICALLY IMPOSSIBLE"
+  IO.println "    (Sum.inl _ ≠ Sum.inr _), sidestepping cycle 33's collapse issue entirely"
+  IO.println "  ✓ incidenceSum_lift_left/_right: the converse of cycle 35's project lemmas -- same-"
+  IO.println "    side ≈ in a factor LIFTS to ≈ in the sum, unconditionally, no typeFunc-equality"
+  IO.println "    hypothesis needed (the sum's CONSTANT typeFunc makes type-preservation free in"
+  IO.println "    THIS direction, unlike the project direction which needed the baking trick)"
+  IO.println "  ✓ confirmed concretely: natToFiniteSet paired via Sum.map still reflects ≈ in"
+  IO.println "    natIncidence ⊕ natIncidence, even though that sum is NOT faithful (cycle 33)"
+  IO.println "  → faithfulness-transport and translation-pairing genuinely diverge in what side-"
+  IO.println "    conditions they need, even for the SAME constructor -- one is conditional, the"
+  IO.println "    other unconditional, and the reason is which type (Sum.elim's shared target vs"
+  IO.println "    Sum.map's disjoint target) the translation is asked to land in"
+
 def main : IO Unit := do
   printFoundationsAndEarlyCycles
   printCycles12to19
