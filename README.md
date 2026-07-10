@@ -81,6 +81,8 @@ It currently establishes:
   Singleton and Kuratowski ordered-pair constructions also descend to the
   recursive extensional quotient, with their exact outer membership laws;
   unordered-pair equality is classified and ordered pairs are injective.
+  The finite powerset construction now also descends to that quotient with
+  the exact law `x ∈ power(s) ↔ x ⊆ s`.
   Relations are represented as sets of ordered pairs; singleton graphs are
   proved relational and functional, with an exact application iff law.
   The identity graph on every finite internal ordinal is also a checked

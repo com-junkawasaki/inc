@@ -622,6 +622,24 @@ theorem hfApprox_pair {n : Nat} {s s' t t' : HFSet}
     · exact ⟨s, hf_member_pair.mpr (Or.inl rfl), hs⟩
     · exact ⟨t, hf_member_pair.mpr (Or.inr rfl), ht⟩
 
+/- Adjoining recursively equal heads to recursively equal tails preserves one
+   more approximation layer.  This is the basic constructor used below to
+   normalize an extensional finite subset against a chosen presentation. -/
+theorem hfApprox_insert {n : Nat} {head head' tail tail' : HFSet}
+    (hhead : HFApprox n head head') (htail : HFApprox (n + 1) tail tail') :
+    HFApprox (n + 1) (.insert head tail) (.insert head' tail') := by
+  constructor
+  · intro x hx
+    rcases hf_member_insert.mp hx with rfl | hx
+    · exact ⟨head', HFMember.head _ _, hhead⟩
+    · rcases htail.left x hx with ⟨y, hy, hxy⟩
+      exact ⟨y, HFMember.tail hy, hxy⟩
+  · intro x hx
+    rcases hf_member_insert.mp hx with rfl | hx
+    · exact ⟨head, HFMember.head _ _, hhead⟩
+    · rcases htail.right x hx with ⟨y, hy, hxy⟩
+      exact ⟨y, HFMember.tail hy, hxy⟩
+
 /- Stable recursive extensional equality: agreement at every finite depth. -/
 def HFRecursiveEq (s t : HFSet) : Prop := ∀ n, HFApprox n s t
 
@@ -637,6 +655,20 @@ theorem hfRecursiveEq_trans {r s t : HFSet} :
     HFRecursiveEq r s → HFRecursiveEq s t → HFRecursiveEq r t := by
   intro hrs hst n
   exact hfApprox_trans (hrs n) (hst n)
+
+/- Literal extensional equality is, in particular, equality at every finite
+   approximation depth. -/
+theorem hfExtensionalEq_recursive {s t : HFSet}
+    (h : HFExtensionalEq s t) : HFRecursiveEq s t := by
+  intro n
+  cases n with
+  | zero => trivial
+  | succ n =>
+    constructor
+    · intro x hx
+      exact ⟨x, (h x).mp hx, hfApprox_refl n x⟩
+    · intro x hx
+      exact ⟨x, (h x).mpr hx, hfApprox_refl n x⟩
 
 theorem hfRecursiveEq_memberRank_eq {s t : HFSet} :
     HFRecursiveEq s t → s.memberRank = t.memberRank := by
@@ -949,6 +981,39 @@ theorem hfRecursiveMemberRaw_iff_exists {x s : HFSet} :
       rcases hf_member_insert.mp hy with rfl | hy
       · exact Or.inl hxy
       · exact Or.inr ⟨y, hy, hxy⟩
+
+/- A syntactic presentation of subset on the recursive quotient: each member
+   of the source has a recursively equal representative in the target. -/
+def HFRecursiveSubsetRaw (u s : HFSet) : Prop :=
+  ∀ x, HFMember x u → ∃ y, HFMember y s ∧ HFRecursiveEq x y
+
+/- Any recursively represented finite subset can be normalized to a literal
+   syntactic subset of its chosen target presentation. -/
+theorem hfRecursiveSubsetRaw_refine {u s : HFSet} :
+    HFRecursiveSubsetRaw u s →
+      ∃ v, HFSubset v s ∧ HFRecursiveEq u v := by
+  induction u generalizing s with
+  | empty =>
+    intro _
+    refine ⟨.empty, ?_, hfRecursiveEq_refl .empty⟩
+    intro x hx
+    exact False.elim (hf_not_member_empty hx)
+  | insert head tail head_ih tail_ih =>
+    intro hsubset
+    rcases hsubset head (HFMember.head _ _) with ⟨head', hhead', hheadEq⟩
+    have htailSubset : HFRecursiveSubsetRaw tail s := by
+      intro x hx
+      exact hsubset x (HFMember.tail hx)
+    rcases tail_ih htailSubset with ⟨tail', htail', htailEq⟩
+    refine ⟨.insert head' tail', ?_, ?_⟩
+    · intro x hx
+      rcases hf_member_insert.mp hx with rfl | hx
+      · exact hhead'
+      · exact htail' x hx
+    · intro n
+      cases n with
+      | zero => trivial
+      | succ n => exact hfApprox_insert (hheadEq n) (htailEq (n + 1))
 
 theorem hfRecursiveMemberRaw_memberRank_lt {x s : HFSet}
     (h : HFRecursiveMemberRaw x s) : x.memberRank < s.memberRank := by
@@ -1759,6 +1824,101 @@ theorem hfRecursiveNatShiftGraph_composite_functional
 def HFRecursiveSubset (s t : HFRecursiveSet) : Prop :=
   ∀ x, HFRecursiveMember x s → HFRecursiveMember x t
 
+/- The quotient subset relation has the expected finite presentation-level
+   characterization. -/
+theorem hfRecursiveSubset_mk_iff_raw (u s : HFSet) :
+    HFRecursiveSubset (Quotient.mk hfRecursiveSetoid u)
+      (Quotient.mk hfRecursiveSetoid s) ↔ HFRecursiveSubsetRaw u s := by
+  constructor
+  · intro h x hx
+    have hxu : HFRecursiveMember (Quotient.mk hfRecursiveSetoid x)
+        (Quotient.mk hfRecursiveSetoid u) := by
+      exact (hfRecursiveMember_mk x u).mpr
+        (fun n => ⟨x, hx, hfApprox_refl n x⟩)
+    rcases hfRecursiveMemberRaw_iff_exists.mp
+        ((hfRecursiveMember_mk x s).mp (h _ hxu)) with ⟨y, hy, hxy⟩
+    exact ⟨y, hy, hxy⟩
+  · intro h x hx
+    revert hx
+    refine Quotient.inductionOn x ?_
+    intro x hx
+    rcases hfRecursiveMemberRaw_iff_exists.mp
+        ((hfRecursiveMember_mk x u).mp hx) with ⟨z, hz, hxz⟩
+    rcases h z hz with ⟨y, hy, hzy⟩
+    exact (hfRecursiveMember_mk x s).mpr
+      (hfRecursiveMemberRaw_iff_exists.mpr
+        ⟨y, hy, hfRecursiveEq_trans hxz hzy⟩)
+
+/- Membership in the syntactic powerset is precisely internal subsethood of
+   the represented sets.  The reverse direction uses finite normalization and
+   the already proved extensional completeness of the presentation. -/
+theorem hfRecursiveMember_power_mk_iff_subset (x : HFRecursiveSet) (s : HFSet) :
+    HFRecursiveMember x (Quotient.mk hfRecursiveSetoid s.power) ↔
+      HFRecursiveSubset x (Quotient.mk hfRecursiveSetoid s) := by
+  refine Quotient.inductionOn x ?_
+  intro x
+  constructor
+  · intro hx
+    apply (hfRecursiveSubset_mk_iff_raw x s).mpr
+    rcases hfRecursiveMemberRaw_iff_exists.mp
+        ((hfRecursiveMember_mk x s.power).mp hx) with ⟨v, hv, hxv⟩
+    intro z hz
+    have hzRaw : HFRecursiveMemberRaw z x :=
+      fun n => ⟨z, hz, hfApprox_refl n z⟩
+    have hzv : HFRecursiveMemberRaw z v :=
+      (hfRecursiveMemberRaw_source_congruent hxv).mp hzRaw
+    rcases hfRecursiveMemberRaw_iff_exists.mp hzv with ⟨w, hw, hzw⟩
+    exact ⟨w, hf_power_member_subset hv w hw, hzw⟩
+  · intro hx
+    have hraw : HFRecursiveSubsetRaw x s :=
+      (hfRecursiveSubset_mk_iff_raw x s).mp hx
+    rcases hfRecursiveSubsetRaw_refine hraw with ⟨v, hvs, hxv⟩
+    rcases hf_power_complete_extensional hvs with ⟨w, hw, hvw⟩
+    exact (hfRecursiveMember_mk x s.power).mpr
+      (hfRecursiveMemberRaw_iff_exists.mpr
+        ⟨w, hw, hfRecursiveEq_trans hxv (hfExtensionalEq_recursive hvw)⟩)
+
+/- Therefore the finite powerset presentation is invariant under recursive
+   extensional equality and can genuinely descend to the quotient. -/
+theorem hfRecursive_power_congruent {s t : HFSet}
+    (h : HFRecursiveEq s t) : HFRecursiveEq s.power t.power := by
+  apply @Quotient.exact HFSet hfRecursiveSetoid s.power t.power
+  apply hfRecursiveSet_extensionality
+  intro x
+  rw [hfRecursiveMember_power_mk_iff_subset,
+    hfRecursiveMember_power_mk_iff_subset]
+  have hst : (Quotient.mk hfRecursiveSetoid s : HFRecursiveSet) =
+      Quotient.mk hfRecursiveSetoid t := Quotient.sound h
+  rw [hst]
+
+/- The quotient-level finite powerset.  It is a powerset operation for the
+   finite hereditary-set fragment, not an assertion of a full set-theoretic
+   powerset principle. -/
+def hfRecursivePower (s : HFRecursiveSet) : HFRecursiveSet :=
+  Quotient.liftOn s
+    (fun s => Quotient.mk hfRecursiveSetoid s.power)
+    (by
+      intro s t h
+      exact Quotient.sound (hfRecursive_power_congruent h))
+
+theorem hfRecursivePower_mk (s : HFSet) :
+    hfRecursivePower (Quotient.mk hfRecursiveSetoid s) =
+      Quotient.mk hfRecursiveSetoid s.power := rfl
+
+theorem hfRecursiveMember_power_iff_subset (x s : HFRecursiveSet) :
+    HFRecursiveMember x (hfRecursivePower s) ↔ HFRecursiveSubset x s := by
+  refine Quotient.inductionOn s ?_
+  intro s
+  exact hfRecursiveMember_power_mk_iff_subset x s
+
+/- Finite powerset is monotone for the internally defined subset order. -/
+theorem hfRecursivePower_monotone {s t : HFRecursiveSet} :
+    HFRecursiveSubset s t → HFRecursiveSubset (hfRecursivePower s) (hfRecursivePower t) := by
+  intro h x hx
+  rw [hfRecursiveMember_power_iff_subset] at hx ⊢
+  intro y hy
+  exact h y (hx y hy)
+
 theorem hfRecursiveSubset_refl (s : HFRecursiveSet) : HFRecursiveSubset s s :=
   fun _ h => h
 
@@ -1989,6 +2149,7 @@ structure HFRecursiveSetFragmentModel where
   empty : HFRecursiveSet
   pair : HFRecursiveSet → HFRecursiveSet → HFRecursiveSet
   union : HFRecursiveSet → HFRecursiveSet → HFRecursiveSet
+  power : HFRecursiveSet → HFRecursiveSet
   filter : HFRecursivePredicate → HFRecursiveSet → HFRecursiveSet
   bigUnion : HFRecursiveSet → HFRecursiveSet
   empty_no_member : ∀ x, ¬ HFRecursiveMember x empty
@@ -1997,6 +2158,7 @@ structure HFRecursiveSetFragmentModel where
   pair_spec : ∀ x s t, HFRecursiveMember x (pair s t) ↔ x = s ∨ x = t
   union_spec : ∀ x s t, HFRecursiveMember x (union s t) ↔
     HFRecursiveMember x s ∨ HFRecursiveMember x t
+  power_spec : ∀ x s, HFRecursiveMember x (power s) ↔ HFRecursiveSubset x s
   filter_spec : ∀ p x s,
     HFRecursiveMember x (filter p s) ↔ HFRecursiveMember x s ∧ p.holds x
   bigUnion_intro : ∀ x y s,
@@ -2014,6 +2176,7 @@ def hfRecursiveSetFragmentModel : HFRecursiveSetFragmentModel where
   empty := hfRecursiveEmpty
   pair := hfRecursivePair
   union := hfRecursiveUnion
+  power := hfRecursivePower
   filter := hfRecursiveFilter
   bigUnion := hfRecursiveBigUnion
   empty_no_member := hfRecursiveMember_empty
@@ -2021,6 +2184,7 @@ def hfRecursiveSetFragmentModel : HFRecursiveSetFragmentModel where
   pair_right := hfRecursiveMember_pair_right
   pair_spec := hfRecursiveMember_pair_iff
   union_spec := hfRecursiveMember_union_iff
+  power_spec := hfRecursiveMember_power_iff_subset
   filter_spec := hfRecursiveMember_filter_iff
   bigUnion_intro := by
     intro x y s hxy hys

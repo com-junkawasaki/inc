@@ -877,6 +877,92 @@ structure RecurrentFormulaSchedule (Atom : Type u) where
   formulaAt : Nat → Formula Atom
   revisits : ∀ formula stage, ∃ later, stage ≤ later ∧ formulaAt later = formula
 
+/- Schedules are intentionally independent from a particular enumeration.  The
+   following operations make that boundary practical: a construction that
+   needs to reserve finitely many initial stages can do so without having to
+   rebuild the recurrent part of the schedule. -/
+theorem RecurrentFormulaSchedule.revisits_strictly_after {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom) (formula : Formula Atom)
+    (stage : Nat) :
+    ∃ later, stage < later ∧ schedule.formulaAt later = formula := by
+  rcases schedule.revisits formula (stage + 1) with ⟨later, hlater, hformula⟩
+  exact ⟨later, Nat.lt_of_succ_le hlater, hformula⟩
+
+noncomputable def RecurrentFormulaSchedule.tail {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom) (offset : Nat) :
+    RecurrentFormulaSchedule Atom where
+  formulaAt := fun stage => schedule.formulaAt (offset + stage)
+  revisits := by
+    intro formula stage
+    rcases schedule.revisits formula (offset + stage) with
+      ⟨later, hlater, hformula⟩
+    refine ⟨later - offset, ?_, ?_⟩
+    · apply Nat.le_sub_of_add_le
+      simpa [Nat.add_comm] using hlater
+    · rw [Nat.add_sub_of_le (Nat.le_trans (Nat.le_add_right _ _) hlater)]
+      exact hformula
+
+theorem RecurrentFormulaSchedule.tail_formulaAt {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom) (offset stage : Nat) :
+    (schedule.tail offset).formulaAt stage = schedule.formulaAt (offset + stage) :=
+  rfl
+
+/- Insert one prescribed formula before a recurrent tail.  This is useful for
+   schedules whose first saturation step must be chosen by hand. -/
+noncomputable def RecurrentFormulaSchedule.prepend {Atom : Type u}
+    (head : Formula Atom) (schedule : RecurrentFormulaSchedule Atom) :
+    RecurrentFormulaSchedule Atom where
+  formulaAt := fun
+    | 0 => head
+    | stage + 1 => schedule.formulaAt stage
+  revisits := by
+    intro formula stage
+    cases stage with
+    | zero =>
+      rcases schedule.revisits formula 0 with ⟨later, hlater, hformula⟩
+      exact ⟨later + 1, Nat.zero_le _, hformula⟩
+    | succ stage =>
+      rcases schedule.revisits formula stage with ⟨later, hlater, hformula⟩
+      exact ⟨later + 1, Nat.succ_le_succ hlater, hformula⟩
+
+theorem RecurrentFormulaSchedule.prepend_zero {Atom : Type u}
+    (head : Formula Atom) (schedule : RecurrentFormulaSchedule Atom) :
+    (schedule.prepend head).formulaAt 0 = head :=
+  rfl
+
+theorem RecurrentFormulaSchedule.prepend_succ {Atom : Type u}
+    (head : Formula Atom) (schedule : RecurrentFormulaSchedule Atom) (stage : Nat) :
+    (schedule.prepend head).formulaAt (stage + 1) = schedule.formulaAt stage :=
+  rfl
+
+/- A finite delay is a repeated `top` prefix.  Its tail is definitionally the
+   original schedule, so finite preliminary construction does not change the
+   eventual disjunction-saturation behaviour. -/
+noncomputable def RecurrentFormulaSchedule.delay {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom) : Nat → RecurrentFormulaSchedule Atom
+  | 0 => schedule
+  | delay + 1 => (schedule.delay delay).prepend .top
+
+theorem RecurrentFormulaSchedule.delay_zero {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom) : schedule.delay 0 = schedule :=
+  rfl
+
+theorem RecurrentFormulaSchedule.delay_tail {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom) :
+    ∀ delay stage,
+      (schedule.delay delay).formulaAt (delay + stage) = schedule.formulaAt stage := by
+  intro delay
+  induction delay with
+  | zero =>
+    intro stage
+    simp [RecurrentFormulaSchedule.delay]
+  | succ delay ih =>
+    intro stage
+    change ((schedule.delay delay).prepend .top).formulaAt ((delay + 1) + stage) = _
+    rw [show delay + 1 + stage = (delay + stage) + 1 by omega]
+    rw [RecurrentFormulaSchedule.prepend_succ]
+    exact ih stage
+
 noncomputable def avoidanceStep {Atom : Type u}
   (forbidden : Formula Atom) (current : List (Formula Atom)) :
     Formula Atom → List (Formula Atom)
@@ -1647,6 +1733,47 @@ theorem primeTheory_finite_fragment_implication_failure_extension {Atom : Type u
     · exact hderives
   exact finite_implication_failure_prime_extension
     schedule support premise conclusion havoid
+
+/- The finite-fragment witness preserves the whole finite *deductive
+   closure*, not merely the displayed support.  This is the exact compact
+   approximation of an arbitrary canonical world that is available without
+   assuming that the world itself has a finite presentation. -/
+theorem primeTheory_finite_fragment_implication_failure_extension_conservative
+    {Atom : Type u} (schedule : RecurrentFormulaSchedule Atom)
+    (theory : PrimeTheory Atom) (support : List (Formula Atom))
+    (hsupport : ∀ formula, formula ∈ support → theory.contains formula)
+    (premise conclusion : Formula Atom)
+    (hnot : ¬ theory.contains (.imp premise conclusion)) :
+    ∃ extension : PrimeTheory Atom,
+      (∀ formula, Derives support formula → extension.contains formula) ∧
+        extension.contains premise ∧ ¬ extension.contains conclusion ∧
+          ¬ extension.contains (.imp premise conclusion) := by
+  have havoid : DerivationallyAvoids support (.imp premise conclusion) := by
+    intro hderives
+    apply hnot
+    apply theory.closed (context := support)
+    · exact hsupport
+    · exact hderives
+  exact finite_implication_failure_prime_extension_conservative
+    schedule support premise conclusion havoid
+
+/- In particular, every finite list of facts of an arbitrary prime theory is
+   retained by a failure witness together with all consequences of that list.
+   The theorem separates the still-missing coherent-limit argument from its
+   already formalized finitary compactness content. -/
+theorem primeTheory_finite_facts_implication_failure_extension
+    {Atom : Type u} (schedule : RecurrentFormulaSchedule Atom)
+    (theory : PrimeTheory Atom) (facts : List (Formula Atom))
+    (hfacts : ∀ formula, formula ∈ facts → theory.contains formula)
+    (premise conclusion : Formula Atom)
+    (hnot : ¬ theory.contains (.imp premise conclusion)) :
+    ∃ extension : PrimeTheory Atom,
+      (∀ formula, Derives facts formula → extension.contains formula) ∧
+        extension.contains premise ∧ ¬ extension.contains conclusion := by
+  rcases primeTheory_finite_fragment_implication_failure_extension_conservative
+    schedule theory facts hfacts premise conclusion hnot with
+    ⟨extension, hclosure, hpremise, hnconclusion, _⟩
+  exact ⟨extension, hclosure, hpremise, hnconclusion⟩
 
 /- A canonical theory need not in general have a finite presentation.  When
    it does, however, the finite relative Lindenbaum construction already gives
