@@ -1832,18 +1832,77 @@ the second route to use unless the roles are made unique too. Which
 route applies is a genuine structural fact about the instance, not a
 matter of proof-engineering preference.
 
-**Next hypothesis (cycle 28, not yet attempted)**: option 2 of cycle
-26's queue, not reached this cycle: does `cycleIncidence`'s genuinely
-invertible `glue` (`Z/4Z`) open an interesting T5 translation story,
-given every prior translation (`natToFiniteSet`/`pairToShape`/
-`pathToNatBool`) only ever needed injectivity, never anything about
-`glue`'s algebraic structure? A natural candidate: a translation that
-is also a `glue`-homomorphism (unlike cycles 6/7/15's cross-*instance*
-maps, which were never expected to preserve `glue`) -- e.g. does
-`cycleToNat : CycleId → Nat` (already defined, used internally for
-`cycleAdd`) satisfy `cycleToNat (cycleAdd x y) = (cycleToNat x +
-cycleToNat y) % 4` as a clean, single-*instance* `glue`-homomorphism
-into `(Nat, +, %4)`, something no prior translation attempted or needed
-to check since no prior `glue` had interesting algebraic structure to
-preserve? Worth checking concretely (`#eval`/`decide`) before
-formalizing, per discipline -- not yet scoped beyond this description.
+## Cycle 28
+
+**Hypothesis**: (option 2 of cycle 26's queue) does `cycleIncidence`'s
+genuinely invertible `glue` (`Z/4Z`) open a new T5 translation story --
+specifically, is `cycleToNat` (already defined, used internally for
+`cycleAdd`) a genuine `glue`-*homomorphism* (`cycleToNat (cycleAdd x y)
+= (cycleToNat x + cycleToNat y) % 4`), something no prior translation
+in this project attempted, since no prior `glue` (an infinite monoid,
+or non-group left-biased selection) had algebraic structure worth
+checking a translation against?
+
+**Method**: `#eval` first, per discipline, scanning all 16 pairs `(m, n)
+∈ {0..3}²` via `cycleToNat (cycleAdd (cycleOfNat m) (cycleOfNat n))`
+against `(m + n) % 4` directly. All 16 agreed. Formalized as
+`cycleToNat_glue_hom (x y : CycleId) : cycleToNat (cycleAdd x y) =
+(cycleToNat x + cycleToNat y) % 4`, proved by `cases x <;> cases y <;>
+decide` (16 concrete cases, fully computational). Then built the
+standard T5 injectivity/reflects-`≈` pair (cycle 5's recipe) --
+targeting `cycleIncidenceFixed` specifically (the *fixed*, faithful
+variant from cycle 27), not the original `cycleIncidence`, since
+translate-reflects-`≈` would be vacuously true against `cycleIncidence`
+(cycle 26: *everything* is `≈`-related there regardless of any
+translation) and therefore uninteresting.
+
+**Result**: **confirmed, and the proof needed no axioms at all --
+`cycleToNat_glue_hom` is unconditionally true by direct computation, not
+merely "true in the cases checked."** Unsurprising once stated plainly
+-- `cycleAdd` was *defined* as exactly this formula wrapped in
+`cycleOfNat`/`cycleToNat` -- but worth confirming as a real theorem
+rather than trusting the definition's shape by eye (the same discipline
+that caught real bugs elsewhere in this project). Added
+`cycleToNat_unit_natural` (trivial, `decide`) and the standard
+`cycleToNat_injective`/`_reflects_approxBisim` pair (`propext` only,
+consistent with cycle 27's fully constructive faithfulness theorem for
+`cycleIncidenceFixed`). Full `lake build`: 40/40 jobs. Repo-wide
+`sorry`-as-tactic grep: none. Added to `Cycle.lean`, wired into
+`Main.lean`.
+
+**Synthesis**: `cycleToNat` is the first translation in this project
+that is simultaneously a faithful `≈`-reflector (the T5 property every
+prior translation had) *and* a genuine algebraic homomorphism (a
+property no prior translation's target had reason to have). Combined,
+these say something sharper than either alone: `cycleIncidenceFixed`'s
+entire algebraic-plus-relational structure is *literally isomorphic* to
+`Z/4Z` with the usual quotient equality -- `cycleToNat` is a bijection
+(by injectivity plus `cycleOfNat` being its two-sided inverse by
+construction) that is simultaneously a `glue`-homomorphism and reflects
+`≈` exactly. This is a genuinely stronger characterization than any
+prior instance's T5 result, precisely because it was the first instance
+whose `glue` had a real target worth being isomorphic *to*.
+
+**Next hypothesis (cycle 29, not yet attempted)**: no mandatory item
+carries over -- both of cycle 26's queued options are now closed
+(cycle 27: faithfulness fix + price; cycle 28: translation-as-
+homomorphism). The `cycleIncidence`/`cycleIncidenceFixed` thread has
+been explored across boundary structure (collapse, cycle 26), boundary
+composition (∂², cycles 26-27), bisimulation (faithfulness, cycle 27),
+and now translation/algebra (cycle 28) -- a full sweep comparable in
+breadth to what `simplexIncidence` received across cycles 11-23. Worth
+treating this thread as complete for now rather than manufacturing a
+fifth angle on the same instance. Two directions for next time, neither
+scoped: (a) a fifth new `Incidence` instance, testing yet another
+un-tried structural shape (e.g. a *tree* with branching factor > 2,
+unlike `pairIncidenceChained`'s strictly-binary nesting -- would a
+wider branching factor surface anything `pair`'s two-entry shape
+couldn't?); (b) revisit the original, much larger research-program
+questions from early in this project's history (constructing `ℕ`/sets/
+logic/category-theory concepts *internal* to Inc, rather than as
+external `Incidence` instances) now that the instance library and
+general-theorem toolkit are substantially more mature than when that
+scope was last assessed as "too large for one cycle" -- worth
+re-scoping only a *first concrete milestone* of that program, not the
+whole vision, consistent with how the very first move into this
+territory (Peano naturals as a concrete instance) was scoped originally.

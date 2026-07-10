@@ -332,3 +332,13 @@ def main : IO Unit := do
   IO.println "  ✓ the predicted price, confirmed a FOURTH time: ∂² = 0 still fails (same general"
   IO.println "    theorem, single_link_composition_ne_zero -- the tension isn't about HOW"
   IO.println "    distinguishing info is encoded, only about keeping the single-link shape"
+
+  IO.println "\n🧮 A Translation That's Also a Homomorphism, For the First Time (cycle 28):"
+  IO.println "  ✓ every prior T5 translation only ever needed injectivity -- no prior glue had"
+  IO.println "    algebraic structure worth checking a translation against"
+  IO.println "  ✓ cycleToNat IS a genuine glue-homomorphism: cycleToNat(cycleAdd x y) ="
+  IO.println "    (cycleToNat x + cycleToNat y) % 4, checked on all 16 pairs, proves with"
+  IO.println "    NO axioms at all -- purely computational"
+  IO.println "  ✓ combined with injectivity + cycleIncidenceFixed's faithfulness (cycle 27):"
+  IO.println "    cycleToNat is BOTH a faithful ≈-reflector AND an algebraic homomorphism --"
+  IO.println "    cycleIncidenceFixed's glue structure is literally isomorphic to Z/4Z"

@@ -249,4 +249,42 @@ theorem cycleIncidenceFixed_c0_composition_ne_zero (idx : List CycleId) (hmem : 
     rfl rfl (by simp)
     hmem
 
+/- Research cycle 28 (see RESEARCH_LOG.md): every prior T5 translation
+   (`natToFiniteSet`/`pairToShape`/`pathToNatBool`) only ever needed
+   *injectivity* -- none of their targets, and none of the source
+   `glue`s (an infinite monoid, or non-group left-biased selection), had
+   algebraic structure worth checking a translation against. `Z/4Z`
+   (cycle 26) is different: it's the first *invertible* `glue` in this
+   project. Does `cycleToNat` (already used internally to define
+   `cycleAdd`) also happen to be a genuine `glue`-*homomorphism* into
+   `(Nat, (· + ·) % 4)`, not just an injective map? Checked empirically
+   first (`#eval`, all 16 pairs `(m, n) ∈ {0..3}²`): every pair agrees.
+   Unsurprising once stated -- `cycleAdd` was *defined* via exactly this
+   formula wrapped in `cycleOfNat`/`cycleToNat` -- but worth confirming
+   as a real theorem, not just trusting the definition's shape by eye. -/
+theorem cycleToNat_glue_hom (x y : CycleId) :
+  cycleToNat (cycleAdd x y) = (cycleToNat x + cycleToNat y) % 4 := by
+  cases x <;> cases y <;> decide
+
+theorem cycleToNat_unit_natural : cycleToNat cycleIncidenceFixed.unit = 0 := by decide
+
+theorem cycleToNat_injective {x y : CycleId} (h : cycleToNat x = cycleToNat y) : x = y := by
+  cases x <;> cases y <;> simp_all [cycleToNat]
+
+/- The standard T5 pattern (cycle 5's recipe, applied to `cycleIncidenceFixed`
+   since it -- unlike the unfixed `cycleIncidence`, where this would be
+   vacuous -- is genuinely `≈`-faithful, cycle 27): injectivity plus the
+   instance's own faithfulness theorem gives translation-reflects-`≈`.
+   Combined with `cycleToNat_glue_hom`/`_unit_natural` above, `cycleToNat`
+   is the *first* translation in this project that is simultaneously a
+   faithful reflector of `≈` AND a genuine algebraic homomorphism --
+   `cycleIncidenceFixed`'s `glue` structure is literally isomorphic to
+   `Z/4Z`, with `cycleToNat` as the explicit witness (bijective, since
+   `cycleOfNat` is its two-sided inverse by construction, and a
+   homomorphism, per the theorems above). -/
+theorem cycleToNat_reflects_approxBisim {x y : CycleId}
+  (h : cycleToNat x = cycleToNat y) : approxBisim cycleIncidenceFixed x y := by
+  rw [cycleIncidenceFixed_approxBisim_iff]
+  exact cycleToNat_injective h
+
 end IncidenceCore
