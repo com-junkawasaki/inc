@@ -739,6 +739,118 @@ theorem two_link_composition_value {I R T : Type u} [DecidableEq I]
   rw [hBij1, hBij2]
   simp [Int.zero_add]
 
+/- Research cycle 30 (see RESEARCH_LOG.md): cycle 20 declined a 3-entry
+   generalization of `boundaryMatrix_two_link`/`two_link_composition_value`
+   for lack of a second real 3-entry instance to validate it against.
+   Cycle 29 (`treeIncidence.node`) supplied one, alongside
+   `simplexIncidence.face` (cycle 11) -- the exact condition cycle 20
+   said would justify building this. Same technique as the two-entry
+   version, one more case throughout. -/
+
+/- Three-entry analogue of `boundaryMatrix_two_link`. -/
+theorem boundaryMatrix_three_link {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i j1 j2 j3 : I) (e1 e2 e3 : Endpoint I R)
+  (hb : inc.boundary i = [e1, e2, e3]) (he1i : e1.i = j1) (he2i : e2.i = j2) (he3i : e3.i = j3)
+  (hne12 : j1 ≠ j2) (hne13 : j1 ≠ j3) (hne23 : j2 ≠ j3) (x : I) :
+  boundaryMatrix inc idx i x =
+    (if x = j1 then
+      (match e1.sign with | Sign.neg => -(Int.ofNat e1.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e1.mult)
+     else 0) +
+    (if x = j2 then
+      (match e2.sign with | Sign.neg => -(Int.ofNat e2.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e2.mult)
+     else 0) +
+    (if x = j3 then
+      (match e3.sign with | Sign.neg => -(Int.ofNat e3.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e3.mult)
+     else 0) := by
+  rw [boundaryMatrix_eq_foldl, hb]
+  simp only [List.foldl_cons, List.foldl_nil, he1i, he2i, he3i]
+  by_cases h1 : x = j1
+  · subst h1
+    simp [hne12, hne12.symm, hne13, hne13.symm]
+  · by_cases h2 : x = j2
+    · subst h2
+      simp [h1, Ne.symm h1, hne23, hne23.symm]
+    · by_cases h3 : x = j3
+      · subst h3
+        simp [h1, Ne.symm h1, h2, Ne.symm h2]
+      · simp [h1, Ne.symm h1, h2, Ne.symm h2, h3, Ne.symm h3]
+
+/- Three-target analogue of `foldl_add_eq_count_mul_two`. -/
+theorem foldl_add_eq_count_mul_three {I : Type u} [DecidableEq I]
+  (idx : List I) (x1 x2 x3 : I) (hne12 : x1 ≠ x2) (hne13 : x1 ≠ x3) (hne23 : x2 ≠ x3)
+  (f : I → Int)
+  (hother : ∀ y ∈ idx, y ≠ x1 → y ≠ x2 → y ≠ x3 → f y = 0) :
+  ∀ acc, idx.foldl (fun a y => a + f y) acc =
+    acc + (idx.count x1) * f x1 + (idx.count x2) * f x2 + (idx.count x3) * f x3 := by
+  induction idx with
+  | nil => intro acc; simp
+  | cons hd tl ih =>
+    intro acc
+    simp only [List.foldl_cons]
+    have ih' : ∀ y ∈ tl, y ≠ x1 → y ≠ x2 → y ≠ x3 → f y = 0 :=
+      fun y hy => hother y (List.mem_cons_of_mem _ hy)
+    rw [ih ih' (acc + f hd)]
+    by_cases h1 : hd = x1
+    · subst h1
+      rw [List.count_cons_self, List.count_cons_of_ne hne12, List.count_cons_of_ne hne13]
+      push_cast
+      rw [Int.add_mul, Int.one_mul]
+      omega
+    · by_cases h2 : hd = x2
+      · subst h2
+        rw [List.count_cons_self, List.count_cons_of_ne h1, List.count_cons_of_ne hne23]
+        push_cast
+        rw [Int.add_mul, Int.one_mul]
+        omega
+      · by_cases h3 : hd = x3
+        · subst h3
+          rw [List.count_cons_self, List.count_cons_of_ne h1, List.count_cons_of_ne h2]
+          push_cast
+          rw [Int.add_mul, Int.one_mul]
+          omega
+        · have hz := hother hd List.mem_cons_self h1 h2 h3
+          rw [List.count_cons_of_ne h1, List.count_cons_of_ne h2, List.count_cons_of_ne h3, hz]
+          omega
+
+/- Three-entry analogue of `two_link_composition_value`: an exact
+   closed-form `∂²` value for any three-entry-boundary element on any
+   `Incidence`. -/
+theorem three_link_composition_value {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i j1 j2 j3 k : I)
+  (e1 e2 e3 : Endpoint I R)
+  (hb : inc.boundary i = [e1, e2, e3]) (he1i : e1.i = j1) (he2i : e2.i = j2) (he3i : e3.i = j3)
+  (hne12 : j1 ≠ j2) (hne13 : j1 ≠ j3) (hne23 : j2 ≠ j3) :
+  boundary_composition inc idx i k =
+    (idx.count j1) * ((match e1.sign with | Sign.neg => -(Int.ofNat e1.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e1.mult) * boundaryMatrix inc idx j1 k) +
+    (idx.count j2) * ((match e2.sign with | Sign.neg => -(Int.ofNat e2.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e2.mult) * boundaryMatrix inc idx j2 k) +
+    (idx.count j3) * ((match e3.sign with | Sign.neg => -(Int.ofNat e3.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e3.mult) * boundaryMatrix inc idx j3 k) := by
+  unfold boundary_composition
+  have hother : ∀ y ∈ idx, y ≠ j1 → y ≠ j2 → y ≠ j3 →
+      boundaryMatrix inc idx i y * boundaryMatrix inc idx y k = 0 := by
+    intro y _ hy1 hy2 hy3
+    rw [boundaryMatrix_three_link inc idx i j1 j2 j3 e1 e2 e3 hb he1i he2i he3i hne12 hne13 hne23 y,
+      if_neg hy1, if_neg hy2, if_neg hy3]
+    simp
+  rw [foldl_add_eq_count_mul_three idx j1 j2 j3 hne12 hne13 hne23
+      (fun y => boundaryMatrix inc idx i y * boundaryMatrix inc idx y k) hother 0]
+  have hBij1 : boundaryMatrix inc idx i j1 =
+      (match e1.sign with | Sign.neg => -(Int.ofNat e1.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e1.mult) := by
+    rw [boundaryMatrix_three_link inc idx i j1 j2 j3 e1 e2 e3 hb he1i he2i he3i hne12 hne13 hne23 j1,
+      if_pos rfl, if_neg hne12, if_neg hne13]
+    simp
+  have hBij2 : boundaryMatrix inc idx i j2 =
+      (match e2.sign with | Sign.neg => -(Int.ofNat e2.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e2.mult) := by
+    rw [boundaryMatrix_three_link inc idx i j1 j2 j3 e1 e2 e3 hb he1i he2i he3i hne12 hne13 hne23 j2,
+      if_neg (Ne.symm hne12), if_pos rfl, if_neg hne23]
+    simp
+  have hBij3 : boundaryMatrix inc idx i j3 =
+      (match e3.sign with | Sign.neg => -(Int.ofNat e3.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e3.mult) := by
+    rw [boundaryMatrix_three_link inc idx i j1 j2 j3 e1 e2 e3 hb he1i he2i he3i hne12 hne13 hne23 j3,
+      if_neg (Ne.symm hne13), if_neg (Ne.symm hne23), if_pos rfl]
+    simp
+  rw [hBij1, hBij2, hBij3]
+  simp [Int.zero_add]
+
 /- Glue operation matrix correspondence -/
 /- Merkle-ID: implementation.linear_algebra.glue_matrix
    How glue operations correspond to matrix operations on boundary matrices. -/

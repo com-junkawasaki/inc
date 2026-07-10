@@ -1956,17 +1956,84 @@ arithmetic let `simp` finish alone -- a small, mechanical scaling
 effect of arity on proof automation, not a deep finding, but honestly
 recorded rather than silently smoothed over.
 
-**Next hypothesis (cycle 30, not yet attempted)**: two candidates,
-neither committed to. (1) Build the general 3-entry `∂²` machinery
-this cycle deliberately deferred -- `boundaryMatrix_three_link`/
-`foldl_add_eq_count_mul_three`/`three_link_composition_value`, mirroring
-cycle 17's 2-entry construction, now validated against *two* real
-instances (`simplexIncidence.face`, `treeIncidence.node`) rather than
-built speculatively against one (the exact condition cycle 20 said
-would justify it). (2) Option (b) from cycle 28's queue, still not
-reached: revisit the original, much larger research-program questions
-(constructing `ℕ`/sets/logic/category-theory concepts *internal* to
-Inc) now that the instance library and general-theorem toolkit are
-substantially more mature -- scoped to a *first concrete milestone*
-only, not the whole vision, the same way the very first move into this
-territory (Peano naturals as a concrete instance) was scoped.
+## Cycle 30
+
+**Hypothesis**: (option 1 of cycle 29's queue) build the general 3-entry
+`∂²` machinery deliberately deferred there --
+`boundaryMatrix_three_link`/`foldl_add_eq_count_mul_three`/
+`three_link_composition_value`, mirroring cycle 17's 2-entry
+construction, now validated against *two* real instances
+(`simplexIncidence.face`, cycle 11; `treeIncidence.node`, cycle 29)
+rather than built speculatively against one -- exactly the condition
+cycle 20 said would justify revisiting its declined generalization.
+
+**Method**: extended cycle 17's exact two-entry technique by one more
+case throughout (`boundaryMatrix_two_link` → `_three_link`,
+`foldl_add_eq_count_mul_two` → `_three`, `two_link_composition_value` →
+`three_link_composition_value`). Hit the identical `if`-orientation
+friction cycle 17 already diagnosed (`rw`/`simp` treating `a = b` and
+`b = a` as different targets) and resolved it the same way (`simp`
+with both a hypothesis and its `.symm` supplied per branch). One
+genuinely new snag: my scratch test file's own *comment text*
+("...the -1/-1 values...") accidentally contained a `/-` substring,
+which Lean's *nested*-comment-aware lexer parsed as opening a second
+comment inside the first, leaving the outer one "unterminated" once
+only one `-/` closed it -- diagnosed by removing suspect text blocks
+one at a time rather than guessing, then avoided by rewording. Applied
+the finished general theorem to *both* motivating instances: generalized
+cycle 29's concrete `treeIncidence` witness into a real theorem over
+*any* well-formed children (not just `leaf 0`/`1`/`2`), and -- the
+more valuable validation -- applied it to `simplexIncidence.face`,
+which cycle 11 only ever checked via `decide` (true for one concrete
+index, never explained symbolically).
+
+**Result**: **all three general theorems and both instance validations
+succeeded, cleanly, on the pattern already known to work (cycle 17's
+technique scaled up without new surprises beyond the two noted
+above).** `#print axioms`: `propext` alone on `boundaryMatrix_three_link`
+(no `Classical.choice`, matching cycle 17's cleanest lemma), standard
+sets on the rest. The `simplexIncidence.face` validation is the
+cycle's most valuable output: `simplexIncidence_face_v0_general` shows
+`face`'s `∂² = 0` at `v0` reduces to `count(e02) - count(e01)`, which
+vanishes whenever both edges appear equally often in the index -- the
+*actual reason* cycle 11's `decide` witness came out `0`, not merely a
+confirmed fact about that one witness. This retroactively explains a
+9-cycle-old result rather than just adding new content. Full `lake
+build`: 42/42 jobs. Repo-wide `sorry`-as-tactic grep: none. Added the
+three general theorems to the root file (same placement convention as
+cycle 9/17's infrastructure), `treeIncidence_node_x_boundary`/
+`_outer_composition_general` to `Tree.lean`,
+`simplexIncidence_e12_v0_boundary`/`_e02_v0_boundary`/`_e01_v0_boundary`/
+`_face_v0_general` to `Simplex.lean`.
+
+**Synthesis**: this closes the loop cycle 20 opened four cycles ago
+(cycle 20 → 29 → 30): declining a generalization for lack of evidence
+isn't a permanent verdict, it's conditional on evidence that may
+eventually arrive -- and treating it that way (recording the specific
+condition that would justify revisiting, rather than either forcing the
+generalization prematurely or dismissing it permanently) is what made
+this cycle a quick, low-risk build rather than a fresh proof-engineering
+gamble. The `simplexIncidence.face` validation also demonstrates a
+distinct, valuable use for a newly-generalized theorem: not just
+extending reach to new instances, but *retroactively explaining* an
+old `decide`-only result. Worth remembering as a category of payoff
+alongside "covers a new instance" and "simplifies an existing proof"
+(cycle 25's audit) -- "explains why an old concrete fact was true."
+
+**Next hypothesis (cycle 31, not yet attempted)**: option (b) of cycle
+28's queue, carried forward twice now without being reached: revisit
+the original, much larger research-program questions (constructing
+`ℕ`/sets/logic/category-theory concepts *internal* to Inc, not as
+external `Incidence` instances) now that the instance library (six
+concrete instances) and general-theorem toolkit (faithfulness via two
+independent routes, `∂²` machinery up to 3 entries, non-bisimilarity,
+T5 translations including one genuine algebra-homomorphism) are
+substantially more mature than when that scope was last assessed as
+"too large for one cycle." Scope to a *first concrete milestone* only,
+not the whole vision -- the same discipline that turned the original
+"can Inc do ZF/category theory/dependent types?" question into the
+tractable `natIncidence` instance at the very start of this thread.
+What that first milestone should actually *be*, concretely, is not yet
+decided and worth thinking through carefully before the next cycle
+commits to Lean, given the scope-creep risk this exact question posed
+back at the start of this project.

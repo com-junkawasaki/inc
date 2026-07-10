@@ -471,4 +471,55 @@ theorem simplexToShape_iff_approxBisim (x y : SimplexId) :
   simplexToShape x = simplexToShape y ↔ approxBisim simplexIncidence x y :=
   ⟨simplexToShape_reflects x y, simplexToShape_distinguishes x y⟩
 
+/- Research cycle 30 (see RESEARCH_LOG.md): cycle 11 checked `face`'s
+   `∂² = 0` only via `decide`, i.e. "true for this concrete instance",
+   never *why* -- the classical alternating-sum convention was known to
+   be the ingredient (cycle 11's sensitivity check, `wrongSimplexIncidence`,
+   confirmed dropping it breaks things), but the actual cancellation
+   mechanism was never derived symbolically. `three_link_composition_value`
+   (root file, cycle 30, built using `treeIncidence.node` as its primary
+   motivating instance) applies here too: `face`'s three signed
+   contributions at `v0` reduce to `count(e02) - count(e01)`, which is
+   `0` whenever both edges appear equally often in the index -- the
+   *general* reason cycle 11's `decide` witness happened to be `0`, not
+   just a coincidence of the specific index chosen there. -/
+theorem simplexIncidence_e12_v0_boundary (idx : List SimplexId) :
+  boundaryMatrix simplexIncidence idx SimplexId.e12 SimplexId.v0 = 0 := by
+  simp [boundaryMatrix_eq_foldl, simplexIncidence, simplexBoundary]
+
+theorem simplexIncidence_e02_v0_boundary (idx : List SimplexId) :
+  boundaryMatrix simplexIncidence idx SimplexId.e02 SimplexId.v0 = -1 := by
+  rw [boundaryMatrix_two_link simplexIncidence idx SimplexId.e02 SimplexId.v0 SimplexId.v2
+    { i := SimplexId.v0, role := SimplexRole.src, sign := Sign.neg, mult := 1 }
+    { i := SimplexId.v2, role := SimplexRole.dst, sign := Sign.pos, mult := 1 }
+    rfl rfl rfl (by simp) SimplexId.v0]
+  simp
+
+theorem simplexIncidence_e01_v0_boundary (idx : List SimplexId) :
+  boundaryMatrix simplexIncidence idx SimplexId.e01 SimplexId.v0 = -1 := by
+  rw [boundaryMatrix_two_link simplexIncidence idx SimplexId.e01 SimplexId.v0 SimplexId.v1
+    { i := SimplexId.v0, role := SimplexRole.src, sign := Sign.neg, mult := 1 }
+    { i := SimplexId.v1, role := SimplexRole.dst, sign := Sign.pos, mult := 1 }
+    rfl rfl rfl (by simp) SimplexId.v0]
+  simp
+
+/- The general explanation, not just a `decide` confirmation: `face`'s
+   `∂² = 0` at `v0` holds for *any* index where `e01`/`e02` each appear
+   exactly once (the ordinary case), because the alternating sum's
+   `-1`/`+1` signs on `e02`/`e01` cancel exactly the `-1`/`-1` values
+   those edges' own boundaries give at `v0`. -/
+theorem simplexIncidence_face_v0_general (idx : List SimplexId)
+  (hcount12 : idx.count SimplexId.e12 = 1) (hcount02 : idx.count SimplexId.e02 = 1)
+  (hcount01 : idx.count SimplexId.e01 = 1) :
+  boundary_composition simplexIncidence idx SimplexId.face SimplexId.v0 = 0 := by
+  rw [three_link_composition_value simplexIncidence idx SimplexId.face
+    SimplexId.e12 SimplexId.e02 SimplexId.e01 SimplexId.v0
+    { i := SimplexId.e12, role := SimplexRole.src, sign := Sign.pos, mult := 1 }
+    { i := SimplexId.e02, role := SimplexRole.dst, sign := Sign.neg, mult := 1 }
+    { i := SimplexId.e01, role := SimplexRole.dst, sign := Sign.pos, mult := 1 }
+    rfl rfl rfl rfl (by simp) (by simp) (by simp)]
+  rw [simplexIncidence_e12_v0_boundary idx, simplexIncidence_e02_v0_boundary idx,
+    simplexIncidence_e01_v0_boundary idx, hcount12, hcount02, hcount01]
+  decide
+
 end IncidenceCore

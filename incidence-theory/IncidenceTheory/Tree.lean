@@ -132,4 +132,44 @@ theorem treeIncidence_not_boundary_square_zero :
   verify_boundary_composition treeIncidence nestedIdx = false := by
   decide
 
+/- Research cycle 30 (see RESEARCH_LOG.md): generalizes the concrete
+   `treeIncidence_nonleaf_composition_witness` above into a real
+   theorem, over *any* choice of the inner node's three children (not
+   just `leaf 0`/`1`/`2`) and *any* two leaf-boundary outer siblings
+   (not just `leaf 3`/`4`), using the new `three_link_composition_value`
+   (root file) -- validating that general theorem against this
+   instance, the second real 3-entry instance alongside
+   `simplexIncidence.face` that motivated building it in the first
+   place. -/
+theorem treeIncidence_node_x_boundary (idx : List TreeId) (x y z : TreeId)
+  (hxy : x ≠ y) (hxz : x ≠ z) (hyz : y ≠ z) :
+  boundaryMatrix treeIncidence idx (TreeId.node x y z) x = 1 := by
+  rw [boundaryMatrix_three_link treeIncidence idx (TreeId.node x y z) x y z
+    { i := x, role := TernaryRole.c1, sign := Sign.pos, mult := 1 }
+    { i := y, role := TernaryRole.c2, sign := Sign.pos, mult := 1 }
+    { i := z, role := TernaryRole.c3, sign := Sign.pos, mult := 1 }
+    rfl rfl rfl rfl hxy hxz hyz x]
+  simp [hxy, hxz]
+
+/- The general shape behind `treeIncidence_nonleaf_composition_witness`:
+   composing an outer node against the inner node's first child is
+   nonzero for *any* well-formed choice of children, not just the one
+   concrete instance checked by `decide`. -/
+theorem treeIncidence_outer_composition_general (x y z d e : TreeId)
+  (hxy : x ≠ y) (hxz : x ≠ z) (hyz : y ≠ z)
+  (hnd : TreeId.node x y z ≠ d) (hne_ : TreeId.node x y z ≠ e) (hde : d ≠ e)
+  (hdleaf : treeIncidence.boundary d = []) (heleaf : treeIncidence.boundary e = []) :
+  boundary_composition treeIncidence [TreeId.node x y z, d, e]
+    (TreeId.node (TreeId.node x y z) d e) x = 1 := by
+  rw [three_link_composition_value treeIncidence [TreeId.node x y z, d, e]
+    (TreeId.node (TreeId.node x y z) d e) (TreeId.node x y z) d e x
+    { i := TreeId.node x y z, role := TernaryRole.c1, sign := Sign.pos, mult := 1 }
+    { i := d, role := TernaryRole.c2, sign := Sign.pos, mult := 1 }
+    { i := e, role := TernaryRole.c3, sign := Sign.pos, mult := 1 }
+    rfl rfl rfl rfl hnd hne_ hde]
+  rw [treeIncidence_node_x_boundary [TreeId.node x y z, d, e] x y z hxy hxz hyz,
+    boundaryMatrix_eq_zero_of_leaf treeIncidence [TreeId.node x y z, d, e] d x hdleaf,
+    boundaryMatrix_eq_zero_of_leaf treeIncidence [TreeId.node x y z, d, e] e x heleaf]
+  simp [hnd, hne_, Ne.symm hnd, Ne.symm hne_]
+
 end IncidenceCore
