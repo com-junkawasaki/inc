@@ -189,6 +189,124 @@ def laplacian {I R T : Type u} [DecidableEq I]
   let b := boundaryMatrix inc idx
   fun i j => idx.foldl (fun acc k => acc + b k i * b k j) 0
 
+/- Finite integer sums, kept list-based to match the observation lists used
+   by `boundaryMatrix` and `laplacian`. -/
+def intListSum {α : Type u} (xs : List α) (f : α → Int) : Int :=
+  xs.foldl (fun total x => total + f x) 0
+
+theorem intListSum_acc {α : Type u} (xs : List α) (f : α → Int) (acc : Int) :
+    xs.foldl (fun total x => total + f x) acc = acc + intListSum xs f := by
+  induction xs generalizing acc with
+  | nil => simp [intListSum]
+  | cons x xs ih =>
+    change xs.foldl (fun total y => total + f y) (acc + f x) =
+      acc + xs.foldl (fun total y => total + f y) (0 + f x)
+    simp only [Int.zero_add]
+    rw [ih (acc + f x), ih (f x)]
+    exact Int.add_assoc _ _ _
+
+theorem intListSum_cons {α : Type u} (x : α) (xs : List α) (f : α → Int) :
+    intListSum (x :: xs) f = f x + intListSum xs f := by
+  unfold intListSum
+  simpa using intListSum_acc xs f (f x)
+
+theorem intListSum_add {α : Type u} (xs : List α) (f g : α → Int) :
+    intListSum xs (fun x => f x + g x) = intListSum xs f + intListSum xs g := by
+  induction xs with
+  | nil => simp [intListSum]
+  | cons x xs ih =>
+    rw [intListSum_cons, intListSum_cons, intListSum_cons, ih]
+    simp only [Int.add_assoc, Int.add_left_comm]
+
+theorem intListSum_mul_left {α : Type u} (a : Int) (xs : List α) (f : α → Int) :
+    intListSum xs (fun x => a * f x) = a * intListSum xs f := by
+  induction xs with
+  | nil => simp [intListSum]
+  | cons x xs ih =>
+    rw [intListSum_cons, intListSum_cons, ih, Int.mul_add]
+
+theorem intListSum_zero {α : Type u} (xs : List α) :
+    intListSum xs (fun _ : α => 0) = 0 := by
+  induction xs with
+  | nil => rfl
+  | cons x xs ih => simp [intListSum_cons, ih]
+
+theorem intListSum_eq_zero_of_mem {α : Type u} (xs : List α) (f : α → Int)
+    (hzero : ∀ x ∈ xs, f x = 0) : intListSum xs f = 0 := by
+  induction xs with
+  | nil => rfl
+  | cons x xs ih =>
+    rw [intListSum_cons, hzero x (by simp)]
+    simp only [Int.zero_add]
+    apply ih
+    intro y hy
+    exact hzero y (by simp [hy])
+
+theorem intListSum_gram_row_swap {I : Type u} (rows cols : List I)
+    (b : I → I → Int) (i : I) :
+    intListSum cols (fun j => intListSum rows (fun k => b k i * b k j)) =
+      intListSum rows (fun k => b k i * intListSum cols (fun j => b k j)) := by
+  induction rows with
+  | nil =>
+    have hzero : intListSum cols (fun _ : I => 0) = 0 := intListSum_zero cols
+    simpa [intListSum] using hzero
+  | cons k rows ih =>
+    have hinner : ∀ j,
+        intListSum (k :: rows) (fun r => b r i * b r j) =
+          b k i * b k j + intListSum rows (fun r => b r i * b r j) := by
+      intro j
+      exact intListSum_cons k rows _
+    calc
+      intListSum cols (fun j => intListSum (k :: rows) (fun r => b r i * b r j)) =
+          intListSum cols (fun j =>
+            b k i * b k j + intListSum rows (fun r => b r i * b r j)) := by
+              apply congrArg (intListSum cols)
+              funext j
+              exact hinner j
+      _ = intListSum cols (fun j => b k i * b k j) +
+          intListSum cols (fun j => intListSum rows (fun r => b r i * b r j)) :=
+            intListSum_add cols _ _
+      _ = b k i * intListSum cols (fun j => b k j) +
+          intListSum rows (fun r => b r i * intListSum cols (fun j => b r j)) := by
+            rw [intListSum_mul_left, ih]
+      _ = intListSum (k :: rows) (fun r =>
+          b r i * intListSum cols (fun j => b r j)) :=
+            (intListSum_cons k rows
+              (fun r => b r i * intListSum cols (fun j => b r j))).symm
+
+/- A boundary row is balanced when the coefficients visible in the chosen
+   finite observation list add to zero.  This is an explicit hypothesis: it
+   is not implied by the generic incidence axioms. -/
+def boundaryRowSum {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (row : I) : Int :=
+  intListSum idx (fun column => boundaryMatrix inc idx row column)
+
+def BoundaryRowBalanced {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) : Prop :=
+  ∀ row, row ∈ idx → boundaryRowSum inc idx row = 0
+
+def laplacianRowSum {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (row : I) : Int :=
+  intListSum idx (fun column => laplacian inc idx row column)
+
+def laplacianColumnSum {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (column : I) : Int :=
+  intListSum idx (fun row => laplacian inc idx row column)
+
+theorem laplacian_rowSum_zero_of_boundaryRowBalanced {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (hbalanced : BoundaryRowBalanced inc idx)
+    (i : I) : laplacianRowSum inc idx i = 0 := by
+  unfold laplacianRowSum laplacian
+  let b := boundaryMatrix inc idx
+  change intListSum idx (fun j => intListSum idx (fun k => b k i * b k j)) = 0
+  rw [intListSum_gram_row_swap]
+  apply intListSum_eq_zero_of_mem
+  intro k hk
+  have hrow : intListSum idx (fun j => b k j) = 0 := by
+    exact hbalanced k hk
+  rw [hrow]
+  simp
+
 /- `BᵀB` is symmetric independently of any extra incidence axioms. -/
 theorem laplacian_symmetric {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I) (i j : I) :
@@ -205,6 +323,17 @@ theorem laplacian_symmetric {I R T : Type u} [DecidableEq I]
       rw [Int.mul_comm (b k i) (b k j)]
       exact ih _
   exact fold_symmetric idx 0
+
+theorem laplacian_columnSum_zero_of_boundaryRowBalanced {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (hbalanced : BoundaryRowBalanced inc idx)
+    (j : I) : laplacianColumnSum inc idx j = 0 := by
+  unfold laplacianColumnSum
+  have hrewrite : (fun row => laplacian inc idx row j) =
+      (fun row => laplacian inc idx j row) := by
+    funext row
+    exact laplacian_symmetric inc idx row j
+  rw [hrewrite]
+  exact laplacian_rowSum_zero_of_boundaryRowBalanced inc idx hbalanced j
 
 /- Each diagonal entry of `BᵀB` is a finite sum of integer squares. -/
 theorem laplacian_diagonal_nonnegative {I R T : Type u} [DecidableEq I]

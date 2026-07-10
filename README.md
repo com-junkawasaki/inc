@@ -191,6 +191,8 @@ witnesses.
 
 Pushout universality, generic boundary-square-zero, linear completeness, and
 translation preservation need additional categorical or linear hypotheses.
+For example, `BoundaryRowBalanced` is now the explicit checked hypothesis
+under which the derived Laplacian has zero row and column sums.
 They are not unconditional theorems in the present Lean core.
 
 The finite model is evidence of satisfiability of this **implemented finite

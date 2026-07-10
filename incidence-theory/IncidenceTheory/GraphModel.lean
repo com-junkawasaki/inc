@@ -1457,6 +1457,24 @@ theorem triangle_approxBisim_iff_same_kind {i j : GId}
 def triB : Matrix GId GId Int := boundaryMatrix triIncidence triIdx
 def triL : Matrix GId GId Int := laplacian triIncidence triIdx
 
+/- Every oriented triangle edge has one `-1` and one `+1` coefficient in the
+   displayed vertex index, while vertex rows are empty.  Thus the explicit
+   row-balance hypothesis of the general linear theorem is met. -/
+theorem triangle_boundary_rows_balanced : BoundaryRowBalanced triIncidence triIdx := by
+  intro row hrow
+  simp [triIdx] at hrow
+  rcases hrow with rfl | rfl | rfl | rfl | rfl | rfl <;> native_decide
+
+theorem triangle_laplacian_full_row_sum_zero (i : GId) :
+    laplacianRowSum triIncidence triIdx i = 0 :=
+  laplacian_rowSum_zero_of_boundaryRowBalanced triIncidence triIdx
+    triangle_boundary_rows_balanced i
+
+theorem triangle_laplacian_full_column_sum_zero (i : GId) :
+    laplacianColumnSum triIncidence triIdx i = 0 :=
+  laplacian_columnSum_zero_of_boundaryRowBalanced triIncidence triIdx
+    triangle_boundary_rows_balanced i
+
 /- Checked entries of the triangle's incidence matrix and Laplacian. -/
 theorem triB_AB_A : triB AB A = -1 := by native_decide
 theorem triB_AB_B : triB AB B = 1 := by native_decide
