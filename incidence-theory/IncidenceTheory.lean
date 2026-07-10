@@ -649,6 +649,40 @@ structure BisimulationNormalizationSpec {I R T : Type u} [DecidableEq I]
   normalize_sound : ∀ i, approxBisim inc i (normalize i)
   normalize_idempotent : ∀ i, normalize (normalize i) = normalize i
 
+/- The identity map is always a stable normalization once quotient-compatible
+   gluing has been supplied.  This is useful for models whose observational
+   quotient is already discrete. -/
+def BisimulationNormalizationSpec.identity {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T)
+    (hglue : GlueRespects inc (approxBisim inc)) :
+    BisimulationNormalizationSpec inc where
+  glue_respects_approx := hglue
+  normalize := id
+  normalize_sound := fun i => approxBisim_refl inc i
+  normalize_idempotent := fun _ => rfl
+
+/- Composing normalizations is stable when the chosen normalizers commute.
+   Without this compatibility assumption, the composite of two idempotent
+   maps need not itself be idempotent, so it is deliberately an explicit
+   premise of the construction. -/
+def BisimulationNormalizationSpec.comp {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} (first second : BisimulationNormalizationSpec inc)
+    (hcomm : ∀ i,
+      first.normalize (second.normalize i) = second.normalize (first.normalize i)) :
+    BisimulationNormalizationSpec inc where
+  glue_respects_approx := first.glue_respects_approx
+  normalize := fun i => first.normalize (second.normalize i)
+  normalize_sound := by
+    intro i
+    exact approxBisim_trans (second.normalize_sound i)
+      (first.normalize_sound (second.normalize i))
+  normalize_idempotent := by
+    intro i
+    change first.normalize (second.normalize (first.normalize (second.normalize i))) =
+      first.normalize (second.normalize i)
+    rw [← hcomm (second.normalize i)]
+    rw [first.normalize_idempotent, second.normalize_idempotent]
+
 theorem normalization_respects_approx {I R T : Type u} [DecidableEq I]
     {inc : Incidence I R T} (spec : BisimulationNormalizationSpec inc)
     {i j : I} (hij : approxBisim inc i j) :
@@ -1059,5 +1093,40 @@ def PushoutPreserving.comp {CObj DObj EObj : Type u}
     calc
       hG.mapped_pushout.apex = G.obj hF.mapped_pushout.apex := hG.apex_is_image
       _ = G.obj (F.obj po.apex) := congrArg G.obj hF.apex_is_image
+
+/- Optional A14--A15-style global preservation data.  A single
+   `PushoutPreserving` witness concerns one chosen cocone; this family asks
+   for such a witness uniformly for every source pushout.  It remains
+   separate from `Incidence`, since existence of categorical pushouts is an
+   extra semantic property of a translation. -/
+structure PushoutPreservingFamily {CObj DObj : Type u} {C : IncCategory CObj}
+    {D : IncCategory DObj} (F : IncFunctor C D) where
+  preserves : ∀ {span : MorphismCospan C} (po : MorphismPushout span),
+    PushoutPreserving F po
+
+def PushoutPreservingFamily.at {CObj DObj : Type u} {C : IncCategory CObj}
+    {D : IncCategory DObj} {F : IncFunctor C D}
+    (family : PushoutPreservingFamily F) {span : MorphismCospan C}
+    (po : MorphismPushout span) : PushoutPreserving F po :=
+  family.preserves po
+
+def PushoutPreservingFamily.identity {Obj : Type u} (C : IncCategory Obj) :
+    PushoutPreservingFamily (IncFunctor.identity C) where
+  preserves := by
+    intro span po
+    exact { mapped_pushout := po, apex_is_image := rfl }
+
+/- Uniform preservation is closed under translation composition.  The second
+   family is applied to the actual mapped universal cocone selected by the
+   first one, exactly as in the pointwise composition theorem above. -/
+def PushoutPreservingFamily.comp {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F : IncFunctor C D} {G : IncFunctor D E}
+    (hF : PushoutPreservingFamily F) (hG : PushoutPreservingFamily G) :
+    PushoutPreservingFamily (G.comp F) where
+  preserves := by
+    intro span po
+    exact PushoutPreserving.comp po (hF.preserves po)
+      (hG.preserves (hF.preserves po).mapped_pushout)
 
 end IncidenceCore

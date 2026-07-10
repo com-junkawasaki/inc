@@ -1664,6 +1664,18 @@ def terminalFunctor : IncFunctor terminalCategory terminalCategory where
   map_id := by intro a; rfl
   map_comp := by intro a b c g f; rfl
 
+/- The terminal identity translation has uniform, rather than merely
+   one-cospan, pushout preservation.  This is a concrete instance of the
+   optional A14--A15 family API. -/
+def terminalIdentityPushoutPreservingFamily :
+    PushoutPreservingFamily (IncFunctor.identity terminalCategory) :=
+  PushoutPreservingFamily.identity terminalCategory
+
+def terminalDoubleIdentityPushoutPreservingFamily :
+    PushoutPreservingFamily
+      ((IncFunctor.identity terminalCategory).comp (IncFunctor.identity terminalCategory)) :=
+  terminalIdentityPushoutPreservingFamily.comp terminalIdentityPushoutPreservingFamily
+
 def terminalCospan : MorphismCospan terminalCategory where
   a := ()
   b := ()
@@ -1680,6 +1692,10 @@ def terminalPushout : MorphismPushout terminalCospan where
   lift_inl := by intro q leftLeg rightLeg h; cases leftLeg; rfl
   lift_inr := by intro q leftLeg rightLeg h; cases rightLeg; rfl
   lift_unique := by intro q leftLeg rightLeg h mediator hl hr; cases mediator; rfl
+
+def terminalIdentityFamilyPreservesPushout :
+    PushoutPreserving (IncFunctor.identity terminalCategory) terminalPushout :=
+  terminalIdentityPushoutPreservingFamily.at terminalPushout
 
 def terminalFunctorPreservesPushout :
     PushoutPreserving terminalFunctor terminalPushout where

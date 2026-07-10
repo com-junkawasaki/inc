@@ -208,7 +208,9 @@ The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo
 bisimilarity and a sound, idempotent normalization.  The finite incidence
 model instantiates it with identity normalization.  A14–A15 remain separate
-categorical specifications rather than fields of the base incidence record.
+categorical specifications rather than fields of the base incidence record:
+`PushoutPreservingFamily` quantifies preservation over every source pushout,
+with checked identity and composition laws and a terminal-category witness.
 
 The finite model is evidence of satisfiability of this **implemented finite
 fragment relative to Lean**. It is not yet a ZF-model proof or a relative
