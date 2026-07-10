@@ -7,6 +7,7 @@ import IncidenceTheory.Simplex
 import IncidenceTheory.Cycle
 import IncidenceTheory.Tree
 import IncidenceTheory.Product
+import IncidenceTheory.Sum
 
 /- `main`'s demo output accumulates one block of `IO.println` calls per
    research cycle (32 so far). Cycle 18 raised `maxRecDepth` when a
@@ -410,8 +411,27 @@ def printCycles24to32 : IO Unit := do
   IO.println "  → chose this over a mechanical sum-constructor repeat because it had a genuinely"
   IO.println "    open answer -- and the answer (clean transport, no tension) is itself the finding"
 
+def printCycles33plus : IO Unit := do
+  IO.println "\n➕ The Second Generic Constructor, and a Genuine Contrast: incidenceSum (cycle 33):"
+  IO.println "  ✓ incidenceSum: I1⊕I2, boundary stays isolated per side (no combining, unlike"
+  IO.println "    the product) -- but a disjoint union has NO element in both sides, so a"
+  IO.println "    genuine two-sided unit forces unit-absorbing glue (same shape as most hand-"
+  IO.println "    built instances) and a CONSTANT typeFunc, unlike incidenceProd's genuine T1×T2"
+  IO.println "  ✓ headline finding: faithfulness does NOT transport through the sum the way it"
+  IO.println "    did through the product (cycle 32) -- ANY two leaves, from EITHER side,"
+  IO.println "    become cross-side ≈-related (boundaryMatched is vacuous for empty boundaries,"
+  IO.println "    regardless of the Sum.inl/Sum.inr tag) -- the 'flat leaves collapse' pattern"
+  IO.println "    (cycles 2/12/13/18/26), now shown as a structural fact about the CONSTRUCTION"
+  IO.println "  ✓ confirmed concretely: Sum.inl 0 ≈ Sum.inr 0 in natIncidence ⊕ natIncidence,"
+  IO.println "    even though natIncidence alone is fully faithful and the two are genuinely"
+  IO.println "    distinct elements (different constructors)"
+  IO.println "  → a real contrast worth holding next to cycle 32: product preserves faithfulness"
+  IO.println "    unconditionally, sum does NOT -- which connective you pick changes what"
+  IO.println "    properties survive, exactly the kind of fact a real type theory needs to know"
+
 def main : IO Unit := do
   printFoundationsAndEarlyCycles
   printCycles12to19
   printCycles20to23
   printCycles24to32
+  printCycles33plus

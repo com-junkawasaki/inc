@@ -2191,17 +2191,88 @@ rather than proof complexity -- worth treating `Main.lean`'s structure
 as something to keep revisiting as cycles accumulate, not a one-time
 fix.
 
-**Next hypothesis (cycle 33, not yet attempted)**: cycle 31's queued
-options (1) and (3) remain open, neither reached. (1) A *sum*
-constructor (`incidenceSum`, analogous to `incidenceProd` but for
-`I1 ⊕ I2`, reusing each side's boundary unchanged) -- a natural second
-data point for "generic constructors on `Incidence`" as a category, and
-now a genuinely different question than it looked like last cycle:
-does `incidenceSum` ALSO have a faithfulness-transports-cleanly
-property analogous to cycle 32's, or does disjoint union behave
-differently from product in ways worth discovering? (2, from cycle 31)
-a translation-style (T5) result for `incidenceProd` -- e.g. does
-`natToFiniteSet` extend to a translation for `natIncidence ×
-natIncidence` in the expected way, and would it also be a `glue`-
-homomorphism-style result the way cycle 28's `cycleToNat` was? Neither
-scoped yet.
+## Cycle 33
+
+**Hypothesis**: (option 1 of cycle 32's queue, chosen over the T5-
+translation option) build `incidenceSum`, the disjoint-union analogue
+of `incidenceProd` (cycle 31), and test whether it also has a
+faithfulness-transports-cleanly property analogous to cycle 32's, or
+whether a sum behaves structurally differently from a product in ways
+worth discovering.
+
+**Method**: designed on paper before writing Lean, since a genuine
+design question surfaced immediately: the product's two-sided unit is
+simply `(inc1.unit, inc2.unit)`, because every element of `I1 × I2`
+has both components -- but `I1 ⊕ I2` has no element belonging to
+*both* sides, so a purely componentwise `glue` cannot satisfy
+`unit_left`/`unit_right` at all (gluing the unit against an element
+from the *other* side would need to produce that element, which
+componentwise gluing structurally cannot do). Resolved by falling back
+to the same "unit-absorbing" `glue` shape nearly every hand-built
+instance in this project already used (`glue x y := if y = unit then
+some x else if x = unit then some y else <componentwise, same side
+only>`), and -- a further forced consequence -- a *constant* `typeFunc`
+(`GraphType.unit`, matching every pre-cycle-31 instance), since a
+genuinely varying `T1 ⊕ T2` typeFunc would make `type_preserve` fail
+for the unit-absorption case (absorbing the unit against `y` produces
+`y`, whose type need not match the unit's). Built the construction (all
+seven obligations typechecked on the first attempt), then tested the
+faithfulness question directly: does `incidenceSum natIncidence
+natIncidence` stay faithful, given `natIncidence` itself is fully
+faithful? Reasoned first (not guessed): `natIncidence`'s `0` is a leaf
+(empty boundary) on *both* copies, and `boundaryMatched` is vacuously
+satisfied when both elements have no boundary entries at all --
+independent of the `Sum.inl`/`Sum.inr` tag, since there's nothing to
+role-mismatch. This predicts `Sum.inl 0 ≈ Sum.inr 0` despite them being
+distinct elements of `Nat ⊕ Nat`.
+
+**Result**: **confirmed -- faithfulness does NOT transport through the
+sum, in sharp contrast to cycle 32's product result.**
+`incidenceSum_leaves_collapse` proves the general fact (any two leaves,
+from either side, are `≈`-related in the sum -- the same "everything
+related to everything" relation restricted to leaves that cycles
+2/12/13/18/26 used, now shown to be forced by the *construction itself*
+rather than by any one instance's design), and
+`incidenceSum_leaves_cross_natIncidence` confirms it concretely:
+`Sum.inl 0 ≈ Sum.inr 0` in `natIncidence ⊕ natIncidence`, even though
+`natIncidence` alone is fully faithful. `#print axioms`: `propext`/
+`Quot.sound` on the general theorem (no `Classical.choice`), standard
+three on the concrete instantiation. One minor proof-engineering note:
+a `<;>`-shared tactic bullet across `boundaryMatched`'s two clauses
+(`.left`/`.right`) incorrectly cased on the same variable (`a`) for
+both, when the second clause needed `b` -- caught by the type-checker
+(a wrong hypothesis name appearing in the error) and fixed by splitting
+into two explicit bullets, not by fighting the shared tactic further.
+Full `lake build`: 46/46 jobs (new file `Sum.lean`). Repo-wide
+`sorry`-as-tactic grep: none.
+
+**Synthesis**: this is the first time two "generic constructors on
+`Incidence`" have been directly compared, and the comparison itself is
+the valuable output -- **which connective you choose changes which
+properties survive**, exactly the kind of fact a real type theory needs
+to track (products and sums behave differently with respect to
+faithfulness in ordinary type theory too, for closely analogous
+reasons: a sum type's injections don't carry enough structure to keep
+elements from *different* summands apart when the summands' own
+"empty" elements coincide under some invariant, here `≈`). The `unit`/
+`typeFunc` design constraint discovered here (forced unit-absorption,
+forced type-constancy) is also worth remembering as a genuine structural
+fact about disjoint unions under `Incidence`'s axioms, not a proof-
+engineering inconvenience -- it explains, after the fact, why every
+instance built *before* `incidenceProd` (cycle 31) used exactly this
+unit-absorbing shape: a disjoint-union-like construction is close to
+what several early instances effectively *were* (leaf/non-leaf
+disjoint cases), and the same constraint applied there too, just never
+named explicitly until building a *generic* sum forced it into view.
+
+**Next hypothesis (cycle 34, not yet attempted)**: option 2 from cycle
+31's queue, twice carried forward without being reached: a T5-style
+translation result for `incidenceProd` -- e.g. does `natToFiniteSet`
+extend to a translation for `natIncidence × natIncidence` in the
+expected way, and would it also be a `glue`-homomorphism-style result
+the way cycle 28's `cycleToNat` was? Also newly open from this cycle:
+does `incidenceSum` have a *conditional* faithfulness result analogous
+to cycle 32's -- e.g. if `inc1`/`inc2` are both faithful AND have at
+most one leaf each (or no shared "collapsible" structure), does
+faithfulness hold? Neither scoped yet; worth choosing based on which
+seems more likely to surface a genuine finding.
