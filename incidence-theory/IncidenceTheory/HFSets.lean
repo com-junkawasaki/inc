@@ -2265,6 +2265,23 @@ theorem hfRecursiveSubset_mk_iff_raw (u s : HFSet) :
       (hfRecursiveMemberRaw_iff_exists.mpr
         ⟨y, hy, hfRecursiveEq_trans hxz hzy⟩)
 
+/- Quotient-level normalization relative to a fixed finite presentation.
+   Any recursively represented subset of `[s]` has a literal syntactic subset
+   `v ⊆ s` as a representative.  Thus changing to the normalized witness is
+   invisible in the extensional quotient, while its inclusion is decidable at
+   the raw finite level. -/
+theorem hfRecursiveSubset_normalize_mk
+    (u : HFRecursiveSet) (s : HFSet)
+    (hsubset : HFRecursiveSubset u (Quotient.mk hfRecursiveSetoid s)) :
+    ∃ v, HFSubset v s ∧ u = Quotient.mk hfRecursiveSetoid v := by
+  revert hsubset
+  refine Quotient.inductionOn u ?_
+  intro u hsubset
+  rcases hfRecursiveSubsetRaw_refine
+      ((hfRecursiveSubset_mk_iff_raw u s).mp hsubset) with
+    ⟨v, hvsubset, huv⟩
+  exact ⟨v, hvsubset, Quotient.sound huv⟩
+
 /- Membership in the syntactic powerset is precisely internal subsethood of
    the represented sets.  The reverse direction uses finite normalization and
    the already proved extensional completeness of the presentation. -/

@@ -197,12 +197,18 @@ translation, while the trivial incidence model supplies concrete T2–T4
 witnesses.
 
 Pushout universality, generic boundary-square-zero, linear completeness, and
-translation preservation need additional categorical or linear hypotheses.
+  translation preservation need additional categorical or linear hypotheses.
 For example, `BoundaryRowBalanced` is now the explicit checked hypothesis
 under which the derived Laplacian has zero row and column sums.
 Pointwise boundary equality transports this balance condition and its
 zero-sum Laplacian consequences between incidence models.
 They are not unconditional theorems in the present Lean core.
+
+The former A11–A13 gap is now represented by the optional
+`BisimulationNormalizationSpec`: it records glue congruence modulo
+bisimilarity and a sound, idempotent normalization.  The finite incidence
+model instantiates it with identity normalization.  A14–A15 remain separate
+categorical specifications rather than fields of the base incidence record.
 
 The finite model is evidence of satisfiability of this **implemented finite
 fragment relative to Lean**. It is not yet a ZF-model proof or a relative

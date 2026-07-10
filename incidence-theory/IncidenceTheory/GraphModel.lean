@@ -207,6 +207,41 @@ theorem finiteIncidence_quotient_mk_eq_iff (i j : FiniteIncidence) :
     subst j
     rfl
 
+/- The two-point model has a discrete observational quotient, so identity is
+   already a stable normal form.  This gives a concrete witness for the
+   optional operational A11--A13-style interface without strengthening the
+   underlying incidence data. -/
+def finiteIdentityNormalizationSpec : BisimulationNormalizationSpec finiteIncidence where
+  glue_respects_approx := by
+    intro i₁ i₂ j₁ j₂ k₁ k₂ hi hj hk₁ hk₂
+    have hiEq : i₁ = i₂ := (finiteIncidence_approxBisim_iff_eq i₁ i₂).mp hi
+    have hjEq : j₁ = j₂ := (finiteIncidence_approxBisim_iff_eq j₁ j₂).mp hj
+    subst i₂
+    subst j₂
+    rw [hk₁] at hk₂
+    injection hk₂ with hresult
+    subst k₂
+    exact approxBisim_refl finiteIncidence k₁
+  normalize := id
+  normalize_sound := by
+    intro i
+    exact approxBisim_refl finiteIncidence i
+  normalize_idempotent := by intro i; rfl
+
+theorem finiteIdentityNormalization_is_identity (i : FiniteIncidence) :
+    finiteIdentityNormalizationSpec.normalize i = i := rfl
+
+theorem finiteIdentityNormalization_glue_congruent
+    {i₁ i₂ j₁ j₂ k₁ k₂ : FiniteIncidence}
+    (hi : approxBisim finiteIncidence i₁ i₂)
+    (hj : approxBisim finiteIncidence j₁ j₂)
+    (hk₁ : finiteIncidence.glue (finiteIdentityNormalizationSpec.normalize i₁)
+      (finiteIdentityNormalizationSpec.normalize j₁) = some k₁)
+    (hk₂ : finiteIncidence.glue (finiteIdentityNormalizationSpec.normalize i₂)
+      (finiteIdentityNormalizationSpec.normalize j₂) = some k₂) :
+    approxBisim finiteIncidence k₁ k₂ :=
+  normalized_glue_congruent finiteIdentityNormalizationSpec hi hj hk₁ hk₂
+
 theorem finiteGlue_associative (i j k : FiniteIncidence) :
     Option.bind (finiteGlue i j) (fun ij => finiteGlue ij k) =
       Option.bind (finiteGlue j k) (fun jk => finiteGlue i jk) := by

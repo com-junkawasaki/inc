@@ -637,6 +637,41 @@ theorem approxBisim_congruent_under_glue {I R T : Type u} [DecidableEq I]
     (hk₂ : inc.glue i₂ j₂ = some k₂) : approxBisim inc k₁ k₂ :=
   hrespect hi hj hk₁ hk₂
 
+/- Optional A11--A13-style operational data.  The base `Incidence` record
+   deliberately does not require quotient compatibility or a normal form:
+   these are additional properties of a chosen implementation.  Soundness
+   means that normalization stays in the same observational class, while
+   idempotence makes the chosen representative stable. -/
+structure BisimulationNormalizationSpec {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) where
+  glue_respects_approx : GlueRespects inc (approxBisim inc)
+  normalize : I → I
+  normalize_sound : ∀ i, approxBisim inc i (normalize i)
+  normalize_idempotent : ∀ i, normalize (normalize i) = normalize i
+
+theorem normalization_respects_approx {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} (spec : BisimulationNormalizationSpec inc)
+    {i j : I} (hij : approxBisim inc i j) :
+    approxBisim inc (spec.normalize i) (spec.normalize j) := by
+  exact approxBisim_trans (approxBisim_symm (spec.normalize_sound i))
+    (approxBisim_trans hij (spec.normalize_sound j))
+
+theorem normalization_quotient_eq {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} (spec : BisimulationNormalizationSpec inc) (i : I) :
+    (Quotient.mk (approxBisimSetoid inc) (spec.normalize i) : IncidenceQuotient inc) =
+      Quotient.mk (approxBisimSetoid inc) i :=
+  incidence_quotient_sound (approxBisim_symm (spec.normalize_sound i))
+
+theorem normalized_glue_congruent {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} (spec : BisimulationNormalizationSpec inc)
+    {i₁ i₂ j₁ j₂ k₁ k₂ : I}
+    (hi : approxBisim inc i₁ i₂) (hj : approxBisim inc j₁ j₂)
+    (hk₁ : inc.glue (spec.normalize i₁) (spec.normalize j₁) = some k₁)
+    (hk₂ : inc.glue (spec.normalize i₂) (spec.normalize j₂) = some k₂) :
+    approxBisim inc k₁ k₂ :=
+  spec.glue_respects_approx (normalization_respects_approx spec hi)
+    (normalization_respects_approx spec hj) hk₁ hk₂
+
 /- A set-level presentation of the universal property needed for T1. -/
 structure Cospan (I : Type u) where
   a : I
