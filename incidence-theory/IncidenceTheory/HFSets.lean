@@ -2545,6 +2545,27 @@ theorem hfRecursiveNat_subset_iff (m n : Nat) :
     rcases (hfRecursiveMember_nat_iff_exists x m).mp hx with ⟨k, hk, rfl⟩
     exact (hfRecursiveNat_member_iff k n).mpr (Nat.lt_of_lt_of_le hk hmn)
 
+/- Strict inclusion is therefore not an external convention: it is exactly
+   the strict natural-number order on the internally reconstructed ordinals. -/
+def HFRecursiveProperSubset (s t : HFRecursiveSet) : Prop :=
+  HFRecursiveSubset s t ∧ ¬ HFRecursiveSubset t s
+
+theorem hfRecursiveNat_properSubset_iff (m n : Nat) :
+    HFRecursiveProperSubset (hfRecursiveNat m) (hfRecursiveNat n) ↔ m < n := by
+  constructor
+  · rintro ⟨hmn, hnm⟩
+    have hle : m ≤ n := (hfRecursiveNat_subset_iff m n).mp hmn
+    have hneq : m ≠ n := by
+      intro h
+      apply hnm
+      simpa [h] using hmn
+    exact Nat.lt_of_le_of_ne hle hneq
+  · intro hmn
+    refine ⟨(hfRecursiveNat_subset_iff m n).mpr (Nat.le_of_lt hmn), ?_⟩
+    intro hnm
+    have hle : n ≤ m := (hfRecursiveNat_subset_iff n m).mp hnm
+    exact (Nat.not_le_of_gt hmn) hle
+
 /- Equality of internal finite ordinals is exactly equality of their external
    indices; this is the order-reflecting half of the ordinal embedding. -/
 theorem hfRecursiveNat_eq_iff (m n : Nat) :

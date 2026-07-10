@@ -369,6 +369,51 @@ theorem finiteLApply_fixed_iff (x : FiniteIncidence → Int) :
     · exact finiteLApply_leaf x
     · simp [finiteLApply_root, h]
 
+/- The complementary component is visibly killed by the projection.  In this
+   two-point model this gives a direct-sum decomposition of every potential
+   into its image and kernel parts. -/
+def finiteLKernelComponent (x : FiniteIncidence → Int) : FiniteIncidence → Int :=
+  fun i => x i - finiteLApply x i
+
+theorem finiteL_kernelComponent_in_kernel (x : FiniteIncidence → Int) :
+    ∀ i, finiteLApply (finiteLKernelComponent x) i = 0 := by
+  apply (finiteL_kernel_iff (finiteLKernelComponent x)).mpr
+  simp [finiteLKernelComponent, finiteLApply_leaf]
+
+theorem finiteL_image_plus_kernel (x : FiniteIncidence → Int) (i : FiniteIncidence) :
+    finiteLApply x i + finiteLKernelComponent x i = x i := by
+  unfold finiteLKernelComponent
+  omega
+
+theorem finiteL_image_kernel_decomposition (x : FiniteIncidence → Int) :
+    x = fun i => finiteLApply x i + finiteLKernelComponent x i := by
+  funext i
+  exact (finiteL_image_plus_kernel x i).symm
+
+theorem finiteL_image_kernel_unique (x y z : FiniteIncidence → Int)
+    (hdecomp : ∀ i, x i = y i + z i)
+    (hyimage : ∀ i, finiteLApply y i = y i)
+    (hzkernel : ∀ i, finiteLApply z i = 0) :
+    y = finiteLApply x ∧ z = finiteLKernelComponent x := by
+  have hzleaf : z .leaf = 0 := (finiteL_kernel_iff z).mp hzkernel
+  have hyroot : y .root = 0 := by
+    have hroot := hyimage .root
+    have : 0 = y .root := by simpa [finiteLApply_root] using hroot
+    exact this.symm
+  constructor
+  · funext i
+    cases i
+    · have hleaf := hdecomp .leaf
+      simp [hzleaf] at hleaf
+      simpa [finiteLApply_leaf] using hleaf.symm
+    · simpa [finiteLApply_root] using hyroot
+  · funext i
+    cases i
+    · simp [finiteLKernelComponent, finiteLApply_leaf, hzleaf]
+    · have hroot := hdecomp .root
+      simp [hyroot] at hroot
+      simpa [finiteLKernelComponent, finiteLApply_root] using hroot.symm
+
 def finiteAlgebraicModel : IncidenceAlgebraic FiniteIncidence GraphRole GraphType where
   toIncidencePreservation := finiteUnitPreservation
   boundaryMatrix := boundaryMatrix finiteIncidence finiteIdx
@@ -551,6 +596,25 @@ theorem finiteIncidence_kripke_entails_iff_derives
     (context : List (Formula FiniteIncidence)) (formula : Formula FiniteIncidence) :
     KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
   kripke_entails_iff_derives_of_enumeration finiteIncidenceFormulaEnumeration context formula
+
+/-! A client need not unpack the Boolean coding or the general enumeration:
+   every underivable finite-incidence sequent has an explicit canonical
+   prime-theory world that forces its assumptions and refutes its conclusion. -/
+theorem finiteIncidence_canonical_countermodel_of_not_derives
+    {context : List (Formula FiniteIncidence)} {formula : Formula FiniteIncidence}
+    (hnot : ¬ Derives context formula) :
+    ∃ theory : PrimeTheory FiniteIncidence,
+      KripkeContextForces (canonicalKripkeModel FiniteIncidence) theory context ∧
+        ¬ KripkeForces (canonicalKripkeModel FiniteIncidence) theory formula :=
+  canonical_countermodel_of_not_derives_of_enumeration
+    finiteIncidenceFormulaEnumeration hnot
+
+theorem finiteIncidence_not_kripke_entails_of_not_derives
+    {context : List (Formula FiniteIncidence)} {formula : Formula FiniteIncidence}
+    (hnot : ¬ Derives context formula) :
+    ¬ KripkeEntails.{0, 0} context formula :=
+  not_kripke_entails_of_not_derives_of_enumeration
+    finiteIncidenceFormulaEnumeration hnot
 
 /-! ### A concrete constructive boundary
 

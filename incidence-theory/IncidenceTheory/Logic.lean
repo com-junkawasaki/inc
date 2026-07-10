@@ -3186,6 +3186,22 @@ theorem fin_kripke_entails_iff_derives (n : Nat)
     KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
   kripke_entails_iff_derives_of_enumeration (finFormulaEnumeration n) context formula
 
+/-! Every finite atom language has a user-facing canonical counterworld
+   theorem, including the empty language (`n = 0`). -/
+theorem fin_canonical_countermodel_of_not_derives (n : Nat)
+    {context : List (Formula (Fin n))} {formula : Formula (Fin n)}
+    (hnot : ¬ Derives context formula) :
+    ∃ theory : PrimeTheory (Fin n),
+      KripkeContextForces (canonicalKripkeModel (Fin n)) theory context ∧
+        ¬ KripkeForces (canonicalKripkeModel (Fin n)) theory formula :=
+  canonical_countermodel_of_not_derives_of_enumeration (finFormulaEnumeration n) hnot
+
+theorem fin_not_kripke_entails_of_not_derives (n : Nat)
+    {context : List (Formula (Fin n))} {formula : Formula (Fin n)}
+    (hnot : ¬ Derives context formula) :
+    ¬ KripkeEntails.{0, 0} context formula :=
+  not_kripke_entails_of_not_derives_of_enumeration (finFormulaEnumeration n) hnot
+
 /-! Natural-number atoms give a concrete countably infinite language.  Unlike
    the finite cases above, its atom coding needs no quotient or wraparound: a
    natural number is both its own code and its own decoding. -/
@@ -3196,6 +3212,20 @@ theorem nat_kripke_entails_iff_derives
     (context : List (Formula Nat)) (formula : Formula Nat) :
     KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
   kripke_entails_iff_derives_of_atom_coding id id (fun _ => rfl) context formula
+
+theorem nat_canonical_countermodel_of_not_derives
+    {context : List (Formula Nat)} {formula : Formula Nat}
+    (hnot : ¬ Derives context formula) :
+    ∃ theory : PrimeTheory Nat,
+      KripkeContextForces (canonicalKripkeModel Nat) theory context ∧
+        ¬ KripkeForces (canonicalKripkeModel Nat) theory formula :=
+  canonical_countermodel_of_not_derives_of_atom_coding id id (fun _ => rfl) hnot
+
+theorem nat_not_kripke_entails_of_not_derives
+    {context : List (Formula Nat)} {formula : Formula Nat}
+    (hnot : ¬ Derives context formula) :
+    ¬ KripkeEntails.{0, 0} context formula :=
+  not_kripke_entails_of_not_derives_of_atom_coding id id (fun _ => rfl) hnot
 
 noncomputable def boolFormulaDecode : Nat → Formula Bool
   | 0 => .atom false
@@ -3266,5 +3296,19 @@ theorem bool_kripke_entails_iff_derives
     (context : List (Formula Bool)) (formula : Formula Bool) :
     KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
   kripke_entails_iff_derives_of_enumeration boolFormulaEnumeration context formula
+
+theorem bool_canonical_countermodel_of_not_derives
+    {context : List (Formula Bool)} {formula : Formula Bool}
+    (hnot : ¬ Derives context formula) :
+    ∃ theory : PrimeTheory Bool,
+      KripkeContextForces (canonicalKripkeModel Bool) theory context ∧
+        ¬ KripkeForces (canonicalKripkeModel Bool) theory formula :=
+  canonical_countermodel_of_not_derives_of_enumeration boolFormulaEnumeration hnot
+
+theorem bool_not_kripke_entails_of_not_derives
+    {context : List (Formula Bool)} {formula : Formula Bool}
+    (hnot : ¬ Derives context formula) :
+    ¬ KripkeEntails.{0, 0} context formula :=
+  not_kripke_entails_of_not_derives_of_enumeration boolFormulaEnumeration hnot
 
 end IncidenceCore

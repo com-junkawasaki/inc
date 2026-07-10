@@ -74,6 +74,8 @@ It currently establishes:
   formula enumeration and hence the corresponding Kripke-completeness theorem.
   In the converse direction, every nonderivable finite sequent has a checked
   canonical prime-theory counterworld for the supplied coding.
+  Public instances expose this counterworld construction for `Fin n`, `Bool`,
+  `Nat`, and the concrete `FiniteIncidence` atom language.
   For the concrete `root` atom, excluded middle is shown underivable and
   Kripke-invalid, while its double-negated form is derivable.
   Each formula has a finite subformula closure, and a consistent context has a
@@ -117,7 +119,8 @@ It currently establishes:
   powersets.
   Its internal von Neumann ordinals additionally satisfy `⋃(n+1)=n` and the
   binary union law `m ∪ n = max(m,n)`; internal inclusion is exactly natural
-  number `≤`, with the induced equality/trichotomy and union algebra laws.
+  number `≤`, while strict inclusion is exactly `<`, with the induced
+  equality/trichotomy and union algebra laws.
   Relations are represented as sets of ordered pairs; singleton graphs are
   proved relational and functional, with an exact application iff law.
   The identity graph on every finite internal ordinal is also a checked
