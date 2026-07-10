@@ -2821,3 +2821,83 @@ attempting any construction on it. (c) Still open and untouched: option
 (b) from cycle 37's queue, the internal-logic distributivity direction
 relating `incidenceProd`/`incidenceSum`, likely needing its own
 scope-down step before any cycle attempts it directly.
+
+## Cycle 40
+
+**Hypothesis**: option (a) from cycle 39's queue -- the "opposite end"
+from cycles 38/39's Subsingleton finding. Those two cycles settled the
+fully-collapsed case (`cycleIncidence`): every possible quotient
+construction is a dead end there, forced into total triviality by
+`well_founded` alone. What happens at the other extreme -- an already
+`≈`-*faithful* instance (`natIncidence`, `cycleIncidenceFixed`), where
+every `≈`-class is a *singleton*? Cycle 39's queue framed this as
+"likely low-payoff" but worth confirming: is the quotient genuinely
+just a relabeling of the original carrier, with nothing new to say?
+
+**Method**: rather than attempt to build a full isomorphic `Incidence`
+structure on the quotient (transporting `boundary`/`glue`/all 7
+obligations through a bijection -- a materially bigger undertaking than
+this cycle's likely payoff justifies, an explicit scoping decision made
+up front rather than discovered mid-cycle), scoped down to the crux
+claim: is `Quotient.mk (approxBisimSetoid inc)` a genuine bijection
+`I ≃ Quotient (approxBisimSetoid inc)` for a faithful instance? Split
+into injectivity and surjectivity. Injectivity needed `Quotient.exact`
+(core Lean, the converse of `Quotient.sound`: `Quotient.mk s a =
+Quotient.mk s b → a ≈ b`) composed directly with the instance's own
+faithfulness theorem -- a one-line proof once the right core lemma was
+located. Surjectivity holds unconditionally for ANY instance via
+`Quotient.ind` (not specific to faithfulness at all -- included for
+completeness of the bijection statement, and to make explicit which
+half of the argument faithfulness actually does the work for).
+Confirmed concretely against both faithful instances built so far
+(`natIncidence`, cycle 4; `cycleIncidenceFixed`, cycle 27) rather than
+leaving the general theorem uninstantiated.
+
+**Result**: **confirmed on the first attempt for all three theorems.**
+`quotient_mk_injective_of_faithful`, `quotient_mk_surjective`, and the
+combined `quotient_mk_bijective_of_faithful` all need only `propext` --
+no `Classical.choice` at all, a genuinely simpler axiom profile than
+cycle 39's representative-based theorems (which needed
+`Classical.choice` to build `quotOut`). Both concrete instantiations
+(`natIncidence`, `cycleIncidenceFixed`) typecheck directly against the
+general theorem. Full `lake build`: 48/48 jobs. Repo-wide
+`sorry`-as-tactic grep: none.
+
+**Synthesis**: this cycle completes the two-pole picture cycles 38-40
+now tell together: `cycleIncidence`'s Subsingleton quotient (cycles
+38/39) collapses *everything* and is forced into total triviality;
+a faithful instance's quotient (this cycle) collapses *nothing* and is
+just a relabeling. Both extremes turn out to be well-understood and, in
+their own ways, uninteresting as genuine "new constructions" -- the
+Subsingleton case because nothing survives, the faithful case because
+nothing changes. This sharpens cycle 39's own synthesis note into a
+concrete prediction for cycle 41: the only regime left where a
+quotient-`Incidence` constructor could produce something genuinely NEW
+(neither degenerate collapse nor a mere relabeling) is an instance
+whose `≈`-quotient has more than one class but fewer classes than
+elements -- and no cycle has yet confirmed such an instance exists
+among those already built in this project. The methodological
+discipline exercised this cycle (deciding NOT to build the full
+isomorphic-structure transport, and saying so explicitly, rather than
+either overbuilding or silently under-delivering) is worth naming: not
+every queued item needs to be pursued to its maximal form to close the
+loop it opens -- the crux claim can be the whole payoff.
+
+**Next hypothesis (cycle 41, not yet attempted)**: item (b) from cycle
+39's queue, now the clear next step given this cycle's completed
+two-pole picture: audit whether any EXISTING instance already built in
+this project has a `≈`-quotient in the genuinely interesting middle
+ground -- more than one class, fewer than "all". `simplexIncidence`
+(vertices/edges/face reportedly "stayed separated by differing
+boundary shapes" per cycle 33's recollection, suggesting it might NOT
+fully collapse but is also very likely not faithful, given `Incidence`
+instances with genuine substructure have historically shown partial
+collapse patterns in this project) is the leading candidate -- audit
+first (which pairs of elements are/aren't `≈`-related) before
+attempting any quotient construction on it. If no existing instance
+qualifies, that itself would be worth noting as a gap: this project
+has, apparently, only ever built instances at one of the two extremes
+this cycle and cycles 38/39 characterized. Separately, option (c) from
+this cycle's queue (= option (b) from cycle 37's queue) remains open:
+the internal-logic distributivity direction relating
+`incidenceProd`/`incidenceSum`.

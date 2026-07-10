@@ -541,6 +541,25 @@ def printCycles38plus : IO Unit := do
   IO.println "    and fully faithful instances (natIncidence, cycleIncidenceFixed) sit at genuine"
   IO.println "    opposite ends of what a quotient-Incidence constructor could ever produce"
 
+  IO.println "\n🪩 The Other Extreme: Faithful Instances Have a Trivial Quotient (cycle 40):"
+  IO.println "  ✓ the opposite end from cycles 38/39's Subsingleton (fully-collapsed) finding:"
+  IO.println "    for an already ≈-faithful instance (natIncidence, cycleIncidenceFixed), every"
+  IO.println "    ≈-class is a SINGLETON, so does the quotient add anything at all?"
+  IO.println "  ✓ quotient_mk_injective_of_faithful: Quotient.mk can never merge two distinct"
+  IO.println "    elements for a faithful instance -- sharing a class means ≈-related, which for"
+  IO.println "    a faithful instance means literally equal, via Quotient.exact + faithfulness"
+  IO.println "  ✓ quotient_mk_surjective: holds unconditionally for ANY instance (Quotient.ind)"
+  IO.println "    -- only becomes the interesting half once paired with injectivity"
+  IO.println "  ✓ quotient_mk_bijective_of_faithful: combined, Quotient.mk is a genuine bijection"
+  IO.println "    I ≃ Quotient (approxBisimSetoid inc) for a faithful instance -- confirmed"
+  IO.println "    concretely against BOTH faithful instances built so far (natIncidence, cycle 4;"
+  IO.println "    cycleIncidenceFixed, cycle 27), not vacuously against just one"
+  IO.println "  → faithful instances and cycleIncidence sit at genuine opposite poles: one"
+  IO.println "    extreme (Subsingleton) collapses everything and forces total triviality"
+  IO.println "    (cycles 38/39); the other (faithful) collapses NOTHING and the quotient is"
+  IO.println "    just a relabeling. The interesting, still-unexplored middle ground -- a"
+  IO.println "    quotient with more than one but fewer than all classes -- remains open"
+
 def main : IO Unit := do
   printFoundationsAndEarlyCycles
   printCycles12to19

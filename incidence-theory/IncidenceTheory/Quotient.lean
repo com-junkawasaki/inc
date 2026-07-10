@@ -1,4 +1,5 @@
 import IncidenceTheory.Cycle
+import IncidenceTheory.Peano
 
 /- Merkle-ID: implementation.graph_model.quotient
    story.jsonnet → implementation.nodes.quotient
@@ -182,5 +183,63 @@ theorem cycleIncidence_rep_quotient_self_loop
 theorem cycleIncidence_real_quotient_self_loop :
   ∃ e ∈ cycleIncidence.boundary (cycleRep CycleId.c0), cycleRep e.i = cycleRep CycleId.c0 :=
   cycleIncidence_rep_quotient_self_loop cycleRep cycleRep_respects_approxBisim
+
+/- Research cycle 40 (see RESEARCH_LOG.md): option (a) from cycle 39's
+   queue -- the "opposite end" from cycle 38/39's Subsingleton finding.
+   Cycles 38/39 settled the fully-collapsed case (`cycleIncidence`):
+   ANY quotient-`Incidence` construction is a dead end there, forced
+   into total triviality. What about the other extreme -- an already
+   `≈`-*faithful* instance (`natIncidence`, `cycleIncidenceFixed`),
+   where `≈` already coincides with `=`? There, every `≈`-class is a
+   *singleton*, so the well-definedness question cycle 38 asked
+   (does `boundary`/`glue` respect `≈`?) should be trivially `Yes` --
+   and the deeper question is whether the quotient itself is anything
+   more than a relabeling of `I`. -/
+
+/- For a faithful instance, `Quotient.mk` is injective -- distinct
+   elements can never share a class, since sharing a class would mean
+   `≈`-related, which for a faithful instance means literally equal. -/
+theorem quotient_mk_injective_of_faithful {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (hfaithful : ∀ x y : I, approxBisim inc x y ↔ x = y)
+  {x y : I} (h : Quotient.mk (approxBisimSetoid inc) x = Quotient.mk (approxBisimSetoid inc) y) :
+  x = y :=
+  (hfaithful x y).mp (Quotient.exact h)
+
+/- Surjectivity holds unconditionally for ANY instance (not just
+   faithful ones) -- every quotient element is `Quotient.mk` of some
+   representative, by `Quotient.ind`. Stated here rather than in the
+   Subsingleton section above since it only becomes interesting
+   combined with injectivity, which is where faithfulness matters. -/
+theorem quotient_mk_surjective {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+  ∀ q : Quotient (approxBisimSetoid inc), ∃ x, Quotient.mk (approxBisimSetoid inc) x = q := by
+  intro q
+  induction q using Quotient.ind with
+  | _ x => exact ⟨x, rfl⟩
+
+/- Combined: for a faithful instance, `Quotient.mk` is a genuine
+   bijection `I ≃ Quotient (approxBisimSetoid inc)`. The quotient adds
+   no new identifications (injective) and loses no elements
+   (surjective) -- it is, up to relabeling, the same carrier the
+   instance already had. This is the precise sense in which faithful
+   instances sit at the opposite end from `cycleIncidence`'s
+   Subsingleton (one-point) quotient: one extreme collapses everything,
+   the other collapses nothing at all. -/
+theorem quotient_mk_bijective_of_faithful {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (hfaithful : ∀ x y : I, approxBisim inc x y ↔ x = y) :
+  (∀ x y : I, Quotient.mk (approxBisimSetoid inc) x = Quotient.mk (approxBisimSetoid inc) y → x = y) ∧
+  (∀ q : Quotient (approxBisimSetoid inc), ∃ x, Quotient.mk (approxBisimSetoid inc) x = q) :=
+  ⟨fun _ _ => quotient_mk_injective_of_faithful inc hfaithful, quotient_mk_surjective inc⟩
+
+/- Concrete confirmation against both faithful instances built so far
+   in this project (`natIncidence`, cycle 4; `cycleIncidenceFixed`,
+   cycle 27) -- not vacuous, two genuinely different faithful instances
+   both confirm the bijection. -/
+example : ∀ x y : Nat, Quotient.mk (approxBisimSetoid natIncidence) x =
+    Quotient.mk (approxBisimSetoid natIncidence) y → x = y :=
+  fun _ _ => quotient_mk_injective_of_faithful natIncidence natIncidence_approxBisim_iff
+
+example : ∀ x y : CycleId, Quotient.mk (approxBisimSetoid cycleIncidenceFixed) x =
+    Quotient.mk (approxBisimSetoid cycleIncidenceFixed) y → x = y :=
+  fun _ _ => quotient_mk_injective_of_faithful cycleIncidenceFixed cycleIncidenceFixed_approxBisim_iff
 
 end IncidenceCore
