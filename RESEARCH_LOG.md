@@ -2525,3 +2525,104 @@ target type" choice for the product analogous to `Sum.elim` that would
 have caused trouble, and did cycle 34 avoid it by luck or by
 structure? Worth a short confirmatory audit even if the expected answer
 is "no issue, `S1×S2` was never ambiguous the way `S1⊕S2` vs `S` was."
+
+## Cycle 37
+
+**Hypothesis**: option (c) from cycle 36's queue, chosen for being
+explicitly scoped as "narrower and more tractable" than options (a) and
+(b): does `incidenceProd_translation_reflects` (cycle 34) have the same
+kind of subtlety cycle 36 found for `incidenceSum` -- a "naive target
+type" choice analogous to `Sum.elim` that would have caused the product
+version to fail unconditionally too? Going in, the expected answer was
+"no issue," but the point of the audit was to *confirm* this rather
+than assume it, and to understand *why* if so -- luck, or structure.
+
+**Method**: read the existing `incidenceProd_translation_reflects`
+(`Product.lean`, cycle 34) directly rather than re-deriving it from
+scratch. Its hypothesis is `(t1 p.1, t2 p.2) = (t1 q.1, t2 q.2)` -- a
+pairing landing in a genuine `S1 × S2`, exactly the `Prod.map`-shaped,
+non-collapsing form cycle 36 identified as the *safe* choice for sums
+(as opposed to `Sum.elim`'s shared-target form). So by inspection, the
+product theorem was never built the collapsing way. The more
+interesting question was *why not* -- was this luck, or is there a
+structural reason products never face this choice? Reasoned: `Sum.elim
+t1 t2 : I1 ⊕ I2 → S` exists in the standard library specifically
+*because* `Sum` has two genuinely distinct cases that must be resolved
+into a single output type -- it is the canonical eliminator `Sum` is
+built around, and reaching for it when building *any* translation out
+of a sum is the natural, idiomatic first move. `Prod` has no analogous
+eliminator into a single shared type: every element of `I1 × I2`
+already carries *both* components simultaneously, so there is no
+"case" to resolve -- pairing componentwise into `S1 × S2` is the only
+shape that even makes sense as a *generic* translation, let alone the
+first one anybody would reach for. This predicts the asymmetry is
+structural, not luck -- but to avoid asserting "products are immune"
+without evidence, tested the flip side directly: does a *deliberately
+constructed* shared-target collapse for the product, mirroring
+`Sum.elim`'s shape, also fail, the way it would have for the sum? Built
+`prodCollapseTrivial : Nat × Nat → List Unit := fun _ => []` (the
+product analogue of a constant `Sum.elim`) and checked, first in a
+scratch file, then transcribed: does it collapse two non-`≈`-related
+pairs?
+
+**Result**: **confirmed on the first attempt, both directions.** (1)
+No subtlety in the existing cycle-34 theorem -- it already uses the
+`Prod.map`-shaped, non-collapsing pairing. (2) The reason is structural
+(no natural eliminator into a shared type exists for `Prod`), not luck.
+(3) **Products are not structurally immune to the underlying failure
+mode** -- `prodCollapseTrivial (0, 0) = prodCollapseTrivial (0, 1)`
+(trivially, both are `[]`) while `¬ approxBisim (incidenceProd
+natIncidence natIncidence) (0, 0) (0, 1)` (via
+`incidenceProd_faithful_of_faithful`, cycle 32, since `(0,0) ≠ (0,1)`)
+-- a deliberately bad shared-target translation for the product fails
+exactly the way `Sum.elim` would have for the sum. `#print axioms`:
+`prodCollapseTrivial_collapses` needs no axioms at all (`rfl`);
+`prodCollapseTrivial_not_reflects` needs `propext`/`Classical.choice`/
+`Quot.sound` -- consistent with the existing baseline, since it composes
+`natIncidence_approxBisim_iff` (cycle 4), which has carried
+`Classical.choice` since that cycle; `incidenceProd_faithful_of_faithful`
+itself remains `propext`/`Quot.sound` only, unchanged. Full `lake
+build`: 46/46 jobs. Repo-wide `sorry`-as-tactic grep: none.
+
+**Synthesis**: this cycle is a "quick audit" in the sense named back in
+cycle 35/36's write-ups -- it closes a loop rather than opening new
+ground, and the headline finding is a *negative* result (no subtlety
+found) plus a structural explanation for *why not*, rather than a new
+theorem enabling new proofs. Worth recording anyway, per this project's
+standing view that confirmatory work is not inherently less valuable
+than novel-phenomenon discovery: the asymmetry between cycle 34
+(product, unconditional and clean on the first attempt) and cycle 33/36
+(sum, conditional faithfulness but unconditional translation-pairing,
+and only after identifying a specific pitfall) was never about one
+constructor being *safer* than the other in any absolute sense -- both
+can fail under a badly-chosen translation. It was about which
+constructor has an *idiomatic, tempting* shape that happens to
+coincide with the bad choice. `Sum.elim` is genuinely the "obvious"
+thing to reach for when translating out of a sum; nothing analogous
+exists for products. This is a useful general lesson for any *future*
+generic constructor built in this project (item (a) from cycle 36's
+queue, still open): when adding a translation-pairing result, check
+whether the construction's *canonical eliminator/recursor* shape
+happens to be collapsing, rather than assuming safety or danger from
+the construction's "shape" alone.
+
+**Next hypothesis (cycle 38, not yet attempted)**: with cycle 36's
+queue now fully drained (item (b) partially addressed by this cycle's
+synthesis note; item (a) and the deeper part of (b) still open), the
+two live threads are: (a) a third generic constructor -- most promising
+candidate is a quotient construction using `approxBisim` itself as the
+identifying relation (test whether the bisimulation machinery is
+well-behaved under its own quotients: does `Incidence` descend to the
+`≈`-quotient of an existing instance, and if so, is the quotient
+trivially/necessarily faithful by construction, in contrast to both
+`incidenceProd`'s unconditional and `incidenceSum`'s conditional
+results?); (b) the still-mostly-untouched original vision of an
+internal ℕ/set/logic construction inside `Inc` -- concretely, does
+`incidenceProd`/`incidenceSum` satisfy anything resembling logical laws
+under `≈` (e.g. a distributivity-flavored statement relating
+`incidenceProd inc1 (incidenceSum inc2 inc3)` to `incidenceSum
+(incidenceProd inc1 inc2) (incidenceProd inc1 inc3)`)? The latter is
+likely too large for one cycle as stated -- if pursued, scope it down
+first (e.g. just check whether a natural map between the two carrier
+types exists and is well-typed, before attempting any bisimulation
+result about it).

@@ -476,6 +476,24 @@ def printCycles33plus : IO Unit := do
   IO.println "    other unconditional, and the reason is which type (Sum.elim's shared target vs"
   IO.println "    Sum.map's disjoint target) the translation is asked to land in"
 
+  IO.println "\n🪞 Auditing the Product for the Same Subtlety -- None Found, and Why (cycle 37):"
+  IO.println "  ✓ confirmed by inspection: incidenceProd_translation_reflects (cycle 34) already"
+  IO.println "    pairs via (t1 p.1, t2 p.2) into a genuine S1×S2 -- the Prod.map-shaped,"
+  IO.println "    non-collapsing form, never the shared-target form that tripped up the sum"
+  IO.println "  ✓ WHY there's no natural temptation toward the bad form for products: Sum.elim"
+  IO.println "    exists because Sum has two genuinely distinct cases needing resolution into"
+  IO.println "    one output type -- it's the eliminator Sum is built around. Prod has no"
+  IO.println "    analogous eliminator: every element already carries BOTH components at once,"
+  IO.println "    so componentwise pairing into S1×S2 is the ONLY idiomatic translation shape"
+  IO.println "  ✓ NOT structural immunity, though -- confirmed concretely: a deliberately"
+  IO.println "    constructed shared-target collapse (prodCollapseTrivial, mirroring Sum.elim's"
+  IO.println "    shape) DOES fail for the product too: it merges (0,0) and (0,1), which are"
+  IO.println "    NOT ≈-related in the fully-faithful natIncidence × natIncidence (cycle 32)"
+  IO.println "  → the asymmetry between cycles 34 and 36 was never about which constructor is"
+  IO.println "    safer -- it's about which one has an idiomatic, tempting shape that happens"
+  IO.println "    to be the bad one. A quick confirmatory audit, but worth recording: closing"
+  IO.println "    this loop rules out an unexamined asymmetry, rather than assuming one away"
+
 def main : IO Unit := do
   printFoundationsAndEarlyCycles
   printCycles12to19

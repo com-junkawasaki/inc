@@ -393,4 +393,40 @@ theorem natProdToFiniteSet_glue_hom (p q : Nat × Nat) :
   simp only [incidenceProd, prodGlue, natIncidence]
   simp [natProdToFiniteSet, natToFiniteSet_glue_hom]
 
+/- Research cycle 37 (see RESEARCH_LOG.md): audit item queued from
+   cycle 36 -- does `incidenceProd_translation_reflects` (cycle 34)
+   have an analogous subtlety to the one cycle 36 found for
+   `incidenceSum` (the `Sum.elim`-vs-`Sum.map` choice)? Confirmed by
+   inspection: the theorem already pairs translations via `(t1 p.1, t2
+   p.2) = (t1 q.1, t2 q.2)`, landing in a genuine `S1 × S2` -- exactly
+   the `Prod.map`-shaped, non-collapsing form, never the collapsing
+   shared-target form that caused cycles 33/36's trouble for sums.
+
+   Why there's no *natural* temptation toward the bad form for products
+   the way there was for sums: `Sum.elim t1 t2 : I1 ⊕ I2 → S` exists in
+   the standard library *because* `Sum` has two genuinely distinct
+   cases that must be resolved into one output type -- it's the
+   eliminator `Sum` is built around. `Prod` has no analogous
+   eliminator into a single shared type: every element of `I1 × I2`
+   already carries BOTH components simultaneously, so pairing them
+   componentwise into `S1 × S2` (never merging them into one `S`) is
+   the *only* idiomatic translation shape -- there is no tempting
+   one-line alternative the way `Sum.elim` is for sums.
+
+   This isn't because products are structurally immune to the
+   underlying failure mode, though -- confirmed concretely below: a
+   deliberately *constructed* shared-target collapse (mirroring
+   `Sum.elim`'s shape) fails for the product exactly the way it would
+   have for the sum. -/
+def prodCollapseTrivial : Nat × Nat → List Unit := fun _ => []
+
+theorem prodCollapseTrivial_collapses :
+  prodCollapseTrivial (0, 0) = prodCollapseTrivial (0, 1) := rfl
+
+theorem prodCollapseTrivial_not_reflects :
+  ¬ approxBisim (incidenceProd natIncidence natIncidence) (0, 0) (0, 1) := by
+  rw [incidenceProd_faithful_of_faithful natIncidence natIncidence
+    natIncidence_approxBisim_iff natIncidence_approxBisim_iff]
+  simp
+
 end IncidenceCore
