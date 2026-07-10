@@ -100,6 +100,9 @@ It currently establishes:
   syntactically, with the exact `x ∈ s × t` ordered-pair membership law.
   Cartesian product now descends to the recursive extensional quotient too,
   with the same exact ordered-pair membership characterization.
+  It is empty in either empty factor, distributes over binary union in either
+  coordinate, is monotone, and reflects each factor under the necessary
+  nonemptiness hypothesis.
   Singleton and Kuratowski ordered-pair constructions also descend to the
   recursive extensional quotient, with their exact outer membership laws;
   unordered-pair equality is classified and ordered pairs are injective.

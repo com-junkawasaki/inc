@@ -1087,6 +1087,9 @@ theorem triL_B_vertex_row_sum : triL B A + triL B B + triL B C = 0 := by
 theorem triL_C_vertex_row_sum : triL C A + triL C B + triL C C = 0 := by
   native_decide
 
+theorem triL_vertex_trace : triL A A + triL B B + triL C C = 6 := by
+  native_decide
+
 /- The finite triangle calculation used by the executable. -/
 def triangle_boundary_composition (i k : GId) : Int :=
   triIdx.foldl (fun acc j => acc + triB i j * triB j k) 0

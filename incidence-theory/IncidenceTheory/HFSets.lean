@@ -2697,6 +2697,63 @@ theorem hfRecursiveProduct_union_left (left right third : HFRecursiveSet) :
       exact ⟨a, (hfRecursiveMember_union_iff a left right).mpr
         (Or.inr ha), b, hb, hxab⟩
 
+/- A nonempty Cartesian factor lets equality of products recover the other
+   factor.  Both right factors are required: an empty factor would collapse a
+   product to the empty set and would make such reflection false. -/
+theorem hfRecursiveProduct_eq_reflect_left
+    {left left' right right' : HFRecursiveSet}
+    (hproduct : hfRecursiveProduct left right = hfRecursiveProduct left' right')
+    (hright : ∃ b, HFRecursiveMember b right)
+    (hright' : ∃ b, HFRecursiveMember b right') :
+    left = left' := by
+  apply hfRecursiveSubset_antisymm
+  · intro a ha
+    rcases hright with ⟨b, hb⟩
+    have hp : HFRecursiveMember (hfRecursiveOrderedPair a b)
+        (hfRecursiveProduct left right) :=
+      (hfRecursiveMember_product_iff _ left right).mpr ⟨a, ha, b, hb, rfl⟩
+    rw [hproduct] at hp
+    rcases (hfRecursiveMember_product_iff _ left' right').mp hp with
+      ⟨a', ha', b', hb', hpair⟩
+    exact (hfRecursiveOrderedPair_injective hpair).left ▸ ha'
+  · intro a ha
+    rcases hright' with ⟨b, hb⟩
+    have hp : HFRecursiveMember (hfRecursiveOrderedPair a b)
+        (hfRecursiveProduct left' right') :=
+      (hfRecursiveMember_product_iff _ left' right').mpr ⟨a, ha, b, hb, rfl⟩
+    rw [← hproduct] at hp
+    rcases (hfRecursiveMember_product_iff _ left right).mp hp with
+      ⟨a', ha', b', hb', hpair⟩
+    exact (hfRecursiveOrderedPair_injective hpair).left ▸ ha'
+
+/- Symmetrically, nonempty left factors make product equality reflect the
+   right factor. -/
+theorem hfRecursiveProduct_eq_reflect_right
+    {left left' right right' : HFRecursiveSet}
+    (hproduct : hfRecursiveProduct left right = hfRecursiveProduct left' right')
+    (hleft : ∃ a, HFRecursiveMember a left)
+    (hleft' : ∃ a, HFRecursiveMember a left') :
+    right = right' := by
+  apply hfRecursiveSubset_antisymm
+  · intro b hb
+    rcases hleft with ⟨a, ha⟩
+    have hp : HFRecursiveMember (hfRecursiveOrderedPair a b)
+        (hfRecursiveProduct left right) :=
+      (hfRecursiveMember_product_iff _ left right).mpr ⟨a, ha, b, hb, rfl⟩
+    rw [hproduct] at hp
+    rcases (hfRecursiveMember_product_iff _ left' right').mp hp with
+      ⟨a', ha', b', hb', hpair⟩
+    exact (hfRecursiveOrderedPair_injective hpair).right ▸ hb'
+  · intro b hb
+    rcases hleft' with ⟨a, ha⟩
+    have hp : HFRecursiveMember (hfRecursiveOrderedPair a b)
+        (hfRecursiveProduct left' right') :=
+      (hfRecursiveMember_product_iff _ left' right').mpr ⟨a, ha, b, hb, rfl⟩
+    rw [← hproduct] at hp
+    rcases (hfRecursiveMember_product_iff _ left right).mp hp with
+      ⟨a', ha', b', hb', hpair⟩
+    exact (hfRecursiveOrderedPair_injective hpair).right ▸ hb'
+
 /- The union of two finite powersets has the expected universal property:
    it is below a third powerset exactly when both source sets are below that
    third base set.  In particular this records the join operation on the
