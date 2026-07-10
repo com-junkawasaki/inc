@@ -216,6 +216,78 @@ theorem finiteAlgebraic_boundaryMatrix :
 theorem finiteAlgebraic_laplacian :
     finiteAlgebraicModel.laplacian = laplacian finiteIncidence finiteIdx := rfl
 
+/- The public structures are intentionally layered: `Incidence` carries the
+   core data, `GluingSpec` supplies the guarded associativity law, and the
+   historical A2--A10 interfaces erase endpoint roles to `Unit`.  This
+   certificate puts the concrete witnesses together without identifying the
+   role-sensitive boundary of the core model with that erased presentation.
+   The current A11--A15 files do not expose corresponding fields, so they are
+   deliberately not claimed here. -/
+structure FiniteIncidenceLayerCertificate where
+  core : Incidence FiniteIncidence GraphRole GraphType
+  core_eq : core = finiteIncidence
+  nonempty_boundary : ∃ i, core.boundary i ≠ []
+  gluing : GluingSpec finiteIncidence
+  erased_gluing : IncidenceGluing FiniteIncidence GraphRole GraphType
+  erased_preservation : IncidencePreservation FiniteIncidence GraphRole GraphType
+  algebraic : IncidenceAlgebraic FiniteIncidence GraphRole GraphType
+  erased_gluing_eq : erased_gluing = finiteUnitGluing
+  erased_preservation_eq : erased_preservation = finiteUnitPreservation
+  algebraic_eq : algebraic = finiteAlgebraicModel
+  glue_total : ∀ i j, ∃ k, finiteIncidence.glue i j = some k
+  laplacian_symmetric : ∀ i j,
+    algebraic.laplacian i j = algebraic.laplacian j i
+  laplacian_diagonal_nonnegative : ∀ i,
+    0 ≤ algebraic.laplacian i i
+
+def finiteIncidenceLayerCertificate : FiniteIncidenceLayerCertificate where
+  core := finiteIncidence
+  core_eq := rfl
+  nonempty_boundary := ⟨.root, finiteIncidence_root_boundary_nonempty⟩
+  gluing := finiteGluingSpec
+  erased_gluing := finiteUnitGluing
+  erased_preservation := finiteUnitPreservation
+  algebraic := finiteAlgebraicModel
+  erased_gluing_eq := rfl
+  erased_preservation_eq := rfl
+  algebraic_eq := rfl
+  glue_total := by
+    intro i j
+    cases i <;> cases j <;> first | exact ⟨.leaf, rfl⟩ | exact ⟨.root, rfl⟩
+  laplacian_symmetric := by
+    intro i j
+    exact laplacian_symmetric finiteIncidence finiteIdx i j
+  laplacian_diagonal_nonnegative := by
+    intro i
+    exact laplacian_diagonal_nonnegative finiteIncidence finiteIdx i
+
+/- The following projections are the directly usable consequences of the
+   interfaces currently formalized in `Axioms.lean`: core A1--A5, gluing
+   A6--A8, preservation A9--A10, and derived linear data A16--A17. -/
+theorem finiteIncidence_available_layers :
+    Nonempty (Incidence FiniteIncidence GraphRole GraphType) ∧
+      Nonempty (GluingSpec finiteIncidence) ∧
+      Nonempty (IncidenceGluing FiniteIncidence GraphRole GraphType) ∧
+      Nonempty (IncidencePreservation FiniteIncidence GraphRole GraphType) ∧
+      Nonempty (IncidenceAlgebraic FiniteIncidence GraphRole GraphType) := by
+  exact ⟨⟨finiteIncidenceLayerCertificate.core⟩,
+    ⟨finiteIncidenceLayerCertificate.gluing⟩,
+    ⟨finiteIncidenceLayerCertificate.erased_gluing⟩,
+    ⟨finiteIncidenceLayerCertificate.erased_preservation⟩,
+    ⟨finiteIncidenceLayerCertificate.algebraic⟩⟩
+
+theorem finiteIncidence_glue_total (i j : FiniteIncidence) :
+    ∃ k, finiteIncidence.glue i j = some k :=
+  finiteIncidenceLayerCertificate.glue_total i j
+
+theorem finiteIncidence_laplacian_symmetric (i j : FiniteIncidence) :
+    finiteAlgebraicModel.laplacian i j = finiteAlgebraicModel.laplacian j i :=
+  finiteIncidenceLayerCertificate.laplacian_symmetric i j
+
+theorem finiteIncidence_laplacian_diagonal_nonnegative (i : FiniteIncidence) :
+    0 ≤ finiteAlgebraicModel.laplacian i i :=
+  finiteIncidenceLayerCertificate.laplacian_diagonal_nonnegative i
+
 /- The nonempty finite model witnesses that observing the `root` row really
    adds positive linear energy at `leaf`; strict extension is therefore not a
    vacuous consequence of the general theorem. -/

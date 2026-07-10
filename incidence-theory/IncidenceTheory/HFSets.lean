@@ -2122,6 +2122,38 @@ theorem hfRecursivePower_monotone {s t : HFRecursiveSet} :
   intro y hy
   exact h y (hx y hy)
 
+/- Powerset is not merely monotone: on the finite hereditary-set quotient it
+   reflects the internal inclusion order.  The reverse implication recovers a
+   member of the base set through its singleton. -/
+theorem hfRecursivePower_subset_iff {s t : HFRecursiveSet} :
+    HFRecursiveSubset (hfRecursivePower s) (hfRecursivePower t) ↔
+      HFRecursiveSubset s t := by
+  constructor
+  · intro h x hxs
+    have hsingleton : HFRecursiveMember (hfRecursiveSingleton x)
+        (hfRecursivePower s) :=
+      (hfRecursiveMember_singleton_power_iff x s).mpr hxs
+    have hsingleton' : HFRecursiveMember (hfRecursiveSingleton x)
+        (hfRecursivePower t) := h _ hsingleton
+    exact (hfRecursiveMember_singleton_power_iff x t).mp hsingleton'
+  · exact hfRecursivePower_monotone
+
+/- Taking the internal union of all finite subsets reconstructs the original
+   finite hereditary set.  This is the quotient-level finite analogue of
+   `⋃ 𝒫(s) = s`, and uses singleton subsets for the nontrivial direction. -/
+theorem hfRecursiveBigUnion_power (s : HFRecursiveSet) :
+    hfRecursiveBigUnion (hfRecursivePower s) = s := by
+  apply hfRecursiveSet_extensionality
+  intro x
+  rw [hfRecursiveMember_bigUnion_iff]
+  constructor
+  · rintro ⟨u, huPower, hxu⟩
+    exact (hfRecursiveMember_power_iff_subset u s).mp huPower x hxu
+  · intro hxs
+    refine ⟨hfRecursiveSingleton x,
+      (hfRecursiveMember_singleton_power_iff x s).mpr hxs, ?_⟩
+    exact (hfRecursiveMember_singleton_iff x x).mpr rfl
+
 theorem hfRecursiveSubset_refl (s : HFRecursiveSet) : HFRecursiveSubset s s :=
   fun _ h => h
 
@@ -2312,6 +2344,39 @@ theorem hfRecursiveUnion_least {s t u : HFRecursiveSet} :
   rcases (hfRecursiveMember_union_iff x s t).mp hx with hxs | hxt
   · exact hsu x hxs
   · exact htu x hxt
+
+/- The union of two finite powersets has the expected universal property:
+   it is below a third powerset exactly when both source sets are below that
+   third base set.  In particular this records the join operation on the
+   order-embedded image of finite powerset. -/
+theorem hfRecursiveUnion_power_subset_power_iff
+    {s t u : HFRecursiveSet} :
+    HFRecursiveSubset
+      (hfRecursiveUnion (hfRecursivePower s) (hfRecursivePower t))
+      (hfRecursivePower u) ↔
+      HFRecursiveSubset s u ∧ HFRecursiveSubset t u := by
+  constructor
+  · intro h
+    constructor
+    · exact (hfRecursivePower_subset_iff).mp
+        (hfRecursiveSubset_trans
+          (hfRecursiveSubset_union_left (hfRecursivePower s) (hfRecursivePower t)) h)
+    · exact (hfRecursivePower_subset_iff).mp
+        (hfRecursiveSubset_trans
+          (hfRecursiveSubset_union_right (hfRecursivePower s) (hfRecursivePower t)) h)
+  · rintro ⟨hsu, htu⟩
+    apply hfRecursiveUnion_least
+    · exact (hfRecursivePower_subset_iff).mpr hsu
+    · exact (hfRecursivePower_subset_iff).mpr htu
+
+/- Every subset of either input remains a subset after adjoining the inputs;
+   this is the concrete powerset/union inclusion used by the universal law. -/
+theorem hfRecursiveUnion_power_subset_power_union (s t : HFRecursiveSet) :
+    HFRecursiveSubset
+      (hfRecursiveUnion (hfRecursivePower s) (hfRecursivePower t))
+      (hfRecursivePower (hfRecursiveUnion s t)) := by
+  exact (hfRecursiveUnion_power_subset_power_iff).mpr
+    ⟨hfRecursiveSubset_union_left s t, hfRecursiveSubset_union_right s t⟩
 
 theorem hfRecursiveUnion_idempotent (s : HFRecursiveSet) :
     hfRecursiveUnion s s = s := by

@@ -2681,6 +2681,180 @@ theorem diagonalRemainder_pair (left right : Nat) :
   rw [((diagonalState_spec (left + right)).2 left (by omega))]
   omega
 
+/-! A countable supply of atoms gives a countable supply of formulas.  We use
+   an explicit retraction rather than a type-class countability assumption, so
+   this construction is also convenient for finite atom types. -/
+
+noncomputable def formulaDecodeOfAtomCoding {Atom : Type u}
+    (decodeAtom : Nat → Atom) : Nat → Formula Atom
+  | 0 => .atom (decodeAtom 0)
+  | code + 1 =>
+    let payload := code / 6
+    match code % 6 with
+    | 0 => .atom (decodeAtom payload)
+    | 1 => .top
+    | 2 => .bot
+    | 3 => .and (formulaDecodeOfAtomCoding decodeAtom (diagonalIndex payload))
+        (formulaDecodeOfAtomCoding decodeAtom (diagonalRemainder payload))
+    | 4 => .or (formulaDecodeOfAtomCoding decodeAtom (diagonalIndex payload))
+        (formulaDecodeOfAtomCoding decodeAtom (diagonalRemainder payload))
+    | _ => .imp (formulaDecodeOfAtomCoding decodeAtom (diagonalIndex payload))
+        (formulaDecodeOfAtomCoding decodeAtom (diagonalRemainder payload))
+termination_by code => code
+
+decreasing_by
+  all_goals
+    apply Nat.lt_succ_of_le
+    apply Nat.le_trans
+    · first | exact diagonalIndex_le_stage _ | exact diagonalRemainder_le_stage _
+    · exact Nat.div_le_self _ _
+
+noncomputable def formulaCodeOfAtomCoding {Atom : Type u}
+    (codeAtom : Atom → Nat) : Formula Atom → Nat
+  | .atom atom => 6 * codeAtom atom + 1
+  | .top => 2
+  | .bot => 3
+  | .and p q => 6 * diagonalPair (formulaCodeOfAtomCoding codeAtom p)
+      (formulaCodeOfAtomCoding codeAtom q) + 4
+  | .or p q => 6 * diagonalPair (formulaCodeOfAtomCoding codeAtom p)
+      (formulaCodeOfAtomCoding codeAtom q) + 5
+  | .imp p q => 6 * diagonalPair (formulaCodeOfAtomCoding codeAtom p)
+      (formulaCodeOfAtomCoding codeAtom q) + 6
+
+theorem formulaDecodeOfAtomCoding_code {Atom : Type u}
+    (decodeAtom : Nat → Atom) (codeAtom : Atom → Nat)
+    (hcode : ∀ atom, decodeAtom (codeAtom atom) = atom) :
+    ∀ formula : Formula Atom,
+      formulaDecodeOfAtomCoding decodeAtom (formulaCodeOfAtomCoding codeAtom formula) = formula := by
+  intro formula
+  induction formula with
+  | atom atom =>
+    simp only [formulaCodeOfAtomCoding, formulaDecodeOfAtomCoding]
+    rw [show (6 * codeAtom atom) / 6 = codeAtom atom by omega]
+    rw [show (6 * codeAtom atom) % 6 = 0 by omega]
+    simpa using congrArg Formula.atom (hcode atom)
+  | top => simp [formulaCodeOfAtomCoding, formulaDecodeOfAtomCoding]
+  | bot => simp [formulaCodeOfAtomCoding, formulaDecodeOfAtomCoding]
+  | and p q ihp ihq =>
+    simp only [formulaCodeOfAtomCoding, formulaDecodeOfAtomCoding]
+    rw [show (6 * diagonalPair (formulaCodeOfAtomCoding codeAtom p)
+        (formulaCodeOfAtomCoding codeAtom q) + 3) / 6 =
+        diagonalPair (formulaCodeOfAtomCoding codeAtom p) (formulaCodeOfAtomCoding codeAtom q) by omega]
+    rw [show (6 * diagonalPair (formulaCodeOfAtomCoding codeAtom p)
+        (formulaCodeOfAtomCoding codeAtom q) + 3) % 6 = 3 by omega]
+    rw [diagonalIndex_pair, diagonalRemainder_pair, ihp, ihq]
+  | or p q ihp ihq =>
+    simp only [formulaCodeOfAtomCoding, formulaDecodeOfAtomCoding]
+    rw [show (6 * diagonalPair (formulaCodeOfAtomCoding codeAtom p)
+        (formulaCodeOfAtomCoding codeAtom q) + 4) / 6 =
+        diagonalPair (formulaCodeOfAtomCoding codeAtom p) (formulaCodeOfAtomCoding codeAtom q) by omega]
+    rw [show (6 * diagonalPair (formulaCodeOfAtomCoding codeAtom p)
+        (formulaCodeOfAtomCoding codeAtom q) + 4) % 6 = 4 by omega]
+    rw [diagonalIndex_pair, diagonalRemainder_pair, ihp, ihq]
+  | imp p q ihp ihq =>
+    simp only [formulaCodeOfAtomCoding, formulaDecodeOfAtomCoding]
+    rw [show (6 * diagonalPair (formulaCodeOfAtomCoding codeAtom p)
+        (formulaCodeOfAtomCoding codeAtom q) + 5) / 6 =
+        diagonalPair (formulaCodeOfAtomCoding codeAtom p) (formulaCodeOfAtomCoding codeAtom q) by omega]
+    rw [show (6 * diagonalPair (formulaCodeOfAtomCoding codeAtom p)
+        (formulaCodeOfAtomCoding codeAtom q) + 5) % 6 = 5 by omega]
+    rw [diagonalIndex_pair, diagonalRemainder_pair, ihp, ihq]
+
+noncomputable def formulaEnumerationOfAtomCoding {Atom : Type u}
+    (decodeAtom : Nat → Atom) (codeAtom : Atom → Nat)
+    (hcode : ∀ atom, decodeAtom (codeAtom atom) = atom) : FormulaEnumeration Atom where
+  enumerate := formulaDecodeOfAtomCoding decodeAtom
+  exhaustive := fun formula => ⟨formulaCodeOfAtomCoding codeAtom formula,
+    formulaDecodeOfAtomCoding_code decodeAtom codeAtom hcode formula⟩
+
+noncomputable def finSuccAtomDecode (n : Nat) : Nat → Fin (n + 1) :=
+  fun index => ⟨index % (n + 1), Nat.mod_lt _ (by omega)⟩
+
+theorem finSuccAtomDecode_code (n : Nat) (atom : Fin (n + 1)) :
+    finSuccAtomDecode n atom.val = atom := by
+  apply Fin.ext
+  simp [finSuccAtomDecode, Nat.mod_eq_of_lt atom.isLt]
+
+noncomputable def finSuccFormulaEnumeration (n : Nat) : FormulaEnumeration (Fin (n + 1)) :=
+  formulaEnumerationOfAtomCoding (finSuccAtomDecode n) Fin.val (finSuccAtomDecode_code n)
+
+theorem finSucc_kripke_entails_iff_derives (n : Nat)
+    (context : List (Formula (Fin (n + 1)))) (formula : Formula (Fin (n + 1))) :
+    KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
+  kripke_entails_iff_derives_of_enumeration (finSuccFormulaEnumeration n) context formula
+
+/- The zero-element finite type has no atom constructor to encode.  Its
+   formula language nevertheless remains countable, using the five remaining
+   propositional constructors. -/
+noncomputable def emptyFormulaDecode : Nat → Formula (Fin 0)
+  | 0 => .top
+  | code + 1 =>
+    let payload := code / 5
+    match code % 5 with
+    | 0 => .top
+    | 1 => .bot
+    | 2 => .and (emptyFormulaDecode (diagonalIndex payload))
+        (emptyFormulaDecode (diagonalRemainder payload))
+    | 3 => .or (emptyFormulaDecode (diagonalIndex payload))
+        (emptyFormulaDecode (diagonalRemainder payload))
+    | _ => .imp (emptyFormulaDecode (diagonalIndex payload))
+        (emptyFormulaDecode (diagonalRemainder payload))
+termination_by code => code
+
+decreasing_by
+  all_goals
+    apply Nat.lt_succ_of_le
+    apply Nat.le_trans
+    · first | exact diagonalIndex_le_stage _ | exact diagonalRemainder_le_stage _
+    · exact Nat.div_le_self _ _
+
+noncomputable def emptyFormulaCode : Formula (Fin 0) → Nat
+  | .atom atom => Fin.elim0 atom
+  | .top => 1
+  | .bot => 2
+  | .and p q => 5 * diagonalPair (emptyFormulaCode p) (emptyFormulaCode q) + 3
+  | .or p q => 5 * diagonalPair (emptyFormulaCode p) (emptyFormulaCode q) + 4
+  | .imp p q => 5 * diagonalPair (emptyFormulaCode p) (emptyFormulaCode q) + 5
+
+theorem emptyFormulaDecode_code : ∀ formula : Formula (Fin 0),
+    emptyFormulaDecode (emptyFormulaCode formula) = formula := by
+  intro formula
+  induction formula with
+  | atom atom => exact Fin.elim0 atom
+  | top => simp [emptyFormulaCode, emptyFormulaDecode]
+  | bot => simp [emptyFormulaCode, emptyFormulaDecode]
+  | and p q ihp ihq =>
+    simp only [emptyFormulaCode, emptyFormulaDecode]
+    rw [show (5 * diagonalPair (emptyFormulaCode p) (emptyFormulaCode q) + 2) / 5 =
+        diagonalPair (emptyFormulaCode p) (emptyFormulaCode q) by omega]
+    rw [show (5 * diagonalPair (emptyFormulaCode p) (emptyFormulaCode q) + 2) % 5 = 2 by omega]
+    rw [diagonalIndex_pair, diagonalRemainder_pair, ihp, ihq]
+  | or p q ihp ihq =>
+    simp only [emptyFormulaCode, emptyFormulaDecode]
+    rw [show (5 * diagonalPair (emptyFormulaCode p) (emptyFormulaCode q) + 3) / 5 =
+        diagonalPair (emptyFormulaCode p) (emptyFormulaCode q) by omega]
+    rw [show (5 * diagonalPair (emptyFormulaCode p) (emptyFormulaCode q) + 3) % 5 = 3 by omega]
+    rw [diagonalIndex_pair, diagonalRemainder_pair, ihp, ihq]
+  | imp p q ihp ihq =>
+    simp only [emptyFormulaCode, emptyFormulaDecode]
+    rw [show (5 * diagonalPair (emptyFormulaCode p) (emptyFormulaCode q) + 4) / 5 =
+        diagonalPair (emptyFormulaCode p) (emptyFormulaCode q) by omega]
+    rw [show (5 * diagonalPair (emptyFormulaCode p) (emptyFormulaCode q) + 4) % 5 = 4 by omega]
+    rw [diagonalIndex_pair, diagonalRemainder_pair, ihp, ihq]
+
+noncomputable def emptyFormulaEnumeration : FormulaEnumeration (Fin 0) where
+  enumerate := emptyFormulaDecode
+  exhaustive := fun formula => ⟨emptyFormulaCode formula, emptyFormulaDecode_code formula⟩
+
+noncomputable def finFormulaEnumeration : (n : Nat) → FormulaEnumeration (Fin n)
+  | 0 => emptyFormulaEnumeration
+  | n + 1 => finSuccFormulaEnumeration n
+
+theorem fin_kripke_entails_iff_derives (n : Nat)
+    (context : List (Formula (Fin n))) (formula : Formula (Fin n)) :
+    KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
+  kripke_entails_iff_derives_of_enumeration (finFormulaEnumeration n) context formula
+
 noncomputable def boolFormulaDecode : Nat → Formula Bool
   | 0 => .atom false
   | code + 1 =>

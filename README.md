@@ -66,6 +66,8 @@ It currently establishes:
   so the full Kripke completeness equivalence is directly instantiated for a
   language with two distinguishable incidence atoms, and is transported to
   the actual `FiniteIncidence` atoms `leaf` and `root`.
+  The construction is now generalized to `Fin n` for every finite atom
+  language, including the zero-atom case.
   For the concrete `root` atom, excluded middle is shown underivable and
   Kripke-invalid, while its double-negated form is derivable.
   Each formula has a finite subformula closure, and a consistent context has a
@@ -99,6 +101,9 @@ It currently establishes:
   the exact law `x ∈ power(s) ↔ x ⊆ s`.
   It is injective (`power(s)=power(t) → s=t`) and satisfies
   `power(∅) = {∅}` on the quotient.
+  It reflects subset (`power(s) ⊆ power(t) ↔ s ⊆ t`), satisfies
+  `⋃ power(s) = s`, and provides the expected upper-bound law for unions of
+  powersets.
   Its internal von Neumann ordinals additionally satisfy `⋃(n+1)=n` and the
   binary union law `m ∪ n = max(m,n)`; internal inclusion is exactly natural
   number `≤`, with the induced equality/trichotomy and union algebra laws.
