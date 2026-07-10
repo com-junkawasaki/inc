@@ -473,6 +473,57 @@ theorem laplacian_congr {I R T : Type u} [DecidableEq I]
       exact ih _
   exact hfold idx 0
 
+/- Pointwise preservation of boundary data transports the explicit
+   row-balance hypothesis itself.  Consequently the zero row/column sums of
+   `BᵀB` are stable under every boundary-faithful translation. -/
+theorem boundaryRowBalanced_congr {I R T : Type u} [DecidableEq I]
+    (inc inc' : Incidence I R T) (idx : List I)
+    (hboundary : ∀ i, inc.boundary i = inc'.boundary i)
+    (hbalanced : BoundaryRowBalanced inc idx) :
+    BoundaryRowBalanced inc' idx := by
+  intro row hrow
+  calc
+    boundaryRowSum inc' idx row = boundaryRowSum inc idx row := by
+      unfold boundaryRowSum
+      apply congrArg (intListSum idx)
+      funext column
+      exact (boundaryMatrix_congr inc inc' idx idx hboundary row column).symm
+    _ = 0 := hbalanced row hrow
+
+theorem laplacianRowSum_congr {I R T : Type u} [DecidableEq I]
+    (inc inc' : Incidence I R T) (idx : List I)
+    (hboundary : ∀ i, inc.boundary i = inc'.boundary i) (row : I) :
+    laplacianRowSum inc idx row = laplacianRowSum inc' idx row := by
+  unfold laplacianRowSum
+  apply congrArg (intListSum idx)
+  funext column
+  exact laplacian_congr inc inc' idx hboundary row column
+
+theorem laplacianColumnSum_congr {I R T : Type u} [DecidableEq I]
+    (inc inc' : Incidence I R T) (idx : List I)
+    (hboundary : ∀ i, inc.boundary i = inc'.boundary i) (column : I) :
+    laplacianColumnSum inc idx column = laplacianColumnSum inc' idx column := by
+  unfold laplacianColumnSum
+  apply congrArg (intListSum idx)
+  funext row
+  exact laplacian_congr inc inc' idx hboundary row column
+
+theorem laplacianRowSum_zero_preserved_of_boundary_congr {I R T : Type u} [DecidableEq I]
+    (inc inc' : Incidence I R T) (idx : List I)
+    (hboundary : ∀ i, inc.boundary i = inc'.boundary i)
+    (hbalanced : BoundaryRowBalanced inc idx) (row : I) :
+    laplacianRowSum inc' idx row = 0 :=
+  laplacian_rowSum_zero_of_boundaryRowBalanced inc' idx
+    (boundaryRowBalanced_congr inc inc' idx hboundary hbalanced) row
+
+theorem laplacianColumnSum_zero_preserved_of_boundary_congr {I R T : Type u} [DecidableEq I]
+    (inc inc' : Incidence I R T) (idx : List I)
+    (hboundary : ∀ i, inc.boundary i = inc'.boundary i)
+    (hbalanced : BoundaryRowBalanced inc idx) (column : I) :
+    laplacianColumnSum inc' idx column = 0 :=
+  laplacian_columnSum_zero_of_boundaryRowBalanced inc' idx
+    (boundaryRowBalanced_congr inc inc' idx hboundary hbalanced) column
+
 /- A positive contribution from new rows gives strict, rather than merely
    weak, diagonal monotonicity. -/
 theorem laplacian_diagonal_strict_monotone_append {I R T : Type u} [DecidableEq I]

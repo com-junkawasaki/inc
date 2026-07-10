@@ -116,6 +116,8 @@ It currently establishes:
   `⟨{a},{b}⟩ ∈ P(s)×P(t)` holds exactly when `a∈s` and `b∈t`.
   The bundled recursive finite-set fragment model records product zero,
   monotonicity and union-distribution laws alongside `⋃P(s)=s`.
+  Within the powerset image, unions have the exact least-upper-bound law;
+  the development deliberately does not equate `P(s∪t)` with `P(s)∪P(t)`.
   Singleton and Kuratowski ordered-pair constructions also descend to the
   recursive extensional quotient, with their exact outer membership laws;
   unordered-pair equality is classified and ordered pairs are injective.
@@ -196,6 +198,8 @@ Pushout universality, generic boundary-square-zero, linear completeness, and
 translation preservation need additional categorical or linear hypotheses.
 For example, `BoundaryRowBalanced` is now the explicit checked hypothesis
 under which the derived Laplacian has zero row and column sums.
+Pointwise boundary equality transports this balance condition and its
+zero-sum Laplacian consequences between incidence models.
 They are not unconditional theorems in the present Lean core.
 
 The finite model is evidence of satisfiability of this **implemented finite

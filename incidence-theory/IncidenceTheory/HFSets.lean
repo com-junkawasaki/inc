@@ -3290,6 +3290,11 @@ structure HFRecursiveSetFragmentModel where
       (hfRecursiveOrderedPair (hfRecursiveSingleton a) (hfRecursiveSingleton b))
       (product (power left) (power right)) ↔
         HFRecursiveMember a left ∧ HFRecursiveMember b right
+  union_powers_least : ∀ {s t u},
+    HFRecursiveSubset (union (power s) (power t)) (power u) ↔
+      HFRecursiveSubset s u ∧ HFRecursiveSubset t u
+  union_powers_subset_power_union : ∀ s t,
+    HFRecursiveSubset (union (power s) (power t)) (power (union s t))
   bigUnion_power : ∀ s, bigUnion (power s) = s
   filter_spec : ∀ p x s,
     HFRecursiveMember x (filter p s) ↔ HFRecursiveMember x s ∧ p.holds x
@@ -3325,6 +3330,8 @@ def hfRecursiveSetFragmentModel : HFRecursiveSetFragmentModel where
   product_union_right := hfRecursiveProduct_union_right
   power_spec := hfRecursiveMember_power_iff_subset
   product_power_singletons := hfRecursiveMember_product_power_singletons_iff
+  union_powers_least := hfRecursiveUnion_power_subset_power_iff
+  union_powers_subset_power_union := hfRecursiveUnion_power_subset_power_union
   bigUnion_power := hfRecursiveBigUnion_power
   filter_spec := hfRecursiveMember_filter_iff
   bigUnion_intro := by
