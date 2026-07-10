@@ -1911,6 +1911,80 @@ theorem hfRecursiveMember_power_iff_subset (x s : HFRecursiveSet) :
   intro s
   exact hfRecursiveMember_power_mk_iff_subset x s
 
+/- A singleton is included in a set exactly when its unique element is a
+   member.  This is the bridge from the powerset specification back to the
+   original set, and will make powerset extensionality available internally. -/
+theorem hfRecursiveSubset_singleton_iff (x s : HFRecursiveSet) :
+    HFRecursiveSubset (hfRecursiveSingleton x) s ↔ HFRecursiveMember x s := by
+  constructor
+  · intro h
+    exact h x ((hfRecursiveMember_singleton_iff x x).mpr rfl)
+  · intro hx y hy
+    have hyx : y = x := (hfRecursiveMember_singleton_iff y x).mp hy
+    rw [hyx]
+    exact hx
+
+/- Singleton membership in a finite powerset has the expected Boolean
+   interpretation. -/
+theorem hfRecursiveMember_singleton_power_iff (x s : HFRecursiveSet) :
+    HFRecursiveMember (hfRecursiveSingleton x) (hfRecursivePower s) ↔
+      HFRecursiveMember x s := by
+  rw [hfRecursiveMember_power_iff_subset, hfRecursiveSubset_singleton_iff]
+
+/- The empty set is a member of every finite powerset. -/
+theorem hfRecursiveEmpty_mem_power (s : HFRecursiveSet) :
+    HFRecursiveMember hfRecursiveEmpty (hfRecursivePower s) := by
+  rw [hfRecursiveMember_power_iff_subset]
+  intro x hx
+  exact False.elim (hfRecursiveMember_empty x hx)
+
+/- Finite powerset is extensional: its value determines the original
+   quotient-level hereditary finite set. -/
+theorem hfRecursivePower_injective : ∀ ⦃s t : HFRecursiveSet⦄,
+    hfRecursivePower s = hfRecursivePower t → s = t := by
+  intro s t hpower
+  apply hfRecursiveSet_extensionality
+  intro x
+  constructor
+  · intro hxs
+    have hsingleton : HFRecursiveMember (hfRecursiveSingleton x)
+        (hfRecursivePower s) :=
+      (hfRecursiveMember_singleton_power_iff x s).mpr hxs
+    rw [hpower] at hsingleton
+    exact (hfRecursiveMember_singleton_power_iff x t).mp hsingleton
+  · intro hxt
+    have hsingleton : HFRecursiveMember (hfRecursiveSingleton x)
+        (hfRecursivePower t) :=
+      (hfRecursiveMember_singleton_power_iff x t).mpr hxt
+    rw [← hpower] at hsingleton
+    exact (hfRecursiveMember_singleton_power_iff x s).mp hsingleton
+
+theorem hfRecursivePower_eq_iff (s t : HFRecursiveSet) :
+  hfRecursivePower s = hfRecursivePower t ↔ s = t := by
+  constructor
+  · exact hfRecursivePower_injective (s := s) (t := t)
+  · intro h
+    rw [h]
+
+/- The finite powerset of the empty set has exactly its sole subset. -/
+theorem hfRecursivePower_empty :
+    hfRecursivePower hfRecursiveEmpty = hfRecursiveSingleton hfRecursiveEmpty := by
+  apply hfRecursiveSet_extensionality
+  intro x
+  rw [hfRecursiveMember_power_iff_subset, hfRecursiveMember_singleton_iff]
+  constructor
+  · intro hx
+    apply hfRecursiveSet_extensionality
+    intro y
+    constructor
+    · intro hy
+      exact False.elim (hfRecursiveMember_empty y (hx y hy))
+    · intro hy
+      exact False.elim (hfRecursiveMember_empty y hy)
+  · intro hx y hy
+    rw [hx] at hy
+    exact False.elim (hfRecursiveMember_empty y hy)
+
 /- Finite powerset is monotone for the internally defined subset order. -/
 theorem hfRecursivePower_monotone {s t : HFRecursiveSet} :
     HFRecursiveSubset s t → HFRecursiveSubset (hfRecursivePower s) (hfRecursivePower t) := by

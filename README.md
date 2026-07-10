@@ -33,8 +33,8 @@ It currently establishes:
   consistency of the empty internal-logic context, while a two-world model
   proves that excluded middle is not derivable (while its double-negated form
   is derived). Prime theories and the
-  canonical Kripke model are defined; its truth lemma is proved conditional on
-  the explicitly stated Lindenbaum extension witness.  The one-step
+  canonical Kripke model are defined; its truth lemma is proved from a
+  recurrent formula schedule.  The one-step
   consistency-preserving choice of a formula or its negation is proved, along
   with its finite-list iteration and finite prime-disjunction property.
   Given an explicit exhaustive formula enumeration, an infinite Lindenbaum
@@ -54,6 +54,11 @@ It currently establishes:
   For prime theories presented by a finite derivational basis, the extension
   is proved to contain the entire source theory, giving the canonical
   implication witness on that fragment.
+  Finite support over an arbitrary prime source theory is formalized, so the
+  relative construction supplies a full prime extension (not just a finite
+  fragment).  Consequently, the canonical truth lemma and canonical and
+  same-universe Kripke completeness are checked from a recurrent formula
+  schedule, without a separate extension axiom.
   Each formula has a finite subformula closure, and a consistent context has a
   finite extension deciding every formula in that closure; its disjunction
   subformulas satisfy a derivable prime-choice law.  The derivable closure of
@@ -83,6 +88,8 @@ It currently establishes:
   unordered-pair equality is classified and ordered pairs are injective.
   The finite powerset construction now also descends to that quotient with
   the exact law `x ∈ power(s) ↔ x ⊆ s`.
+  It is injective (`power(s)=power(t) → s=t`) and satisfies
+  `power(∅) = {∅}` on the quotient.
   Relations are represented as sets of ordered pairs; singleton graphs are
   proved relational and functional, with an exact application iff law.
   The identity graph on every finite internal ordinal is also a checked

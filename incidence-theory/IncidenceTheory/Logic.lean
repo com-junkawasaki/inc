@@ -1815,6 +1815,418 @@ theorem primeTheoryFiniteBasis_extension_witness {Atom : Type u}
   exact primeTheory_implication_failure_extension_of_finite_basis
     schedule theory basis premise conclusion hnot
 
+/- `theoryDerives T Δ φ` means that a derivation uses all of its persistent
+   assumptions from `T`, and only finitely many additional assumptions `Δ`.
+   Making this finite support explicit is what permits the relative
+   Lindenbaum construction to start from an arbitrary (possibly infinite)
+   canonical theory. -/
+def theoryDerives {Atom : Type u} (theory : PrimeTheory Atom)
+    (extra : List (Formula Atom)) (formula : Formula Atom) : Prop :=
+  ∃ support : List (Formula Atom),
+    (∀ assumption, assumption ∈ support → theory.contains assumption) ∧
+      Derives (extra ++ support) formula
+
+def theoryAvoids {Atom : Type u} (theory : PrimeTheory Atom)
+    (extra : List (Formula Atom)) (forbidden : Formula Atom) : Prop :=
+  ¬ theoryDerives theory extra forbidden
+
+theorem theoryDerives_extra_mono {Atom : Type u} (theory : PrimeTheory Atom)
+    {source target : List (Formula Atom)} {formula : Formula Atom}
+    (hsubset : ContextSubset source target) :
+    theoryDerives theory source formula → theoryDerives theory target formula := by
+  rintro ⟨support, hsupport, hderives⟩
+  refine ⟨support, hsupport, ?_⟩
+  apply derives_weaken
+  · intro assumption hassumption
+    rcases List.mem_append.mp hassumption with hsource | hsupportMem
+    · exact List.mem_append.mpr (Or.inl (hsubset assumption hsource))
+    · exact List.mem_append.mpr (Or.inr hsupportMem)
+  · exact hderives
+
+theorem theoryDerives_finite_support {Atom : Type u} (theory : PrimeTheory Atom)
+    (extra context : List (Formula Atom))
+    (hcontains : ∀ assumption, assumption ∈ context →
+      theoryDerives theory extra assumption) :
+    ∃ support : List (Formula Atom),
+      (∀ assumption, assumption ∈ support → theory.contains assumption) ∧
+        ∀ assumption, assumption ∈ context → Derives (extra ++ support) assumption := by
+  induction context with
+  | nil =>
+    refine ⟨[], ?_, ?_⟩
+    · intro assumption hmem
+      simp at hmem
+    · intro assumption hmem
+      simp at hmem
+  | cons head tail ih =>
+    rcases hcontains head (by simp) with ⟨headSupport, hheadSupport, hhead⟩
+    rcases ih (by
+      intro assumption hassumption
+      exact hcontains assumption (List.mem_cons_of_mem _ hassumption))
+      with ⟨tailSupport, htailSupport, htail⟩
+    refine ⟨headSupport ++ tailSupport, ?_, ?_⟩
+    · intro assumption hassumption
+      rcases List.mem_append.mp hassumption with hhead | htail
+      · exact hheadSupport assumption hhead
+      · exact htailSupport assumption htail
+    · intro assumption hassumption
+      rcases List.mem_cons.mp hassumption with rfl | htailMem
+      · apply derives_weaken (source := extra ++ headSupport)
+        · intro member hmember
+          rcases List.mem_append.mp hmember with hextra | hhead
+          · exact List.mem_append.mpr (Or.inl hextra)
+          · exact List.mem_append.mpr (Or.inr (List.mem_append.mpr (Or.inl hhead)))
+        · exact hhead
+      · apply derives_weaken (source := extra ++ tailSupport)
+        · intro member hmember
+          rcases List.mem_append.mp hmember with hextra | htail'
+          · exact List.mem_append.mpr (Or.inl hextra)
+          · exact List.mem_append.mpr (Or.inr (List.mem_append.mpr (Or.inr htail')))
+        · exact htail assumption htailMem
+
+theorem theoryDerives_closed {Atom : Type u} (theory : PrimeTheory Atom)
+    {extra context : List (Formula Atom)} {formula : Formula Atom}
+    (hcontains : ∀ assumption, assumption ∈ context →
+      theoryDerives theory extra assumption)
+    (hderives : Derives context formula) : theoryDerives theory extra formula := by
+  rcases theoryDerives_finite_support theory extra context hcontains with
+    ⟨support, hsupport, hderivesSupport⟩
+  refine ⟨support, hsupport, ?_⟩
+  exact derives_substitute hderivesSupport hderives
+
+theorem theoryAvoids_imp_extension {Atom : Type u} (theory : PrimeTheory Atom)
+    {premise conclusion : Formula Atom}
+    (hnot : ¬ theory.contains (.imp premise conclusion)) :
+    theoryAvoids theory [premise] conclusion := by
+  rintro ⟨support, hsupport, hderives⟩
+  apply hnot
+  apply theory.closed (context := support)
+  · exact hsupport
+  · exact Derives.impI hderives
+
+theorem theoryDerives_or_elim {Atom : Type u} (theory : PrimeTheory Atom)
+    (current : List (Formula Atom)) (left right forbidden : Formula Atom)
+    (hor : theoryDerives theory current (.or left right))
+    (hleft : theoryDerives theory (left :: current) forbidden)
+    (hright : theoryDerives theory (right :: current) forbidden) :
+    theoryDerives theory current forbidden := by
+  rcases hor with ⟨orSupport, horSupport, hor⟩
+  rcases hleft with ⟨leftSupport, hleftSupport, hleft⟩
+  rcases hright with ⟨rightSupport, hrightSupport, hright⟩
+  let support := orSupport ++ leftSupport ++ rightSupport
+  have hsupport : ∀ assumption, assumption ∈ support → theory.contains assumption := by
+    intro assumption hassumption
+    rcases List.mem_append.mp hassumption with hfirst | hrightMem
+    · rcases List.mem_append.mp hfirst with horMem | hleftMem
+      · exact horSupport assumption horMem
+      · exact hleftSupport assumption hleftMem
+    · exact hrightSupport assumption hrightMem
+  refine ⟨support, hsupport, ?_⟩
+  apply Derives.orE (p := left) (q := right)
+  · apply derives_weaken (source := current ++ orSupport)
+    · intro assumption hassumption
+      rcases List.mem_append.mp hassumption with hcurrent | horMem
+      · exact List.mem_append.mpr (Or.inl hcurrent)
+      · exact List.mem_append.mpr (Or.inr
+          (List.mem_append.mpr (Or.inl (List.mem_append.mpr (Or.inl horMem)))))
+    · exact hor
+  · apply derives_weaken (source := (left :: current) ++ leftSupport)
+    · intro assumption hassumption
+      rcases List.mem_append.mp hassumption with hleftCurrent | hleftMem
+      · rcases List.mem_cons.mp hleftCurrent with rfl | hcurrent
+        · exact List.mem_cons_self
+        · exact List.mem_cons_of_mem _ (List.mem_append.mpr (Or.inl hcurrent))
+      · exact List.mem_cons_of_mem _ (List.mem_append.mpr (Or.inr
+          (List.mem_append.mpr (Or.inl (List.mem_append.mpr (Or.inr hleftMem))))))
+    · exact hleft
+  · apply derives_weaken (source := (right :: current) ++ rightSupport)
+    · intro assumption hassumption
+      rcases List.mem_append.mp hassumption with hrightCurrent | hrightMem
+      · rcases List.mem_cons.mp hrightCurrent with rfl | hcurrent
+        · exact List.mem_cons_self
+        · exact List.mem_cons_of_mem _ (List.mem_append.mpr (Or.inl hcurrent))
+      · exact List.mem_cons_of_mem _ (List.mem_append.mpr (Or.inr
+          (List.mem_append.mpr (Or.inr hrightMem))))
+    · exact hright
+
+theorem theoryAvoids_or_extension_left_or_right {Atom : Type u}
+    (theory : PrimeTheory Atom) (current : List (Formula Atom))
+    (left right forbidden : Formula Atom)
+    (havoid : theoryAvoids theory current forbidden)
+    (hor : theoryDerives theory current (.or left right)) :
+    theoryAvoids theory (left :: current) forbidden ∨
+      theoryAvoids theory (right :: current) forbidden := by
+  by_cases hleft : theoryAvoids theory (left :: current) forbidden
+  · exact Or.inl hleft
+  · right
+    intro hright
+    apply havoid
+    apply theoryDerives_or_elim theory current left right forbidden hor
+    · exact Classical.byContradiction hleft
+    · exact hright
+
+noncomputable def theoryAvoidanceStep {Atom : Type u} (theory : PrimeTheory Atom)
+    (forbidden : Formula Atom) (current : List (Formula Atom)) :
+    Formula Atom → List (Formula Atom)
+  | .or left right => by
+    classical
+    exact if hor : theoryDerives theory current (.or left right)
+      then if hleft : theoryAvoids theory (left :: current) forbidden
+        then left :: current
+        else right :: current
+      else current
+  | _ => current
+
+noncomputable def theoryAvoidanceChain {Atom : Type u}
+    (theory : PrimeTheory Atom) (schedule : RecurrentFormulaSchedule Atom)
+    (forbidden : Formula Atom) (base : List (Formula Atom)) : Nat → List (Formula Atom)
+  | 0 => base
+  | n + 1 => theoryAvoidanceStep theory forbidden
+      (theoryAvoidanceChain theory schedule forbidden base n) (schedule.formulaAt n)
+
+theorem theoryAvoidanceStep_subset {Atom : Type u} (theory : PrimeTheory Atom)
+    (forbidden : Formula Atom) (current : List (Formula Atom)) (candidate : Formula Atom) :
+    ContextSubset current (theoryAvoidanceStep theory forbidden current candidate) := by
+  cases candidate with
+  | atom => exact fun _ h => h
+  | top => exact fun _ h => h
+  | bot => exact fun _ h => h
+  | and left right => exact fun _ h => h
+  | imp left right => exact fun _ h => h
+  | or left right =>
+    simp only [theoryAvoidanceStep]
+    split
+    · split <;> exact fun _ h => List.mem_cons_of_mem _ h
+    · exact fun _ h => h
+
+theorem theoryAvoidanceStep_avoids {Atom : Type u} (theory : PrimeTheory Atom)
+    (forbidden : Formula Atom) (current : List (Formula Atom)) (candidate : Formula Atom)
+    (hcurrent : theoryAvoids theory current forbidden) :
+    theoryAvoids theory (theoryAvoidanceStep theory forbidden current candidate) forbidden := by
+  cases candidate with
+  | atom => exact hcurrent
+  | top => exact hcurrent
+  | bot => exact hcurrent
+  | and left right => exact hcurrent
+  | imp left right => exact hcurrent
+  | or left right =>
+    simp only [theoryAvoidanceStep]
+    split
+    · rename_i hor
+      split
+      · assumption
+      · rename_i hnotleft
+        rcases theoryAvoids_or_extension_left_or_right theory current left right forbidden
+          hcurrent hor with hleft | hright
+        · exact False.elim (hnotleft hleft)
+        · exact hright
+    · exact hcurrent
+
+theorem theoryAvoidanceChain_subset_succ {Atom : Type u} (theory : PrimeTheory Atom)
+    (schedule : RecurrentFormulaSchedule Atom) (forbidden : Formula Atom)
+    (base : List (Formula Atom)) (n : Nat) :
+    ContextSubset (theoryAvoidanceChain theory schedule forbidden base n)
+      (theoryAvoidanceChain theory schedule forbidden base (n + 1)) := by
+  change ContextSubset _ (theoryAvoidanceStep theory forbidden _ (schedule.formulaAt n))
+  exact theoryAvoidanceStep_subset theory forbidden _ _
+
+theorem theoryAvoidanceChain_avoids {Atom : Type u} (theory : PrimeTheory Atom)
+    (schedule : RecurrentFormulaSchedule Atom) (forbidden : Formula Atom)
+    (base : List (Formula Atom)) (hbase : theoryAvoids theory base forbidden) :
+    ∀ n, theoryAvoids theory (theoryAvoidanceChain theory schedule forbidden base n) forbidden := by
+  intro n
+  induction n with
+  | zero => exact hbase
+  | succ n ih =>
+    change theoryAvoids theory (theoryAvoidanceStep theory forbidden
+      (theoryAvoidanceChain theory schedule forbidden base n) (schedule.formulaAt n)) forbidden
+    exact theoryAvoidanceStep_avoids theory forbidden _ _ ih
+
+theorem theoryAvoidanceChain_subset_of_le {Atom : Type u} (theory : PrimeTheory Atom)
+    (schedule : RecurrentFormulaSchedule Atom) (forbidden : Formula Atom)
+    (base : List (Formula Atom)) {source target : Nat} : source ≤ target →
+      ContextSubset (theoryAvoidanceChain theory schedule forbidden base source)
+        (theoryAvoidanceChain theory schedule forbidden base target) := by
+  intro hle
+  induction target generalizing source with
+  | zero =>
+    have hzero : source = 0 := Nat.eq_zero_of_le_zero hle
+    subst source
+    exact fun _ h => h
+  | succ target ih =>
+    rcases Nat.lt_or_eq_of_le hle with hlt | rfl
+    · intro formula hmem
+      exact theoryAvoidanceChain_subset_succ theory schedule forbidden base target formula
+        (ih (Nat.le_of_lt_succ hlt) formula hmem)
+    · exact fun _ h => h
+
+theorem theoryAvoidanceChain_derives_mono {Atom : Type u} (theory : PrimeTheory Atom)
+    (schedule : RecurrentFormulaSchedule Atom) (forbidden : Formula Atom)
+    (base : List (Formula Atom)) {source target : Nat} (hle : source ≤ target)
+    {formula : Formula Atom} :
+    theoryDerives theory (theoryAvoidanceChain theory schedule forbidden base source) formula →
+      theoryDerives theory (theoryAvoidanceChain theory schedule forbidden base target) formula :=
+  theoryDerives_extra_mono theory
+    (theoryAvoidanceChain_subset_of_le theory schedule forbidden base hle)
+
+def theoryAvoidanceLimitDerives {Atom : Type u} (theory : PrimeTheory Atom)
+    (schedule : RecurrentFormulaSchedule Atom) (forbidden : Formula Atom)
+    (base : List (Formula Atom)) (formula : Formula Atom) : Prop :=
+  ∃ stage, theoryDerives theory (theoryAvoidanceChain theory schedule forbidden base stage) formula
+
+theorem theoryAvoidanceLimitDerives_from_extra {Atom : Type u} (theory : PrimeTheory Atom)
+    (schedule : RecurrentFormulaSchedule Atom) (forbidden : Formula Atom)
+    (base : List (Formula Atom)) {formula : Formula Atom} :
+    formula ∈ base → theoryAvoidanceLimitDerives theory schedule forbidden base formula := by
+  intro hmem
+  refine ⟨0, [], ?_, ?_⟩
+  · intro assumption hassumption
+    simp at hassumption
+  · simpa [theoryAvoidanceChain] using (Derives.ax hmem : Derives base formula)
+
+theorem theoryAvoidanceLimitDerives_contains_theory {Atom : Type u}
+    (theory : PrimeTheory Atom) (schedule : RecurrentFormulaSchedule Atom)
+    (forbidden : Formula Atom) (base : List (Formula Atom)) {formula : Formula Atom} :
+    theory.contains formula → theoryAvoidanceLimitDerives theory schedule forbidden base formula := by
+  intro hformula
+  refine ⟨0, [formula], ?_, ?_⟩
+  · intro assumption hassumption
+    have h : assumption = formula := by simpa using hassumption
+    subst assumption
+    exact hformula
+  · change Derives (base ++ [formula]) formula
+    exact Derives.ax (List.mem_append.mpr (Or.inr (by simp)))
+
+theorem theoryDerives_of_mem_extra {Atom : Type u} (theory : PrimeTheory Atom)
+    (extra : List (Formula Atom)) {formula : Formula Atom} :
+    formula ∈ extra → theoryDerives theory extra formula := by
+  intro hmem
+  refine ⟨[], ?_, ?_⟩
+  · intro assumption hassumption
+    simp at hassumption
+  · simpa using (Derives.ax hmem : Derives extra formula)
+
+theorem theoryAvoidance_finite_context_bound {Atom : Type u} (theory : PrimeTheory Atom)
+    (schedule : RecurrentFormulaSchedule Atom) (forbidden : Formula Atom)
+    (base : List (Formula Atom)) :
+    ∀ context : List (Formula Atom),
+      (∀ assumption, assumption ∈ context →
+        theoryAvoidanceLimitDerives theory schedule forbidden base assumption) →
+        ∃ stage, ∀ assumption, assumption ∈ context →
+          theoryDerives theory (theoryAvoidanceChain theory schedule forbidden base stage) assumption := by
+  intro context
+  induction context with
+  | nil =>
+    intro _
+    exact ⟨0, by intro assumption hmem; simp at hmem⟩
+  | cons head tail ih =>
+    intro hcontains
+    rcases hcontains head (by simp) with ⟨headStage, hhead⟩
+    rcases ih (by
+      intro assumption hassumption
+      exact hcontains assumption (List.mem_cons_of_mem _ hassumption)) with
+      ⟨tailStage, htail⟩
+    refine ⟨Nat.max headStage tailStage, ?_⟩
+    intro assumption hassumption
+    rcases List.mem_cons.mp hassumption with rfl | htailMem
+    · exact theoryAvoidanceChain_derives_mono theory schedule forbidden base
+        (Nat.le_max_left _ _) hhead
+    · exact theoryAvoidanceChain_derives_mono theory schedule forbidden base
+        (Nat.le_max_right _ _) (htail assumption htailMem)
+
+theorem theoryAvoidanceLimitDerives_closed {Atom : Type u} (theory : PrimeTheory Atom)
+    (schedule : RecurrentFormulaSchedule Atom) (forbidden : Formula Atom)
+    (base : List (Formula Atom)) : ∀ {context formula},
+      (∀ assumption, assumption ∈ context →
+        theoryAvoidanceLimitDerives theory schedule forbidden base assumption) →
+      Derives context formula →
+        theoryAvoidanceLimitDerives theory schedule forbidden base formula := by
+  intro context formula hcontains hderives
+  rcases theoryAvoidance_finite_context_bound theory schedule forbidden base context hcontains with
+    ⟨stage, hstage⟩
+  exact ⟨stage, theoryDerives_closed theory hstage hderives⟩
+
+theorem theoryAvoidanceLimitDerives_avoids {Atom : Type u} (theory : PrimeTheory Atom)
+    (schedule : RecurrentFormulaSchedule Atom) (forbidden : Formula Atom)
+    (base : List (Formula Atom)) (hbase : theoryAvoids theory base forbidden) :
+    ¬ theoryAvoidanceLimitDerives theory schedule forbidden base forbidden := by
+  rintro ⟨stage, hforbidden⟩
+  exact theoryAvoidanceChain_avoids theory schedule forbidden base hbase stage hforbidden
+
+theorem theoryAvoidanceChain_or_choice {Atom : Type u} (theory : PrimeTheory Atom)
+    (schedule : RecurrentFormulaSchedule Atom) (forbidden : Formula Atom)
+    (base : List (Formula Atom)) (stage : Nat) (p q : Formula Atom)
+    (hscheduled : schedule.formulaAt stage = .or p q)
+    (hor : theoryDerives theory (theoryAvoidanceChain theory schedule forbidden base stage) (.or p q)) :
+    p ∈ theoryAvoidanceChain theory schedule forbidden base (stage + 1) ∨
+      q ∈ theoryAvoidanceChain theory schedule forbidden base (stage + 1) := by
+  change p ∈ theoryAvoidanceStep theory forbidden
+      (theoryAvoidanceChain theory schedule forbidden base stage) (schedule.formulaAt stage) ∨
+        q ∈ theoryAvoidanceStep theory forbidden
+          (theoryAvoidanceChain theory schedule forbidden base stage) (schedule.formulaAt stage)
+  rw [hscheduled]
+  simp only [theoryAvoidanceStep]
+  split
+  · split
+    · exact Or.inl List.mem_cons_self
+    · exact Or.inr List.mem_cons_self
+  · rename_i hnot
+    exact False.elim (hnot hor)
+
+theorem theoryAvoidanceLimitDerives_prime {Atom : Type u} (theory : PrimeTheory Atom)
+    (schedule : RecurrentFormulaSchedule Atom) (forbidden : Formula Atom)
+    (base : List (Formula Atom)) {p q : Formula Atom} :
+    theoryAvoidanceLimitDerives theory schedule forbidden base (.or p q) →
+      theoryAvoidanceLimitDerives theory schedule forbidden base p ∨
+        theoryAvoidanceLimitDerives theory schedule forbidden base q := by
+  rintro ⟨stage, hor⟩
+  rcases schedule.revisits (.or p q) stage with ⟨later, hle, hscheduled⟩
+  have horLater : theoryDerives theory
+      (theoryAvoidanceChain theory schedule forbidden base later) (.or p q) :=
+    theoryAvoidanceChain_derives_mono theory schedule forbidden base hle hor
+  rcases theoryAvoidanceChain_or_choice theory schedule forbidden base later p q
+    hscheduled horLater with hp | hq
+  · exact Or.inl ⟨later + 1,
+      theoryDerives_of_mem_extra theory _ hp⟩
+  · exact Or.inr ⟨later + 1,
+      theoryDerives_of_mem_extra theory _ hq⟩
+
+theorem theoryAvoidanceLimitDerives_consistent {Atom : Type u} (theory : PrimeTheory Atom)
+    (schedule : RecurrentFormulaSchedule Atom) (forbidden : Formula Atom)
+    (base : List (Formula Atom)) (hbase : theoryAvoids theory base forbidden) :
+    ¬ theoryAvoidanceLimitDerives theory schedule forbidden base .bot := by
+  rintro ⟨stage, hbot⟩
+  apply theoryAvoidanceLimitDerives_avoids theory schedule forbidden base hbase
+  exact ⟨stage, match hbot with
+    | ⟨support, hsupport, derives⟩ => ⟨support, hsupport, Derives.botE derives⟩⟩
+
+def theoryAvoidanceLimitPrimeTheory {Atom : Type u} (theory : PrimeTheory Atom)
+    (schedule : RecurrentFormulaSchedule Atom) (forbidden : Formula Atom)
+    (base : List (Formula Atom)) (hbase : theoryAvoids theory base forbidden) :
+    PrimeTheory Atom where
+  contains := theoryAvoidanceLimitDerives theory schedule forbidden base
+  closed := theoryAvoidanceLimitDerives_closed theory schedule forbidden base
+  consistent := theoryAvoidanceLimitDerives_consistent theory schedule forbidden base hbase
+  prime := fun hor => theoryAvoidanceLimitDerives_prime theory schedule forbidden base hor
+
+/- The relative prime-extension theorem, now with an arbitrary prime source
+   rather than a finite presentation. -/
+theorem arbitrary_prime_implication_failure_extension {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom) (theory : PrimeTheory Atom)
+    (premise conclusion : Formula Atom)
+    (hnot : ¬ theory.contains (.imp premise conclusion)) :
+    ∃ extension : PrimeTheory Atom,
+      primeTheoryLe theory extension ∧ extension.contains premise ∧
+        ¬ extension.contains conclusion := by
+  let base : List (Formula Atom) := [premise]
+  have hbase : theoryAvoids theory base conclusion := by
+    simpa [base] using theoryAvoids_imp_extension theory hnot
+  let extension := theoryAvoidanceLimitPrimeTheory theory schedule conclusion base hbase
+  refine ⟨extension, ?_, ?_, ?_⟩
+  · intro formula hformula
+    exact theoryAvoidanceLimitDerives_contains_theory theory schedule conclusion base hformula
+  · exact theoryAvoidanceLimitDerives_from_extra theory schedule conclusion base (by simp [base])
+  · exact theoryAvoidanceLimitDerives_avoids theory schedule conclusion base hbase
+
 def canonicalKripkeModel (Atom : Type u) : KripkeModel (Atom := Atom) where
   World := PrimeTheory Atom
   le := primeTheoryLe
@@ -1831,6 +2243,13 @@ structure PrimeExtensionWitness (Atom : Type u) where
     ¬ theory.contains (.imp p q) →
       ∃ extension : PrimeTheory Atom, primeTheoryLe theory extension ∧
         extension.contains p ∧ ¬ extension.contains q
+
+/- The finite-support relative chain above discharges the formerly
+   conditional Lindenbaum obligation. -/
+def primeExtensionWitnessOfSchedule {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom) : PrimeExtensionWitness Atom where
+  extend_imp_failure := fun theory premise conclusion hnot =>
+    arbitrary_prime_implication_failure_extension schedule theory premise conclusion hnot
 
 theorem canonical_truth_lemma {Atom : Type u} (witness : PrimeExtensionWitness Atom)
     (theory : PrimeTheory Atom) : ∀ formula : Formula Atom,
@@ -1919,6 +2338,109 @@ theorem canonical_truth_lemma {Atom : Type u} (witness : PrimeExtensionWitness A
           exact (ihp extension).mp hp
       · exact Derives.impE (p := p) (q := q)
           (Derives.ax (by simp)) (Derives.ax (by simp))
+
+/- Semantic entailment in the canonical model is useful independently of the
+   universe-polymorphic notion `KripkeEntails`: it exposes exactly which
+   Lindenbaum principle is used by the converse direction below. -/
+def CanonicalKripkeEntails {Atom : Type u} (context : List (Formula Atom))
+    (formula : Formula Atom) : Prop :=
+  ∀ theory : PrimeTheory Atom,
+    KripkeContextForces (canonicalKripkeModel Atom) theory context →
+      KripkeForces (canonicalKripkeModel Atom) theory formula
+
+theorem derives_canonical_kripke_entails {Atom : Type u}
+    {context : List (Formula Atom)} {formula : Formula Atom}
+    (derivation : Derives context formula) :
+    CanonicalKripkeEntails context formula :=
+  fun theory holds => derives_kripke_sound derivation
+    (canonicalKripkeModel Atom) theory holds
+
+/- Once implication failures extend to prime theories, the relative avoidance
+   construction supplies a canonical counterworld for every underivable
+   finite sequent.  This is the canonical-model completeness direction; the
+   witness parameter makes its sole remaining non-finitary requirement
+   explicit rather than postulating it. -/
+theorem canonical_kripke_entails_complete {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom) (witness : PrimeExtensionWitness Atom)
+    {context : List (Formula Atom)} {formula : Formula Atom} :
+    CanonicalKripkeEntails context formula → Derives context formula := by
+  intro hentails
+  apply Classical.byContradiction
+  intro hnot
+  rcases relative_prime_extension schedule formula context hnot with
+    ⟨theory, hcontext, hformula⟩
+  have hforcesContext :
+      KripkeContextForces (canonicalKripkeModel Atom) theory context := by
+    intro assumption hassumption
+    exact (canonical_truth_lemma witness theory assumption).mpr
+      (hcontext assumption hassumption)
+  have hforcesFormula :
+      KripkeForces (canonicalKripkeModel Atom) theory formula :=
+    hentails theory hforcesContext
+  exact hformula ((canonical_truth_lemma witness theory formula).mp hforcesFormula)
+
+theorem canonical_kripke_entails_iff_derives {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom) (witness : PrimeExtensionWitness Atom)
+    (context : List (Formula Atom)) (formula : Formula Atom) :
+    CanonicalKripkeEntails context formula ↔ Derives context formula := by
+  constructor
+  · exact canonical_kripke_entails_complete schedule witness
+  · exact derives_canonical_kripke_entails
+
+/- Conditional full Kripke completeness follows immediately, since the
+   canonical prime-theory model is one of the Kripke models quantified by
+   `KripkeEntails`.  Soundness itself remains unconditional. -/
+theorem kripke_entails_complete_of_prime_extension {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom) (witness : PrimeExtensionWitness Atom)
+    {context : List (Formula Atom)} {formula : Formula Atom} :
+    KripkeEntails.{u, u} context formula → Derives context formula := by
+  intro hentails
+  apply canonical_kripke_entails_complete schedule witness
+  intro theory hcontext
+  exact hentails (canonicalKripkeModel Atom) theory hcontext
+
+theorem kripke_entails_iff_derives_of_prime_extension {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom) (witness : PrimeExtensionWitness Atom)
+    (context : List (Formula Atom)) (formula : Formula Atom) :
+    KripkeEntails.{u, u} context formula ↔ Derives context formula := by
+  constructor
+  · exact kripke_entails_complete_of_prime_extension schedule witness
+  · exact derives_kripke_entails
+
+/- The canonical truth lemma and both completeness statements no longer need
+   an externally supplied extension postulate: recurrence of the formula schedule
+   is the only enumeration data used by the construction. -/
+theorem canonical_truth_lemma_of_schedule {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom) (theory : PrimeTheory Atom) :
+    ∀ formula : Formula Atom,
+      KripkeForces (canonicalKripkeModel Atom) theory formula ↔ theory.contains formula :=
+  canonical_truth_lemma (primeExtensionWitnessOfSchedule schedule) theory
+
+theorem canonical_kripke_entails_complete_of_schedule {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom)
+    {context : List (Formula Atom)} {formula : Formula Atom} :
+    CanonicalKripkeEntails context formula → Derives context formula :=
+  canonical_kripke_entails_complete schedule (primeExtensionWitnessOfSchedule schedule)
+
+theorem canonical_kripke_entails_iff_derives_of_schedule {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom)
+    (context : List (Formula Atom)) (formula : Formula Atom) :
+    CanonicalKripkeEntails context formula ↔ Derives context formula :=
+  canonical_kripke_entails_iff_derives schedule (primeExtensionWitnessOfSchedule schedule)
+    context formula
+
+theorem kripke_entails_complete_of_schedule {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom)
+    {context : List (Formula Atom)} {formula : Formula Atom} :
+    KripkeEntails.{u, u} context formula → Derives context formula :=
+  kripke_entails_complete_of_prime_extension schedule (primeExtensionWitnessOfSchedule schedule)
+
+theorem kripke_entails_iff_derives_of_schedule {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom)
+    (context : List (Formula Atom)) (formula : Formula Atom) :
+    KripkeEntails.{u, u} context formula ↔ Derives context formula :=
+  kripke_entails_iff_derives_of_prime_extension schedule
+    (primeExtensionWitnessOfSchedule schedule) context formula
 
 /- Incidence-specialized notation for clients of the core structure. -/
 abbrev IncidenceFormula (I : Type u) := Formula I
