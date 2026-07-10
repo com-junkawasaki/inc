@@ -429,6 +429,19 @@ def printCycles33plus : IO Unit := do
   IO.println "    unconditionally, sum does NOT -- which connective you pick changes what"
   IO.println "    properties survive, exactly the kind of fact a real type theory needs to know"
 
+  IO.println "\n🔗 A Generic Translation, and an Old Result Revisited (cycle 34):"
+  IO.println "  ✓ incidenceProd_translation_reflects: pairing two ≈-reflecting translations"
+  IO.println "    produces a translation reflecting ≈ on the PRODUCT -- generic, twice deferred"
+  IO.println "    (cycles 31/32), a direct consequence of cycle 32's iff, no new machinery"
+  IO.println "  ✓ REVISITED cycle 5's natToFiniteSet with cycle 28's lens: is it ALSO a"
+  IO.println "    glue-homomorphism? natToFiniteSet(m+n) = natToFiniteSet m ++ natToFiniteSet n --"
+  IO.println "    never checked before (no glue had algebraic structure worth it back then)"
+  IO.println "  ✓ ties together: natProdToFiniteSet is BOTH a faithful ≈-reflector (via the new"
+  IO.println "    generic theorem) AND a glue-homomorphism for the product -- cycle 28's"
+  IO.println "    'both properties at once' achievement, now for a GENERIC construction"
+  IO.println "  → an old translation still had an unchecked property; a new lens (any glue"
+  IO.println "    with algebraic structure) can retroactively reveal it years (cycles) later"
+
 def main : IO Unit := do
   printFoundationsAndEarlyCycles
   printCycles12to19

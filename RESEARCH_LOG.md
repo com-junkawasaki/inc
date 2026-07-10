@@ -2265,14 +2265,73 @@ what several early instances effectively *were* (leaf/non-leaf
 disjoint cases), and the same constraint applied there too, just never
 named explicitly until building a *generic* sum forced it into view.
 
-**Next hypothesis (cycle 34, not yet attempted)**: option 2 from cycle
-31's queue, twice carried forward without being reached: a T5-style
-translation result for `incidenceProd` -- e.g. does `natToFiniteSet`
-extend to a translation for `natIncidence × natIncidence` in the
-expected way, and would it also be a `glue`-homomorphism-style result
-the way cycle 28's `cycleToNat` was? Also newly open from this cycle:
-does `incidenceSum` have a *conditional* faithfulness result analogous
-to cycle 32's -- e.g. if `inc1`/`inc2` are both faithful AND have at
-most one leaf each (or no shared "collapsible" structure), does
-faithfulness hold? Neither scoped yet; worth choosing based on which
-seems more likely to surface a genuine finding.
+## Cycle 34
+
+**Hypothesis**: (option 2 of cycle 31's queue, twice carried forward)
+a T5-style translation result for `incidenceProd` -- does
+`natToFiniteSet` extend to a translation for `natIncidence ×
+natIncidence` in the expected way, and would it also be a
+`glue`-homomorphism-style result the way cycle 28's `cycleToNat` was?
+Chosen over `incidenceSum`'s conditional-faithfulness option to avoid
+this item being deferred a third time.
+
+**Method**: rather than build a one-off translation specific to
+`natIncidence × natIncidence`, generalized to match `incidenceProd`'s
+own generic style: pairing *any* two translations that each reflect
+their own instance's `≈` should produce a translation reflecting `≈`
+on the product -- a direct consequence of cycle 32's
+`incidenceProd_approxBisim_iff`, needing no new machinery beyond
+componentwise pairing. While instantiating this against
+`natToFiniteSet` specifically, a second, independent question
+surfaced: `natToFiniteSet` (cycle 5) was only ever checked for
+injectivity, back when no `glue` in this project had algebraic
+structure worth checking a translation against -- does it *also*
+happen to be a `glue`-homomorphism into list concatenation, the same
+lens cycle 28 first applied to `cycleToNat`? Checked empirically first
+(`#eval`, three concrete cases: `natToFiniteSet 3 ++ natToFiniteSet 4
+== natToFiniteSet 7`, etc.) before formalizing.
+
+**Result**: **both confirmed, on the second attempt for the
+homomorphism proof.** `incidenceProd_translation_reflects` verifies
+cleanly with `propext`/`Quot.sound`, no `Classical.choice`.
+`natToFiniteSet_glue_hom` (`natToFiniteSet (m + n) = natToFiniteSet m
+++ natToFiniteSet n`) needed one direction correction: the first
+attempt inducted on the *second* summand (matching `Nat.add_succ`),
+which produced a residual (`a :: (xs ++ ys) = xs ++ a :: ys`) that
+isn't true for general lists -- a genuine mismatch between which
+argument the induction should walk and which direction
+`List.cons_append` associates, caught immediately by the type-checker
+rather than requiring deep debugging. Inducting on the *first* summand
+instead (`Nat.succ_add`) aligned cleanly with `(a :: xs) ++ ys = a ::
+(xs ++ ys)`, always true, and the proof closed immediately. Combined
+both into `natProdToFiniteSet_glue_hom`, showing the paired translation
+is simultaneously a faithful `≈`-reflector *and* a `glue`-homomorphism
+for the product -- the same "both properties at once" achievement
+cycle 28 reached for `cycleToNat`, now demonstrated for a *generic*
+construction rather than one hand-built instance. `#print axioms`:
+`propext` alone on the pure list-append fact, standard sets on the
+rest. Full `lake build`: 46/46 jobs. Repo-wide `sorry`-as-tactic grep:
+none.
+
+**Synthesis**: the genuinely notable part of this cycle isn't the
+generic pairing theorem (a direct, low-risk consequence of existing
+machinery) -- it's that a 29-cycle-old translation (`natToFiniteSet`,
+cycle 5) still had an unchecked property, and a *new analytical lens*
+introduced much later (cycle 28's "is this translation also a
+homomorphism?" question) revealed it retroactively rather than only
+ever applying to instances built after the lens existed. Worth keeping
+in mind as a category of follow-up distinct from "new instance,"
+"generalize a stalled result," or "audit unexercised parameters": periodically
+re-examine *old* results through *newer* analytical questions that
+didn't exist when they were first proved.
+
+**Next hypothesis (cycle 35, not yet attempted)**: option from cycle
+33's queue, not reached this cycle: does `incidenceSum` have a
+*conditional* faithfulness result analogous to cycle 32's -- e.g. if
+`inc1`/`inc2` are both faithful AND have at most one leaf each (or no
+"collapsible" structure shared across sides), does faithfulness hold?
+Also newly worth considering: does `incidenceSum` have an analogous
+generic translation-pairing result (this cycle's `incidenceProd`
+theorem, adapted for a disjoint union -- likely simpler, since a sum
+translation would presumably be `Sum.elim t1 t2 : I1 ⊕ I2 → S` rather
+than a genuine pairing)? Neither scoped yet.

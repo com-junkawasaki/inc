@@ -318,4 +318,79 @@ example : ∀ p q : Nat × Nat, approxBisim (incidenceProd natIncidence natIncid
   incidenceProd_faithful_of_faithful natIncidence natIncidence
     natIncidence_approxBisim_iff natIncidence_approxBisim_iff
 
+/- Research cycle 34 (see RESEARCH_LOG.md): a T5-style translation
+   result for `incidenceProd`, twice deferred (cycles 31, 32). Rather
+   than build a one-off translation for `natIncidence × natIncidence`
+   specifically, the natural GENERIC statement -- mirroring how
+   `incidenceProd` itself is generic -- is: pairing two translations
+   that each reflect their own instance's `≈` produces a translation
+   that reflects `≈` on the product. This is a direct consequence of
+   `incidenceProd_approxBisim_iff` (cycle 32) plus each translation's
+   own reflection property, needing no new machinery. -/
+theorem incidenceProd_translation_reflects
+  {I1 S1 I2 S2 : Type u} [DecidableEq I1] [DecidableEq I2] {R1 T1 R2 T2 : Type u}
+  (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+  (t1 : I1 → S1) (t2 : I2 → S2)
+  (ht1 : ∀ x y, t1 x = t1 y → approxBisim inc1 x y)
+  (ht2 : ∀ x y, t2 x = t2 y → approxBisim inc2 x y)
+  {p q : I1 × I2} (h : (t1 p.1, t2 p.2) = (t1 q.1, t2 q.2)) :
+  approxBisim (incidenceProd inc1 inc2) p q := by
+  obtain ⟨p1, p2⟩ := p
+  obtain ⟨q1, q2⟩ := q
+  simp only [Prod.mk.injEq] at h
+  rw [incidenceProd_approxBisim_iff]
+  exact ⟨ht1 p1 q1 h.1, ht2 p2 q2 h.2⟩
+
+/- While instantiating the generic theorem against `natToFiniteSet`
+   (cycle 5), a second, independent question arose: does
+   `natToFiniteSet` -- built and checked for injectivity only, back
+   when no `glue` in this project had algebraic structure worth
+   checking against a translation -- happen to *also* be a
+   `glue`-homomorphism, the same lens cycle 28 first applied to
+   `cycleToNat`? Checked empirically first (`#eval`,
+   `natToFiniteSet 3 ++ natToFiniteSet 4 == natToFiniteSet 7` and two
+   more concrete cases): all agreed. Proof needed induction on the
+   *first* summand (`Nat.succ_add`, not `Nat.add_succ`) to line up with
+   `List.cons_append`'s associativity -- the first induction attempt
+   (on the second summand) produced a residual (`a :: (xs ++ ys) = xs
+   ++ a :: ys`) that isn't true for general lists, a genuine direction
+   mismatch caught immediately by the type-checker, not a deep
+   difficulty. -/
+theorem natToFiniteSet_glue_hom (m n : Nat) :
+  natToFiniteSet (m + n) = natToFiniteSet m ++ natToFiniteSet n := by
+  induction m with
+  | zero => simp [natToFiniteSet]
+  | succ k ih => simp [Nat.succ_add, natToFiniteSet, ih]
+
+def natProdToFiniteSet : Nat × Nat → List Unit × List Unit :=
+  fun p => (natToFiniteSet p.1, natToFiniteSet p.2)
+
+/- Concrete instantiation of the generic theorem: the paired
+   translation reflects `≈` on `natIncidence × natIncidence`. -/
+theorem natProdToFiniteSet_reflects_approxBisim {p q : Nat × Nat}
+  (h : natProdToFiniteSet p = natProdToFiniteSet q) :
+    approxBisim (incidenceProd natIncidence natIncidence) p q := by
+  obtain ⟨p1, p2⟩ := p
+  obtain ⟨q1, q2⟩ := q
+  simp only [natProdToFiniteSet, Prod.mk.injEq] at h
+  exact incidenceProd_translation_reflects natIncidence natIncidence
+    natToFiniteSet natToFiniteSet
+    (fun x y hxy => natToFiniteSet_reflects_approxBisim hxy)
+    (fun x y hxy => natToFiniteSet_reflects_approxBisim hxy)
+    (by simp [h.1, h.2])
+
+/- Ties the whole picture together: the paired translation is ALSO a
+   genuine `glue`-homomorphism for the product, combining
+   `natToFiniteSet_glue_hom` on each side with `incidenceProd`'s own
+   componentwise `glue` -- the same "faithful reflector AND algebra
+   homomorphism" achievement cycle 28 reached for `cycleToNat`, now
+   for a *generic* construction rather than one hand-built instance. -/
+theorem natProdToFiniteSet_glue_hom (p q : Nat × Nat) :
+  ((incidenceProd natIncidence natIncidence).glue p q).map natProdToFiniteSet =
+    some (natToFiniteSet p.1 ++ natToFiniteSet q.1, natToFiniteSet p.2 ++ natToFiniteSet q.2) := by
+  obtain ⟨p1, p2⟩ := p
+  obtain ⟨q1, q2⟩ := q
+  simp only [incidenceProd, prodGlue, natIncidence]
+  simp [natProdToFiniteSet, natToFiniteSet_glue_hom]
+
 end IncidenceCore
