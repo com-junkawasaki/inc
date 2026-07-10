@@ -87,6 +87,8 @@ It currently establishes:
 - an extensional two-atom finite-set fragment: membership is encoded by set
   boundaries; union, intersection, complement, and difference have proved
   Boolean-algebra laws, and boundary membership represents each operation.
+  These facts are bundled as a checked `SetIncidence` Boolean-fragment model
+  certificate.
 - arbitrary finite-basis extensional sets (`BitSet n`), with checked Boolean
   operations (union, intersection, complement, difference), complement laws,
   distributivity, and De Morgan's law proved pointwise over `Fin n`; boundary
@@ -112,6 +114,8 @@ It currently establishes:
   order coordinatewise.
   Its interaction with powerset is checked at singleton representatives:
   `⟨{a},{b}⟩ ∈ P(s)×P(t)` holds exactly when `a∈s` and `b∈t`.
+  The bundled recursive finite-set fragment model records product zero,
+  monotonicity and union-distribution laws alongside `⋃P(s)=s`.
   Singleton and Kuratowski ordered-pair constructions also descend to the
   recursive extensional quotient, with their exact outer membership laws;
   unordered-pair equality is classified and ordered pairs are injective.

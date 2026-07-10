@@ -799,6 +799,16 @@ theorem twoSet_difference_disjoint (s t : TwoSet) :
     cases t with
     | mk ta tb => cases sa <;> cases sb <;> cases ta <;> cases tb <;> rfl
 
+theorem twoSet_union_complement_full (s : TwoSet) :
+    twoSetUnion s (twoSetComplement s) = twoSetFull := by
+  cases s with
+  | mk sa sb => cases sa <;> cases sb <;> rfl
+
+theorem twoSet_intersection_complement_empty (s : TwoSet) :
+    twoSetIntersection s (twoSetComplement s) = twoSetEmpty := by
+  cases s with
+  | mk sa sb => cases sa <;> cases sb <;> rfl
+
 theorem twoSet_extensional (s t : TwoSet)
     (h : ∀ atom, twoSetContains s atom = twoSetContains t atom) : s = t := by
   cases s with
@@ -977,6 +987,87 @@ theorem setGlue_associative (i j k : SetIncidence) :
     by_cases hj : j = SetIncidence.set twoSetEmpty <;>
     by_cases hk : k = SetIncidence.set twoSetEmpty <;>
     simp [setGlue, hi, hj, hk]
+
+/- A usable finite Boolean-set model certificate.  It packages both the
+   algebra on extensional two-atom sets and the fact that the incidence
+   boundary displays that algebra faithfully at each atom endpoint. -/
+structure SetIncidenceBooleanFragmentCertificate where
+  model : Incidence SetIncidence GraphRole GraphType
+  model_eq : model = setIncidenceModel
+  union_empty_left : ∀ s, twoSetUnion twoSetEmpty s = s
+  union_empty_right : ∀ s, twoSetUnion s twoSetEmpty = s
+  union_commutative : ∀ s t, twoSetUnion s t = twoSetUnion t s
+  union_associative : ∀ s t u,
+    twoSetUnion (twoSetUnion s t) u = twoSetUnion s (twoSetUnion t u)
+  intersection_commutative : ∀ s t,
+    twoSetIntersection s t = twoSetIntersection t s
+  intersection_associative : ∀ s t u,
+    twoSetIntersection (twoSetIntersection s t) u =
+      twoSetIntersection s (twoSetIntersection t u)
+  complement_involutive : ∀ s, twoSetComplement (twoSetComplement s) = s
+  deMorgan_union : ∀ s t,
+    twoSetComplement (twoSetUnion s t) =
+      twoSetIntersection (twoSetComplement s) (twoSetComplement t)
+  complement_full : ∀ s, twoSetUnion s (twoSetComplement s) = twoSetFull
+  complement_empty : ∀ s, twoSetIntersection s (twoSetComplement s) = twoSetEmpty
+  difference_reconstruction : ∀ s t,
+    twoSetUnion (twoSetDifference s t) (twoSetIntersection s t) = s
+  difference_disjoint : ∀ s t,
+    twoSetIntersection (twoSetDifference s t) t = twoSetEmpty
+  boundary_extensional : ∀ s t, setBoundary (.set s) = setBoundary (.set t) ↔ s = t
+  boundary_union_atomA : ∀ s t,
+    atomAEndpoint ∈ setBoundary (.set (twoSetUnion s t)) ↔
+      atomAEndpoint ∈ setBoundary (.set s) ∨ atomAEndpoint ∈ setBoundary (.set t)
+  boundary_union_atomB : ∀ s t,
+    atomBEndpoint ∈ setBoundary (.set (twoSetUnion s t)) ↔
+      atomBEndpoint ∈ setBoundary (.set s) ∨ atomBEndpoint ∈ setBoundary (.set t)
+  boundary_intersection_atomA : ∀ s t,
+    atomAEndpoint ∈ setBoundary (.set (twoSetIntersection s t)) ↔
+      atomAEndpoint ∈ setBoundary (.set s) ∧ atomAEndpoint ∈ setBoundary (.set t)
+  boundary_intersection_atomB : ∀ s t,
+    atomBEndpoint ∈ setBoundary (.set (twoSetIntersection s t)) ↔
+      atomBEndpoint ∈ setBoundary (.set s) ∧ atomBEndpoint ∈ setBoundary (.set t)
+  boundary_complement_atomA : ∀ s,
+    atomAEndpoint ∈ setBoundary (.set (twoSetComplement s)) ↔
+      ¬ atomAEndpoint ∈ setBoundary (.set s)
+  boundary_complement_atomB : ∀ s,
+    atomBEndpoint ∈ setBoundary (.set (twoSetComplement s)) ↔
+      ¬ atomBEndpoint ∈ setBoundary (.set s)
+  boundary_difference_atomA : ∀ s t,
+    atomAEndpoint ∈ setBoundary (.set (twoSetDifference s t)) ↔
+      atomAEndpoint ∈ setBoundary (.set s) ∧ ¬ atomAEndpoint ∈ setBoundary (.set t)
+  boundary_difference_atomB : ∀ s t,
+    atomBEndpoint ∈ setBoundary (.set (twoSetDifference s t)) ↔
+      atomBEndpoint ∈ setBoundary (.set s) ∧ ¬ atomBEndpoint ∈ setBoundary (.set t)
+
+def setIncidenceBooleanFragmentCertificate : SetIncidenceBooleanFragmentCertificate where
+  model := setIncidenceModel
+  model_eq := rfl
+  union_empty_left := twoSetUnion_empty_left
+  union_empty_right := twoSetUnion_empty_right
+  union_commutative := twoSetUnion_commutative
+  union_associative := twoSetUnion_associative
+  intersection_commutative := twoSetIntersection_commutative
+  intersection_associative := twoSetIntersection_associative
+  complement_involutive := twoSetComplement_involutive
+  deMorgan_union := twoSet_deMorgan_union
+  complement_full := twoSet_union_complement_full
+  complement_empty := twoSet_intersection_complement_empty
+  difference_reconstruction := twoSet_difference_union_intersection
+  difference_disjoint := twoSet_difference_disjoint
+  boundary_extensional := set_boundary_extensional
+  boundary_union_atomA := setBoundary_union_membership_atomA
+  boundary_union_atomB := setBoundary_union_membership_atomB
+  boundary_intersection_atomA := setBoundary_intersection_membership_atomA
+  boundary_intersection_atomB := setBoundary_intersection_membership_atomB
+  boundary_complement_atomA := setBoundary_complement_membership_atomA
+  boundary_complement_atomB := setBoundary_complement_membership_atomB
+  boundary_difference_atomA := setBoundary_difference_membership_atomA
+  boundary_difference_atomB := setBoundary_difference_membership_atomB
+
+theorem setIncidence_has_boolean_fragment_model :
+    Nonempty SetIncidenceBooleanFragmentCertificate :=
+  ⟨setIncidenceBooleanFragmentCertificate⟩
 
 /- Hereditarily finite set syntax as a genuinely recursive incidence model.
    Its structural boundary is distinct from extensional set membership. -/

@@ -3249,7 +3249,19 @@ structure HFRecursiveSetFragmentModel where
     ∃ leftMember, HFRecursiveMember leftMember s ∧
       ∃ rightMember, HFRecursiveMember rightMember t ∧
         x = hfRecursiveOrderedPair leftMember rightMember
+  product_empty_left : ∀ s, product empty s = empty
+  product_empty_right : ∀ s, product s empty = empty
+  product_mono : ∀ {left left' right right'},
+    HFRecursiveSubset left left' → HFRecursiveSubset right right' →
+      HFRecursiveSubset (product left right) (product left' right')
+  product_union_left : ∀ left right third,
+    product (union left right) third =
+      union (product left third) (product right third)
+  product_union_right : ∀ left right third,
+    product left (union right third) =
+      union (product left right) (product left third)
   power_spec : ∀ x s, HFRecursiveMember x (power s) ↔ HFRecursiveSubset x s
+  bigUnion_power : ∀ s, bigUnion (power s) = s
   filter_spec : ∀ p x s,
     HFRecursiveMember x (filter p s) ↔ HFRecursiveMember x s ∧ p.holds x
   bigUnion_intro : ∀ x y s,
@@ -3277,7 +3289,13 @@ def hfRecursiveSetFragmentModel : HFRecursiveSetFragmentModel where
   pair_spec := hfRecursiveMember_pair_iff
   union_spec := hfRecursiveMember_union_iff
   product_spec := hfRecursiveMember_product_iff
+  product_empty_left := hfRecursiveProduct_empty_left
+  product_empty_right := hfRecursiveProduct_empty_right
+  product_mono := hfRecursiveProduct_mono
+  product_union_left := hfRecursiveProduct_union_left
+  product_union_right := hfRecursiveProduct_union_right
   power_spec := hfRecursiveMember_power_iff_subset
+  bigUnion_power := hfRecursiveBigUnion_power
   filter_spec := hfRecursiveMember_filter_iff
   bigUnion_intro := by
     intro x y s hxy hys
