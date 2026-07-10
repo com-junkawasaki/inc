@@ -1,6 +1,6 @@
 # Incidence Theory - Lean 4 Formalization
 
-This directory contains the complete formalization of the Theory of Incidence in Lean 4.
+This directory contains a checked Lean 4 core for the Theory of Incidence.
 
 ## Quick Build
 
@@ -35,15 +35,17 @@ Each axiom is now in its own module for independent development and verification
 **Extensions (A14-A17)**:
 - `Axioms/A14_A17.lean` - Advanced features (Functoriality, Colimits, Linear Algebra)
 
-### Legacy Files
-- `IncidenceTheory/Basic.lean` - Legacy implementation (being phased out)
-
 ## Verification
 
-All axioms A1-A17 are formalized and proven. The CI ensures:
-- All proofs check correctly
-- Examples run without errors
-- Boundary matrices and Laplacians compute properly
+The checked core establishes finite list boundaries, sign cases, positive
+multiplicities, rank-based exclusion of direct boundary cycles, and that the
+defined bisimilarity is an equivalence relation. Boundary matrices and
+Laplacians are computed from the boundary data.  The concrete triangle model
+also has a checked `∂² = 0` theorem.
+
+Claims such as `∂² = 0`, pushout universality, and linear completeness require
+additional hypotheses; they are intentionally not asserted as unconditional
+theorems. The build ensures all checked proofs and examples compile.
 
 ## Key Components
 

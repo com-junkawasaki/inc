@@ -10,8 +10,13 @@ namespace IncidenceCore
    well-formed incidence must supply (see `Incidence.well_founded` in
    Axioms.lean); this lemma packages that hypothesis for A5-only callers. -/
 theorem well_founded_theorem {I R : Type u} [DecidableEq I]
-  (boundary : I → Boundary I R)
-  (hwf : ∀ i, ¬(∃ e ∈ boundary i, e.i = i)) :
-  ∀ i, ¬(∃ e ∈ boundary i, e.i = i) := hwf
+  (boundary : I → Boundary I R) (rank : I → Nat)
+  (decreases : ∀ i e, e ∈ boundary i → rank e.i < rank i) :
+  -- A decreasing natural-number rank rules out direct boundary cycles.
+  ∀ i, ¬(∃ e ∈ boundary i, e.i = i) := by
+  intro i ⟨e, he, hei⟩
+  have hlt := decreases i e he
+  rw [hei] at hlt
+  exact Nat.lt_irrefl _ hlt
 
 end IncidenceCore

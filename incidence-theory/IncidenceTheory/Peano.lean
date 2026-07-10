@@ -154,10 +154,10 @@ theorem natIncidence_glue_comm (i j : Nat) :
 /- Merkle-ID: implementation.graph_model.peano.gluing_spec
    GluingSpec instance for natIncidence (permissive guards; addition). -/
 def natGluingSpec : GluingSpec natIncidence :=
-  { guards := Guards.permissive Nat
-  , unit_ok := by intro i; refine ⟨rfl, ?_, ?_⟩ <;> simp [natIncidence]
+  { unit_ok := by
+      intro i
+      exact ⟨by simp [natIncidence], by simp [natIncidence]⟩
   , type_preserve := by intro i j k _ _; rfl
-  , guard_preserve := by intro i j k _ _; trivial
   , assoc_when_ok := by
       intro i j k ij ijk jk _ h2 _ h4 _ h6 _
       simp [natIncidence] at h2 h4 h6 ⊢

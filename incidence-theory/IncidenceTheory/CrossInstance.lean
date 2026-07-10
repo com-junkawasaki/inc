@@ -35,7 +35,8 @@ namespace IncidenceCore
 theorem atom_boundary_natural (n : Nat) :
   pairIncidenceChained.boundary (PairId.atom n) =
     (natIncidence.boundary n).map (fun e =>
-      ({ i := PairId.atom e.i, role := PairRole.chain, sign := e.sign, mult := e.mult }
+      ({ i := PairId.atom e.i, role := PairRole.chain, sign := e.sign, mult := e.mult,
+         mult_pos := e.mult_pos }
         : Endpoint PairId PairRole)) := by
   cases n with
   | zero => simp [natIncidence, peanoBoundary, pairIncidenceChained, pairBoundaryChained]
@@ -121,7 +122,8 @@ theorem sizeOf_pair_ne_glue (a b : PairId) :
 theorem node_boundary_natural (n : Nat) :
   pathIncidenceChained.boundary (PathId.node n) =
     (natIncidence.boundary n).map (fun e =>
-      ({ i := PathId.node e.i, role := PathRole.chain, sign := e.sign, mult := e.mult }
+      ({ i := PathId.node e.i, role := PathRole.chain, sign := e.sign, mult := e.mult,
+         mult_pos := e.mult_pos }
         : Endpoint PathId PathRole)) := by
   cases n with
   | zero => simp [natIncidence, peanoBoundary, pathIncidenceChained, pathBoundaryChained]

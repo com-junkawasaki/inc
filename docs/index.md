@@ -198,13 +198,13 @@ function computeLaplacianMatrix() {
 function runVerification() {
   const results = document.getElementById('verification-results');
 
-  // Simulate verification checks
+  // These entries describe the checked Lean core, not unformalized research goals.
   const checks = [
-    { name: '∂² = 0 Property', status: '✓ VERIFIED', detail: 'Boundary operator squares to zero' },
-    { name: 'Type Consistency', status: '✓ VERIFIED', detail: 'All boundary elements share parent type' },
-    { name: 'Gluing Universality', status: '✓ VERIFIED', detail: 'Glue operations create pushouts' },
-    { name: 'Bisimulation Congruence', status: '✓ VERIFIED', detail: '≈ preserved under operations' },
-    { name: 'Linear Completeness', status: '✓ VERIFIED', detail: 'Linear observations determine equivalence' }
+    { name: 'Triangle ∂² = 0', status: '✓ VERIFIED', detail: 'Finite triangle calculation checked by Lean' },
+    { name: 'Boundary invariants', status: '✓ VERIFIED', detail: 'Finite boundaries, signs, and positive multiplicities' },
+    { name: 'Gluing laws', status: '✓ VERIFIED', detail: 'Unit, type preservation, and conditional associativity' },
+    { name: 'Bisimilarity', status: '✓ VERIFIED', detail: 'Reflexive, symmetric, and transitive' },
+    { name: 'Linear data', status: '✓ VERIFIED', detail: 'Boundary matrices and Laplacians are computed from boundaries' }
   ];
 
   let html = '<div class="verification-list">';
@@ -228,61 +228,25 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-## 🏛️ Core Theorems (T1-T5)
+## 📚 Checked Lean core
 
-Incidence Theory establishes its foundational status through five core theorems:
-
-### T1: Glue Universality
-<div class="theorem-box">
-  <h4>Theorem T1</h4>
-  <p><strong>Gluing operations create pushouts with universal property.</strong></p>
-  <p class="proof-status">✅ Proven in Lean 4 with concrete triangle examples</p>
-</div>
-
-### T2: Congruence
-<div class="theorem-box">
-  <h4>Theorem T2</h4>
-  <p><strong>Observational equivalence ≈ is a congruence relation.</strong></p>
-  <p class="proof-status">✅ Proven in Lean 4 with bisimulation properties</p>
-</div>
-
-### T3: Linear Soundness
-<div class="theorem-box">
-  <h4>Theorem T3</h4>
-  <p><strong>Boundary operators ∂ satisfy ∂²=0, bridging logic and linear algebra.</strong></p>
-  <p class="proof-status">✅ Proven in Lean 4 with matrix computations</p>
-</div>
-
-### T4: Completeness
-<div class="theorem-box">
-  <h4>Theorem T4</h4>
-  <p><strong>Linear-algebraic observations completely determine incidence equivalence.</strong></p>
-  <p class="proof-status">✅ Proven in Lean 4 with spectral properties</p>
-</div>
-
-### T5: Translation Preservation
-<div class="theorem-box">
-  <h4>Theorem T5</h4>
-  <p><strong>Translations to Set/Category/Type preserve limits and colimits.</strong></p>
-  <p class="proof-status">✅ Proven in Lean 4 with embedding constructions</p>
-</div>
-
-## 📚 Formal Verification
-
-All theorems are formally verified in Lean 4:
+The formalization currently checks the boundary, gluing, bisimulation, and
+triangle-linear results shown above. Pushout universality, generic `∂² = 0`,
+linear completeness, and translation preservation remain conditional research
+goals: their required categorical or linear hypotheses are not yet encoded.
 
 <div class="verification-summary">
   <div class="metric">
-    <div class="number">17</div>
-    <div class="label">Axioms (A1-A17)</div>
+    <div class="number">6</div>
+    <div class="label">Checked triangle matrix entries</div>
   </div>
   <div class="metric">
-    <div class="number">5</div>
-    <div class="label">Core Theorems (T1-T5)</div>
+    <div class="number">3</div>
+    <div class="label">Checked Laplacian diagonal entries</div>
   </div>
   <div class="metric">
-    <div class="number">100%</div>
-    <div class="label">Formal Coverage</div>
+    <div class="number">0</div>
+    <div class="label">Unproved Lean declarations</div>
   </div>
   <div class="metric">
     <div class="number">✅</div>
@@ -292,14 +256,15 @@ All theorems are formally verified in Lean 4:
 
 ## 🔗 Learn More
 
-- **[Full Documentation](https://github.com/com-junkawasaki/inc)** - Complete theory and implementation
+- **[Formal status](verification.html)** - Checked scope and open research goals
 - **[ArXiv Preprint](https://arxiv.org/)** - Academic paper (coming soon)
-- **[Lean Formalization](https://github.com/com-junkawasaki/inc/tree/main/incidence-theory)** - Complete proofs in Lean 4
+- **[Lean Formalization](https://github.com/com-junkawasaki/inc/tree/main/incidence-theory)** - Checked core proofs in Lean 4
 - **[Validation Script](https://github.com/com-junkawasaki/inc#one-command-verification)** - One-command verification
 
-## 🎯 Status: ArXiv Ready
+## 🎯 Status: active formalization
 
-Incidence Theory has achieved mathematical maturity and is ready for academic peer review as the **fourth foundation** alongside Set, Category, and Type theories.
+The checked core and the broader theory are being developed together. The Lean
+source defines the currently verified scope.
 
 ---
 

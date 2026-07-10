@@ -14,9 +14,8 @@ structure IncidenceGluing (I R T : Type u) extends IncidenceType I T where
   unit_left  : ∀ i, glue unit i = some i
   unit_right : ∀ i, glue i unit = some i
 
-  -- A8: Associativity under guards (guarded, partial: glue(glue i j, k) = glue(i, glue j k)
-  -- whenever both sides are defined, via Option.bind chaining)
-  associativity : ∀ i j k,
-    (glue i j).bind (fun ij => glue ij k) = (glue j k).bind (fun jk => glue i jk)
+  -- A8: Associativity under guards
+  associativity : ∀ i j k, Option.bind (glue i j) (fun ij => glue ij k) =
+                           Option.bind (glue j k) (fun jk => glue i jk)
 
 end IncidenceCore

@@ -520,6 +520,6 @@ theorem simplexIncidence_face_v0_general (idx : List SimplexId)
     rfl rfl rfl rfl (by simp) (by simp) (by simp)]
   rw [simplexIncidence_e12_v0_boundary idx, simplexIncidence_e02_v0_boundary idx,
     simplexIncidence_e01_v0_boundary idx, hcount12, hcount02, hcount01]
-  decide
+  simp
 
 end IncidenceCore

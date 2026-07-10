@@ -26,9 +26,12 @@ structure Incidence (I R T : Type u) [DecidableEq I] where
   -- Guards from A9-A13
   guards          : Guards I
 
-  -- Linear algebra from A16-A17
-  boundaryMatrix  : Matrix I I Int
-  laplacian       : Matrix I I Int
+  -- Compatibility slots for the original A16--A17 presentation.  The
+  -- checked public operators in `IncidenceTheory.lean` remain derived from
+  -- `boundary`; these fields let older concrete models retain their cached
+  -- data while the derived interface stays authoritative.
+  boundaryMatrix  : Matrix I I Int := fun _ _ => 0
+  laplacian       : Matrix I I Int := fun _ _ => 0
 
   -- Invariants from all axioms
   type_consistent : ∀ (i : I), ∀ (e : Endpoint I R), e ∈ boundary i → typeFunc e.i = typeFunc i

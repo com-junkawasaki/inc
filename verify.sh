@@ -29,14 +29,21 @@ fi
 
 echo "🏗️  Building Lean formalization..."
 cd incidence-theory
+lake clean
 if ! lake build; then
     echo "❌ Lean build failed"
     exit 1
 fi
 
 echo "▶️  Running examples..."
-if ! ./.lake/build/bin/incidence-theory; then
+if ! lake exe incidence-theory; then
     echo "❌ Example execution failed"
+    exit 1
+fi
+
+echo "🔎 Checking for unproved Lean declarations..."
+if rg -n '\bsorry\b|\baxiom\b' . -g '*.lean' -g '!**/.lake/**'; then
+    echo "❌ Found an unproved Lean declaration"
     exit 1
 fi
 
@@ -46,11 +53,11 @@ echo "✅ All verifications passed!"
 echo ""
 echo "📊 Verification Summary:"
 echo "   • Lean 4 formalization: ✅ Built successfully"
-echo "   • All proofs: ✅ Verified"
+echo "   • Checked proofs: ✅ Verified"
 echo "   • Examples: ✅ Executed successfully"
-echo "   • Axioms A1-A17: ✅ All formalized"
+echo "   • Unproved declarations: ✅ None"
 echo ""
-echo "🎉 Incidence Theory is mathematically sound!"
+echo "🎉 The checked Lean core is internally verified."
 echo ""
 echo "For more details, see:"
 echo "   • README.md for theory overview"

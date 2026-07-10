@@ -40,10 +40,12 @@ def prodBoundary {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
   (I1 × I2) → Boundary (I1 × I2) (R1 ⊕ R2)
   | (i1, i2) =>
     (inc1.boundary i1).map (fun e =>
-      ({ i := (e.i, i2), role := Sum.inl e.role, sign := e.sign, mult := e.mult } :
+      ({ i := (e.i, i2), role := Sum.inl e.role, sign := e.sign, mult := e.mult,
+         mult_pos := e.mult_pos } :
         Endpoint (I1 × I2) (R1 ⊕ R2))) ++
     (inc2.boundary i2).map (fun e =>
-      ({ i := (i1, e.i), role := Sum.inr e.role, sign := e.sign, mult := e.mult } :
+      ({ i := (i1, e.i), role := Sum.inr e.role, sign := e.sign, mult := e.mult,
+         mult_pos := e.mult_pos } :
         Endpoint (I1 × I2) (R1 ⊕ R2)))
 
 def prodGlue {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
@@ -120,7 +122,8 @@ def incidenceProd {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
 theorem prodBoundary_mem_left {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
   (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (i1 : I1) (i2 : I2)
   (e1 : Endpoint I1 R1) (he1 : e1 ∈ inc1.boundary i1) :
-  ({ i := (e1.i, i2), role := Sum.inl e1.role, sign := e1.sign, mult := e1.mult } :
+  ({ i := (e1.i, i2), role := Sum.inl e1.role, sign := e1.sign, mult := e1.mult,
+     mult_pos := e1.mult_pos } :
     Endpoint (I1 × I2) (R1 ⊕ R2)) ∈ prodBoundary inc1 inc2 (i1, i2) := by
   simp only [prodBoundary, List.mem_append, List.mem_map]
   exact Or.inl ⟨e1, he1, rfl⟩
@@ -128,7 +131,8 @@ theorem prodBoundary_mem_left {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [Dec
 theorem prodBoundary_mem_right {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
   (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (i1 : I1) (i2 : I2)
   (e2 : Endpoint I2 R2) (he2 : e2 ∈ inc2.boundary i2) :
-  ({ i := (i1, e2.i), role := Sum.inr e2.role, sign := e2.sign, mult := e2.mult } :
+  ({ i := (i1, e2.i), role := Sum.inr e2.role, sign := e2.sign, mult := e2.mult,
+     mult_pos := e2.mult_pos } :
     Endpoint (I1 × I2) (R1 ⊕ R2)) ∈ prodBoundary inc1 inc2 (i1, i2) := by
   simp only [prodBoundary, List.mem_append, List.mem_map]
   exact Or.inr ⟨e2, he2, rfl⟩
@@ -160,12 +164,12 @@ theorem incidenceProd_approxBisim_of_approxBisim
     rcases he with ⟨e1, he1, heq⟩ | ⟨e2, he2, heq⟩
     · subst heq
       obtain ⟨e1', he1', hcompat1, hrel1'⟩ := hmatch1.left e1 he1
-      exact ⟨{ i := (e1'.i, b2), role := Sum.inl e1'.role, sign := e1'.sign, mult := e1'.mult },
+      exact ⟨{ i := (e1'.i, b2), role := Sum.inl e1'.role, sign := e1'.sign, mult := e1'.mult, mult_pos := e1'.mult_pos },
         prodBoundary_mem_left inc1 inc2 b1 b2 e1' he1',
         ⟨congrArg Sum.inl hcompat1.1, hcompat1.2⟩, hrel1', hr2⟩
     · subst heq
       obtain ⟨e2', he2', hcompat2, hrel2'⟩ := hmatch2.left e2 he2
-      exact ⟨{ i := (b1, e2'.i), role := Sum.inr e2'.role, sign := e2'.sign, mult := e2'.mult },
+      exact ⟨{ i := (b1, e2'.i), role := Sum.inr e2'.role, sign := e2'.sign, mult := e2'.mult, mult_pos := e2'.mult_pos },
         prodBoundary_mem_right inc1 inc2 b1 b2 e2' he2',
         ⟨congrArg Sum.inr hcompat2.1, hcompat2.2⟩, hr1, hrel2'⟩
   · intro e he
@@ -173,12 +177,12 @@ theorem incidenceProd_approxBisim_of_approxBisim
     rcases he with ⟨e1, he1, heq⟩ | ⟨e2, he2, heq⟩
     · subst heq
       obtain ⟨e1', he1', hcompat1, hrel1'⟩ := hmatch1.right e1 he1
-      exact ⟨{ i := (e1'.i, a2), role := Sum.inl e1'.role, sign := e1'.sign, mult := e1'.mult },
+      exact ⟨{ i := (e1'.i, a2), role := Sum.inl e1'.role, sign := e1'.sign, mult := e1'.mult, mult_pos := e1'.mult_pos },
         prodBoundary_mem_left inc1 inc2 a1 a2 e1' he1',
         ⟨congrArg Sum.inl hcompat1.1, hcompat1.2⟩, hrel1', hr2⟩
     · subst heq
       obtain ⟨e2', he2', hcompat2, hrel2'⟩ := hmatch2.right e2 he2
-      exact ⟨{ i := (a1, e2'.i), role := Sum.inr e2'.role, sign := e2'.sign, mult := e2'.mult },
+      exact ⟨{ i := (a1, e2'.i), role := Sum.inr e2'.role, sign := e2'.sign, mult := e2'.mult, mult_pos := e2'.mult_pos },
         prodBoundary_mem_right inc1 inc2 a1 a2 e2' he2',
         ⟨congrArg Sum.inr hcompat2.1, hcompat2.2⟩, hr1, hrel2'⟩
 
@@ -226,7 +230,7 @@ theorem incidenceProd_project
     refine ⟨by simpa using congrArg Prod.fst htype, ?_, ?_⟩
     · intro e1 he1
       obtain ⟨e', he', hcompat, hrel'⟩ := hmatch.left
-        { i := (e1.i, a2), role := Sum.inl e1.role, sign := e1.sign, mult := e1.mult }
+        { i := (e1.i, a2), role := Sum.inl e1.role, sign := e1.sign, mult := e1.mult, mult_pos := e1.mult_pos }
         (prodBoundary_mem_left inc1 inc2 a1 a2 e1 he1)
       simp only [incidenceProd, prodBoundary, List.mem_append, List.mem_map] at he'
       rcases he' with ⟨e1', he1', heq⟩ | ⟨e2', he2', heq⟩
@@ -239,7 +243,7 @@ theorem incidenceProd_project
         simp [boundaryCompatible] at hcompat
     · intro e1' he1'
       obtain ⟨e, he, hcompat, hrel'⟩ := hmatch.right
-        { i := (e1'.i, b2), role := Sum.inl e1'.role, sign := e1'.sign, mult := e1'.mult }
+        { i := (e1'.i, b2), role := Sum.inl e1'.role, sign := e1'.sign, mult := e1'.mult, mult_pos := e1'.mult_pos }
         (prodBoundary_mem_left inc1 inc2 b1 b2 e1' he1')
       simp only [incidenceProd, prodBoundary, List.mem_append, List.mem_map] at he
       rcases he with ⟨e1, he1, heq⟩ | ⟨e2, he2, heq⟩
@@ -256,7 +260,7 @@ theorem incidenceProd_project
     refine ⟨by simpa using congrArg Prod.snd htype, ?_, ?_⟩
     · intro e2 he2
       obtain ⟨e', he', hcompat, hrel'⟩ := hmatch.left
-        { i := (a1, e2.i), role := Sum.inr e2.role, sign := e2.sign, mult := e2.mult }
+        { i := (a1, e2.i), role := Sum.inr e2.role, sign := e2.sign, mult := e2.mult, mult_pos := e2.mult_pos }
         (prodBoundary_mem_right inc1 inc2 a1 a2 e2 he2)
       simp only [incidenceProd, prodBoundary, List.mem_append, List.mem_map] at he'
       rcases he' with ⟨e1', he1', heq⟩ | ⟨e2', he2', heq⟩
@@ -269,7 +273,7 @@ theorem incidenceProd_project
         · simpa using hrel'
     · intro e2' he2'
       obtain ⟨e, he, hcompat, hrel'⟩ := hmatch.right
-        { i := (b1, e2'.i), role := Sum.inr e2'.role, sign := e2'.sign, mult := e2'.mult }
+        { i := (b1, e2'.i), role := Sum.inr e2'.role, sign := e2'.sign, mult := e2'.mult, mult_pos := e2'.mult_pos }
         (prodBoundary_mem_right inc1 inc2 b1 b2 e2' he2')
       simp only [incidenceProd, prodBoundary, List.mem_append, List.mem_map] at he
       rcases he with ⟨e1, he1, heq⟩ | ⟨e2, he2, heq⟩

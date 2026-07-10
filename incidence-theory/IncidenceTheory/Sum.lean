@@ -41,17 +41,23 @@ import IncidenceTheory.Cycle
 
 namespace IncidenceCore
 
+def sumInlEndpoint {I1 R1 I2 R2 : Type u} (e : Endpoint I1 R1) :
+    Endpoint (I1 ⊕ I2) (R1 ⊕ R2) :=
+  { i := Sum.inl e.i, role := Sum.inl e.role, sign := e.sign, mult := e.mult,
+    mult_pos := e.mult_pos }
+
+def sumInrEndpoint {I1 R1 I2 R2 : Type u} (e : Endpoint I2 R2) :
+    Endpoint (I1 ⊕ I2) (R1 ⊕ R2) :=
+  { i := Sum.inr e.i, role := Sum.inr e.role, sign := e.sign, mult := e.mult,
+    mult_pos := e.mult_pos }
+
 def sumBoundary {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
   (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) :
   (I1 ⊕ I2) → Boundary (I1 ⊕ I2) (R1 ⊕ R2)
   | Sum.inl i1 =>
-    (inc1.boundary i1).map (fun e =>
-      ({ i := Sum.inl e.i, role := Sum.inl e.role, sign := e.sign, mult := e.mult } :
-        Endpoint (I1 ⊕ I2) (R1 ⊕ R2)))
+    (inc1.boundary i1).map sumInlEndpoint
   | Sum.inr i2 =>
-    (inc2.boundary i2).map (fun e =>
-      ({ i := Sum.inr e.i, role := Sum.inr e.role, sign := e.sign, mult := e.mult } :
-        Endpoint (I1 ⊕ I2) (R1 ⊕ R2)))
+    (inc2.boundary i2).map sumInrEndpoint
 
 /- Unit-absorbing, then componentwise same-side, else `none` -- the
    only shape that can satisfy `unit_left`/`unit_right` given a
@@ -112,13 +118,13 @@ def incidenceSum {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
       simp only [sumBoundary, List.mem_map] at he
       obtain ⟨e1, he1, heq⟩ := he
       subst heq
-      simp at hei
+      simp [sumInlEndpoint] at hei
       exact inc1.well_founded i1 ⟨e1, he1, hei⟩
     | inr i2 =>
       simp only [sumBoundary, List.mem_map] at he
       obtain ⟨e2, he2, heq⟩ := he
       subst heq
-      simp at hei
+      simp [sumInrEndpoint] at hei
       exact inc2.well_founded i2 ⟨e2, he2, hei⟩
   unit_left := by
     intro i
@@ -210,14 +216,14 @@ theorem incidenceSum_cross_not_bisim_of_not_leaf_left
   ¬ approxBisim (incidenceSum inc1 inc2) (Sum.inl a) (Sum.inr b) := by
   obtain ⟨e1, he1⟩ := List.exists_mem_of_ne_nil _ ha
   apply not_approxBisim_of_boundary_mismatch (incidenceSum inc1 inc2) (Sum.inl a) (Sum.inr b)
-    { i := Sum.inl e1.i, role := Sum.inl e1.role, sign := e1.sign, mult := e1.mult }
+    (sumInlEndpoint e1)
   · simp only [incidenceSum, sumBoundary, List.mem_map]
     exact ⟨e1, he1, rfl⟩
   · intro e' he'
     simp only [incidenceSum, sumBoundary, List.mem_map] at he'
     obtain ⟨e2, he2, heq⟩ := he'
     subst heq
-    simp [boundaryCompatible]
+    simp [sumInlEndpoint, sumInrEndpoint, boundaryCompatible]
 
 /- Symmetric: if `inc2`'s element has any boundary entry, same
    conclusion, via `approxBisim_symm` applied to the mirror-image
@@ -231,14 +237,14 @@ theorem incidenceSum_cross_not_bisim_of_not_leaf_right
   have h' : approxBisim (incidenceSum inc1 inc2) (Sum.inr b) (Sum.inl a) := approxBisim_symm h
   obtain ⟨e2, he2⟩ := List.exists_mem_of_ne_nil _ hb
   exact not_approxBisim_of_boundary_mismatch (incidenceSum inc1 inc2) (Sum.inr b) (Sum.inl a)
-    { i := Sum.inr e2.i, role := Sum.inr e2.role, sign := e2.sign, mult := e2.mult }
+    (sumInrEndpoint e2)
     (by simp only [incidenceSum, sumBoundary, List.mem_map]; exact ⟨e2, he2, rfl⟩)
     (by
       intro e' he'
       simp only [incidenceSum, sumBoundary, List.mem_map] at he'
       obtain ⟨e1, he1, heq⟩ := he'
       subst heq
-      simp [boundaryCompatible])
+      simp [sumInlEndpoint, sumInrEndpoint, boundaryCompatible])
     h'
 
 /- Same-side `≈` in the sum reduces to `≈` in `inc1` alone -- the
@@ -265,8 +271,7 @@ theorem incidenceSum_project_left
   obtain ⟨_, hmatch⟩ := hbisim (Sum.inl x) (Sum.inl y) hr
   refine ⟨htype', ?_, ?_⟩
   · intro e he
-    have heS : ({ i := Sum.inl e.i, role := Sum.inl e.role, sign := e.sign, mult := e.mult } :
-        Endpoint (I1 ⊕ I2) (R1 ⊕ R2)) ∈ (incidenceSum inc1 inc2).boundary (Sum.inl x) := by
+    have heS : sumInlEndpoint e ∈ (incidenceSum inc1 inc2).boundary (Sum.inl x) := by
       simp only [incidenceSum, sumBoundary, List.mem_map]
       exact ⟨e, he, rfl⟩
     obtain ⟨e', he', hcompat, hrel'⟩ := hmatch.left _ heS
@@ -276,8 +281,7 @@ theorem incidenceSum_project_left
     refine ⟨e1', he1', ⟨(Sum.inl.injEq _ _).mp hcompat.1, hcompat.2⟩, hrel', ?_⟩
     rw [inc1.type_consistent x e he, inc1.type_consistent y e1' he1', htype']
   · intro e' he'
-    have heS : ({ i := Sum.inl e'.i, role := Sum.inl e'.role, sign := e'.sign, mult := e'.mult } :
-        Endpoint (I1 ⊕ I2) (R1 ⊕ R2)) ∈ (incidenceSum inc1 inc2).boundary (Sum.inl y) := by
+    have heS : sumInlEndpoint e' ∈ (incidenceSum inc1 inc2).boundary (Sum.inl y) := by
       simp only [incidenceSum, sumBoundary, List.mem_map]
       exact ⟨e', he', rfl⟩
     obtain ⟨e, he, hcompat, hrel'⟩ := hmatch.right _ heS
@@ -300,8 +304,7 @@ theorem incidenceSum_project_right
   obtain ⟨_, hmatch⟩ := hbisim (Sum.inr x) (Sum.inr y) hr
   refine ⟨htype', ?_, ?_⟩
   · intro e he
-    have heS : ({ i := Sum.inr e.i, role := Sum.inr e.role, sign := e.sign, mult := e.mult } :
-        Endpoint (I1 ⊕ I2) (R1 ⊕ R2)) ∈ (incidenceSum inc1 inc2).boundary (Sum.inr x) := by
+    have heS : sumInrEndpoint e ∈ (incidenceSum inc1 inc2).boundary (Sum.inr x) := by
       simp only [incidenceSum, sumBoundary, List.mem_map]
       exact ⟨e, he, rfl⟩
     obtain ⟨e', he', hcompat, hrel'⟩ := hmatch.left _ heS
@@ -311,8 +314,7 @@ theorem incidenceSum_project_right
     refine ⟨e2', he2', ⟨(Sum.inr.injEq _ _).mp hcompat.1, hcompat.2⟩, hrel', ?_⟩
     rw [inc2.type_consistent x e he, inc2.type_consistent y e2' he2', htype']
   · intro e' he'
-    have heS : ({ i := Sum.inr e'.i, role := Sum.inr e'.role, sign := e'.sign, mult := e'.mult } :
-        Endpoint (I1 ⊕ I2) (R1 ⊕ R2)) ∈ (incidenceSum inc1 inc2).boundary (Sum.inr y) := by
+    have heS : sumInrEndpoint e' ∈ (incidenceSum inc1 inc2).boundary (Sum.inr y) := by
       simp only [incidenceSum, sumBoundary, List.mem_map]
       exact ⟨e', he', rfl⟩
     obtain ⟨e, he, hcompat, hrel'⟩ := hmatch.right _ heS
@@ -445,7 +447,7 @@ theorem incidenceSum_lift_left
         obtain ⟨e1, he1, heq⟩ := he
         subst heq
         obtain ⟨e1', he1', hcompat, hrel'⟩ := hmatch.left e1 he1
-        exact ⟨{ i := Sum.inl e1'.i, role := Sum.inl e1'.role, sign := e1'.sign, mult := e1'.mult },
+        exact ⟨sumInlEndpoint e1',
           by simp only [incidenceSum, sumBoundary, List.mem_map]; exact ⟨e1', he1', rfl⟩,
           ⟨congrArg Sum.inl hcompat.1, hcompat.2⟩, hrel'⟩
       · intro e' he'
@@ -453,7 +455,7 @@ theorem incidenceSum_lift_left
         obtain ⟨e1', he1', heq⟩ := he'
         subst heq
         obtain ⟨e1, he1, hcompat, hrel'⟩ := hmatch.right e1' he1'
-        exact ⟨{ i := Sum.inl e1.i, role := Sum.inl e1.role, sign := e1.sign, mult := e1.mult },
+        exact ⟨sumInlEndpoint e1,
           by simp only [incidenceSum, sumBoundary, List.mem_map]; exact ⟨e1, he1, rfl⟩,
           ⟨congrArg Sum.inl hcompat.1, hcompat.2⟩, hrel'⟩
     | inr y2 => simp at hr
@@ -481,7 +483,7 @@ theorem incidenceSum_lift_right
         obtain ⟨e2, he2, heq⟩ := he
         subst heq
         obtain ⟨e2', he2', hcompat, hrel'⟩ := hmatch.left e2 he2
-        exact ⟨{ i := Sum.inr e2'.i, role := Sum.inr e2'.role, sign := e2'.sign, mult := e2'.mult },
+        exact ⟨sumInrEndpoint e2',
           by simp only [incidenceSum, sumBoundary, List.mem_map]; exact ⟨e2', he2', rfl⟩,
           ⟨congrArg Sum.inr hcompat.1, hcompat.2⟩, hrel'⟩
       · intro e' he'
@@ -489,7 +491,7 @@ theorem incidenceSum_lift_right
         obtain ⟨e2', he2', heq⟩ := he'
         subst heq
         obtain ⟨e2, he2, hcompat, hrel'⟩ := hmatch.right e2' he2'
-        exact ⟨{ i := Sum.inr e2.i, role := Sum.inr e2.role, sign := e2.sign, mult := e2.mult },
+        exact ⟨sumInrEndpoint e2,
           by simp only [incidenceSum, sumBoundary, List.mem_map]; exact ⟨e2, he2, rfl⟩,
           ⟨congrArg Sum.inr hcompat.1, hcompat.2⟩, hrel'⟩
     | inl y1 => simp at hr

@@ -34,13 +34,8 @@ import IncidenceTheory.Simplex
 
 namespace IncidenceCore
 
-/- The positive half: `approxBisim` packages into a genuine `Setoid I`
-   for ANY `Incidence` instance, unconditionally -- built entirely from
-   theorems already proven in the root file (`approxBisim_refl`/
-   `_symm`/`_trans`), no new proof obligations. -/
-def approxBisimSetoid {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) : Setoid I where
-  r := approxBisim inc
-  iseqv := ⟨approxBisim_refl inc, approxBisim_symm, approxBisim_trans⟩
+/- The positive half is supplied by the core `approxBisimSetoid`: it packages
+   every `Incidence`'s proved bisimilarity equivalence as a `Setoid`. -/
 
 /- The concrete inequality underlying the negative result: `c0` and
    `c1`'s single boundary entries point to different predecessors

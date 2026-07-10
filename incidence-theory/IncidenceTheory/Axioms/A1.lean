@@ -7,8 +7,8 @@ namespace IncidenceCore
 /- A1 is automatically satisfied by using List (finite by construction):
    every boundary has a finite cardinality bound, namely its own length. -/
 theorem finite_endpoints_theorem {I R : Type u} (boundary : I → Boundary I R) :
-  ∀ i, ∃ n : Nat, (boundary i).length ≤ n := by
+  ∀ i, ∃ n : Nat, (boundary i).length = n := by
   intro i
-  exact ⟨(boundary i).length, Nat.le_refl _⟩
+  exact ⟨(boundary i).length, rfl⟩
 
 end IncidenceCore
