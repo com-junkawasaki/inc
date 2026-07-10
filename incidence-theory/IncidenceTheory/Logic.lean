@@ -24,6 +24,18 @@ def Formula.map {Atom Atom' : Type u} (f : Atom → Atom') : Formula Atom → Fo
   | .or p q => .or (p.map f) (q.map f)
   | .imp p q => .imp (p.map f) (q.map f)
 
+/- Atom translations act strictly functorially on formulas.  These small
+   equalities are what permit a faithful incidence translation to reflect,
+   rather than merely preserve, derivations below. -/
+theorem Formula.map_id {Atom : Type u} (formula : Formula Atom) :
+    formula.map id = formula := by
+  induction formula <;> simp [Formula.map, *]
+
+theorem Formula.map_comp {Atom Atom' Atom'' : Type u} (g : Atom' → Atom'')
+    (f : Atom → Atom') (formula : Formula Atom) :
+    (formula.map f).map g = formula.map (g ∘ f) := by
+  induction formula <;> simp [Formula.map, *, Function.comp_def]
+
 def Formula.neg {Atom : Type u} (formula : Formula Atom) : Formula Atom :=
   .imp formula .bot
 
@@ -102,6 +114,36 @@ theorem formulaSubformulas_trans {Atom : Type u} {formula subformula nested : Fo
 def Formula.mapContext {Atom Atom' : Type u} (f : Atom → Atom')
     (context : List (Formula Atom)) : List (Formula Atom') :=
   context.map (Formula.map f)
+
+theorem Formula.mapContext_id {Atom : Type u} (context : List (Formula Atom)) :
+    Formula.mapContext id context = context := by
+  induction context with
+  | nil => rfl
+  | cons formula context ih =>
+    change Formula.map id formula :: Formula.mapContext id context = formula :: context
+    rw [Formula.map_id, ih]
+
+theorem Formula.mapContext_comp {Atom Atom' Atom'' : Type u} (g : Atom' → Atom'')
+    (f : Atom → Atom') (context : List (Formula Atom)) :
+    Formula.mapContext g (Formula.mapContext f context) =
+      Formula.mapContext (g ∘ f) context := by
+  simp [Formula.mapContext, Formula.map_comp]
+
+theorem Formula.map_leftInverse {Atom Atom' : Type u} (f : Atom → Atom')
+    (g : Atom' → Atom) (hgf : ∀ atom, g (f atom) = atom) (formula : Formula Atom) :
+    (formula.map f).map g = formula := by
+  induction formula <;> simp [Formula.map, *]
+
+theorem Formula.mapContext_leftInverse {Atom Atom' : Type u} (f : Atom → Atom')
+    (g : Atom' → Atom) (hgf : ∀ atom, g (f atom) = atom)
+    (context : List (Formula Atom)) :
+    Formula.mapContext g (Formula.mapContext f context) = context := by
+  induction context with
+  | nil => rfl
+  | cons formula context ih =>
+    change Formula.map g (Formula.map f formula) ::
+      Formula.mapContext g (Formula.mapContext f context) = formula :: context
+    rw [Formula.map_leftInverse f g hgf, ih]
 
 def Satisfies {Atom : Type u} (valuation : Atom → Prop) : Formula Atom → Prop
   | .atom a => valuation a
@@ -243,6 +285,29 @@ theorem derives_map {Atom Atom' : Type u} (f : Atom → Atom')
     apply Derives.impI
     simpa [Formula.mapContext] using ih
   | impE dpq dp ihpq ihp => exact Derives.impE ihpq ihp
+
+/- A split-injective translation is conservative for finite derivations:
+   translate a proof back along its retraction and normalize the two maps.
+   In particular, changing incidence names through a bijection is an exact
+   equivalence of derivability, not just a sound forward translation. -/
+theorem derives_map_reflect_of_leftInverse {Atom Atom' : Type u}
+    (f : Atom → Atom') (g : Atom' → Atom) (hgf : ∀ atom, g (f atom) = atom)
+    {context : List (Formula Atom)} {formula : Formula Atom} :
+    Derives (Formula.mapContext f context) (formula.map f) →
+      Derives context formula := by
+  intro hderives
+  have hback := derives_map g hderives
+  simpa only [Formula.mapContext_leftInverse f g hgf,
+    Formula.map_leftInverse f g hgf formula] using hback
+
+theorem derives_map_iff_of_leftInverse {Atom Atom' : Type u}
+    (f : Atom → Atom') (g : Atom' → Atom) (hgf : ∀ atom, g (f atom) = atom)
+    {context : List (Formula Atom)} {formula : Formula Atom} :
+    Derives (Formula.mapContext f context) (formula.map f) ↔
+      Derives context formula := by
+  constructor
+  · exact derives_map_reflect_of_leftInverse f g hgf
+  · exact derives_map f
 
 /- Structural weakening is needed whenever an incidence translation introduces
    auxiliary assumptions. -/
@@ -1435,6 +1500,19 @@ theorem derives_kripke_entails {Atom : Type u} {context : List (Formula Atom)}
     KripkeEntails.{u, v} context formula :=
   fun model world holds => derives_kripke_sound derivation model world holds
 
+/- Semantic consequence transports covariantly along an incidence/atom map.
+   A target model is reindexed to a source model; the preceding two equivalences
+   then identify both its assumptions and its conclusion exactly. -/
+theorem kripke_entails_map {Atom Atom' : Type u} (f : Atom → Atom')
+    {context : List (Formula Atom)} {formula : Formula Atom}
+    (hentails : KripkeEntails.{u, v} context formula) :
+    KripkeEntails.{u, v} (Formula.mapContext f context) (formula.map f) := by
+  intro model world hcontext
+  have hpullback : KripkeContextForces (KripkeModel.pullback f model) world context :=
+    (kripke_context_forces_map_iff f model world context).mp hcontext
+  exact (kripke_forces_map_iff f model world formula).mpr
+    (hentails (KripkeModel.pullback f model) world hpullback)
+
 def emptyKripkeModel (Atom : Type u) : KripkeModel Atom where
   World := Unit
   le := fun _ _ => True
@@ -2550,5 +2628,127 @@ theorem kripke_entails_iff_derives_of_enumeration {Atom : Type u}
 
 /- Incidence-specialized notation for clients of the core structure. -/
 abbrev IncidenceFormula (I : Type u) := Formula I
+
+/-! ## A concrete enumeration for two incidence atoms
+
+The completeness theorem above deliberately takes an enumeration as an
+explicit hypothesis, because arbitrary incidence types need not be countable.
+For the smallest genuinely nontrivial incidence language, however, that input
+can be constructed in the library.  The following decoder uses the triangular
+scan already used by `recurrentSchedule` as a surjection from natural numbers
+onto pairs of natural numbers.  Formula constructors are tagged modulo seven;
+the recursive calls are made only on a strictly smaller code. -/
+
+theorem diagonalState_first_le_second : ∀ stage : Nat,
+    (diagonalState stage).1 ≤ (diagonalState stage).2 := by
+  intro stage
+  induction stage with
+  | zero => exact Nat.le_refl _
+  | succ stage ih =>
+    simp only [diagonalState]
+    split <;> omega
+
+theorem diagonalState_second_le_stage : ∀ stage : Nat,
+    (diagonalState stage).2 ≤ stage := by
+  intro stage
+  induction stage with
+  | zero => exact Nat.le_refl _
+  | succ stage ih =>
+    simp only [diagonalState]
+    split <;> omega
+
+def diagonalRemainder (stage : Nat) : Nat :=
+  (diagonalState stage).2 - (diagonalState stage).1
+
+theorem diagonalIndex_le_stage (stage : Nat) : diagonalIndex stage ≤ stage :=
+  Nat.le_trans (diagonalState_first_le_second stage)
+    (diagonalState_second_le_stage stage)
+
+theorem diagonalRemainder_le_stage (stage : Nat) : diagonalRemainder stage ≤ stage :=
+  Nat.le_trans (Nat.sub_le _ _) (diagonalState_second_le_stage stage)
+
+def diagonalPair (left right : Nat) : Nat :=
+  diagonalTriangle (left + right) + left
+
+theorem diagonalIndex_pair (left right : Nat) :
+    diagonalIndex (diagonalPair left right) = left := by
+  unfold diagonalIndex diagonalPair
+  exact congrArg Prod.fst ((diagonalState_spec (left + right)).2 left (by omega))
+
+theorem diagonalRemainder_pair (left right : Nat) :
+    diagonalRemainder (diagonalPair left right) = right := by
+  unfold diagonalRemainder diagonalPair
+  rw [((diagonalState_spec (left + right)).2 left (by omega))]
+  omega
+
+noncomputable def boolFormulaDecode : Nat → Formula Bool
+  | 0 => .atom false
+  | code + 1 =>
+    let payload := code / 7
+    match code % 7 with
+    | 0 => .atom false
+    | 1 => .atom true
+    | 2 => .top
+    | 3 => .bot
+    | 4 => .and (boolFormulaDecode (diagonalIndex payload))
+        (boolFormulaDecode (diagonalRemainder payload))
+    | 5 => .or (boolFormulaDecode (diagonalIndex payload))
+        (boolFormulaDecode (diagonalRemainder payload))
+    | _ => .imp (boolFormulaDecode (diagonalIndex payload))
+        (boolFormulaDecode (diagonalRemainder payload))
+termination_by code => code
+
+decreasing_by
+  all_goals
+    apply Nat.lt_succ_of_le
+    apply Nat.le_trans
+    · first | exact diagonalIndex_le_stage _ | exact diagonalRemainder_le_stage _
+    · exact Nat.div_le_self _ _
+
+noncomputable def boolFormulaCode : Formula Bool → Nat
+  | .atom false => 1
+  | .atom true => 2
+  | .top => 3
+  | .bot => 4
+  | .and p q => 7 * diagonalPair (boolFormulaCode p) (boolFormulaCode q) + 5
+  | .or p q => 7 * diagonalPair (boolFormulaCode p) (boolFormulaCode q) + 6
+  | .imp p q => 7 * diagonalPair (boolFormulaCode p) (boolFormulaCode q) + 7
+
+theorem boolFormulaDecode_code : ∀ formula : Formula Bool,
+    boolFormulaDecode (boolFormulaCode formula) = formula := by
+  intro formula
+  induction formula with
+  | atom atom => cases atom <;> simp [boolFormulaCode, boolFormulaDecode]
+  | top => simp [boolFormulaCode, boolFormulaDecode]
+  | bot => simp [boolFormulaCode, boolFormulaDecode]
+  | and p q ihp ihq =>
+    simp only [boolFormulaCode, boolFormulaDecode]
+    rw [show (7 * diagonalPair (boolFormulaCode p) (boolFormulaCode q) + 4) / 7 =
+        diagonalPair (boolFormulaCode p) (boolFormulaCode q) by omega]
+    rw [show (7 * diagonalPair (boolFormulaCode p) (boolFormulaCode q) + 4) % 7 = 4 by omega]
+    rw [diagonalIndex_pair, diagonalRemainder_pair, ihp, ihq]
+  | or p q ihp ihq =>
+    simp only [boolFormulaCode, boolFormulaDecode]
+    rw [show (7 * diagonalPair (boolFormulaCode p) (boolFormulaCode q) + 5) / 7 =
+        diagonalPair (boolFormulaCode p) (boolFormulaCode q) by omega]
+    rw [show (7 * diagonalPair (boolFormulaCode p) (boolFormulaCode q) + 5) % 7 = 5 by omega]
+    rw [diagonalIndex_pair, diagonalRemainder_pair, ihp, ihq]
+  | imp p q ihp ihq =>
+    simp only [boolFormulaCode, boolFormulaDecode]
+    rw [show (7 * diagonalPair (boolFormulaCode p) (boolFormulaCode q) + 6) / 7 =
+        diagonalPair (boolFormulaCode p) (boolFormulaCode q) by omega]
+    rw [show (7 * diagonalPair (boolFormulaCode p) (boolFormulaCode q) + 6) % 7 = 6 by omega]
+    rw [diagonalIndex_pair, diagonalRemainder_pair, ihp, ihq]
+
+noncomputable def boolFormulaEnumeration : FormulaEnumeration Bool where
+  enumerate := boolFormulaDecode
+  exhaustive := fun formula => ⟨boolFormulaCode formula, boolFormulaDecode_code formula⟩
+
+/- The abstract canonical completeness theorem is consequently immediately
+   usable for a language with two distinguishable incidence atoms. -/
+theorem bool_kripke_entails_iff_derives
+    (context : List (Formula Bool)) (formula : Formula Bool) :
+    KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
+  kripke_entails_iff_derives_of_enumeration boolFormulaEnumeration context formula
 
 end IncidenceCore

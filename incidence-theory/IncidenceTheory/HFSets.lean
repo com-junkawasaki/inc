@@ -2094,6 +2094,53 @@ theorem hfRecursiveNat_succ_eq (n : Nat) :
     · rw [hxn]
       exact hfRecursiveNat_succ_member n
 
+/- Binary union of finite von Neumann ordinals is their ordinal maximum.
+   This is an internal, extensional reconstruction of the usual ordinal
+   operation, rather than merely an equality of their natural indices. -/
+theorem hfRecursiveNat_union_eq_max (m n : Nat) :
+    hfRecursiveUnion (hfRecursiveNat m) (hfRecursiveNat n) =
+      hfRecursiveNat (Nat.max m n) := by
+  apply hfRecursiveSet_extensionality
+  intro x
+  rw [hfRecursiveMember_union_iff]
+  constructor
+  · rintro (hxm | hxn)
+    · rcases (hfRecursiveMember_nat_iff_exists x m).mp hxm with ⟨k, hk, rfl⟩
+      exact (hfRecursiveNat_member_iff k (Nat.max m n)).mpr
+        (Nat.lt_of_lt_of_le hk (Nat.le_max_left _ _))
+    · rcases (hfRecursiveMember_nat_iff_exists x n).mp hxn with ⟨k, hk, rfl⟩
+      exact (hfRecursiveNat_member_iff k (Nat.max m n)).mpr
+        (Nat.lt_of_lt_of_le hk (Nat.le_max_right _ _))
+  · intro hx
+    rcases (hfRecursiveMember_nat_iff_exists x (Nat.max m n)).mp hx with
+      ⟨k, hk, rfl⟩
+    by_cases hmn : m ≤ n
+    · right
+      exact (hfRecursiveNat_member_iff k n).mpr
+        (by simpa [Nat.max_eq_right hmn] using hk)
+    · left
+      have hnm : n ≤ m := Nat.le_of_lt (Nat.lt_of_not_ge hmn)
+      exact (hfRecursiveNat_member_iff k m).mpr
+        (by simpa [Nat.max_eq_left hnm] using hk)
+
+/- The big union of a successor finite ordinal is its predecessor.  Together
+   with `hfRecursiveNat_succ_eq`, this gives the familiar successor/union
+   laws directly in the internally constructed finite-set universe. -/
+theorem hfRecursiveBigUnion_nat_succ (n : Nat) :
+    hfRecursiveBigUnion (hfRecursiveNat (n + 1)) = hfRecursiveNat n := by
+  apply hfRecursiveSet_extensionality
+  intro x
+  rw [hfRecursiveMember_bigUnion_iff]
+  constructor
+  · rintro ⟨y, hy, hxy⟩
+    rcases (hfRecursiveMember_nat_iff_exists y (n + 1)).mp hy with
+      ⟨m, hm, rfl⟩
+    rcases (hfRecursiveMember_nat_iff_exists x m).mp hxy with ⟨k, hk, rfl⟩
+    exact (hfRecursiveNat_member_iff k n).mpr (by omega)
+  · intro hx
+    refine ⟨hfRecursiveNat n, hfRecursiveNat_succ_member n, ?_⟩
+    exact hx
+
 theorem hfRecursiveSubset_trans {r s t : HFRecursiveSet} :
     HFRecursiveSubset r s → HFRecursiveSubset s t → HFRecursiveSubset r t := by
   intro hrs hst x hx

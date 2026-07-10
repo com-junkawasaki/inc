@@ -62,6 +62,9 @@ It currently establishes:
   `FormulaEnumeration` now constructs that schedule by a checked triangular
   traversal, so these results are directly available from the project's
   existing enumeration input.
+  A concrete decoder/encoder supplies such an enumeration for `Bool` atoms,
+  so the full Kripke completeness equivalence is directly instantiated for a
+  language with two distinguishable incidence atoms.
   Each formula has a finite subformula closure, and a consistent context has a
   finite extension deciding every formula in that closure; its disjunction
   subformulas satisfy a derivable prime-choice law.  The derivable closure of
@@ -93,6 +96,8 @@ It currently establishes:
   the exact law `x ∈ power(s) ↔ x ⊆ s`.
   It is injective (`power(s)=power(t) → s=t`) and satisfies
   `power(∅) = {∅}` on the quotient.
+  Its internal von Neumann ordinals additionally satisfy `⋃(n+1)=n` and the
+  binary union law `m ∪ n = max(m,n)`.
   Relations are represented as sets of ordered pairs; singleton graphs are
   proved relational and functional, with an exact application iff law.
   The identity graph on every finite internal ordinal is also a checked
