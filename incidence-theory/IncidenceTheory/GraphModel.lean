@@ -1076,6 +1076,17 @@ theorem triL_AA : triL A A = 2 := by native_decide
 theorem triL_BB : triL B B = 2 := by native_decide
 theorem triL_CC : triL C C = 2 := by native_decide
 
+/- The constant potential lies in the kernel of the vertex part of the
+   triangle Laplacian: every vertex row has total sum zero. -/
+theorem triL_A_vertex_row_sum : triL A A + triL A B + triL A C = 0 := by
+  native_decide
+
+theorem triL_B_vertex_row_sum : triL B A + triL B B + triL B C = 0 := by
+  native_decide
+
+theorem triL_C_vertex_row_sum : triL C A + triL C B + triL C C = 0 := by
+  native_decide
+
 /- The finite triangle calculation used by the executable. -/
 def triangle_boundary_composition (i k : GId) : Int :=
   triIdx.foldl (fun acc j => acc + triB i j * triB j k) 0

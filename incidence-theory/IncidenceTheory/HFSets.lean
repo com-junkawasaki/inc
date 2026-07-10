@@ -2608,6 +2608,95 @@ theorem hfRecursiveUnion_least {s t u : HFRecursiveSet} :
   · exact hsu x hxs
   · exact htu x hxt
 
+/- The quotient Cartesian product has the expected zero laws.  These are
+   proved from the quotient membership specification, so they do not depend on
+   a chosen syntactic presentation of either factor. -/
+theorem hfRecursiveProduct_empty_left (s : HFRecursiveSet) :
+    hfRecursiveProduct hfRecursiveEmpty s = hfRecursiveEmpty := by
+  apply hfRecursiveSet_extensionality
+  intro x
+  rw [hfRecursiveMember_product_iff]
+  constructor
+  · rintro ⟨a, ha, b, hb, hxab⟩
+    exact False.elim (hfRecursiveMember_empty a ha)
+  · intro hx
+    exact False.elim (hfRecursiveMember_empty x hx)
+
+theorem hfRecursiveProduct_empty_right (s : HFRecursiveSet) :
+    hfRecursiveProduct s hfRecursiveEmpty = hfRecursiveEmpty := by
+  apply hfRecursiveSet_extensionality
+  intro x
+  rw [hfRecursiveMember_product_iff]
+  constructor
+  · rintro ⟨a, ha, b, hb, hxab⟩
+    exact False.elim (hfRecursiveMember_empty b hb)
+  · intro hx
+    exact False.elim (hfRecursiveMember_empty x hx)
+
+/- Cartesian product is monotone in both arguments for the internally
+   defined, quotient-safe subset relation. -/
+theorem hfRecursiveProduct_mono {left left' right right' : HFRecursiveSet}
+    (hleft : HFRecursiveSubset left left')
+    (hright : HFRecursiveSubset right right') :
+    HFRecursiveSubset (hfRecursiveProduct left right)
+      (hfRecursiveProduct left' right') := by
+  intro x hx
+  rcases (hfRecursiveMember_product_iff x left right).mp hx with
+    ⟨a, ha, b, hb, hxab⟩
+  exact (hfRecursiveMember_product_iff x left' right').mpr
+    ⟨a, hleft a ha, b, hright b hb, hxab⟩
+
+/- Product distributes over finite union in each coordinate.  The witnesses
+   in the product membership criterion make the two directions entirely
+   extensional. -/
+theorem hfRecursiveProduct_union_right (left right third : HFRecursiveSet) :
+    hfRecursiveProduct left (hfRecursiveUnion right third) =
+      hfRecursiveUnion (hfRecursiveProduct left right)
+        (hfRecursiveProduct left third) := by
+  apply hfRecursiveSet_extensionality
+  intro x
+  rw [hfRecursiveMember_product_iff, hfRecursiveMember_union_iff]
+  constructor
+  · rintro ⟨a, ha, b, hb, hxab⟩
+    rcases (hfRecursiveMember_union_iff b right third).mp hb with hb | hb
+    · exact Or.inl ((hfRecursiveMember_product_iff x left right).mpr
+        ⟨a, ha, b, hb, hxab⟩)
+    · exact Or.inr ((hfRecursiveMember_product_iff x left third).mpr
+        ⟨a, ha, b, hb, hxab⟩)
+  · rintro (h | h)
+    · rcases (hfRecursiveMember_product_iff x left right).mp h with
+        ⟨a, ha, b, hb, hxab⟩
+      exact ⟨a, ha, b, (hfRecursiveMember_union_iff b right third).mpr
+        (Or.inl hb), hxab⟩
+    · rcases (hfRecursiveMember_product_iff x left third).mp h with
+        ⟨a, ha, b, hb, hxab⟩
+      exact ⟨a, ha, b, (hfRecursiveMember_union_iff b right third).mpr
+        (Or.inr hb), hxab⟩
+
+theorem hfRecursiveProduct_union_left (left right third : HFRecursiveSet) :
+    hfRecursiveProduct (hfRecursiveUnion left right) third =
+      hfRecursiveUnion (hfRecursiveProduct left third)
+        (hfRecursiveProduct right third) := by
+  apply hfRecursiveSet_extensionality
+  intro x
+  rw [hfRecursiveMember_product_iff, hfRecursiveMember_union_iff]
+  constructor
+  · rintro ⟨a, ha, b, hb, hxab⟩
+    rcases (hfRecursiveMember_union_iff a left right).mp ha with ha | ha
+    · exact Or.inl ((hfRecursiveMember_product_iff x left third).mpr
+        ⟨a, ha, b, hb, hxab⟩)
+    · exact Or.inr ((hfRecursiveMember_product_iff x right third).mpr
+        ⟨a, ha, b, hb, hxab⟩)
+  · rintro (h | h)
+    · rcases (hfRecursiveMember_product_iff x left third).mp h with
+        ⟨a, ha, b, hb, hxab⟩
+      exact ⟨a, (hfRecursiveMember_union_iff a left right).mpr
+        (Or.inl ha), b, hb, hxab⟩
+    · rcases (hfRecursiveMember_product_iff x right third).mp h with
+        ⟨a, ha, b, hb, hxab⟩
+      exact ⟨a, (hfRecursiveMember_union_iff a left right).mpr
+        (Or.inr ha), b, hb, hxab⟩
+
 /- The union of two finite powersets has the expected universal property:
    it is below a third powerset exactly when both source sets are below that
    third base set.  In particular this records the join operation on the

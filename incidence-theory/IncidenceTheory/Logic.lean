@@ -2913,6 +2913,18 @@ noncomputable def formulaEnumerationOfAtomCoding {Atom : Type u}
   exhaustive := fun formula => ⟨formulaCodeOfAtomCoding codeAtom formula,
     formulaDecodeOfAtomCoding_code decodeAtom codeAtom hcode formula⟩
 
+/-! The coding retraction is precisely the data needed to apply the generic
+   enumeration-based completeness construction.  Keeping this theorem at the
+   coding interface makes every countably retracted atom language an immediate
+   instance, without exposing a client to the intermediate enumeration. -/
+theorem kripke_entails_iff_derives_of_atom_coding {Atom : Type u}
+    (decodeAtom : Nat → Atom) (codeAtom : Atom → Nat)
+    (hcode : ∀ atom, decodeAtom (codeAtom atom) = atom)
+    (context : List (Formula Atom)) (formula : Formula Atom) :
+    KripkeEntails.{u, u} context formula ↔ Derives context formula :=
+  kripke_entails_iff_derives_of_enumeration
+    (formulaEnumerationOfAtomCoding decodeAtom codeAtom hcode) context formula
+
 noncomputable def finSuccAtomDecode (n : Nat) : Nat → Fin (n + 1) :=
   fun index => ⟨index % (n + 1), Nat.mod_lt _ (by omega)⟩
 
@@ -2927,7 +2939,8 @@ noncomputable def finSuccFormulaEnumeration (n : Nat) : FormulaEnumeration (Fin 
 theorem finSucc_kripke_entails_iff_derives (n : Nat)
     (context : List (Formula (Fin (n + 1)))) (formula : Formula (Fin (n + 1))) :
     KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
-  kripke_entails_iff_derives_of_enumeration (finSuccFormulaEnumeration n) context formula
+  kripke_entails_iff_derives_of_atom_coding (finSuccAtomDecode n) Fin.val
+    (finSuccAtomDecode_code n) context formula
 
 /- The zero-element finite type has no atom constructor to encode.  Its
    formula language nevertheless remains countable, using the five remaining
@@ -3010,7 +3023,7 @@ noncomputable def natFormulaEnumeration : FormulaEnumeration Nat :=
 theorem nat_kripke_entails_iff_derives
     (context : List (Formula Nat)) (formula : Formula Nat) :
     KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
-  kripke_entails_iff_derives_of_enumeration natFormulaEnumeration context formula
+  kripke_entails_iff_derives_of_atom_coding id id (fun _ => rfl) context formula
 
 noncomputable def boolFormulaDecode : Nat → Formula Bool
   | 0 => .atom false

@@ -70,6 +70,8 @@ It currently establishes:
   language, including the zero-atom case.
   The same coding directly supplies the complete Kripke semantics for the
   countably infinite `Nat` atom language.
+  More generally, every atom encoder/decoder retraction supplies the required
+  formula enumeration and hence the corresponding Kripke-completeness theorem.
   For the concrete `root` atom, excluded middle is shown underivable and
   Kripke-invalid, while its double-negated form is derivable.
   Each formula has a finite subformula closure, and a consistent context has a
