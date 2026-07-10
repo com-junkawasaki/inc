@@ -614,6 +614,69 @@ theorem MorphismIso.trans_inv {Obj : Type u} {C : IncCategory Obj}
     (second : MorphismIso C middle target) :
     (first.trans second).inv = C.comp first.inv second.inv := rfl
 
+/- These componentwise laws are the coherence API used below.  We state them
+   on arrows rather than as equality of bundled isomorphisms, so no extensional
+   equality principle for an arbitrary `Hom` family is required. -/
+theorem MorphismIso.refl_hom {Obj : Type u} {C : IncCategory Obj} (source : Obj) :
+    (MorphismIso.refl (C := C) source).hom = C.id source := rfl
+
+theorem MorphismIso.refl_inv {Obj : Type u} {C : IncCategory Obj} (source : Obj) :
+    (MorphismIso.refl (C := C) source).inv = C.id source := rfl
+
+theorem MorphismIso.symm_hom {Obj : Type u} {C : IncCategory Obj} {source target : Obj}
+    (iso : MorphismIso C source target) : iso.symm.hom = iso.inv := rfl
+
+theorem MorphismIso.symm_inv {Obj : Type u} {C : IncCategory Obj} {source target : Obj}
+    (iso : MorphismIso C source target) : iso.symm.inv = iso.hom := rfl
+
+theorem MorphismIso.symm_symm_hom {Obj : Type u} {C : IncCategory Obj}
+    {source target : Obj} (iso : MorphismIso C source target) :
+    iso.symm.symm.hom = iso.hom := rfl
+
+theorem MorphismIso.symm_symm_inv {Obj : Type u} {C : IncCategory Obj}
+    {source target : Obj} (iso : MorphismIso C source target) :
+    iso.symm.symm.inv = iso.inv := rfl
+
+theorem MorphismIso.trans_assoc_hom {Obj : Type u} {C : IncCategory Obj}
+    {a b c d : Obj} (first : MorphismIso C a b) (second : MorphismIso C b c)
+    (third : MorphismIso C c d) :
+    ((first.trans second).trans third).hom = (first.trans (second.trans third)).hom := by
+  exact C.assoc third.hom second.hom first.hom
+
+theorem MorphismIso.trans_assoc_inv {Obj : Type u} {C : IncCategory Obj}
+    {a b c d : Obj} (first : MorphismIso C a b) (second : MorphismIso C b c)
+    (third : MorphismIso C c d) :
+    ((first.trans second).trans third).inv = (first.trans (second.trans third)).inv := by
+  exact (C.assoc first.inv second.inv third.inv).symm
+
+theorem MorphismIso.refl_trans_hom {Obj : Type u} {C : IncCategory Obj}
+    {source target : Obj} (iso : MorphismIso C source target) :
+    ((MorphismIso.refl (C := C) source).trans iso).hom = iso.hom :=
+  C.comp_id iso.hom
+
+theorem MorphismIso.trans_refl_hom {Obj : Type u} {C : IncCategory Obj}
+    {source target : Obj} (iso : MorphismIso C source target) :
+    (iso.trans (MorphismIso.refl (C := C) target)).hom = iso.hom :=
+  C.id_comp iso.hom
+
+theorem MorphismIso.refl_trans_inv {Obj : Type u} {C : IncCategory Obj}
+    {source target : Obj} (iso : MorphismIso C source target) :
+    ((MorphismIso.refl (C := C) source).trans iso).inv = iso.inv :=
+  C.id_comp iso.inv
+
+theorem MorphismIso.trans_refl_inv {Obj : Type u} {C : IncCategory Obj}
+    {source target : Obj} (iso : MorphismIso C source target) :
+    (iso.trans (MorphismIso.refl (C := C) target)).inv = iso.inv :=
+  C.comp_id iso.inv
+
+theorem MorphismIso.trans_symm_hom {Obj : Type u} {C : IncCategory Obj}
+    {source target : Obj} (iso : MorphismIso C source target) :
+    (iso.trans iso.symm).hom = C.id source := iso.inv_hom
+
+theorem MorphismIso.symm_trans_hom {Obj : Type u} {C : IncCategory Obj}
+    {source target : Obj} (iso : MorphismIso C source target) :
+    (iso.symm.trans iso).hom = C.id target := iso.hom_inv
+
 def pushoutComparison {Obj : Type u} {C : IncCategory Obj}
     {span : MorphismCospan C} (source target : MorphismPushout span) :
     C.Hom source.apex target.apex :=
@@ -674,6 +737,76 @@ theorem pushout_unique_up_to_iso_self_hom {Obj : Type u} {C : IncCategory Obj}
     {span : MorphismCospan C} (po : MorphismPushout span) :
     (pushout_unique_up_to_iso po po).hom = C.id po.apex :=
   pushoutComparison_self po
+
+theorem pushout_unique_up_to_iso_trans_inv {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C} (first second third : MorphismPushout span) :
+    ((pushout_unique_up_to_iso first second).trans
+      (pushout_unique_up_to_iso second third)).inv =
+      (pushout_unique_up_to_iso first third).inv := by
+  exact (pushoutComparison_comp third second first).symm
+
+theorem pushout_unique_up_to_iso_symm_inv {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C} (source target : MorphismPushout span) :
+    (pushout_unique_up_to_iso source target).symm.inv =
+      (pushout_unique_up_to_iso target source).inv := rfl
+
+theorem pushout_unique_up_to_iso_self_inv {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C} (po : MorphismPushout span) :
+    (pushout_unique_up_to_iso po po).inv = C.id po.apex :=
+  pushoutComparison_self po
+
+/- Four presentations have a path-independent comparison.  The two displayed
+   parenthesizations are intentionally retained: later translation towers can
+   rewrite either syntactic composite to the direct comparison. -/
+theorem pushoutComparison_quad_comp {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C}
+    (first second third fourth : MorphismPushout span) :
+    pushoutComparison first fourth =
+      C.comp (pushoutComparison third fourth)
+        (C.comp (pushoutComparison second third) (pushoutComparison first second)) := by
+  rw [pushoutComparison_comp first third fourth,
+    pushoutComparison_comp first second third]
+
+theorem pushoutComparison_quad_comp_assoc {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C}
+    (first second third fourth : MorphismPushout span) :
+    pushoutComparison first fourth =
+      C.comp (C.comp (pushoutComparison third fourth) (pushoutComparison second third))
+        (pushoutComparison first second) := by
+  rw [pushoutComparison_quad_comp]
+  exact C.assoc _ _ _
+
+theorem pushout_unique_up_to_iso_refl_trans_hom {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C} (first second : MorphismPushout span) :
+    ((pushout_unique_up_to_iso first first).trans
+      (pushout_unique_up_to_iso first second)).hom =
+      (pushout_unique_up_to_iso first second).hom := by
+  change C.comp (pushoutComparison first second) (pushoutComparison first first) =
+    pushoutComparison first second
+  rw [pushoutComparison_self, C.comp_id]
+
+theorem pushout_unique_up_to_iso_trans_refl_hom {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C} (first second : MorphismPushout span) :
+    ((pushout_unique_up_to_iso first second).trans
+      (pushout_unique_up_to_iso second second)).hom =
+      (pushout_unique_up_to_iso first second).hom := by
+  change C.comp (pushoutComparison second second) (pushoutComparison first second) =
+    pushoutComparison first second
+  rw [pushoutComparison_self, C.id_comp]
+
+theorem pushout_unique_up_to_iso_roundtrip_hom {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C} (first second : MorphismPushout span) :
+    ((pushout_unique_up_to_iso first second).trans
+      (pushout_unique_up_to_iso second first)).hom = C.id first.apex :=
+  (pushout_unique_up_to_iso first second).inv_hom
+
+theorem pushout_unique_up_to_iso_roundtrip_inv {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C} (first second : MorphismPushout span) :
+    ((pushout_unique_up_to_iso first second).trans
+      (pushout_unique_up_to_iso second first)).inv = C.id first.apex :=
+  by
+    change C.comp (pushoutComparison second first) (pushoutComparison first second) = C.id first.apex
+    exact (pushout_unique_up_to_iso first second).inv_hom
 
 theorem functor_maps_pushout_cocone {CObj DObj : Type u}
     {C : IncCategory CObj} {D : IncCategory DObj} (F : IncFunctor C D)

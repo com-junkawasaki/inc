@@ -131,6 +131,8 @@ It currently establishes:
   filtering and its complement partition a set and are disjoint; this is the
   checked intersection/difference fragment available without asserting an
   unproved representative-independent binary intersection operation.
+  Predicate complement, conjunction, and disjunction satisfy involution and
+  De Morgan/filter laws on the quotient.
 - an extensional quotient of recursive finite sets, with union proved
   well-defined on equivalence classes.
 - a stable recursive extensional quotient, with pairing and respectful

@@ -2640,6 +2640,63 @@ theorem hfRecursivePredicate_holds_not (p : HFRecursivePredicate)
   change (Bool.not (p.run x) = true) ↔ ¬ p.run x = true
   cases p.run x <;> simp
 
+/- The Boolean operations are defined on respectful raw predicates, hence all
+   of the following laws are statements at the quotient level. -/
+def HFRecursivePredicate.or (p q : HFRecursivePredicate) : HFRecursivePredicate where
+  run := fun x => p.run x || q.run x
+  respectful := by
+    intro n x y h
+    change (p.run x || q.run x) = (p.run y || q.run y)
+    rw [p.respectful h, q.respectful h]
+
+theorem hfRecursivePredicate_holds_or (p q : HFRecursivePredicate)
+    (x : HFRecursiveSet) :
+    (p.or q).holds x ↔ p.holds x ∨ q.holds x := by
+  refine Quotient.inductionOn x ?_
+  intro x
+  change ((p.run x || q.run x) = true) ↔
+    (p.run x = true ∨ q.run x = true)
+  cases p.run x <;> cases q.run x <;> simp
+
+theorem hfRecursivePredicate_holds_not_not (p : HFRecursivePredicate)
+    (x : HFRecursiveSet) :
+    p.not.not.holds x ↔ p.holds x := by
+  rw [hfRecursivePredicate_holds_not, hfRecursivePredicate_holds_not]
+  constructor
+  · intro h
+    exact Classical.byContradiction h
+  · intro hp hnot
+    exact hnot hp
+
+theorem hfRecursivePredicate_holds_not_and (p q : HFRecursivePredicate)
+    (x : HFRecursiveSet) :
+    (p.and q).not.holds x ↔ p.not.holds x ∨ q.not.holds x := by
+  rw [hfRecursivePredicate_holds_not, hfRecursivePredicate_holds_and,
+    hfRecursivePredicate_holds_not, hfRecursivePredicate_holds_not]
+  classical
+  constructor
+  · intro h
+    by_cases hp : p.holds x
+    · right
+      intro hq
+      exact h ⟨hp, hq⟩
+    · exact Or.inl hp
+  · rintro (hp | hq) ⟨hp' , hq'⟩
+    · exact hp hp'
+    · exact hq hq'
+
+theorem hfRecursivePredicate_holds_not_or (p q : HFRecursivePredicate)
+    (x : HFRecursiveSet) :
+    (p.or q).not.holds x ↔ p.not.holds x ∧ q.not.holds x := by
+  rw [hfRecursivePredicate_holds_not, hfRecursivePredicate_holds_or,
+    hfRecursivePredicate_holds_not, hfRecursivePredicate_holds_not]
+  constructor
+  · intro h
+    exact ⟨fun hp => h (Or.inl hp), fun hq => h (Or.inr hq)⟩
+  · rintro ⟨hp, hq⟩ (hp' | hq')
+    · exact hp hp'
+    · exact hq hq'
+
 /- Relative set difference (or complement in `s`) is separation by the
    complement predicate.  It is a genuine quotient-level operation, because
    `HFRecursivePredicate.not` remains approximation-respectful. -/
@@ -2653,6 +2710,38 @@ theorem hfRecursiveMember_difference_iff (p : HFRecursivePredicate)
       HFRecursiveMember x s ∧ ¬ p.holds x := by
   rw [hfRecursiveDifference, hfRecursiveMember_filter_iff,
     hfRecursivePredicate_holds_not]
+
+theorem hfRecursiveDifference_eq_filter_not (p : HFRecursivePredicate)
+    (s : HFRecursiveSet) :
+    hfRecursiveDifference p s = hfRecursiveFilter p.not s := rfl
+
+theorem hfRecursiveDifference_not (p : HFRecursivePredicate)
+    (s : HFRecursiveSet) :
+    hfRecursiveDifference p.not s = hfRecursiveFilter p s := by
+  apply hfRecursiveSet_extensionality
+  intro x
+  rw [hfRecursiveMember_difference_iff, hfRecursiveMember_filter_iff]
+  constructor
+  · rintro ⟨hxs, hnot⟩
+    apply And.intro hxs
+    apply Classical.byContradiction
+    intro hpnot
+    exact hnot ((hfRecursivePredicate_holds_not p x).mpr hpnot)
+  · rintro ⟨hxs, hp⟩
+    exact ⟨hxs, fun hpnot =>
+      (hfRecursivePredicate_holds_not p x).mp hpnot hp⟩
+
+theorem hfRecursiveDifference_difference (p : HFRecursivePredicate)
+    (s : HFRecursiveSet) :
+    hfRecursiveDifference p (hfRecursiveDifference p s) = hfRecursiveDifference p s := by
+  apply hfRecursiveSet_extensionality
+  intro x
+  rw [hfRecursiveMember_difference_iff, hfRecursiveMember_difference_iff]
+  constructor
+  · rintro ⟨⟨hxs, hnot⟩, _⟩
+    exact ⟨hxs, hnot⟩
+  · rintro ⟨hxs, hnot⟩
+    exact ⟨⟨hxs, hnot⟩, hnot⟩
 
 /- Separation and its relative complement form a finite partition. -/
 theorem hfRecursiveFilter_union_difference (p : HFRecursivePredicate)
@@ -2743,6 +2832,58 @@ theorem hfRecursiveFilter_compose (p q : HFRecursivePredicate)
     exact ⟨hxs, hp, hq⟩
   · rintro ⟨hxs, hp, hq⟩
     exact ⟨⟨hxs, hq⟩, hp⟩
+
+theorem hfRecursiveFilter_not_not (p : HFRecursivePredicate)
+    (s : HFRecursiveSet) :
+    hfRecursiveFilter p.not.not s = hfRecursiveFilter p s := by
+  apply hfRecursiveSet_extensionality
+  intro x
+  rw [hfRecursiveMember_filter_iff, hfRecursiveMember_filter_iff,
+    hfRecursivePredicate_holds_not_not]
+
+/- A filter and its Boolean complement are a disjoint, exhaustive split of
+   their ambient finite set. -/
+theorem hfRecursiveFilter_union_filter_not (p : HFRecursivePredicate)
+    (s : HFRecursiveSet) :
+    hfRecursiveUnion (hfRecursiveFilter p s) (hfRecursiveFilter p.not s) = s := by
+  simpa only [hfRecursiveDifference_eq_filter_not] using
+    hfRecursiveFilter_union_difference p s
+
+theorem hfRecursiveFilter_filter_not_disjoint (p : HFRecursivePredicate)
+    (s x : HFRecursiveSet) :
+    ¬ (HFRecursiveMember x (hfRecursiveFilter p s) ∧
+      HFRecursiveMember x (hfRecursiveFilter p.not s)) := by
+  simpa only [hfRecursiveDifference_eq_filter_not] using
+    hfRecursiveFilter_difference_disjoint p s x
+
+theorem hfRecursiveFilter_deMorgan_or (p q : HFRecursivePredicate)
+    (s : HFRecursiveSet) :
+    hfRecursiveFilter (p.or q).not s =
+      hfRecursiveFilter p.not (hfRecursiveFilter q.not s) := by
+  apply hfRecursiveSet_extensionality
+  intro x
+  rw [hfRecursiveMember_filter_iff, hfRecursiveMember_filter_iff,
+    hfRecursiveMember_filter_iff, hfRecursivePredicate_holds_not_or,
+    hfRecursivePredicate_holds_not, hfRecursivePredicate_holds_not]
+  constructor
+  · rintro ⟨hxs, hp, hq⟩
+    exact ⟨⟨hxs, hq⟩, hp⟩
+  · rintro ⟨⟨hxs, hq⟩, hp⟩
+    exact ⟨hxs, hp, hq⟩
+
+theorem hfRecursiveFilter_difference_intersection (p q : HFRecursivePredicate)
+    (s : HFRecursiveSet) :
+    hfRecursiveDifference p (hfRecursiveFilter q s) =
+      hfRecursiveFilter q (hfRecursiveDifference p s) := by
+  apply hfRecursiveSet_extensionality
+  intro x
+  rw [hfRecursiveMember_difference_iff, hfRecursiveMember_filter_iff,
+    hfRecursiveMember_filter_iff, hfRecursiveMember_difference_iff]
+  constructor
+  · rintro ⟨⟨hxs, hq⟩, hnp⟩
+    exact ⟨⟨hxs, hnp⟩, hq⟩
+  · rintro ⟨⟨hxs, hnp⟩, hq⟩
+    exact ⟨⟨hxs, hq⟩, hnp⟩
 
 /- A bundled witness for the finite set-theoretic fragment actually proved in
    this file.  It deliberately records only the operations and laws checked
