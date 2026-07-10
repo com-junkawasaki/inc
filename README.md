@@ -85,7 +85,8 @@ It currently establishes:
   bundled as a finite prime theory (consistent, decisive, and prime on that
   finite language).
 - an extensional two-atom finite-set fragment: membership is encoded by set
-  boundaries, and union has proved Boolean-algebra laws.
+  boundaries; union, intersection, complement, and difference have proved
+  Boolean-algebra laws, and boundary membership represents each operation.
 - arbitrary finite-basis extensional sets (`BitSet n`), with checked Boolean
   operations (union, intersection, complement, difference), complement laws,
   distributivity, and De Morgan's law proved pointwise over `Fin n`; boundary
@@ -107,6 +108,8 @@ It currently establishes:
   It is empty in either empty factor, distributes over binary union in either
   coordinate, is monotone, and reflects each factor under the necessary
   nonemptiness hypothesis.
+  Under the same nonemptiness condition it also reflects the product subset
+  order coordinatewise.
   Singleton and Kuratowski ordered-pair constructions also descend to the
   recursive extensional quotient, with their exact outer membership laws;
   unordered-pair equality is classified and ordered pairs are injective.

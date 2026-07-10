@@ -2667,6 +2667,37 @@ theorem hfRecursiveProduct_mono {left left' right right' : HFRecursiveSet}
   exact (hfRecursiveMember_product_iff x left' right').mpr
     ⟨a, hleft a ha, b, hright b hb, hxab⟩
 
+/- For nonempty source factors, inclusion of Cartesian products reflects
+   inclusion of both factors.  Nonemptiness is essential: a product with an
+   empty factor carries no information about the other factor. -/
+theorem hfRecursiveProduct_subset_iff {left left' right right' : HFRecursiveSet}
+    (hleftNonempty : ∃ a, HFRecursiveMember a left)
+    (hrightNonempty : ∃ b, HFRecursiveMember b right) :
+    HFRecursiveSubset (hfRecursiveProduct left right)
+      (hfRecursiveProduct left' right') ↔
+      HFRecursiveSubset left left' ∧ HFRecursiveSubset right right' := by
+  constructor
+  · intro hproduct
+    constructor
+    · intro a ha
+      rcases hrightNonempty with ⟨b, hb⟩
+      have hpair : HFRecursiveMember (hfRecursiveOrderedPair a b)
+          (hfRecursiveProduct left right) :=
+        (hfRecursiveMember_product_iff _ left right).mpr ⟨a, ha, b, hb, rfl⟩
+      rcases (hfRecursiveMember_product_iff _ left' right').mp
+          (hproduct _ hpair) with ⟨a', ha', b', hb', heq⟩
+      exact (hfRecursiveOrderedPair_injective heq).left ▸ ha'
+    · intro b hb
+      rcases hleftNonempty with ⟨a, ha⟩
+      have hpair : HFRecursiveMember (hfRecursiveOrderedPair a b)
+          (hfRecursiveProduct left right) :=
+        (hfRecursiveMember_product_iff _ left right).mpr ⟨a, ha, b, hb, rfl⟩
+      rcases (hfRecursiveMember_product_iff _ left' right').mp
+          (hproduct _ hpair) with ⟨a', ha', b', hb', heq⟩
+      exact (hfRecursiveOrderedPair_injective heq).right ▸ hb'
+  · rintro ⟨hleft, hright⟩
+    exact hfRecursiveProduct_mono hleft hright
+
 /- Product distributes over finite union in each coordinate.  The witnesses
    in the product membership criterion make the two directions entirely
    extensional. -/

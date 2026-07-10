@@ -682,6 +682,17 @@ def twoSetEmpty : TwoSet := { hasA := false, hasB := false }
 def twoSetUnion (s t : TwoSet) : TwoSet :=
   { hasA := s.hasA || t.hasA, hasB := s.hasB || t.hasB }
 
+def twoSetFull : TwoSet := { hasA := true, hasB := true }
+
+def twoSetIntersection (s t : TwoSet) : TwoSet :=
+  { hasA := s.hasA && t.hasA, hasB := s.hasB && t.hasB }
+
+def twoSetComplement (s : TwoSet) : TwoSet :=
+  { hasA := !s.hasA, hasB := !s.hasB }
+
+def twoSetDifference (s t : TwoSet) : TwoSet :=
+  twoSetIntersection s (twoSetComplement t)
+
 inductive TwoAtom where | a | b
 deriving DecidableEq, Repr
 
@@ -692,6 +703,20 @@ def twoSetContains (s : TwoSet) : TwoAtom → Bool
 theorem twoSetUnion_contains (s t : TwoSet) (atom : TwoAtom) :
     twoSetContains (twoSetUnion s t) atom =
       (twoSetContains s atom || twoSetContains t atom) := by
+  cases atom <;> rfl
+
+theorem twoSetIntersection_contains (s t : TwoSet) (atom : TwoAtom) :
+    twoSetContains (twoSetIntersection s t) atom =
+      (twoSetContains s atom && twoSetContains t atom) := by
+  cases atom <;> rfl
+
+theorem twoSetComplement_contains (s : TwoSet) (atom : TwoAtom) :
+    twoSetContains (twoSetComplement s) atom = !twoSetContains s atom := by
+  cases atom <;> rfl
+
+theorem twoSetDifference_contains (s t : TwoSet) (atom : TwoAtom) :
+    twoSetContains (twoSetDifference s t) atom =
+      (twoSetContains s atom && !twoSetContains t atom) := by
   cases atom <;> rfl
 
 theorem twoSetUnion_empty_left (s : TwoSet) : twoSetUnion twoSetEmpty s = s := by
@@ -723,6 +748,56 @@ theorem twoSetUnion_associative (s t u : TwoSet) :
 theorem twoSetUnion_idempotent (s : TwoSet) : twoSetUnion s s = s := by
   cases s with
   | mk hasA hasB => cases hasA <;> cases hasB <;> rfl
+
+theorem twoSetIntersection_commutative (s t : TwoSet) :
+    twoSetIntersection s t = twoSetIntersection t s := by
+  cases s with
+  | mk sa sb =>
+    cases t with
+    | mk ta tb => cases sa <;> cases sb <;> cases ta <;> cases tb <;> rfl
+
+theorem twoSetIntersection_associative (s t u : TwoSet) :
+    twoSetIntersection (twoSetIntersection s t) u =
+      twoSetIntersection s (twoSetIntersection t u) := by
+  cases s with
+  | mk sa sb =>
+    cases t with
+    | mk ta tb =>
+      cases u with
+      | mk ua ub =>
+        cases sa <;> cases sb <;> cases ta <;> cases tb <;>
+          cases ua <;> cases ub <;> rfl
+
+theorem twoSetIntersection_idempotent (s : TwoSet) : twoSetIntersection s s = s := by
+  cases s with
+  | mk sa sb => cases sa <;> cases sb <;> rfl
+
+theorem twoSetComplement_involutive (s : TwoSet) :
+    twoSetComplement (twoSetComplement s) = s := by
+  cases s with
+  | mk sa sb => cases sa <;> cases sb <;> rfl
+
+theorem twoSet_deMorgan_union (s t : TwoSet) :
+    twoSetComplement (twoSetUnion s t) =
+      twoSetIntersection (twoSetComplement s) (twoSetComplement t) := by
+  cases s with
+  | mk sa sb =>
+    cases t with
+    | mk ta tb => cases sa <;> cases sb <;> cases ta <;> cases tb <;> rfl
+
+theorem twoSet_difference_union_intersection (s t : TwoSet) :
+    twoSetUnion (twoSetDifference s t) (twoSetIntersection s t) = s := by
+  cases s with
+  | mk sa sb =>
+    cases t with
+    | mk ta tb => cases sa <;> cases sb <;> cases ta <;> cases tb <;> rfl
+
+theorem twoSet_difference_disjoint (s t : TwoSet) :
+    twoSetIntersection (twoSetDifference s t) t = twoSetEmpty := by
+  cases s with
+  | mk sa sb =>
+    cases t with
+    | mk ta tb => cases sa <;> cases sb <;> cases ta <;> cases tb <;> rfl
 
 theorem twoSet_extensional (s t : TwoSet)
     (h : ∀ atom, twoSetContains s atom = twoSetContains t atom) : s = t := by
@@ -770,6 +845,58 @@ theorem setBoundary_membership_atomB (s : TwoSet) :
   cases s with
   | mk hasA hasB =>
     cases hasA <;> cases hasB <;> simp [setBoundary, atomBEndpoint]
+
+/- Boundary membership is faithful for every Boolean operation in the
+   two-atom fragment, not only for union. -/
+theorem setBoundary_intersection_membership_atomA (s t : TwoSet) :
+    atomAEndpoint ∈ setBoundary (.set (twoSetIntersection s t)) ↔
+      atomAEndpoint ∈ setBoundary (.set s) ∧ atomAEndpoint ∈ setBoundary (.set t) := by
+  cases s with
+  | mk sa sb =>
+    cases t with
+    | mk ta tb => cases sa <;> cases sb <;> cases ta <;> cases tb <;>
+      simp [setBoundary, atomAEndpoint, twoSetIntersection]
+
+theorem setBoundary_intersection_membership_atomB (s t : TwoSet) :
+    atomBEndpoint ∈ setBoundary (.set (twoSetIntersection s t)) ↔
+      atomBEndpoint ∈ setBoundary (.set s) ∧ atomBEndpoint ∈ setBoundary (.set t) := by
+  cases s with
+  | mk sa sb =>
+    cases t with
+    | mk ta tb => cases sa <;> cases sb <;> cases ta <;> cases tb <;>
+      simp [setBoundary, atomBEndpoint, twoSetIntersection]
+
+theorem setBoundary_complement_membership_atomA (s : TwoSet) :
+    atomAEndpoint ∈ setBoundary (.set (twoSetComplement s)) ↔
+      ¬ atomAEndpoint ∈ setBoundary (.set s) := by
+  cases s with
+  | mk sa sb => cases sa <;> cases sb <;>
+    simp [setBoundary, atomAEndpoint, twoSetComplement]
+
+theorem setBoundary_complement_membership_atomB (s : TwoSet) :
+    atomBEndpoint ∈ setBoundary (.set (twoSetComplement s)) ↔
+      ¬ atomBEndpoint ∈ setBoundary (.set s) := by
+  cases s with
+  | mk sa sb => cases sa <;> cases sb <;>
+    simp [setBoundary, atomBEndpoint, twoSetComplement]
+
+theorem setBoundary_difference_membership_atomA (s t : TwoSet) :
+    atomAEndpoint ∈ setBoundary (.set (twoSetDifference s t)) ↔
+      atomAEndpoint ∈ setBoundary (.set s) ∧ ¬ atomAEndpoint ∈ setBoundary (.set t) := by
+  cases s with
+  | mk sa sb =>
+    cases t with
+    | mk ta tb => cases sa <;> cases sb <;> cases ta <;> cases tb <;>
+      simp [setBoundary, atomAEndpoint, twoSetDifference, twoSetIntersection, twoSetComplement]
+
+theorem setBoundary_difference_membership_atomB (s t : TwoSet) :
+    atomBEndpoint ∈ setBoundary (.set (twoSetDifference s t)) ↔
+      atomBEndpoint ∈ setBoundary (.set s) ∧ ¬ atomBEndpoint ∈ setBoundary (.set t) := by
+  cases s with
+  | mk sa sb =>
+    cases t with
+    | mk ta tb => cases sa <;> cases sb <;> cases ta <;> cases tb <;>
+      simp [setBoundary, atomBEndpoint, twoSetDifference, twoSetIntersection, twoSetComplement]
 
 theorem setBoundary_union_membership_atomA (s t : TwoSet) :
     atomAEndpoint ∈ setBoundary (.set (twoSetUnion s t)) ↔
