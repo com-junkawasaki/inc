@@ -2626,3 +2626,99 @@ likely too large for one cycle as stated -- if pursued, scope it down
 first (e.g. just check whether a natural map between the two carrier
 types exists and is well-typed, before attempting any bisimulation
 result about it).
+
+## Cycle 38
+
+**Hypothesis**: option (a) from cycle 37's queue -- the third generic
+constructor thread, specifically the "most promising candidate" named
+there: a quotient construction using `approxBisim` itself as the
+identifying relation. Rather than jump straight to building a full
+`Incidence` structure on the `≈`-quotient of an existing instance
+(the scope-down cycle 37 itself recommended for large next steps),
+this cycle checks the necessary PREREQUISITE first: does `Incidence`'s
+own data (`boundary`, `glue`) even respect `≈` -- i.e. is it constant
+on `≈`-equivalence classes? This is exactly the well-definedness side
+condition `Quotient.lift`/`Quotient.lift₂` need to turn a function on
+the carrier `I` into a function on `Quotient (approxBisimSetoid inc)`.
+Going in, genuinely unsure which way this would go -- `≈` is defined
+via existential "up to compatible matching" (`boundaryMatched`), not
+literal equality, so there was reason to suspect it might fail, but no
+prior cycle had checked.
+
+**Method**: split into a positive half and a negative half. POSITIVE:
+package `approxBisim` as a genuine `Setoid I` -- trivial given
+`approxBisim_refl`/`_symm`/`_trans` already proven in the root file
+(no new proof obligations at all, `approxBisimSetoid` is a one-line
+anonymous-constructor definition). NEGATIVE: rather than search for a
+fresh counterexample, recognized that `cycleIncidence` (cycle 26, the
+*pre-fix*, non-faithful cycle instance) was already a ready-made
+witness -- `cycleIncidence_all_collapse` (cycle 26) already proves
+`approxBisim cycleIncidence x y` for ALL `x y : CycleId`, so `c0 ≈ c1`
+was already on hand. Checked concretely (first via `decide`, which
+failed because `Endpoint` has no derived `DecidableEq`, only `Repr` --
+fixed with an explicit `injection`-based inequality proof extracting
+the differing `i` field) whether `cycleIncidence.boundary c0` and
+`cycleIncidence.boundary c1` are equal as literal lists. They are not:
+`c0`'s single boundary entry points to predecessor `c3`, `c1`'s points
+to `c0` -- genuinely different `Endpoint` values, not just different
+positions. Once boundary's failure was confirmed, checked whether this
+was isolated to `boundary` or a broader phenomenon: tested `glue`
+similarly, gluing `c0` and `c1` (already known `≈`-related) against a
+fixed third element `c0` -- `cycleAdd c0 c0 = c0` vs. `cycleAdd c1 c0 =
+c1`, again genuinely different.
+
+**Result**: **confirmed on the first attempt for all five theorems.**
+`approxBisimSetoid` is unconditionally correct (`propext` only, in fact
+needs nothing beyond what was already proven). The negative result is
+real and general, not an artifact of a specific counterexample search:
+**`boundary` is NOT constant on `≈`-classes** (`cycleIncidence_boundary_not_approxBisim_invariant`),
+witnessed concretely and packaged existentially
+(`exists_incidence_boundary_not_approxBisim_congruent`); **`glue` fails
+the identical check** (`cycleIncidence_glue_not_approxBisim_invariant`).
+`#print axioms`: `propext` only on all five new theorems -- fully
+constructive, no `Classical.choice`. Full `lake build`: 48/48 jobs (new
+file `IncidenceTheory/Quotient.lean`, wired into `Main.lean`'s
+imports). Repo-wide `sorry`-as-tactic grep: none.
+
+**Synthesis**: this cycle is a genuine "novel finding" cycle wearing
+the clothes of a scoping exercise -- it doesn't build the quotient
+constructor cycle 36/37 queued, but it answers a real open question
+about whether the *naive* version of that constructor (the one that
+would occur to anyone first: just reuse `inc.boundary`/`inc.glue`
+directly via `Quotient.lift`/`lift₂`) is even well-typed, and the
+answer is a clean, general **no**, for at least one instance already
+built in this project. This connects to a standard distinction in
+bisimulation/coalgebra theory that this project has now independently
+rediscovered from first principles: bisimilarity, by design, only ever
+requires *behavioral* matching (existential, up to compatible
+correspondence), which is strictly weaker than requiring the
+underlying *structural data* to be literally invariant -- so a
+bisimulation-quotient does not automatically inherit a well-defined
+copy of the original structure's operations the way a
+congruence-quotient would. The methodological point matters as much as
+the result: checking the prerequisite BEFORE attempting the full
+construction turned what could have been a multi-cycle dead-end
+(discovered only after building most of a quotient `Incidence` and
+hitting an unprovable `well_founded`/`type_preserve` obligation) into a
+single well-scoped cycle with a clean, useful negative result and a
+reusable positive piece (`approxBisimSetoid`) salvaged from it.
+
+**Next hypothesis (cycle 39, not yet attempted)**: given this cycle's
+finding, a full "naive" quotient `Incidence` constructor is off the
+table, but two refined variants remain open. (a) A quotient via
+*canonical representative* (`Quotient.out`, using `Classical.choice`
+under the hood, already an accepted axiom in this project): define
+`boundary` on the quotient as `inc.boundary ∘ Quotient.out`. This is
+trivially well-typed (no lifting needed, `Quotient.out` is already a
+genuine function `Quotient s → I`), but likely uninteresting on its
+own -- it doesn't actually collapse any structure, just re-indexes the
+carrier type, so worth checking what (if anything) it buys before
+committing to it. (b) Restrict to already-`≈`-faithful instances (where
+`≈` coincides with `=`, e.g. `natIncidence`, `cycleIncidenceFixed`): is
+the well-definedness question vacuous there (trivially true since
+`≈`-classes are singletons), and if so, is a "quotient of a faithful
+instance" simply isomorphic to the instance itself -- a clean but
+low-payoff confirmatory result, or is there something less trivial to
+say? Separately, option (b) from cycle 37's queue (the internal-logic
+distributivity direction) remains open and untouched, still likely
+needing its own scope-down step before any cycle attempts it directly.

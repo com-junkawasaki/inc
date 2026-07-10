@@ -8,6 +8,7 @@ import IncidenceTheory.Cycle
 import IncidenceTheory.Tree
 import IncidenceTheory.Product
 import IncidenceTheory.Sum
+import IncidenceTheory.Quotient
 
 /- `main`'s demo output accumulates one block of `IO.println` calls per
    research cycle (32 so far). Cycle 18 raised `maxRecDepth` when a
@@ -494,9 +495,32 @@ def printCycles33plus : IO Unit := do
   IO.println "    to be the bad one. A quick confirmatory audit, but worth recording: closing"
   IO.println "    this loop rules out an unexamined asymmetry, rather than assuming one away"
 
+def printCycles38plus : IO Unit := do
+  IO.println "\n🪤 Scoping the Third Constructor: Why a Naive ≈-Quotient Fails (cycle 38):"
+  IO.println "  ✓ approxBisimSetoid: ≈ packages into a genuine Setoid I for ANY instance,"
+  IO.println "    unconditionally -- built entirely from already-proven refl/symm/trans, no new"
+  IO.println "    proof obligations. The equivalence-relation half of a quotient works for free"
+  IO.println "  ✓ the necessary PREREQUISITE checked before attempting a full quotient Incidence:"
+  IO.println "    does boundary/glue respect ≈, i.e. are they constant on ≈-classes (what"
+  IO.println "    Quotient.lift/lift₂ would need to typecheck)? Checked against cycleIncidence"
+  IO.println "    (cycle 26), where ALL FOUR elements collapse into one ≈-class"
+  IO.println "  ✓ NO: cycleIncidence.boundary c0 ≠ cycleIncidence.boundary c1 (different"
+  IO.println "    predecessor pointers, c3 vs c0) despite c0 ≈ c1 -- boundary is not"
+  IO.println "    ≈-invariant. Confirmed it's not isolated: glue fails the identical check too"
+  IO.println "    (cycleAdd c0 c0 = c0 but cycleAdd c1 c0 = c1, and c0 ≈ c1)"
+  IO.println "  → a real prerequisite check, not a formality: the naive 'reuse the original"
+  IO.println "    data directly on the quotient' approach to a quotient-Incidence constructor"
+  IO.println "    is a dead end for at least one existing instance, not merely undischarged --"
+  IO.println "    ≈ is a genuinely coarser behavioral equivalence than any congruence"
+  IO.println "    boundary/glue happen to satisfy. Any future quotient construction needs a"
+  IO.println "    different mechanism (e.g. a canonical representative, or restricting to"
+  IO.println "    already-faithful instances where the question is vacuous) -- scoped down"
+  IO.println "    rather than attempted blind, per cycle 37's own methodological note"
+
 def main : IO Unit := do
   printFoundationsAndEarlyCycles
   printCycles12to19
   printCycles20to23
   printCycles24to32
   printCycles33plus
+  printCycles38plus
