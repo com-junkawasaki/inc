@@ -121,9 +121,16 @@ It currently establishes:
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
+  On every nonempty finite ordinal, this action is faithful: equality of
+  shift graphs reflects equality of offsets and gives graph-level left
+  cancellation for addition.
   On the quotient, binary union is idempotent, `⋃{s,t}=s∪t`, and big union
   preserves empty and distributes over binary union; binary union is also the
   least upper bound for the extensional subset order.
+  Respectful predicates also provide quotient-safe relative difference:
+  filtering and its complement partition a set and are disjoint; this is the
+  checked intersection/difference fragment available without asserting an
+  unproved representative-independent binary intersection operation.
 - an extensional quotient of recursive finite sets, with union proved
   well-defined on equivalence classes.
 - a stable recursive extensional quotient, with pairing and respectful

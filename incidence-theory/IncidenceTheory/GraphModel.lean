@@ -803,6 +803,86 @@ def triIncidence : Incidence GId GraphRole GraphType where
     by_cases h : i = A <;> simp [h]
   type_preserve := by intro i j k _ _; rfl
 
+/- The triangle has a genuinely nontrivial observational quotient.  Its
+   directed edges have the same boundary *shape*, even though their endpoint
+   identifiers differ.  Conversely an object with a boundary cannot be
+   bisimilar to one with no boundary.  We state these facts without claiming
+   that the infinite carrier `GId` itself has only finitely many classes. -/
+theorem tri_nonempty_not_approxBisim_empty {i j : GId}
+    (hi : triIncidence.boundary i ≠ []) (hj : triIncidence.boundary j = []) :
+    ¬ approxBisim triIncidence i j := by
+  rintro ⟨rel, hrel, hij⟩
+  rcases hrel i j hij with ⟨_, hmatched⟩
+  obtain ⟨e, he⟩ := List.exists_mem_of_ne_nil _ hi
+  rcases hmatched.left e he with ⟨e', he', _, _⟩
+  simp [hj] at he'
+
+def triABBCRel (i j : GId) : Prop :=
+  (i = AB ∧ j = BC) ∨ (i = A ∧ j = B) ∨ (i = B ∧ j = C)
+
+theorem triABBC_isBisimulation : IsBisimulation triIncidence triABBCRel := by
+  intro i j hij
+  rcases hij with h | h | h
+  · rcases h with ⟨rfl, rfl⟩
+    refine ⟨rfl, ?_⟩
+    constructor
+    · intro e he
+      change e ∈ [{ i := A, role := GraphRole.src, sign := Sign.neg, mult := 1, mult_pos := by omega },
+        { i := B, role := GraphRole.dst, sign := Sign.pos, mult := 1, mult_pos := by omega }] at he
+      simp only [List.mem_cons, List.not_mem_nil, or_false] at he
+      rcases he with (rfl | rfl)
+      · refine ⟨{ i := B, role := GraphRole.src, sign := Sign.neg, mult := 1, mult_pos := (by omega) }, ?_, ⟨rfl, rfl, rfl⟩, ?_⟩
+        · change { i := B, role := GraphRole.src, sign := Sign.neg, mult := 1, mult_pos := by omega } ∈ triIncidence.boundary BC
+          simp [triIncidence, triBoundary, BC, B]
+        · exact Or.inr (Or.inl ⟨rfl, rfl⟩)
+      · refine ⟨{ i := C, role := GraphRole.dst, sign := Sign.pos, mult := 1, mult_pos := (by omega) }, ?_, ⟨rfl, rfl, rfl⟩, ?_⟩
+        · change { i := C, role := GraphRole.dst, sign := Sign.pos, mult := 1, mult_pos := by omega } ∈ triIncidence.boundary BC
+          simp [triIncidence, triBoundary, BC, C]
+        · exact Or.inr (Or.inr ⟨rfl, rfl⟩)
+    · intro e he
+      change e ∈ [{ i := B, role := GraphRole.src, sign := Sign.neg, mult := 1, mult_pos := by omega },
+        { i := C, role := GraphRole.dst, sign := Sign.pos, mult := 1, mult_pos := by omega }] at he
+      simp only [List.mem_cons, List.not_mem_nil, or_false] at he
+      rcases he with (rfl | rfl)
+      · refine ⟨{ i := A, role := GraphRole.src, sign := Sign.neg, mult := 1, mult_pos := (by omega) }, ?_, ⟨rfl, rfl, rfl⟩, ?_⟩
+        · change { i := A, role := GraphRole.src, sign := Sign.neg, mult := 1, mult_pos := by omega } ∈ triIncidence.boundary AB
+          simp [triIncidence, triBoundary, AB, A]
+        · exact Or.inr (Or.inl ⟨rfl, rfl⟩)
+      · refine ⟨{ i := B, role := GraphRole.dst, sign := Sign.pos, mult := 1, mult_pos := (by omega) }, ?_, ⟨rfl, rfl, rfl⟩, ?_⟩
+        · change { i := B, role := GraphRole.dst, sign := Sign.pos, mult := 1, mult_pos := by omega } ∈ triIncidence.boundary AB
+          simp [triIncidence, triBoundary, AB, B]
+        · exact Or.inr (Or.inr ⟨rfl, rfl⟩)
+  · rcases h with ⟨rfl, rfl⟩
+    refine ⟨rfl, ?_⟩
+    change boundaryMatched triIncidence triABBCRel (GId.node 1) (GId.node 2)
+    simp [boundaryMatched, triIncidence, triBoundary]
+  · rcases h with ⟨rfl, rfl⟩
+    refine ⟨rfl, ?_⟩
+    change boundaryMatched triIncidence triABBCRel (GId.node 2) (GId.node 3)
+    simp [boundaryMatched, triIncidence, triBoundary]
+
+theorem triangle_AB_approxBisim_BC : approxBisim triIncidence AB BC :=
+  ⟨triABBCRel, triABBC_isBisimulation, Or.inl ⟨rfl, rfl⟩⟩
+
+theorem triangle_BC_approxBisim_AB : approxBisim triIncidence BC AB :=
+  approxBisim_symm triangle_AB_approxBisim_BC
+
+theorem triangle_AB_quotient_eq_BC :
+    (Quotient.mk (approxBisimSetoid triIncidence) AB : IncidenceQuotient triIncidence) =
+      Quotient.mk (approxBisimSetoid triIncidence) BC :=
+  incidence_quotient_sound triangle_AB_approxBisim_BC
+
+theorem triangle_AB_not_approxBisim_A : ¬ approxBisim triIncidence AB A := by
+  apply tri_nonempty_not_approxBisim_empty
+  · simp [triIncidence, triBoundary, AB]
+  · simp [triIncidence, triBoundary, A]
+
+theorem triangle_AB_quotient_ne_A :
+    (Quotient.mk (approxBisimSetoid triIncidence) AB : IncidenceQuotient triIncidence) ≠
+      Quotient.mk (approxBisimSetoid triIncidence) A := by
+  intro h
+  exact triangle_AB_not_approxBisim_A (Quotient.exact h)
+
 theorem tri_glue_associative (i j k : GId) :
     Option.bind (triIncidence.glue i j) (fun ij => triIncidence.glue ij k) =
       Option.bind (triIncidence.glue j k) (fun jk => triIncidence.glue i jk) := by

@@ -1788,6 +1788,53 @@ theorem hfRecursiveNatShiftGraph_injective (offset n : Nat) :
   subst k
   exact hinput₁.trans hinput₂.symm
 
+/- On every nonempty finite ordinal, the internal translation graph remembers
+   its offset.  Thus the graph presentation is a faithful action of natural
+   addition, rather than merely a collection of functional relations. -/
+theorem hfRecursiveNatShiftGraph_offset_injective
+    (n firstOffset secondOffset : Nat) (hn : 0 < n) :
+    hfRecursiveNatShiftGraph firstOffset n =
+        hfRecursiveNatShiftGraph secondOffset n ↔
+      firstOffset = secondOffset := by
+  constructor
+  · intro hgraphs
+    have hfirst :
+        HFRecursiveMember
+          (hfRecursiveOrderedPair (hfRecursiveNat 0) (hfRecursiveNat (0 + firstOffset)))
+          (hfRecursiveNatShiftGraph firstOffset n) :=
+      (hfRecursiveNatShiftGraph_apply_iff firstOffset n
+        (hfRecursiveNat 0) (hfRecursiveNat (0 + firstOffset))).mpr
+        ⟨0, hn, rfl, rfl⟩
+    have hsecond :
+        HFRecursiveMember
+          (hfRecursiveOrderedPair (hfRecursiveNat 0) (hfRecursiveNat (0 + firstOffset)))
+          (hfRecursiveNatShiftGraph secondOffset n) := by
+      rw [← hgraphs]
+      exact hfirst
+    rcases (hfRecursiveNatShiftGraph_apply_iff secondOffset n
+      (hfRecursiveNat 0) (hfRecursiveNat (0 + firstOffset))).mp hsecond with
+      ⟨m, hm, hinput, houtput⟩
+    have hmzero : m = 0 := hfRecursiveNat_injective hinput.symm
+    subst m
+    exact hfRecursiveNat_injective (by simpa using houtput)
+  · intro hoffset
+    subst secondOffset
+    rfl
+
+/- The faithful translation action reflects cancellation of a common left
+   offset.  This is stated at graph level so later internal arithmetic can use
+   relation equality as its observable equality principle. -/
+theorem hfRecursiveNatShiftGraph_add_left_cancel
+    (n common firstOffset secondOffset : Nat) (hn : 0 < n)
+    (hgraphs :
+      hfRecursiveNatShiftGraph (common + firstOffset) n =
+        hfRecursiveNatShiftGraph (common + secondOffset) n) :
+    firstOffset = secondOffset := by
+  have hsums : common + firstOffset = common + secondOffset :=
+    (hfRecursiveNatShiftGraph_offset_injective n
+      (common + firstOffset) (common + secondOffset) hn).mp hgraphs
+  exact Nat.add_left_cancel hsums
+
 theorem hfRecursiveNatIdentityGraph_injective (n : Nat) :
     HFRecursiveInjective (hfRecursiveNatIdentityGraph n) := by
   simpa [hfRecursiveNatShiftGraph_zero] using hfRecursiveNatShiftGraph_injective 0 n
@@ -2572,6 +2619,83 @@ theorem hfRecursivePredicate_holds_and (p q : HFRecursivePredicate)
   change ((p.run x && q.run x) = true) ↔
     (p.run x = true ∧ q.run x = true)
   cases p.run x <;> cases q.run x <;> simp
+
+/- The predicates used for separation are closed under Boolean complement.
+   This is deliberately a complement of a *decidable extensional predicate*,
+   rather than an attempted raw-presentation test for membership in an
+   arbitrary quotient set.  The latter would not be invariant under changing
+   representatives without an additional normalization theorem. -/
+def HFRecursivePredicate.not (p : HFRecursivePredicate) : HFRecursivePredicate where
+  run := fun x => Bool.not (p.run x)
+  respectful := by
+    intro n x y h
+    change Bool.not (p.run x) = Bool.not (p.run y)
+    rw [p.respectful h]
+
+theorem hfRecursivePredicate_holds_not (p : HFRecursivePredicate)
+    (x : HFRecursiveSet) :
+    p.not.holds x ↔ ¬ p.holds x := by
+  refine Quotient.inductionOn x ?_
+  intro x
+  change (Bool.not (p.run x) = true) ↔ ¬ p.run x = true
+  cases p.run x <;> simp
+
+/- Relative set difference (or complement in `s`) is separation by the
+   complement predicate.  It is a genuine quotient-level operation, because
+   `HFRecursivePredicate.not` remains approximation-respectful. -/
+def hfRecursiveDifference (p : HFRecursivePredicate) (s : HFRecursiveSet) :
+    HFRecursiveSet :=
+  hfRecursiveFilter p.not s
+
+theorem hfRecursiveMember_difference_iff (p : HFRecursivePredicate)
+    (x s : HFRecursiveSet) :
+    HFRecursiveMember x (hfRecursiveDifference p s) ↔
+      HFRecursiveMember x s ∧ ¬ p.holds x := by
+  rw [hfRecursiveDifference, hfRecursiveMember_filter_iff,
+    hfRecursivePredicate_holds_not]
+
+/- Separation and its relative complement form a finite partition. -/
+theorem hfRecursiveFilter_union_difference (p : HFRecursivePredicate)
+    (s : HFRecursiveSet) :
+    hfRecursiveUnion (hfRecursiveFilter p s) (hfRecursiveDifference p s) = s := by
+  apply hfRecursiveSet_extensionality
+  intro x
+  rw [hfRecursiveMember_union_iff, hfRecursiveMember_filter_iff,
+    hfRecursiveMember_difference_iff]
+  constructor
+  · rintro (⟨hxs, _⟩ | ⟨hxs, _⟩)
+    · exact hxs
+    · exact hxs
+  · intro hxs
+    by_cases hp : p.holds x
+    · exact Or.inl ⟨hxs, hp⟩
+    · exact Or.inr ⟨hxs, hp⟩
+
+/- The two pieces of that partition are disjoint. -/
+theorem hfRecursiveFilter_difference_disjoint (p : HFRecursivePredicate)
+    (s x : HFRecursiveSet) :
+    ¬ (HFRecursiveMember x (hfRecursiveFilter p s) ∧
+      HFRecursiveMember x (hfRecursiveDifference p s)) := by
+  rintro ⟨hfilter, hdifference⟩
+  have hp : p.holds x := (hfRecursiveMember_filter_iff p x s).mp hfilter |>.right
+  have hnot : ¬ p.holds x := (hfRecursiveMember_difference_iff p x s).mp hdifference |>.right
+  exact hnot hp
+
+/- Filtering twice is the intersection of two decidable extensional
+   subobjects of `s`; order is immaterial. -/
+theorem hfRecursiveFilter_intersection_comm (p q : HFRecursivePredicate)
+    (s : HFRecursiveSet) :
+    hfRecursiveFilter p (hfRecursiveFilter q s) =
+      hfRecursiveFilter q (hfRecursiveFilter p s) := by
+  apply hfRecursiveSet_extensionality
+  intro x
+  rw [hfRecursiveMember_filter_iff, hfRecursiveMember_filter_iff,
+    hfRecursiveMember_filter_iff, hfRecursiveMember_filter_iff]
+  constructor
+  · rintro ⟨⟨hxs, hq⟩, hp⟩
+    exact ⟨⟨hxs, hp⟩, hq⟩
+  · rintro ⟨⟨hxs, hp⟩, hq⟩
+    exact ⟨⟨hxs, hq⟩, hp⟩
 
 theorem hfRecursiveTruePredicate_holds (x : HFRecursiveSet) :
     hfRecursiveTruePredicate.holds x := by
