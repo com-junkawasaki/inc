@@ -47,6 +47,61 @@ def boundaryMatched {I R T : Type u} [DecidableEq I] (inc : Incidence I R T)
   (∀ e ∈ inc.boundary i, ∃ e', e' ∈ inc.boundary j ∧ boundaryCompatible inc e e' ∧ rel e.i e'.i) ∧
   (∀ e' ∈ inc.boundary j, ∃ e, e ∈ inc.boundary i ∧ boundaryCompatible inc e e' ∧ rel e.i e'.i)
 
+/- Research cycle 18 (see RESEARCH_LOG.md): cycle 12's `simplexIncidence`
+   edges-collapse conjecture stalled twice on hand-rolled `boundaryMatched`
+   existentials (9-way case splits, `simp_all`/`tauto` friction). The
+   third attempt's fix wasn't a cleverer tactic on the same proof shape --
+   it was avoiding the hand-rolling entirely: a *reusable* lemma that
+   turns "I already know how each boundary entry pairs up" into
+   `boundaryMatched` directly, term-mode, so each instance case becomes
+   one `exact` call instead of an existential-witness dance. Works for
+   any two-entry-boundary pair on any `Incidence`, not just
+   `simplexIncidence`'s edges. -/
+
+/- Given an explicit *positional pairing* between two elements' (both
+   length-2) boundaries -- each pair already known compatible and
+   `rel`-related -- `boundaryMatched` holds between them. Skips the
+   existential search: the caller supplies the witnesses directly. -/
+theorem boundaryMatched_of_two_entries {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (rel : I → I → Prop) (i j : I)
+  (e1 e2 f1 f2 : Endpoint I R)
+  (hbi : inc.boundary i = [e1, e2]) (hbj : inc.boundary j = [f1, f2])
+  (hc1 : boundaryCompatible inc e1 f1) (hr1 : rel e1.i f1.i)
+  (hc2 : boundaryCompatible inc e2 f2) (hr2 : rel e2.i f2.i) :
+  boundaryMatched inc rel i j := by
+  unfold boundaryMatched
+  rw [hbi, hbj]
+  constructor
+  · intro e he
+    simp only [List.mem_cons, List.not_mem_nil, or_false] at he
+    rcases he with he | he
+    · subst he; exact ⟨f1, by simp, hc1, hr1⟩
+    · subst he; exact ⟨f2, by simp, hc2, hr2⟩
+  · intro e' he'
+    simp only [List.mem_cons, List.not_mem_nil, or_false] at he'
+    rcases he' with he' | he'
+    · subst he'; exact ⟨e1, by simp, hc1, hr1⟩
+    · subst he'; exact ⟨e2, by simp, hc2, hr2⟩
+
+/- `boundaryMatched` at `(i, j)` gives `boundaryMatched` at `(j, i)` for
+   free once `rel` is known symmetric -- halves the casework needed for
+   a symmetric relation over several elements (only the "canonical"
+   unordered pairs need a direct proof; the rest follow from this). -/
+theorem boundaryMatched_symm {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (rel : I → I → Prop) (i j : I)
+  (hsymm : ∀ a b, rel a b → rel b a)
+  (h : boundaryMatched inc rel i j) :
+  boundaryMatched inc rel j i := by
+  unfold boundaryMatched at h ⊢
+  obtain ⟨h1, h2⟩ := h
+  constructor
+  · intro e he
+    obtain ⟨e', he', hcomp, hrel⟩ := h2 e he
+    exact ⟨e', he', boundaryCompatible_symm hcomp, hsymm _ _ hrel⟩
+  · intro e' he'
+    obtain ⟨e, he, hcomp, hrel⟩ := h1 e' he'
+    exact ⟨e, he, boundaryCompatible_symm hcomp, hsymm _ _ hrel⟩
+
 /- A bisimulation is a relation preserved by types and boundary matching. -/
 /- Merkle-ID: foundation.logic
    bisimulation predicate. -/
@@ -152,6 +207,85 @@ theorem approxBisim_trans {I R T : Type u} [DecidableEq I] {inc : Incidence I R 
   rcases hIJ with ⟨rel₁, h₁, hij⟩
   rcases hJK with ⟨rel₂, h₂, hjk⟩
   exact ⟨(fun a c => ∃ b, rel₁ a b ∧ rel₂ b c), isBisimulation_comp h₁ h₂, ⟨j, hij, hjk⟩⟩
+
+/- Research cycle 21 (see RESEARCH_LOG.md): every non-equality result in
+   this project up to this point proved `i ≠ j` (literal inequality) --
+   a strictly *weaker* claim than `¬ approxBisim inc i j` (non-
+   bisimilarity), since `≈` can (and, per cycles 2/12/13, often does)
+   relate distinct elements. This is the first general theorem proving
+   the *stronger* claim. The key observation: `IsBisimulation`'s
+   definition forces `boundaryMatched` to hold for *any* witnessing
+   relation, not just a specific one -- so if some boundary entry of `i`
+   structurally has no `boundaryCompatible` counterpart anywhere in `j`'s
+   boundary, *no* relation can ever bisimulate `i` and `j`, regardless of
+   what that relation otherwise says. This makes non-bisimilarity
+   provable *without* quantifying over all possible relations by hand
+   (which would be intractable) -- the universal quantifier in
+   `approxBisim`'s definition is discharged by `rintro`, then the
+   contradiction is purely about the fixed boundaries. -/
+theorem not_approxBisim_of_boundary_mismatch {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (i j : I) (e : Endpoint I R) (he : e ∈ inc.boundary i)
+  (hno : ∀ e' ∈ inc.boundary j, ¬ boundaryCompatible inc e e') :
+  ¬ approxBisim inc i j := by
+  rintro ⟨rel, hbisim, hij⟩
+  obtain ⟨_, hmatch⟩ := hbisim i j hij
+  obtain ⟨e', he', hcomp, _⟩ := hmatch.left e he
+  exact hno e' he' hcomp
+
+/- The most common instance of the above: an element with *any* boundary
+   entry can never be bisimilar to a leaf (empty-boundary element) --
+   `hno` is vacuous, since there's nothing in an empty list to be
+   compatible with. -/
+theorem not_approxBisim_empty_nonempty {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (i j : I)
+  (hi : inc.boundary j = []) (e : Endpoint I R) (he : e ∈ inc.boundary i) :
+  ¬ approxBisim inc i j := by
+  apply not_approxBisim_of_boundary_mismatch inc i j e he
+  rw [hi]
+  simp
+
+/- Research cycle 4 (co-scientist step, see RESEARCH_LOG.md): cycles 1-3
+   each proved faithfulness (≈ coincides with =) for a specific instance
+   by hand, via well-founded induction chasing `boundaryMatched`'s
+   existentials. This is the general theorem extracted from that
+   repeated pattern: given a well-founded measure on which boundaries
+   strictly decrease, and an "extensionality" hypothesis (elements with
+   literally-equal, role-matched boundaries are equal -- the genuinely
+   substantive assumption, analogous to ZF's set extensionality), *any*
+   bisimulation on the instance forces literal equality. Proves with
+   *zero* axioms (not even the usual propext/Classical.choice/Quot.sound
+   that show up almost everywhere else in this file) -- it's a small,
+   fully constructive well-founded induction. Validated non-vacuously
+   against two independent, structurally different instances in
+   Peano.lean and Pairs.lean (natIncidence, pairIncidenceChained). -/
+/- Merkle-ID: foundation.logic.bisim_faithful
+   General faithfulness theorem: ≈ = = whenever boundary is a
+   well-founded, extensional description of each element. -/
+theorem incidence_bisim_faithful {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (μ : I → Nat)
+  (hdec : ∀ i e, e ∈ inc.boundary i → μ e.i < μ i)
+  (hext : ∀ x y, inc.typeFunc x = inc.typeFunc y →
+    boundaryMatched inc (· = ·) x y → x = y)
+  {rel : I → I → Prop} (hbisim : IsBisimulation inc rel) :
+  ∀ x y, rel x y → x = y := by
+  have key : ∀ n x, μ x = n → ∀ y, rel x y → x = y := by
+    intro n
+    induction n using Nat.strongRecOn with
+    | _ n ih =>
+      intro x hx y hxy
+      obtain ⟨htype, hM⟩ := hbisim x y hxy
+      apply hext x y htype
+      constructor
+      · intro e he
+        obtain ⟨e', he', hcompat, hrel⟩ := hM.left e he
+        have hμe : μ e.i < n := hx ▸ hdec x e he
+        exact ⟨e', he', hcompat, ih (μ e.i) hμe e.i rfl e'.i hrel⟩
+      · intro e' he'
+        obtain ⟨e, he, hcompat, hrel⟩ := hM.right e' he'
+        have hμe : μ e.i < n := hx ▸ hdec x e he
+        exact ⟨e, he, hcompat, ih (μ e.i) hμe e.i rfl e'.i hrel⟩
+  intro x y hxy
+  exact key (μ x) x rfl y hxy
 
 /- ==========================================================================
    Linear algebra: boundary matrices and Laplacians over a chosen finite
@@ -278,6 +412,444 @@ theorem boundary_operator_square_zero {I R T : Type u} [DecidableEq I]
   have hi' := List.all_eq_true.mp hcheck i hi
   have hk' := List.all_eq_true.mp hi' k hk
   exact of_decide_eq_true hk'
+
+/- Research cycle 9 (see RESEARCH_LOG.md): cycle 8 found ∂² ≠ 0 for
+   `natIncidence`'s chain and hypothesized the classical simplicial fix
+   (alternate the boundary sign by degree parity) might restore it.
+   Algebraic reasoning first, before touching Lean: a chain complex's
+   ∂² = 0 works via *cancellation among multiple faces of the same
+   simplex* -- but a single-face chain (each nonzero element has exactly
+   one boundary endpoint) never has more than one term to cancel
+   against, so composing two such links always multiplies two nonzero
+   numbers, which is never zero, *no matter what signs are chosen*.
+   This generalizes cycle 8's one-off refutation (and its planned
+   alternating-sign variant, confirmed empirically to also fail) into a
+   single theorem about *any* `Incidence`: cancellation requires more
+   than one face per element, full stop -- it is not a matter of
+   picking the right sign convention. -/
+
+/- Extracted helper: with a single boundary endpoint, `boundaryMatrix`
+   is exactly that endpoint's signed value at its target and 0
+   elsewhere. -/
+theorem boundaryMatrix_single_link {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i j : I) (e1 : Endpoint I R)
+  (hb1 : inc.boundary i = [e1]) (he1i : e1.i = j) (x : I) :
+  boundaryMatrix inc idx i x =
+    if x = j then
+      (match e1.sign with
+       | Sign.neg => -(Int.ofNat e1.mult)
+       | Sign.zero => 0
+       | Sign.pos => Int.ofNat e1.mult)
+    else 0 := by
+  unfold boundaryMatrix
+  dsimp only
+  rw [hb1]
+  simp only [List.foldl_cons, List.foldl_nil]
+  by_cases h : x = j
+  · subst h
+    rw [dif_pos he1i]
+    rw [if_pos rfl, Int.zero_add]
+  · have hne : e1.i ≠ x := fun hc => h (hc.symm.trans he1i)
+    rw [dif_neg hne]
+    simp [h]
+
+/- Extracted helper: folding `(+f y)` over a list where `f` vanishes
+   except at one target reduces to (count of the target) × (its value). -/
+theorem foldl_add_eq_count_mul {I : Type u} [DecidableEq I]
+  (idx : List I) (x : I) (f : I → Int)
+  (hother : ∀ y ∈ idx, y ≠ x → f y = 0) :
+  ∀ acc, idx.foldl (fun a y => a + f y) acc = acc + (idx.count x) * f x := by
+  induction idx with
+  | nil => intro acc; simp
+  | cons hd tl ih =>
+    intro acc
+    simp only [List.foldl_cons]
+    have ih' : ∀ y ∈ tl, y ≠ x → f y = 0 := fun y hy => hother y (List.mem_cons_of_mem _ hy)
+    rw [ih ih' (acc + f hd)]
+    by_cases h : hd = x
+    · subst h
+      rw [List.count_cons_self]
+      push_cast
+      rw [Int.add_mul, Int.one_mul]
+      omega
+    · have hz := hother hd List.mem_cons_self h
+      rw [List.count_cons_of_ne h, hz]
+      omega
+
+/- Extracted helper: a nonzero-sign, positive-multiplicity endpoint's
+   signed value is nonzero, regardless of which of the two nonzero signs
+   it is. -/
+theorem signed_ne_zero {I R : Type u} (e : Endpoint I R)
+  (hs : e.sign ≠ Sign.zero) (hm : e.mult ≥ 1) :
+    (match e.sign with
+     | Sign.neg => -(Int.ofNat e.mult)
+     | Sign.zero => (0 : Int)
+     | Sign.pos => Int.ofNat e.mult) ≠ 0 := by
+  revert hs
+  cases e.sign with
+  | neg => intro hs; simp; omega
+  | zero => intro hs; exact absurd rfl hs
+  | pos => intro hs; simp; omega
+
+/- The main impossibility theorem: no choice of (nonzero) signs on a
+   single-face chain can make two consecutive links compose to zero. -/
+/- Merkle-ID: foundation.axiomatization.single_link_impossibility
+   ∂² ≠ 0 for any single-face chain, independent of the sign convention. -/
+theorem single_link_composition_ne_zero {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i j k : I)
+  (e1 e2 : Endpoint I R)
+  (hb1 : inc.boundary i = [e1]) (he1i : e1.i = j) (he1s : e1.sign ≠ Sign.zero)
+  (hb2 : inc.boundary j = [e2]) (he2i : e2.i = k) (he2s : e2.sign ≠ Sign.zero)
+  (hij : j ∈ idx) :
+  boundary_composition inc idx i k ≠ 0 := by
+  have hm1 : e1.mult ≥ 1 := inc.multiplicities i e1 (by rw [hb1]; exact List.mem_singleton_self e1)
+  have hm2 : e2.mult ≥ 1 := inc.multiplicities j e2 (by rw [hb2]; exact List.mem_singleton_self e2)
+  unfold boundary_composition
+  have hother : ∀ y ∈ idx, y ≠ j →
+      boundaryMatrix inc idx i y * boundaryMatrix inc idx y k = 0 := by
+    intro y _ hy
+    rw [boundaryMatrix_single_link inc idx i j e1 hb1 he1i y, if_neg hy]
+    simp
+  rw [foldl_add_eq_count_mul idx j
+      (fun y => boundaryMatrix inc idx i y * boundaryMatrix inc idx y k) hother 0]
+  have hBij : boundaryMatrix inc idx i j =
+      (match e1.sign with
+       | Sign.neg => -(Int.ofNat e1.mult)
+       | Sign.zero => 0
+       | Sign.pos => Int.ofNat e1.mult) := by
+    rw [boundaryMatrix_single_link inc idx i j e1 hb1 he1i j, if_pos rfl]
+  have hBjk : boundaryMatrix inc idx j k =
+      (match e2.sign with
+       | Sign.neg => -(Int.ofNat e2.mult)
+       | Sign.zero => 0
+       | Sign.pos => Int.ofNat e2.mult) := by
+    rw [boundaryMatrix_single_link inc idx j k e2 hb2 he2i k, if_pos rfl]
+  have hcount : idx.count j ≥ 1 := List.count_pos_iff.mpr hij
+  have hne1 := signed_ne_zero e1 he1s hm1
+  have hne2 := signed_ne_zero e2 he2s hm2
+  simp only [Int.zero_add, hBij, hBjk]
+  exact Int.mul_ne_zero (by omega) (Int.mul_ne_zero hne1 hne2)
+
+/- Research cycle 10 (see RESEARCH_LOG.md): cycle 9 proved single-face
+   chains can *never* satisfy ∂²=0. This is the converse-flavored
+   question: what *is* a sufficient condition? Answer: if `i`'s boundary
+   only reaches "leaves" (elements with empty boundary of their own),
+   `∂²` vanishes at `i` for the trivial dimension-exhaustion reason the
+   triangle already relied on (nodes have no further boundary) -- but
+   now stated and proved as a general theorem, not re-derived per
+   instance via `decide`. -/
+
+/- `boundaryMatrix` unfolded to a plain `List.foldl` with an `ite`
+   (rather than the `dite`-inside-a-tactic-lambda its own definition
+   uses), making it tractable to reason about symbolically. -/
+theorem boundaryMatrix_eq_foldl {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i j : I) :
+  boundaryMatrix inc idx i j =
+    (inc.boundary i).foldl (fun acc e =>
+      if e.i = j then acc + (match e.sign with
+        | Sign.neg => -(Int.ofNat e.mult)
+        | Sign.zero => 0
+        | Sign.pos => Int.ofNat e.mult)
+      else acc) 0 := by
+  unfold boundaryMatrix
+  dsimp only
+  generalize inc.boundary i = entries
+  suffices h : ∀ acc, entries.foldl (fun a e => by
+      by_cases h : e.i = j
+      · exact a + (match e.sign with
+          | Sign.neg => -(Int.ofNat e.mult)
+          | Sign.zero => 0
+          | Sign.pos => Int.ofNat e.mult)
+      · exact a) acc =
+      entries.foldl (fun acc e =>
+        if e.i = j then acc + (match e.sign with
+          | Sign.neg => -(Int.ofNat e.mult)
+          | Sign.zero => 0
+          | Sign.pos => Int.ofNat e.mult)
+        else acc) acc from h 0
+  induction entries with
+  | nil => intro acc; rfl
+  | cons hd tl ih =>
+    intro acc
+    simp only [List.foldl_cons]
+    by_cases h : hd.i = j
+    · rw [dif_pos h, if_pos h, ih]
+    · rw [dif_neg h, if_neg h, ih]
+
+/- If some column of `boundaryMatrix i` is nonzero, that column's index
+   must be an actual target of one of `i`'s boundary endpoints. -/
+theorem list_foldl_witness {I R : Type u} [DecidableEq I]
+  (entries : List (Endpoint I R)) (j : I) (g : Endpoint I R → Int)
+  (h : entries.foldl (fun acc e => if e.i = j then acc + g e else acc) 0 ≠ 0) :
+  ∃ e ∈ entries, e.i = j := by
+  induction entries with
+  | nil => simp at h
+  | cons hd tl ih =>
+    simp only [List.foldl_cons] at h
+    by_cases hc : hd.i = j
+    · exact ⟨hd, List.mem_cons_self, hc⟩
+    · rw [if_neg hc] at h
+      obtain ⟨e, he, hei⟩ := ih h
+      exact ⟨e, List.mem_cons_of_mem _ he, hei⟩
+
+theorem boundaryMatrix_ne_zero_witness {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i j : I)
+  (h : boundaryMatrix inc idx i j ≠ 0) :
+  ∃ e ∈ inc.boundary i, e.i = j := by
+  rw [boundaryMatrix_eq_foldl] at h
+  exact list_foldl_witness (inc.boundary i) j _ h
+
+/- A leaf's row of `boundaryMatrix` is all zeros. -/
+theorem boundaryMatrix_eq_zero_of_leaf {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (j k : I)
+  (hleaf : inc.boundary j = []) :
+  boundaryMatrix inc idx j k = 0 := by
+  rw [boundaryMatrix_eq_foldl, hleaf]
+  rfl
+
+theorem foldl_add_zero_of_all_zero {I : Type u} (L : List I) (f : I → Int)
+  (hz : ∀ y ∈ L, f y = 0) : L.foldl (fun a y => a + f y) 0 = 0 := by
+  induction L with
+  | nil => rfl
+  | cons hd tl ih =>
+    simp only [List.foldl_cons]
+    rw [hz hd List.mem_cons_self]
+    simp only [Int.zero_add]
+    exact ih (fun y hy => hz y (List.mem_cons_of_mem _ hy))
+
+/- The sufficient condition: if every endpoint in `i`'s boundary points
+   to a leaf (an element with no boundary of its own), ∂² vanishes at
+   `i`, for any index set and any target `k`. This is exactly the
+   property `triIncidence`'s edges have always had (their endpoints are
+   nodes, which are leaves) -- now available as a reusable theorem
+   instead of a `decide` call re-run per instance. -/
+/- Merkle-ID: foundation.axiomatization.leaf_boundary_sufficiency
+   ∂² = 0 whenever an element's boundary only reaches leaves. -/
+theorem boundary_composition_zero_of_leaf_boundary {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i k : I)
+  (hleaf : ∀ e ∈ inc.boundary i, inc.boundary e.i = []) :
+  boundary_composition inc idx i k = 0 := by
+  unfold boundary_composition
+  apply foldl_add_zero_of_all_zero
+  intro j _
+  by_cases h : boundaryMatrix inc idx i j = 0
+  · simp [h]
+  · obtain ⟨e, he, hei⟩ := boundaryMatrix_ne_zero_witness inc idx i j h
+    have hz : inc.boundary j = [] := hei ▸ hleaf e he
+    simp [boundaryMatrix_eq_zero_of_leaf inc idx j k hz]
+
+/- Research cycle 17 (see RESEARCH_LOG.md): `single_link_composition_ne_zero`
+   (cycle 9) only applies to a *singleton*-boundary source. Cycle 16 found
+   `pathIncidenceChained`'s multi-entry `edge` elements also break ∂²=0,
+   but could only report a `decide`-checked concrete witness, not a
+   general theorem, since no existing lemma covered a two-entry boundary.
+   This extends the same `boundaryMatrix`/`foldl` technique
+   (`boundaryMatrix_single_link` + `foldl_add_eq_count_mul`, cycle 9) one
+   step further: a *two*-entry boundary, still fully general over any
+   `Incidence`, not tied to `PathComplex`. -/
+
+/- Two-entry analogue of `boundaryMatrix_single_link`: when `i`'s boundary
+   is exactly `[e1, e2]` pointing at two *distinct* elements `j1 ≠ j2`,
+   `boundaryMatrix inc idx i x` is the sum of the two entries' signed
+   contributions, gated by which of `j1`/`j2` (if either) `x` equals. -/
+theorem boundaryMatrix_two_link {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i j1 j2 : I) (e1 e2 : Endpoint I R)
+  (hb : inc.boundary i = [e1, e2]) (he1i : e1.i = j1) (he2i : e2.i = j2)
+  (hne : j1 ≠ j2) (x : I) :
+  boundaryMatrix inc idx i x =
+    (if x = j1 then
+      (match e1.sign with | Sign.neg => -(Int.ofNat e1.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e1.mult)
+     else 0) +
+    (if x = j2 then
+      (match e2.sign with | Sign.neg => -(Int.ofNat e2.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e2.mult)
+     else 0) := by
+  rw [boundaryMatrix_eq_foldl, hb]
+  simp only [List.foldl_cons, List.foldl_nil, he1i, he2i]
+  by_cases h1 : x = j1
+  · subst h1
+    simp only [hne, hne.symm, if_pos, if_neg, not_false_eq_true, Int.zero_add, Int.add_zero]
+  · by_cases h2 : x = j2
+    · subst h2
+      simp only [hne, hne.symm, if_pos, if_neg, not_false_eq_true, Int.zero_add]
+    · simp [Ne.symm h1, Ne.symm h2, h1, h2]
+
+/- Two-target analogue of `foldl_add_eq_count_mul`: a `foldl` sum where
+   `f` is known to vanish off two designated points collapses to just
+   those two points' contributions, weighted by their multiplicities in
+   `idx`. Same induction shape as the single-target version (cycle 9),
+   extended by one more case split. -/
+theorem foldl_add_eq_count_mul_two {I : Type u} [DecidableEq I]
+  (idx : List I) (x1 x2 : I) (hne : x1 ≠ x2) (f : I → Int)
+  (hother : ∀ y ∈ idx, y ≠ x1 → y ≠ x2 → f y = 0) :
+  ∀ acc, idx.foldl (fun a y => a + f y) acc = acc + (idx.count x1) * f x1 + (idx.count x2) * f x2 := by
+  induction idx with
+  | nil => intro acc; simp
+  | cons hd tl ih =>
+    intro acc
+    simp only [List.foldl_cons]
+    have ih' : ∀ y ∈ tl, y ≠ x1 → y ≠ x2 → f y = 0 := fun y hy => hother y (List.mem_cons_of_mem _ hy)
+    rw [ih ih' (acc + f hd)]
+    by_cases h1 : hd = x1
+    · subst h1
+      rw [List.count_cons_self, List.count_cons_of_ne hne]
+      push_cast
+      rw [Int.add_mul, Int.one_mul]
+      omega
+    · by_cases h2 : hd = x2
+      · subst h2
+        rw [List.count_cons_self, List.count_cons_of_ne h1]
+        push_cast
+        rw [Int.add_mul, Int.one_mul]
+        omega
+      · have hz := hother hd List.mem_cons_self h1 h2
+        rw [List.count_cons_of_ne h1, List.count_cons_of_ne h2, hz]
+        omega
+
+/- The payoff: `∂²` at a two-entry-boundary element reduces to an exact,
+   closed-form value (not merely "nonzero" like cycle 9's theorem) --
+   the two boundary entries' signed contributions, each weighted by how
+   many times its target appears in `idx` and by the target's own
+   boundary row at `k`. Composed from the two lemmas above the same way
+   `single_link_composition_ne_zero` composed from their single-entry
+   counterparts. -/
+theorem two_link_composition_value {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i j1 j2 k : I)
+  (e1 e2 : Endpoint I R)
+  (hb : inc.boundary i = [e1, e2]) (he1i : e1.i = j1) (he2i : e2.i = j2)
+  (hne : j1 ≠ j2) :
+  boundary_composition inc idx i k =
+    (idx.count j1) * ((match e1.sign with | Sign.neg => -(Int.ofNat e1.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e1.mult) * boundaryMatrix inc idx j1 k) +
+    (idx.count j2) * ((match e2.sign with | Sign.neg => -(Int.ofNat e2.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e2.mult) * boundaryMatrix inc idx j2 k) := by
+  unfold boundary_composition
+  have hother : ∀ y ∈ idx, y ≠ j1 → y ≠ j2 →
+      boundaryMatrix inc idx i y * boundaryMatrix inc idx y k = 0 := by
+    intro y _ hy1 hy2
+    rw [boundaryMatrix_two_link inc idx i j1 j2 e1 e2 hb he1i he2i hne y, if_neg hy1, if_neg hy2]
+    simp
+  rw [foldl_add_eq_count_mul_two idx j1 j2 hne
+      (fun y => boundaryMatrix inc idx i y * boundaryMatrix inc idx y k) hother 0]
+  have hBij1 : boundaryMatrix inc idx i j1 =
+      (match e1.sign with | Sign.neg => -(Int.ofNat e1.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e1.mult) := by
+    rw [boundaryMatrix_two_link inc idx i j1 j2 e1 e2 hb he1i he2i hne j1, if_pos rfl, if_neg hne]
+    simp
+  have hBij2 : boundaryMatrix inc idx i j2 =
+      (match e2.sign with | Sign.neg => -(Int.ofNat e2.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e2.mult) := by
+    rw [boundaryMatrix_two_link inc idx i j1 j2 e1 e2 hb he1i he2i hne j2, if_neg (Ne.symm hne), if_pos rfl]
+    simp
+  rw [hBij1, hBij2]
+  simp [Int.zero_add]
+
+/- Research cycle 30 (see RESEARCH_LOG.md): cycle 20 declined a 3-entry
+   generalization of `boundaryMatrix_two_link`/`two_link_composition_value`
+   for lack of a second real 3-entry instance to validate it against.
+   Cycle 29 (`treeIncidence.node`) supplied one, alongside
+   `simplexIncidence.face` (cycle 11) -- the exact condition cycle 20
+   said would justify building this. Same technique as the two-entry
+   version, one more case throughout. -/
+
+/- Three-entry analogue of `boundaryMatrix_two_link`. -/
+theorem boundaryMatrix_three_link {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i j1 j2 j3 : I) (e1 e2 e3 : Endpoint I R)
+  (hb : inc.boundary i = [e1, e2, e3]) (he1i : e1.i = j1) (he2i : e2.i = j2) (he3i : e3.i = j3)
+  (hne12 : j1 ≠ j2) (hne13 : j1 ≠ j3) (hne23 : j2 ≠ j3) (x : I) :
+  boundaryMatrix inc idx i x =
+    (if x = j1 then
+      (match e1.sign with | Sign.neg => -(Int.ofNat e1.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e1.mult)
+     else 0) +
+    (if x = j2 then
+      (match e2.sign with | Sign.neg => -(Int.ofNat e2.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e2.mult)
+     else 0) +
+    (if x = j3 then
+      (match e3.sign with | Sign.neg => -(Int.ofNat e3.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e3.mult)
+     else 0) := by
+  rw [boundaryMatrix_eq_foldl, hb]
+  simp only [List.foldl_cons, List.foldl_nil, he1i, he2i, he3i]
+  by_cases h1 : x = j1
+  · subst h1
+    simp [hne12, hne12.symm, hne13, hne13.symm]
+  · by_cases h2 : x = j2
+    · subst h2
+      simp [h1, Ne.symm h1, hne23, hne23.symm]
+    · by_cases h3 : x = j3
+      · subst h3
+        simp [h1, Ne.symm h1, h2, Ne.symm h2]
+      · simp [h1, Ne.symm h1, h2, Ne.symm h2, h3, Ne.symm h3]
+
+/- Three-target analogue of `foldl_add_eq_count_mul_two`. -/
+theorem foldl_add_eq_count_mul_three {I : Type u} [DecidableEq I]
+  (idx : List I) (x1 x2 x3 : I) (hne12 : x1 ≠ x2) (hne13 : x1 ≠ x3) (hne23 : x2 ≠ x3)
+  (f : I → Int)
+  (hother : ∀ y ∈ idx, y ≠ x1 → y ≠ x2 → y ≠ x3 → f y = 0) :
+  ∀ acc, idx.foldl (fun a y => a + f y) acc =
+    acc + (idx.count x1) * f x1 + (idx.count x2) * f x2 + (idx.count x3) * f x3 := by
+  induction idx with
+  | nil => intro acc; simp
+  | cons hd tl ih =>
+    intro acc
+    simp only [List.foldl_cons]
+    have ih' : ∀ y ∈ tl, y ≠ x1 → y ≠ x2 → y ≠ x3 → f y = 0 :=
+      fun y hy => hother y (List.mem_cons_of_mem _ hy)
+    rw [ih ih' (acc + f hd)]
+    by_cases h1 : hd = x1
+    · subst h1
+      rw [List.count_cons_self, List.count_cons_of_ne hne12, List.count_cons_of_ne hne13]
+      push_cast
+      rw [Int.add_mul, Int.one_mul]
+      omega
+    · by_cases h2 : hd = x2
+      · subst h2
+        rw [List.count_cons_self, List.count_cons_of_ne h1, List.count_cons_of_ne hne23]
+        push_cast
+        rw [Int.add_mul, Int.one_mul]
+        omega
+      · by_cases h3 : hd = x3
+        · subst h3
+          rw [List.count_cons_self, List.count_cons_of_ne h1, List.count_cons_of_ne h2]
+          push_cast
+          rw [Int.add_mul, Int.one_mul]
+          omega
+        · have hz := hother hd List.mem_cons_self h1 h2 h3
+          rw [List.count_cons_of_ne h1, List.count_cons_of_ne h2, List.count_cons_of_ne h3, hz]
+          omega
+
+/- Three-entry analogue of `two_link_composition_value`: an exact
+   closed-form `∂²` value for any three-entry-boundary element on any
+   `Incidence`. -/
+theorem three_link_composition_value {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (i j1 j2 j3 k : I)
+  (e1 e2 e3 : Endpoint I R)
+  (hb : inc.boundary i = [e1, e2, e3]) (he1i : e1.i = j1) (he2i : e2.i = j2) (he3i : e3.i = j3)
+  (hne12 : j1 ≠ j2) (hne13 : j1 ≠ j3) (hne23 : j2 ≠ j3) :
+  boundary_composition inc idx i k =
+    (idx.count j1) * ((match e1.sign with | Sign.neg => -(Int.ofNat e1.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e1.mult) * boundaryMatrix inc idx j1 k) +
+    (idx.count j2) * ((match e2.sign with | Sign.neg => -(Int.ofNat e2.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e2.mult) * boundaryMatrix inc idx j2 k) +
+    (idx.count j3) * ((match e3.sign with | Sign.neg => -(Int.ofNat e3.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e3.mult) * boundaryMatrix inc idx j3 k) := by
+  unfold boundary_composition
+  have hother : ∀ y ∈ idx, y ≠ j1 → y ≠ j2 → y ≠ j3 →
+      boundaryMatrix inc idx i y * boundaryMatrix inc idx y k = 0 := by
+    intro y _ hy1 hy2 hy3
+    rw [boundaryMatrix_three_link inc idx i j1 j2 j3 e1 e2 e3 hb he1i he2i he3i hne12 hne13 hne23 y,
+      if_neg hy1, if_neg hy2, if_neg hy3]
+    simp
+  rw [foldl_add_eq_count_mul_three idx j1 j2 j3 hne12 hne13 hne23
+      (fun y => boundaryMatrix inc idx i y * boundaryMatrix inc idx y k) hother 0]
+  have hBij1 : boundaryMatrix inc idx i j1 =
+      (match e1.sign with | Sign.neg => -(Int.ofNat e1.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e1.mult) := by
+    rw [boundaryMatrix_three_link inc idx i j1 j2 j3 e1 e2 e3 hb he1i he2i he3i hne12 hne13 hne23 j1,
+      if_pos rfl, if_neg hne12, if_neg hne13]
+    simp
+  have hBij2 : boundaryMatrix inc idx i j2 =
+      (match e2.sign with | Sign.neg => -(Int.ofNat e2.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e2.mult) := by
+    rw [boundaryMatrix_three_link inc idx i j1 j2 j3 e1 e2 e3 hb he1i he2i he3i hne12 hne13 hne23 j2,
+      if_neg (Ne.symm hne12), if_pos rfl, if_neg hne23]
+    simp
+  have hBij3 : boundaryMatrix inc idx i j3 =
+      (match e3.sign with | Sign.neg => -(Int.ofNat e3.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e3.mult) := by
+    rw [boundaryMatrix_three_link inc idx i j1 j2 j3 e1 e2 e3 hb he1i he2i he3i hne12 hne13 hne23 j3,
+      if_neg (Ne.symm hne13), if_neg (Ne.symm hne23), if_pos rfl]
+    simp
+  rw [hBij1, hBij2, hBij3]
+  simp [Int.zero_add]
 
 /- Glue operation matrix correspondence -/
 /- Merkle-ID: implementation.linear_algebra.glue_matrix
