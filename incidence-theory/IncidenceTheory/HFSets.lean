@@ -2153,6 +2153,67 @@ theorem hfRecursiveSubset_antisymm {s t : HFRecursiveSet} :
   intro x
   exact ⟨fun hx => hst x hx, fun hx => hts x hx⟩
 
+/- The finite von Neumann embedding reflects and preserves the ordinary
+   non-strict order as internal inclusion.  Together with
+   `hfRecursiveNat_member_iff`, this identifies the full finite ordinal order
+   inside the recursive-set quotient. -/
+theorem hfRecursiveNat_subset_iff (m n : Nat) :
+    HFRecursiveSubset (hfRecursiveNat m) (hfRecursiveNat n) ↔ m ≤ n := by
+  constructor
+  · intro h
+    apply Nat.le_of_not_lt
+    intro hnm
+    exact hfRecursiveMember_irreflexive (hfRecursiveNat n)
+      (h _ ((hfRecursiveNat_member_iff n m).mpr hnm))
+  · intro hmn x hx
+    rcases (hfRecursiveMember_nat_iff_exists x m).mp hx with ⟨k, hk, rfl⟩
+    exact (hfRecursiveNat_member_iff k n).mpr (Nat.lt_of_lt_of_le hk hmn)
+
+/- Equality of internal finite ordinals is exactly equality of their external
+   indices; this is the order-reflecting half of the ordinal embedding. -/
+theorem hfRecursiveNat_eq_iff (m n : Nat) :
+    hfRecursiveNat m = hfRecursiveNat n ↔ m = n := by
+  constructor
+  · exact hfRecursiveNat_injective
+  · intro h
+    rw [h]
+
+/- Hence the three internal alternatives of two finite ordinals are mutually
+   exclusive and correspond precisely to `<`, `=`, and `>` on naturals. -/
+theorem hfRecursiveNat_trichotomy_iff (m n : Nat) :
+    (HFRecursiveMember (hfRecursiveNat m) (hfRecursiveNat n) ∧ m < n) ∨
+      (hfRecursiveNat m = hfRecursiveNat n ∧ m = n) ∨
+      (HFRecursiveMember (hfRecursiveNat n) (hfRecursiveNat m) ∧ n < m) := by
+  rcases Nat.lt_trichotomy m n with hmn | hmn | hnm
+  · exact Or.inl ⟨(hfRecursiveNat_member_iff m n).mpr hmn, hmn⟩
+  · exact Or.inr (Or.inl ⟨by rw [hmn], hmn⟩)
+  · exact Or.inr (Or.inr ⟨(hfRecursiveNat_member_iff n m).mpr hnm, hnm⟩)
+
+/- Binary union therefore transports the semilattice laws of `max` to the
+   internally reconstructed ordinals. -/
+theorem hfRecursiveNat_union_assoc (l m n : Nat) :
+    hfRecursiveUnion (hfRecursiveUnion (hfRecursiveNat l) (hfRecursiveNat m))
+      (hfRecursiveNat n) =
+      hfRecursiveUnion (hfRecursiveNat l)
+        (hfRecursiveUnion (hfRecursiveNat m) (hfRecursiveNat n)) := by
+  rw [hfRecursiveNat_union_eq_max, hfRecursiveNat_union_eq_max,
+    hfRecursiveNat_union_eq_max, hfRecursiveNat_union_eq_max]
+  congr 1
+  exact Nat.max_assoc l m n
+
+theorem hfRecursiveNat_union_comm (m n : Nat) :
+    hfRecursiveUnion (hfRecursiveNat m) (hfRecursiveNat n) =
+      hfRecursiveUnion (hfRecursiveNat n) (hfRecursiveNat m) := by
+  rw [hfRecursiveNat_union_eq_max, hfRecursiveNat_union_eq_max]
+  congr 1
+  exact Nat.max_comm m n
+
+theorem hfRecursiveNat_union_idempotent (n : Nat) :
+    hfRecursiveUnion (hfRecursiveNat n) (hfRecursiveNat n) = hfRecursiveNat n := by
+  rw [hfRecursiveNat_union_eq_max]
+  congr 1
+  exact Nat.max_self n
+
 theorem hfRecursiveSubset_union_left (s t : HFRecursiveSet) :
     HFRecursiveSubset s (hfRecursiveUnion s t) := by
   intro x hx

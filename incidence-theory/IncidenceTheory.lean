@@ -516,6 +516,47 @@ structure MorphismIso {Obj : Type u} (C : IncCategory Obj) (source target : Obj)
   inv_hom : C.comp inv hom = C.id source
   hom_inv : C.comp hom inv = C.id target
 
+/- The elementary groupoid laws for translation equivalences.  Keeping these
+   in the small core lets later incidence translations compose their chosen
+   identifications without importing a category-theory library. -/
+def MorphismIso.refl {Obj : Type u} {C : IncCategory Obj} (source : Obj) :
+    MorphismIso C source source where
+  hom := C.id source
+  inv := C.id source
+  inv_hom := C.id_comp (C.id source)
+  hom_inv := C.id_comp (C.id source)
+
+def MorphismIso.symm {Obj : Type u} {C : IncCategory Obj} {source target : Obj}
+    (iso : MorphismIso C source target) : MorphismIso C target source where
+  hom := iso.inv
+  inv := iso.hom
+  inv_hom := iso.hom_inv
+  hom_inv := iso.inv_hom
+
+def MorphismIso.trans {Obj : Type u} {C : IncCategory Obj}
+    {source middle target : Obj} (first : MorphismIso C source middle)
+    (second : MorphismIso C middle target) : MorphismIso C source target where
+  hom := C.comp second.hom first.hom
+  inv := C.comp first.inv second.inv
+  inv_hom := by
+    rw [← C.assoc first.inv second.inv (C.comp second.hom first.hom),
+      C.assoc second.inv second.hom first.hom,
+      second.inv_hom, C.id_comp, first.inv_hom]
+  hom_inv := by
+    rw [← C.assoc second.hom first.hom (C.comp first.inv second.inv),
+      C.assoc first.hom first.inv second.inv,
+      first.hom_inv, C.id_comp, second.hom_inv]
+
+theorem MorphismIso.trans_hom {Obj : Type u} {C : IncCategory Obj}
+    {source middle target : Obj} (first : MorphismIso C source middle)
+    (second : MorphismIso C middle target) :
+    (first.trans second).hom = C.comp second.hom first.hom := rfl
+
+theorem MorphismIso.trans_inv {Obj : Type u} {C : IncCategory Obj}
+    {source middle target : Obj} (first : MorphismIso C source middle)
+    (second : MorphismIso C middle target) :
+    (first.trans second).inv = C.comp first.inv second.inv := rfl
+
 def pushoutComparison {Obj : Type u} {C : IncCategory Obj}
     {span : MorphismCospan C} (source target : MorphismPushout span) :
     C.Hom source.apex target.apex :=
@@ -557,6 +598,25 @@ def pushout_unique_up_to_iso {Obj : Type u} {C : IncCategory Obj}
     rw [← pushoutComparison_comp, pushoutComparison_self]
   hom_inv := by
     rw [← pushoutComparison_comp, pushoutComparison_self]
+
+/- Comparison isomorphisms are coherent: the direct identification of two
+   translated pushout presentations is the composite through any third one. -/
+theorem pushout_unique_up_to_iso_trans_hom {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C} (first second third : MorphismPushout span) :
+    ((pushout_unique_up_to_iso first second).trans
+      (pushout_unique_up_to_iso second third)).hom =
+      (pushout_unique_up_to_iso first third).hom := by
+  exact (pushoutComparison_comp first second third).symm
+
+theorem pushout_unique_up_to_iso_symm_hom {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C} (source target : MorphismPushout span) :
+    (pushout_unique_up_to_iso source target).symm.hom =
+      (pushout_unique_up_to_iso target source).hom := rfl
+
+theorem pushout_unique_up_to_iso_self_hom {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C} (po : MorphismPushout span) :
+    (pushout_unique_up_to_iso po po).hom = C.id po.apex :=
+  pushoutComparison_self po
 
 theorem functor_maps_pushout_cocone {CObj DObj : Type u}
     {C : IncCategory CObj} {D : IncCategory DObj} (F : IncFunctor C D)

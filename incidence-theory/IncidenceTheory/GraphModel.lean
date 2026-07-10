@@ -250,6 +250,52 @@ theorem finiteLogic_modus_ponens_sound (valuation : FiniteIncidence → Prop)
     (holds : ContextSatisfies valuation finiteLogicContext) : valuation .leaf :=
   derives_sound finiteLogicDerivation holds
 
+/-! ### Complete internal logic for the concrete finite incidence language
+
+The two incidence nodes are exactly the two Boolean atoms used by the concrete
+enumeration in `Logic`.  Transporting that enumeration, rather than postulating
+one for this model, makes canonical Kripke completeness directly available to
+clients which use `leaf` and `root` as their atoms. -/
+
+def finiteIncidenceToBool : FiniteIncidence → Bool
+  | .leaf => false
+  | .root => true
+
+def boolToFiniteIncidence : Bool → FiniteIncidence
+  | false => .leaf
+  | true => .root
+
+theorem boolToFiniteIncidence_finiteIncidenceToBool (node : FiniteIncidence) :
+    boolToFiniteIncidence (finiteIncidenceToBool node) = node := by
+  cases node <;> rfl
+
+theorem finiteIncidenceToBool_boolToFiniteIncidence (bit : Bool) :
+    finiteIncidenceToBool (boolToFiniteIncidence bit) = bit := by
+  cases bit <;> rfl
+
+noncomputable def finiteIncidenceFormulaDecode : Nat → Formula FiniteIncidence :=
+  fun code => (boolFormulaDecode code).map boolToFiniteIncidence
+
+noncomputable def finiteIncidenceFormulaCode : Formula FiniteIncidence → Nat :=
+  fun formula => boolFormulaCode (formula.map finiteIncidenceToBool)
+
+theorem finiteIncidenceFormulaDecode_code (formula : Formula FiniteIncidence) :
+    finiteIncidenceFormulaDecode (finiteIncidenceFormulaCode formula) = formula := by
+  unfold finiteIncidenceFormulaDecode finiteIncidenceFormulaCode
+  rw [boolFormulaDecode_code]
+  exact Formula.map_leftInverse finiteIncidenceToBool boolToFiniteIncidence
+    boolToFiniteIncidence_finiteIncidenceToBool formula
+
+noncomputable def finiteIncidenceFormulaEnumeration : FormulaEnumeration FiniteIncidence where
+  enumerate := finiteIncidenceFormulaDecode
+  exhaustive := fun formula => ⟨finiteIncidenceFormulaCode formula,
+    finiteIncidenceFormulaDecode_code formula⟩
+
+theorem finiteIncidence_kripke_entails_iff_derives
+    (context : List (Formula FiniteIncidence)) (formula : Formula FiniteIncidence) :
+    KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
+  kripke_entails_iff_derives_of_enumeration finiteIncidenceFormulaEnumeration context formula
+
 /- A finite extensional-set fragment: subsets of the two atoms `a` and `b`.
    A set incidence has exactly its members as boundary endpoints. -/
 structure TwoSet where
@@ -692,6 +738,23 @@ def triangleIdentityPreservesPushout :
 def triangle_translation_preserves_pushout :
     MorphismPushout ((IncFunctor.identity triangleCategory).mapCospan triangleCospan) :=
   translation_preserves_pushout trianglePushout triangleIdentityPreservesPushout
+
+/- The concrete triangle model also exercises two-stage translation.  This is
+   stronger than merely reusing the identity witness: it invokes the general
+   composition theorem and hence verifies that the selected pushout survives
+   the intermediate presentation. -/
+def triangleDoubleIdentityPreservesPushout :
+    PushoutPreserving
+      ((IncFunctor.identity triangleCategory).comp (IncFunctor.identity triangleCategory))
+      trianglePushout :=
+  PushoutPreserving.comp trianglePushout triangleIdentityPreservesPushout
+    triangleIdentityPreservesPushout
+
+def triangle_double_translation_preserves_pushout :
+    MorphismPushout
+      (((IncFunctor.identity triangleCategory).comp
+        (IncFunctor.identity triangleCategory)).mapCospan triangleCospan) :=
+  translation_preserves_pushout trianglePushout triangleDoubleIdentityPreservesPushout
 
 def terminalSetCospan : Cospan Unit where
   a := ()
