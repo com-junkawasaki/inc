@@ -15,7 +15,7 @@ It currently establishes:
   into bisimilarity;
 - computed boundary matrices and Laplacians, with general `BᵀB` symmetry and
   nonnegative diagonal entries; finite row-list append/cons decomposition is
-  also proved; and
+  also proved, along with diagonal monotonicity under row extension; and
 - a concrete triangle model, including checked matrix entries and a checked
   `∂² = 0` calculation.
 - a finite, well-founded, nonempty-boundary Lean model (`leaf ← root`) that
@@ -51,6 +51,9 @@ It currently establishes:
   In particular, a finite-context failure of `p → q` has a prime-theory
   witness containing the context and `p`, while omitting `q`; this witness
   conservatively preserves every derivable consequence of the finite context.
+  For prime theories presented by a finite derivational basis, the extension
+  is proved to contain the entire source theory, giving the canonical
+  implication witness on that fragment.
   Each formula has a finite subformula closure, and a consistent context has a
   finite extension deciding every formula in that closure; its disjunction
   subformulas satisfy a derivable prime-choice law.  The derivable closure of

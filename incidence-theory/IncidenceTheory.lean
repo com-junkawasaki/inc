@@ -277,6 +277,38 @@ theorem laplacian_empty {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (i j : I) : laplacian inc [] i j = 0 := by
   rfl
 
+/- Adding observed rows can only increase a diagonal entry.  This is the
+   finite positive-semidefinite monotonicity of the derived `BᵀB` data; no
+   incidence axiom beyond the definition of the boundary matrix is used. -/
+theorem laplacian_diagonal_monotone_append {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx extra : List I) (i : I) :
+    laplacian inc idx i i ≤ laplacian inc (idx ++ extra) i i := by
+  rw [laplacian_append]
+  exact Int.le_add_of_nonneg_right
+    (laplacian_diagonal_nonnegative inc extra i)
+
+/- In particular, a single additional row adds a nonnegative square to the
+   diagonal. -/
+theorem laplacian_diagonal_monotone_cons {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (k : I) (idx : List I) (i : I) :
+    laplacian inc idx i i ≤ laplacian inc (k :: idx) i i := by
+  rw [laplacian_cons]
+  have hrow : 0 ≤ boundaryMatrix inc idx k i * boundaryMatrix inc idx k i := by
+    simpa [laplacian] using laplacian_diagonal_nonnegative inc [k] i
+  exact Int.le_add_of_nonneg_left hrow
+
+/- If all observed boundary rows vanish, the complete derived Laplacian is
+   zero, not merely square-zero. -/
+theorem laplacian_of_empty_boundaries {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (hempty : ∀ i, inc.boundary i = [])
+    (i j : I) : laplacian inc idx i j = 0 := by
+  have hfold : ∀ xs : List I, xs.foldl (fun (acc : Int) _ => acc) 0 = 0 := by
+    intro xs
+    induction xs with
+    | nil => rfl
+    | cons _ xs ih => exact ih
+  simpa [laplacian, boundaryMatrix, hempty] using hfold idx
+
 def boundarySquareZero {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I) : Prop :=
   ∀ i k, i ∈ idx → k ∈ idx →

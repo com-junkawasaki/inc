@@ -1395,6 +1395,15 @@ def HFRecursiveFunctional (relation : HFRecursiveSet) : Prop :=
       HFRecursiveMember (hfRecursiveOrderedPair input output₂) relation →
         output₁ = output₂
 
+/- Finite unions of graph presentations are again relations. -/
+theorem hfRecursiveRelation_union {left right : HFRecursiveSet}
+    (hleft : HFRecursiveRelation left) (hright : HFRecursiveRelation right) :
+    HFRecursiveRelation (hfRecursiveUnion left right) := by
+  intro element helement
+  rcases (hfRecursiveMember_union_iff element left right).mp helement with hleftMember | hrightMember
+  · exact hleft element hleftMember
+  · exact hright element hrightMember
+
 def hfRecursiveSingletonGraph (input output : HFRecursiveSet) : HFRecursiveSet :=
   hfRecursiveSingleton (hfRecursiveOrderedPair input output)
 
@@ -1679,6 +1688,73 @@ theorem hfRecursiveNatShiftGraph_relationalComposite
     exact (hfRecursiveNatShiftGraph_apply_iff (firstOffset + secondOffset) n
       input output).mpr ⟨m, hm, hinput, by
         simpa [Nat.add_assoc] using houtput⟩
+
+/- A functional relation is injective when an output determines its input.
+   This is the graph-theoretic counterpart of one-to-one finite maps. -/
+def HFRecursiveInjective (relation : HFRecursiveSet) : Prop :=
+  ∀ input₁ input₂ output,
+    HFRecursiveMember (hfRecursiveOrderedPair input₁ output) relation →
+      HFRecursiveMember (hfRecursiveOrderedPair input₂ output) relation →
+        input₁ = input₂
+
+/- Every finite ordinal shift is an internally represented relation. -/
+theorem hfRecursiveNatShiftGraph_relation (offset n : Nat) :
+    HFRecursiveRelation (hfRecursiveNatShiftGraph offset n) := by
+  induction n with
+  | zero =>
+    intro element helement
+    exact False.elim (hfRecursiveMember_empty element helement)
+  | succ n ih =>
+    rw [hfRecursiveNatShiftGraph]
+    exact hfRecursiveRelation_union
+      (hfRecursiveSingletonGraph_relation (hfRecursiveNat n) (hfRecursiveNat (n + offset))) ih
+
+/- Translation by a fixed offset is injective on each finite ordinal. -/
+theorem hfRecursiveNatShiftGraph_injective (offset n : Nat) :
+    HFRecursiveInjective (hfRecursiveNatShiftGraph offset n) := by
+  intro input₁ input₂ output h₁ h₂
+  rcases (hfRecursiveNatShiftGraph_apply_iff offset n input₁ output).mp h₁ with
+    ⟨m, hm, hinput₁, houtput₁⟩
+  rcases (hfRecursiveNatShiftGraph_apply_iff offset n input₂ output).mp h₂ with
+    ⟨k, hk, hinput₂, houtput₂⟩
+  have hmk : m + offset = k + offset :=
+    hfRecursiveNat_injective (houtput₁.symm.trans houtput₂)
+  have hmk' : m = k := Nat.add_right_cancel hmk
+  subst k
+  exact hinput₁.trans hinput₂.symm
+
+theorem hfRecursiveNatIdentityGraph_injective (n : Nat) :
+    HFRecursiveInjective (hfRecursiveNatIdentityGraph n) := by
+  simpa [hfRecursiveNatShiftGraph_zero] using hfRecursiveNatShiftGraph_injective 0 n
+
+theorem hfRecursiveNatSuccessorGraph_injective (n : Nat) :
+    HFRecursiveInjective (hfRecursiveNatSuccessorGraph n) := by
+  simpa [hfRecursiveNatShiftGraph_one] using hfRecursiveNatShiftGraph_injective 1 n
+
+/- Functionality is stable under an internally specified relational composite. -/
+theorem hfRecursiveRelationalComposite_functional
+    {first second composite : HFRecursiveSet}
+    (hcomposite : HFRecursiveRelationalComposite first second composite)
+    (hfirst : HFRecursiveFunctional first)
+    (hsecond : HFRecursiveFunctional second) :
+    HFRecursiveFunctional composite := by
+  intro input output₁ output₂ h₁ h₂
+  rcases (hcomposite input output₁).mp h₁ with ⟨middle₁, hfirst₁, hsecond₁⟩
+  rcases (hcomposite input output₂).mp h₂ with ⟨middle₂, hfirst₂, hsecond₂⟩
+  have hmiddle : middle₁ = middle₂ := hfirst input middle₁ middle₂ hfirst₁ hfirst₂
+  subst middle₂
+  exact hsecond middle₁ output₁ output₂ hsecond₁ hsecond₂
+
+/- Hence the composite of two finite shifts is itself functional, with the
+   expected summed offset. -/
+theorem hfRecursiveNatShiftGraph_composite_functional
+    (firstOffset secondOffset n : Nat) :
+    HFRecursiveFunctional
+      (hfRecursiveNatShiftGraph (firstOffset + secondOffset) n) := by
+  apply hfRecursiveRelationalComposite_functional
+    (hfRecursiveNatShiftGraph_relationalComposite firstOffset secondOffset n)
+    (hfRecursiveNatShiftGraph_functional firstOffset n)
+    (hfRecursiveNatShiftGraph_functional secondOffset (n + firstOffset))
 
 def HFRecursiveSubset (s t : HFRecursiveSet) : Prop :=
   ∀ x, HFRecursiveMember x s → HFRecursiveMember x t

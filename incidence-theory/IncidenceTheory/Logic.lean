@@ -1626,6 +1626,68 @@ theorem primeTheoryLe_trans {Atom : Type u} {r s t : PrimeTheory Atom} :
   intro hrs hst formula hr
   exact hst formula (hrs formula hr)
 
+/- Every finite part of an arbitrary prime theory can already be retained by
+   an implication-failure witness.  This is the finitary compactness half of
+   the unrestricted extension problem: the only remaining step is to take a
+   coherent limit over all such finite supports. -/
+theorem primeTheory_finite_fragment_implication_failure_extension {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom) (theory : PrimeTheory Atom)
+    (support : List (Formula Atom))
+    (hsupport : ∀ formula, formula ∈ support → theory.contains formula)
+    (premise conclusion : Formula Atom)
+    (hnot : ¬ theory.contains (.imp premise conclusion)) :
+    ∃ extension : PrimeTheory Atom,
+      (∀ formula, formula ∈ support → extension.contains formula) ∧
+        extension.contains premise ∧ ¬ extension.contains conclusion := by
+  have havoid : DerivationallyAvoids support (.imp premise conclusion) := by
+    intro hderives
+    apply hnot
+    apply theory.closed (context := support)
+    · exact hsupport
+    · exact hderives
+  exact finite_implication_failure_prime_extension
+    schedule support premise conclusion havoid
+
+/- A canonical theory need not in general have a finite presentation.  When
+   it does, however, the finite relative Lindenbaum construction already gives
+   the *full* extension required by the implication case, rather than merely
+   an extension of a selected finite fragment. -/
+structure PrimeTheoryFiniteBasis {Atom : Type u} (theory : PrimeTheory Atom) where
+  formulas : List (Formula Atom)
+  complete : ∀ formula, theory.contains formula ↔ Derives formulas formula
+
+theorem primeTheory_implication_failure_extension_of_finite_basis {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom) (theory : PrimeTheory Atom)
+    (basis : PrimeTheoryFiniteBasis theory) (premise conclusion : Formula Atom)
+    (hnot : ¬ theory.contains (.imp premise conclusion)) :
+    ∃ extension : PrimeTheory Atom,
+      primeTheoryLe theory extension ∧ extension.contains premise ∧
+        ¬ extension.contains conclusion := by
+  have havoid : DerivationallyAvoids basis.formulas (.imp premise conclusion) := by
+    intro hderives
+    exact hnot ((basis.complete (.imp premise conclusion)).mpr hderives)
+  rcases finite_implication_failure_prime_extension_conservative
+    schedule basis.formulas premise conclusion havoid with
+    ⟨extension, hpreserves, hpremise, hnconclusion, _⟩
+  refine ⟨extension, ?_, hpremise, hnconclusion⟩
+  intro formula hformula
+  exact hpreserves formula ((basis.complete formula).mp hformula)
+
+/- This packages the preceding theorem in exactly the shape of the canonical
+   witness, for the finitely presented sub-class of canonical worlds.  The
+   remaining unrestricted theorem is precisely the passage from a general
+   prime theory to such a relative saturation. -/
+theorem primeTheoryFiniteBasis_extension_witness {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom) (theory : PrimeTheory Atom)
+    (basis : PrimeTheoryFiniteBasis theory) :
+    ∀ (premise conclusion : Formula Atom),
+      ¬ theory.contains (.imp premise conclusion) →
+        ∃ extension : PrimeTheory Atom, primeTheoryLe theory extension ∧
+          extension.contains premise ∧ ¬ extension.contains conclusion := by
+  intro premise conclusion hnot
+  exact primeTheory_implication_failure_extension_of_finite_basis
+    schedule theory basis premise conclusion hnot
+
 def canonicalKripkeModel (Atom : Type u) : KripkeModel (Atom := Atom) where
   World := PrimeTheory Atom
   le := primeTheoryLe
