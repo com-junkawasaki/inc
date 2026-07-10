@@ -1883,26 +1883,90 @@ construction) that is simultaneously a `glue`-homomorphism and reflects
 prior instance's T5 result, precisely because it was the first instance
 whose `glue` had a real target worth being isomorphic *to*.
 
-**Next hypothesis (cycle 29, not yet attempted)**: no mandatory item
-carries over -- both of cycle 26's queued options are now closed
-(cycle 27: faithfulness fix + price; cycle 28: translation-as-
-homomorphism). The `cycleIncidence`/`cycleIncidenceFixed` thread has
-been explored across boundary structure (collapse, cycle 26), boundary
-composition (∂², cycles 26-27), bisimulation (faithfulness, cycle 27),
-and now translation/algebra (cycle 28) -- a full sweep comparable in
-breadth to what `simplexIncidence` received across cycles 11-23. Worth
-treating this thread as complete for now rather than manufacturing a
-fifth angle on the same instance. Two directions for next time, neither
-scoped: (a) a fifth new `Incidence` instance, testing yet another
-un-tried structural shape (e.g. a *tree* with branching factor > 2,
-unlike `pairIncidenceChained`'s strictly-binary nesting -- would a
-wider branching factor surface anything `pair`'s two-entry shape
-couldn't?); (b) revisit the original, much larger research-program
-questions from early in this project's history (constructing `ℕ`/sets/
-logic/category-theory concepts *internal* to Inc, rather than as
-external `Incidence` instances) now that the instance library and
-general-theorem toolkit are substantially more mature than when that
-scope was last assessed as "too large for one cycle" -- worth
-re-scoping only a *first concrete milestone* of that program, not the
-whole vision, consistent with how the very first move into this
-territory (Peano naturals as a concrete instance) was scoped originally.
+## Cycle 29
+
+**Hypothesis**: (option (a) of cycle 28's queue) a fifth new `Incidence`
+instance, testing a structural shape none of the prior four tried -- a
+*ternary*-branching tree, `node a b c` with a genuine *three*-entry
+boundary, rather than `pairIncidenceChained`'s strictly binary nesting.
+Would wider branching surface anything `pair`'s two-entry shape
+couldn't? And -- since `node`'s boundary is a second real 3-entry
+instance alongside `simplexIncidence.face` (cycle 11) -- does this
+finally satisfy cycle 20's stated condition ("no second instance to
+validate a 3-entry generalization against") for revisiting that
+declined generalization?
+
+**Method**: built `TreeId := leaf (n : Nat) | node (a b c : TreeId)`
+with `treeBoundary (node a b c) = [{a,c1,pos,1},{b,c2,pos,1},{c,c3,pos,1}]`
+(uniform `pos` sign, unlike `simplexIncidence.face`'s deliberate
+alternating sum). One proof-engineering snag building the `Incidence`
+instance itself: `well_founded`'s recursive case (`a = node a b c`,
+structurally impossible) wasn't closed automatically by `simp_all` the
+way it had been for every prior instance's simpler shapes -- needed an
+explicit `sizeOf`-based contradiction (`congrArg sizeOf hei`, then
+`simp [TreeId.node.sizeOf_spec]`, closed by `<;> omega` after `simp`
+alone closed some but not all branches). Then tested, in order: (1)
+whether "flat leaves collapse" (cycles 2/12/13/18/26) still holds for
+bare `leaf n`s; (2) whether `boundary_composition_zero_of_leaf_boundary`
+(cycle 10) still applies when a node's three children are all leaves;
+(3) `#eval`-checked what happens with *non-leaf* children (a nested
+`outerTree = node (node (leaf 0) (leaf 1) (leaf 2)) (leaf 3) (leaf 4)`)
+before formalizing.
+
+**Result**: **all three established patterns confirmed unchanged by
+branching factor -- no qualitatively new phenomenon, and that absence is
+itself the honest finding, not a lesser one.** `treeIncidence_leaves_collapse`
+(fifth confirmation), `treeIncidence_leaf_children_zero` (cycle 10's
+theorem reused directly, no new machinery, confirming it was never
+arity-specific), and the concrete `#eval`/`decide` witnesses for
+`outerTree` (nonzero at `leaf 0`/`1`/`2`, reached two levels deep
+through the inner node; zero at `leaf 3`/`4`, direct leaf children;
+overall `∂² ≠ 0`) all check out, matching the "single active branch, no
+cancellation" shape `single_link_composition_ne_zero` (cycle 9)
+captures for 1-entry boundaries -- here for a 3-entry one where only one
+of three branches happens to reach any given target, so no genuine
+3-way convergence (unlike `pairIncidenceChained`'s cycle 24/25 nested-
+pair cancellation, which needed a *second*, independent path to the
+same target to produce real cancellation; a plain ternary tree with no
+other structure doesn't manufacture that on its own). Left the actual
+3-entry generalization (`boundaryMatrix_three_link`/
+`foldl_add_eq_count_mul_three`/`three_link_composition_value`,
+mirroring cycle 17's 2-entry construction) as a `decide`-witness stage
+rather than attempting the general theorem in the same cycle as the
+instance -- deliberately, matching cycle 8→9's staging (introduce a
+concrete failure first, generalize the mechanism in a later cycle once
+motivated by more than one data point). `#print axioms`: standard three
+throughout, no `sorryAx`. Full `lake build`: 42/42 jobs (new file
+`Tree.lean`). Repo-wide `sorry`-as-tactic grep: none.
+
+**Synthesis**: worth stating plainly since it cuts against the instinct
+to always look for something surprising -- this cycle's value is
+*ruling out* a hidden assumption ("these three patterns held only
+because everything so far happened to be binary"), not discovering a
+new one. Confirmatory cycles (this one; cycle 19's audit; parts of
+cycle 25) are a legitimate category of finding in this project's
+co-scientist discipline, distinct from but not lesser than novel-
+phenomenon cycles (cycles 24, 26). The `well_founded` field's `sizeOf`
+friction is also worth noting structurally: it's the first instance
+where `simp_all` alone didn't suffice for an "element can't equal its
+own strictly-larger constructor application" argument, likely because
+ternary nesting's sizeOf arithmetic (`1 + sizeOf a + sizeOf b + sizeOf
+c`) needed `omega` to close where binary/unary shapes' simpler
+arithmetic let `simp` finish alone -- a small, mechanical scaling
+effect of arity on proof automation, not a deep finding, but honestly
+recorded rather than silently smoothed over.
+
+**Next hypothesis (cycle 30, not yet attempted)**: two candidates,
+neither committed to. (1) Build the general 3-entry `∂²` machinery
+this cycle deliberately deferred -- `boundaryMatrix_three_link`/
+`foldl_add_eq_count_mul_three`/`three_link_composition_value`, mirroring
+cycle 17's 2-entry construction, now validated against *two* real
+instances (`simplexIncidence.face`, `treeIncidence.node`) rather than
+built speculatively against one (the exact condition cycle 20 said
+would justify it). (2) Option (b) from cycle 28's queue, still not
+reached: revisit the original, much larger research-program questions
+(constructing `ℕ`/sets/logic/category-theory concepts *internal* to
+Inc) now that the instance library and general-theorem toolkit are
+substantially more mature -- scoped to a *first concrete milestone*
+only, not the whole vision, the same way the very first move into this
+territory (Peano naturals as a concrete instance) was scoped.

@@ -5,6 +5,7 @@ import IncidenceTheory.CrossInstance
 import IncidenceTheory.PathComplex
 import IncidenceTheory.Simplex
 import IncidenceTheory.Cycle
+import IncidenceTheory.Tree
 
 /- `main`'s `do` block accumulates one `IO.println` per research cycle
    (18 so far); Lean's `do`-notation desugaring is right-recursive and
@@ -342,3 +343,16 @@ def main : IO Unit := do
   IO.println "  ✓ combined with injectivity + cycleIncidenceFixed's faithfulness (cycle 27):"
   IO.println "    cycleToNat is BOTH a faithful ≈-reflector AND an algebraic homomorphism --"
   IO.println "    cycleIncidenceFixed's glue structure is literally isomorphic to Z/4Z"
+
+  IO.println "\n🌳 A Fifth Instance: Ternary Branching, Same Patterns Confirmed (cycle 29):"
+  IO.println "  ✓ treeIncidence: node a b c, a genuine 3-entry (uniform pos, not alternating)"
+  IO.println "    boundary -- the SECOND real 3-entry instance (after simplexIncidence.face,"
+  IO.println "    cycle 11), finally satisfying cycle 20's condition for a 3-entry generalization"
+  IO.println "  ✓ 'flat leaves collapse' generalizes to ternary (5th confirmation, after"
+  IO.println "    cycles 2/12/13/18/26) -- branching factor doesn't matter, only structure"
+  IO.println "  ✓ leaf-boundary sufficiency (cycle 10) applies 'for free' to a 3-entry element"
+  IO.println "  ✓ non-leaf children -> genuine ∂² ≠ 0 (checked concretely, same 'one active"
+  IO.println "    branch, no cancellation' shape as single_link) -- generalization to a real"
+  IO.println "    3-entry theorem queued, not attempted here, honestly scoped as its own cycle"
+  IO.println "  → this instance CONFIRMS known patterns generalize rather than finding something"
+  IO.println "    qualitatively new -- itself a real finding: rules out 'secretly about binary'"
