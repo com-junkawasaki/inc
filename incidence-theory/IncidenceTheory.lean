@@ -551,6 +551,15 @@ def boundarySquareZero {I R T : Type u} [DecidableEq I]
   ∀ i k, i ∈ idx → k ∈ idx →
     idx.foldl (fun acc j => acc + boundaryMatrix inc idx i j * boundaryMatrix inc idx j k) 0 = 0
 
+/- An unconditional chain-complex law for one incidence would quantify over
+   every finite observation list.  This is deliberately distinct from the
+   conditional `boundarySquareZero inc idx`: the base `Incidence` interface
+   does not impose it, and concrete countermodels below show it cannot be
+   derived from the current axioms. -/
+def BoundarySquareZeroEverywhere {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) : Prop :=
+  ∀ idx, boundarySquareZero inc idx
+
 theorem boundaryMatrix_of_empty_boundary {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I) {i j : I}
     (hempty : inc.boundary i = []) : boundaryMatrix inc idx i j = 0 := by

@@ -231,6 +231,24 @@ theorem natIncidence_boundary_composition_witness :
   boundary_composition natIncidence natIdx6 2 0 = 1 := by
   decide
 
+/- The requested unconditional `∂² = 0` theorem is refuted by a model of the
+   implemented incidence axioms.  Thus a future universal chain-complex result
+   must strengthen `Incidence` (or explicitly require a chain-complex law);
+   it cannot be filled by a proof over the present interface. -/
+theorem natIncidence_not_boundarySquareZeroEverywhere :
+    ¬ BoundarySquareZeroEverywhere natIncidence := by
+  intro hall
+  have hzero := hall natIdx6 2 0 (by decide) (by decide)
+  change boundary_composition natIncidence natIdx6 2 0 = 0 at hzero
+  rw [natIncidence_boundary_composition_witness] at hzero
+  omega
+
+theorem incidence_axioms_do_not_imply_unconditional_boundarySquareZero :
+    ¬ (∀ {I R T : Type} [DecidableEq I] (inc : Incidence I R T),
+      BoundarySquareZeroEverywhere inc) := by
+  intro hall
+  exact natIncidence_not_boundarySquareZeroEverywhere (hall natIncidence)
+
 /- Research cycle 9 (see RESEARCH_LOG.md): classical simplicial homology
    fixes exactly cycle 8's failure by *alternating* the boundary sign by
    degree parity. `altIncidence` tests that directly: `n+1 → n` is
