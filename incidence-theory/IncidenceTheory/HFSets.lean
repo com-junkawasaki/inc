@@ -2698,6 +2698,37 @@ theorem hfRecursiveProduct_subset_iff {left left' right right' : HFRecursiveSet}
   · rintro ⟨hleft, hright⟩
     exact hfRecursiveProduct_mono hleft hright
 
+/- The singleton embedding of a pair is compatible with both finite
+   powersets.  Equivalently, the canonical point
+   `⟨{a}, {b}⟩` belongs to `P(left) × P(right)` exactly when its two original
+   coordinates belong to the corresponding factors. -/
+theorem hfRecursiveMember_product_power_singletons_iff
+    (a b left right : HFRecursiveSet) :
+    HFRecursiveMember
+      (hfRecursiveOrderedPair (hfRecursiveSingleton a) (hfRecursiveSingleton b))
+      (hfRecursiveProduct (hfRecursivePower left) (hfRecursivePower right)) ↔
+      HFRecursiveMember a left ∧ HFRecursiveMember b right := by
+  constructor
+  · intro h
+    rcases (hfRecursiveMember_product_iff _ (hfRecursivePower left)
+        (hfRecursivePower right)).mp h with
+      ⟨a', ha', b', hb', hpair⟩
+    rcases hfRecursiveOrderedPair_injective hpair with ⟨haa', hbb'⟩
+    constructor
+    · apply (hfRecursiveMember_singleton_power_iff a left).mp
+      rw [haa']
+      exact ha'
+    · apply (hfRecursiveMember_singleton_power_iff b right).mp
+      rw [hbb']
+      exact hb'
+  · rintro ⟨ha, hb⟩
+    exact (hfRecursiveMember_product_iff _ (hfRecursivePower left)
+      (hfRecursivePower right)).mpr
+      ⟨hfRecursiveSingleton a,
+        (hfRecursiveMember_singleton_power_iff a left).mpr ha,
+        hfRecursiveSingleton b,
+        (hfRecursiveMember_singleton_power_iff b right).mpr hb, rfl⟩
+
 /- Product distributes over finite union in each coordinate.  The witnesses
    in the product membership criterion make the two directions entirely
    extensional. -/

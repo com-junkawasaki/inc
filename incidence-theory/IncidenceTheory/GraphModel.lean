@@ -1392,6 +1392,46 @@ theorem triL_C_vertex_row_sum : triL C A + triL C B + triL C C = 0 := by
 theorem triL_vertex_trace : triL A A + triL B B + triL C C = 6 := by
   native_decide
 
+/- Concrete spectral calculations use the same six-element finite index as
+   the triangle Gram matrix.  Edge coordinates are set to zero, so these are
+   the familiar vertex potentials embedded in the full incidence carrier. -/
+def triLApply (x : GId → Int) (i : GId) : Int :=
+  triIdx.foldl (fun total j => total + triL i j * x j) 0
+
+def trianglePotentialAB : GId → Int
+  | .node 1 => 1
+  | .node 2 => -1
+  | _ => 0
+
+def trianglePotentialAC : GId → Int
+  | .node 1 => 1
+  | .node 3 => -1
+  | _ => 0
+
+def triangleConstantPotential : GId → Int
+  | .node 1 | .node 2 | .node 3 => 1
+  | _ => 0
+
+theorem trianglePotentialAB_eigenvalue_three {i : GId} (hi : i ∈ triIdx) :
+    triLApply trianglePotentialAB i = 3 * trianglePotentialAB i := by
+  simp [triIdx] at hi
+  rcases hi with rfl | rfl | rfl | rfl | rfl | rfl <;> native_decide
+
+theorem trianglePotentialAC_eigenvalue_three {i : GId} (hi : i ∈ triIdx) :
+    triLApply trianglePotentialAC i = 3 * trianglePotentialAC i := by
+  simp [triIdx] at hi
+  rcases hi with rfl | rfl | rfl | rfl | rfl | rfl <;> native_decide
+
+theorem triangleConstantPotential_in_kernel {i : GId} (hi : i ∈ triIdx) :
+    triLApply triangleConstantPotential i = 0 := by
+  simp [triIdx] at hi
+  rcases hi with rfl | rfl | rfl | rfl | rfl | rfl <;> native_decide
+
+theorem triangle_eigenvectors_independent :
+    trianglePotentialAB A * trianglePotentialAC B -
+      trianglePotentialAB B * trianglePotentialAC A = 1 := by
+  native_decide
+
 /- The finite triangle calculation used by the executable. -/
 def triangle_boundary_composition (i k : GId) : Int :=
   triIdx.foldl (fun acc j => acc + triB i j * triB j k) 0

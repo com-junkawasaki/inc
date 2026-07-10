@@ -110,6 +110,8 @@ It currently establishes:
   nonemptiness hypothesis.
   Under the same nonemptiness condition it also reflects the product subset
   order coordinatewise.
+  Its interaction with powerset is checked at singleton representatives:
+  `⟨{a},{b}⟩ ∈ P(s)×P(t)` holds exactly when `a∈s` and `b∈t`.
   Singleton and Kuratowski ordered-pair constructions also descend to the
   recursive extensional quotient, with their exact outer membership laws;
   unordered-pair equality is classified and ordered pairs are injective.
