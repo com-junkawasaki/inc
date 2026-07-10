@@ -315,6 +315,60 @@ theorem finiteL_kernel_iff (x : FiniteIncidence → Int) :
     · simp [finiteLApply_leaf, h]
     · exact finiteLApply_root x
 
+/- Thus this Gram Laplacian is an actual projection.  These are action-level
+   statements, so no separate finite-matrix multiplication interface is
+   required. -/
+theorem finiteLApply_idempotent (x : FiniteIncidence → Int) (i : FiniteIncidence) :
+    finiteLApply (fun j => finiteLApply x j) i = finiteLApply x i := by
+  cases i
+  · simp [finiteLApply_leaf]
+  · simp [finiteLApply_root]
+
+theorem finiteLApply_comp_self (x : FiniteIncidence → Int) :
+    (fun i => finiteLApply (fun j => finiteLApply x j) i) = finiteLApply x := by
+  funext i
+  exact finiteLApply_idempotent x i
+
+def finiteLeafBasis : FiniteIncidence → Int
+  | .leaf => 1
+  | .root => 0
+
+def finiteRootBasis : FiniteIncidence → Int
+  | .leaf => 0
+  | .root => 1
+
+theorem finiteLApply_leafBasis (i : FiniteIncidence) :
+    finiteLApply finiteLeafBasis i = finiteLeafBasis i := by
+  cases i <;> simp [finiteLApply_leaf, finiteLApply_root, finiteLeafBasis]
+
+theorem finiteLApply_rootBasis (i : FiniteIncidence) :
+    finiteLApply finiteRootBasis i = 0 := by
+  cases i <;> simp [finiteLApply_leaf, finiteLApply_root, finiteRootBasis]
+
+theorem finiteLApply_basis_decomposition (x : FiniteIncidence → Int) (i : FiniteIncidence) :
+    finiteLApply x i = x .leaf * finiteLeafBasis i := by
+  cases i
+  · simp [finiteLApply_leaf, finiteLeafBasis]
+  · simp [finiteLApply_root, finiteLeafBasis]
+
+theorem finite_basis_decomposition (x : FiniteIncidence → Int) :
+    x = fun i => x .leaf * finiteLeafBasis i + x .root * finiteRootBasis i := by
+  funext i
+  cases i <;> simp [finiteLeafBasis, finiteRootBasis]
+
+theorem finiteLApply_fixed_iff (x : FiniteIncidence → Int) :
+    (∀ i, finiteLApply x i = x i) ↔ x .root = 0 := by
+  constructor
+  · intro h
+    have hroot := h .root
+    have : 0 = x .root := by
+      simpa [finiteLApply_root] using hroot
+    exact this.symm
+  · intro h i
+    cases i
+    · exact finiteLApply_leaf x
+    · simp [finiteLApply_root, h]
+
 def finiteAlgebraicModel : IncidenceAlgebraic FiniteIncidence GraphRole GraphType where
   toIncidencePreservation := finiteUnitPreservation
   boundaryMatrix := boundaryMatrix finiteIncidence finiteIdx

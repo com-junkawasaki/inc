@@ -72,6 +72,8 @@ It currently establishes:
   countably infinite `Nat` atom language.
   More generally, every atom encoder/decoder retraction supplies the required
   formula enumeration and hence the corresponding Kripke-completeness theorem.
+  In the converse direction, every nonderivable finite sequent has a checked
+  canonical prime-theory counterworld for the supplied coding.
   For the concrete `root` atom, excluded middle is shown underivable and
   Kripke-invalid, while its double-negated form is derivable.
   Each formula has a finite subformula closure, and a consistent context has a

@@ -2874,6 +2874,54 @@ theorem kripke_entails_iff_derives_of_enumeration {Atom : Type u}
     KripkeEntails.{u, u} context formula ↔ Derives context formula :=
   kripke_entails_iff_derives_of_schedule enumeration.recurrentSchedule context formula
 
+/-! The completeness proof has a constructive-looking contraposed form that
+   is often more useful to clients: an underivable finite sequent has a named
+   world in the canonical prime-theory model which forces every assumption and
+   refutes the conclusion. -/
+theorem canonical_countermodel_of_not_derives_of_schedule {Atom : Type u}
+    (schedule : RecurrentFormulaSchedule Atom)
+    {context : List (Formula Atom)} {formula : Formula Atom}
+    (hnot : ¬ Derives context formula) :
+    ∃ theory : PrimeTheory Atom,
+      KripkeContextForces (canonicalKripkeModel Atom) theory context ∧
+        ¬ KripkeForces (canonicalKripkeModel Atom) theory formula := by
+  rcases relative_prime_extension schedule formula context hnot with
+    ⟨theory, hcontext, hnotcontains⟩
+  refine ⟨theory, ?_, ?_⟩
+  · intro assumption hassumption
+    exact (canonical_truth_lemma_of_schedule schedule theory assumption).mpr
+      (hcontext assumption hassumption)
+  · intro hforces
+    exact hnotcontains
+      ((canonical_truth_lemma_of_schedule schedule theory formula).mp hforces)
+
+theorem canonical_countermodel_of_not_derives_of_enumeration {Atom : Type u}
+    (enumeration : FormulaEnumeration Atom)
+    {context : List (Formula Atom)} {formula : Formula Atom}
+    (hnot : ¬ Derives context formula) :
+    ∃ theory : PrimeTheory Atom,
+      KripkeContextForces (canonicalKripkeModel Atom) theory context ∧
+        ¬ KripkeForces (canonicalKripkeModel Atom) theory formula :=
+  canonical_countermodel_of_not_derives_of_schedule enumeration.recurrentSchedule hnot
+
+theorem not_canonical_kripke_entails_of_not_derives_of_enumeration {Atom : Type u}
+    (enumeration : FormulaEnumeration Atom)
+    {context : List (Formula Atom)} {formula : Formula Atom}
+    (hnot : ¬ Derives context formula) :
+    ¬ CanonicalKripkeEntails context formula := by
+  rintro hentails
+  rcases canonical_countermodel_of_not_derives_of_enumeration enumeration hnot with
+    ⟨theory, hcontext, hnotforces⟩
+  exact hnotforces (hentails theory hcontext)
+
+theorem not_kripke_entails_of_not_derives_of_enumeration {Atom : Type u}
+    (enumeration : FormulaEnumeration Atom)
+    {context : List (Formula Atom)} {formula : Formula Atom}
+    (hnot : ¬ Derives context formula) :
+    ¬ KripkeEntails.{u, u} context formula := by
+  intro hentails
+  exact hnot ((kripke_entails_iff_derives_of_enumeration enumeration context formula).mp hentails)
+
 /- Incidence-specialized notation for clients of the core structure. -/
 abbrev IncidenceFormula (I : Type u) := Formula I
 
@@ -3026,6 +3074,28 @@ theorem kripke_entails_iff_derives_of_atom_coding {Atom : Type u}
     KripkeEntails.{u, u} context formula ↔ Derives context formula :=
   kripke_entails_iff_derives_of_enumeration
     (formulaEnumerationOfAtomCoding decodeAtom codeAtom hcode) context formula
+
+/-! Countable atom codings expose the canonical countermodel directly, not
+   only the logically equivalent completeness statement. -/
+theorem canonical_countermodel_of_not_derives_of_atom_coding {Atom : Type u}
+    (decodeAtom : Nat → Atom) (codeAtom : Atom → Nat)
+    (hcode : ∀ atom, decodeAtom (codeAtom atom) = atom)
+    {context : List (Formula Atom)} {formula : Formula Atom}
+    (hnot : ¬ Derives context formula) :
+    ∃ theory : PrimeTheory Atom,
+      KripkeContextForces (canonicalKripkeModel Atom) theory context ∧
+        ¬ KripkeForces (canonicalKripkeModel Atom) theory formula :=
+  canonical_countermodel_of_not_derives_of_enumeration
+    (formulaEnumerationOfAtomCoding decodeAtom codeAtom hcode) hnot
+
+theorem not_kripke_entails_of_not_derives_of_atom_coding {Atom : Type u}
+    (decodeAtom : Nat → Atom) (codeAtom : Atom → Nat)
+    (hcode : ∀ atom, decodeAtom (codeAtom atom) = atom)
+    {context : List (Formula Atom)} {formula : Formula Atom}
+    (hnot : ¬ Derives context formula) :
+    ¬ KripkeEntails.{u, u} context formula :=
+  not_kripke_entails_of_not_derives_of_enumeration
+    (formulaEnumerationOfAtomCoding decodeAtom codeAtom hcode) hnot
 
 noncomputable def finSuccAtomDecode (n : Nat) : Nat → Fin (n + 1) :=
   fun index => ⟨index % (n + 1), Nat.mod_lt _ (by omega)⟩
