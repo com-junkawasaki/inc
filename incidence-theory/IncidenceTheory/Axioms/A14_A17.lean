@@ -4,10 +4,7 @@ import IncidenceTheory.Axioms.A9_A13
 
 namespace IncidenceCore
 
-universe u v w
-
-/- Linear algebraic signatures -/
-def Matrix (m : Type u) (n : Type v) (α : Type w) := m → n → α
+-- Matrix is defined once, in Axioms.Basic (imported transitively via A9_A13).
 
 /- Extended structure with linear algebra -/
 structure IncidenceAlgebraic (I R T : Type u) [DecidableEq I]

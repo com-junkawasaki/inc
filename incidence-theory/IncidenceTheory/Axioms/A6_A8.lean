@@ -1,5 +1,6 @@
 /- Merkle-ID: foundation.axiomatization.A6_A8
    Gluing Operations: A6 (Existence), A7 (Unit), A8 (Associativity) -/
+import IncidenceTheory.Axioms.Basic
 import IncidenceTheory.Axioms.A2
 
 namespace IncidenceCore

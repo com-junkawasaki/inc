@@ -509,11 +509,11 @@ def finiteIncidenceLayerCertificate : FiniteIncidenceLayerCertificate where
    interfaces currently formalized in `Axioms.lean`: core A1--A5, gluing
    A6--A8, preservation A9--A10, and derived linear data A16--A17. -/
 theorem finiteIncidence_available_layers :
-    Nonempty (Incidence FiniteIncidence GraphRole GraphType) ∧
+    Nonempty (Incidence FiniteIncidence GraphRole GraphType.{0}) ∧
       Nonempty (GluingSpec finiteIncidence) ∧
-      Nonempty (IncidenceGluing FiniteIncidence GraphRole GraphType) ∧
-      Nonempty (IncidencePreservation FiniteIncidence GraphRole GraphType) ∧
-      Nonempty (IncidenceAlgebraic FiniteIncidence GraphRole GraphType) := by
+      Nonempty (IncidenceGluing.{0, 0} FiniteIncidence GraphRole GraphType.{0}) ∧
+      Nonempty (IncidencePreservation.{0, 0} FiniteIncidence GraphRole GraphType.{0}) ∧
+      Nonempty (IncidenceAlgebraic.{0, 0} FiniteIncidence GraphRole GraphType.{0}) := by
   exact ⟨⟨finiteIncidenceLayerCertificate.core⟩,
     ⟨finiteIncidenceLayerCertificate.gluing⟩,
     ⟨finiteIncidenceLayerCertificate.erased_gluing⟩,

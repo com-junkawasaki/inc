@@ -1,6 +1,6 @@
 /- Merkle-ID: foundation.axiomatization.basic
    Basic structures and types for Incidence Theory -/
-universe u v
+universe u v w
 
 /- Signs for oriented endpoints (A3). -/
 inductive Sign where
@@ -15,9 +15,18 @@ structure Endpoint (I : Type u) (R : Type v) where
   role : R
   sign : Sign
   mult : Nat
-  mult_pos : 1 ≤ mult
+  mult_pos : 1 ≤ mult := by omega
 deriving Repr
 
 /- For now we model a multiset as a list with multiset semantics.
    Future: swap to Multiset once the dependency is available. -/
 abbrev Boundary (I : Type u) (R : Type v) := List (Endpoint I R)
+
+/- Minimal matrix abstraction using functions over finite indices.
+   Canonical definition (A16); shared by every module that needs it so it
+   is declared exactly once (avoids duplicate-declaration errors). -/
+namespace IncidenceCore
+
+def Matrix (m : Type u) (n : Type v) (α : Type w) := m → n → α
+
+end IncidenceCore

@@ -14,15 +14,12 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Setup Lean
-      uses: leanprover-community/setup-lean@v1
+    # leanprover-community/setup-lean no longer exists (repo not found);
+    # leanprover/lean-action is the maintained action and also runs `lake build`.
+    - name: Setup Lean and build
+      uses: leanprover/lean-action@v1
       with:
-        lean-version: leanprover/lean4:v4.23.0
-
-    - name: Build
-      run: |
-        cd incidence-theory
-        lake build
+        lake-package-directory: incidence-theory
 
     - name: Run examples
       run: |

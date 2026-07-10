@@ -4,7 +4,11 @@ import IncidenceTheory.Axioms.Basic
 
 namespace IncidenceCore
 
-/- A5: Well-founded recursion on boundaries -/
+/- A5 is a genuine constraint (no self-loops in the boundary): an arbitrary
+   `boundary : I → Boundary I R` need not satisfy it, so it cannot be a
+   theorem about unconstrained boundaries. It is instead an axiom every
+   well-formed incidence must supply (see `Incidence.well_founded` in
+   Axioms.lean); this lemma packages that hypothesis for A5-only callers. -/
 theorem well_founded_theorem {I R : Type u} [DecidableEq I]
   (boundary : I → Boundary I R) (rank : I → Nat)
   (decreases : ∀ i e, e ∈ boundary i → rank e.i < rank i) :
