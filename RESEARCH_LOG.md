@@ -2325,13 +2325,80 @@ in mind as a category of follow-up distinct from "new instance,"
 re-examine *old* results through *newer* analytical questions that
 didn't exist when they were first proved.
 
-**Next hypothesis (cycle 35, not yet attempted)**: option from cycle
-33's queue, not reached this cycle: does `incidenceSum` have a
-*conditional* faithfulness result analogous to cycle 32's -- e.g. if
-`inc1`/`inc2` are both faithful AND have at most one leaf each (or no
-"collapsible" structure shared across sides), does faithfulness hold?
-Also newly worth considering: does `incidenceSum` have an analogous
-generic translation-pairing result (this cycle's `incidenceProd`
-theorem, adapted for a disjoint union -- likely simpler, since a sum
-translation would presumably be `Sum.elim t1 t2 : I1 ⊕ I2 → S` rather
-than a genuine pairing)? Neither scoped yet.
+## Cycle 35
+
+**Hypothesis**: (option from cycle 33's queue) does `incidenceSum` have
+a *conditional* faithfulness result, given cycle 33 showed it fails in
+general? Scoped before writing Lean: cycle 33's cross-side collapse
+mechanism needs *both* sides to supply a leaf for the *same* pair, so a
+natural sufficient condition is "at least one side has no leaves at
+all" -- and `cycleIncidenceFixed` (cycle 27) is the perfect witness,
+being both fully faithful and having *zero* leaves whatsoever (the
+first instance in this project with that property).
+
+**Method**: built the result in three pieces, mirroring cycle 32's
+`incidenceProd_project` structure but adapted for a disjoint union. (1)
+Cross-side non-bisimilarity whenever *either* side has any boundary
+entry at all (via `not_approxBisim_of_boundary_mismatch`, cycle 21,
+directly -- a `Sum.inl`-tagged entry can never be `boundaryCompatible`
+with a `Sum.inr`-tagged one, the same tag-mismatch argument cycle 32
+used for the product). (2) Same-side `≈` projects down to the
+component instance's own `≈` -- structurally simpler than
+`incidenceProd_project` since there's nothing to *combine*, only to
+*isolate*. One genuine subtlety this direction had that the product's
+projection didn't: `incidenceSum`'s `typeFunc` is *forced* constant
+(cycle 33's design tension), so `IsBisimulation`'s type-preservation
+obligation for the projected relation can't be derived for free the way
+it could for the product's genuine `T1×T2` typing. Resolved by baking
+`inc1.typeFunc x = inc1.typeFunc y` directly into the projected
+relation's definition (rather than trying to derive it from the sum's
+trivial type equality, which carries no real information), then
+propagating it along boundary edges using `inc1`'s own
+`type_consistent` obligation -- already guaranteed by the `Incidence`
+structure, not an extra assumption. (3) Combined both into the full
+iff, case-split on which side each of `p`/`q` is on (4 cases: same-side
+uses the projection + each component's own faithfulness; cross-side
+uses the non-bisimilarity fact, requiring only one side leafless).
+
+**Result**: **confirmed on the first complete attempt (after the
+`typeFunc` subtlety was identified and resolved during design, not
+discovered as a build failure) -- and, notably, proves with only
+`propext`/`Quot.sound`, no `Classical.choice`, fully constructive.**
+`incidenceSum_faithful_of_faithful_no_shared_leaves` is stated
+generically (restricted to `GraphType`-typed instances, matching every
+concrete instance in this project, so the `typeFunc`-equality
+hypothesis discharges trivially via `rfl` at call sites) and confirmed
+concretely: `natIncidence ⊕ cycleIncidenceFixed` is fully faithful,
+despite `natIncidence` itself having exactly one leaf (`0`) -- because
+`cycleIncidenceFixed` supplies none, cross-side collapse never gets a
+chance to happen. `#print axioms`: `propext`/`Quot.sound` on all five
+new theorems. Full `lake build`: 46/46 jobs. Repo-wide `sorry`-as-tactic
+grep: none.
+
+**Synthesis**: this cycle closes the loop cycle 33 opened, the same way
+cycle 30 closed cycle 20's loop and cycle 32 closed cycle 31's --
+"declining/limiting a result for now" in this project consistently
+turns out to be conditional on a specific piece of evidence, and that
+evidence keeps arriving from *other* cycles' work rather than needing
+to be manufactured on the spot (`cycleIncidenceFixed`, cycle 27's
+byproduct of a completely different investigation, turned out to be
+exactly what this cycle needed). The `typeFunc`-forced-constant
+subtlety is also worth remembering as a second, independent way a
+"projection" argument can need care beyond `incidenceProd_project`'s
+template (that one needed only tag-matching for boundary entries; this
+one additionally needed to route type-equality through
+`type_consistent` by construction, not derive it from the ambient
+bisimulation).
+
+**Next hypothesis (cycle 36, not yet attempted)**: option from cycle
+34's queue, not reached this cycle: does `incidenceSum` have an
+analogous generic translation-pairing result (mirroring cycle 34's
+`incidenceProd_translation_reflects`) -- likely via `Sum.elim t1 t2 :
+I1 ⊕ I2 → S1 ⊕ S2` rather than a genuine pairing, and likely needing an
+analogous "no shared collapsible structure" side-condition given this
+cycle's finding that plain `incidenceSum` doesn't preserve faithfulness
+unconditionally. Also open, not yet scoped: are there other existing
+instances (beyond `cycleIncidenceFixed`) with the "faithful and
+leafless" property this cycle's condition needs, making
+`incidenceSum_faithful_of_faithful_no_shared_leaves` more broadly
+reusable, or is `cycleIncidenceFixed` currently unique in this respect?

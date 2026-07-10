@@ -442,6 +442,19 @@ def printCycles33plus : IO Unit := do
   IO.println "  → an old translation still had an unchecked property; a new lens (any glue"
   IO.println "    with algebraic structure) can retroactively reveal it years (cycles) later"
 
+  IO.println "\n🧷 A Conditional Faithfulness Result for the Sum, Connecting Cycle 27 (cycle 35):"
+  IO.println "  ✓ incidenceSum_faithful_of_faithful_no_shared_leaves: full faithfulness holds"
+  IO.println "    whenever both factors are faithful AND at least one side has NO leaves at all --"
+  IO.println "    cross-side collapse (cycle 33) needs BOTH sides to supply a leaf for the SAME pair"
+  IO.println "  ✓ cycleIncidenceFixed (cycle 27) is the perfect witness: faithful AND leafless"
+  IO.println "    (every element has exactly one boundary entry, cyclically) -- confirmed"
+  IO.println "    concretely: natIncidence ⊕ cycleIncidenceFixed IS fully faithful"
+  IO.println "  ✓ one genuine subtlety incidenceProd_project didn't have: incidenceSum's typeFunc"
+  IO.println "    is FORCED constant (cycle 33's design tension), so type-preservation can't be"
+  IO.println "    derived for free -- fixed by baking typeFunc-equality into the projected relation"
+  IO.println "    and propagating it via each instance's OWN type_consistent obligation"
+  IO.println "  → proves with ONLY propext/Quot.sound, no Classical.choice -- fully constructive"
+
 def main : IO Unit := do
   printFoundationsAndEarlyCycles
   printCycles12to19

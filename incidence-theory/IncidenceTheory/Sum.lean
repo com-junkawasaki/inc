@@ -1,4 +1,5 @@
 import IncidenceTheory.Peano
+import IncidenceTheory.Cycle
 
 /- Merkle-ID: implementation.graph_model.sum
    story.jsonnet → implementation.nodes.sum
@@ -186,5 +187,199 @@ theorem incidenceSum_leaves_cross_natIncidence :
 
 theorem incidenceSum_inl0_ne_inr0 :
   (Sum.inl (0 : Nat) : Nat ⊕ Nat) ≠ Sum.inr (0 : Nat) := by simp
+
+/- Research cycle 35 (see RESEARCH_LOG.md): does `incidenceSum` have a
+   *conditional* faithfulness result, given cycle 33 showed it fails in
+   general? The cross-side collapse mechanism (cycle 33) needs *both*
+   sides to supply a leaf for the SAME pair -- so if just one side has
+   *no* leaves at all, no cross-side collapse can ever happen, for
+   *any* pair. `cycleIncidenceFixed` (cycle 27) is the perfect witness:
+   it's fully faithful AND has zero leaves whatsoever (every element
+   has exactly one boundary entry, cyclically) -- the first instance in
+   this project with that property. -/
+
+/- If `inc1`'s element has *any* boundary entry, it can never be
+   cross-side bisimilar to anything on the other side -- the same
+   argument cycle 33's collapse fact needed the ABSENCE of, now used in
+   the presence of a boundary entry via `not_approxBisim_of_boundary_mismatch`
+   (cycle 21) directly. -/
+theorem incidenceSum_cross_not_bisim_of_not_leaf_left
+  {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+  (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+  {a : I1} {b : I2} (ha : inc1.boundary a ≠ []) :
+  ¬ approxBisim (incidenceSum inc1 inc2) (Sum.inl a) (Sum.inr b) := by
+  obtain ⟨e1, he1⟩ := List.exists_mem_of_ne_nil _ ha
+  apply not_approxBisim_of_boundary_mismatch (incidenceSum inc1 inc2) (Sum.inl a) (Sum.inr b)
+    { i := Sum.inl e1.i, role := Sum.inl e1.role, sign := e1.sign, mult := e1.mult }
+  · simp only [incidenceSum, sumBoundary, List.mem_map]
+    exact ⟨e1, he1, rfl⟩
+  · intro e' he'
+    simp only [incidenceSum, sumBoundary, List.mem_map] at he'
+    obtain ⟨e2, he2, heq⟩ := he'
+    subst heq
+    simp [boundaryCompatible]
+
+/- Symmetric: if `inc2`'s element has any boundary entry, same
+   conclusion, via `approxBisim_symm` applied to the mirror-image
+   argument. -/
+theorem incidenceSum_cross_not_bisim_of_not_leaf_right
+  {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+  (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+  {a : I1} {b : I2} (hb : inc2.boundary b ≠ []) :
+  ¬ approxBisim (incidenceSum inc1 inc2) (Sum.inl a) (Sum.inr b) := by
+  intro h
+  have h' : approxBisim (incidenceSum inc1 inc2) (Sum.inr b) (Sum.inl a) := approxBisim_symm h
+  obtain ⟨e2, he2⟩ := List.exists_mem_of_ne_nil _ hb
+  exact not_approxBisim_of_boundary_mismatch (incidenceSum inc1 inc2) (Sum.inr b) (Sum.inl a)
+    { i := Sum.inr e2.i, role := Sum.inr e2.role, sign := e2.sign, mult := e2.mult }
+    (by simp only [incidenceSum, sumBoundary, List.mem_map]; exact ⟨e2, he2, rfl⟩)
+    (by
+      intro e' he'
+      simp only [incidenceSum, sumBoundary, List.mem_map] at he'
+      obtain ⟨e1, he1, heq⟩ := he'
+      subst heq
+      simp [boundaryCompatible])
+    h'
+
+/- Same-side `≈` in the sum reduces to `≈` in `inc1` alone -- the
+   `incidenceProd_project`-style projection (cycle 32), simpler here
+   since there's nothing to combine, only to isolate. One genuine
+   subtlety `incidenceProd_project` didn't have: `incidenceSum`'s
+   `typeFunc` is *forced* constant (the design tension noted above), so
+   `IsBisimulation`'s type-preservation obligation can't be derived for
+   free the way it could for the product's genuine `T1×T2` typing --
+   resolved by baking `inc1.typeFunc x = inc1.typeFunc y` directly into
+   the projected relation, then propagating it along boundary edges via
+   `inc1`'s own `type_consistent` obligation (already guaranteed by the
+   `Incidence` structure, not an extra assumption). -/
+theorem incidenceSum_project_left
+  {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+  (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+  {a b : I1} (h : approxBisim (incidenceSum inc1 inc2) (Sum.inl a) (Sum.inl b))
+  (htype : inc1.typeFunc a = inc1.typeFunc b) :
+  approxBisim inc1 a b := by
+  obtain ⟨rel, hbisim, hab⟩ := h
+  refine ⟨fun x y => rel (Sum.inl x) (Sum.inl y) ∧ inc1.typeFunc x = inc1.typeFunc y,
+    ?_, hab, htype⟩
+  intro x y ⟨hr, htype'⟩
+  obtain ⟨_, hmatch⟩ := hbisim (Sum.inl x) (Sum.inl y) hr
+  refine ⟨htype', ?_, ?_⟩
+  · intro e he
+    have heS : ({ i := Sum.inl e.i, role := Sum.inl e.role, sign := e.sign, mult := e.mult } :
+        Endpoint (I1 ⊕ I2) (R1 ⊕ R2)) ∈ (incidenceSum inc1 inc2).boundary (Sum.inl x) := by
+      simp only [incidenceSum, sumBoundary, List.mem_map]
+      exact ⟨e, he, rfl⟩
+    obtain ⟨e', he', hcompat, hrel'⟩ := hmatch.left _ heS
+    simp only [incidenceSum, sumBoundary, List.mem_map] at he'
+    obtain ⟨e1', he1', heq⟩ := he'
+    subst heq
+    refine ⟨e1', he1', ⟨(Sum.inl.injEq _ _).mp hcompat.1, hcompat.2⟩, hrel', ?_⟩
+    rw [inc1.type_consistent x e he, inc1.type_consistent y e1' he1', htype']
+  · intro e' he'
+    have heS : ({ i := Sum.inl e'.i, role := Sum.inl e'.role, sign := e'.sign, mult := e'.mult } :
+        Endpoint (I1 ⊕ I2) (R1 ⊕ R2)) ∈ (incidenceSum inc1 inc2).boundary (Sum.inl y) := by
+      simp only [incidenceSum, sumBoundary, List.mem_map]
+      exact ⟨e', he', rfl⟩
+    obtain ⟨e, he, hcompat, hrel'⟩ := hmatch.right _ heS
+    simp only [incidenceSum, sumBoundary, List.mem_map] at he
+    obtain ⟨e1, he1, heq⟩ := he
+    subst heq
+    refine ⟨e1, he1, ⟨(Sum.inl.injEq _ _).mp hcompat.1, hcompat.2⟩, hrel', ?_⟩
+    rw [inc1.type_consistent x e1 he1, inc1.type_consistent y e' he', htype']
+
+theorem incidenceSum_project_right
+  {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+  (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+  {a b : I2} (h : approxBisim (incidenceSum inc1 inc2) (Sum.inr a) (Sum.inr b))
+  (htype : inc2.typeFunc a = inc2.typeFunc b) :
+  approxBisim inc2 a b := by
+  obtain ⟨rel, hbisim, hab⟩ := h
+  refine ⟨fun x y => rel (Sum.inr x) (Sum.inr y) ∧ inc2.typeFunc x = inc2.typeFunc y,
+    ?_, hab, htype⟩
+  intro x y ⟨hr, htype'⟩
+  obtain ⟨_, hmatch⟩ := hbisim (Sum.inr x) (Sum.inr y) hr
+  refine ⟨htype', ?_, ?_⟩
+  · intro e he
+    have heS : ({ i := Sum.inr e.i, role := Sum.inr e.role, sign := e.sign, mult := e.mult } :
+        Endpoint (I1 ⊕ I2) (R1 ⊕ R2)) ∈ (incidenceSum inc1 inc2).boundary (Sum.inr x) := by
+      simp only [incidenceSum, sumBoundary, List.mem_map]
+      exact ⟨e, he, rfl⟩
+    obtain ⟨e', he', hcompat, hrel'⟩ := hmatch.left _ heS
+    simp only [incidenceSum, sumBoundary, List.mem_map] at he'
+    obtain ⟨e2', he2', heq⟩ := he'
+    subst heq
+    refine ⟨e2', he2', ⟨(Sum.inr.injEq _ _).mp hcompat.1, hcompat.2⟩, hrel', ?_⟩
+    rw [inc2.type_consistent x e he, inc2.type_consistent y e2' he2', htype']
+  · intro e' he'
+    have heS : ({ i := Sum.inr e'.i, role := Sum.inr e'.role, sign := e'.sign, mult := e'.mult } :
+        Endpoint (I1 ⊕ I2) (R1 ⊕ R2)) ∈ (incidenceSum inc1 inc2).boundary (Sum.inr y) := by
+      simp only [incidenceSum, sumBoundary, List.mem_map]
+      exact ⟨e', he', rfl⟩
+    obtain ⟨e, he, hcompat, hrel'⟩ := hmatch.right _ heS
+    simp only [incidenceSum, sumBoundary, List.mem_map] at he
+    obtain ⟨e2, he2, heq⟩ := he
+    subst heq
+    refine ⟨e2, he2, ⟨(Sum.inr.injEq _ _).mp hcompat.1, hcompat.2⟩, hrel', ?_⟩
+    rw [inc2.type_consistent x e2 he2, inc2.type_consistent y e' he', htype']
+
+/- The payoff: full faithfulness for the sum whenever both factors are
+   individually faithful AND at least one side has no leaves at all.
+   Restricted to `GraphType`-typed instances (every concrete instance in
+   this project, matching the design tension noted above) so `htype`
+   discharges trivially via `rfl` at the call sites. -/
+theorem incidenceSum_faithful_of_faithful_no_shared_leaves
+  {I1 R1 I2 R2 : Type u} [DecidableEq I1] [DecidableEq I2]
+  (inc1 : Incidence I1 R1 GraphType) (inc2 : Incidence I2 R2 GraphType)
+  (hf1 : ∀ x y : I1, approxBisim inc1 x y ↔ x = y)
+  (hf2 : ∀ x y : I2, approxBisim inc2 x y ↔ x = y)
+  (hleafless2 : ∀ b, inc2.boundary b ≠ []) :
+  ∀ p q : I1 ⊕ I2, approxBisim (incidenceSum inc1 inc2) p q ↔ p = q := by
+  intro p q
+  cases p with
+  | inl a =>
+    cases q with
+    | inl b =>
+      constructor
+      · intro h
+        have := incidenceSum_project_left inc1 inc2 h rfl
+        rw [hf1] at this
+        rw [this]
+      · rintro h
+        cases h
+        exact approxBisim_refl _ _
+    | inr b =>
+      constructor
+      · intro h
+        exact absurd h (incidenceSum_cross_not_bisim_of_not_leaf_right inc1 inc2 (hleafless2 b))
+      · intro h
+        cases h
+  | inr a =>
+    cases q with
+    | inl b =>
+      constructor
+      · intro h
+        exact absurd (approxBisim_symm h)
+          (incidenceSum_cross_not_bisim_of_not_leaf_right inc1 inc2 (hleafless2 a))
+      · intro h
+        cases h
+    | inr b =>
+      constructor
+      · intro h
+        have := incidenceSum_project_right inc1 inc2 h rfl
+        rw [hf2] at this
+        rw [this]
+      · rintro h
+        cases h
+        exact approxBisim_refl _ _
+
+/- Concrete confirmation: `natIncidence ⊕ cycleIncidenceFixed` is fully
+   faithful -- `cycleIncidenceFixed` (cycle 27) is the first instance in
+   this project with NO leaves at all, so no cross-side collapse can
+   happen despite `natIncidence` itself having exactly one leaf (`0`). -/
+example : ∀ p q : Nat ⊕ CycleId,
+    approxBisim (incidenceSum natIncidence cycleIncidenceFixed) p q ↔ p = q :=
+  incidenceSum_faithful_of_faithful_no_shared_leaves natIncidence cycleIncidenceFixed
+    natIncidence_approxBisim_iff cycleIncidenceFixed_approxBisim_iff
+    (fun b => by cases b <;> simp [cycleIncidenceFixed, cycleBoundaryFixed])
 
 end IncidenceCore
