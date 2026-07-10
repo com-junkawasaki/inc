@@ -6,6 +6,7 @@ import IncidenceTheory.PathComplex
 import IncidenceTheory.Simplex
 import IncidenceTheory.Cycle
 import IncidenceTheory.Tree
+import IncidenceTheory.Product
 
 /- `main`'s `do` block accumulates one `IO.println` per research cycle
    (18 so far); Lean's `do`-notation desugaring is right-recursive and
@@ -368,3 +369,17 @@ def main : IO Unit := do
   IO.println "    cycle 11's specific decide-checked index happened to give zero"
   IO.println "  → closes the loop cycle 20 opened: declining a generalization isn't permanent,"
   IO.println "    it's conditional on evidence -- and the condition was eventually met"
+
+  IO.println "\n🧩 A Generic Constructor, Not Another Instance: incidenceProd (cycle 31):"
+  IO.println "  ✓ FIRST concrete milestone toward internal construction: a GENERIC product,"
+  IO.println "    taking ANY two Incidence structures and producing a third -- proven ONCE for"
+  IO.println "    every pair, unlike every prior instance built by hand for one carrier type"
+  IO.println "  ✓ all 7 Incidence proof obligations discharged generically -- each reduces"
+  IO.println "    directly to inc1's or inc2's OWN obligation, using only the interface"
+  IO.println "  ✓ incidenceProd_approxBisim_of_approxBisim: the product respects bisimulation"
+  IO.println "    (≈ on components ⇒ ≈ on the product) -- a genuine congruence/functoriality"
+  IO.println "    property, proved with only propext/Quot.sound, no Classical.choice"
+  IO.println "  ✓ sanity-checked against natIncidence × natIncidence, not just vacuously typed"
+  IO.println "  → deliberately scoped to ONE connective (product), not the whole original vision"
+  IO.println "    (functions, dependent types, induction) -- the same discipline that scoped"
+  IO.println "    the very first move into this territory down to natIncidence itself"

@@ -2020,20 +2020,113 @@ old `decide`-only result. Worth remembering as a category of payoff
 alongside "covers a new instance" and "simplifies an existing proof"
 (cycle 25's audit) -- "explains why an old concrete fact was true."
 
-**Next hypothesis (cycle 31, not yet attempted)**: option (b) of cycle
-28's queue, carried forward twice now without being reached: revisit
-the original, much larger research-program questions (constructing
-`ℕ`/sets/logic/category-theory concepts *internal* to Inc, not as
-external `Incidence` instances) now that the instance library (six
-concrete instances) and general-theorem toolkit (faithfulness via two
-independent routes, `∂²` machinery up to 3 entries, non-bisimilarity,
-T5 translations including one genuine algebra-homomorphism) are
-substantially more mature than when that scope was last assessed as
-"too large for one cycle." Scope to a *first concrete milestone* only,
-not the whole vision -- the same discipline that turned the original
-"can Inc do ZF/category theory/dependent types?" question into the
-tractable `natIncidence` instance at the very start of this thread.
-What that first milestone should actually *be*, concretely, is not yet
-decided and worth thinking through carefully before the next cycle
-commits to Lean, given the scope-creep risk this exact question posed
-back at the start of this project.
+## Cycle 31
+
+**Hypothesis**: (option (b) of cycle 28's queue, carried forward twice)
+revisit the original, much larger research-program questions
+(constructing `ℕ`/sets/logic/category-theory concepts *internal* to
+Inc, not as external `Incidence` instances) now that the instance
+library and general-theorem toolkit are substantially more mature.
+Scoped deliberately to a *first concrete milestone* before writing any
+Lean, per the explicit caution left at the end of cycle 30: what should
+that milestone actually *be*?
+
+**Scoping, done before any Lean**: every construction in this project's
+history so far -- `natIncidence`, `pairIncidenceChained`,
+`pathIncidenceChained`, `simplexIncidence`, `cycleIncidence`,
+`treeIncidence` -- builds a specific *instance* by hand: choosing one
+carrier type, one boundary function, one `glue`, and proving the seven
+`Incidence` obligations for *that* choice. The deeper, originally-
+deferred question was different in kind: can Inc's primitive vocabulary
+(`boundary`/`glue`/`≈`) express type-theoretic *connectives*
+*generically*, as constructions that take arbitrary `Incidence`
+structures as input and produce new ones as output -- the way a real
+type theory's product/sum/function types are generic constructors on
+types, not one-off encodings? No construction in this project has ever
+done that; every one has been carrier-type-specific. Chose the single
+simplest such connective -- a *product* constructor, `incidenceProd :
+Incidence I1 R1 T1 → Incidence I2 R2 T2 → Incidence (I1×I2) (R1⊕R2)
+(T1×T2)` -- deliberately not attempting function types, dependent
+types, identity types, or induction principles in the same cycle.
+
+**Method**: designed the construction on paper first (the standard
+"box product" shape from algebraic topology: `(i1,i2)`'s boundary is
+`i1`'s boundary transported with a `Sum.inl`-tagged role, plus `i2`'s
+boundary transported with `Sum.inr`), then verified each of the seven
+`Incidence` proof obligations reduces *directly* to the corresponding
+obligation of `inc1` or `inc2` (whichever side an entry, or a
+successful `glue`, came from) before writing any tactic proof. One
+design correction made *during* this check, not after: an unconditionally
+permissive `guards` field for the product would make `type_preserve`
+unprovable in general (there'd be no way to invoke `inc1`/`inc2`'s own
+`type_preserve`, which need their *own* guards to hold, not the
+product's) -- fixed by defining the product's `guards` to require
+*both* components' own guards to allow the move, not by assuming
+permissiveness. Then built the construction and a first congruence
+theorem (`≈` on components implies `≈` on the product) in a scratch
+file, iterating through several rounds of friction: `rintro`'s
+inability to destructure a `Prod` pattern combined with a further
+`⟨...⟩` pattern in one step (worked around with explicit
+`intro`/`obtain`, the same fix used for `well_founded`'s analogous
+case); `boundaryCompatible`'s lifted-endpoint proof needing explicit
+`congrArg Sum.inl`/`Sum.inr` reconstruction rather than reusing the
+un-lifted compatibility proof directly (since the lifted entries'
+`.role` fields are `Sum.inl`/`Sum.inr`-wrapped, not literally the same
+term); and building small membership helper lemmas
+(`prodBoundary_mem_left`/`_right`) once ad-hoc `simp` calls for
+boundary membership became too fragile to reuse across both directions
+of the congruence proof.
+
+**Result**: **the full generic constructor typechecks with zero
+`sorry` across all seven obligations, and the congruence theorem proves
+with only `propext`/`Quot.sound` -- no `Classical.choice` at all,
+fully constructive.** This is qualitatively different from every prior
+cycle's output: not a new fact about an existing structure, but a new
+*kind* of construction -- a function from `Incidence` structures to
+`Incidence` structures, proven correct once and for all pairs, rather
+than instantiated by hand each time. Sanity-checked against a real
+pair of instances (`natIncidence × natIncidence`): the product's
+boundary at `(2,3)` has exactly 2 entries (one from each side, matching
+`natIncidence`'s own single-link shape at both `2` and `3`), the unit
+is `(0,0)`, and both `approxBisim_refl` and the new congruence theorem
+apply concretely, not just vacuously. `#print axioms`: `propext`/
+`Quot.sound` on the membership helpers and the congruence theorem.
+Full `lake build`: 44/44 jobs (new file `Product.lean`). Repo-wide
+`sorry`-as-tactic grep: none.
+
+**Synthesis**: this is the project's first step that's genuinely
+*internal* to the Inc framework rather than *modeled within* it -- the
+distinction the very first scope-down (natural numbers as a concrete
+instance, back at the start of this thread) deliberately deferred. It's
+a small step (one connective, the simplest one, with only one
+congruence theorem beyond the construction itself) but a real one: it
+demonstrates the *pattern* by which further connectives could be built
+(sum types via `Sum I1 I2`'s boundary reusing each side's own boundary
+unchanged; a terminal/unit-object instance; eventually function-type-
+like or dependent constructions, though those are substantially harder
+and not implied to be equally tractable by this result). The
+`well_founded`-pattern reuse (the `rintro`-on-`Prod` friction) and the
+`boundaryMatrix_two_link`/`_three_link` if-orientation friction from
+earlier cycles both resurfaced here in slightly different guises --
+worth noting as recurring categories of Lean friction in this project
+(pattern-destructuring in `rintro`, and equality-direction mismatches
+in `simp`/`rw`) rather than independent one-off surprises each time.
+
+**Next hypothesis (cycle 32, not yet attempted)**: several directions
+opened by this cycle, none committed to. (1) A *sum* constructor
+(`incidenceSum`, analogous to `incidenceProd` but for `I1 ⊕ I2`,
+reusing each side's boundary unchanged rather than combining them) --
+likely the next-simplest connective, and a natural second data point
+for "generic constructors on `Incidence`" as a genuine category of
+construction (mirroring how this project always seeks a second
+instance before trusting a pattern is general). (2) Does `incidenceProd`
+interact with any *existing* general theorem -- e.g. does the product
+of two faithful instances (`natIncidence_approxBisim_iff`-style) stay
+faithful, or does faithfulness fail to transport through the product
+the way `∂² = 0` failed to transport through the collapse-fix (cycles
+8/16/27)? Not yet checked. (3) A translation-style result for the
+product analogous to T5 (e.g. does `natToFiniteSet` extend to a
+translation for `natIncidence × natIncidence` in the expected way?).
+None of these are scoped yet -- worth picking based on which seems most
+likely to surface a genuine finding rather than mechanically repeat
+this cycle's shape.
