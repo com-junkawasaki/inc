@@ -1950,6 +1950,108 @@ theorem hfRecursiveNatShiftGraph_associative_application_iff
       (n + firstOffset) firstMiddle output).mpr
     exact ⟨secondMiddle, hsecond, hthird⟩
 
+/- Relational-composite specifications determine a graph extensionally once
+   both candidates are known to contain only ordered pairs.  The relation
+   hypotheses are essential here: the composite specification itself only
+   constrains memberships which are already presented as ordered pairs. -/
+theorem hfRecursiveRelationalComposite_unique
+    {first second composite₁ composite₂ : HFRecursiveSet}
+    (h₁ : HFRecursiveRelationalComposite first second composite₁)
+    (h₂ : HFRecursiveRelationalComposite first second composite₂)
+    (hr₁ : HFRecursiveRelation composite₁)
+    (hr₂ : HFRecursiveRelation composite₂) :
+    composite₁ = composite₂ := by
+  apply hfRecursiveSet_extensionality
+  intro element
+  constructor
+  · intro hmember
+    rcases hr₁ element hmember with ⟨input, output, rfl⟩
+    exact (h₂ input output).mpr ((h₁ input output).mp hmember)
+  · intro hmember
+    rcases hr₂ element hmember with ⟨input, output, rfl⟩
+    exact (h₁ input output).mpr ((h₂ input output).mp hmember)
+
+/- Three successive relations, stated without committing to either binary
+   parenthesization.  This is the appropriate extensional associativity
+   interface for internal graph presentations. -/
+def HFRecursiveThreeRelationalComposite
+    (first second third composite : HFRecursiveSet) : Prop :=
+  ∀ input output,
+    HFRecursiveMember (hfRecursiveOrderedPair input output) composite ↔
+      ∃ firstMiddle secondMiddle,
+        HFRecursiveMember (hfRecursiveOrderedPair input firstMiddle) first ∧
+        HFRecursiveMember (hfRecursiveOrderedPair firstMiddle secondMiddle) second ∧
+        HFRecursiveMember (hfRecursiveOrderedPair secondMiddle output) third
+
+theorem hfRecursiveThreeRelationalComposite_unique
+    {first second third composite₁ composite₂ : HFRecursiveSet}
+    (h₁ : HFRecursiveThreeRelationalComposite first second third composite₁)
+    (h₂ : HFRecursiveThreeRelationalComposite first second third composite₂)
+    (hr₁ : HFRecursiveRelation composite₁)
+    (hr₂ : HFRecursiveRelation composite₂) :
+    composite₁ = composite₂ := by
+  apply hfRecursiveSet_extensionality
+  intro element
+  constructor
+  · intro hmember
+    rcases hr₁ element hmember with ⟨input, output, rfl⟩
+    exact (h₂ input output).mpr ((h₁ input output).mp hmember)
+  · intro hmember
+    rcases hr₂ element hmember with ⟨input, output, rfl⟩
+    exact (h₁ input output).mpr ((h₂ input output).mp hmember)
+
+/- Translation graphs satisfy the parenthesization-free three-stage
+   specification.  Thus their internal graph composite is associative as an
+   extensional finite relation, not merely after evaluating an input. -/
+theorem hfRecursiveNatShiftGraph_three_relationalComposite
+    (firstOffset secondOffset thirdOffset n : Nat) :
+    HFRecursiveThreeRelationalComposite
+      (hfRecursiveNatShiftGraph firstOffset n)
+      (hfRecursiveNatShiftGraph secondOffset (n + firstOffset))
+      (hfRecursiveNatShiftGraph thirdOffset (n + firstOffset + secondOffset))
+      (hfRecursiveNatShiftGraph (firstOffset + (secondOffset + thirdOffset)) n) := by
+  intro input output
+  exact hfRecursiveNatShiftGraph_associative_application_iff
+    firstOffset secondOffset thirdOffset n input output
+
+/- Both binary parenthesizations are witnessed by the very same extensional
+   summed graph.  The conjunction makes the associativity coherence usable by
+   clients which work with binary relational-composite certificates. -/
+theorem hfRecursiveNatShiftGraph_associative_relationalComposite
+    (firstOffset secondOffset thirdOffset n : Nat) :
+    HFRecursiveRelationalComposite
+      (hfRecursiveNatShiftGraph firstOffset n)
+      (hfRecursiveNatShiftGraph (secondOffset + thirdOffset) (n + firstOffset))
+      (hfRecursiveNatShiftGraph ((firstOffset + secondOffset) + thirdOffset) n) ∧
+    HFRecursiveRelationalComposite
+      (hfRecursiveNatShiftGraph (firstOffset + secondOffset) n)
+      (hfRecursiveNatShiftGraph thirdOffset (n + (firstOffset + secondOffset)))
+      (hfRecursiveNatShiftGraph ((firstOffset + secondOffset) + thirdOffset) n) := by
+  constructor
+  · simpa [Nat.add_assoc] using
+      (hfRecursiveNatShiftGraph_relationalComposite firstOffset
+        (secondOffset + thirdOffset) n)
+  · exact hfRecursiveNatShiftGraph_relationalComposite
+      (firstOffset + secondOffset) thirdOffset n
+
+/- Any relation graph realizing the same three translations is uniquely the
+   summed shift graph.  This packages the concrete three-way composition
+   calculation as a reusable quotient-level uniqueness theorem. -/
+theorem hfRecursiveNatShiftGraph_three_relationalComposite_unique
+    {firstOffset secondOffset thirdOffset n : Nat} {composite : HFRecursiveSet}
+    (hcomposite : HFRecursiveThreeRelationalComposite
+      (hfRecursiveNatShiftGraph firstOffset n)
+      (hfRecursiveNatShiftGraph secondOffset (n + firstOffset))
+      (hfRecursiveNatShiftGraph thirdOffset (n + firstOffset + secondOffset))
+      composite)
+    (hrelation : HFRecursiveRelation composite) :
+    composite = hfRecursiveNatShiftGraph
+      (firstOffset + (secondOffset + thirdOffset)) n := by
+  apply hfRecursiveThreeRelationalComposite_unique hcomposite
+    (hfRecursiveNatShiftGraph_three_relationalComposite
+      firstOffset secondOffset thirdOffset n) hrelation
+  exact hfRecursiveNatShiftGraph_relation _ _
+
 def HFRecursiveSubset (s t : HFRecursiveSet) : Prop :=
   ∀ x, HFRecursiveMember x s → HFRecursiveMember x t
 

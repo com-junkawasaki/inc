@@ -2855,6 +2855,17 @@ theorem fin_kripke_entails_iff_derives (n : Nat)
     KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
   kripke_entails_iff_derives_of_enumeration (finFormulaEnumeration n) context formula
 
+/-! Natural-number atoms give a concrete countably infinite language.  Unlike
+   the finite cases above, its atom coding needs no quotient or wraparound: a
+   natural number is both its own code and its own decoding. -/
+noncomputable def natFormulaEnumeration : FormulaEnumeration Nat :=
+  formulaEnumerationOfAtomCoding id id (fun _ => rfl)
+
+theorem nat_kripke_entails_iff_derives
+    (context : List (Formula Nat)) (formula : Formula Nat) :
+    KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
+  kripke_entails_iff_derives_of_enumeration natFormulaEnumeration context formula
+
 noncomputable def boolFormulaDecode : Nat → Formula Bool
   | 0 => .atom false
   | code + 1 =>

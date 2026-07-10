@@ -154,6 +154,59 @@ theorem incidenceCore_has_nontrivial_model :
 theorem finiteIncidence_root_boundary_nonempty : finiteIncidence.boundary .root ≠ [] := by
   simp [finiteIncidence, finiteBoundary]
 
+/- The two nodes have genuinely different observable branching: `root` has a
+   boundary endpoint whereas `leaf` has none.  This makes the finite model a
+   useful sharp test of the coinductive quotient, rather than merely a model
+   in which every node collapses. -/
+theorem finiteIncidence_root_not_approxBisim_leaf :
+    ¬ approxBisim finiteIncidence .root .leaf := by
+  rintro ⟨rel, hrel, hrootleaf⟩
+  rcases hrel .root .leaf hrootleaf with ⟨_, hmatched⟩
+  let endpoint : Endpoint FiniteIncidence GraphRole :=
+    { i := .leaf, role := .src, sign := .pos, mult := 1,
+      mult_pos := by omega }
+  have hendpoint : endpoint ∈ finiteIncidence.boundary .root := by
+    simp [finiteIncidence, finiteBoundary, endpoint]
+  rcases hmatched.left endpoint hendpoint with ⟨endpoint', hleaf, _, _⟩
+  simp [finiteIncidence, finiteBoundary] at hleaf
+
+theorem finiteIncidence_leaf_not_approxBisim_root :
+    ¬ approxBisim finiteIncidence .leaf .root := by
+  intro h
+  exact finiteIncidence_root_not_approxBisim_leaf (approxBisim_symm h)
+
+/- Bisimilarity is discrete on the two-element incidence model. -/
+theorem finiteIncidence_approxBisim_iff_eq (i j : FiniteIncidence) :
+    approxBisim finiteIncidence i j ↔ i = j := by
+  constructor
+  · intro h
+    cases i <;> cases j
+    · rfl
+    · exact False.elim (finiteIncidence_leaf_not_approxBisim_root h)
+    · exact False.elim (finiteIncidence_root_not_approxBisim_leaf h)
+    · rfl
+  · intro h
+    subst j
+    exact approxBisim_refl finiteIncidence i
+
+theorem finiteIncidence_quotient_mk_injective {i j : FiniteIncidence} :
+    (Quotient.mk (approxBisimSetoid finiteIncidence) i :
+        IncidenceQuotient finiteIncidence) =
+      Quotient.mk (approxBisimSetoid finiteIncidence) j → i = j := by
+  intro hij
+  apply (finiteIncidence_approxBisim_iff_eq i j).mp
+  exact Quotient.exact hij
+
+theorem finiteIncidence_quotient_mk_eq_iff (i j : FiniteIncidence) :
+    (Quotient.mk (approxBisimSetoid finiteIncidence) i :
+        IncidenceQuotient finiteIncidence) =
+      Quotient.mk (approxBisimSetoid finiteIncidence) j ↔ i = j := by
+  constructor
+  · exact finiteIncidence_quotient_mk_injective
+  · intro h
+    subst j
+    rfl
+
 theorem finiteGlue_associative (i j k : FiniteIncidence) :
     Option.bind (finiteGlue i j) (fun ij => finiteGlue ij k) =
       Option.bind (finiteGlue j k) (fun jk => finiteGlue i jk) := by
