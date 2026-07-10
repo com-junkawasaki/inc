@@ -129,6 +129,31 @@ def finiteIncidence : Incidence FiniteIncidence GraphRole GraphType where
   unit_right := by intro i; cases i <;> rfl
   type_preserve := by intro i j k hallow hglue; rfl
 
+/- A checked, nondegenerate model certificate for the data and laws of the
+   incidence core.  It records that the carrier is inhabited and that the
+   model has a genuine boundary endpoint, so the witness is not the vacuous
+   empty-boundary example. -/
+structure FiniteIncidenceConsistencyCertificate where
+  model : Incidence FiniteIncidence GraphRole GraphType
+  carrier_inhabited : Nonempty FiniteIncidence
+  nonempty_boundary : ∃ i, model.boundary i ≠ []
+
+def finiteIncidenceConsistencyCertificate : FiniteIncidenceConsistencyCertificate where
+  model := finiteIncidence
+  carrier_inhabited := ⟨.leaf⟩
+  nonempty_boundary := by
+    refine ⟨.root, ?_⟩
+    simp [finiteIncidence, finiteBoundary]
+
+/- The core's constraints therefore admit a concrete two-element model. -/
+theorem incidenceCore_has_nontrivial_model :
+    Nonempty (Incidence FiniteIncidence GraphRole GraphType) ∧
+      ∃ i, finiteIncidence.boundary i ≠ [] := by
+  exact ⟨⟨finiteIncidence⟩, finiteIncidenceConsistencyCertificate.nonempty_boundary⟩
+
+theorem finiteIncidence_root_boundary_nonempty : finiteIncidence.boundary .root ≠ [] := by
+  simp [finiteIncidence, finiteBoundary]
+
 theorem finiteGlue_associative (i j k : FiniteIncidence) :
     Option.bind (finiteGlue i j) (fun ij => finiteGlue ij k) =
       Option.bind (finiteGlue j k) (fun jk => finiteGlue i jk) := by

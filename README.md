@@ -58,7 +58,10 @@ It currently establishes:
   relative construction supplies a full prime extension (not just a finite
   fragment).  Consequently, the canonical truth lemma and canonical and
   same-universe Kripke completeness are checked from a recurrent formula
-  schedule, without a separate extension axiom.
+  schedule, without a separate extension axiom.  Every supplied exhaustive
+  `FormulaEnumeration` now constructs that schedule by a checked triangular
+  traversal, so these results are directly available from the project's
+  existing enumeration input.
   Each formula has a finite subformula closure, and a consistent context has a
   finite extension deciding every formula in that closure; its disjunction
   subformulas satisfy a derivable prime-choice law.  The derivable closure of

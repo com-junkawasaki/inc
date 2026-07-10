@@ -877,6 +877,79 @@ structure RecurrentFormulaSchedule (Atom : Type u) where
   formulaAt : Nat → Formula Atom
   revisits : ∀ formula stage, ∃ later, stage ≤ later ∧ formulaAt later = formula
 
+/- Every ordinary enumeration yields a recurrent enumeration by scanning finite
+   initial segments in successively larger triangular blocks:
+   `0; 0,1; 0,1,2; …`.  The state keeps the position and the current block
+   length, which avoids assuming any library pairing function. -/
+def diagonalState : Nat → Nat × Nat
+  | 0 => (0, 0)
+  | stage + 1 =>
+    let state := diagonalState stage
+    if state.1 < state.2 then (state.1 + 1, state.2) else (0, state.2 + 1)
+
+def diagonalIndex (stage : Nat) : Nat := (diagonalState stage).1
+
+def diagonalTriangle : Nat → Nat
+  | 0 => 0
+  | level + 1 => diagonalTriangle level + (level + 1)
+
+theorem diagonalState_spec : ∀ level : Nat,
+    diagonalState (diagonalTriangle level) = (0, level) ∧
+      ∀ position, position ≤ level →
+        diagonalState (diagonalTriangle level + position) = (position, level) := by
+  intro level
+  induction level with
+  | zero =>
+    constructor
+    · rfl
+    · intro position hposition
+      have hzero : position = 0 := Nat.eq_zero_of_le_zero hposition
+      subst position
+      rfl
+  | succ level ih =>
+    have hlast : diagonalState (diagonalTriangle level + level) = (level, level) :=
+      ih.2 level (Nat.le_refl _)
+    have hboundary : diagonalState (diagonalTriangle (level + 1)) = (0, level + 1) := by
+      rw [diagonalTriangle]
+      change diagonalState ((diagonalTriangle level + level) + 1) = _
+      rw [diagonalState]
+      simp [hlast]
+    constructor
+    · exact hboundary
+    · intro position hposition
+      induction position with
+      | zero => simpa using hboundary
+      | succ position ihposition =>
+        have hprevLe : position ≤ level := Nat.le_of_succ_le_succ hposition
+        have hprev := ihposition (Nat.le_trans hprevLe (Nat.le_succ _))
+        have hlt : position < level + 1 := Nat.lt_succ_of_le hprevLe
+        rw [show diagonalTriangle (level + 1) + (position + 1) =
+          (diagonalTriangle (level + 1) + position) + 1 by omega]
+        rw [diagonalState]
+        simp [hprev, hlt]
+
+theorem diagonalTriangle_ge_self : ∀ level : Nat,
+    level ≤ diagonalTriangle level := by
+  intro level
+  induction level with
+  | zero => exact Nat.zero_le _
+  | succ level ih =>
+    rw [diagonalTriangle]
+    omega
+
+noncomputable def FormulaEnumeration.recurrentSchedule {Atom : Type u}
+    (enumeration : FormulaEnumeration Atom) : RecurrentFormulaSchedule Atom where
+  formulaAt := fun stage => enumeration.enumerate (diagonalIndex stage)
+  revisits := by
+    intro formula stage
+    rcases enumeration.exhaustive formula with ⟨index, hindex⟩
+    refine ⟨diagonalTriangle (stage + index + 1) + index, ?_, ?_⟩
+    · have htriangle := diagonalTriangle_ge_self (stage + index + 1)
+      omega
+    · rw [show diagonalIndex (diagonalTriangle (stage + index + 1) + index) = index by
+          exact congrArg Prod.fst ((diagonalState_spec (stage + index + 1)).2 index (by omega))]
+      exact hindex
+
 /- Schedules are intentionally independent from a particular enumeration.  The
    following operations make that boundary practical: a construction that
    needs to reserve finitely many initial stages can do so without having to
@@ -2441,6 +2514,39 @@ theorem kripke_entails_iff_derives_of_schedule {Atom : Type u}
     KripkeEntails.{u, u} context formula ↔ Derives context formula :=
   kripke_entails_iff_derives_of_prime_extension schedule
     (primeExtensionWitnessOfSchedule schedule) context formula
+
+/- An ordinary exhaustive enumeration is therefore sufficient for the full
+   canonical argument: `recurrentSchedule` is a concrete recurrence witness,
+   rather than a second infinitary hypothesis supplied by a client. -/
+theorem canonical_truth_lemma_of_enumeration {Atom : Type u}
+    (enumeration : FormulaEnumeration Atom) (theory : PrimeTheory Atom) :
+    ∀ formula : Formula Atom,
+      KripkeForces (canonicalKripkeModel Atom) theory formula ↔ theory.contains formula :=
+  canonical_truth_lemma_of_schedule enumeration.recurrentSchedule theory
+
+theorem canonical_kripke_entails_complete_of_enumeration {Atom : Type u}
+    (enumeration : FormulaEnumeration Atom)
+    {context : List (Formula Atom)} {formula : Formula Atom} :
+    CanonicalKripkeEntails context formula → Derives context formula :=
+  canonical_kripke_entails_complete_of_schedule enumeration.recurrentSchedule
+
+theorem canonical_kripke_entails_iff_derives_of_enumeration {Atom : Type u}
+    (enumeration : FormulaEnumeration Atom)
+    (context : List (Formula Atom)) (formula : Formula Atom) :
+    CanonicalKripkeEntails context formula ↔ Derives context formula :=
+  canonical_kripke_entails_iff_derives_of_schedule enumeration.recurrentSchedule context formula
+
+theorem kripke_entails_complete_of_enumeration {Atom : Type u}
+    (enumeration : FormulaEnumeration Atom)
+    {context : List (Formula Atom)} {formula : Formula Atom} :
+    KripkeEntails.{u, u} context formula → Derives context formula :=
+  kripke_entails_complete_of_schedule enumeration.recurrentSchedule
+
+theorem kripke_entails_iff_derives_of_enumeration {Atom : Type u}
+    (enumeration : FormulaEnumeration Atom)
+    (context : List (Formula Atom)) (formula : Formula Atom) :
+    KripkeEntails.{u, u} context formula ↔ Derives context formula :=
+  kripke_entails_iff_derives_of_schedule enumeration.recurrentSchedule context formula
 
 /- Incidence-specialized notation for clients of the core structure. -/
 abbrev IncidenceFormula (I : Type u) := Formula I

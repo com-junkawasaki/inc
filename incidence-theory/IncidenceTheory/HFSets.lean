@@ -1821,6 +1821,54 @@ theorem hfRecursiveNatShiftGraph_composite_functional
     (hfRecursiveNatShiftGraph_functional firstOffset n)
     (hfRecursiveNatShiftGraph_functional secondOffset (n + firstOffset))
 
+/- Injectivity is likewise stable under relational composition.  This gives a
+   presentation-independent finite counterpart of the fact that a composite
+   of one-to-one maps is one-to-one. -/
+theorem hfRecursiveRelationalComposite_injective
+    {first second composite : HFRecursiveSet}
+    (hcomposite : HFRecursiveRelationalComposite first second composite)
+    (hfirst : HFRecursiveInjective first)
+    (hsecond : HFRecursiveInjective second) :
+    HFRecursiveInjective composite := by
+  intro input₁ input₂ output h₁ h₂
+  rcases (hcomposite input₁ output).mp h₁ with ⟨middle₁, hfirst₁, hsecond₁⟩
+  rcases (hcomposite input₂ output).mp h₂ with ⟨middle₂, hfirst₂, hsecond₂⟩
+  have hmiddle : middle₁ = middle₂ := hsecond middle₁ middle₂ output hsecond₁ hsecond₂
+  subst middle₂
+  exact hfirst input₁ input₂ middle₁ hfirst₁ hfirst₂
+
+/- The internally represented identity graph is a left identity for finite
+   ordinal translations. -/
+theorem hfRecursiveNatIdentityGraph_left_relationalComposite
+    (offset n : Nat) :
+    HFRecursiveRelationalComposite
+      (hfRecursiveNatIdentityGraph n)
+      (hfRecursiveNatShiftGraph offset n)
+      (hfRecursiveNatShiftGraph offset n) := by
+  simpa [hfRecursiveNatShiftGraph_zero] using
+    (hfRecursiveNatShiftGraph_relationalComposite 0 offset n)
+
+/- It is also a right identity, on the translated finite ordinal. -/
+theorem hfRecursiveNatIdentityGraph_right_relationalComposite
+    (offset n : Nat) :
+    HFRecursiveRelationalComposite
+      (hfRecursiveNatShiftGraph offset n)
+      (hfRecursiveNatIdentityGraph (n + offset))
+      (hfRecursiveNatShiftGraph offset n) := by
+  simpa [hfRecursiveNatShiftGraph_zero] using
+    (hfRecursiveNatShiftGraph_relationalComposite offset 0 n)
+
+/- Therefore the relation-level composite of two finite translations remains
+   injective, as well as functional. -/
+theorem hfRecursiveNatShiftGraph_composite_injective
+    (firstOffset secondOffset n : Nat) :
+    HFRecursiveInjective
+      (hfRecursiveNatShiftGraph (firstOffset + secondOffset) n) := by
+  apply hfRecursiveRelationalComposite_injective
+    (hfRecursiveNatShiftGraph_relationalComposite firstOffset secondOffset n)
+    (hfRecursiveNatShiftGraph_injective firstOffset n)
+    (hfRecursiveNatShiftGraph_injective secondOffset (n + firstOffset))
+
 def HFRecursiveSubset (s t : HFRecursiveSet) : Prop :=
   ∀ x, HFRecursiveMember x s → HFRecursiveMember x t
 
