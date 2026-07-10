@@ -71,28 +71,21 @@ def main : IO Unit := do
   IO.println "\n✅ Boundary Operator Verification:"
   let boundaryCheck := verifyBoundaryOperator
   if boundaryCheck then
-    IO.println "  ✓ ∂² = 0 verified (boundary operator property)"
+    IO.println "  ✓ ∂² = 0 computed for the triangle"
   else
     IO.println "  ✗ ∂² ≠ 0 (boundary operator property failed)"
 
-  IO.println "\n🔬 Triangle Graph ∂² = 0 Verification:"
-  let triangleCheck := triangle_square_zero_check
-  if triangleCheck then
-    IO.println "  ✓ Triangle boundary composition ∂∂ = 0"
-  else
-    IO.println "  ✗ Triangle boundary composition ∂∂ ≠ 0"
-
-  IO.println "\n🏛️  Incidence Theory - Core Theorems (T1-T5) Status:"
-  IO.println "  T1 (Glue Universality): ✅ Framework + triangle concrete proof"
-  IO.println "  T2 (Congruence): ✅ Framework + triangle concrete proof"
-  IO.println "  T3 (Linear Soundness): ✅ ∂² = 0 theorem + boundary preservation"
-  IO.println "  T4 (Completeness): ✅ Framework + triangle concrete proof"
-  IO.println "  T5 (Translation): ✅ Framework + triangle concrete proof"
+  IO.println "\n🏛️  Checked Core Status:"
+  IO.println "  ✓ finite boundaries, sign cases, and positive multiplicities"
+  IO.println "  ✓ bisimilarity is reflexive, symmetric, and transitive"
+  IO.println "  ✓ boundary matrices and Laplacians are computed from boundaries"
+  IO.println "  ✓ triangle ∂² = 0 is a Lean theorem (native_decide)"
+  IO.println "  • ∂² = 0, pushouts, and linear completeness require extra hypotheses"
 
   IO.println "\n✨ Key Achievements:"
-  IO.println "  • Modular axiom system (A1-A17) ✅"
+  IO.println "  • Checked incidence core ✅"
   IO.println "  • Boundary matrices & Laplacians ✅"
   IO.println "  • Bisimulation-based equivalence ✅"
-  IO.println "  • Five core theorems framework ✅"
+  IO.println "  • No unproved global theorem claims"
   IO.println "  • Triangle graph concrete example ✅"
   IO.println "  • CI/CD automated verification ✅"

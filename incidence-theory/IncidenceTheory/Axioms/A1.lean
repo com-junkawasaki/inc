@@ -6,9 +6,8 @@ namespace IncidenceCore
 
 /- A1 is automatically satisfied by using List (finite by construction) -/
 theorem finite_endpoints_theorem {I R : Type u} (boundary : I → Boundary I R) :
-  ∀ i, (boundary i).length < Nat.inf := by
+  ∀ i, ∃ n : Nat, (boundary i).length = n := by
   intro i
-  -- Lists are finite by construction in Lean
-  simp
+  exact ⟨(boundary i).length, rfl⟩
 
 end IncidenceCore

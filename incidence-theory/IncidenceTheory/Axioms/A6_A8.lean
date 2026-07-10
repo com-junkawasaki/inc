@@ -1,6 +1,6 @@
 /- Merkle-ID: foundation.axiomatization.A6_A8
    Gluing Operations: A6 (Existence), A7 (Unit), A8 (Associativity) -/
-import IncidenceTheory.Axioms.Basic
+import IncidenceTheory.Axioms.A2
 
 namespace IncidenceCore
 
@@ -14,7 +14,7 @@ structure IncidenceGluing (I R T : Type u) extends IncidenceType I T where
   unit_right : ∀ i, glue i unit = some i
 
   -- A8: Associativity under guards
-  associativity : ∀ i j k, glue (glue i j).bind (λ ij => glue ij k) =
-                           glue i (glue j k).bind (λ jk => glue i jk)
+  associativity : ∀ i j k, Option.bind (glue i j) (fun ij => glue ij k) =
+                           Option.bind (glue j k) (fun jk => glue i jk)
 
 end IncidenceCore

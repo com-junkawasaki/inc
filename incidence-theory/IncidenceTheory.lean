@@ -1,604 +1,519 @@
-/- Merkle-ID: implementation.api_freeze
-   Maps to story.jsonnet → implementation.nodes.api_freeze
-   Purpose: Consolidate a minimal surface API for incidence structures. -/
 import IncidenceTheory.Axioms
 
-/- Merkle-ID: implementation.core_refactor
-   story.jsonnet → implementation.nodes.core_refactor
-   Canonical Incidence API (namespaced) — modularized axioms. -/
+/-!
+  A small, checked core for incidence structures.
+
+  This module deliberately proves only consequences of the data carried by
+  `Incidence`; categorical universality and linear completeness require extra
+  hypotheses and are not asserted here.
+-/
 
 namespace IncidenceCore
 
-/- Canonical Incidence structure with modular axioms. -/
-/- Merkle-ID: implementation.core
-   canonical incidence using modular axioms. -/
--- Use the full modular Incidence structure from Axioms.lean
--- This provides all A1-A17 axioms in a clean, modular way
+universe u v w
 
-/- Observational equivalence (temporary, equality-based; to be replaced by bisimulation).
-   Uses exact boundary equality; callers should not rely on order sensitivity. -/
-/- Merkle-ID: foundation.logic
-   equality-based approx (temporary). -/
-def approxEq {I R T : Type u} [DecidableEq I] (inc : IncidenceAlgebraic I R T) (i j : I) : Prop :=
+/- Observational equality is equality of the observable type and boundary. -/
+def approxEq {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (i j : I) : Prop :=
   inc.typeFunc i = inc.typeFunc j ∧ inc.boundary i = inc.boundary j
 
-/- Temporary: reflexivity for approxEq (will be replaced when approxBisim is defined) -/
-theorem approxEq_refl {I R T : Type u} [DecidableEq I] (inc : IncidenceAlgebraic I R T) (i : I) :
-  approxEq inc i i := by simp [approxEq]
+theorem approxEq_refl {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (i : I) : approxEq inc i i := by
+  exact ⟨rfl, rfl⟩
 
-/- Temporary: symmetry for approxEq (will be replaced when approxBisim is defined) -/
-theorem approxEq_symm {I R T : Type u} [DecidableEq I] {inc : IncidenceAlgebraic I R T} {i j : I} :
-  approxEq inc i j → approxEq inc j i := by
-  intro h
-  simp [approxEq, h.left, h.right.symm]
+theorem approxEq_symm {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} {i j : I} : approxEq inc i j → approxEq inc j i := by
+  rintro ⟨ht, hb⟩
+  exact ⟨ht.symm, hb.symm⟩
 
-/- Temporary: transitivity for approxEq (will be replaced when approxBisim is defined) -/
-theorem approxEq_trans {I R T : Type u} [DecidableEq I] {inc : IncidenceAlgebraic I R T} {i j k : I} :
-  approxEq inc i j → approxEq inc j k → approxEq inc i k := by
-  intro hij hjk
-  simp [approxEq, hij.left.trans hjk.left, hij.right.trans hjk.right]
+theorem approxEq_trans {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} {i j k : I} :
+    approxEq inc i j → approxEq inc j k → approxEq inc i k := by
+  rintro ⟨ht₁, hb₁⟩ ⟨ht₂, hb₂⟩
+  exact ⟨ht₁.trans ht₂, hb₁.trans hb₂⟩
 
-/- Merkle-ID: foundation.logic
-   approxEq is a bisimulation (strict equality on boundaries). -/
-theorem isBisimulation_approxEq {I R T : Type u} (inc : Incidence I R T) :
-  IsBisimulation inc (approxEq inc) := by
-  intro i j hij
-  rcases hij with ⟨hT, hB⟩
-  refine And.intro hT ?H
-  unfold boundaryMatched
-  constructor
-  · intro e he
-    refine ⟨e, ?_, ?_, ?_⟩
-    · -- transport membership along boundary equality
-      simpa [hB] using he
-    · -- endpoint matches itself
-      unfold boundaryCompatible; simp
-    · exact And.intro rfl rfl
-  · intro e' he'
-    refine ⟨e', ?_, ?_, ?_⟩
-    · -- transport membership in the other direction
-      simpa [hB.symm] using he'
-    · unfold boundaryCompatible; simp
-    · exact And.intro rfl rfl
-
--- Bridge approxEq ⇒ approxBisim removed (migration complete).
-
-/- Convenience to apply guarded gluing. -/
-/- Merkle-ID: implementation.core
-   guarded gluing helper. -/
-def applyGlue {I R T : Type u} (inc : Incidence I R T) (i j : I) : Option I :=
-  inc.glue i j
-
-/- Boundary operator property: ∂² = 0 -/
-/- Merkle-ID: foundation.axiomatization.boundary_operator
-   ∂² = 0 property for boundary matrices. -/
-theorem boundary_operator_square_zero {I R T : Type u} [DecidableEq I]
-  (inc : IncidenceAlgebraic I R T) (idx : List I) :
-  -- For all i,k in the index set, the composition ∂∂ vanishes
-  ∀ i k : I, i ∈ idx → k ∈ idx →
-    (boundaryMatrix inc idx i k) = 0 ∨
-    ∀ j : I, j ∈ idx →
-      (boundaryMatrix inc idx k j) * (boundaryMatrix inc idx j i) = 0 := by
-  -- This is a complex property that depends on the incidence structure
-  -- For now, we provide a simplified version for well-formed incidences
-  sorry  -- Placeholder: requires detailed boundary analysis
-
-/- Simplified boundary composition check -/
-/- Merkle-ID: implementation.linear_algebra.boundary_composition
-   Verify ∂² = 0 for small index sets. -/
-def verify_boundary_composition {I R T : Type u} [DecidableEq I]
-  (inc : IncidenceAlgebraic I R T) (idx : List I) : Bool :=
-  -- Check B * B = 0 for the given index set
-  idx.all (fun i =>
-    idx.all (fun k =>
-      let bik := boundaryMatrix inc idx i k
-      if bik = 0 then true
-      else
-        idx.all (fun j =>
-          let bkj := boundaryMatrix inc idx k j
-          let bji := boundaryMatrix inc idx j i
-          bkj * bji = 0
-        )
-    )
-  )
-
-/- Compute ∂∂(i,j) = sum_k ∂(i,k) * ∂(k,j) for triangle -/
-/- Merkle-ID: implementation.linear_algebra.triangle_boundary_composition
-   Compute the composition ∂∂ for specific indices in triangle graph. -/
-def triangle_boundary_composition (i j : GId) : Int :=
-  -- ∂∂(i,j) = sum over k of ∂(i,k) * ∂(k,j)
-  triIdx.foldl (fun acc k =>
-    acc + (triB i k) * (triB k j)
-  ) 0
-
-/- Verify ∂² = 0 for all pairs in triangle graph -/
-/- Merkle-ID: implementation.linear_algebra.triangle_square_zero_check
-   Check that ∂² = 0 for all index pairs in triangle. -/
-def triangle_square_zero_check : Bool :=
-  triIdx.all (fun i =>
-    triIdx.all (fun j =>
-      triangle_boundary_composition i j = 0
-    )
-  )
-
-/- Theorem: ∂² = 0 for triangle graph -/
-/- Merkle-ID: implementation.linear_algebra.triangle_boundary_square_zero
-   Specific proof that ∂² = 0 for the triangle incidence structure. -/
-theorem triangle_boundary_square_zero :
-  -- For the triangle graph, ∂∂ = 0
-  triangle_square_zero_check = true := by
-  -- Unfold the computation and show that all compositions vanish
-  unfold triangle_square_zero_check triangle_boundary_composition triIdx triB
-  -- This requires analyzing the specific boundary structure of the triangle
-  -- The triangle has no "holes" so the boundary operator squares to zero
-  -- Proof by case analysis on all pairs of indices
-  sorry  -- Requires explicit calculation for each pair
-
-/- Glue operation matrix correspondence -/
-/- Merkle-ID: implementation.linear_algebra.glue_matrix
-   How glue operations correspond to matrix operations on boundary matrices. -/
-def glue_boundary_matrix {I R T : Type u} [DecidableEq I]
-  (inc : IncidenceAlgebraic I R T) (idx : List I) (i j : I) : Matrix I I Int :=
-  -- When gluing i and j, the resulting boundary matrix combines their boundaries
-  -- This is a simplified model; real glue would require more complex operations
-  fun x y =>
-    if x = i ∧ y = j then
-      -- Combine boundaries along the glue interface
-      0  -- Placeholder: would need proper boundary merging logic
-    else
-      boundaryMatrix inc idx x y
-
-/- Theorem: Glue preserves boundary operator properties -/
-/- Merkle-ID: foundation.axiomatization.glue_boundary_preservation
-   Glue operations preserve the ∂² = 0 property. -/
-theorem glue_preserves_boundary_operator {I R T : Type u} [DecidableEq I]
-  (inc : IncidenceAlgebraic I R T) (idx : List I) {i j k : I}
-  (hglue : inc.glue i j = some k) :
-  -- If i and j can be glued to k, then ∂² = 0 is preserved
-  -- This requires that the glued boundary matrix also satisfies ∂∂ = 0
-  true := by  -- Placeholder: requires detailed boundary merging analysis
-  trivial
-
-/- Merkle-ID: foundation.axiomatization.pushout_universality
-   T1: Glue operation has pushout universality -/
-namespace PushoutUniversality
-
-/- Pushout diagram in Incidence Theory -/
-/- Merkle-ID: foundation.axiomatization.pushout_diagram
-   Definition of pushout in incidence structures. -/
-structure PushoutDiagram {I R T : Type u} (inc : Incidence I R T) where
-  a b c : I
-  f : I → Option I  -- morphism from a to b
-  g : I → Option I  -- morphism from a to c
-  -- pushout object would be glue(b,c) with universal property
-
-/- Cocone for pushout -/
-/- Merkle-ID: foundation.axiomatization.pushout_cocone
-   Cocone witnessing the pushout universal property. -/
-structure Cocone {I R T : Type u} (inc : Incidence I R T)
-  (diagram : PushoutDiagram inc) where
-  apex : I
-  leg1 : I → Option I  -- from b to apex
-  leg2 : I → Option I  -- from c to apex
-  commutes : ∀ x, leg1 (diagram.f x |>.getD x) = leg2 (diagram.g x |>.getD x)
-
-/- Theorem T1: Glue has pushout universality -/
-/- Merkle-ID: foundation.axiomatization.t1_glue_pushout
-   T1: Glue operations create pushouts with universal property. -/
-theorem glue_creates_pushouts {I R T : Type u} [DecidableEq I]
-  (inc : Incidence I R T) {i j k : I}
-  (hglue : inc.glue i j = some k) :
-  -- The glued incidence k is a pushout of i along the boundary sharing
-  -- This establishes that glue has the universal property of pushouts
-  ∃ (cocone : Cocone inc ⟨i, j, k, id, id⟩),
-    ∀ (other : Cocone inc ⟨i, j, k, id, id⟩),
-    ∃! (mediator : I → Option I), true := by
-  -- This requires constructing the universal cocone
-  -- and proving uniqueness of mediators
-  sorry  -- Requires detailed universal property proof
-
-/- Concrete T1 proof for triangle graph -/
-/- Merkle-ID: foundation.axiomatization.t1_triangle_concrete
-   Concrete proof of T1 for the triangle incidence structure. -/
-theorem triangle_glue_pushout_concrete :
-  -- In the triangle graph, gluing A to itself creates a valid pushout
-  -- This demonstrates the concrete universal property
-  let glue_result := triIncidence.glue A A
-  glue_result = some A := by
-  -- The triangle glue operation is designed to be idempotent
-  unfold Incidence.glue triIncidence
-  -- When gluing A to itself, it should return A (idempotent)
-  simp
-  -- This shows that glue has the reflexive property needed for pushouts
-  rfl
-
-end PushoutUniversality
-
-/- Merkle-ID: foundation.axiomatization.congruence_theory
-   T2: Observational equivalence is a congruence -/
-namespace CongruenceTheory
-
-/- Congruence property for glue -/
-/- Merkle-ID: foundation.axiomatization.congruence_glue
-   ≡ is preserved under glue operations. -/
-theorem approx_congruent_under_glue {I R T : Type u} [DecidableEq I]
-  (inc : IncidenceAlgebraic I R T) {i₁ i₂ j₁ j₂ k₁ k₂ : I}
-  (hi : approxBisim inc i₁ i₂) (hj : approxBisim inc j₁ j₂)
-  (hk₁ : inc.glue i₁ j₁ = some k₁) (hk₂ : inc.glue i₂ j₂ = some k₂) :
-  approxBisim inc k₁ k₂ := by
-  -- If i₁ ≡ i₂ and j₁ ≡ j₂, then glue(i₁,j₁) ≡ glue(i₂,j₂)
-  -- This requires lifting bisimilarity through glue operations
-  unfold approxBisim at hi hj ⊢
-  -- Proof by case analysis on the bisimulation witnesses
-  sorry  -- Requires detailed congruence proof
-
-/- Congruence for all operations -/
-/- Merkle-ID: foundation.axiomatization.full_congruence
-   T2: ≡ is a congruence relation for all incidence operations. -/
-theorem approx_is_congruence {I R T : Type u} [DecidableEq I]
-  (inc : IncidenceAlgebraic I R T) :
-  -- ≈ is preserved under all operations: glue, boundary, etc.
-  ∀ {i j k : I} (op : I → I → Option I),
-    (∀ x y, op x y = inc.glue x y) →
-    approxBisim inc i j → approxBisim inc k (op i k |>.getD i) →
-    approxBisim inc (op i k |>.getD i) (op j k |>.getD j) := by
-  sorry  -- General congruence theorem
-
-/- Concrete T2 proof for triangle graph -/
-/- Merkle-ID: foundation.axiomatization.t2_triangle_congruence
-   Concrete proof of congruence for triangle graph. -/
-theorem triangle_congruence_concrete :
-  -- In triangle graph, ≈ is preserved under glue operations
-  -- A ≈ A (reflexivity), so glue(A,A) ≈ glue(A,A)
-  approxBisim triIncidence A A := by
-  -- Follows from reflexivity
-  apply approxBisim_refl
-
-end CongruenceTheory
-
-/- Merkle-ID: foundation.axiomatization.linear_semantics_soundness
-   T3: Linear semantics soundness -/
-namespace LinearSemanticsSoundness
-
-/- Functor from Incidence to Chain Complex -/
-/- Merkle-ID: foundation.axiomatization.incidence_to_chain
-   Translation functor F: Inc → Ch(R). -/
-structure ChainComplex (R : Type u) [Ring R] where
-  -- Chain complex Cₙ → Cₙ₋₁ → ... → C₀
-  -- with differentials ∂ₙ : Cₙ → Cₙ₋₁ satisfying ∂ₙ₋₁ ∘ ∂ₙ = 0
-
-/- Boundary functor preserves structure -/
-/- Merkle-ID: foundation.axiomatization.boundary_functor_soundness
-   T3: F(∂) is indeed a boundary operator. -/
-theorem boundary_functor_soundness {I R T : Type u} [DecidableEq I]
-  (inc : IncidenceAlgebraic I R T) (idx : List I) :
-  -- F(∂) : F(Inc) → F(Inc) is a boundary operator
-  -- ∂ ∘ ∂ = 0 in the incidence structure implies d ∘ d = 0 in the chain complex
-  boundary_operator_square_zero inc idx := by
-  -- This follows from the boundary operator properties
-  apply boundary_operator_square_zero
-  exact idx
-
-/- Linear invariants are preserved -/
-/- Merkle-ID: foundation.axiomatization.linear_invariants_preserved
-   Linear algebraic properties are preserved under F. -/
-theorem linear_invariants_preserved {I R T : Type u} [DecidableEq I]
-  (inc : IncidenceAlgebraic I R T) (idx : List I) :
-  -- Spectral properties, ranks, etc. are preserved
-  -- F preserves incidence-theoretic invariants
-  true := by
-  trivial  -- Placeholder for detailed invariant preservation
-
-end LinearSemanticsSoundness
-
-/- Merkle-ID: foundation.axiomatization.completeness_theory
-   T4: Completeness - linear observations determine equivalence -/
-namespace CompletenessTheory
-
-/- Linear observation functor -/
-/- Merkle-ID: foundation.axiomatization.linear_observation
-   Linear observations: boundary matrices, Laplacians, spectra. -/
-structure LinearObservation {I R T : Type u} [DecidableEq I]
-  (inc : IncidenceAlgebraic I R T) (idx : List I) where
-  boundary_matrix : Matrix I I Int
-  laplacian : Matrix I I Int
-  -- spectral data, ranks, etc.
-
-/- Completeness theorem -/
-/- Merkle-ID: foundation.axiomatization.completeness
-   T4: If linear observations agree, then incidences are equivalent. -/
-theorem linear_completeness {I R T : Type u} [DecidableEq I]
-  (inc : IncidenceAlgebraic I R T) (idx : List I) {i j : I}
-  (h_observations : ∀ obs : LinearObservation inc idx,
-    obs.boundary_matrix i = obs.boundary_matrix j ∧
-    obs.laplacian i = obs.laplacian j) :
-  -- If all linear observations agree, then i ≈ j
-  approxBisim inc i j := by
-  -- This requires that the incidence structure is completely determined
-  -- by its linear-algebraic properties
-  sorry  -- Requires detailed completeness argument
-
-/- Concrete T4 proof for triangle graph -/
-/- Merkle-ID: foundation.axiomatization.t4_triangle_completeness
-   Concrete proof of completeness for triangle graph. -/
-theorem triangle_completeness_concrete :
-  -- In triangle graph, nodes with same boundary signatures are equivalent
-  -- A and A have same boundary matrices → A ≈ A
-  ∀ obs : LinearObservation triIncidence triIdx,
-    obs.boundary_matrix A = obs.boundary_matrix A ∧
-    obs.laplacian A = obs.laplacian A := by
-  -- Trivial case: A equals itself
-  intro obs
-  constructor
-  · rfl
-  · rfl
-
-end CompletenessTheory
-
-/- Merkle-ID: foundation.axiomatization.translation_preservation
-   T5: Translation preserves limits/colimits -/
-namespace TranslationPreservation
-
-/- Translation functor to Set -/
-/- Merkle-ID: foundation.axiomatization.inc_to_set
-   Translation Inc → Set. -/
-def inc_to_set {I R T : Type u} (inc : Incidence I R T) : I → Type u :=
-  -- Nullary incidences become sets, unary become functions, etc.
-  fun i => if inc.boundary i = [] then ULift Bool else ULift Unit  -- Simplified
-
-/- Translation to Category -/
-/- Merkle-ID: foundation.axiomatization.inc_to_cat
-   Translation Inc → Cat. -/
--- Category where objects are incidences, morphisms are gluings
-
-/- Translation to Type -/
-/- Merkle-ID: foundation.axiomatization.inc_to_type
-   Translation Inc → Type. -/
--- Types as inductive families over incidences
-
-/- Preservation of (co)limits -/
-/- Merkle-ID: foundation.axiomatization.limit_preservation
-   T5: Translations preserve finite limits and colimits. -/
-theorem preserves_limits {I R T : Type u} [DecidableEq I]
-  (inc : IncidenceAlgebraic I R T) :
-  -- Inc → Set/Cat/Type preserves pullbacks, equalizers, etc.
-  -- Glue corresponds to pushouts, etc.
-  true := by
-  trivial  -- Placeholder for detailed preservation proofs
-
-/- Concrete T5 proof for triangle graph -/
-/- Merkle-ID: foundation.axiomatization.t5_triangle_translation
-   Concrete proof of translation preservation for triangle graph. -/
-theorem triangle_translation_concrete :
-  -- Triangle graph translates to set/category/type preserving structure
-  -- The triangle as a set: {A, B, C} with edges
-  let triangle_as_set := inc_to_set triIncidence
-  triangle_as_set A = ULift Unit ∧  -- A is connected (has edges)
-  triangle_as_set B = ULift Unit ∧  -- B is connected
-  triangle_as_set C = ULift Unit    -- C is connected
-  := by
-  -- Check the translation for triangle nodes
-  unfold inc_to_set
-  -- All nodes have non-empty boundaries, so they all map to ULift Unit
-  simp [triBoundary]
-  constructor
-  · constructor
-  · constructor
-    constructor
-
-end TranslationPreservation
-
-end IncidenceCore
-
-/- Linear algebra signatures for incidence structures. -/
-
-namespace IncidenceCore
-
-/- Minimal matrix abstraction using functions over finite indices.
-   We avoid external deps; users can later replace with mathlib `Matrix`. -/
-universe v w
-def Matrix (m : Type u) (n : Type v) (α : Type w) := m → n → α
-
-/- Boundary matrix over a chosen finite index set of incidences. -/
-def boundaryMatrix {I R T : Type u} [DecidableEq I]
-  (inc : Incidence I R T)
-  (idx : List I) : Matrix I I Int :=
-  fun i j =>
-    -- count signed multiplicities of j in boundary of i
-    let _ := idx -- mark idx as used to satisfy linter
-    let entries := inc.boundary i
-    let signed (e : Endpoint I R) : Int :=
-      match e.sign with
-      | Sign.neg  => - (Int.ofNat e.mult)
-      | Sign.zero => 0
-      | Sign.pos  => Int.ofNat e.mult
-    entries.foldl (fun acc e => by
-      by_cases h : e.i = j
-      · exact acc + signed e
-      · exact acc) 0
-
-/- Laplacian L = Bᵀ ⬝ B with naive multiplication over Int. -/
-def laplacian {I R T : Type u} [DecidableEq I]
-  (inc : Incidence I R T)
-  (idx : List I) : Matrix I I Int :=
-  let B := boundaryMatrix inc idx
-  fun i j =>
-    -- naive finite sum over idx as rows/cols proxy
-    let rec dot (xs : List I) (acc : Int) : Int :=
-      match xs with
-      | []      => acc
-      | k :: ks => dot ks (acc + (B k i) * (B k j))
-    dot idx 0
-
-end IncidenceCore
-
-/- Pushout≅Gluing specification: guards, type preservation, unit/assoc under preconditions. -/
-
-namespace IncidenceCore
-
-/- Guards declare when gluing is permitted. -/
-structure Guards (I : Type u) where
-  allow : I → I → Bool
-
-/- Gluing specification relative to an incidence. -/
-structure GluingSpec {I R T : Type u} (inc : Incidence I R T) where
-  guards           : Guards I
-  unit_ok          : ∀ i, guards.allow i inc.unit = true ∧ inc.glue i inc.unit = some i ∧ inc.glue inc.unit i = some i
-  type_preserve    : ∀ {i j k}, guards.allow i j = true → inc.glue i j = some k → inc.typeFunc k = inc.typeFunc i
-  guard_preserve   : ∀ {i j k}, guards.allow i j = true → inc.glue i j = some k → True
-  assoc_when_ok    : ∀ {i j k ij ijk jk},
-    guards.allow i j = true → inc.glue i j = some ij →
-    guards.allow ij k = true → inc.glue ij k = some ijk →
-    guards.allow j k = true → inc.glue j k = some jk →
-    guards.allow i jk = true → inc.glue i jk = some ijk
-
-/- A default permissive guard (always true). -/
-def Guards.permissive (I : Type u) : Guards I := { allow := fun _ _ => true }
-
-end IncidenceCore
-
-/- Merkle-ID: foundation.logic
-   bisimulation skeleton over canonical API. -/
-
-namespace IncidenceCore
-
-/- Endpoint compatibility (role/sign/mult preserved). -/
-/- Merkle-ID: foundation.axiomatization
-   endpoint compatibility notion for ≈. -/
-def boundaryCompatible {I R T : Type u} (_inc : Incidence I R T)
-  (e₁ e₂ : Endpoint I R) : Prop :=
+/- Endpoint compatibility ignores the endpoint identity but retains its label. -/
+def boundaryCompatible {I R T : Type u} [DecidableEq I] (_inc : Incidence I R T)
+    (e₁ e₂ : Endpoint I R) : Prop :=
   e₁.role = e₂.role ∧ e₁.sign = e₂.sign ∧ e₁.mult = e₂.mult
 
-/- boundaryCompatible is symmetric. -/
-theorem boundaryCompatible_symm {I R T : Type u} {inc : Incidence I R T} {e1 e2 : Endpoint I R} :
-  boundaryCompatible inc e1 e2 → boundaryCompatible inc e2 e1 := by
-  intro h
-  unfold boundaryCompatible
-  simp [h.left, h.right.left, h.right.right]
+theorem boundaryCompatible_symm {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} {e₁ e₂ : Endpoint I R} :
+    boundaryCompatible inc e₁ e₂ → boundaryCompatible inc e₂ e₁ := by
+  rintro ⟨hr, hs, hm⟩
+  exact ⟨hr.symm, hs.symm, hm.symm⟩
 
-/- Chaining compatibility through an intermediate endpoint. -/
-theorem boundaryCompatible_trans {I R T : Type u} {inc : Incidence I R T}
-  {e₁ e₂ e₃ : Endpoint I R} :
-  boundaryCompatible inc e₁ e₂ → boundaryCompatible inc e₂ e₃ → boundaryCompatible inc e₁ e₃ := by
-  intro h12 h23
-  unfold boundaryCompatible at h12 h23 ⊢
-  rcases h12 with ⟨hr12, hs12, hm12⟩
-  rcases h23 with ⟨hr23, hs23, hm23⟩
-  exact And.intro (hr12.trans hr23) (And.intro (hs12.trans hs23) (hm12.trans hm23))
+theorem boundaryCompatible_trans {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} {e₁ e₂ e₃ : Endpoint I R} :
+    boundaryCompatible inc e₁ e₂ → boundaryCompatible inc e₂ e₃ →
+      boundaryCompatible inc e₁ e₃ := by
+  rintro ⟨hr₁, hs₁, hm₁⟩ ⟨hr₂, hs₂, hm₂⟩
+  exact ⟨hr₁.trans hr₂, hs₁.trans hs₂, hm₁.trans hm₂⟩
 
-/- Boundary matching w.r.t. a relation rel on incidences. -/
-/- Merkle-ID: foundation.logic
-   boundary matching definition for bisimulation. -/
-def boundaryMatched {I R T : Type u} (inc : Incidence I R T)
-  (rel : I → I → Prop) (i j : I) : Prop :=
-  (∀ e ∈ inc.boundary i, ∃ e', e' ∈ inc.boundary j ∧ boundaryCompatible inc e e' ∧ rel e.i e'.i) ∧
-  (∀ e' ∈ inc.boundary j, ∃ e, e ∈ inc.boundary i ∧ boundaryCompatible inc e e' ∧ rel e.i e'.i)
+def boundaryMatched {I R T : Type u} [DecidableEq I] (inc : Incidence I R T)
+    (rel : I → I → Prop) (i j : I) : Prop :=
+  (∀ e ∈ inc.boundary i, ∃ e' ∈ inc.boundary j,
+      boundaryCompatible inc e e' ∧ rel e.i e'.i) ∧
+  (∀ e' ∈ inc.boundary j, ∃ e ∈ inc.boundary i,
+      boundaryCompatible inc e e' ∧ rel e.i e'.i)
 
-/- A bisimulation is a relation preserved by types and boundary matching. -/
-/- Merkle-ID: foundation.logic
-   bisimulation predicate. -/
-def IsBisimulation {I R T : Type u} (inc : Incidence I R T)
-  (rel : I → I → Prop) : Prop :=
+def IsBisimulation {I R T : Type u} [DecidableEq I] (inc : Incidence I R T)
+    (rel : I → I → Prop) : Prop :=
   ∀ i j, rel i j → inc.typeFunc i = inc.typeFunc j ∧ boundaryMatched inc rel i j
 
-/- Bisimilarity: related by some bisimulation. -/
-/- Merkle-ID: foundation.logic
-   bisimilarity. -/
-def approxBisim {I R T : Type u} (inc : Incidence I R T) (i j : I) : Prop :=
+def approxBisim {I R T : Type u} [DecidableEq I] (inc : Incidence I R T)
+    (i j : I) : Prop :=
   ∃ rel, IsBisimulation inc rel ∧ rel i j
 
-/- Equality relation is a bisimulation. -/
-/- Merkle-ID: foundation.models
-   base bisimulation instance (equality). -/
-theorem isBisimulation_rfl {I R T : Type u} (inc : Incidence I R T) :
-  IsBisimulation inc (fun a b => a = b) := by
+/- Exact agreement of observables is a (strict) bisimulation. -/
+theorem isBisimulation_approxEq {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) : IsBisimulation inc (approxEq inc) := by
   intro i j hij
-  cases hij with
-  | refl =>
-    refine And.intro rfl ?_
-    unfold boundaryMatched boundaryCompatible
-    constructor
-    · intro e he
-      refine ⟨e, ?_, ?_, rfl⟩
-      · simpa using he
-      · simp
-    · intro e he
-      refine ⟨e, ?_, ?_, rfl⟩
-      · simpa using he
-      · simp
-
-/- Merkle-ID: foundation.logic
-   reflexivity of bisimilarity. -/
-theorem approxBisim_refl {I R T : Type u} (inc : Incidence I R T) (i : I) :
-  approxBisim inc i i := by
-  refine ⟨(fun a b => a = b), isBisimulation_rfl inc, rfl⟩
-
-/- Symmetry: if rel is a bisimulation then its converse is also. -/
-/- Merkle-ID: foundation.logic
-   symmetry of bisimulation. -/
-theorem isBisimulation_symm {I R T : Type u} {inc : Incidence I R T}
-  {rel : I → I → Prop} (h : IsBisimulation inc rel) :
-  IsBisimulation inc (fun a b => rel b a) := by
-  intro i j hij
-  have hij' := h j i hij
-  rcases hij' with ⟨hTji, hM⟩
-  have hT : inc.typeFunc i = inc.typeFunc j := Eq.symm hTji
-  refine And.intro hT ?H
-  unfold boundaryMatched at hM ⊢
+  refine ⟨hij.left, ?_⟩
   constructor
   · intro e he
-    rcases hM.right e he with ⟨e', he', hC, hRel⟩
-    exact ⟨e', he', boundaryCompatible_symm hC, hRel⟩
-  · intro e' he'
-    rcases hM.left e' he' with ⟨e, he, hC, hRel⟩
-    exact ⟨e, he, boundaryCompatible_symm hC, hRel⟩
+    refine ⟨e, ?_, ⟨rfl, rfl, rfl⟩, approxEq_refl inc e.i⟩
+    simpa [hij.right] using he
+  · intro e he
+    refine ⟨e, ?_, ⟨rfl, rfl, rfl⟩, approxEq_refl inc e.i⟩
+    simpa [hij.right] using he
 
-/- Merkle-ID: foundation.logic
-   symmetry of bisimilarity. -/
-theorem approxBisim_symm {I R T : Type u} {inc : Incidence I R T} {i j : I} :
-  approxBisim inc i j → approxBisim inc j i := by
-  intro ⟨rel, hRel, hij⟩
-  exact ⟨(fun a b => rel b a), isBisimulation_symm hRel, hij⟩
+theorem approxEq_implies_approxBisim {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} {i j : I} :
+    approxEq inc i j → approxBisim inc i j := by
+  intro hij
+  exact ⟨approxEq inc, isBisimulation_approxEq inc, hij⟩
 
-/- Composition of two bisimulations is a bisimulation. -/
-theorem isBisimulation_comp {I R T : Type u} {inc : Incidence I R T}
-  {rel₁ rel₂ : I → I → Prop}
-  (h₁ : IsBisimulation inc rel₁) (h₂ : IsBisimulation inc rel₂) :
-  IsBisimulation inc (fun a c => ∃ b, rel₁ a b ∧ rel₂ b c) := by
+theorem isBisimulation_rfl {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) : IsBisimulation inc (fun a b => a = b) := by
+  intro i j hij
+  subst j
+  refine ⟨rfl, ?_⟩
+  constructor
+  · intro e he
+    exact ⟨e, he, ⟨rfl, rfl, rfl⟩, rfl⟩
+  · intro e he
+    exact ⟨e, he, ⟨rfl, rfl, rfl⟩, rfl⟩
+
+theorem approxBisim_refl {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (i : I) : approxBisim inc i i :=
+  ⟨(fun a b => a = b), isBisimulation_rfl inc, rfl⟩
+
+theorem isBisimulation_symm {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} {rel : I → I → Prop}
+    (h : IsBisimulation inc rel) : IsBisimulation inc (fun a b => rel b a) := by
+  intro i j hij
+  rcases h j i hij with ⟨ht, hm⟩
+  refine ⟨ht.symm, ?_⟩
+  constructor
+  · intro e he
+    rcases hm.right e he with ⟨e', he', hc, hr⟩
+    exact ⟨e', he', boundaryCompatible_symm hc, hr⟩
+  · intro e he
+    rcases hm.left e he with ⟨e', he', hc, hr⟩
+    exact ⟨e', he', boundaryCompatible_symm hc, hr⟩
+
+theorem approxBisim_symm {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} {i j : I} :
+    approxBisim inc i j → approxBisim inc j i := by
+  rintro ⟨rel, hr, hij⟩
+  exact ⟨(fun a b => rel b a), isBisimulation_symm hr, hij⟩
+
+theorem isBisimulation_comp {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} {rel₁ rel₂ : I → I → Prop}
+    (h₁ : IsBisimulation inc rel₁) (h₂ : IsBisimulation inc rel₂) :
+    IsBisimulation inc (fun a c => ∃ b, rel₁ a b ∧ rel₂ b c) := by
   intro i k hik
   rcases hik with ⟨j, hij, hjk⟩
-  have hTij := (h₁ i j hij).left
-  have hMj := (h₁ i j hij).right
-  have hTjk := (h₂ j k hjk).left
-  have hMk := (h₂ j k hjk).right
-  -- Types align transitively
-  have hTik : inc.typeFunc i = inc.typeFunc k := hTij.trans hTjk
-  -- Boundary matching by chaining matches through j
-  refine And.intro hTik ?H
-  unfold boundaryMatched at hMj hMk ⊢
+  rcases h₁ i j hij with ⟨ht₁, hm₁⟩
+  rcases h₂ j k hjk with ⟨ht₂, hm₂⟩
+  refine ⟨ht₁.trans ht₂, ?_⟩
   constructor
   · intro e he
-    rcases hMj.left e he with ⟨e2, he2, hC12, hRel12⟩
-    rcases hMk.left e2 he2 with ⟨e3, he3, hC23, hRel23⟩
-    refine ⟨e3, he3, ?hC13, ?hRel13⟩
-    · exact boundaryCompatible_trans hC12 hC23
-    · exact ⟨e2.i, hRel12, hRel23⟩
-  · intro e3 he3
-    rcases hMk.right e3 he3 with ⟨e2, he2, hC32, hRel32⟩
-    rcases hMj.right e2 he2 with ⟨e, he, hC21, hRel21⟩
-    refine ⟨e, he, ?hC31, ?hRel31⟩
-    · -- hC31 : boundaryCompatible e e3
-      -- We have hC21 : compat e2 e and hC32 : compat e2 e3; chain via trans
-      have hC13 : boundaryCompatible inc e e2 := boundaryCompatible_symm hC21
-      exact boundaryCompatible_trans hC13 hC32
-    · exact ⟨e2.i, hRel21, hRel32⟩
+    rcases hm₁.left e he with ⟨e₂, he₂, hc₁, hr₁⟩
+    rcases hm₂.left e₂ he₂ with ⟨e₃, he₃, hc₂, hr₂⟩
+    exact ⟨e₃, he₃, boundaryCompatible_trans hc₁ hc₂, ⟨e₂.i, hr₁, hr₂⟩⟩
+  · intro e he
+    rcases hm₂.right e he with ⟨e₂, he₂, hc₂, hr₂⟩
+    rcases hm₁.right e₂ he₂ with ⟨e₁, he₁, hc₁, hr₁⟩
+    exact ⟨e₁, he₁,
+      boundaryCompatible_trans hc₁ hc₂,
+      ⟨e₂.i, hr₁, hr₂⟩⟩
 
-/- Transitivity of bisimilarity via composition. -/
-theorem approxBisim_trans {I R T : Type u} {inc : Incidence I R T} {i j k : I} :
-  approxBisim inc i j → approxBisim inc j k → approxBisim inc i k := by
-  intro hIJ hJK
-  rcases hIJ with ⟨rel₁, h₁, hij⟩
-  rcases hJK with ⟨rel₂, h₂, hjk⟩
-  exact ⟨(fun a c => ∃ b, rel₁ a b ∧ rel₂ b c), isBisimulation_comp h₁ h₂, ⟨j, hij, hjk⟩⟩
+theorem approxBisim_trans {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} {i j k : I} :
+    approxBisim inc i j → approxBisim inc j k → approxBisim inc i k := by
+  rintro ⟨rel₁, h₁, hij⟩ ⟨rel₂, h₂, hjk⟩
+  exact ⟨(fun a c => ∃ b, rel₁ a b ∧ rel₂ b c),
+    isBisimulation_comp h₁ h₂, ⟨j, hij, hjk⟩⟩
+
+/- Bisimilarity can therefore be used as an equivalence relation. -/
+theorem approxBisim_equivalence {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) : Equivalence (approxBisim inc) where
+  refl := approxBisim_refl inc
+  symm := by
+    intro i j
+    exact approxBisim_symm
+  trans := by
+    intro i j k
+    exact approxBisim_trans
+
+def approxBisimSetoid {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) : Setoid I where
+  r := approxBisim inc
+  iseqv := approxBisim_equivalence inc
+
+abbrev IncidenceQuotient {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) := Quotient (approxBisimSetoid inc)
+
+theorem incidence_quotient_sound {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} {i j : I} (h : approxBisim inc i j) :
+    (Quotient.mk (approxBisimSetoid inc) i : IncidenceQuotient inc) =
+      Quotient.mk (approxBisimSetoid inc) j :=
+  Quotient.sound h
+
+/- Derived linear data.  It is computation, not an additional assumption. -/
+def boundaryMatrix {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (_idx : List I) : Matrix I I Int :=
+  fun i j =>
+    (inc.boundary i).foldl (fun acc e =>
+      if e.i = j then
+        acc + match e.sign with
+          | Sign.neg => -(Int.ofNat e.mult)
+          | Sign.zero => 0
+          | Sign.pos => Int.ofNat e.mult
+      else acc) 0
+
+def laplacian {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) : Matrix I I Int :=
+  let b := boundaryMatrix inc idx
+  fun i j => idx.foldl (fun acc k => acc + b k i * b k j) 0
+
+/- `BᵀB` is symmetric independently of any extra incidence axioms. -/
+theorem laplacian_symmetric {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (i j : I) :
+    laplacian inc idx i j = laplacian inc idx j i := by
+  let b := boundaryMatrix inc idx
+  have fold_symmetric : ∀ (xs : List I) (acc : Int),
+      xs.foldl (fun total k => total + b k i * b k j) acc =
+        xs.foldl (fun total k => total + b k j * b k i) acc := by
+    intro xs acc
+    induction xs generalizing acc with
+    | nil => rfl
+    | cons k xs ih =>
+      simp only [List.foldl]
+      rw [Int.mul_comm (b k i) (b k j)]
+      exact ih _
+  exact fold_symmetric idx 0
+
+/- Each diagonal entry of `BᵀB` is a finite sum of integer squares. -/
+theorem laplacian_diagonal_nonnegative {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (i : I) :
+    0 ≤ laplacian inc idx i i := by
+  let b := boundaryMatrix inc idx
+  have square_nonnegative : ∀ value : Int, 0 ≤ value * value := by
+    intro value
+    rcases Int.le_total 0 value with hnonneg | hnonpos
+    · exact Int.mul_nonneg hnonneg hnonneg
+    · rw [← Int.neg_mul_neg value value]
+      exact Int.mul_nonneg
+        (Int.neg_nonneg_of_nonpos hnonpos)
+        (Int.neg_nonneg_of_nonpos hnonpos)
+  have fold_nonnegative : ∀ (xs : List I) (acc : Int), 0 ≤ acc →
+      0 ≤ xs.foldl (fun total k => total + b k i * b k i) acc := by
+    intro xs acc hacc
+    induction xs generalizing acc with
+    | nil => simpa using hacc
+    | cons k xs ih =>
+      simp only [List.foldl]
+      apply ih
+      exact Int.add_nonneg hacc (square_nonnegative (b k i))
+  exact fold_nonnegative idx 0 (Int.le_refl 0)
+
+def boundarySquareZero {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) : Prop :=
+  ∀ i k, i ∈ idx → k ∈ idx →
+    idx.foldl (fun acc j => acc + boundaryMatrix inc idx i j * boundaryMatrix inc idx j k) 0 = 0
+
+theorem boundaryMatrix_of_empty_boundary {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) {i j : I}
+    (hempty : inc.boundary i = []) : boundaryMatrix inc idx i j = 0 := by
+  simp [boundaryMatrix, hempty]
+
+theorem empty_boundaries_square_zero {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (hempty : ∀ i, inc.boundary i = []) :
+    boundarySquareZero inc idx := by
+  intro i k _ _
+  have hfold : ∀ xs : List I, xs.foldl (fun (acc : Int) _ => acc) 0 = 0 := by
+    intro xs
+    induction xs with
+    | nil => rfl
+    | cons x xs ih => exact ih
+  simpa [boundaryMatrix, hempty] using hfold idx
+
+theorem boundary_functor_soundness {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (h : boundarySquareZero inc idx) :
+    boundarySquareZero inc idx := h
+
+def sameLinearObservations {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (i j : I) : Prop :=
+  ∀ k, k ∈ idx →
+    boundaryMatrix inc idx i k = boundaryMatrix inc idx j k ∧
+      laplacian inc idx i k = laplacian inc idx j k
+
+/- Linear data imply observational equivalence only for a model that supplies
+   the corresponding separation theorem. -/
+structure LinearCompletenessSpec {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) where
+  complete : ∀ {i j}, sameLinearObservations inc idx i j → approxBisim inc i j
+
+theorem linear_completeness {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} {idx : List I} (spec : LinearCompletenessSpec inc idx)
+    {i j : I} (h : sameLinearObservations inc idx i j) : approxBisim inc i j :=
+  spec.complete h
+
+/- A gluing specification supplies the additional laws needed for gluing proofs. -/
+structure GluingSpec {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) where
+  unit_ok : ∀ i, inc.glue i inc.unit = some i ∧ inc.glue inc.unit i = some i
+  type_preserve : ∀ {i j k}, inc.guards.allow i j = true →
+    inc.glue i j = some k → inc.typeFunc k = inc.typeFunc i
+  assoc_when_ok : ∀ {i j k ij ijk jk},
+    inc.guards.allow i j = true → inc.glue i j = some ij →
+    inc.guards.allow ij k = true → inc.glue ij k = some ijk →
+    inc.guards.allow j k = true → inc.glue j k = some jk →
+    inc.guards.allow i jk = true → inc.glue i jk = some ijk
+
+def Guards.permissive (I : Type u) : Guards I := { allow := fun _ _ => true }
+
+theorem glue_left_unit {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (i : I) : inc.glue inc.unit i = some i :=
+  inc.unit_left i
+
+theorem glue_right_unit {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (i : I) : inc.glue i inc.unit = some i :=
+  inc.unit_right i
+
+theorem glue_preserves_type {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) {i j k : I}
+    (hguard : inc.guards.allow i j = true) (hglue : inc.glue i j = some k) :
+    inc.typeFunc k = inc.typeFunc i :=
+  inc.type_preserve hguard hglue
+
+theorem glue_associative_when_allowed {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} (spec : GluingSpec inc) {i j k ij ijk jk : I}
+    (hijAllowed : inc.guards.allow i j = true) (hij : inc.glue i j = some ij)
+    (hijkAllowed : inc.guards.allow ij k = true) (hijk : inc.glue ij k = some ijk)
+    (hjkAllowed : inc.guards.allow j k = true) (hjk : inc.glue j k = some jk)
+    (hiJkAllowed : inc.guards.allow i jk = true) : inc.glue i jk = some ijk :=
+  spec.assoc_when_ok hijAllowed hij hijkAllowed hijk hjkAllowed hjk hiJkAllowed
+
+/- A gluing operation may preserve a relation only when that is part of its
+   specification; it is not a consequence of boundary data alone. -/
+def GlueRespects {I R T : Type u} [DecidableEq I] (inc : Incidence I R T)
+    (rel : I → I → Prop) : Prop :=
+  ∀ {i₁ i₂ j₁ j₂ k₁ k₂ : I}, rel i₁ i₂ → rel j₁ j₂ →
+    inc.glue i₁ j₁ = some k₁ → inc.glue i₂ j₂ = some k₂ → rel k₁ k₂
+
+theorem approxBisim_congruent_under_glue {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} (hrespect : GlueRespects inc (approxBisim inc))
+    {i₁ i₂ j₁ j₂ k₁ k₂ : I} (hi : approxBisim inc i₁ i₂)
+    (hj : approxBisim inc j₁ j₂) (hk₁ : inc.glue i₁ j₁ = some k₁)
+    (hk₂ : inc.glue i₂ j₂ = some k₂) : approxBisim inc k₁ k₂ :=
+  hrespect hi hj hk₁ hk₂
+
+/- A set-level presentation of the universal property needed for T1. -/
+structure Cospan (I : Type u) where
+  a : I
+  b : I
+  c : I
+  left : I → I
+  right : I → I
+
+structure PushoutWitness {I : Type u} (diagram : Cospan I) where
+  apex : I
+  inl : I → I
+  inr : I → I
+  commutes : ∀ x, inl (diagram.left x) = inr (diagram.right x)
+  lift : ∀ (leftLeg rightLeg : I → I),
+    (∀ x, leftLeg (diagram.left x) = rightLeg (diagram.right x)) → I → I
+  lift_inl : ∀ leftLeg rightLeg h x, lift leftLeg rightLeg h (inl x) = leftLeg x
+  lift_inr : ∀ leftLeg rightLeg h x, lift leftLeg rightLeg h (inr x) = rightLeg x
+  lift_unique : ∀ leftLeg rightLeg h (mediator : I → I),
+    (∀ x, mediator (inl x) = leftLeg x) →
+    (∀ x, mediator (inr x) = rightLeg x) → mediator = lift leftLeg rightLeg h
+
+/- This is the additional data required to connect `glue` to a pushout. -/
+structure GluePushoutSpec {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) where
+  diagram : I → I → Cospan I
+  witness : ∀ {i j k}, inc.glue i j = some k →
+    { pushout : PushoutWitness (diagram i j) // pushout.apex = k }
+
+def glue_creates_pushout {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} (spec : GluePushoutSpec inc) {i j k : I}
+    (hglue : inc.glue i j = some k) :
+    { pushout : PushoutWitness (spec.diagram i j) // pushout.apex = k } :=
+  spec.witness hglue
+
+/- Minimal category-theoretic data for the translation theorem (T5). -/
+structure IncCategory (Obj : Type u) where
+  Hom : Obj → Obj → Type u
+  id : ∀ a, Hom a a
+  comp : ∀ {a b c}, Hom b c → Hom a b → Hom a c
+  id_comp : ∀ {a b} (f : Hom a b), comp (id b) f = f
+  comp_id : ∀ {a b} (f : Hom a b), comp f (id a) = f
+  assoc : ∀ {a b c d} (f : Hom c d) (g : Hom b c) (h : Hom a b),
+    comp f (comp g h) = comp (comp f g) h
+
+structure IncFunctor {CObj DObj : Type u}
+    (C : IncCategory CObj) (D : IncCategory DObj) where
+  obj : CObj → DObj
+  map : ∀ {a b}, C.Hom a b → D.Hom (obj a) (obj b)
+  map_id : ∀ a, map (C.id a) = D.id (obj a)
+  map_comp : ∀ {a b c} (g : C.Hom b c) (f : C.Hom a b),
+    map (C.comp g f) = D.comp (map g) (map f)
+
+def IncFunctor.identity {Obj : Type u} (C : IncCategory Obj) : IncFunctor C C where
+  obj := id
+  map := fun f => f
+  map_id := by intro a; rfl
+  map_comp := by intro a b c g f; rfl
+
+def IncFunctor.comp {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    (G : IncFunctor D E) (F : IncFunctor C D) : IncFunctor C E where
+  obj := fun a => G.obj (F.obj a)
+  map := fun f => G.map (F.map f)
+  map_id := by
+    intro a
+    rw [F.map_id, G.map_id]
+  map_comp := by
+    intro a b c g f
+    rw [F.map_comp, G.map_comp]
+
+structure MorphismCospan {Obj : Type u} (C : IncCategory Obj) where
+  a : Obj
+  b : Obj
+  c : Obj
+  left : C.Hom a b
+  right : C.Hom a c
+
+def IncFunctor.mapCospan {CObj DObj : Type u} {C : IncCategory CObj}
+    {D : IncCategory DObj} (F : IncFunctor C D) (span : MorphismCospan C) :
+    MorphismCospan D where
+  a := F.obj span.a
+  b := F.obj span.b
+  c := F.obj span.c
+  left := F.map span.left
+  right := F.map span.right
+
+theorem IncFunctor.mapCospan_identity {Obj : Type u} {C : IncCategory Obj}
+    (span : MorphismCospan C) :
+    (IncFunctor.identity C).mapCospan span = span := rfl
+
+theorem IncFunctor.mapCospan_comp {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    (G : IncFunctor D E) (F : IncFunctor C D) (span : MorphismCospan C) :
+    (G.comp F).mapCospan span = G.mapCospan (F.mapCospan span) := rfl
+
+structure MorphismPushout {Obj : Type u} {C : IncCategory Obj}
+    (span : MorphismCospan C) where
+  apex : Obj
+  inl : C.Hom span.b apex
+  inr : C.Hom span.c apex
+  commutes : C.comp inl span.left = C.comp inr span.right
+  lift : ∀ (q : Obj) (leftLeg : C.Hom span.b q) (rightLeg : C.Hom span.c q),
+    C.comp leftLeg span.left = C.comp rightLeg span.right → C.Hom apex q
+  lift_inl : ∀ q leftLeg rightLeg h, C.comp (lift q leftLeg rightLeg h) inl = leftLeg
+  lift_inr : ∀ q leftLeg rightLeg h, C.comp (lift q leftLeg rightLeg h) inr = rightLeg
+  lift_unique : ∀ q leftLeg rightLeg h (mediator : C.Hom apex q),
+    C.comp mediator inl = leftLeg → C.comp mediator inr = rightLeg →
+      mediator = lift q leftLeg rightLeg h
+
+/- The small amount of isomorphism data needed to state uniqueness of a
+   pushout apex without importing a larger category-theory library. -/
+structure MorphismIso {Obj : Type u} (C : IncCategory Obj) (source target : Obj) where
+  hom : C.Hom source target
+  inv : C.Hom target source
+  inv_hom : C.comp inv hom = C.id source
+  hom_inv : C.comp hom inv = C.id target
+
+def pushoutComparison {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C} (source target : MorphismPushout span) :
+    C.Hom source.apex target.apex :=
+  source.lift target.apex target.inl target.inr target.commutes
+
+theorem pushoutComparison_inl {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C} (source target : MorphismPushout span) :
+    C.comp (pushoutComparison source target) source.inl = target.inl :=
+  source.lift_inl target.apex target.inl target.inr target.commutes
+
+theorem pushoutComparison_inr {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C} (source target : MorphismPushout span) :
+    C.comp (pushoutComparison source target) source.inr = target.inr :=
+  source.lift_inr target.apex target.inl target.inr target.commutes
+
+theorem pushoutComparison_self {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C} (po : MorphismPushout span) :
+    pushoutComparison po po = C.id po.apex := by
+  symm
+  apply po.lift_unique po.apex po.inl po.inr po.commutes
+  · simpa using C.id_comp po.inl
+  · simpa using C.id_comp po.inr
+
+theorem pushoutComparison_comp {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C} (first second third : MorphismPushout span) :
+    pushoutComparison first third =
+      C.comp (pushoutComparison second third) (pushoutComparison first second) := by
+  symm
+  apply first.lift_unique third.apex third.inl third.inr third.commutes
+  · rw [← C.assoc, pushoutComparison_inl, pushoutComparison_inl]
+  · rw [← C.assoc, pushoutComparison_inr, pushoutComparison_inr]
+
+def pushout_unique_up_to_iso {Obj : Type u} {C : IncCategory Obj}
+    {span : MorphismCospan C} (source target : MorphismPushout span) :
+    MorphismIso C source.apex target.apex where
+  hom := pushoutComparison source target
+  inv := pushoutComparison target source
+  inv_hom := by
+    rw [← pushoutComparison_comp, pushoutComparison_self]
+  hom_inv := by
+    rw [← pushoutComparison_comp, pushoutComparison_self]
+
+theorem functor_maps_pushout_cocone {CObj DObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} (F : IncFunctor C D)
+    {span : MorphismCospan C} (po : MorphismPushout span) :
+    D.comp (F.map po.inl) (F.map span.left) =
+      D.comp (F.map po.inr) (F.map span.right) := by
+  rw [← F.map_comp, po.commutes, F.map_comp]
+
+/- T5's nontrivial hypothesis: mapping the source universal cocone is again
+   universal in the target category. -/
+structure PushoutPreserving {CObj DObj : Type u} {C : IncCategory CObj}
+    {D : IncCategory DObj} (F : IncFunctor C D) {span : MorphismCospan C}
+    (po : MorphismPushout span) where
+  mapped_pushout : MorphismPushout (F.mapCospan span)
+  apex_is_image : mapped_pushout.apex = F.obj po.apex
+
+def translation_preserves_pushout {CObj DObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {F : IncFunctor C D}
+    {span : MorphismCospan C} (po : MorphismPushout span)
+    (hpreserves : PushoutPreserving F po) :
+    MorphismPushout (F.mapCospan span) :=
+  hpreserves.mapped_pushout
+
+/- Preservation composes: translating through two pushout-preserving stages
+   preserves the same source pushout through their composite translation. -/
+def PushoutPreserving.comp {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F : IncFunctor C D} {G : IncFunctor D E}
+    {span : MorphismCospan C} (po : MorphismPushout span)
+    (hF : PushoutPreserving F po)
+    (hG : PushoutPreserving G hF.mapped_pushout) :
+    PushoutPreserving (G.comp F) po where
+  mapped_pushout := hG.mapped_pushout
+  apex_is_image := by
+    calc
+      hG.mapped_pushout.apex = G.obj hF.mapped_pushout.apex := hG.apex_is_image
+      _ = G.obj (F.obj po.apex) := congrArg G.obj hF.apex_is_image
 
 end IncidenceCore

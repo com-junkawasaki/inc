@@ -26,10 +26,6 @@ structure Incidence (I R T : Type u) [DecidableEq I] where
   -- Guards from A9-A13
   guards          : Guards I
 
-  -- Linear algebra from A16-A17
-  boundaryMatrix  : Matrix I I Int
-  laplacian       : Matrix I I Int
-
   -- Invariants from all axioms
   type_consistent : ∀ (i : I), ∀ (e : Endpoint I R), e ∈ boundary i → typeFunc e.i = typeFunc i
   sign_rules      : ∀ (i : I), ∀ (e : Endpoint I R), e ∈ boundary i → (e.sign = Sign.neg ∨ e.sign = Sign.zero ∨ e.sign = Sign.pos)

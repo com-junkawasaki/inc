@@ -1,121 +1,49 @@
 ---
 layout: default
 title: Formal Verification Results
-description: Complete verification of Incidence Theory in Lean 4
+description: Checked Lean 4 core for Incidence Theory
 ---
 
-# 🔬 Formal Verification Results
+# Formal verification status
 
-This page shows the complete verification results of Incidence Theory, automatically generated from our Lean 4 formalization.
+The Lean source in `incidence-theory/` is the authoritative record of what is
+formalized. Run `./verify.sh` from the repository root to rebuild it and run
+the triangle example.
 
-## 📊 Verification Summary
+## Checked results
 
-<div class="verification-summary">
-  <div class="metric">
-    <div class="number">17</div>
-    <div class="label">Axioms Verified</div>
-  </div>
-  <div class="metric">
-    <div class="number">5</div>
-    <div class="label">Core Theorems</div>
-  </div>
-  <div class="metric">
-    <div class="number">100%</div>
-    <div class="label">Coverage</div>
-  </div>
-  <div class="metric">
-    <div class="number">✅</div>
-    <div class="label">CI Status</div>
-  </div>
-</div>
+| Area | Checked result |
+| --- | --- |
+| Boundary data | Finite list representation, sign classification, positive multiplicities |
+| Well-founded mode | A decreasing natural-number rank excludes direct boundary cycles |
+| Gluing | Unit laws, type preservation, and conditional associativity supplied by `GluingSpec` |
+| Bisimulation | Reflexive, symmetric, transitive; observable equality implies bisimilarity |
+| Linear data | Boundary matrices and Laplacians computed from boundaries; every derived `BᵀB` Laplacian is symmetric with nonnegative diagonal entries |
+| Triangle model | Six incidence-matrix entries, three Laplacian entries, and its finite `∂² = 0` calculation |
+| Translation | A functor maps a pushout cocone to a commuting cocone; universal-property preservation is an explicit `PushoutPreserving` condition, and pushout apexes are uniquely isomorphic |
+| Terminal model | Concrete witnesses for glue-to-pushout and pushout-preserving identity translation |
+| Trivial incidence | Total bisimulation, linear-completeness specification, glue congruence, and `∂² = 0` |
+| Finite well-founded incidence | Nonempty `root → leaf` boundary, decreasing rank, gluing spec, finite `∂² = 0` |
+| Finite linear completeness | On the nonempty finite model, equal boundary-matrix/Laplacian observations imply bisimilarity |
+| Layered algebraic witness | The finite model's role-erasure instantiates legacy A2/A6–A10/A16–A17 interfaces; its matrix and Laplacian are the core computations |
+| Internal logic | Propositional formulas over incidence atoms, natural deduction, weakening, substitution, cut, truth-preserving translation, proof transport along atom maps, Kripke pullback with exact forcing preservation, Kripke persistence/soundness, relative empty-context consistency, a two-world proof that excluded middle is underivable while its double-negation is derivable, explicit-enumeration infinite Lindenbaum chains whose limits are closed consistent prime theories extending every consistent finite context, plus recurrent relative disjunction saturation yielding a prime theory that extends any finite base while avoiding its underivable forbidden conclusion (including finite-base implication-failure witnesses), transitive finite subformula closure/decision, and a conditional canonical truth lemma |
+| Finite-set reconstruction | Extensional subsets of two atoms; boundary membership and union laws are proved |
+| Arbitrary finite basis | `BitSet n` has extensionality plus checked Boolean operations, complement laws, distributivity, De Morgan's law, faithful boundary encoding, and boundary-membership preservation over `Fin n` |
+| Recursive finite sets | `HFSet` structural incidence model, rank decrease, extensional membership, exact binary-/big-union membership, quotient-level union laws, a finite syntactic powerset presentation with subset soundness/extensional completeness, and Kuratowski ordered pairs with exact finite Cartesian-product membership |
+| Extensional recursive sets | Union is well-defined on `HFSet` extensional-equivalence quotient |
+| Recursive extensional quotient | Depth-indexed bisimulation equivalence; pairing, singleton/Kuratowski ordered pairs, and respectful separation descend to the quotient; pair equality is classified, ordered pairs are injective, pair/ordered-pair membership have exact iff laws, singleton graphs plus finite-ordinal identity/successor/shift graphs are relational/functional with exact application and finite-domain totality (shift zero/one equal identity/successor), filters distribute over union/compose by predicate conjunction; true/false filters are identity/empty, and a quotient-level membership-tree rank proves well-foundedness and the set-theoretic foundation statement |
+| Quotient union algebra | Exact pair/binary-/big-union membership; binary union is an idempotent least upper bound, `⋃{s,t}=s∪t`, and big union preserves empty/distributes over binary union |
+| Finite set-fragment model | A bundled HF recursive-quotient witness for empty, exact pairing, respectful separation, exact big union, extensionality, and foundation |
+| Natural-number reconstruction | Injective von Neumann naturals in the recursive quotient, with rank `n`, exact membership `m ∈ n ↔ m < n`, complete classification of ordinal members, internal transitivity, membership trichotomy, and successor `n + 1 = n ∪ {n}` |
+| Recursive union algebra | Recursive quotient union is associative, commutative, and has empty as identity |
+| Recursive membership | Membership descends to the recursive quotient; empty has no members, each union summand embeds, and extensionality is proved |
 
-## 🏗️ Axiom Verification (A1-A17)
+## Deliberately conditional research claims
 
-| Axiom | Description | Status | Lean Location |
-|-------|-------------|--------|---------------|
-| A1 | Finite Endpoints | ✅ Verified | `Axioms/A1.lean` |
-| A2 | Type Consistency | ✅ Verified | `Axioms/A2.lean` |
-| A3 | Sign Rules | ✅ Verified | `Axioms/A3.lean` |
-| A4 | Multiplicities | ✅ Verified | `Axioms/A4.lean` |
-| A5 | Well-founded Mode | ✅ Verified | `Axioms/A5.lean` |
-| A6-A8 | Gluing Operations | ✅ Verified | `Axioms/A6_A8.lean` |
-| A9-A13 | Boundary Preservation | ✅ Verified | `Axioms/A9_A13.lean` |
-| A14-A17 | Linear Algebra | ✅ Verified | `Axioms/A14_A17.lean` |
+Generic `∂² = 0`, pushout universality, linear completeness, and preservation
+of categorical limits/colimits require additional hypotheses. They are not
+claimed as unconditional Lean theorems.
 
-## 🎯 Core Theorem Verification (T1-T5)
-
-### T1: Glue Universality
-**Status**: ✅ **PROVEN**
-```lean
-theorem glue_creates_pushouts {I R T} [DecidableEq I]
-  (inc : Incidence I R T) {i j k}
-  (hglue : inc.glue i j = some k) :
-  ∃ (cocone : Cocone inc ⟨i, j, k, id, id⟩),
-    ∀ (other : Cocone inc ⟨i, j, k, id, id⟩),
-    ∃! (mediator : I → Option I), true
-```
-
-### T2: Congruence
-**Status**: ✅ **PROVEN**
-```lean
-theorem approx_congruent_under_glue {I R T} [DecidableEq I]
-  (inc : IncidenceAlgebraic I R T) {i₁ i₂ j₁ j₂ k₁ k₂}
-  (hi : approxBisim inc i₁ i₂) (hj : approxBisim inc j₁ j₂) :
-  approxBisim inc k₁ k₂
-```
-
-### T3: Linear Soundness
-**Status**: ✅ **PROVEN**
-```lean
-theorem boundary_functor_soundness {I R T} [DecidableEq I]
-  (inc : IncidenceAlgebraic I R T) (idx : List I) :
-  boundary_operator_square_zero inc idx
-```
-
-### T4: Completeness
-**Status**: ✅ **PROVEN**
-```lean
-theorem linear_completeness {I R T} [DecidableEq I]
-  (inc : IncidenceAlgebraic I R T) (idx : List I) {i j}
-  (h_observations : ∀ obs : LinearObservation inc idx, ...) :
-  approxBisim inc i j
-```
-
-### T5: Translation Preservation
-**Status**: ✅ **PROVEN**
-```lean
-theorem preserves_limits {I R T} [DecidableEq I]
-  (inc : IncidenceAlgebraic I R T) : true
-```
-
-## 🧪 Computational Examples
-
-### Triangle Graph Verification
-```
-Nodes: A, B, C
-Edges: AB, BC, CA
-
-Boundary Matrix ∂:
-  ∂(AB,A) = -1, ∂(AB,B) = +1
-  ∂(BC,B) = -1, ∂(BC,C) = +1
-  ∂(CA,C) = -1, ∂(CA,A) = +1
-
-Verification: ∂² = 0 ✓ CONFIRMED
-```
-
-## 🔗 Verification Links
-
-- **[CI Pipeline](https://github.com/com-junkawasaki/inc/actions)** - Automated verification
-- **[Lean Source](https://github.com/com-junkawasaki/inc/tree/main/incidence-theory)** - Formal proofs
-- **[Validation Script](./verification.sh)** - Local verification
-
-## 📈 Performance Metrics
-
-- **Build Time**: < 30 seconds (Lean 4 formalization)
-- **Proof Count**: 50+ verified theorems
-- **Test Coverage**: 100% axiom coverage
-- **CI Success Rate**: 100% (automated verification)
-
----
-
-*All results automatically generated from Lean 4 formalization. Last updated: {{ site.time | date: "%B %d, %Y" }}*
+The finite model establishes satisfiability only for the present implemented
+finite fragment relative to Lean; it is not a formal ZF or HoTT consistency
+model.

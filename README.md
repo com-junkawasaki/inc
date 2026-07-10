@@ -1,201 +1,152 @@
-# Theory of Incidence — Set, Category, Type, and Incidence
+# Theory of Incidence
 
-> A Fourth Foundation for Mathematics and Computation, where relations are the sole primitive entity.
+This repository develops a Lean 4 core for incidence structures: relations
+whose boundaries consist of labelled, oriented endpoints.
 
-## Status
+## Checked status
 
-[![CI](https://github.com/com-junkawasaki/inc/actions/workflows/ci.yml/badge.svg)](https://github.com/com-junkawasaki/inc/actions/workflows/ci.yml)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17345516.svg)](https://doi.org/10.5281/zenodo.17345516)
-[![Web Demo](https://img.shields.io/badge/Web-Demo-blue)](https://com-junkawasaki.github.io/inc/)
+The checked Lean development is in [`incidence-theory/`](./incidence-theory).
+It currently establishes:
 
-## Overview
+- finite list boundaries, sign cases, and positive multiplicities;
+- rank-based exclusion of direct boundary cycles;
+- guarded gluing unit laws, type preservation, and conditional associativity;
+- bisimilarity as an equivalence relation, with observable equality embedded
+  into bisimilarity;
+- computed boundary matrices and Laplacians, with general `BᵀB` symmetry and
+  nonnegative diagonal entries; and
+- a concrete triangle model, including checked matrix entries and a checked
+  `∂² = 0` calculation.
+- a finite, well-founded, nonempty-boundary Lean model (`leaf ← root`) that
+  satisfies the current structure invariants, rank decrease, gluing laws, and
+  finite `∂² = 0`; its role-erasure is also a concrete witness of the legacy
+  layered A2/A6–A10/A16–A17 interfaces, with computed matrix and Laplacian.
+  Its linear observations are proved complete for bisimilarity.
+- a propositional internal-logic fragment over incidence atoms, with natural
+  deduction, semantic soundness, context weakening, and truth-preserving
+  translation theorems; atom maps also transport formulas, contexts, and
+  derivations.  Its intuitionistic Kripke semantics, persistence theorem, and
+  Kripke soundness theorem are checked; atom translations pull Kripke models
+  back and preserve formula and context forcing exactly. Assumption substitution and cut are
+  also proved syntactically.  A one-world Kripke model proves relative
+  consistency of the empty internal-logic context, while a two-world model
+  proves that excluded middle is not derivable (while its double-negated form
+  is derived). Prime theories and the
+  canonical Kripke model are defined; its truth lemma is proved conditional on
+  the explicitly stated Lindenbaum extension witness.  The one-step
+  consistency-preserving choice of a formula or its negation is proved, along
+  with its finite-list iteration and finite prime-disjunction property.
+  Given an explicit exhaustive formula enumeration, an infinite Lindenbaum
+  chain is defined; every finite stage stays consistent and every formula is
+  eventually decided. Its limit is constructed as a closed, consistent prime
+  theory. The chain is also available from every consistent finite context,
+  which is preserved through all stages while formulas are decided; its limit
+  is a prime theory containing that context.
+  Relative countermodel steps for implication and disjunction are also proved.
+  A recurrent disjunction-saturation chain is additionally defined for a
+  forbidden conclusion; it contains its base context while its limit continues
+  to avoid that conclusion, yielding a closed consistent prime-theory relative
+  extension of every finite base that does not derive the forbidden formula.
+  In particular, a finite-context failure of `p → q` has a prime-theory
+  witness containing the context and `p`, while omitting `q`.
+  Each formula has a finite subformula closure, and a consistent context has a
+  finite extension deciding every formula in that closure; its disjunction
+  subformulas satisfy a derivable prime-choice law.  The derivable closure of
+  each finite extension is formalized as a deductively closed theory and is
+  bundled as a finite prime theory (consistent, decisive, and prime on that
+  finite language).
+- an extensional two-atom finite-set fragment: membership is encoded by set
+  boundaries, and union has proved Boolean-algebra laws.
+- arbitrary finite-basis extensional sets (`BitSet n`), with checked Boolean
+  operations (union, intersection, complement, difference), complement laws,
+  distributivity, and De Morgan's law proved pointwise over `Fin n`; boundary
+  membership exactly represents set membership and preserves these operations;
+  equal boundaries are exactly equal finite sets.
+- recursive hereditarily finite set syntax as a well-founded incidence model,
+  with structural-boundary rank decrease and associative gluing; its big union
+  satisfies the syntactic membership law `x ∈ ⋃s ↔ ∃ y ∈ s, x ∈ y`. Big union
+  descends to the recursive quotient with the same exact membership law.
+  A finite powerset presentation is also defined syntactically, with its
+  insertion-step membership decomposition and subset soundness proved. Every
+  syntactic subset has an extensionally equal representative in that finite
+  powerset (so duplicate/order-sensitive presentations do not weaken the
+  extensional claim).
+  Kuratowski ordered pairs and finite Cartesian products are also constructed
+  syntactically, with the exact `x ∈ s × t` ordered-pair membership law.
+  Singleton and Kuratowski ordered-pair constructions also descend to the
+  recursive extensional quotient, with their exact outer membership laws;
+  unordered-pair equality is classified and ordered pairs are injective.
+  Relations are represented as sets of ordered pairs; singleton graphs are
+  proved relational and functional, with an exact application iff law.
+  The identity graph on every finite internal ordinal is also a checked
+  total relation/function with its exact finite-domain application specification.
+  A finite-domain successor graph is likewise functional and total, with
+  application `m ↦ m + 1` proved internally.
+  More generally, finite shift graphs implement `m ↦ m + k`; shift by zero is
+  proved equal to the identity graph and shift by one to the successor graph.
+  On the quotient, binary union is idempotent, `⋃{s,t}=s∪t`, and big union
+  preserves empty and distributes over binary union; binary union is also the
+  least upper bound for the extensional subset order.
+- an extensional quotient of recursive finite sets, with union proved
+  well-defined on equivalence classes.
+- a stable recursive extensional quotient, with pairing and respectful
+  decidable separation proved well-defined on equivalence classes; both
+  arguments are proved members of the constructed pair, and filtered
+  membership is exactly membership plus the respectful predicate; true/false
+  filters are respectively identity and empty, and filtering distributes over
+  binary union; successive filters compose by predicate conjunction. A membership-tree rank proves
+  foundation in the form `¬ (s ∈ s)` on the recursive quotient; recursive
+  equality preserves this rank, so it descends to extensional classes.  The
+  quotient membership relation itself is proved well-founded, yielding the
+  set-theoretic foundation statement for every nonempty recursive set. These
+  checked laws are bundled as an explicit finite set-fragment model (not a
+  claim of full ZF).
+- von Neumann naturals embed into the recursive quotient: their rank is their
+  index, their membership is exactly `<`, the embedding is injective, every
+  member of a finite ordinal is classified as an earlier ordinal, and these
+  ordinals are internally transitive and linearly ordered by membership. Their successor is reconstructed as
+  `n ∪ {n}` using the checked pair and union operations. This is an internal
+  infinite sequence, not yet an infinity-set axiom.
+- recursive extensional union with proved associative, commutative, and empty
+  identity laws.
+- quotient-level membership for recursive sets, with empty-set exclusion,
+  embeddings of each union summand, and extensionality proved as theorems.
 
-This repository hosts the development of the **Theory of Incidence (Inc)**, a proposed fourth foundational framework for mathematics and computation. It stands alongside Set Theory, Category Theory, and Type Theory, offering a new perspective where relations, or "incidences," are the primary building blocks of all structures.
+The minimal category/functor/pushout vocabulary is also formalized. A functor
+is proved to map a pushout cocone to a commuting cocone; preservation of the
+universal property is represented explicitly by `PushoutPreserving`. Functor
+composition, cospan-map identity/composition laws, and composition of
+pushout-preserving translations are checked. Any two pushout apexes of the
+same cospan are connected by a constructed unique isomorphism.
+The terminal category supplies a concrete pushout-preserving identity
+translation, while the trivial incidence model supplies concrete T2–T4
+witnesses.
 
-Conventional foundations separate entities from the relationships between them. Inc unifies them by treating every mathematical object—from numbers and sets to functions and categories—as a configuration of incidences. This relational-first approach provides a native language for describing systems with dynamic, recursive, or self-referential structures, which are common in computer science, physics, and biology but are often cumbersome to model in existing frameworks.
+Pushout universality, generic boundary-square-zero, linear completeness, and
+translation preservation need additional categorical or linear hypotheses.
+They are not unconditional theorems in the present Lean core.
 
-## 🏛️ Core Theoretical Results
+The finite model is evidence of satisfiability of this **implemented finite
+fragment relative to Lean**. It is not yet a ZF-model proof or a relative
+consistency proof for a full incidence theory.
 
-Incidence Theory establishes its foundational status through **five core theorems (T1-T5)**, all formally proven in Lean 4:
-
-- **T1 (Glue Universality)**: Glue operations create pushouts with universal property
-- **T2 (Congruence)**: Observational equivalence ≈ is preserved under all operations
-- **T3 (Linear Soundness)**: Boundary operators ∂ satisfy ∂²=0, bridging logic and linear algebra
-- **T4 (Completeness)**: Linear-algebraic observations completely determine incidence equivalence
-- **T5 (Translation Preservation)**: Translations to Set/Category/Type preserve limits and colimits
-
-These theorems provide the mathematical foundation for Inc as a computational foundation equivalent to Set, Category, and Type theories.
-
-## The Vision: Beyond Set, Category, and Type
-
-The goal of Inc is not to replace existing foundations but to provide a unifying substrate that claIncies their connections and addresses their limitations:
-
-1.  **Unifying Objects and Relations**: Inc eliminates the object-relation dualism. An "object" is simply a stable pattern of relations (a zero-ary or fixed-point incidence).
-2.  **Native Support for Dynamic Structures**: Through its coinductive mode, Inc can formally model systems that change their own structure over time, such as evolving networks or computational processes.
-3.  **Bridging Logic and Geometry**: The theory's axiomatic connection between its relational syntax and linear-algebraic semantics (via Boundary Matrices and Laplacians) creates a direct bridge between formal proof and numerical analysis.
-
-## Core Concepts
-
-The theory is built upon a few simple but powerful ideas:
-
--   **Incidence (`I`)**: The only primitive type. An incidence is a pure relation that connects other incidences.
--   **Boundary Operator (`∂`)**: A function that defines an incidence by specifying its endpoints. Since endpoints are also incidences, the structure is fully recursive.
--   **Gluing (`glue`)**: The fundamental composition operator. It allows complex structures to be built by "gluing" incidences together along their shared boundaries.
--   **Observational Equivalence (`≈`)**: A form of bisimulation that defines when two incidence structures are considered the same, providing a robust notion of equivalence that respects behavior and structure.
-
-## Project Roadmap & Current Status
-
-The development of Inc follows the process network defined in [`story.jsonnet`](./story.jsonnet). The project spans four main stages:
-
-### ✅ **Stage 1: Theoretical Foundation** - **COMPLETED**
-- ✅ **Axioms (A1-A17)**: All 17 axioms formally defined in modular Lean modules
-- ✅ **Incidence Logic (IL)**: Bisimulation-based proof system implemented
-- ✅ **Core Theorems (T1-T5)**: Five foundational theorems proven in Lean 4
-- ✅ **Translation Framework**: Embeddings to Set/Category/Type theories defined
-
-### ✅ **Stage 2: Reference Implementation** - **COMPLETED**
-- ✅ **Lean 4 Formalization**: Complete proof assistant implementation
-- ✅ **Boundary Matrices**: Incidence matrix computation with ∂²=0 verification
-- ✅ **Laplacian Operators**: Spectral analysis framework implemented
-- ✅ **Triangle Graph Example**: Concrete computational example with full verification
-
-### 🔄 **Stage 3: Academic Publication** - **READY FOR SUBMISSION**
-- ✅ **Foundational Paper**: Complete draft with T1-T5 theorems
-- 🔄 **ArXiv Preprint**: Ready for submission (math.LO/cs.LO categories)
-- 📋 **Target Journals**: LMCS, MSCS, leading logic/conference venues
-
-### 🚧 **Stage 4: Application & Validation** - **IN PROGRESS**
-- ✅ **Mathematical Case Study**: Triangle graph with ∂²=0 and boundary matrices
-- 🔄 **Computational Systems**: π-calculus modeling (planned)
-- 🔄 **Biological Networks**: Metabolic pathway analysis (planned)
-- 📊 **Performance Benchmarks**: Comparative analysis with other foundations
-
-### 📈 **Quality Metrics**
-- **Formal Verification**: 100% Lean 4 coverage with automated CI/CD
-- **Computational Validation**: Triangle graph example with numerical verification
-- **Modular Architecture**: Axiom-by-axiom independent development
-- **Reproducibility**: One-command verification with `./verify.sh`
-
-## 🌐 Interactive Web Demo
-
-Experience Incidence Theory live in your browser:
-
-**[🧮 Live Demonstration](https://com-junkawasaki.github.io/inc/)**
-
-The web demo features:
-- **Interactive Triangle Graph**: Visual boundary matrix computation
-- **Live Verification**: Real-time ∂²=0 checking
-- **Theorem Showcase**: All five core theorems (T1-T5) with proofs
-- **Formal Results**: Complete Lean 4 verification status
-
-## Getting Started
-
-This project is currently in the foundational stage. The primary document guiding the work is [`story.jsonnet`](./story.jsonnet), which contains the formal project plan as a Merkle DAG.
-
-### Building the Lean Formalization
-
-The formal axioms and proofs are implemented in Lean4. The CI automatically verifies that all proofs are correct.
-
-#### Quick Start (Local Build)
-
-```bash
-# Install Lean4 toolchain
-curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y
-source ~/.profile  # or restart your shell
-
-# Clone and build
-git clone https://github.com/com-junkawasaki/inc.git
-cd inc/incidence-theory
-lake build
-lake exe incidence-theory  # Run examples
-```
-
-#### Online Verification
-
-The GitHub Actions CI automatically builds and verifies all proofs on every push. Check the [Actions tab](https://github.com/com-junkawasaki/inc/actions) for build status.
-
-#### One-Command Verification
-
-Run `./verify.sh` to verify the complete formalization locally:
+## Verify
 
 ```bash
 ./verify.sh
-# Output: ✅ All verifications passed!
-#         📊 Verification Summary:
-#            • Lean 4 formalization: ✅ Built successfully
-#            • All proofs: ✅ Verified
-#            • Examples: ✅ Executed successfully
-#            • Axioms A1-A17: ✅ All formalized
 ```
 
-#### Development
+or, from `incidence-theory/`:
 
-- **Lean Version**: Compatible with Lean 4 nightly (2024-10-01)
-- **Dependencies**: None (uses only Lean standard library)
-- **Build System**: Lake (Lean's package manager)
+```bash
+lake build
+lake exe incidence-theory
+```
 
-#### Current Lean Proof Coverage
+The checker accepts no `sorry` or Lean `axiom` declarations in the current
+Lean source tree.
 
-The Lean formalization provides **complete coverage** of Incidence Theory, including:
+## Scope
 
-##### **Axiomatic Foundation (A1-A17)**
-- ✅ **Modular Axiom System**: Each axiom in separate modules for independent development
-- ✅ **All 17 Axioms**: A1-A17 formally defined and proven
-- ✅ **Type Safety**: Boundary consistency and well-founded recursion
-
-##### **Core Theoretical Results (T1-T5)**
-- ✅ **T1: Glue Universality** - Pushout universal property with concrete triangle proof
-- ✅ **T2: Congruence** - Observational equivalence preserved under operations
-- ✅ **T3: Linear Soundness** - ∂²=0 boundary operator theorem
-- ✅ **T4: Completeness** - Linear observations determine equivalence
-- ✅ **T5: Translation Preservation** - Limits/colimits preserved in translations
-
-##### **Computational Implementation**
-- ✅ **Boundary Matrices**: `boundaryMatrix` function computing incidence matrices
-- ✅ **Laplacians**: `laplacian` function for spectral analysis
-- ✅ **Bisimulation**: Complete `approxBisim` implementation with reflexivity/symmetry/transitivity
-- ✅ **Triangle Graph Example**: Complete ∂²=0 verification and matrix computation
-
-##### **Verification & Quality Assurance**
-- ✅ **Automated CI/CD**: GitHub Actions with Lean 4 verification
-- ✅ **One-Command Validation**: `./verify.sh` for complete verification
-- ✅ **Modular Architecture**: Axiom-by-axiom independent testing
-
-**Coverage**: **100% formal verification** of the core theory with concrete computational examples. Incidence Theory is now a **mathematically rigorous and computationally validated** foundational framework.
-
-### Publications & Academic Status
-
-#### Preprint (Ready for ArXiv Submission)
-The foundational paper is available in:
-- **Markdown**: [`posts/arxiv_post.md`](./posts/arxiv_post.md)
-- **LaTeX**: [`posts/arxiv_paper.tex`](./posts/arxiv_paper.tex)
-
-**Key Contributions**:
-- Complete formalization of Incidence Theory (A1-A17)
-- Five core theorems (T1-T5) establishing foundational status
-- Concrete triangle graph example with ∂²=0 verification
-- Boundary matrices and Laplacians with computational examples
-- Bisimulation proofs and observational equivalence
-
-#### Target Venues
-- **Primary**: Mathematical Logic (`math.LO`) / Logic in Computer Science (`cs.LO`)
-- **Secondary**: Category Theory (`math.CT`) / Theoretical Computer Science
-
-#### Zenodo Archive
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17345516.svg)](https://doi.org/10.5281/zenodo.17345516)
-
-All artifacts, proofs, and examples are archived for long-term reproducibility.
-
----
-
-## 🎯 **Current Project Status: ArXiv-Ready**
-
-Incidence Theory has achieved **mathematical maturity** with:
-- **Complete formalization** of all axioms and core theorems in Lean 4
-- **Computational validation** through concrete examples and matrix computations
-- **Theoretical foundation** established via five core theorems (T1-T5)
-- **Automated verification** ensuring correctness and reproducibility
-
-The theory is now ready for academic dissemination and represents a genuine contribution to the foundations of mathematics and computation.
-
-**Ready for ArXiv submission** - the fourth foundation awaits peer review! 🧮✨
+The papers and older web material in this repository describe broader research
+directions. The Lean source is authoritative for the current formalized scope.
