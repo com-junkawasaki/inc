@@ -2112,21 +2112,96 @@ worth noting as recurring categories of Lean friction in this project
 (pattern-destructuring in `rintro`, and equality-direction mismatches
 in `simp`/`rw`) rather than independent one-off surprises each time.
 
-**Next hypothesis (cycle 32, not yet attempted)**: several directions
-opened by this cycle, none committed to. (1) A *sum* constructor
-(`incidenceSum`, analogous to `incidenceProd` but for `I1 ⊕ I2`,
-reusing each side's boundary unchanged rather than combining them) --
-likely the next-simplest connective, and a natural second data point
-for "generic constructors on `Incidence`" as a genuine category of
-construction (mirroring how this project always seeks a second
-instance before trusting a pattern is general). (2) Does `incidenceProd`
-interact with any *existing* general theorem -- e.g. does the product
-of two faithful instances (`natIncidence_approxBisim_iff`-style) stay
-faithful, or does faithfulness fail to transport through the product
-the way `∂² = 0` failed to transport through the collapse-fix (cycles
-8/16/27)? Not yet checked. (3) A translation-style result for the
-product analogous to T5 (e.g. does `natToFiniteSet` extend to a
-translation for `natIncidence × natIncidence` in the expected way?).
-None of these are scoped yet -- worth picking based on which seems most
-likely to surface a genuine finding rather than mechanically repeat
-this cycle's shape.
+## Cycle 32
+
+**Hypothesis**: (option 2 of cycle 31's queue, chosen over option 1's
+mechanical sum-constructor repeat) does faithfulness transport through
+`incidenceProd` -- if `inc1` and `inc2` are both individually
+`≈`-faithful, is `incidenceProd inc1 inc2` faithful too, or does it fail
+to transport the way `∂² = 0` provably fails to transport through the
+collapse-fix (cycles 8/16/27)? Chosen deliberately over the sum-
+constructor option because this question had a genuinely open answer,
+where a second connective would have mechanically repeated cycle 31's
+shape with low chance of a new finding.
+
+**Method**: worked out the key mechanism on paper before writing Lean.
+Cycle 31's congruence theorem only went one direction (`≈` on
+components ⇒ `≈` on the product). The natural way to get full
+faithfulness is to first establish the *converse* -- `≈` on the product
+⇒ `≈` on *both* components -- then combine with each component's own
+faithfulness. Realized the converse should be provable via
+*projecting* a product-level witnessing relation: given `rel`
+witnessing `(i1,i2) ≈ (j1,j2)` in the product, define `rel1 a1 b1 := ∃
+a2 b2, rel (a1,a2) (b1,b2)` and check whether `rel1` is itself a
+bisimulation for `inc1`. The key structural fact making this work:
+`boundaryCompatible` requires *matching* `Sum.inl`/`Sum.inr` tags, so a
+`Sum.inl`-tagged boundary entry in the product can only ever be
+`boundaryMatched` against another `Sum.inl`-tagged entry -- meaning any
+witness `boundaryMatched` supplies for a left-tagged entry is
+automatically itself left-tagged, i.e. comes from `inc1`'s own
+boundary, and `rel`'s own existential witnesses are exactly what `rel1`
+needs. No new machinery beyond this observation. Built and tested the
+`inc1`-side projection alone first (confirmed compiling standalone with
+only a placeholder `sorry` for the symmetric `inc2` side) before writing
+the `inc2` side, to isolate the technique before doubling the surface
+area -- caught one copy-paste slip this way (a stray `a1` where `b1`
+was needed) via the type-checker rather than by re-deriving from
+scratch.
+
+**Result**: **confirmed, and the full iff plus the faithfulness-
+transport corollary all proved with only `propext`/`Quot.sound` --
+fully constructive.** `incidenceProd_project` establishes the converse
+generally; combined with cycle 31's `incidenceProd_approxBisim_of_approxBisim`,
+`incidenceProd_approxBisim_iff` upgrades the one-directional congruence
+theorem into a genuine iff: the product's `≈` is *exactly* componentwise
+`≈`, no more and no less. `incidenceProd_faithful_of_faithful` then
+answers the queued question directly: faithfulness transports through
+the product *at no cost*, for any two individually-faithful instances,
+with no analogue of the `∂² = 0` tension anywhere in sight. Confirmed
+concretely (not just abstractly) by instantiating with `natIncidence`'s
+own faithfulness theorem (cycle 4) applied twice: `natIncidence ×
+natIncidence` is fully faithful. `#print axioms`: `propext`/`Quot.sound`
+on all three new theorems, matching cycle 31's cleanliness. Full `lake
+build`: 44/44 jobs. Repo-wide `sorry`-as-tactic grep: none.
+
+One unrelated but real build failure surfaced and was fixed along the
+way: adding this cycle's content pushed `Main.lean`'s single `main`
+`do`-block past a *second*, different scaling limit from cycle 18's
+(`maxRecDepth`, an elaborator limit) -- this time the *generated C
+code*'s brace-nesting depth exceeded clang's default 256-bracket
+ceiling during compilation, a downstream limit cycle 18's fix didn't
+touch. Rather than reach for a compiler flag (fragile across
+toolchains), split `main`'s single do-block into four helper functions
+grouped by cycle range; `main` itself becomes a flat sequence of calls.
+Verified the demo's full output is unchanged (all 32 cycles' text
+intact, in order) before and after the split.
+
+**Synthesis**: this cycle's headline result -- faithfulness transports
+cleanly through the product, with no cost -- is worth setting explicitly
+alongside the `∂² = 0` tension (cycles 8/16/27) as a *contrasting* data
+point, not a lesser one: not every property this project has studied
+fails to compose or transport under every construction. The
+`well_founded`/`incidenceProd`-style projection technique (existentials
+supplied by the very structure being projected FROM) is also a clean,
+reusable pattern -- worth remembering if a `incidenceSum` or similar
+construction is built later and needs an analogous converse. The
+build-tooling fix is this project's second encounter with a scaling
+limit purely from accumulated demo-output volume (cycle 18, cycle 32)
+rather than proof complexity -- worth treating `Main.lean`'s structure
+as something to keep revisiting as cycles accumulate, not a one-time
+fix.
+
+**Next hypothesis (cycle 33, not yet attempted)**: cycle 31's queued
+options (1) and (3) remain open, neither reached. (1) A *sum*
+constructor (`incidenceSum`, analogous to `incidenceProd` but for
+`I1 ⊕ I2`, reusing each side's boundary unchanged) -- a natural second
+data point for "generic constructors on `Incidence`" as a category, and
+now a genuinely different question than it looked like last cycle:
+does `incidenceSum` ALSO have a faithfulness-transports-cleanly
+property analogous to cycle 32's, or does disjoint union behave
+differently from product in ways worth discovering? (2, from cycle 31)
+a translation-style (T5) result for `incidenceProd` -- e.g. does
+`natToFiniteSet` extend to a translation for `natIncidence ×
+natIncidence` in the expected way, and would it also be a `glue`-
+homomorphism-style result the way cycle 28's `cycleToNat` was? Neither
+scoped yet.

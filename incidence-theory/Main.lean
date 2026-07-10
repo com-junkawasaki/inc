@@ -8,11 +8,18 @@ import IncidenceTheory.Cycle
 import IncidenceTheory.Tree
 import IncidenceTheory.Product
 
-/- `main`'s `do` block accumulates one `IO.println` per research cycle
-   (18 so far); Lean's `do`-notation desugaring is right-recursive and
-   hits the default elaborator recursion limit around this size. Raised
-   with headroom for future cycles rather than re-hit and re-raised
-   incrementally each time. -/
+/- `main`'s demo output accumulates one block of `IO.println` calls per
+   research cycle (32 so far). Cycle 18 raised `maxRecDepth` when a
+   single giant `do` block first hit Lean's elaborator recursion limit.
+   Cycle 32 hit a *second*, different scaling limit further downstream:
+   the generated C code's `{}` nesting depth exceeded clang's default
+   256-bracket ceiling during compilation (not elaboration). Rather than
+   pass compiler-specific flags (fragile across toolchains/platforms),
+   split `main`'s single do-block into four helper functions grouped by
+   cycle range -- each compiles to its own, much shallower C function,
+   and `main` itself becomes a flat sequence of calls rather than one
+   deeply nested block. `maxRecDepth` is kept for headroom on any single
+   helper's own elaboration. -/
 set_option maxRecDepth 4096
 
 open IncidenceCore
@@ -65,7 +72,7 @@ def computeBoundaryValue (i j : GId) : Int :=
 def computeLaplacianValue (i j : GId) : Int :=
   triL i j
 
-def main : IO Unit := do
+def printFoundationsAndEarlyCycles : IO Unit := do
   IO.println "🧮 Incidence Theory - Triangle Graph Analysis"
   IO.println "============================================="
 
@@ -168,6 +175,8 @@ def main : IO Unit := do
   IO.println "    with the classical alternating-sum convention -- not accidental:"
   IO.println "    drop the alternation (wrongSimplexIncidence) and it breaks (-2 ≠ 0)"
 
+
+def printCycles12to19 : IO Unit := do
   IO.println "\n🔍 A Third Instance of the Collapse Pattern (cycle 12):"
   IO.println "  ⚠ v0/v1/v2 all have empty boundary with nothing distinguishing them --"
   IO.println "    cycle 2's 'flat atoms collapse' pattern, independently rediscovered"
@@ -242,6 +251,8 @@ def main : IO Unit := do
   IO.println "  → an audit cycle can pay off as concretely as a new-instance cycle: this"
   IO.println "    wasn't a new phenomenon, just closing a gap the library's own shape invited"
 
+
+def printCycles20to23 : IO Unit := do
   IO.println "\n🚦 A Generalization Declined, and T5's Third Instance (cycle 20):"
   IO.println "  ✗ boundaryMatched_of_two_entries's natural 3-entry generalization: DECLINED --"
   IO.println "    grepped every boundary def in the project; simplexIncidence's face is the"
@@ -285,6 +296,8 @@ def main : IO Unit := do
   IO.println "  → same lesson as cycle 18, one level up: when a proof stalls on ONE combinator,"
   IO.println "    try a genuinely different one before concluding the content is out of reach"
 
+
+def printCycles24to32 : IO Unit := do
   IO.println "\n🪢 Real Cancellation from Recursive Nesting, Not Structural Absence (cycle 24):"
   IO.println "  ✓ pair(pair(atom n,atom(n+1)),atom(n+2)) vs. atom n: nonzero (1) -- same 'only one"
   IO.println "    term' shape as natIncidence's chain, no surprise"
@@ -383,3 +396,22 @@ def main : IO Unit := do
   IO.println "  → deliberately scoped to ONE connective (product), not the whole original vision"
   IO.println "    (functions, dependent types, induction) -- the same discipline that scoped"
   IO.println "    the very first move into this territory down to natIncidence itself"
+
+  IO.println "\n🔁 The Converse, and a Clean Answer: Faithfulness Transports Through Product (cycle 32):"
+  IO.println "  ✓ incidenceProd_project: ≈ on the PRODUCT forces ≈ on BOTH components -- the"
+  IO.println "    converse of cycle 31's congruence theorem, via projecting a witnessing relation"
+  IO.println "    (Sum.inl/Sum.inr tags can never cross-match, so the projection is automatic)"
+  IO.println "  ✓ incidenceProd_approxBisim_iff: the product's ≈ is EXACTLY componentwise ≈,"
+  IO.println "    no more and no less -- upgrades cycle 31's one-way theorem into a genuine iff"
+  IO.println "  ✓ incidenceProd_faithful_of_faithful: faithfulness transports through the product"
+  IO.println "    AT NO COST -- unlike ∂² = 0, which the collapse-fix (cycles 8/16/27) could"
+  IO.println "    NEVER preserve alongside faithfulness, this property transports cleanly"
+  IO.println "  ✓ confirmed concretely: natIncidence × natIncidence is fully faithful"
+  IO.println "  → chose this over a mechanical sum-constructor repeat because it had a genuinely"
+  IO.println "    open answer -- and the answer (clean transport, no tension) is itself the finding"
+
+def main : IO Unit := do
+  printFoundationsAndEarlyCycles
+  printCycles12to19
+  printCycles20to23
+  printCycles24to32

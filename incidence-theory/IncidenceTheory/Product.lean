@@ -198,4 +198,124 @@ example (h1 : approxBisim natIncidence 2 2) (h2 : approxBisim natIncidence 3 3) 
     approxBisim (incidenceProd natIncidence natIncidence) (2, 3) (2, 3) :=
   incidenceProd_approxBisim_of_approxBisim natIncidence natIncidence h1 h2
 
+/- Research cycle 32 (see RESEARCH_LOG.md): cycle 31's congruence
+   theorem only went one direction (`≈` on components ⇒ `≈` on the
+   product). Does the CONVERSE hold -- does `≈` on the product force
+   `≈` on both components, i.e. is the product's `≈` *exactly*
+   componentwise `≈`, not merely implied by it? Given a witnessing
+   relation `rel` for the product, its *projection* onto `I1`
+   (`rel1 a1 b1 := ∃ a2 b2, rel (a1, a2) (b1, b2)`) turns out to itself
+   be a bisimulation for `inc1` -- because `boundaryCompatible`
+   requires *matching* `Sum.inl`/`Sum.inr` tags (a `Sum.inl`-tagged
+   entry can never be compatible with a `Sum.inr`-tagged one), so any
+   `boundaryMatched` witness for a left-tagged entry in the product must
+   itself be left-tagged, i.e. come from `inc1`'s own boundary --
+   `rel`'s own existentials supply the witnesses `rel1` needs directly,
+   with no new machinery. Symmetric for `inc2`. -/
+theorem incidenceProd_project
+  {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+  (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+  {i1 j1 : I1} {i2 j2 : I2}
+  (h : approxBisim (incidenceProd inc1 inc2) (i1, i2) (j1, j2)) :
+  approxBisim inc1 i1 j1 ∧ approxBisim inc2 i2 j2 := by
+  obtain ⟨rel, hbisim, hij⟩ := h
+  constructor
+  · refine ⟨fun a1 b1 => ∃ a2 b2, rel (a1, a2) (b1, b2), ?_, i2, j2, hij⟩
+    intro a1 b1 ⟨a2, b2, hr⟩
+    obtain ⟨htype, hmatch⟩ := hbisim (a1, a2) (b1, b2) hr
+    refine ⟨by simpa using congrArg Prod.fst htype, ?_, ?_⟩
+    · intro e1 he1
+      obtain ⟨e', he', hcompat, hrel'⟩ := hmatch.left
+        { i := (e1.i, a2), role := Sum.inl e1.role, sign := e1.sign, mult := e1.mult }
+        (prodBoundary_mem_left inc1 inc2 a1 a2 e1 he1)
+      simp only [incidenceProd, prodBoundary, List.mem_append, List.mem_map] at he'
+      rcases he' with ⟨e1', he1', heq⟩ | ⟨e2', he2', heq⟩
+      · subst heq
+        refine ⟨e1', he1', ?_, a2, b2, ?_⟩
+        · exact ⟨(Sum.inl.injEq _ _).mp hcompat.1, hcompat.2⟩
+        · simpa using hrel'
+      · subst heq
+        exfalso
+        simp [boundaryCompatible] at hcompat
+    · intro e1' he1'
+      obtain ⟨e, he, hcompat, hrel'⟩ := hmatch.right
+        { i := (e1'.i, b2), role := Sum.inl e1'.role, sign := e1'.sign, mult := e1'.mult }
+        (prodBoundary_mem_left inc1 inc2 b1 b2 e1' he1')
+      simp only [incidenceProd, prodBoundary, List.mem_append, List.mem_map] at he
+      rcases he with ⟨e1, he1, heq⟩ | ⟨e2, he2, heq⟩
+      · subst heq
+        refine ⟨e1, he1, ?_, a2, b2, ?_⟩
+        · exact ⟨(Sum.inl.injEq _ _).mp hcompat.1, hcompat.2⟩
+        · simpa using hrel'
+      · subst heq
+        exfalso
+        simp [boundaryCompatible] at hcompat
+  · refine ⟨fun a2 b2 => ∃ a1 b1, rel (a1, a2) (b1, b2), ?_, i1, j1, hij⟩
+    intro a2 b2 ⟨a1, b1, hr⟩
+    obtain ⟨htype, hmatch⟩ := hbisim (a1, a2) (b1, b2) hr
+    refine ⟨by simpa using congrArg Prod.snd htype, ?_, ?_⟩
+    · intro e2 he2
+      obtain ⟨e', he', hcompat, hrel'⟩ := hmatch.left
+        { i := (a1, e2.i), role := Sum.inr e2.role, sign := e2.sign, mult := e2.mult }
+        (prodBoundary_mem_right inc1 inc2 a1 a2 e2 he2)
+      simp only [incidenceProd, prodBoundary, List.mem_append, List.mem_map] at he'
+      rcases he' with ⟨e1', he1', heq⟩ | ⟨e2', he2', heq⟩
+      · subst heq
+        exfalso
+        simp [boundaryCompatible] at hcompat
+      · subst heq
+        refine ⟨e2', he2', ?_, a1, b1, ?_⟩
+        · exact ⟨(Sum.inr.injEq _ _).mp hcompat.1, hcompat.2⟩
+        · simpa using hrel'
+    · intro e2' he2'
+      obtain ⟨e, he, hcompat, hrel'⟩ := hmatch.right
+        { i := (b1, e2'.i), role := Sum.inr e2'.role, sign := e2'.sign, mult := e2'.mult }
+        (prodBoundary_mem_right inc1 inc2 b1 b2 e2' he2')
+      simp only [incidenceProd, prodBoundary, List.mem_append, List.mem_map] at he
+      rcases he with ⟨e1, he1, heq⟩ | ⟨e2, he2, heq⟩
+      · subst heq
+        exfalso
+        simp [boundaryCompatible] at hcompat
+      · subst heq
+        refine ⟨e2, he2, ?_, a1, b1, ?_⟩
+        · exact ⟨(Sum.inr.injEq _ _).mp hcompat.1, hcompat.2⟩
+        · simpa using hrel'
+
+/- The full characterization, upgrading cycle 31's one-directional
+   congruence theorem into a genuine iff: the product's `≈` is *exactly*
+   componentwise `≈`, no more and no less. -/
+theorem incidenceProd_approxBisim_iff
+  {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+  (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+  (i1 j1 : I1) (i2 j2 : I2) :
+  approxBisim (incidenceProd inc1 inc2) (i1, i2) (j1, j2) ↔
+    approxBisim inc1 i1 j1 ∧ approxBisim inc2 i2 j2 :=
+  ⟨incidenceProd_project inc1 inc2,
+   fun ⟨h1, h2⟩ => incidenceProd_approxBisim_of_approxBisim inc1 inc2 h1 h2⟩
+
+/- The payoff: faithfulness (`≈ ↔ =`) transports cleanly through the
+   product whenever both factors are individually faithful -- answering
+   the question cycle 31 queued but didn't check. Unlike `∂² = 0`, which
+   the collapse-fix (cycles 8/16/27) provably could *never* preserve
+   alongside faithfulness, `≈`-faithfulness itself transports through
+   this construction with no cost at all. -/
+theorem incidenceProd_faithful_of_faithful
+  {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+  (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+  (hf1 : ∀ x y : I1, approxBisim inc1 x y ↔ x = y)
+  (hf2 : ∀ x y : I2, approxBisim inc2 x y ↔ x = y) :
+  ∀ p q : I1 × I2, approxBisim (incidenceProd inc1 inc2) p q ↔ p = q := by
+  intro (p1, p2) (q1, q2)
+  rw [incidenceProd_approxBisim_iff, hf1, hf2]
+  constructor
+  · rintro ⟨rfl, rfl⟩; rfl
+  · intro h; simp_all
+
+/- Concrete confirmation: `natIncidence × natIncidence` is fully
+   faithful, via the general theorem applied to `natIncidence`'s own
+   faithfulness (cycle 4) twice -- not vacuous, a real instantiation. -/
+example : ∀ p q : Nat × Nat, approxBisim (incidenceProd natIncidence natIncidence) p q ↔ p = q :=
+  incidenceProd_faithful_of_faithful natIncidence natIncidence
+    natIncidence_approxBisim_iff natIncidence_approxBisim_iff
+
 end IncidenceCore
