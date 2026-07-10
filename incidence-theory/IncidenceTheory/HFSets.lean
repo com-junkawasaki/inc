@@ -1869,6 +1869,87 @@ theorem hfRecursiveNatShiftGraph_composite_injective
     (hfRecursiveNatShiftGraph_injective firstOffset n)
     (hfRecursiveNatShiftGraph_injective secondOffset (n + firstOffset))
 
+/- At the application level, the intermediate value in a composite of shifts
+   is immaterial: applying the two graph relations succeeds precisely at the
+   ordinal obtained by adding both offsets. -/
+theorem hfRecursiveNatShiftGraph_composite_application_iff
+    (firstOffset secondOffset n m : Nat) (hm : m < n) (output : HFRecursiveSet) :
+    (∃ middle,
+      HFRecursiveMember
+        (hfRecursiveOrderedPair (hfRecursiveNat m) middle)
+        (hfRecursiveNatShiftGraph firstOffset n) ∧
+      HFRecursiveMember
+        (hfRecursiveOrderedPair middle output)
+        (hfRecursiveNatShiftGraph secondOffset (n + firstOffset))) ↔
+      output = hfRecursiveNat (m + (firstOffset + secondOffset)) := by
+  constructor
+  · intro h
+    have hcomposite :
+        HFRecursiveMember
+          (hfRecursiveOrderedPair (hfRecursiveNat m) output)
+          (hfRecursiveNatShiftGraph (firstOffset + secondOffset) n) :=
+      (hfRecursiveNatShiftGraph_relationalComposite firstOffset secondOffset n
+        (hfRecursiveNat m) output).mpr h
+    rcases (hfRecursiveNatShiftGraph_apply_iff
+      (firstOffset + secondOffset) n (hfRecursiveNat m) output).mp hcomposite with
+      ⟨k, hk, hinput, houtput⟩
+    have hmk : m = k := hfRecursiveNat_injective hinput
+    subst k
+    exact houtput
+  · intro houtput
+    apply (hfRecursiveNatShiftGraph_relationalComposite firstOffset secondOffset n
+      (hfRecursiveNat m) output).mp
+    apply (hfRecursiveNatShiftGraph_apply_iff
+      (firstOffset + secondOffset) n (hfRecursiveNat m) output).mpr
+    exact ⟨m, hm, rfl, houtput⟩
+
+/- The composite graph is total on its original finite ordinal, with its
+   application-level value made explicit. -/
+theorem hfRecursiveNatShiftGraph_composite_total
+    (firstOffset secondOffset n m : Nat) (hm : m < n) :
+    ∃ output,
+      HFRecursiveMember
+        (hfRecursiveOrderedPair (hfRecursiveNat m) output)
+        (hfRecursiveNatShiftGraph (firstOffset + secondOffset) n) ∧
+      output = hfRecursiveNat (m + (firstOffset + secondOffset)) := by
+  refine ⟨hfRecursiveNat (m + (firstOffset + secondOffset)), ?_, rfl⟩
+  exact (hfRecursiveNatShiftGraph_apply_iff
+    (firstOffset + secondOffset) n (hfRecursiveNat m)
+    (hfRecursiveNat (m + (firstOffset + secondOffset)))).mpr ⟨m, hm, rfl, rfl⟩
+
+/- Associativity is visible before quotienting graph applications: the graph
+   for the summed offset is equivalent to choosing both intermediate values.
+   This is a genuine three-stage relation calculation, rather than only an
+   arithmetic equality of offsets. -/
+theorem hfRecursiveNatShiftGraph_associative_application_iff
+    (firstOffset secondOffset thirdOffset n : Nat)
+    (input output : HFRecursiveSet) :
+    HFRecursiveMember (hfRecursiveOrderedPair input output)
+      (hfRecursiveNatShiftGraph (firstOffset + (secondOffset + thirdOffset)) n) ↔
+      ∃ firstMiddle secondMiddle,
+        HFRecursiveMember (hfRecursiveOrderedPair input firstMiddle)
+          (hfRecursiveNatShiftGraph firstOffset n) ∧
+        HFRecursiveMember (hfRecursiveOrderedPair firstMiddle secondMiddle)
+          (hfRecursiveNatShiftGraph secondOffset (n + firstOffset)) ∧
+        HFRecursiveMember (hfRecursiveOrderedPair secondMiddle output)
+          (hfRecursiveNatShiftGraph thirdOffset (n + firstOffset + secondOffset)) := by
+  constructor
+  · intro h
+    rcases (hfRecursiveNatShiftGraph_relationalComposite firstOffset
+      (secondOffset + thirdOffset) n input output).mp h with
+      ⟨firstMiddle, hfirst, hrest⟩
+    rcases (hfRecursiveNatShiftGraph_relationalComposite secondOffset thirdOffset
+      (n + firstOffset) firstMiddle output).mp hrest with
+      ⟨secondMiddle, hsecond, hthird⟩
+    exact ⟨firstMiddle, secondMiddle, hfirst, hsecond, hthird⟩
+  · rintro ⟨firstMiddle, secondMiddle, hfirst, hsecond, hthird⟩
+    apply (hfRecursiveNatShiftGraph_relationalComposite firstOffset
+      (secondOffset + thirdOffset) n input output).mpr
+    refine ⟨firstMiddle, hfirst, ?_⟩
+    apply (hfRecursiveNatShiftGraph_relationalComposite secondOffset thirdOffset
+      (n + firstOffset) firstMiddle output).mpr
+    exact ⟨secondMiddle, hsecond, hthird⟩
+
 def HFRecursiveSubset (s t : HFRecursiveSet) : Prop :=
   ∀ x, HFRecursiveMember x s → HFRecursiveMember x t
 

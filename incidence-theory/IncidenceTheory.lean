@@ -279,7 +279,7 @@ theorem laplacian_empty {I R T : Type u} [DecidableEq I]
 
 /- Adding observed rows can only increase a diagonal entry.  This is the
    finite positive-semidefinite monotonicity of the derived `BᵀB` data; no
-   incidence axiom beyond the definition of the boundary matrix is used. -/
+   incidence postulate beyond the definition of the boundary matrix is used. -/
 theorem laplacian_diagonal_monotone_append {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx extra : List I) (i : I) :
     laplacian inc idx i i ≤ laplacian inc (idx ++ extra) i i := by
@@ -308,6 +308,63 @@ theorem laplacian_of_empty_boundaries {I R T : Type u} [DecidableEq I]
     | nil => rfl
     | cons _ xs ih => exact ih
   simpa [laplacian, boundaryMatrix, hempty] using hfold idx
+
+/- The observation list is a row selector for `laplacian`; it does not alter
+   the boundary row itself.  Keeping this fact explicit is useful when a
+   finite observation is extended or reindexed. -/
+theorem boundaryMatrix_index_irrel {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx idx' : List I) (i j : I) :
+    boundaryMatrix inc idx i j = boundaryMatrix inc idx' i j := rfl
+
+/- Equal boundary data give equal derived linear data.  This is the precise
+   preservation statement available without asking a translation to preserve
+   any extra, non-derived matrix structure. -/
+theorem boundaryMatrix_congr {I R T : Type u} [DecidableEq I]
+    (inc inc' : Incidence I R T) (idx idx' : List I)
+    (hboundary : ∀ i, inc.boundary i = inc'.boundary i) (i j : I) :
+    boundaryMatrix inc idx i j = boundaryMatrix inc' idx' i j := by
+  simp [boundaryMatrix, hboundary i]
+
+theorem laplacian_congr {I R T : Type u} [DecidableEq I]
+    (inc inc' : Incidence I R T) (idx : List I)
+    (hboundary : ∀ i, inc.boundary i = inc'.boundary i) (i j : I) :
+    laplacian inc idx i j = laplacian inc' idx i j := by
+  have hmatrix : ∀ k a, boundaryMatrix inc idx k a = boundaryMatrix inc' idx k a :=
+    fun k a => boundaryMatrix_congr inc inc' idx idx hboundary k a
+  simp only [laplacian]
+  have hfold : ∀ (xs : List I) (acc : Int),
+      xs.foldl (fun total k => total + boundaryMatrix inc idx k i * boundaryMatrix inc idx k j) acc =
+        xs.foldl (fun total k => total + boundaryMatrix inc' idx k i * boundaryMatrix inc' idx k j) acc := by
+    intro xs acc
+    induction xs generalizing acc with
+    | nil => rfl
+    | cons k xs ih =>
+      simp only [List.foldl]
+      rw [hmatrix k i, hmatrix k j]
+      exact ih _
+  exact hfold idx 0
+
+/- A positive contribution from new rows gives strict, rather than merely
+   weak, diagonal monotonicity. -/
+theorem laplacian_diagonal_strict_monotone_append {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx extra : List I) (i : I)
+    (hpositive : 0 < laplacian inc extra i i) :
+    laplacian inc idx i i < laplacian inc (idx ++ extra) i i := by
+  rw [laplacian_append]
+  exact Int.lt_add_of_pos_right _ hpositive
+
+/- Equivalently, the increment is exactly the Laplacian of the appended
+   observation rows. -/
+theorem laplacian_diagonal_increment_append {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx extra : List I) (i : I) :
+    laplacian inc (idx ++ extra) i i - laplacian inc idx i i =
+      laplacian inc extra i i := by
+  rw [laplacian_append]
+  calc
+    laplacian inc idx i i + laplacian inc extra i i - laplacian inc idx i i =
+        laplacian inc extra i i + laplacian inc idx i i - laplacian inc idx i i := by
+          rw [Int.add_comm]
+    _ = laplacian inc extra i i := Int.add_sub_cancel _ _
 
 def boundarySquareZero {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I) : Prop :=

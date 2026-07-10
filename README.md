@@ -66,6 +66,8 @@ It currently establishes:
   so the full Kripke completeness equivalence is directly instantiated for a
   language with two distinguishable incidence atoms, and is transported to
   the actual `FiniteIncidence` atoms `leaf` and `root`.
+  For the concrete `root` atom, excluded middle is shown underivable and
+  Kripke-invalid, while its double-negated form is derivable.
   Each formula has a finite subformula closure, and a consistent context has a
   finite extension deciding every formula in that closure; its disjunction
   subformulas satisfy a derivable prime-choice law.  The derivable closure of
@@ -109,6 +111,8 @@ It currently establishes:
   More generally, finite shift graphs implement `m ↦ m + k`; shift by zero is
   proved equal to the identity graph and shift by one to the successor graph.
   Their pointwise composition is proved to add offsets.
+  Their relational-composition presentation has exact two- and three-stage
+  application laws and finite-domain totality.
   On the quotient, binary union is idempotent, `⋃{s,t}=s∪t`, and big union
   preserves empty and distributes over binary union; binary union is also the
   least upper bound for the extensional subset order.

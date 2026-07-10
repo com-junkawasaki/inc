@@ -216,6 +216,26 @@ theorem finiteAlgebraic_boundaryMatrix :
 theorem finiteAlgebraic_laplacian :
     finiteAlgebraicModel.laplacian = laplacian finiteIncidence finiteIdx := rfl
 
+/- The nonempty finite model witnesses that observing the `root` row really
+   adds positive linear energy at `leaf`; strict extension is therefore not a
+   vacuous consequence of the general theorem. -/
+theorem finite_root_leaf_laplacian :
+    laplacian finiteIncidence [.root] .leaf .leaf = 1 := by
+  native_decide
+
+theorem finite_leaf_energy_strict_extension :
+    laplacian finiteIncidence [] .leaf .leaf <
+      laplacian finiteIncidence ([] ++ [.root]) .leaf .leaf := by
+  apply laplacian_diagonal_strict_monotone_append finiteIncidence [] [.root] .leaf
+  rw [finite_root_leaf_laplacian]
+  decide
+
+theorem finite_leaf_energy_increment :
+    laplacian finiteIncidence ([] ++ [.root]) .leaf .leaf -
+      laplacian finiteIncidence [] .leaf .leaf = 1 := by
+  rw [laplacian_diagonal_increment_append]
+  exact finite_root_leaf_laplacian
+
 theorem finite_model_boundary_square_zero : boundarySquareZero finiteIncidence finiteIdx := by
   intro i k hi hk
   simp [finiteIdx] at hi hk
@@ -295,6 +315,60 @@ theorem finiteIncidence_kripke_entails_iff_derives
     (context : List (Formula FiniteIncidence)) (formula : Formula FiniteIncidence) :
     KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
   kripke_entails_iff_derives_of_enumeration finiteIncidenceFormulaEnumeration context formula
+
+/-! ### A concrete constructive boundary
+
+The preceding completeness result is not merely an abstract transport result:
+the incidence atom carried by the nonempty-boundary node `root` has the usual
+two-world Kripke counterexample to excluded middle.  Thus the internal logic
+of the concrete incidence model remains intuitionistic, while retaining the
+double-negated classical principle. -/
+
+def finiteIncidenceRootDelayedKripkeModel : KripkeModel FiniteIncidence :=
+  delayedAtomKripkeModel FiniteIncidence .root
+
+theorem finiteIncidence_root_excluded_middle_countermodel :
+    ¬ KripkeForces finiteIncidenceRootDelayedKripkeModel false
+      (Formula.or (Formula.atom FiniteIncidence.root)
+        (Formula.neg (Formula.atom FiniteIncidence.root))) := by
+  intro hforces
+  rcases hforces with hroot | hnotroot
+  · exact Bool.noConfusion hroot.left
+  · exact hnotroot true (Or.inl rfl) ⟨rfl, rfl⟩
+
+theorem finiteIncidence_root_excluded_middle_not_derivable :
+    ¬ Derives ([] : List (Formula FiniteIncidence))
+      (Formula.or (Formula.atom FiniteIncidence.root)
+        (Formula.neg (Formula.atom FiniteIncidence.root))) :=
+  excluded_middle_not_derivable FiniteIncidence.root
+
+theorem finiteIncidence_root_excluded_middle_not_kripke_entails :
+    ¬ KripkeEntails.{0, 0} ([] : List (Formula FiniteIncidence))
+      (Formula.or (Formula.atom FiniteIncidence.root)
+        (Formula.neg (Formula.atom FiniteIncidence.root))) := by
+  intro hentails
+  apply finiteIncidence_root_excluded_middle_countermodel
+  apply hentails finiteIncidenceRootDelayedKripkeModel false
+  intro formula hmem
+  exact False.elim (List.not_mem_nil hmem)
+
+theorem finiteIncidence_root_double_neg_excluded_middle_derivable :
+    Derives ([] : List (Formula FiniteIncidence))
+      (Formula.neg (Formula.neg
+        (Formula.or (Formula.atom FiniteIncidence.root)
+          (Formula.neg (Formula.atom FiniteIncidence.root))))) :=
+  double_neg_excluded_middle_derivable FiniteIncidence.root
+
+theorem finiteIncidence_root_constructive_boundary :
+    (¬ Derives ([] : List (Formula FiniteIncidence))
+      (Formula.or (Formula.atom FiniteIncidence.root)
+        (Formula.neg (Formula.atom FiniteIncidence.root)))) ∧
+    Derives ([] : List (Formula FiniteIncidence))
+      (Formula.neg (Formula.neg
+        (Formula.or (Formula.atom FiniteIncidence.root)
+          (Formula.neg (Formula.atom FiniteIncidence.root))))) :=
+  ⟨finiteIncidence_root_excluded_middle_not_derivable,
+    finiteIncidence_root_double_neg_excluded_middle_derivable⟩
 
 /- A finite extensional-set fragment: subsets of the two atoms `a` and `b`.
    A set incidence has exactly its members as boundary endpoints. -/
