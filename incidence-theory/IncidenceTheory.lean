@@ -7990,6 +7990,28 @@ theorem BoundaryShapeEquivalence.discreteCategoryEquivalence_forward
     equivalence.discreteCategoryEquivalence.forward =
       equivalence.hom.discreteFunctor := rfl
 
+noncomputable def BoundaryShapeEquivalence.discreteFunctorPreservesFiniteLimitsColimits
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    StrongFiniteLimitColimitPreservingFamily equivalence.hom.discreteFunctor :=
+  IncCategoryEquivalence.strongFiniteLimitColimitPreservingFamily
+    equivalence.discreteCategoryEquivalence
+
+noncomputable def BoundaryShapeEquivalence.discreteFunctorPreservesPushouts
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    StrongPushoutPreservingFamily equivalence.hom.discreteFunctor :=
+  equivalence.discreteCategoryEquivalence.strongPushoutPreservingFamily
+
+noncomputable def BoundaryShapeEquivalence.discreteFunctorPreservesPullbacks
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    StrongPullbackPreservingFamily equivalence.hom.discreteFunctor :=
+  equivalence.discreteCategoryEquivalence.strongPullbackPreservingFamily
+
 def BoundaryShapeEquivalence.carrierEquivalence
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
     {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
