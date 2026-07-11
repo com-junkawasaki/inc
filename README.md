@@ -1378,6 +1378,12 @@ It currently establishes:
   and typing result; `toDispatchResult` forgets that extra precision.  The unit
   leaf is implemented end to end by `dispatchStrictUnit`, establishing the first
   branch of the strict total fold.
+  Three more strict branches are now implemented end to end:
+  `dispatchStrictVariable` connects the lookup provider to the exact type result,
+  `dispatchStrictRefl` builds Identity formation and reflexivity from one child,
+  and `dispatchStrictLambda` combines an exact domain result with a body result
+  under the lifted substitution.  The strict fold now covers both leaves, the
+  Identity recursion edge, and the binder recursion edge.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
