@@ -936,27 +936,36 @@ cycle 38–41 で以下の3極構造が判明した:
 
 ## Consequences（現状の限界・未解決事項）
 
-- **内部論理の方向性が未着手**: `incidenceProd`/`incidenceSum` を AND/OR に相当する
-  ものとして扱う分配律等の関係は、cycle 37 以来 queue されたまま一度も着手されて
-  いない。
-- **「第四の基礎」としての大きな野心はほぼ手つかず**: ℕ・集合論・論理・圏論・
-  依存型を Inc の内部に構成するという当初のビジョンは、`natIncidence` という
-  最初の一例（Peano自然数のみ）に留まっている。
-- **quotient構成の一般理論が未確立**: 成功例（`simplexIncidence`）は現状ただ一つ。
-  「well-founded gradingを尊重する崩壊なら常に成功する」という予想は、まだ
-  一般定理としては証明されていない仮説段階。
+- **内部論理とIncidence固有意味論の接続が残る**: 命題構文、自然演繹soundness、
+  derivable-equivalence quotient上の分配Heyting algebra、任意decidable atom carrierの
+  Kripke完全性・countermodel・consistency/satisfiabilityは証明済みである。一方、
+  boundary/glueそのものから得るtruth semanticsは一般Kripke semanticsより弱く、
+  `incidenceBoundary_semantics_not_complete`という反例もある。残件は追加条件の下で
+  Incidence固有観測がどの論理fragmentを完全に捉えるかの分類である。
+- **依存型保存定理のprovider実現性が残る**: Pi/Sigma/Identity raw calculus、semantic
+  substitution、formation/typing相互保存foldは完成した。canonical版でもvariable
+  replacement、coherent readiness alignment、general fiber rebaseの3仮定が残り、
+  これらを具体semantic modelで構成するか、より強いcanonicality条件から導出する必要がある。
+- **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
+  product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
+  整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。
+- **quotient構成は条件付き一般理論まで進展**: boundary/glue/guard invariance、
+  no-self-loop、glue type preservationが明示され、descentの必要十分性・一意性と
+  grade-decreasingからno-self-loopが従うことも証明済み。残件は非忠実な具体例で
+  条件を満たす範囲を広げることである。
 - **mathlib非依存のコスト**: 標準的な補題・tactic を都度手作りする必要があり、
   証明の記述量が mathlib 前提の Lean コードに比べて大きくなっている
   （例: `Quotient.out` 相当を `Classical.choice` から再構築、cycle 39）。
 
 ## 総括
 
-コア基盤（公理系・bisimulation理論・14〜17個の具体インスタンス・2つの汎用
-コンストラクタ・quotient構成の部分理論）は技術的負債ゼロで手堅く積み上がっており、
-「型理論のカーネル + 実例群」に相当する段階に達している。一方、当初構想していた
-「Inc の内部に数学の主要構造を埋め込む」という大きな野心は本格着手前——現在は
-土台固めのフェーズにある。次の焦点候補は cycle 41 の queue（内部論理の分配律、
-`shapeIncidence.glue` の別定義の可能性）に記録されている。
+cycle 41時点の「土台固め」評価からは大きく進み、現在はchecked incidence core、
+bisimulation/quotient理論、多数の具体モデル、命題内部論理のsoundness・完全性、
+依存型raw calculusと条件付きsubstitution preservationを備える段階にある。したがって
+主要な次段階は「内部論理への着手」ではなく、(1) preservation providersの具体化、
+(2) Incidence固有truth semanticsの完全fragment分類、(3) 依存型意味論と圏論構造の
+統合、(4) より広い既存数学の再構成である。cycle 41本文は研究史上の基準点として
+保持するが、このConsequencesと冒頭追補を現在のauthoritative maturity評価とする。
 
 ## References
 
