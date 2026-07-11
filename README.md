@@ -267,6 +267,9 @@ It currently establishes:
   common divisor is a unit rather than merely being labeled as one.  This is instantiated by a
   kernel-checked certificate `2·(-1)+3·1=1`, so every represented common divisor
   of `2` and `3` divides `1` whenever its combined witness remains in the window.
+  The certificate is exposed as bounded internal coprimality; a general coprime
+  pair has only `±1` as common represented divisors, and `2` and `3` are proved
+  coprime with that explicit unit-divisor conclusion.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.

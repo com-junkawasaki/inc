@@ -3455,6 +3455,10 @@ structure HFRecursiveIntegerBezoutCertificate
   combination :
     left * leftCoefficient + right * rightCoefficient = 1
 
+def HFRecursiveIntegerCoprime
+    (bound : Nat) (left right : Int) : Prop :=
+  Nonempty (HFRecursiveIntegerBezoutCertificate bound left right)
+
 theorem hfRecursiveIntegerBezout_common_divisor_divides_one
     (bound : Nat) (left right divisor : Int)
     (divisorWithin : HFRecursiveIntegerWithin bound divisor)
@@ -3497,6 +3501,29 @@ theorem hfRecursiveIntegerBezout_common_divisor_is_unit
     left right divisor divisorWithin certificate dividesLeft dividesRight
     combinedFactorWithin
 
+theorem hfRecursiveIntegerCoprime_common_divisor_is_unit
+    (bound : Nat) (left right divisor : Int)
+    (divisorWithin : HFRecursiveIntegerWithin bound divisor)
+    (oneWithin : HFRecursiveIntegerWithin bound 1)
+    (negOneWithin : HFRecursiveIntegerWithin bound (-1))
+    (coprime : HFRecursiveIntegerCoprime bound left right)
+    (dividesLeft : HFRecursiveIntegerDivides bound divisor left)
+    (dividesRight : HFRecursiveIntegerDivides bound divisor right)
+    (combinedFactorWithin : ∀
+      (certificate : HFRecursiveIntegerBezoutCertificate bound left right)
+      leftFactor rightFactor,
+      HFRecursiveIntegerWithin bound leftFactor →
+      HFRecursiveIntegerWithin bound rightFactor →
+      left = divisor * leftFactor → right = divisor * rightFactor →
+      HFRecursiveIntegerWithin bound
+        (leftFactor * certificate.leftCoefficient +
+          rightFactor * certificate.rightCoefficient)) :
+    divisor = 1 ∨ divisor = -1 := by
+  rcases coprime with ⟨certificate⟩
+  exact hfRecursiveIntegerBezout_common_divisor_is_unit bound
+    left right divisor divisorWithin oneWithin negOneWithin certificate
+    dividesLeft dividesRight (combinedFactorWithin certificate)
+
 theorem hfRecursiveIntegerBezout_no_nonunit_common_divisor
     (bound : Nat) (left right divisor : Int)
     (divisorWithin : HFRecursiveIntegerWithin bound divisor)
@@ -3526,6 +3553,13 @@ def hfRecursiveIntegerTwoThreeBezoutCertificate
   rightCoefficientWithin := oneWithin
   combination := by decide
 
+theorem hfRecursiveInteger_two_three_coprime
+    (bound : Nat)
+    (negOneWithin : HFRecursiveIntegerWithin bound (-1))
+    (oneWithin : HFRecursiveIntegerWithin bound 1) :
+    HFRecursiveIntegerCoprime bound 2 3 :=
+  ⟨hfRecursiveIntegerTwoThreeBezoutCertificate bound negOneWithin oneWithin⟩
+
 theorem hfRecursiveInteger_two_three_common_divisor_divides_one
     (bound : Nat) (divisor : Int)
     (divisorWithin : HFRecursiveIntegerWithin bound divisor)
@@ -3541,6 +3575,24 @@ theorem hfRecursiveInteger_two_three_common_divisor_divides_one
     HFRecursiveIntegerDivides bound divisor 1 := by
   exact hfRecursiveIntegerBezout_common_divisor_divides_one bound 2 3 divisor
     divisorWithin
+    (hfRecursiveIntegerTwoThreeBezoutCertificate bound negOneWithin oneWithin)
+    dividesTwo dividesThree combinedFactorWithin
+
+theorem hfRecursiveInteger_two_three_common_divisor_is_unit
+    (bound : Nat) (divisor : Int)
+    (divisorWithin : HFRecursiveIntegerWithin bound divisor)
+    (negOneWithin : HFRecursiveIntegerWithin bound (-1))
+    (oneWithin : HFRecursiveIntegerWithin bound 1)
+    (dividesTwo : HFRecursiveIntegerDivides bound divisor 2)
+    (dividesThree : HFRecursiveIntegerDivides bound divisor 3)
+    (combinedFactorWithin : ∀ twoFactor threeFactor,
+      HFRecursiveIntegerWithin bound twoFactor →
+      HFRecursiveIntegerWithin bound threeFactor →
+      2 = divisor * twoFactor → 3 = divisor * threeFactor →
+      HFRecursiveIntegerWithin bound (twoFactor * (-1) + threeFactor * 1)) :
+    divisor = 1 ∨ divisor = -1 := by
+  exact hfRecursiveIntegerBezout_common_divisor_is_unit bound 2 3 divisor
+    divisorWithin oneWithin negOneWithin
     (hfRecursiveIntegerTwoThreeBezoutCertificate bound negOneWithin oneWithin)
     dividesTwo dividesThree combinedFactorWithin
 
