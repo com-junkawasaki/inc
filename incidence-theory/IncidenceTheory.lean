@@ -7579,6 +7579,30 @@ theorem boundaryShapeTranslation_exists_iff_incToSet_naturallyIsomorphic
       have component := iso.inv_app_hom_app (⟨i⟩ : IncLiftedObject I)
       exact congrFun (congrArg IncLiftedFunction.function component) value
 
+theorem incToSet_naturallyIsomorphic_iff_boundaryShapeCode_preserved
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂)
+    (map : I → J) :
+    IncNaturallyIsomorphic (incToSetFunctor source)
+        ((incToSetFunctor target).comp (incDiscreteMapFunctor map)) ↔
+      ∀ i, boundaryShapeCode source i = boundaryShapeCode target (map i) := by
+  rw [← boundaryShapeTranslation_exists_iff_incToSet_naturallyIsomorphic
+      source target map]
+  exact boundaryShapeTranslation_exists_iff_code_preserving source target map
+
+theorem incToSet_naturallyIsomorphic_iff_fibers_equivalent
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂)
+    (map : I → J) :
+    IncNaturallyIsomorphic (incToSetFunctor source)
+        ((incToSetFunctor target).comp (incDiscreteMapFunctor map)) ↔
+      ∀ i, Nonempty (IncTypeEquivalence (inc_to_set source i)
+        (inc_to_set target (map i))) := by
+  rw [← boundaryShapeTranslation_exists_iff_incToSet_naturallyIsomorphic
+      source target map]
+  exact boundaryShapeTranslation_exists_iff_inc_to_set_equivalent_along_map
+    source target map
+
 theorem BoundaryShapeTranslation.discreteFunctor_obj
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
     {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
