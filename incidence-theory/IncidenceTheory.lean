@@ -2028,6 +2028,64 @@ structure IncFunctorEquivalenceCriterion
   fullyFaithful : IncFunctorFullyFaithful F
   essentiallySurjective : IncFunctorEssentiallySurjective F
 
+structure IncEssentialPreimage
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) (target : DObj) where
+  source : CObj
+  iso : MorphismIso D (F.obj source) target
+
+theorem IncFunctorEssentiallySurjective.nonempty_preimage
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (hF : IncFunctorEssentiallySurjective F)
+    (target : DObj) : Nonempty (IncEssentialPreimage F target) := by
+  obtain ⟨source, hom, inv, inv_hom, hom_inv⟩ := hF target
+  exact ⟨
+    { source := source
+      iso :=
+        { hom := hom
+          inv := inv
+          inv_hom := inv_hom
+          hom_inv := hom_inv } }⟩
+
+noncomputable def IncFunctorEssentiallySurjective.choosePreimage
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (hF : IncFunctorEssentiallySurjective F)
+    (target : DObj) : IncEssentialPreimage F target :=
+  Classical.choice (hF.nonempty_preimage target)
+
+noncomputable def IncFunctorEquivalenceCriterion.inverseObj
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F) :
+    DObj → CObj :=
+  fun target => (criterion.essentiallySurjective.choosePreimage target).source
+
+noncomputable def IncFunctorEquivalenceCriterion.inverseObj_iso
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F)
+    (target : DObj) :
+    MorphismIso D (F.obj (criterion.inverseObj target)) target :=
+  (criterion.essentiallySurjective.choosePreimage target).iso
+
+noncomputable def IncFunctorEquivalenceCriterion.inverseMap
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F)
+    {source target : DObj} (morphism : D.Hom source target) :
+    C.Hom (criterion.inverseObj source) (criterion.inverseObj target) :=
+  Classical.choose (criterion.fullyFaithful.full
+    (D.comp (criterion.inverseObj_iso target).inv
+      (D.comp morphism (criterion.inverseObj_iso source).hom)))
+
+theorem IncFunctorEquivalenceCriterion.inverseMap_spec
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F)
+    {source target : DObj} (morphism : D.Hom source target) :
+    F.map (criterion.inverseMap morphism) =
+      D.comp (criterion.inverseObj_iso target).inv
+        (D.comp morphism (criterion.inverseObj_iso source).hom) :=
+  Classical.choose_spec (criterion.fullyFaithful.full
+    (D.comp (criterion.inverseObj_iso target).inv
+      (D.comp morphism (criterion.inverseObj_iso source).hom)))
+
 theorem IncFunctorEquivalenceCriterion.identity
     {Obj : Type u} (C : IncCategory Obj) :
     IncFunctorEquivalenceCriterion (IncFunctor.identity C) where
