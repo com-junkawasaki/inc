@@ -256,6 +256,48 @@ theorem cycleIncidenceFixed_approxBisim_iff (x y : CycleId) :
 
 def cycleIdxFixed : List CycleId := [CycleId.c0, CycleId.c1, CycleId.c2, CycleId.c3]
 
+theorem cycleIncidenceFixed_bisimulationFaithful :
+    CompletenessTheory.BisimulationFaithful cycleIncidenceFixed := by
+  intro x y bisimilar
+  exact (cycleIncidenceFixed_approxBisim_iff x y).mp bisimilar
+
+theorem cycleIncidenceFixed_complete_language_sound
+    (language : CompletenessTheory.LinearObservationLanguage
+      cycleIncidenceFixed cycleIdxFixed)
+    (complete : CompletenessTheory.ContainsLinearIndicators
+      cycleIncidenceFixed cycleIdxFixed language) :
+    CompletenessTheory.CompleteLanguageBisimulationSound
+      cycleIncidenceFixed cycleIdxFixed language :=
+  (CompletenessTheory.complete_language_bisimulation_sound_iff_faithful
+    cycleIncidenceFixed cycleIdxFixed language complete).mpr
+      cycleIncidenceFixed_bisimulationFaithful
+
+theorem cycleIncidenceFixed_complete_observational_iff_bisimulation
+    (language : CompletenessTheory.LinearObservationLanguage
+      cycleIncidenceFixed cycleIdxFixed)
+    (complete : CompletenessTheory.ContainsLinearIndicators
+      cycleIncidenceFixed cycleIdxFixed language)
+    (x y : CycleId) :
+    CompletenessTheory.AgreeOnLinearObservationLanguage
+        cycleIncidenceFixed cycleIdxFixed language x y ↔
+      approxBisim cycleIncidenceFixed x y :=
+  CompletenessTheory.complete_language_observational_iff_bisimulation_of_faithful
+    cycleIncidenceFixed cycleIdxFixed language complete
+      cycleIncidenceFixed_bisimulationFaithful x y
+
+def cycleIncidenceFixed_completeLanguageQuotientEquivalence
+    (language : CompletenessTheory.LinearObservationLanguage
+      cycleIncidenceFixed cycleIdxFixed)
+    (complete : CompletenessTheory.ContainsLinearIndicators
+      cycleIncidenceFixed cycleIdxFixed language) :
+    IncTypeEquivalence
+      (CompletenessTheory.LanguageObservationQuotient
+        cycleIncidenceFixed cycleIdxFixed language complete)
+      (IncidenceQuotient cycleIncidenceFixed) :=
+  CompletenessTheory.completeLanguageBisimulationQuotientEquivalence
+    cycleIncidenceFixed cycleIdxFixed language complete
+      cycleIncidenceFixed_bisimulationFaithful
+
 theorem cycleIncidenceFixed_not_boundary_square_zero :
   verify_boundary_composition cycleIncidenceFixed cycleIdxFixed = false := by decide
 
