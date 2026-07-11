@@ -3258,6 +3258,54 @@ def IncDependentFamilyIsomorphism.productEquivalence
     intro value
     exact congrFun iso.mapProduct_hom_inv value
 
+def IncDependentFamilyIsomorphism.fiberEquivalence
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target) (index : I) :
+    IncTypeEquivalence (source.fiber index) (target.fiber index) where
+  forward := iso.hom.app index
+  inverse := iso.inv.app index
+  inverse_forward := iso.inv_hom index
+  forward_inverse := iso.hom_inv index
+
+theorem IncDependentFamilyIsomorphism.sumEquivalence_preserves_index
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target)
+    (value : IncDependentSum source) :
+    (iso.sumEquivalence.forward value).fst = value.fst := by
+  rcases value with ⟨index, value⟩
+  rfl
+
+theorem IncDependentFamilyIsomorphism.sumEquivalence_on_fiber
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target)
+    (index : I) (value : source.fiber index) :
+    iso.sumEquivalence.forward ⟨index, value⟩ =
+      ⟨index, (iso.fiberEquivalence index).forward value⟩ := by
+  rfl
+
+theorem IncDependentFamilyIsomorphism.productEquivalence_evaluate
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target)
+    (term : IncDependentProduct source) (index : I) :
+    iso.productEquivalence.forward term index =
+      (iso.fiberEquivalence index).forward (term index) := by
+  rfl
+
+theorem IncDependentFamilyIsomorphism.productEquivalence_reindex
+    {I R T J : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target)
+    (baseMap : J → I) (term : IncDependentProduct source) :
+    target.reindexProduct baseMap (iso.productEquivalence.forward term) =
+      fun index => (iso.fiberEquivalence (baseMap index)).forward
+        (source.reindexProduct baseMap term index) := by
+  funext index
+  rfl
+
 def IncCategoryEquivalence.objectIsoClassEquivalence
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (equivalence : IncCategoryEquivalence C D) :
