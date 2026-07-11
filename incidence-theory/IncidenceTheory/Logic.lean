@@ -5059,6 +5059,40 @@ def IncidenceLeafContextSatisfies {I R T : Type u} [DecidableEq I]
     (incidence : Incidence I R T) (context : List (Formula I)) : Prop :=
   ContextSatisfies (IncidenceLeafValuation incidence) context
 
+theorem incidenceBoundaryValuation_iff_not_leaf
+    {I R T : Type u} [DecidableEq I]
+    (incidence : Incidence I R T) (atom : I) :
+    IncidenceBoundaryValuation incidence atom ↔
+      ¬ IncidenceLeafValuation incidence atom := by
+  constructor
+  · rintro ⟨endpoint, member⟩ leaf
+    unfold IncidenceLeafValuation at leaf
+    rw [leaf] at member
+    simp at member
+  · intro notLeaf
+    unfold IncidenceBoundaryValuation
+    unfold IncidenceLeafValuation at notLeaf
+    cases boundaryEq : incidence.boundary atom with
+    | nil => exact False.elim (notLeaf boundaryEq)
+    | cons endpoint rest =>
+      exact ⟨endpoint, by simp⟩
+
+theorem incidenceLeafValuation_iff_not_boundary
+    {I R T : Type u} [DecidableEq I]
+    (incidence : Incidence I R T) (atom : I) :
+    IncidenceLeafValuation incidence atom ↔
+      ¬ IncidenceBoundaryValuation incidence atom := by
+  constructor
+  · intro leaf boundary
+    exact ((incidenceBoundaryValuation_iff_not_leaf incidence atom).mp boundary) leaf
+  · intro notBoundary
+    cases boundaryEq : incidence.boundary atom with
+    | nil => exact boundaryEq
+    | cons endpoint rest =>
+      exfalso
+      apply notBoundary
+      exact ⟨endpoint, by simp [boundaryEq]⟩
+
 def IncidenceBoundarySatisfies {I R T : Type u} [DecidableEq I]
     (incidence : Incidence I R T) (formula : Formula I) : Prop :=
   Satisfies (IncidenceBoundaryValuation incidence) formula
@@ -5066,6 +5100,13 @@ def IncidenceBoundarySatisfies {I R T : Type u} [DecidableEq I]
 def IncidenceBoundaryContextSatisfies {I R T : Type u} [DecidableEq I]
     (incidence : Incidence I R T) (context : List (Formula I)) : Prop :=
   ContextSatisfies (IncidenceBoundaryValuation incidence) context
+
+theorem incidenceBoundaryAtom_iff_not_leafAtom
+    {I R T : Type u} [DecidableEq I]
+    (incidence : Incidence I R T) (atom : I) :
+    IncidenceBoundarySatisfies incidence (.atom atom) ↔
+      ¬ IncidenceLeafSatisfies incidence (.atom atom) :=
+  incidenceBoundaryValuation_iff_not_leaf incidence atom
 
 def IncidenceBoundaryEntails {I R T : Type u} [DecidableEq I]
     (incidence : Incidence I R T) (context : List (Formula I))
