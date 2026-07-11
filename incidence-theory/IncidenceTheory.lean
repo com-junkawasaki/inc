@@ -6216,6 +6216,38 @@ def indicatorLanguageQuotientEquivalence
     (indicatorObservationLanguage inc idx)
     (indicatorObservationLanguage_containsIndicators inc idx)
 
+def completeLanguageQuotientsEquivalent
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (firstIdx secondIdx : List I)
+    (firstLanguage : LinearObservationLanguage inc firstIdx)
+    (secondLanguage : LinearObservationLanguage inc secondIdx)
+    (firstComplete : ContainsLinearIndicators inc firstIdx firstLanguage)
+    (secondComplete : ContainsLinearIndicators inc secondIdx secondLanguage) :
+    IncTypeEquivalence
+      (LanguageObservationQuotient inc firstIdx firstLanguage firstComplete)
+      (LanguageObservationQuotient inc secondIdx secondLanguage
+        secondComplete) :=
+  (indicatorCompleteLanguageQuotientEquivalence inc secondIdx secondLanguage
+    secondComplete).trans
+      (indicatorCompleteLanguageQuotientEquivalence inc firstIdx firstLanguage
+        firstComplete).symm
+
+def indicatorLanguageQuotientsIndexInvariant
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (firstIdx secondIdx : List I) :
+    IncTypeEquivalence
+      (LanguageObservationQuotient inc firstIdx
+        (indicatorObservationLanguage inc firstIdx)
+        (indicatorObservationLanguage_containsIndicators inc firstIdx))
+      (LanguageObservationQuotient inc secondIdx
+        (indicatorObservationLanguage inc secondIdx)
+        (indicatorObservationLanguage_containsIndicators inc secondIdx)) :=
+  completeLanguageQuotientsEquivalent inc firstIdx secondIdx
+    (indicatorObservationLanguage inc firstIdx)
+    (indicatorObservationLanguage inc secondIdx)
+    (indicatorObservationLanguage_containsIndicators inc firstIdx)
+    (indicatorObservationLanguage_containsIndicators inc secondIdx)
+
 theorem language_extension_preserves_completeness
     {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I)
