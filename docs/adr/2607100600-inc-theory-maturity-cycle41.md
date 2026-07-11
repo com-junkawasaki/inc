@@ -645,6 +645,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   complete fiber resultのheterogeneous equalityを一体で保持し、`typingResult` eliminatorがchecked transportを行う。
   reflexive caseは`exact`で閉じる。これによりmutual dispatcherの次段は、無関係なequality引数群ではなく、この単一の
   canonical alignment objectを各recursive edgeで構成すればよい。
+- 4つのdependent branch combinatorをこのalignment objectを直接受け取るAPIへ統一した。さらにexternal canonical resultへの
+  alignmentをdispatch packageと一体で返す`IncDepRawTypingSubstitutionAlignedDispatchResult`と、そのtransport済みtermを返す
+  `typingResult`を追加した。`dispatchFirstAligned`が第一射影branchをこの強い返り値へdefinitionally packageできることを
+  証明し、mutual recursionのoutput shapeを実際のnon-leaf branchで検証した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
