@@ -3493,6 +3493,121 @@ theorem IncCoherentCategoryEquivalence.pulledMediator_eq_sourceLift
       _ = C.comp (G.map rightLeg) (unit.hom.app span.c) := by
             rw [mediator_inr]
 
+theorem IncCoherentCategoryEquivalence.mappedPushoutLift_unique
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D)
+    {span : MorphismCospan C} (po : MorphismPushout span)
+    (q : DObj)
+    (leftLeg : D.Hom (coherent.equivalence.forward.obj span.b) q)
+    (rightLeg : D.Hom (coherent.equivalence.forward.obj span.c) q)
+    (commutes :
+      D.comp leftLeg (coherent.equivalence.forward.map span.left) =
+        D.comp rightLeg (coherent.equivalence.forward.map span.right))
+    (mediator : D.Hom (coherent.equivalence.forward.obj po.apex) q)
+    (mediator_inl :
+      D.comp mediator (coherent.equivalence.forward.map po.inl) = leftLeg)
+    (mediator_inr :
+      D.comp mediator (coherent.equivalence.forward.map po.inr) = rightLeg) :
+    mediator = coherent.mappedPushoutLift po q leftLeg rightLeg commutes := by
+  let F := coherent.equivalence.forward
+  let G := coherent.equivalence.inverse
+  let unit := coherent.equivalence.unit
+  let counit := coherent.equivalence.counit
+  let pulledCommutes :=
+    coherent.pulledPushoutCocone_commutes leftLeg rightLeg commutes
+  let sourceLift := po.lift (G.obj q)
+    (C.comp (G.map leftLeg) (unit.hom.app span.b))
+    (C.comp (G.map rightLeg) (unit.hom.app span.c)) pulledCommutes
+  have pulledMediatorEq :
+      C.comp (G.map mediator) (unit.hom.app po.apex) = sourceLift :=
+    coherent.pulledMediator_eq_sourceLift po q leftLeg rightLeg commutes
+      mediator mediator_inl mediator_inr
+  have counitInvNaturality :
+      D.comp ((F.comp G).map mediator) (counit.inv.app (F.obj po.apex)) =
+        D.comp (counit.inv.app q) mediator := by
+    simpa [IncFunctor.identity] using counit.inv.naturality mediator
+  change mediator = D.comp (counit.hom.app q) (F.map sourceLift)
+  calc
+    mediator = D.comp (D.id q) mediator := (D.id_comp mediator).symm
+    _ = D.comp
+        (D.comp (counit.hom.app q) (counit.inv.app q)) mediator := by
+          simpa [IncFunctor.identity] using
+            congrArg (fun arrow => D.comp arrow mediator)
+              (counit.inv_app_hom_app q).symm
+    _ = D.comp (counit.hom.app q)
+        (D.comp (counit.inv.app q) mediator) := (D.assoc _ _ _).symm
+    _ = D.comp (counit.hom.app q)
+        (D.comp ((F.comp G).map mediator)
+          (counit.inv.app (F.obj po.apex))) := by
+            rw [counitInvNaturality]
+    _ = D.comp (counit.hom.app q)
+        (D.comp ((F.comp G).map mediator)
+          (F.map (unit.hom.app po.apex))) := by
+            rw [coherent.counit_inv_forward_eq_map_unit]
+    _ = D.comp (counit.hom.app q)
+        (D.comp (F.map (G.map mediator))
+          (F.map (unit.hom.app po.apex))) := by
+            rfl
+    _ = D.comp (counit.hom.app q)
+        (F.map (C.comp (G.map mediator) (unit.hom.app po.apex))) := by
+          rw [F.map_comp]
+    _ = D.comp (counit.hom.app q) (F.map sourceLift) := by
+          rw [pulledMediatorEq]
+
+def IncCoherentCategoryEquivalence.mapPushout
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D)
+    {span : MorphismCospan C} (po : MorphismPushout span) :
+    MorphismPushout (coherent.equivalence.forward.mapCospan span) where
+  apex := coherent.equivalence.forward.obj po.apex
+  inl := coherent.equivalence.forward.map po.inl
+  inr := coherent.equivalence.forward.map po.inr
+  commutes := functor_maps_pushout_cocone coherent.equivalence.forward po
+  lift := coherent.mappedPushoutLift po
+  lift_inl := coherent.mappedPushoutLift_inl po
+  lift_inr := coherent.mappedPushoutLift_inr po
+  lift_unique := by
+    intro q leftLeg rightLeg commutes mediator mediator_inl mediator_inr
+    exact coherent.mappedPushoutLift_unique po q leftLeg rightLeg commutes
+      mediator mediator_inl mediator_inr
+
+def IncCoherentCategoryEquivalence.stronglyPreservesPushout
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D)
+    {span : MorphismCospan C} (po : MorphismPushout span) :
+    StrongPushoutPreserving coherent.equivalence.forward po where
+  mapped_pushout := coherent.mapPushout po
+  apex_is_image := rfl
+  inl_is_map := rfl
+  inr_is_map := rfl
+
+def IncCoherentCategoryEquivalence.strongPushoutPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D) :
+    StrongPushoutPreservingFamily coherent.equivalence.forward where
+  preserves := coherent.stronglyPreservesPushout
+
+def IncCoherentCategoryEquivalence.pushoutPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D) :
+    PushoutPreservingFamily coherent.equivalence.forward :=
+  coherent.strongPushoutPreservingFamily.toPushoutPreservingFamily
+
+noncomputable def IncCategoryEquivalence.strongPushoutPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    StrongPushoutPreservingFamily equivalence.forward := by
+  let coherent := equivalence.coherentReplacement
+  have forwardEq : coherent.equivalence.forward = equivalence.forward :=
+    equivalence.coherentReplacement_forward
+  exact Eq.ndrec coherent.strongPushoutPreservingFamily forwardEq
+
+noncomputable def IncCategoryEquivalence.pushoutPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    PushoutPreservingFamily equivalence.forward :=
+  equivalence.strongPushoutPreservingFamily.toPushoutPreservingFamily
+
 /- Uniform preservation is closed under translation composition.  The second
    family is applied to the actual mapped universal cocone selected by the
    first one, exactly as in the pointwise composition theorem above. -/
