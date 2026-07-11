@@ -6973,6 +6973,112 @@ structure BoundaryShapeEmbedding
     extends BoundaryShapeTranslation source target where
   injective : ∀ {i j}, map i = map j → i = j
 
+structure BehavioralBoundaryShapeTranslation
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂)
+    extends BoundaryShapeTranslation source target where
+  preservesBisimulation : ∀ {i j}, approxBisim source i j →
+    approxBisim target (map i) (map j)
+
+def BehavioralBoundaryShapeTranslation.identity
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    BehavioralBoundaryShapeTranslation inc inc where
+  toBoundaryShapeTranslation := BoundaryShapeTranslation.identity inc
+  preservesBisimulation := fun bisimilar => bisimilar
+
+def BehavioralBoundaryShapeTranslation.comp
+    {I J K R₁ T₁ R₂ T₂ R₃ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (secondMap : BehavioralBoundaryShapeTranslation second third)
+    (firstMap : BehavioralBoundaryShapeTranslation first second) :
+    BehavioralBoundaryShapeTranslation first third where
+  toBoundaryShapeTranslation :=
+    secondMap.toBoundaryShapeTranslation.comp
+      firstMap.toBoundaryShapeTranslation
+  preservesBisimulation := fun bisimilar =>
+    secondMap.preservesBisimulation
+      (firstMap.preservesBisimulation bisimilar)
+
+theorem BehavioralBoundaryShapeTranslation.ext
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    {first second : BehavioralBoundaryShapeTranslation source target}
+    (mapEq : first.map = second.map) : first = second := by
+  have baseEq : first.toBoundaryShapeTranslation =
+      second.toBoundaryShapeTranslation :=
+    BoundaryShapeTranslation.ext mapEq
+  cases first
+  cases second
+  cases baseEq
+  rfl
+
+theorem BehavioralBoundaryShapeTranslation.identity_comp
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : BehavioralBoundaryShapeTranslation source target) :
+    (BehavioralBoundaryShapeTranslation.identity target).comp translation =
+      translation := by
+  apply BehavioralBoundaryShapeTranslation.ext
+  rfl
+
+theorem BehavioralBoundaryShapeTranslation.comp_identity
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : BehavioralBoundaryShapeTranslation source target) :
+    translation.comp (BehavioralBoundaryShapeTranslation.identity source) =
+      translation := by
+  apply BehavioralBoundaryShapeTranslation.ext
+  rfl
+
+theorem BehavioralBoundaryShapeTranslation.comp_assoc
+    {I J K L R₁ T₁ R₂ T₂ R₃ T₃ R₄ T₄ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K] [DecidableEq L]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃} {fourth : Incidence L R₄ T₄}
+    (thirdMap : BehavioralBoundaryShapeTranslation third fourth)
+    (secondMap : BehavioralBoundaryShapeTranslation second third)
+    (firstMap : BehavioralBoundaryShapeTranslation first second) :
+    (thirdMap.comp secondMap).comp firstMap =
+      thirdMap.comp (secondMap.comp firstMap) := by
+  apply BehavioralBoundaryShapeTranslation.ext
+  rfl
+
+def BehavioralBoundaryShapeTranslation.mapBisimulationQuotient
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : BehavioralBoundaryShapeTranslation source target) :
+    IncidenceQuotient source → IncidenceQuotient target :=
+  Quotient.lift
+    (fun i => Quotient.mk (approxBisimSetoid target) (translation.map i))
+    (by
+      intro i j bisimilar
+      exact Quotient.sound (translation.preservesBisimulation bisimilar))
+
+theorem BehavioralBoundaryShapeTranslation.mapBisimulationQuotient_identity
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    (BehavioralBoundaryShapeTranslation.identity inc).mapBisimulationQuotient =
+      id := by
+  funext value
+  refine Quotient.inductionOn value ?_
+  intro representative
+  rfl
+
+theorem BehavioralBoundaryShapeTranslation.mapBisimulationQuotient_comp
+    {I J K R₁ T₁ R₂ T₂ R₃ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (secondMap : BehavioralBoundaryShapeTranslation second third)
+    (firstMap : BehavioralBoundaryShapeTranslation first second) :
+    (secondMap.comp firstMap).mapBisimulationQuotient =
+      secondMap.mapBisimulationQuotient ∘ firstMap.mapBisimulationQuotient := by
+  funext value
+  refine Quotient.inductionOn value ?_
+  intro representative
+  rfl
+
 def BoundaryShapeEmbedding.identity
     {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
     BoundaryShapeEmbedding inc inc where
