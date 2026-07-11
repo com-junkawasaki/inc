@@ -113,6 +113,14 @@ theorem CoherentQuotient.target_kripke_complete
     KripkeEntails.{u, u} context formula ↔ Derives context formula :=
   quotient.target.kripke_complete context formula
 
+def CoherentQuotient.target_glue_creates_pushout
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    {i j k : Q} (hglue : quotient.target.chainPushout.inc.glue i j = some k) :
+    { pushout : PushoutWitness (quotient.target.chainPushout.glue_pushout.diagram i j) //
+      pushout.apex = k } :=
+  quotient.target.glue_creates_pushout hglue
+
 theorem CoherentQuotient.quotient_lift_injective
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
     {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
