@@ -1808,6 +1808,25 @@ theorem incDepRawDependentRefl_application_type :
       .identity .unit .unit .unit := by
   rfl
 
+def incDepRawDependentPair : IncDepRawTerm :=
+  .pair .unit (.refl .unit)
+
+def incDepRawDependentPair_hasType :
+    IncDepRawHasType [] incDepRawDependentPair
+      (.sigma .unit (.identity .unit (.var 0) (.var 0))) := by
+  exact IncDepRawHasType.pairRule IncDepRawHasType.unitRule
+    (IncDepRawHasType.reflRule IncDepRawHasType.unitRule)
+
+def incDepRawDependentPair_first_hasType :
+    IncDepRawHasType [] (.first incDepRawDependentPair) .unit :=
+  IncDepRawHasType.firstRule incDepRawDependentPair_hasType
+
+def incDepRawDependentPair_second_hasType :
+    IncDepRawHasType [] (.second incDepRawDependentPair)
+      (.identity .unit (.first incDepRawDependentPair)
+        (.first incDepRawDependentPair)) :=
+  IncDepRawHasType.secondRule incDepRawDependentPair_hasType
+
 structure IncContext where
   Assignment : Type u
 
@@ -2265,6 +2284,21 @@ def incDepRawDependentReflSemantic :
 
 theorem incDepRawDependentReflSemantic_beta :
     IncPiTerm.apply incDepRawDependentReflSemantic incDepUnitTerm =
+      IncIdentityTerm.refl incDepUnitTerm := by
+  rfl
+
+def incDepRawDependentPairSemantic :
+    IncTerm (IncSigmaType incDepUnitType
+      incDepRawDependentReflSemanticCodomain) :=
+  IncSigmaTerm.pair incDepUnitTerm
+    (IncIdentityTerm.refl incDepUnitTerm)
+
+theorem incDepRawDependentPairSemantic_first_beta :
+    IncSigmaTerm.first incDepRawDependentPairSemantic = incDepUnitTerm := by
+  rfl
+
+theorem incDepRawDependentPairSemantic_second_beta :
+    IncSigmaTerm.second incDepRawDependentPairSemantic =
       IncIdentityTerm.refl incDepUnitTerm := by
   rfl
 

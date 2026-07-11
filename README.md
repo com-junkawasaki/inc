@@ -530,6 +530,12 @@ It currently establishes:
   to unit is proved definitionally equal to semantic reflexivity.  This checks
   the intended raw-to-semantic constructor alignment and beta computation while
   the general derivation interpreter remains to be completed.
+  The bridge also covers dependent Sigma: the raw pair inhabiting
+  `Sigma (x : Unit), Id Unit x x` and both of its typed projections are checked,
+  and the corresponding semantic dependent pair is built from the same unit and
+  reflexivity data.  Its first and second projections satisfy their semantic beta
+  laws definitionally.  Concrete raw/semantic alignment is therefore exercised
+  for Pi, Sigma, and identity rather than for only one dependent connective.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite

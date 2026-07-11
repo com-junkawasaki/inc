@@ -192,6 +192,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   variable、contextual identity formation/refl、Pi lambdaで構成した。semantic unit termへの
   applicationがsemantic reflへdefinitionally beta簡約することを証明し、raw/semanticの
   constructor対応と計算則を具体例で接続した。一般derivation interpreterは引き続き残る。
+- bridgeをdependent Sigmaへ拡張した。rawで`Sigma (x : Unit), Id Unit x x`のclosed pairと
+  first/second両projectionを型付けし、semantic側でも同じunit/refl dataからdependent pairを
+  構成した。semantic first/second projectionの両beta則がdefinitionally成立する。これで
+  Pi/Sigma/Id三主要connectiveすべてのraw/semantic constructor alignmentを具体的に検証した。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性
