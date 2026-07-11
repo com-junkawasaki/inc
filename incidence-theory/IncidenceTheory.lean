@@ -1313,6 +1313,102 @@ theorem IncCategoryEquivalence.inverse_faithful
     equivalence.inverse.map left = equivalence.inverse.map right → left = right :=
   equivalence.symm.forward_faithful left right
 
+theorem IncCategoryEquivalence.forward_full
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D)
+    {source target : CObj}
+    (morphism : D.Hom (equivalence.forward.obj source)
+      (equivalence.forward.obj target)) :
+    ∃ preimage : C.Hom source target, equivalence.forward.map preimage = morphism := by
+  let preimage : C.Hom source target :=
+    C.comp (equivalence.unit.inv.app target)
+      (C.comp (equivalence.inverse.map morphism) (equivalence.unit.hom.app source))
+  refine ⟨preimage, ?_⟩
+  apply equivalence.inverse_faithful
+  change (equivalence.inverse.comp equivalence.forward).map preimage =
+    equivalence.inverse.map morphism
+  have naturality := equivalence.unit.hom.naturality preimage
+  have sourceCancel :
+      C.comp (equivalence.unit.hom.app source) (equivalence.unit.inv.app source) =
+        C.id ((equivalence.inverse.comp equivalence.forward).obj source) :=
+    equivalence.unit.inv_app_hom_app source
+  have targetCancel :
+      C.comp (equivalence.unit.hom.app target) (equivalence.unit.inv.app target) =
+        C.id ((equivalence.inverse.comp equivalence.forward).obj target) :=
+    equivalence.unit.inv_app_hom_app target
+  calc
+    (equivalence.inverse.comp equivalence.forward).map preimage =
+        C.comp ((equivalence.inverse.comp equivalence.forward).map preimage)
+          (C.id ((equivalence.inverse.comp equivalence.forward).obj source)) :=
+            (C.comp_id _).symm
+    _ = C.comp ((equivalence.inverse.comp equivalence.forward).map preimage)
+        (C.comp (equivalence.unit.hom.app source)
+          (equivalence.unit.inv.app source)) := by rw [sourceCancel]
+    _ = C.comp
+        (C.comp ((equivalence.inverse.comp equivalence.forward).map preimage)
+          (equivalence.unit.hom.app source))
+        (equivalence.unit.inv.app source) := C.assoc _ _ _
+    _ = C.comp
+        (C.comp (equivalence.unit.hom.app target) preimage)
+        (equivalence.unit.inv.app source) := by
+          simpa [IncFunctor.identity] using
+            congrArg (fun composed => C.comp composed (equivalence.unit.inv.app source))
+              naturality
+    _ = C.comp (equivalence.unit.hom.app target)
+        (C.comp preimage (equivalence.unit.inv.app source)) := (C.assoc _ _ _).symm
+    _ = C.comp (equivalence.unit.hom.app target)
+        (C.comp (equivalence.unit.inv.app target)
+          (C.comp (C.comp (equivalence.inverse.map morphism)
+            (equivalence.unit.hom.app source))
+            (equivalence.unit.inv.app source))) := by
+              change C.comp (equivalence.unit.hom.app target)
+                (C.comp (C.comp (equivalence.unit.inv.app target)
+                  (C.comp (equivalence.inverse.map morphism)
+                    (equivalence.unit.hom.app source)))
+                  (equivalence.unit.inv.app source)) = _
+              exact congrArg (C.comp (equivalence.unit.hom.app target))
+                (C.assoc (equivalence.unit.inv.app target)
+                  (C.comp (equivalence.inverse.map morphism)
+                    (equivalence.unit.hom.app source))
+                  (equivalence.unit.inv.app source)).symm
+    _ = C.comp (equivalence.unit.hom.app target)
+        (C.comp (equivalence.unit.inv.app target)
+          (C.comp (equivalence.inverse.map morphism)
+            (C.comp (equivalence.unit.hom.app source)
+              (equivalence.unit.inv.app source)))) := by
+              apply congrArg (C.comp (equivalence.unit.hom.app target))
+              apply congrArg (C.comp (equivalence.unit.inv.app target))
+              exact (C.assoc (equivalence.inverse.map morphism)
+                (equivalence.unit.hom.app source)
+                (equivalence.unit.inv.app source)).symm
+    _ = C.comp (equivalence.unit.hom.app target)
+        (C.comp (equivalence.unit.inv.app target)
+          (C.comp (equivalence.inverse.map morphism)
+            (C.id ((equivalence.inverse.comp equivalence.forward).obj source)))) := by
+              rw [sourceCancel]
+    _ = C.comp (equivalence.unit.hom.app target)
+        (C.comp (equivalence.unit.inv.app target)
+          (equivalence.inverse.map morphism)) := by rw [C.comp_id]
+    _ = C.comp
+        (C.comp (equivalence.unit.hom.app target) (equivalence.unit.inv.app target))
+        (equivalence.inverse.map morphism) := C.assoc _ _ _
+    _ = C.comp (C.id ((equivalence.inverse.comp equivalence.forward).obj target))
+        (equivalence.inverse.map morphism) := by rw [targetCancel]
+    _ = equivalence.inverse.map morphism := C.id_comp _
+
+theorem IncCategoryEquivalence.forward_fullyFaithful
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    IncFunctorFullyFaithful equivalence.forward where
+  faithful := equivalence.forward_faithful
+  full := equivalence.forward_full
+
+theorem IncCategoryEquivalence.inverse_fullyFaithful
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    IncFunctorFullyFaithful equivalence.inverse :=
+  equivalence.symm.forward_fullyFaithful
+
 theorem IncFunctor.identity_fullyFaithful
     {Obj : Type u} (C : IncCategory Obj) :
     IncFunctorFullyFaithful (IncFunctor.identity C) where
