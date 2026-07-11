@@ -1560,6 +1560,14 @@ It currently establishes:
   the Identity fiber.  The exported coherence theorem confirms the resulting
   reflexivity term commutes with the identity substitution.  Together with the
   lambda example, this exercises both cross-directions of the mutual recursion.
+  The dependent Sigma example is now connected too.
+  `preserveDependentPair` preserves the closed pair
+  `⟨unit, refl unit⟩` in `Σ (_ : Unit), Id Unit x x`; its second component is
+  recursively normalized onto the canonical instantiated Identity fiber before
+  pair introduction.  `preserveDependentPairFirst` then runs the first-projection
+  eliminator over the recursively preserved Sigma result.  Both export semantic
+  coherence theorems, so canonical Sigma introduction and elimination are now
+  exercised end to end rather than only through isolated constructors.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
