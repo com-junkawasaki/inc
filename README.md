@@ -717,6 +717,13 @@ It currently establishes:
   assignment.  For arbitrary dependent pair components, first and second
   projection are definitionally the corresponding semantic components.  These
   Pi and both Sigma beta theorems no longer depend on the closed unit examples.
+  Multi-step soundness is now evaluator-parametric.  For any carrier and any raw
+  term evaluator, a proof that each one-step reduction maps to equality lifts by
+  induction to all multi-step reductions and to the full reflexive/symmetric/
+  transitive definitional equality.  The canonical computation quotient is
+  re-established as one instance.  The future contextual interpreter therefore
+  only needs to discharge primitive one-step soundness; the closure theorem is
+  already generic.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

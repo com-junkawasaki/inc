@@ -2443,6 +2443,34 @@ theorem IncDepRawSteps.compute_sound
     first.compute = second.compute :=
   steps.toDefEq.compute_eq
 
+theorem IncDepRawSteps.evaluator_sound
+    {carrier : Type u} (evaluate : IncDepRawTerm → carrier)
+    (stepSound : ∀ {first second}, IncDepRawStep first second →
+      evaluate first = evaluate second)
+    {first second : IncDepRawTerm} (steps : IncDepRawSteps first second) :
+    evaluate first = evaluate second := by
+  induction steps with
+  | refl => rfl
+  | tail step _ ih => exact Eq.trans (stepSound step) ih
+
+theorem IncDepRawDefEq.evaluator_sound
+    {carrier : Type u} (evaluate : IncDepRawTerm → carrier)
+    (stepSound : ∀ {first second}, IncDepRawStep first second →
+      evaluate first = evaluate second)
+    {first second : IncDepRawTerm} (equal : IncDepRawDefEq first second) :
+    evaluate first = evaluate second := by
+  induction equal with
+  | refl => rfl
+  | ofStep step => exact stepSound step
+  | symm _ ih => exact ih.symm
+  | trans _ _ firstIH secondIH => exact Eq.trans firstIH secondIH
+
+theorem incDepRawCompute_evaluator_sound
+    {first second : IncDepRawTerm} (steps : IncDepRawSteps first second) :
+    first.compute = second.compute :=
+  steps.evaluator_sound IncDepRawTerm.compute
+    (fun step => step.compute_sound)
+
 theorem incDepRawDependentRefl_betaStep :
     IncDepRawStep (.apply incDepRawDependentRefl .unit) (.refl .unit) := by
   exact IncDepRawStep.piBeta

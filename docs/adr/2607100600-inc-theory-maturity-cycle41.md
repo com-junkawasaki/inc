@@ -311,6 +311,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   domain/codomain、body/argument resultについてsemantic lambda applicationがextended assignment
   上のbodyとdefinitionally一致する。任意dependent pair componentsについてfirst/second projection
   が対応componentと一致する。Pi betaとSigma両betaはclosed Unit例に依存しない。
+- multi-step soundnessをevaluator-parametricにした。任意carrierとraw term evaluatorについて、
+  one-stepをequalityへ写す証明から全multi-step reductionおよびreflexive/symmetric/transitive
+  definitional equalityのsoundnessを帰納的に導く。canonical computation quotient evaluatorを
+  instanceとして再証明した。将来のcontextual interpreterはprimitive one-step soundnessだけを
+  dischargeすればよく、closure theoremは既にgenericである。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
