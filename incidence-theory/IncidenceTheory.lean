@@ -221,6 +221,30 @@ theorem IncDependentFamily.mapSum_comp {I R T : Type u} [DecidableEq I]
   rcases total with ⟨i, value⟩
   rfl
 
+def IncDependentFamily.mapProduct {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} {family target : IncDependentFamily inc}
+    (map : ∀ i, family.fiber i → target.fiber i) :
+    IncDependentProduct family → IncDependentProduct target :=
+  fun sec i => map i (sec i)
+
+theorem IncDependentFamily.mapProduct_id {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} (family : IncDependentFamily inc) :
+    IncDependentFamily.mapProduct (family := family) (target := family)
+      (fun _ value => value) = id := by
+  funext sec
+  rfl
+
+theorem IncDependentFamily.mapProduct_comp {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} {first second third : IncDependentFamily inc}
+    (f : ∀ i, first.fiber i → second.fiber i)
+    (g : ∀ i, second.fiber i → third.fiber i) :
+    IncDependentFamily.mapProduct (family := second) (target := third) g ∘
+        IncDependentFamily.mapProduct (family := first) (target := second) f =
+      IncDependentFamily.mapProduct (family := first) (target := third)
+        (fun i value => g i (f i value)) := by
+  funext sec i
+  rfl
+
 theorem incDependentProduct_ext {I R T : Type u} [DecidableEq I]
     {inc : Incidence I R T} {family : IncDependentFamily inc}
     {left right : IncDependentProduct family}
