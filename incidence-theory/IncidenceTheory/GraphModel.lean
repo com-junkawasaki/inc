@@ -1303,6 +1303,26 @@ theorem hfNatIncidenceQuotient_induction
   | zero => exact zero
   | succ n ih => exact successor n ih
 
+theorem hfNatIncidenceQuotient_recursion_unique {A : Type}
+    (f g : IncidenceQuotient hfIncidence → A) (step : A → A)
+    (zero : f (hfNatIncidenceQuotientEncode 0) =
+      g (hfNatIncidenceQuotientEncode 0))
+    (fSucc : ∀ n, f (hfNatIncidenceQuotientEncode (n + 1)) =
+      step (f (hfNatIncidenceQuotientEncode n)))
+    (gSucc : ∀ n, g (hfNatIncidenceQuotientEncode (n + 1)) =
+      step (g (hfNatIncidenceQuotientEncode n))) :
+    ∀ n, f (hfNatIncidenceQuotientEncode n) =
+      g (hfNatIncidenceQuotientEncode n) := by
+  intro n
+  induction n with
+  | zero => exact zero
+  | succ n ih =>
+      calc
+        f (hfNatIncidenceQuotientEncode (n + 1)) =
+            step (f (hfNatIncidenceQuotientEncode n)) := fSucc n
+        _ = step (g (hfNatIncidenceQuotientEncode n)) := congrArg step ih
+        _ = g (hfNatIncidenceQuotientEncode (n + 1)) := (gSucc n).symm
+
 structure HFNatIncidenceQuotientEmbedding where
   encode : Nat → IncidenceQuotient hfIncidence
   eq_iff : ∀ m n, encode m = encode n ↔ m = n
@@ -1312,6 +1332,12 @@ structure HFNatIncidenceQuotientEmbedding where
     predicate (encode 0) →
     (∀ n, predicate (encode n) → predicate (encode (n + 1))) →
     ∀ n, predicate (encode n)
+  recursion_unique : ∀ (A : Type)
+    (f g : IncidenceQuotient hfIncidence → A) (step : A → A),
+    f (encode 0) = g (encode 0) →
+    (∀ n, f (encode (n + 1)) = step (f (encode n))) →
+    (∀ n, g (encode (n + 1)) = step (g (encode n))) →
+    ∀ n, f (encode n) = g (encode n)
 
 def hfNatIncidenceQuotientEmbedding : HFNatIncidenceQuotientEmbedding where
   encode := hfNatIncidenceQuotientEncode
@@ -1319,6 +1345,9 @@ def hfNatIncidenceQuotientEmbedding : HFNatIncidenceQuotientEmbedding where
   zero_ne_succ := hfNatIncidenceQuotient_zero_ne_succ
   succ_injective := hfNatIncidenceQuotient_succ_injective
   induction := hfNatIncidenceQuotient_induction
+  recursion_unique := by
+    intro A f g step zero fSucc gSucc
+    exact hfNatIncidenceQuotient_recursion_unique f g step zero fSucc gSucc
 
 /- Graph with nodes and edges as incidences. We take I as a sum of Node | Edge. -/
 inductive GId where | node (n : Nat) | edge (e : Nat)
