@@ -187,6 +187,12 @@ It currently establishes:
   for both ordinary and strict inclusion.  Under those same hypotheses, equal
   outputs of the internal power graph cancel respectively to equal bases or
   equal exponents.
+  Signed integers now have an internal HF carrier representation as a
+  Kuratowski pair of a sign tag and a natural magnitude.  Positive/nonnegative
+  and negative encodings are disjoint, the embedding from `Int` is injective,
+  and every value satisfying the integer-code predicate has a unique integer
+  representation.  Integer arithmetic graphs are a subsequent layer, not
+  claimed by this carrier result alone.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.

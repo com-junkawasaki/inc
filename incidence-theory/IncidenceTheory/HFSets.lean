@@ -1563,6 +1563,76 @@ theorem hfRecursiveOrderedPair_injective {s t u v : HFRecursiveSet} :
       exact (hfRecursiveMember_pair_iff t s t).mpr (Or.inr rfl)
     exact ⟨hus.symm, htu.trans (hus.trans hvs.symm)⟩
 
+/- Signed integers are encoded internally by a sign tag and a magnitude.
+   `ofNat n` uses tag 0 and `negSucc n` (the integer `-(n+1)`) uses tag 1. -/
+def hfRecursiveInteger : Int → HFRecursiveSet
+  | .ofNat n => hfRecursiveOrderedPair (hfRecursiveNat 0) (hfRecursiveNat n)
+  | .negSucc n => hfRecursiveOrderedPair (hfRecursiveNat 1) (hfRecursiveNat n)
+
+theorem hfRecursiveInteger_ofNat (n : Nat) :
+    hfRecursiveInteger (Int.ofNat n) =
+      hfRecursiveOrderedPair (hfRecursiveNat 0) (hfRecursiveNat n) := rfl
+
+theorem hfRecursiveInteger_negSucc (n : Nat) :
+    hfRecursiveInteger (Int.negSucc n) =
+      hfRecursiveOrderedPair (hfRecursiveNat 1) (hfRecursiveNat n) := rfl
+
+theorem hfRecursiveInteger_positive_negative_disjoint (m n : Nat) :
+    hfRecursiveInteger (Int.ofNat m) ≠ hfRecursiveInteger (Int.negSucc n) := by
+  intro equal
+  have tags := (hfRecursiveOrderedPair_injective equal).left
+  have impossible : 0 = 1 := hfRecursiveNat_injective tags
+  cases impossible
+
+theorem hfRecursiveInteger_injective {first second : Int} :
+    hfRecursiveInteger first = hfRecursiveInteger second → first = second := by
+  intro equal
+  cases first with
+  | ofNat first =>
+      cases second with
+      | ofNat second =>
+          have magnitudes := (hfRecursiveOrderedPair_injective equal).right
+          have indexEq : first = second := hfRecursiveNat_injective magnitudes
+          cases indexEq
+          rfl
+      | negSucc second =>
+          exact False.elim
+            (hfRecursiveInteger_positive_negative_disjoint first second equal)
+  | negSucc first =>
+      cases second with
+      | ofNat second =>
+          exact False.elim
+            (hfRecursiveInteger_positive_negative_disjoint second first equal.symm)
+      | negSucc second =>
+          have magnitudes := (hfRecursiveOrderedPair_injective equal).right
+          have indexEq : first = second := hfRecursiveNat_injective magnitudes
+          cases indexEq
+          rfl
+
+def HFRecursiveIntegerCode (value : HFRecursiveSet) : Prop :=
+  ∃ integer : Int, value = hfRecursiveInteger integer
+
+theorem hfRecursiveInteger_isCode (integer : Int) :
+    HFRecursiveIntegerCode (hfRecursiveInteger integer) :=
+  ⟨integer, rfl⟩
+
+theorem hfRecursiveInteger_representation_unique
+    {value : HFRecursiveSet} {first second : Int}
+    (firstRep : value = hfRecursiveInteger first)
+    (secondRep : value = hfRecursiveInteger second) :
+    first = second :=
+  hfRecursiveInteger_injective (firstRep.symm.trans secondRep)
+
+theorem hfRecursiveIntegerCode_has_unique_representation
+    (value : HFRecursiveSet) (isCode : HFRecursiveIntegerCode value) :
+    ∃ integer : Int,
+      value = hfRecursiveInteger integer ∧
+      ∀ other : Int, value = hfRecursiveInteger other → other = integer := by
+  rcases isCode with ⟨integer, representation⟩
+  refine ⟨integer, representation, ?_⟩
+  intro other otherRep
+  exact hfRecursiveInteger_representation_unique otherRep representation
+
 /- A relation is represented internally as a set of Kuratowski ordered pairs. -/
 def HFRecursiveRelation (relation : HFRecursiveSet) : Prop :=
   ∀ element, HFRecursiveMember element relation →
