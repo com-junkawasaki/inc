@@ -1427,8 +1427,16 @@ It currently establishes:
   before consulting the replacement provider; reflexivity aligns its recursive
   term with the selected type result; lambda performs the full binder protocol
   (domain dispatch, semantic-context extension, replacement lifting, codomain
-  dispatch, and body normalization).  Apply, pair, first, and second remain to
-  be connected to complete the eight-way typing dispatcher.
+  dispatch, and body normalization).
+  Apply, pair, first, and second now have checked fold branches as well.  Each
+  independently dispatches domain, lifted codomain, and (where needed) the
+  instantiated structural result; recursive term results are normalized onto
+  the exact Pi, Sigma, domain, or instantiated fiber before the strict semantic
+  constructor is invoked.  Apply, pair, and second obtain their natural
+  instantiate square from the explicit coherence provider.  All eight typing
+  rules therefore have both low-level strict constructors and fold-level branch
+  combinators.  Only the single recursor that selects these branches and ties it
+  to the formation dispatcher remains in the preservation assembly.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

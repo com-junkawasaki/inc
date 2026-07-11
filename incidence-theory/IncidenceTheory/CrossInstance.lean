@@ -11162,6 +11162,305 @@ noncomputable def IncDepRawSubstitutionFiberModel.foldStrictLambda
   exact model.dispatchStrictLambda domainReady codomainReady
     (strictBody.castFormationReady bodyEq) domainResult.formationResult alignedBody
 
+noncomputable def IncDepRawSubstitutionFiberModel.foldStrictFirst
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (formationDispatcher : IncDepRawStrictFormationSubstitutionDispatcher)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider)
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {pairTyping : IncDepRawHasType target pair (.sigma domain codomain)}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (pairReady : IncDepRawCoherentTypingDispatchReady pairTyping
+      (IncDepRawWellFormed.sigma domainFormation codomainFormation))
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult)
+    (pairResult : IncDepRawStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.ofCoherent pairReady)
+      substitutionResult) :
+    let sigmaReady := IncDepRawCoherentFormationDispatchReady.sigma
+      domainReady codomainReady
+    let strictPair :=
+      (IncDepRawStrictTypingDispatchReady.ofCoherent pairReady)
+        |>.castFormationReady
+          (readinessAlignment.alignFormation pairReady.formationReady sigmaReady)
+    IncDepRawStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.firstRule domainReady codomainReady
+        strictPair) substitutionResult := by
+  let domainResult := formationDispatcher.run domainReady targetTree replacements
+  let extendedTree := IncDepRawContextSemanticTree.extend targetTree
+    domainResult.formationResult.targetFormationResult
+  let liftedReplacements := replacements.liftResult domainResult.formationResult
+  let codomainResult := formationDispatcher.run codomainReady extendedTree
+    liftedReplacements
+  let sigmaReady := IncDepRawCoherentFormationDispatchReady.sigma
+    domainReady codomainReady
+  let pairEq := readinessAlignment.alignFormation pairReady.formationReady
+    sigmaReady
+  let strictPair := IncDepRawStrictTypingDispatchReady.ofCoherent pairReady
+  let sigmaResult := model.sigma domainResult.formationResult
+    codomainResult.formationResult
+  let alignedPair := (pairResult.castFormationReady pairEq)
+    |>.normalizeFormation rebaseProvider sigmaResult
+  exact model.dispatchStrictFirst domainReady codomainReady
+    (strictPair.castFormationReady pairEq) domainResult.formationResult
+    codomainResult.formationResult alignedPair.typingResult
+
+noncomputable def IncDepRawSubstitutionFiberModel.foldStrictSecond
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (formationDispatcher : IncDepRawStrictFormationSubstitutionDispatcher)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider)
+    (instantiateProvider : IncDepRawInstantiateFormationCoherenceProvider)
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {resultFormation : IncDepRawWellFormed target
+      (codomain.instantiate (.first pair))}
+    {pairTyping : IncDepRawHasType target pair (.sigma domain codomain)}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (resultReady : IncDepRawCoherentFormationDispatchReady resultFormation)
+    (pairReady : IncDepRawCoherentTypingDispatchReady pairTyping
+      (IncDepRawWellFormed.sigma domainFormation codomainFormation))
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult)
+    (pairResult : IncDepRawStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.ofCoherent pairReady)
+      substitutionResult) :
+    let sigmaReady := IncDepRawCoherentFormationDispatchReady.sigma
+      domainReady codomainReady
+    let strictPair :=
+      (IncDepRawStrictTypingDispatchReady.ofCoherent pairReady)
+        |>.castFormationReady
+          (readinessAlignment.alignFormation pairReady.formationReady sigmaReady)
+    IncDepRawStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.secondRule domainReady codomainReady
+        resultReady strictPair) substitutionResult := by
+  let domainResult := formationDispatcher.run domainReady targetTree replacements
+  let extendedTree := IncDepRawContextSemanticTree.extend targetTree
+    domainResult.formationResult.targetFormationResult
+  let liftedReplacements := replacements.liftResult domainResult.formationResult
+  let codomainResult := formationDispatcher.run codomainReady extendedTree
+    liftedReplacements
+  let structuralResult := formationDispatcher.run resultReady targetTree
+    replacements
+  let sigmaReady := IncDepRawCoherentFormationDispatchReady.sigma
+    domainReady codomainReady
+  let pairEq := readinessAlignment.alignFormation pairReady.formationReady
+    sigmaReady
+  let strictPair := IncDepRawStrictTypingDispatchReady.ofCoherent pairReady
+  let sigmaResult := model.sigma domainResult.formationResult
+    codomainResult.formationResult
+  let alignedPair := (pairResult.castFormationReady pairEq)
+    |>.normalizeFormation rebaseProvider sigmaResult
+  let firstCoherence :
+      domainResult.formationResult.semanticFiberEquivalence.transport
+          (IncSigmaTerm.first
+            alignedPair.typingResult.sourceTermResult.semanticTerm) =
+        (IncSigmaTerm.first
+          alignedPair.typingResult.targetTermResult.semanticTerm).substitute
+            substitutionResult.semanticSubstitution := by
+    funext assignment
+    exact congrArg Sigma.fst
+      (congrFun alignedPair.typingResult.semanticTerm_coherence assignment)
+  let coherence := instantiateProvider.dispatch domainResult.formationResult
+    codomainResult.formationResult
+    (IncSigmaTerm.first alignedPair.typingResult.sourceTermResult.semanticTerm)
+    (IncSigmaTerm.first alignedPair.typingResult.targetTermResult.semanticTerm)
+    firstCoherence structuralResult.formationResult
+  exact model.dispatchStrictSecond domainReady codomainReady resultReady
+    (strictPair.castFormationReady pairEq) domainResult.formationResult
+    codomainResult.formationResult alignedPair.typingResult
+    structuralResult.formationResult coherence
+
+noncomputable def IncDepRawSubstitutionFiberModel.foldStrictApply
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (formationDispatcher : IncDepRawStrictFormationSubstitutionDispatcher)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider)
+    (instantiateProvider : IncDepRawInstantiateFormationCoherenceProvider)
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {function argument : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {resultFormation : IncDepRawWellFormed target
+      (codomain.instantiate argument)}
+    {functionTyping : IncDepRawHasType target function (.pi domain codomain)}
+    {argumentTyping : IncDepRawHasType target argument domain}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (resultReady : IncDepRawCoherentFormationDispatchReady resultFormation)
+    (functionReady : IncDepRawCoherentTypingDispatchReady functionTyping
+      (IncDepRawWellFormed.pi domainFormation codomainFormation))
+    (argumentReady : IncDepRawCoherentTypingDispatchReady argumentTyping
+      domainFormation)
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult)
+    (functionResult : IncDepRawStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.ofCoherent functionReady)
+      substitutionResult)
+    (argumentResult : IncDepRawStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.ofCoherent argumentReady)
+      substitutionResult) :
+    let piReady := IncDepRawCoherentFormationDispatchReady.pi
+      domainReady codomainReady
+    let strictFunction :=
+      (IncDepRawStrictTypingDispatchReady.ofCoherent functionReady)
+        |>.castFormationReady
+          (readinessAlignment.alignFormation functionReady.formationReady piReady)
+    let strictArgument :=
+      (IncDepRawStrictTypingDispatchReady.ofCoherent argumentReady)
+        |>.castFormationReady
+          (readinessAlignment.alignFormation argumentReady.formationReady
+            domainReady)
+    IncDepRawStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.applyRule domainReady codomainReady
+        resultReady strictFunction strictArgument) substitutionResult := by
+  let domainResult := formationDispatcher.run domainReady targetTree replacements
+  let extendedTree := IncDepRawContextSemanticTree.extend targetTree
+    domainResult.formationResult.targetFormationResult
+  let liftedReplacements := replacements.liftResult domainResult.formationResult
+  let codomainResult := formationDispatcher.run codomainReady extendedTree
+    liftedReplacements
+  let structuralResult := formationDispatcher.run resultReady targetTree
+    replacements
+  let piReady := IncDepRawCoherentFormationDispatchReady.pi
+    domainReady codomainReady
+  let functionEq := readinessAlignment.alignFormation
+    functionReady.formationReady piReady
+  let argumentEq := readinessAlignment.alignFormation
+    argumentReady.formationReady domainReady
+  let strictFunction := IncDepRawStrictTypingDispatchReady.ofCoherent functionReady
+  let strictArgument := IncDepRawStrictTypingDispatchReady.ofCoherent argumentReady
+  let piResult := model.pi domainResult.formationResult
+    codomainResult.formationResult
+  let alignedFunction := (functionResult.castFormationReady functionEq)
+    |>.normalizeFormation rebaseProvider piResult
+  let alignedArgument := (argumentResult.castFormationReady argumentEq)
+    |>.normalizeFormation rebaseProvider domainResult.formationResult
+  let coherence := instantiateProvider.dispatch domainResult.formationResult
+    codomainResult.formationResult
+    alignedArgument.typingResult.sourceTermResult.semanticTerm
+    alignedArgument.typingResult.targetTermResult.semanticTerm
+    alignedArgument.typingResult.semanticTerm_coherence
+    structuralResult.formationResult
+  exact model.dispatchStrictApply domainReady codomainReady resultReady
+    (strictFunction.castFormationReady functionEq)
+    (strictArgument.castFormationReady argumentEq)
+    domainResult.formationResult codomainResult.formationResult
+    alignedFunction.typingResult alignedArgument.typingResult
+    structuralResult.formationResult coherence
+
+noncomputable def IncDepRawSubstitutionFiberModel.foldStrictPair
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (formationDispatcher : IncDepRawStrictFormationSubstitutionDispatcher)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider)
+    (instantiateProvider : IncDepRawInstantiateFormationCoherenceProvider)
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {first second : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {resultFormation : IncDepRawWellFormed target
+      (codomain.instantiate first)}
+    {firstTyping : IncDepRawHasType target first domain}
+    {secondTyping : IncDepRawHasType target second (codomain.instantiate first)}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (resultReady : IncDepRawCoherentFormationDispatchReady resultFormation)
+    (firstReady : IncDepRawCoherentTypingDispatchReady firstTyping
+      domainFormation)
+    (secondReady : IncDepRawCoherentTypingDispatchReady secondTyping
+      resultFormation)
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult)
+    (firstResult : IncDepRawStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.ofCoherent firstReady)
+      substitutionResult)
+    (secondResult : IncDepRawStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.ofCoherent secondReady)
+      substitutionResult) :
+    let strictFirst :=
+      (IncDepRawStrictTypingDispatchReady.ofCoherent firstReady)
+        |>.castFormationReady
+          (readinessAlignment.alignFormation firstReady.formationReady
+            domainReady)
+    let strictSecond :=
+      (IncDepRawStrictTypingDispatchReady.ofCoherent secondReady)
+        |>.castFormationReady
+          (readinessAlignment.alignFormation secondReady.formationReady
+            resultReady)
+    IncDepRawStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.pairRule domainReady codomainReady
+        resultReady strictFirst strictSecond) substitutionResult := by
+  let domainResult := formationDispatcher.run domainReady targetTree replacements
+  let extendedTree := IncDepRawContextSemanticTree.extend targetTree
+    domainResult.formationResult.targetFormationResult
+  let liftedReplacements := replacements.liftResult domainResult.formationResult
+  let codomainResult := formationDispatcher.run codomainReady extendedTree
+    liftedReplacements
+  let structuralResult := formationDispatcher.run resultReady targetTree
+    replacements
+  let firstEq := readinessAlignment.alignFormation firstReady.formationReady
+    domainReady
+  let secondEq := readinessAlignment.alignFormation secondReady.formationReady
+    resultReady
+  let strictFirst := IncDepRawStrictTypingDispatchReady.ofCoherent firstReady
+  let strictSecond := IncDepRawStrictTypingDispatchReady.ofCoherent secondReady
+  let alignedFirst := (firstResult.castFormationReady firstEq)
+    |>.normalizeFormation rebaseProvider domainResult.formationResult
+  let alignedSecond := (secondResult.castFormationReady secondEq)
+    |>.normalizeFormation rebaseProvider structuralResult.formationResult
+  let coherence := instantiateProvider.dispatch domainResult.formationResult
+    codomainResult.formationResult
+    alignedFirst.typingResult.sourceTermResult.semanticTerm
+    alignedFirst.typingResult.targetTermResult.semanticTerm
+    alignedFirst.typingResult.semanticTerm_coherence
+    structuralResult.formationResult
+  exact model.dispatchStrictPair domainReady codomainReady resultReady
+    (strictFirst.castFormationReady firstEq)
+    (strictSecond.castFormationReady secondEq)
+    domainResult.formationResult codomainResult.formationResult
+    alignedFirst.typingResult structuralResult.formationResult
+    alignedSecond.typingResult coherence
+
 noncomputable def IncDepRawReadyTypingSemanticResult.variable
     {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
     {lookup : IncDepRawLookup context position type}

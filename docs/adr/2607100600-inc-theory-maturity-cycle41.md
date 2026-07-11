@@ -756,7 +756,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   typing recursionは対称なproof-indexed interfaceを介して接続できる。残件はtyping側の再帰実装と、このpairを同時再帰で構成する工程である。
 - typing側のchecked fold branchesとしてvariable/unit/refl/lambdaを実装した。variableはexact type resultをformation dispatcherから取得して
   replacement providerへ渡し、reflはrecursive term resultを選択されたtype resultへalignする。lambdaはdomain dispatch、semantic context extend、
-  replacement lift、codomain dispatch、body normalizeというbinder protocol全体を実行する。残るapply/pair/first/secondの接続でtyping全8枝が揃う。
+  replacement lift、codomain dispatch、body normalizeというbinder protocol全体を実行する。
+- apply/pair/first/secondにもchecked fold branchesを追加し、typing全8 rulesのfold-level combinatorが揃った。各枝はdomain、lifted codomain、必要なら
+  instantiated structural resultを独立dispatchし、recursive term resultsをexact Pi/Sigma/domain/instantiate fiberへnormalizeしてからstrict semantic
+  constructorへ渡す。apply/pair/secondのinstantiate naturalityは明示的coherence providerから取得する。残件はcoherent typing tree上でこれら8枝を
+  選択する単一recursorと、formation dispatcherとのmutual knotの具体化である。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
