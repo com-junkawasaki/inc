@@ -163,6 +163,37 @@ theorem CoherentQuotient.translate_satisfies
       Satisfies (fun incidence => valuation (quotient.classification.classify incidence)) formula :=
   satisfies_map quotient.classification.classify valuation formula
 
+/- Reflection of syntax needs more than quotient compatibility: a genuinely
+   collapsing classifier cannot be inverted.  A supplied left inverse is the
+   precise conservative-translation hypothesis. -/
+structure CoherentQuotientLogicalRetract
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source) where
+  retraction : Q → I
+  left_inverse : ∀ incidence, retraction (quotient.classification.classify incidence) = incidence
+
+theorem CoherentQuotient.reflect_derivation
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    (retract : CoherentQuotientLogicalRetract quotient)
+    {context : List (Formula I)} {formula : Formula I} :
+    Derives (Formula.mapContext quotient.classification.classify context)
+      (formula.map quotient.classification.classify) →
+      Derives context formula :=
+  derives_map_reflect_of_leftInverse quotient.classification.classify retract.retraction
+    retract.left_inverse
+
+theorem CoherentQuotient.translate_derivation_iff
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    (retract : CoherentQuotientLogicalRetract quotient)
+    (context : List (Formula I)) (formula : Formula I) :
+    Derives (Formula.mapContext quotient.classification.classify context)
+      (formula.map quotient.classification.classify) ↔ Derives context formula := by
+  constructor
+  · exact quotient.reflect_derivation retract
+  · exact quotient.translate_derivation
+
 def CoherentQuotient.target_glue_creates_pushout
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
     {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)

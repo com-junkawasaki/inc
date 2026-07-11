@@ -1862,6 +1862,14 @@ noncomputable def terminalCoherentQuotient :
     cases k
     rfl
 
+def terminalCoherentQuotientLogicalRetract :
+    CoherentQuotientLogicalRetract terminalCoherentQuotient where
+  retraction := id
+  left_inverse := by
+    intro incidence
+    cases incidence
+    rfl
+
 example (idx : List Unit) (i k : Unit) (hi : i ∈ idx) (hk : k ∈ idx) :
     boundary_composition terminalChainComplexPushoutIncidence.inc idx i k = 0 :=
   terminalChainComplexPushoutIncidence.boundary_composition_zero idx i k hi hk
