@@ -596,6 +596,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - `model.pair`/`model.first`/`model.second`もcanonical Sigma packageを内部取得する形で追加した。unit/refl/lambda/applyと
   合わせ、variable以外の全typing constructorsがmodel algebraへ入った。残るtyping constructor境界はlookup/replacementを
   接続するvariable dispatchである。
+- `model.variable`を追加し、recursive type result、lookup formation alignment、replacement environment、最終variable
+  equationを既存`toTypingSubstitution`へ接続した。全8 typing shapesと全5 formation shapesにmodel-algebra methodが揃い、
+  残る統合作業はreadiness evidenceをmutual recursionして各methodを選択するstructural dispatcher本体となった。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

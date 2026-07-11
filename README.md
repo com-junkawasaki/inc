@@ -1149,6 +1149,12 @@ It currently establishes:
   `model.second` obtain the canonical Sigma package internally.  Together with
   unit, refl, lambda, and apply, every non-variable typing constructor is now in
   the model algebra.  Variable dispatch remains the lookup/replacement bridge.
+  That final constructor is now exposed as `model.variable`, combining the
+  recursively selected type result with lookup formation alignment, the
+  replacement environment, and the final variable equation.  All eight typing
+  shapes and all five formation shapes therefore have model-algebra methods; the
+  remaining integration task is the mutual structural recursion that selects
+  them from readiness evidence.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

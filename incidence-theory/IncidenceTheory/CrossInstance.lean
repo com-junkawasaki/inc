@@ -7520,6 +7520,45 @@ noncomputable def IncDepRawReadyVariableFormationSemanticResult.toTypingSubstitu
       typeResult.sourceFormationResult.semanticType sourceFormationCoherence)
     targetFormationCoherence variableCoherence).toTyping
 
+noncomputable def IncDepRawSubstitutionFiberModel.variable
+    (_model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType} {position : Nat}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {lookup : IncDepRawLookup target position type}
+    {typeFormation : IncDepRawWellFormed target type}
+    {typeReady : IncDepRawFormationSemanticReady typeFormation}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {targetTree : IncDepRawContextSemanticTree targetResult}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (targetAlignment : IncDepRawReadyVariableFormationSemanticResult
+      (lookup := lookup) typeReady targetTree)
+    (typeResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := typeFormation) substitutionResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult)
+    (sourceFormationCoherence : replacements.semanticType lookup =
+      typeResult.sourceFormationResult.semanticType)
+    (targetFormationCoherence :
+      typeResult.targetFormationResult.semanticType =
+        targetAlignment.formationResult.semanticType)
+    (variableCoherence :
+      typeResult.semanticFiberEquivalence.transport
+          (replacements.typingResultAligned lookup
+            typeResult.sourceFormationResult.semanticType
+            sourceFormationCoherence).semanticTerm =
+        (targetAlignment.toTypingFormation.typingResult.castType
+          targetFormationCoherence.symm).semanticTerm.substitute
+            substitutionResult.semanticSubstitution) :
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := IncDepRawHasType.varRule lookup) typeResult :=
+  targetAlignment.toTypingSubstitution typeResult replacements
+    sourceFormationCoherence targetFormationCoherence variableCoherence
+
 noncomputable def IncDepRawReadyTypingSemanticResult.variable
     {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
     {lookup : IncDepRawLookup context position type}
