@@ -4906,6 +4906,71 @@ noncomputable def completeLogicOfAtomCoding {Atom : Type u}
     CompletePropositionalInternalLogic Atom where
   enumeration := formulaEnumerationOfAtomCoding decodeAtom codeAtom hcode
 
+/- A reusable countable atom presentation.  Keeping the retraction as data
+   makes countability closed under the same sum and product constructors used
+   by incidence structures, and therefore makes completeness compositional. -/
+structure CountableAtomCoding (Atom : Type u) where
+  decode : Nat → Atom
+  code : Atom → Nat
+  decode_code : ∀ atom, decode (code atom) = atom
+
+noncomputable def CountableAtomCoding.formulaEnumeration {Atom : Type u}
+    (coding : CountableAtomCoding Atom) : FormulaEnumeration Atom :=
+  formulaEnumerationOfAtomCoding coding.decode coding.code coding.decode_code
+
+noncomputable def CountableAtomCoding.completeLogic {Atom : Type u}
+    (coding : CountableAtomCoding Atom) : CompletePropositionalInternalLogic Atom :=
+  completeLogicOfAtomCoding coding.decode coding.code coding.decode_code
+
+noncomputable def CountableAtomCoding.sum {Left Right : Type u}
+    (left : CountableAtomCoding Left) (right : CountableAtomCoding Right) :
+    CountableAtomCoding (Sum Left Right) where
+  decode index := if index % 2 = 0 then .inl (left.decode (index / 2))
+    else .inr (right.decode (index / 2))
+  code
+    | .inl atom => 2 * left.code atom
+    | .inr atom => 2 * right.code atom + 1
+  decode_code := by
+    intro atom
+    cases atom with
+    | inl atom =>
+      simp [left.decode_code]
+    | inr atom =>
+      simp [show (2 * right.code atom + 1) / 2 = right.code atom by omega,
+        right.decode_code]
+
+noncomputable def CountableAtomCoding.prod {Left Right : Type u}
+    (left : CountableAtomCoding Left) (right : CountableAtomCoding Right) :
+    CountableAtomCoding (Left × Right) where
+  decode index :=
+    (left.decode (diagonalIndex index), right.decode (diagonalRemainder index))
+  code pair := diagonalPair (left.code pair.1) (right.code pair.2)
+  decode_code := by
+    intro pair
+    apply Prod.ext
+    · simp [diagonalIndex_pair, left.decode_code]
+    · simp [diagonalRemainder_pair, right.decode_code]
+
+theorem CountableAtomCoding.kripke_complete {Atom : Type u}
+    (coding : CountableAtomCoding Atom)
+    (context : List (Formula Atom)) (formula : Formula Atom) :
+    KripkeEntails.{u, u} context formula ↔ Derives context formula :=
+  kripke_entails_iff_derives_of_enumeration coding.formulaEnumeration context formula
+
+theorem CountableAtomCoding.sum_kripke_complete {Left Right : Type u}
+    (left : CountableAtomCoding Left) (right : CountableAtomCoding Right)
+    (context : List (Formula (Sum Left Right)))
+    (formula : Formula (Sum Left Right)) :
+    KripkeEntails.{u, u} context formula ↔ Derives context formula :=
+  (left.sum right).kripke_complete context formula
+
+theorem CountableAtomCoding.prod_kripke_complete {Left Right : Type u}
+    (left : CountableAtomCoding Left) (right : CountableAtomCoding Right)
+    (context : List (Formula (Left × Right)))
+    (formula : Formula (Left × Right)) :
+    KripkeEntails.{u, u} context formula ↔ Derives context formula :=
+  (left.prod right).kripke_complete context formula
+
 /-! The coding retraction is precisely the data needed to apply the generic
    enumeration-based completeness construction.  Keeping this theorem at the
    coding interface makes every countably retracted atom language an immediate

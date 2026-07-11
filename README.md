@@ -76,6 +76,10 @@ It currently establishes:
   countably infinite `Nat` atom language.
   More generally, every atom encoder/decoder retraction supplies the required
   formula enumeration and hence the corresponding Kripke-completeness theorem.
+  These countable atom presentations are closed under disjoint sums and
+  Cartesian products by explicit parity and diagonal codings.  Consequently,
+  the internal languages carried by countably presented `incidenceSum` and
+  `incidenceProd` constructions inherit full Kripke completeness compositionally.
   In the converse direction, every nonderivable finite sequent has a checked
   canonical prime-theory counterworld for the supplied coding.
   For every supplied formula enumeration, a finite context is
