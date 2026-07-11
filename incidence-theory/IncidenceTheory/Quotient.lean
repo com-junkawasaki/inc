@@ -385,6 +385,38 @@ theorem bisimulationQuotientLift_comp
   · intro x
     rfl
 
+theorem BisimulationQuotientClassification.lift_eq_bisimulationQuotientLift
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc) :
+    classification.lift = bisimulationQuotientLift inc
+      classification.classify
+      (fun _ _ bisimilar => classification.respects bisimilar) := by
+  apply bisimulationQuotient_factorization_unique inc classification.classify
+  · intro x
+    rfl
+  · intro x
+    rfl
+
+noncomputable def BisimulationQuotientClassification.equivalence
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc) :
+    IncTypeEquivalence (IncidenceQuotient inc) Q where
+  forward := classification.lift
+  inverse := fun q => Classical.choose (classification.lift_surjective q)
+  inverse_forward := by
+    intro quotient
+    apply classification.lift_injective
+    exact Classical.choose_spec
+      (classification.lift_surjective (classification.lift quotient))
+  forward_inverse := by
+    intro q
+    exact Classical.choose_spec (classification.lift_surjective q)
+
+theorem BisimulationQuotientClassification.equivalence_forward
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc) :
+    classification.equivalence.forward = classification.lift := rfl
+
 /- Concrete confirmation against both faithful instances built so far
    in this project (`natIncidence`, cycle 4; `cycleIncidenceFixed`,
    cycle 27) -- not vacuous, two genuinely different faithful instances
