@@ -1586,6 +1586,103 @@ noncomputable def hfNatIncidenceImageSemiringLaws :
   mul_add := HFNatIncidenceImage.mul_add
   add_mul := HFNatIncidenceImage.add_mul
 
+def HFNatIncidenceImage.le (left right : HFNatIncidenceImage) : Prop :=
+  left.index ≤ right.index
+
+theorem HFNatIncidenceImage.le_refl (value : HFNatIncidenceImage) :
+    value.le value :=
+  Nat.le_refl _
+
+theorem HFNatIncidenceImage.le_trans {first second third : HFNatIncidenceImage} :
+    first.le second → second.le third → first.le third :=
+  Nat.le_trans
+
+theorem HFNatIncidenceImage.le_antisymm {left right : HFNatIncidenceImage} :
+    left.le right → right.le left → left = right := by
+  intro hleft hright
+  apply HFNatIncidenceImage.eq_of_index_eq
+  exact Nat.le_antisymm hleft hright
+
+theorem HFNatIncidenceImage.le_total (left right : HFNatIncidenceImage) :
+    left.le right ∨ right.le left :=
+  Nat.le_total left.index right.index
+
+theorem HFNatIncidenceImage.add_mono
+    {left left' right right' : HFNatIncidenceImage} :
+    left.le left' → right.le right' →
+      (left.add right).le (left'.add right') := by
+  intro hleft hright
+  unfold HFNatIncidenceImage.le
+  rw [HFNatIncidenceImage.index_add, HFNatIncidenceImage.index_add]
+  exact Nat.add_le_add hleft hright
+
+theorem HFNatIncidenceImage.mul_mono
+    {left left' right right' : HFNatIncidenceImage} :
+    left.le left' → right.le right' →
+      (left.mul right).le (left'.mul right') := by
+  intro hleft hright
+  unfold HFNatIncidenceImage.le
+  rw [HFNatIncidenceImage.index_mul, HFNatIncidenceImage.index_mul]
+  exact Nat.mul_le_mul hleft hright
+
+theorem HFNatIncidenceImage.add_left_cancel
+    {fixed left right : HFNatIncidenceImage} :
+    fixed.add left = fixed.add right → left = right := by
+  intro equal
+  apply HFNatIncidenceImage.eq_of_index_eq
+  have indexEqual := congrArg HFNatIncidenceImage.index equal
+  rw [HFNatIncidenceImage.index_add, HFNatIncidenceImage.index_add] at indexEqual
+  exact Nat.add_left_cancel indexEqual
+
+theorem HFNatIncidenceImage.add_right_cancel
+    {fixed left right : HFNatIncidenceImage} :
+    left.add fixed = right.add fixed → left = right := by
+  intro equal
+  apply HFNatIncidenceImage.eq_of_index_eq
+  have indexEqual := congrArg HFNatIncidenceImage.index equal
+  rw [HFNatIncidenceImage.index_add, HFNatIncidenceImage.index_add] at indexEqual
+  exact Nat.add_right_cancel indexEqual
+
+theorem hfNatIncidenceImageZero_ne_one :
+    hfNatIncidenceImageZero ≠ hfNatIncidenceImageOne := by
+  intro equal
+  have indexEqual := congrArg HFNatIncidenceImage.index equal
+  unfold hfNatIncidenceImageZero hfNatIncidenceImageOne at indexEqual
+  rw [HFNatIncidenceImage.index_encode, HFNatIncidenceImage.index_encode] at indexEqual
+  cases indexEqual
+
+structure HFNatIncidenceImageOrderedSemiringLaws where
+  semiring : HFNatIncidenceImageSemiringLaws
+  le : HFNatIncidenceImage → HFNatIncidenceImage → Prop
+  le_refl : ∀ value, le value value
+  le_trans : ∀ {first second third},
+    le first second → le second third → le first third
+  le_antisymm : ∀ {left right}, le left right → le right left → left = right
+  le_total : ∀ left right, le left right ∨ le right left
+  add_mono : ∀ {left left' right right'},
+    le left left' → le right right' → le (semiring.add left right) (semiring.add left' right')
+  mul_mono : ∀ {left left' right right'},
+    le left left' → le right right' → le (semiring.mul left right) (semiring.mul left' right')
+  zero_ne_one : semiring.zero ≠ semiring.one
+  add_left_cancel : ∀ {fixed left right},
+    semiring.add fixed left = semiring.add fixed right → left = right
+  add_right_cancel : ∀ {fixed left right},
+    semiring.add left fixed = semiring.add right fixed → left = right
+
+noncomputable def hfNatIncidenceImageOrderedSemiringLaws :
+    HFNatIncidenceImageOrderedSemiringLaws where
+  semiring := hfNatIncidenceImageSemiringLaws
+  le := HFNatIncidenceImage.le
+  le_refl := HFNatIncidenceImage.le_refl
+  le_trans := HFNatIncidenceImage.le_trans
+  le_antisymm := HFNatIncidenceImage.le_antisymm
+  le_total := HFNatIncidenceImage.le_total
+  add_mono := HFNatIncidenceImage.add_mono
+  mul_mono := HFNatIncidenceImage.mul_mono
+  zero_ne_one := hfNatIncidenceImageZero_ne_one
+  add_left_cancel := HFNatIncidenceImage.add_left_cancel
+  add_right_cancel := HFNatIncidenceImage.add_right_cancel
+
 /- Graph with nodes and edges as incidences. We take I as a sum of Node | Edge. -/
 inductive GId where | node (n : Nat) | edge (e : Nat)
 deriving DecidableEq, Repr
