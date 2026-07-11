@@ -6886,6 +6886,72 @@ structure IncDepRawInstantiateFormationCoherenceProvider where
     IncDepRawInstantiateFormationCoherence domainResult codomainResult
       sourceArgument targetArgument argumentCoherence structuralResult
 
+structure IncDepRawCanonicalInstantiateFormationCoherenceProvider where
+  provideCanonical : ∀
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {argument : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    (instantiatedFormation : IncDepRawWellFormed target
+      (codomain.instantiate argument))
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (codomainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := codomainFormation) domainResult.liftSubstitution)
+    (sourceArgument : IncTerm domainResult.sourceFormationResult.semanticType)
+    (targetArgument : IncTerm domainResult.targetFormationResult.semanticType)
+    (argumentCoherence :
+      domainResult.semanticFiberEquivalence.transport sourceArgument =
+        targetArgument.substitute substitutionResult.semanticSubstitution),
+    IncDepRawInstantiateFormationCoherence domainResult codomainResult
+      sourceArgument targetArgument argumentCoherence
+      (IncDepRawFormationSubstitutionFiberResult.instantiateCanonical
+        instantiatedFormation domainResult codomainResult sourceArgument
+        targetArgument argumentCoherence)
+
+noncomputable def incDepRawCanonicalInstantiateFormationCoherenceProvider :
+    IncDepRawCanonicalInstantiateFormationCoherenceProvider where
+  provideCanonical := IncDepRawInstantiateFormationCoherence.canonical
+
+noncomputable def IncDepRawCanonicalInstantiateFormationCoherenceProvider.dispatch
+    (provider : IncDepRawCanonicalInstantiateFormationCoherenceProvider)
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {argument : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    (instantiatedFormation : IncDepRawWellFormed target
+      (codomain.instantiate argument))
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (codomainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := codomainFormation) domainResult.liftSubstitution)
+    (sourceArgument : IncTerm domainResult.sourceFormationResult.semanticType)
+    (targetArgument : IncTerm domainResult.targetFormationResult.semanticType)
+    (argumentCoherence :
+      domainResult.semanticFiberEquivalence.transport sourceArgument =
+        targetArgument.substitute substitutionResult.semanticSubstitution) :
+    IncDepRawInstantiateFormationCoherence domainResult codomainResult
+      sourceArgument targetArgument argumentCoherence
+      (IncDepRawFormationSubstitutionFiberResult.instantiateCanonical
+        instantiatedFormation domainResult codomainResult sourceArgument
+        targetArgument argumentCoherence) :=
+  provider.provideCanonical instantiatedFormation domainResult codomainResult
+    sourceArgument targetArgument argumentCoherence
+
 noncomputable def IncDepRawInstantiateFormationCoherenceProvider.dispatch
     (provider : IncDepRawInstantiateFormationCoherenceProvider)
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}

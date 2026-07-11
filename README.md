@@ -1501,6 +1501,12 @@ It currently establishes:
   from general rebase alone: its alignment component asks for literal semantic-
   type equalities, whereas a rebase supplies fiber equivalences.  The package
   makes this precise boundary visible at every use site.
+  The canonical subcase is nevertheless fully inhabited without assumptions:
+  `incDepRawCanonicalInstantiateFormationCoherenceProvider` supplies coherence
+  whenever the structural result is exactly `instantiateCanonical`.  Its
+  alignment equalities and both rebase equivalences are reflexive.  This
+  separates the constructive canonical fragment from the additional task of
+  relating an independently dispatched structural result to the canonical one.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

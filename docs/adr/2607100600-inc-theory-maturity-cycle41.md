@@ -791,6 +791,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `IncDepRawSubstitutionPreservationHypotheses`へ集約し、`model.preservation hypotheses`を簡潔な公開constructorとした。instantiate coherenceはgeneral
   rebaseだけからは導出できない。前者のalignment fieldはliteral semantic-type equalitiesを要求する一方、後者が与えるのはfiber equivalencesだからである。
   このpackageにより保存定理の正確な仮定境界が利用箇所で明示される。
+- canonical subcaseは無仮定でinhabitできることを`incDepRawCanonicalInstantiateFormationCoherenceProvider`としてpackageした。structural resultが
+  `instantiateCanonical`そのものであればalignment equalitiesとsource/target rebase equivalencesはすべてreflexiveになる。既にconstructiveな
+  canonical fragmentと、独立dispatchされたstructural resultをcanonical resultへ関連付ける追加課題を分離した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
