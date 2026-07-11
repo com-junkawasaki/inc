@@ -1261,6 +1261,31 @@ def hfNatIncidenceFaithfulEmbedding : HFNatIncidenceFaithfulEmbedding where
   embedding := hfNatIncidenceEmbedding
   bisim_iff_eq := hf_vonNeumann_approxBisim_iff_eq
 
+def hfNatIncidenceQuotientEncode (n : Nat) : IncidenceQuotient hfIncidence :=
+  Quotient.mk (approxBisimSetoid hfIncidence) (HFSet.vonNeumann n)
+
+theorem hfNatIncidenceQuotientEncode_injective {m n : Nat} :
+    hfNatIncidenceQuotientEncode m = hfNatIncidenceQuotientEncode n → m = n := by
+  intro equal
+  have bisim : approxBisim hfIncidence
+      (HFSet.vonNeumann m) (HFSet.vonNeumann n) := Quotient.exact equal
+  exact (hf_vonNeumann_approxBisim_iff_eq m n).mp bisim
+
+theorem hfNatIncidenceQuotientEncode_eq_iff (m n : Nat) :
+    hfNatIncidenceQuotientEncode m = hfNatIncidenceQuotientEncode n ↔ m = n := by
+  constructor
+  · exact hfNatIncidenceQuotientEncode_injective
+  · intro equal
+    rw [equal]
+
+structure HFNatIncidenceQuotientEmbedding where
+  encode : Nat → IncidenceQuotient hfIncidence
+  eq_iff : ∀ m n, encode m = encode n ↔ m = n
+
+def hfNatIncidenceQuotientEmbedding : HFNatIncidenceQuotientEmbedding where
+  encode := hfNatIncidenceQuotientEncode
+  eq_iff := hfNatIncidenceQuotientEncode_eq_iff
+
 /- Graph with nodes and edges as incidences. We take I as a sum of Node | Edge. -/
 inductive GId where | node (n : Nat) | edge (e : Nat)
 deriving DecidableEq, Repr
