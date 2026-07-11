@@ -538,6 +538,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - Pi/Sigma双方にcanonical `dependentEquiv`と`ofCodomainCoherence`を追加した。codomain mapは任意入力でなくrecursive
   codomain formation resultのactual fiber equivalenceから構成され、外部入力は不可欠な二round-trip lawだけである。
   これにより後続lambda/pair/projection typing branchでformationが使うmapとterm coherenceが使うmapの同一性を保持する。
+- `IncDependentFiberEquiv.piForward_eq_of_pointwise`でpointwise codomain transportをdependent function equalityへ
+  liftし、uniform typing-substitution `.lambda` constructorを実装した。recursive domain/codomain/body resultsとPiの
+  round-trip lawsからtarget/source lambda interpretationおよび最終term coherenceをsorry-freeで構成し、lambda分岐を
+  end-to-endで閉じた。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

@@ -1065,6 +1065,11 @@ It currently establishes:
   `ofCodomainCoherence` asks only for the two unavoidable round-trip laws.  This
   preserves the map identity needed by lambda, pair, and projection substitution
   branches.
+  Lambda substitution is now closed end to end.  The general
+  `piForward_eq_of_pointwise` lemma lifts pointwise codomain transport to an
+  equality of dependent functions.  The uniform `.lambda` constructor combines
+  recursive domain, codomain, and body results with the Pi round-trip laws and
+  derives the final substituted-lambda coherence without an extra term equation.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

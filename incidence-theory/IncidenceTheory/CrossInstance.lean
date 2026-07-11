@@ -3272,8 +3272,32 @@ theorem IncDependentFiberEquiv.piBackward_apply
     (sourceValue : sourceDomain) :
     dependentEquiv.piBackward targetFunction sourceValue =
       (dependentEquiv.codomainEquiv sourceValue).backward
-        (targetFunction (domainEquiv.forward sourceValue)) := by
+      (targetFunction (domainEquiv.forward sourceValue)) := by
   rfl
+
+theorem IncDependentFiberEquiv.piForward_eq_of_pointwise
+    {sourceDomain targetDomain : Type u}
+    {domainEquiv : IncFiberEquiv sourceDomain targetDomain}
+    {sourceCodomain : sourceDomain → Type u}
+    {targetCodomain : targetDomain → Type u}
+    (dependentEquiv : IncDependentFiberEquiv domainEquiv
+      sourceCodomain targetCodomain)
+    (sourceFunction : ∀ value, sourceCodomain value)
+    (targetFunction : ∀ value, targetCodomain value)
+    (pointwise : ∀ sourceValue,
+      (dependentEquiv.codomainEquiv sourceValue).forward
+          (sourceFunction sourceValue) =
+        targetFunction (domainEquiv.forward sourceValue)) :
+    dependentEquiv.piForward sourceFunction = targetFunction := by
+  funext targetValue
+  rw [dependentEquiv.piForward_apply, pointwise]
+  have transport_section {first second : targetDomain}
+      (coherence : first = second) :
+      Eq.mp (congrArg targetCodomain coherence) (targetFunction first) =
+        targetFunction second := by
+    cases coherence
+    rfl
+  exact transport_section (domainEquiv.forward_backward targetValue)
 
 structure IncDependentPiFiberEquiv
     {sourceDomain targetDomain : Type u}
@@ -6037,6 +6061,62 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.refl
       semanticTerm_coherence := ?_ }
   funext assignment
   apply IncIdentityType.witness_irrel
+
+noncomputable def IncDepRawTypingSubstitutionFiberResult.lambda
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {body : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {bodyTyping : IncDepRawHasType (domain :: target) body codomain}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (codomainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := codomainFormation)
+      domainResult.liftSubstitution)
+    (backward_forward : ∀ assignment function,
+      (IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
+        domainResult codomainResult assignment).piBackward
+        ((IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
+          domainResult codomainResult assignment).piForward function) = function)
+    (forward_backward : ∀ assignment function,
+      (IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
+        domainResult codomainResult assignment).piForward
+        ((IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
+          domainResult codomainResult assignment).piBackward function) = function)
+    (bodyResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := bodyTyping) codomainResult) :
+    let piResult :=
+      IncDepRawPiFormationSubstitutionFiberResult.ofCodomainCoherence
+        domainResult codomainResult backward_forward forward_backward
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := IncDepRawHasType.lambdaRule domainFormation bodyTyping)
+      piResult.toFormationFiberResult := by
+  dsimp
+  let piResult :=
+    IncDepRawPiFormationSubstitutionFiberResult.ofCodomainCoherence
+      domainResult codomainResult backward_forward forward_backward
+  refine
+    { targetTermResult := IncDepRawTypingSemanticResult.lambda
+        bodyResult.targetTermResult
+      sourceTermResult := IncDepRawTypingSemanticResult.lambda
+        bodyResult.sourceTermResult
+      semanticTerm_coherence := ?_ }
+  funext assignment
+  exact
+    (piResult.fiberEquiv assignment).dependentEquiv.piForward_eq_of_pointwise
+      (fun value => bodyResult.sourceTermResult.semanticTerm
+        ⟨assignment, value⟩)
+      (fun value => bodyResult.targetTermResult.semanticTerm
+        ⟨substitutionResult.semanticSubstitution assignment, value⟩)
+      (fun sourceValue => congrFun bodyResult.semanticTerm_coherence
+        ⟨assignment, sourceValue⟩)
 
 def IncDepRawTypingFormationSemanticResult.unit
     {context : List IncDepRawType}
