@@ -7230,6 +7230,56 @@ noncomputable def BehavioralQuotientEquivalenceCriterion.quotientEquivalence
       intro targetClass
       exact Classical.choose_spec (surjective targetClass) }
 
+noncomputable def behavioralQuotientCriterionOfBijectiveMap
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : BehavioralBoundaryShapeTranslation source target)
+    (injective : ∀ {left right : IncidenceQuotient source},
+      translation.mapBisimulationQuotient left =
+        translation.mapBisimulationQuotient right → left = right)
+    (surjective : ∀ targetClass : IncidenceQuotient target,
+      ∃ sourceClass : IncidenceQuotient source,
+        translation.mapBisimulationQuotient sourceClass = targetClass) :
+    BehavioralQuotientEquivalenceCriterion source target where
+  embedding := {
+    toBehavioralBoundaryShapeTranslation := translation
+    reflectsBisimulation := by
+      intro i j targetBisimilar
+      exact @Quotient.exact I (approxBisimSetoid source) i j
+        (injective (@Quotient.sound J (approxBisimSetoid target)
+          (translation.map i) (translation.map j) targetBisimilar)) }
+  essentiallySurjective := by
+    intro j
+    obtain ⟨sourceClass, imageEqual⟩ :=
+      surjective (Quotient.mk (approxBisimSetoid target) j)
+    obtain ⟨i, representativeEqual⟩ := Quotient.exists_rep sourceClass
+    refine ⟨i, ?_⟩
+    apply @Quotient.exact J (approxBisimSetoid target)
+      (translation.map i) j
+    have mappedRepresentativeEqual :=
+      congrArg translation.mapBisimulationQuotient representativeEqual
+    exact mappedRepresentativeEqual.trans imageEqual
+
+theorem behavioralQuotientCriterion_iff_quotientMap_bijective
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : BehavioralBoundaryShapeTranslation source target) :
+    (∃ criterion : BehavioralQuotientEquivalenceCriterion source target,
+      criterion.embedding.toBehavioralBoundaryShapeTranslation = translation) ↔
+    ((∀ {left right : IncidenceQuotient source},
+        translation.mapBisimulationQuotient left =
+          translation.mapBisimulationQuotient right → left = right) ∧
+      (∀ targetClass : IncidenceQuotient target,
+        ∃ sourceClass : IncidenceQuotient source,
+          translation.mapBisimulationQuotient sourceClass = targetClass)) := by
+  constructor
+  · rintro ⟨criterion, underlyingEq⟩
+    cases underlyingEq
+    exact criterion.quotientMap_bijective
+  · rintro ⟨injective, surjective⟩
+    exact ⟨behavioralQuotientCriterionOfBijectiveMap translation
+      injective surjective, rfl⟩
+
 theorem BehavioralQuotientEquivalenceCriterion.quotientEquivalence_forward
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
     {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
