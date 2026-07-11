@@ -6195,6 +6195,31 @@ def IncDepRawStrictTypingDispatchReady.formationDispatchReady
     IncDepRawFormationDispatchReady formation :=
   formationReady.toDispatchReady
 
+def IncDepRawStrictTypingDispatchReady.castFormationReady
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    {firstReady secondReady : IncDepRawCoherentFormationDispatchReady formation}
+    (ready : IncDepRawStrictTypingDispatchReady typing firstReady)
+    (readinessEq : firstReady = secondReady) :
+    IncDepRawStrictTypingDispatchReady typing secondReady := by
+  cases readinessEq
+  exact ready
+
+def IncDepRawCoherentFormationDispatchReady.identityStrict
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {leftTyping : IncDepRawHasType context left type}
+    {rightTyping : IncDepRawHasType context right type}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (leftReady : IncDepRawStrictTypingDispatchReady leftTyping typeReady)
+    (rightReady : IncDepRawStrictTypingDispatchReady rightTyping typeReady) :
+    IncDepRawCoherentFormationDispatchReady
+      (IncDepRawWellFormed.identity typeFormation leftTyping rightTyping) :=
+  IncDepRawCoherentFormationDispatchReady.identity typeReady leftReady.ready
+    rightReady.ready
+
 def IncDepRawStrictTypingDispatchReady.varRule
     {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
     {lookup : IncDepRawLookup context position type}
@@ -6320,8 +6345,8 @@ def IncDepRawStrictTypingDispatchReady.reflRule
     (termReady : IncDepRawStrictTypingDispatchReady termTyping typeReady) :
     IncDepRawStrictTypingDispatchReady
       (IncDepRawHasType.reflRule termTyping)
-      (IncDepRawCoherentFormationDispatchReady.identity typeReady
-        termReady.ready termReady.ready) where
+      (IncDepRawCoherentFormationDispatchReady.identityStrict typeReady
+        termReady termReady) where
   ready := IncDepRawCoherentTypingDispatchReady.reflRule typeReady
     termReady.ready
   formationReady_eq := rfl

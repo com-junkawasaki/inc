@@ -1366,6 +1366,12 @@ It currently establishes:
   for the binder case, eliminates the body's stored equality once.  The full
   strict typing syntax tree can therefore be built compositionally without the
   global alignment provider.
+  `identityStrict` now constructs Identity formation readiness only from endpoint
+  typing trees indexed by the same type readiness, and the strict reflexivity
+  constructor uses it.  `castFormationReady` transports a strict typing tree
+  along an explicit equality of readiness evidence.  Nested Identity nodes and
+  the occasional equality exposed by binder decomposition can therefore remain
+  inside the strict discipline.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

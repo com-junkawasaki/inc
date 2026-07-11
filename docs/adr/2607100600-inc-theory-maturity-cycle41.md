@@ -725,6 +725,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - strict constructorをtyping全8 rules（variable/unit/lambda/application/pair/両projection/reflexivity）へ追加した。各constructorは
   親が要求するformation-readiness evidenceをdefinitionally返し、binder caseだけbodyが保持するequalityを一度eliminateする。
   full strict typing syntax treeをglobal alignment providerなしでcompositionalに構築できる。
+- `identityStrict`を追加し、同じtype readinessでindexされたendpoint typing treeだけからIdentity formation readinessを構成する。
+  strict reflexivity constructorもこれを使用する。`castFormationReady`はreadiness evidenceの明示的equalityに沿ってstrict typing
+  treeをtransportする。nested Identity nodeとbinder decompositionで現れるequalityをstrict discipline内に保持できる。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
