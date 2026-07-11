@@ -1048,6 +1048,12 @@ It currently establishes:
   variable equations are definitional.  `liftFiber_ofEq` proves that this is a
   conservative extension of the previous equality-based lift.  This supplies the
   semantic substitution needed to recurse into Pi/Sigma codomains.
+  That recursion is now wired into the formation API.  A domain result exposes
+  `liftSubstitution`; Pi and Sigma `ofCodomainResult` constructors consume a
+  formation-substitution result recursively computed under that lift.  The
+  direct uniform `.pi` and `.sigma` constructors then return the parent result,
+  leaving only the genuinely necessary dependent round-trip coherence as branch
+  input.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

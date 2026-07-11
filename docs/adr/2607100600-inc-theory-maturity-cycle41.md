@@ -528,6 +528,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `IncDepRawSubstitutionSemanticResult.liftFiber`を追加した。projectionとnewest-variableの計算則はdefinitionally成立し、
   `liftFiber_ofEq`で従来のequality-based `lift`との一致も証明した。これによりdomain interpretationが等式でなく
   fiber equivalenceとして得られるPi/Sigma formation substitutionでもcodomainへ再帰できる。
+- domain formation resultから`liftSubstitution`を公開し、Pi/Sigmaの`ofCodomainResult`がそのlift下で再帰計算した
+  codomain formation-substitution resultを直接消費するよう接続した。さらにuniform `.pi`/`.sigma` constructorが
+  parent formation resultを返す。binder branchの入力はrecursive domain/codomain resultsと不可欠なdependent
+  round-trip coherenceだけになり、total dispatcherの実際の再帰形が確定した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
