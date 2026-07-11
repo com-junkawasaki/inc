@@ -494,6 +494,45 @@ theorem BisimulationQuotientClassification.targetEquivalence_symm
   rw [first.targetEquivalence_classify second] at inverseForward
   exact inverseForward
 
+noncomputable def BisimulationQuotientClassification.transportTarget
+    {I R T Q Q' : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (equivalence : IncTypeEquivalence Q Q') :
+    BisimulationQuotientClassification (Q := Q') inc where
+  classify := equivalence.forward ∘ classification.classify
+  respects := by
+    intro x y bisimilar
+    exact congrArg equivalence.forward (classification.respects bisimilar)
+  reflects := by
+    intro x y imagesEqual
+    apply classification.reflects
+    have inverseImages := congrArg equivalence.inverse imagesEqual
+    simpa [Function.comp_apply, equivalence.inverse_forward] using inverseImages
+  surjective := by
+    intro q'
+    rcases classification.surjective (equivalence.inverse q') with ⟨x, hx⟩
+    refine ⟨x, ?_⟩
+    change equivalence.forward (classification.classify x) = q'
+    rw [hx, equivalence.forward_inverse]
+
+theorem BisimulationQuotientClassification.transportTarget_classify
+    {I R T Q Q' : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (equivalence : IncTypeEquivalence Q Q') (x : I) :
+    (classification.transportTarget equivalence).classify x =
+      equivalence.forward (classification.classify x) := rfl
+
+theorem BisimulationQuotientClassification.targetEquivalence_transportTarget
+    {I R T Q Q' : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (equivalence : IncTypeEquivalence Q Q') :
+    classification.targetEquivalence
+        (classification.transportTarget equivalence) = equivalence := by
+  apply IncTypeEquivalence.ext_forward
+  exact (classification.targetEquivalence_unique
+    (classification.transportTarget equivalence) equivalence.forward
+    (fun _ => rfl)).symm
+
 /- Concrete confirmation against both faithful instances built so far
    in this project (`natIncidence`, cycle 4; `cycleIncidenceFixed`,
    cycle 27) -- not vacuous, two genuinely different faithful instances
