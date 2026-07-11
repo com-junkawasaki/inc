@@ -239,6 +239,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   readiness、canonical preservation hypothesesを束ね、`interpretCertifiedCanonical`がstrict semantic resultとcoherenceを返す。
   `IncDepRawCertifiedCanonicalSemanticSynthesizer`はこの構成を全certified judgmentsへ量化し、与えられれば`interpretCertified`と
   `interpretCertified_coherent`が一般interpreterを生成する。したがって残件はrecursive interpretationではなく、このsynthesizerのinhabitationそのものである。
+- closed dependent pairについて`incDepRawDependentPairCanonicalSemanticInput`を構成し、empty context semantics、pair coherent readiness、canonical
+  hypothesesを実際にpackageした。`interpretCertifiedDependentPair`はこのcertified inputのinterpretationが既存`preserveDependentPair` resultと`rfl`で
+  一致することを示す。synthesis packageは実行可能でpreservation implementationとdefinitionally合成し、残件はAPI修正でなくuniform package生成である。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

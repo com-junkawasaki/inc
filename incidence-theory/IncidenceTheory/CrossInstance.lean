@@ -12299,6 +12299,22 @@ theorem IncDepRawSubstitutionFiberModel.preserveDependentPair_coherent
   exact (model.preserveDependentPair hypotheses).typingResult
     |>.semanticTerm_coherence
 
+def incDepRawDependentPairCanonicalSemanticInput
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses) :
+    IncDepRawCertifiedCanonicalSemanticInput incDepRawDependentPair_certified where
+  contextResult := incDepRawEmptyContextSemantic
+  contextTree := incDepRawEmptyContextSemanticTree
+  readiness := incDepRawDependentPairCoherentReady
+  preservationHypotheses := hypotheses
+
+theorem IncDepRawSubstitutionFiberModel.interpretCertifiedDependentPair
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses) :
+    model.interpretCertifiedCanonical
+        (incDepRawDependentPairCanonicalSemanticInput hypotheses) =
+      model.preserveDependentPair hypotheses :=
+  rfl
+
 def incDepRawDependentPairFirstCoherentReady :
     IncDepRawCoherentTypingDispatchReady incDepRawDependentPair_first_hasType
       (IncDepRawWellFormed.unit (context := [])) :=

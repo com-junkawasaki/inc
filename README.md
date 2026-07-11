@@ -611,6 +611,14 @@ It currently establishes:
   `interpretCertified_coherent` proves its semantic substitution law.  Thus the
   remaining synthesis problem has an exact Lean type and no longer includes the
   already-complete recursive interpretation itself.
+  The boundary is inhabited for the closed dependent-pair example by
+  `incDepRawDependentPairCanonicalSemanticInput`.  It supplies the empty context
+  semantics, the pair's coherent readiness tree, and the explicit canonical
+  hypotheses.  `interpretCertifiedDependentPair` proves by `rfl` that interpreting
+  this certified input is exactly the previously checked
+  `preserveDependentPair` result.  Hence the synthesis package is executable and
+  composes definitionally with the preservation implementation; the remaining
+  universal task is producing such packages uniformly, not repairing their API.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
