@@ -125,6 +125,15 @@ It currently establishes:
   The generic `incidenceProd` and `incidenceSum` constructors lift to this packaged
   level, so composing presented incidence structures simultaneously composes their
   carrier, countable internal language, and checked Kripke completeness theorem.
+  Work toward removing the global countability requirement now has a checked
+  finite-support layer: every formula exposes its finite atom list, every
+  context and sequent expose their combined finite support, and atom maps that
+  agree only on that support are proved to induce identical formulas and
+  contexts.  In particular, an encode/decode pair need be a left inverse only
+  on the displayed sequent support for formula and context translation to
+  round-trip exactly.  Constructing the corresponding finite code/retraction
+  and transporting Kripke countermodels through it remain the next steps
+  toward completeness for arbitrary, possibly uncountable, carriers.
   This is instantiated non-vacuously for both `natIncidence × natIncidence` and
   `natIncidence ⊕ natIncidence`: consistent contexts have Kripke models, and every
   underivable formula has a canonical prime-theory counterworld in each language.

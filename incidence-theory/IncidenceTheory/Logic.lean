@@ -26,6 +26,59 @@ def Formula.map {Atom Atom' : Type u} (f : Atom → Atom') : Formula Atom → Fo
   | .or p q => .or (p.map f) (q.map f)
   | .imp p q => .imp (p.map f) (q.map f)
 
+def formulaAtoms {Atom : Type u} : Formula Atom → List Atom
+  | .atom atom => [atom]
+  | .top => []
+  | .bot => []
+  | .and left right => formulaAtoms left ++ formulaAtoms right
+  | .or left right => formulaAtoms left ++ formulaAtoms right
+  | .imp left right => formulaAtoms left ++ formulaAtoms right
+
+theorem Formula.atom_mem_atoms {Atom : Type u} (atom : Atom) :
+    atom ∈ formulaAtoms (Formula.atom atom) := by
+  simp [formulaAtoms]
+
+theorem Formula.map_eq_of_agree_on_atoms
+    {Atom Atom' : Type u} (first second : Atom → Atom') :
+    ∀ formula : Formula Atom,
+      (∀ atom, atom ∈ formulaAtoms formula → first atom = second atom) →
+      formula.map first = formula.map second := by
+  intro formula
+  induction formula with
+  | atom atom =>
+      intro agree
+      simp only [Formula.map]
+      rw [agree atom (by simp [formulaAtoms])]
+  | top => intro _; rfl
+  | bot => intro _; rfl
+  | and left right ihLeft ihRight =>
+      intro agree
+      change (∀ atom, atom ∈ formulaAtoms left ++ formulaAtoms right →
+        first atom = second atom) at agree
+      simp only [Formula.map]
+      rw [ihLeft (fun atom member => agree atom
+        (List.mem_append.mpr (Or.inl member))),
+        ihRight (fun atom member => agree atom
+          (List.mem_append.mpr (Or.inr member)))]
+  | or left right ihLeft ihRight =>
+      intro agree
+      change (∀ atom, atom ∈ formulaAtoms left ++ formulaAtoms right →
+        first atom = second atom) at agree
+      simp only [Formula.map]
+      rw [ihLeft (fun atom member => agree atom
+        (List.mem_append.mpr (Or.inl member))),
+        ihRight (fun atom member => agree atom
+          (List.mem_append.mpr (Or.inr member)))]
+  | imp left right ihLeft ihRight =>
+      intro agree
+      change (∀ atom, atom ∈ formulaAtoms left ++ formulaAtoms right →
+        first atom = second atom) at agree
+      simp only [Formula.map]
+      rw [ihLeft (fun atom member => agree atom
+        (List.mem_append.mpr (Or.inl member))),
+        ihRight (fun atom member => agree atom
+          (List.mem_append.mpr (Or.inr member)))]
+
 /- Atom translations act strictly functorially on formulas.  These small
    equalities are what permit a faithful incidence translation to reflect,
    rather than merely preserve, derivations below. -/
@@ -122,6 +175,87 @@ theorem formulaSubformulas_trans {Atom : Type u} {formula subformula nested : Fo
 def Formula.mapContext {Atom Atom' : Type u} (f : Atom → Atom')
     (context : List (Formula Atom)) : List (Formula Atom') :=
   context.map (Formula.map f)
+
+def Formula.contextAtoms {Atom : Type u}
+    (context : List (Formula Atom)) : List Atom :=
+  context.flatMap formulaAtoms
+
+theorem Formula.atoms_subset_contextAtoms_of_mem
+    {Atom : Type u} {formula : Formula Atom} {context : List (Formula Atom)}
+    (formulaMember : formula ∈ context) :
+    ∀ atom, atom ∈ formulaAtoms formula → atom ∈ Formula.contextAtoms context := by
+  intro atom atomMember
+  simp only [Formula.contextAtoms, List.mem_flatMap]
+  exact ⟨formula, formulaMember, atomMember⟩
+
+theorem Formula.mapContext_eq_of_agree_on_contextAtoms
+    {Atom Atom' : Type u} (first second : Atom → Atom')
+    (context : List (Formula Atom))
+    (agree : ∀ atom, atom ∈ Formula.contextAtoms context →
+      first atom = second atom) :
+    Formula.mapContext first context = Formula.mapContext second context := by
+  apply List.map_congr_left
+  intro formula formulaMember
+  apply Formula.map_eq_of_agree_on_atoms
+  intro atom atomMember
+  exact agree atom
+    (Formula.atoms_subset_contextAtoms_of_mem formulaMember atom atomMember)
+
+def Formula.sequentAtoms {Atom : Type u}
+    (context : List (Formula Atom)) (conclusion : Formula Atom) : List Atom :=
+  Formula.contextAtoms context ++ formulaAtoms conclusion
+
+theorem Formula.map_roundtrip_of_leftInverse_on_atoms
+    {Atom Code : Type u} (encode : Atom → Code) (decode : Code → Atom)
+    (formula : Formula Atom)
+    (leftInverse : ∀ atom, atom ∈ formulaAtoms formula →
+      decode (encode atom) = atom) :
+    (formula.map encode).map decode = formula := by
+  rw [Formula.map_comp]
+  calc
+    formula.map (decode ∘ encode) = formula.map id := by
+      apply Formula.map_eq_of_agree_on_atoms
+      intro atom member
+      exact leftInverse atom member
+    _ = formula := Formula.map_id formula
+
+theorem Formula.mapContext_roundtrip_of_leftInverse_on_contextAtoms
+    {Atom Code : Type u} (encode : Atom → Code) (decode : Code → Atom)
+    (context : List (Formula Atom))
+    (leftInverse : ∀ atom, atom ∈ Formula.contextAtoms context →
+      decode (encode atom) = atom) :
+    Formula.mapContext decode (Formula.mapContext encode context) = context := by
+  induction context with
+  | nil => rfl
+  | cons formula rest ih =>
+      simp only [Formula.mapContext, List.map_cons]
+      congr 1
+      · apply Formula.map_roundtrip_of_leftInverse_on_atoms
+        intro atom member
+        apply leftInverse atom
+        simp only [Formula.contextAtoms, List.flatMap_cons, List.mem_append]
+        exact Or.inl member
+      · apply ih
+        intro atom member
+        apply leftInverse atom
+        simp only [Formula.contextAtoms, List.flatMap_cons, List.mem_append]
+        exact Or.inr member
+
+theorem Formula.sequent_roundtrip_of_leftInverse_on_support
+    {Atom Code : Type u} (encode : Atom → Code) (decode : Code → Atom)
+    (context : List (Formula Atom)) (conclusion : Formula Atom)
+    (leftInverse : ∀ atom,
+      atom ∈ Formula.sequentAtoms context conclusion →
+        decode (encode atom) = atom) :
+    Formula.mapContext decode (Formula.mapContext encode context) = context ∧
+      (conclusion.map encode).map decode = conclusion := by
+  constructor
+  · apply Formula.mapContext_roundtrip_of_leftInverse_on_contextAtoms
+    intro atom member
+    exact leftInverse atom (List.mem_append.mpr (Or.inl member))
+  · apply Formula.map_roundtrip_of_leftInverse_on_atoms
+    intro atom member
+    exact leftInverse atom (List.mem_append.mpr (Or.inr member))
 
 theorem Formula.mapContext_id {Atom : Type u} (context : List (Formula Atom)) :
     Formula.mapContext id context = context := by

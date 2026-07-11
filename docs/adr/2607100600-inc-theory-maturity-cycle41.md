@@ -65,6 +65,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   class へ collapse し、boundary/glue/guard invariance、no-self-loop、glue type
   preservation をすべて満たす。certificate から Nat carrier 上の canonical quotient
   Incidence を構成し、その glue が正確に加法、guard が常に true であることを証明済み。
+- 非可算 carrier の完全性へ向け、formula/context/sequent が使用する atom の有限 list
+  support を定義した。atom map が support 上だけで一致すれば formula/context translation
+  が一致し、encode/decode が sequent support 上だけで left inverse なら context と結論が
+  正確に round-trip することを証明済み。global な atom coding を有限 sequent ごとの coding
+  に置き換える基盤であり、有限 code/retraction と Kripke countermodel transport が次段。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」ではなく、非可算 carrier への完全性条件の拡張、Incidence 固有の
