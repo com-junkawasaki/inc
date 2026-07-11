@@ -232,8 +232,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - semantic result APIを任意certified telescopeへ一般化した。well-formed raw contextにsemantic
   contextを割り当て、semantic dependent extensionでcontextを延長し、certified open judgmentに
   contextual typeとそのtermを割り当てる。empty-context derivationのproof indexをcase analysis
-  するclosed-to-general embeddingを構成し、Pi/Sigma例を一般APIへ載せた。全certified judgmentを
-  生成するrecursive constructor interpreter自体は引き続き未完である。
+  するclosed-to-general embeddingを構成し、Pi/Sigma例を一般APIへ載せた。certified judgmentだけから
+  semantic context tree・substitution semantics・replacement・providersを自動生成する無条件interpreterは未完である。一方、それらを明示入力とする
+  provider-relative mutual substitution-preservation interpreterは現在完成済みであり、両者を区別する。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
@@ -589,7 +590,7 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   resultまで直接返すようにした。Identityを除くbase/unit/Pi/Sigmaの4 formation branchesがmodel-dispatchedとなった。
 - model `.identity`がrecursive type resultと左右endpoint typing resultsから5番目のformation resultを返すようにし、
   全5 formation shapesをmodel APIへ統一した。typing側も`.typingUnit`/`.refl`で二つのnon-binder leaf constructorsを
-  model methods化し、pending mutual structural dispatcherが消費するconstructor algebraを具体化した。
+  model methods化した。このconstructor algebraを消費するmutual structural dispatcherは後続更新で完成済みである。
 - `model.lambda`/`model.apply`を追加した。canonical Pi coherence packageはmodel内部で取得され、recursive child results
   （applyでは加えてraw instantiated formation）だけからtyping resultを返す。dispatcherがPi lawsをtyping branchへ
   明示搬送する必要を除去した。
@@ -829,8 +830,8 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
-  packageした。general recursive interpreterのdependent return shapeとsoundness obligationを
-  固定した段階であり、一般再帰関数自体は未完である。
+  packageした。provider-relative substitution-preservation recursorは後続更新で完成した。
+  certified judgmentだけからsemantic inputs/providersを合成する無条件interpreterは未完である。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

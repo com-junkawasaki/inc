@@ -594,7 +594,12 @@ It currently establishes:
   closed result embeds into this general API with proof-index-aware elimination
   of the unique empty-context derivation; the dependent Pi and Sigma examples
   are checked through that embedding.  The recursive constructor interpreter
-  producing these results for every certified judgment remains pending.
+  producing these results from a certified judgment alone remains pending.
+  The now-complete mutual substitution-preservation interpreter instead starts
+  from an explicit semantic context tree, substitution semantics, replacement
+  interpretation, and the documented provider hypotheses.  It proves the
+  recursive semantic step once those inputs exist; it does not synthesize them
+  from bare certification.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
@@ -1139,8 +1144,10 @@ It currently establishes:
   Identity is now model-dispatched from the recursive type and two endpoint
   typing results, completing all five formation shapes.  On the typing side,
   `.typingUnit` and `.refl` expose the two non-binder leaf constructors through
-  the same model API.  This is the constructor algebra consumed by the pending
-  mutual structural dispatcher.
+  the same model API.  This constructor algebra is now consumed by the checked
+  mutual structural dispatcher `preserveFormation`/`preserveTyping` and its
+  canonical variant; this sentence previously described that dispatcher as
+  pending and is retained here only with its current completed status.
   Pi typing is model-dispatched as well.  `model.lambda` and `model.apply` obtain
   the canonical Pi package internally and consume only recursive child results
   (plus the raw instantiated formation required by application).  The dispatcher
@@ -1589,7 +1596,9 @@ It currently establishes:
   with their equality.  The dependent Pi/reflexivity and Sigma/pair judgments
   inhabit the first API, and Pi beta plus both Sigma projection reductions
   inhabit the second.  This fixes the dependent result shape and soundness
-  obligation for the general recursive interpreter, which is still pending.
+  obligation for the unconditional certified-judgment interpreter.  The
+  provider-relative substitution-preservation recursor is complete; automatic
+  construction of its semantic inputs from certification remains pending.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite
