@@ -770,6 +770,13 @@ It currently establishes:
   codomain in intensional Lean.  Composite coherence must therefore retain an
   explicit fiber transport (and its computation law), not merely a family
   equality; no univalence or unchecked equality axiom is assumed.
+  That transport layer is now formalized by `IncFiberEquiv` and
+  `IncTypeInContext.FiberEquiv`.  It carries forward/backward maps with both
+  inverse laws pointwise, supports reflexivity, symmetry, composition and
+  reindexing, and transports semantic terms with checked round-trip equations.
+  Existing formation-substitution equalities embed into this stronger interface,
+  so subsequent Pi/Sigma coherence can consume explicit fiber maps rather than
+  attempting invalid dependent rewriting.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

@@ -348,6 +348,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   Lean内でdependent codomainが使うtransportを決定できない境界も確定した。composite coherenceは
   family equalityだけでなく明示的fiber transportと計算則を保持する必要があり、univalenceや
   unchecked equality axiomは導入しない。
+- explicit transport layerとして`IncFiberEquiv`と`IncTypeInContext.FiberEquiv`を形式化した。
+  fiberごとのforward/backward mapと両inverse law、refl/symm/trans/reindex、semantic termのtransport
+  とround-trip equationを証明した。既存formation-substitution equalityもこの強いinterfaceへ
+  埋め込めるため、Pi/Sigma coherenceは不正なdependent rewriteではなく明示的fiber mapを使える。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

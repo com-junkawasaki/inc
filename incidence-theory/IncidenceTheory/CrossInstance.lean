@@ -2637,6 +2637,95 @@ theorem IncTypeInContext.reindex_comp
       (type.reindex after).reindex before := by
   rfl
 
+structure IncFiberEquiv (source target : Type u) where
+  forward : source → target
+  backward : target → source
+  backward_forward : ∀ value, backward (forward value) = value
+  forward_backward : ∀ value, forward (backward value) = value
+
+structure IncTypeInContext.FiberEquiv
+    {context : IncContext.{u}}
+    (source target : IncTypeInContext context) where
+  fiberEquiv : ∀ assignment,
+    IncFiberEquiv (source assignment) (target assignment)
+
+def IncTypeInContext.FiberEquiv.refl
+    {context : IncContext.{u}} (family : IncTypeInContext context) :
+    IncTypeInContext.FiberEquiv family family where
+  fiberEquiv := fun _ =>
+    { forward := id, backward := id
+      backward_forward := fun _ => rfl
+      forward_backward := fun _ => rfl }
+
+def IncTypeInContext.FiberEquiv.ofEq
+    {context : IncContext.{u}} {source target : IncTypeInContext context}
+    (coherence : source = target) : IncTypeInContext.FiberEquiv source target := by
+  cases coherence
+  exact IncTypeInContext.FiberEquiv.refl source
+
+def IncTypeInContext.FiberEquiv.symm
+    {context : IncContext.{u}} {source target : IncTypeInContext context}
+    (equivalence : IncTypeInContext.FiberEquiv source target) :
+    IncTypeInContext.FiberEquiv target source where
+  fiberEquiv := fun assignment =>
+    { forward := (equivalence.fiberEquiv assignment).backward
+      backward := (equivalence.fiberEquiv assignment).forward
+      backward_forward := (equivalence.fiberEquiv assignment).forward_backward
+      forward_backward := (equivalence.fiberEquiv assignment).backward_forward }
+
+def IncTypeInContext.FiberEquiv.trans
+    {context : IncContext.{u}} {first second third : IncTypeInContext context}
+    (firstEquivalence : IncTypeInContext.FiberEquiv first second)
+    (secondEquivalence : IncTypeInContext.FiberEquiv second third) :
+    IncTypeInContext.FiberEquiv first third where
+  fiberEquiv := fun assignment =>
+    { forward := (secondEquivalence.fiberEquiv assignment).forward ∘
+        (firstEquivalence.fiberEquiv assignment).forward
+      backward := (firstEquivalence.fiberEquiv assignment).backward ∘
+        (secondEquivalence.fiberEquiv assignment).backward
+      backward_forward := by
+        intro value
+        simp only [Function.comp_apply,
+          (secondEquivalence.fiberEquiv assignment).backward_forward,
+          (firstEquivalence.fiberEquiv assignment).backward_forward]
+      forward_backward := by
+        intro value
+        simp only [Function.comp_apply,
+          (firstEquivalence.fiberEquiv assignment).forward_backward,
+          (secondEquivalence.fiberEquiv assignment).forward_backward] }
+
+def IncTypeInContext.FiberEquiv.reindex
+    {sourceContext targetContext : IncContext.{u}}
+    {source target : IncTypeInContext targetContext}
+    (equivalence : IncTypeInContext.FiberEquiv source target)
+    (substitution : sourceContext.Substitution targetContext) :
+    IncTypeInContext.FiberEquiv (source.reindex substitution)
+      (target.reindex substitution) where
+  fiberEquiv := fun assignment =>
+    equivalence.fiberEquiv (substitution assignment)
+
+def IncTypeInContext.FiberEquiv.transport
+    {context : IncContext.{u}} {source target : IncTypeInContext context}
+    (equivalence : IncTypeInContext.FiberEquiv source target)
+    (term : IncTerm source) : IncTerm target :=
+  fun assignment => (equivalence.fiberEquiv assignment).forward (term assignment)
+
+theorem IncTypeInContext.FiberEquiv.transport_symm
+    {context : IncContext.{u}} {source target : IncTypeInContext context}
+    (equivalence : IncTypeInContext.FiberEquiv source target)
+    (term : IncTerm source) :
+    equivalence.symm.transport (equivalence.transport term) = term := by
+  funext assignment
+  exact (equivalence.fiberEquiv assignment).backward_forward (term assignment)
+
+theorem IncTypeInContext.FiberEquiv.symm_transport
+    {context : IncContext.{u}} {source target : IncTypeInContext context}
+    (equivalence : IncTypeInContext.FiberEquiv source target)
+    (term : IncTerm target) :
+    equivalence.transport (equivalence.symm.transport term) = term := by
+  funext assignment
+  exact (equivalence.fiberEquiv assignment).forward_backward (term assignment)
+
 theorem IncTerm.substitute_identity
     {context : IncContext.{u}} {type : IncTypeInContext context}
     (term : IncTerm type) :
@@ -3336,6 +3425,23 @@ structure IncDepRawFormationSubstitutionSemanticResult
   semanticType_coherence : sourceFormationResult.semanticType =
     targetFormationResult.semanticType.reindex
       substitutionResult.semanticSubstitution
+
+def IncDepRawFormationSubstitutionSemanticResult.fiberEquivalence
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawFormationSubstitutionSemanticResult
+      (targetFormation := targetFormation) substitutionResult) :
+    IncTypeInContext.FiberEquiv result.sourceFormationResult.semanticType
+      (result.targetFormationResult.semanticType.reindex
+        substitutionResult.semanticSubstitution) :=
+  IncTypeInContext.FiberEquiv.ofEq result.semanticType_coherence
 
 def IncDepRawFormationSubstitutionSemanticResult.base
     {source target : List IncDepRawType} {index : Nat}
