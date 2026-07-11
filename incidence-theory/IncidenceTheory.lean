@@ -4488,6 +4488,64 @@ noncomputable def IncCategoryEquivalence.strongCoequalizerPreservingFamily
     StrongCoequalizerPreservingFamily equivalence.forward :=
   equivalence.forward_criterion.strongCoequalizerPreservingFamily
 
+noncomputable def IncCategoryEquivalence.mapEqualizer
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D)
+    {source target : CObj} {first second : C.Hom source target}
+    (equalizer : IncEqualizer first second) :
+    IncEqualizer (equivalence.forward.map first)
+      (equivalence.forward.map second) :=
+  (equivalence.strongEqualizerPreservingFamily.preserves equalizer).mapped
+
+theorem IncCategoryEquivalence.mapEqualizer_object
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D)
+    {source target : CObj} {first second : C.Hom source target}
+    (equalizer : IncEqualizer first second) :
+    (equivalence.mapEqualizer equalizer).object =
+      equivalence.forward.obj equalizer.object :=
+  StrongEqualizerPreserving.object_is_image
+    (equivalence.strongEqualizerPreservingFamily.preserves equalizer)
+
+theorem IncCategoryEquivalence.mapEqualizer_inclusion
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D)
+    {source target : CObj} {first second : C.Hom source target}
+    (equalizer : IncEqualizer first second) :
+    HEq (equivalence.mapEqualizer equalizer).inclusion
+      (equivalence.forward.map equalizer.inclusion) :=
+  StrongEqualizerPreserving.inclusion_is_map
+    (equivalence.strongEqualizerPreservingFamily.preserves equalizer)
+
+noncomputable def IncCategoryEquivalence.mapCoequalizer
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D)
+    {source target : CObj} {first second : C.Hom source target}
+    (coequalizer : IncCoequalizer first second) :
+    IncCoequalizer (equivalence.forward.map first)
+      (equivalence.forward.map second) :=
+  (equivalence.strongCoequalizerPreservingFamily.preserves coequalizer).mapped
+
+theorem IncCategoryEquivalence.mapCoequalizer_object
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D)
+    {source target : CObj} {first second : C.Hom source target}
+    (coequalizer : IncCoequalizer first second) :
+    (equivalence.mapCoequalizer coequalizer).object =
+      equivalence.forward.obj coequalizer.object :=
+  StrongEqualizerPreserving.object_is_image
+    (equivalence.strongCoequalizerPreservingFamily.preserves coequalizer)
+
+theorem IncCategoryEquivalence.mapCoequalizer_projection
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D)
+    {source target : CObj} {first second : C.Hom source target}
+    (coequalizer : IncCoequalizer first second) :
+    HEq (equivalence.mapCoequalizer coequalizer).inclusion
+      (equivalence.forward.map coequalizer.inclusion) :=
+  StrongEqualizerPreserving.inclusion_is_map
+    (equivalence.strongCoequalizerPreservingFamily.preserves coequalizer)
+
 structure StrongFiniteLimitColimitPreservingFamily
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (F : IncFunctor C D) extends StrongFiniteBicartesianPreservingFamily F where
