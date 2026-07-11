@@ -1302,6 +1302,24 @@ def IncNaturalIsomorphism.whiskerRight
     intro object
     exact iso.inv_app_hom_app (H.obj object)
 
+def IncNaturalIsomorphism.hcomp
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F G : IncFunctor C D} {H K : IncFunctor D E}
+    (beta : IncNaturalIsomorphism H K)
+    (alpha : IncNaturalIsomorphism F G) :
+    IncNaturalIsomorphism (H.comp F) (K.comp G) where
+  hom := beta.hom.hcomp alpha.hom
+  inv := beta.inv.hcomp alpha.inv
+  hom_inv_id := by
+    rw [← IncNaturalTransformation.hcomp_vcomp_interchange]
+    rw [beta.hom_inv_id, alpha.hom_inv_id]
+    exact IncNaturalTransformation.hcomp_identity F H
+  inv_hom_id := by
+    rw [← IncNaturalTransformation.hcomp_vcomp_interchange]
+    rw [beta.inv_hom_id, alpha.inv_hom_id]
+    exact IncNaturalTransformation.hcomp_identity G K
+
 def IncNaturalIsomorphism.trans
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     {F G H : IncFunctor C D}
