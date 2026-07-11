@@ -28,6 +28,139 @@ import IncidenceTheory.Product
 
 namespace IncidenceCore
 
+structure IncContext where
+  Assignment : Type u
+
+def IncContext.empty : IncContext.{u} :=
+  ⟨ULift.{u} Unit⟩
+
+def IncContext.extend (context : IncContext.{u})
+    (family : context.Assignment → Type u) : IncContext :=
+  ⟨Sigma family⟩
+
+abbrev IncContext.Substitution (source target : IncContext.{u}) : Type u :=
+  source.Assignment → target.Assignment
+
+def IncContext.Substitution.identity (context : IncContext.{u}) :
+    context.Substitution context :=
+  id
+
+def IncContext.Substitution.comp
+    {first second third : IncContext.{u}}
+    (after : second.Substitution third)
+    (before : first.Substitution second) :
+    first.Substitution third :=
+  after ∘ before
+
+theorem IncContext.Substitution.identity_comp
+    {source target : IncContext.{u}}
+    (substitution : source.Substitution target) :
+    (IncContext.Substitution.identity target).comp substitution = substitution := by
+  rfl
+
+theorem IncContext.Substitution.comp_identity
+    {source target : IncContext.{u}}
+    (substitution : source.Substitution target) :
+    substitution.comp (IncContext.Substitution.identity source) = substitution := by
+  rfl
+
+theorem IncContext.Substitution.comp_assoc
+    {first second third fourth : IncContext.{u}}
+    (thirdMap : third.Substitution fourth)
+    (secondMap : second.Substitution third)
+    (firstMap : first.Substitution second) :
+    (thirdMap.comp secondMap).comp firstMap =
+      thirdMap.comp (secondMap.comp firstMap) := by
+  rfl
+
+abbrev IncTypeInContext (context : IncContext.{u}) : Type (u + 1) :=
+  context.Assignment → Type u
+
+abbrev IncTerm {context : IncContext.{u}}
+    (type : IncTypeInContext context) : Type u :=
+  ∀ assignment, type assignment
+
+def IncTypeInContext.reindex
+    {source target : IncContext.{u}}
+    (type : IncTypeInContext target)
+    (substitution : source.Substitution target) :
+    IncTypeInContext source :=
+  fun assignment => type (substitution assignment)
+
+def IncTerm.substitute
+    {source target : IncContext.{u}}
+    {type : IncTypeInContext target}
+    (term : IncTerm type)
+    (substitution : source.Substitution target) :
+    IncTerm (type.reindex substitution) :=
+  fun assignment => term (substitution assignment)
+
+theorem IncTypeInContext.reindex_identity
+    {context : IncContext.{u}} (type : IncTypeInContext context) :
+    type.reindex (IncContext.Substitution.identity context) = type := by
+  rfl
+
+theorem IncTypeInContext.reindex_comp
+    {first second third : IncContext.{u}}
+    (type : IncTypeInContext third)
+    (after : second.Substitution third)
+    (before : first.Substitution second) :
+    type.reindex (after.comp before) =
+      (type.reindex after).reindex before := by
+  rfl
+
+theorem IncTerm.substitute_identity
+    {context : IncContext.{u}} {type : IncTypeInContext context}
+    (term : IncTerm type) :
+    term.substitute (IncContext.Substitution.identity context) = term := by
+  rfl
+
+theorem IncTerm.substitute_comp
+    {first second third : IncContext.{u}}
+    {type : IncTypeInContext third}
+    (term : IncTerm type)
+    (after : second.Substitution third)
+    (before : first.Substitution second) :
+    term.substitute (after.comp before) =
+      (term.substitute after).substitute before := by
+  rfl
+
+def IncContext.extendProjection
+    (context : IncContext.{u}) (family : IncTypeInContext context) :
+    (context.extend family).Substitution context :=
+  Sigma.fst
+
+def IncContext.extendVariable
+    (context : IncContext.{u}) (family : IncTypeInContext context) :
+    IncTerm (family.reindex (context.extendProjection family)) :=
+  Sigma.snd
+
+def IncContext.Substitution.extend
+    {source target : IncContext.{u}}
+    (substitution : source.Substitution target)
+    (family : IncTypeInContext target)
+    (term : IncTerm (family.reindex substitution)) :
+    source.Substitution (target.extend family) :=
+  fun assignment => ⟨substitution assignment, term assignment⟩
+
+theorem IncContext.Substitution.extend_projection
+    {source target : IncContext.{u}}
+    (substitution : source.Substitution target)
+    (family : IncTypeInContext target)
+    (term : IncTerm (family.reindex substitution)) :
+    (target.extendProjection family).comp
+        (substitution.extend family term) = substitution := by
+  rfl
+
+theorem IncContext.Substitution.extend_variable
+    {source target : IncContext.{u}}
+    (substitution : source.Substitution target)
+    (family : IncTypeInContext target)
+    (term : IncTerm (family.reindex substitution)) :
+    (target.extendVariable family).substitute
+        (substitution.extend family term) = term := by
+  rfl
+
 def IncIdentityFamily
     {I R T : Type u} [DecidableEq (I × I)]
     (pairIncidence : Incidence (I × I) R T) :

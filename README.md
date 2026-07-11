@@ -407,7 +407,14 @@ It currently establishes:
   action preserves identity and composition, symmetry is involutive, and
   transport is natural with respect to every dependent-family morphism.  These
   are the core equality/substitution coherence laws needed before adding a
-  full telescope syntax and typing judgment.
+  full telescope syntax and typing judgment.  A semantic context calculus is
+  now present as well: contexts carry assignment types, dependent extension is
+  a Sigma type, substitutions are assignment maps with identity/associative
+  composition, and types and terms reindex functorially.  Extended contexts
+  expose their projection and variable, while substitution extension satisfies
+  both projection and variable beta laws.  What remains is an independent raw
+  telescope/term syntax and inductive typing judgment whose interpretation is
+  this checked semantic calculus.
 - the `inc_to_set` translation packaged as a functor from the discrete
   incidence carrier category to the category of types.  It is always faithful
   but never full or essentially surjective; explicit morphisms and objects

@@ -94,6 +94,12 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   symmetry involution、任意の dependent-family morphism に対する transport naturality を
   証明し、identity elimination を既存 substitution/reindex 層へ接続した。残る依存型
   課題は telescope syntax と typing judgment を明示した完全な context calculus である。
+- semantic context calculus を追加した。context は assignment type、dependent extension
+  は Sigma、substitution は assignment map として定義し、identity/合成/結合則、type
+  reindex と term substitution の identity/合成則を証明した。context extension の
+  projection/variable と substitution extension を構成し、projection/variable beta 則も
+  checked。残るのはこの意味論とは独立した raw telescope/term syntax と inductive
+  typing derivation、および interpretation の soundness である。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」や carrier 可算性の除去ではなく、Incidence 固有の意味論とのさらに
