@@ -9368,6 +9368,90 @@ structure IncDepRawStrictFormationSubstitutionDispatchResult
   formationResult : IncDepRawFormationSubstitutionFiberResult
     (targetFormation := targetFormation) substitutionResult
 
+structure IncDepRawFormationSubstitutionFiberRebaseProvider where
+  provide : ∀
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (first second : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult),
+    IncDepRawFormationSubstitutionFiberRebase first second
+
+def IncDepRawFormationSubstitutionFiberRebaseProvider.rebase
+    (provider : IncDepRawFormationSubstitutionFiberRebaseProvider)
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (first second : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult) :
+    IncDepRawFormationSubstitutionFiberRebase first second :=
+  provider.provide first second
+
+noncomputable def IncDepRawStrictTypingSubstitutionDispatchResult.rebaseFormation
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {targetFormationReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    {targetReady : IncDepRawStrictTypingDispatchReady targetTyping
+      targetFormationReady}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawStrictTypingSubstitutionDispatchResult targetReady
+      substitutionResult)
+    (formationResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult)
+    (rebase : IncDepRawFormationSubstitutionFiberRebase
+      result.formationResult formationResult) :
+    IncDepRawStrictTypingSubstitutionDispatchResult targetReady
+      substitutionResult where
+  formationResult := formationResult
+  typingResult := result.typingResult.rebase rebase
+
+noncomputable def IncDepRawStrictTypingSubstitutionDispatchResult.normalizeFormation
+    (provider : IncDepRawFormationSubstitutionFiberRebaseProvider)
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {targetFormationReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    {targetReady : IncDepRawStrictTypingDispatchReady targetTyping
+      targetFormationReady}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawStrictTypingSubstitutionDispatchResult targetReady
+      substitutionResult)
+    (formationResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult) :
+    IncDepRawStrictTypingSubstitutionDispatchResult targetReady
+      substitutionResult :=
+  result.rebaseFormation formationResult
+    (provider.rebase result.formationResult formationResult)
+
 def IncDepRawStrictFormationSubstitutionDispatchResult.toFormationResult
     {source target : List IncDepRawType} {type : IncDepRawType}
     {substitution : IncDepRawSubstitution source target}

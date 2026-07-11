@@ -741,6 +741,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - formation側にもparallel exact return type `IncDepRawStrictFormationSubstitutionDispatchResult`とbase/unit/Pi/Sigma/Identityの
   checked constructorsを追加した。Pi/Sigmaはcodomain result用にsubstitutionをliftし、Identityはexact type resultへalignment済みの
   endpoint typing resultsを消費する。意図するmutual foldの両側がcomplete constructor APIを持つ。
+- 同一syntactic formationを複数枝が独立に再帰評価したときの残るsemantic equality obligationを、
+  `IncDepRawFormationSubstitutionFiberRebaseProvider`として明示した。これは任意の二つのformation substitution results間の
+  natural fiber rebaseを供給する仮定であり、`rebaseFormation`/`normalizeFormation`がchecked strict typing resultを選択した
+  exact formation resultへtransportする。Identity endpointやsibling typing branchの合流で必要なcoherenceを暗黙のproof uniqueness
+  として扱わず、保存foldの明示的仮定にできる。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

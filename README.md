@@ -1397,6 +1397,15 @@ It currently establishes:
   codomain result; Identity consumes endpoint typing results already aligned to
   its exact type result.  Both halves of the intended mutual fold therefore have
   complete constructor APIs.
+  The remaining cross-branch equality obligation is now explicit as
+  `IncDepRawFormationSubstitutionFiberRebaseProvider`: it supplies a natural
+  fiber rebase between two semantic results for the same syntactic formation.
+  `rebaseFormation` and `normalizeFormation` transport an already checked strict
+  typing result onto a selected formation result.  This is the normalization
+  interface needed when Identity endpoints or sibling typing branches independently
+  recurse over the same formation; the future preservation fold will take this
+  semantic coherence as an explicit hypothesis instead of assuming proof-result
+  uniqueness silently.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
