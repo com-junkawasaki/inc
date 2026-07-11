@@ -246,7 +246,10 @@ It currently establishes:
   a common offset both preserves and reflects comparison.  Strict order is
   reconstructed solely from graph evidence (`x≤y` succeeds while `y≤x` does
   not), with exact equivalence to `x<y`; irreflexivity, transitivity,
-  asymmetry, and additive preservation/reflection are all checked.
+  asymmetry, additive preservation/reflection, and trichotomy are all checked.
+  Negation reverses strict order, while multiplication by a factor certified
+  internally as strictly positive preserves it, again with explicit bounds on
+  both products.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
