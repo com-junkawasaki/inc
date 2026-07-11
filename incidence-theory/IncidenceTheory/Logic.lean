@@ -5082,6 +5082,33 @@ theorem derives_incidenceBoundary_entails
     IncidenceBoundaryEntails incidence context formula :=
   fun holds => derives_incidenceBoundary_sound derivation holds
 
+theorem incidenceBoundary_excludedMiddle_holds
+    {I R T : Type u} [DecidableEq I]
+    (incidence : Incidence I R T) (atom : I) :
+    IncidenceBoundarySatisfies incidence
+      (.or (.atom atom) (Formula.neg (.atom atom))) := by
+  change IncidenceBoundaryValuation incidence atom ∨
+    (IncidenceBoundaryValuation incidence atom → False)
+  exact Classical.em (IncidenceBoundaryValuation incidence atom)
+
+theorem incidenceBoundary_excludedMiddle_entails
+    {I R T : Type u} [DecidableEq I]
+    (incidence : Incidence I R T) (atom : I) :
+    IncidenceBoundaryEntails incidence []
+      (.or (.atom atom) (Formula.neg (.atom atom))) := by
+  intro _
+  exact incidenceBoundary_excludedMiddle_holds incidence atom
+
+theorem incidenceBoundary_semantics_not_complete
+    {I R T : Type u} [DecidableEq I]
+    (incidence : Incidence I R T) (atom : I) :
+    IncidenceBoundaryEntails incidence []
+        (.or (.atom atom) (Formula.neg (.atom atom))) ∧
+      ¬ Derives ([] : List (Formula I))
+        (.or (.atom atom) (Formula.neg (.atom atom))) :=
+  ⟨incidenceBoundary_excludedMiddle_entails incidence atom,
+    excluded_middle_not_derivable atom⟩
+
 theorem incidenceBoundarySatisfies_map_iff
     {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
     (source : Incidence I R T) (target : Incidence I' R' T')

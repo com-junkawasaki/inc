@@ -46,7 +46,11 @@ It currently establishes:
   `Nat → PathId.node` boundary-natural map is a concrete embedding and preserves
   every translated formula's truth and every finite sequent's entailment iff.
   For `natIncidence`, atom `n` is true exactly
-  when `n≠0`, including a checked negation of the zero atom.  Its intuitionistic
+  when `n≠0`, including a checked negation of the zero atom.  This single
+  boundary-derived valuation is intentionally not claimed complete: excluded
+  middle is valid in it but remains intuitionistically underivable, a checked
+  generic counterexample instantiated at the `natIncidence` zero atom.  Full
+  completeness belongs to the all-model Kripke semantics below.  Its intuitionistic
   Kripke semantics, persistence theorem, and
   Kripke soundness theorem are checked; atom translations pull Kripke models
   back and preserve formula and context forcing exactly. Assumption substitution and cut are

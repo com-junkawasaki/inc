@@ -97,6 +97,13 @@ theorem natIncidence_boundarySatisfies_zero_negation :
   intro holds
   exact (natIncidence_boundaryValuation_iff 0).mp holds rfl
 
+theorem natIncidence_boundarySemantics_not_complete :
+    IncidenceBoundaryEntails natIncidence []
+        (.or (.atom 0) (Formula.neg (.atom 0))) ∧
+      ¬ Derives ([] : List (Formula Nat))
+        (.or (.atom 0) (Formula.neg (.atom 0))) :=
+  incidenceBoundary_semantics_not_complete natIncidence 0
+
 /- glue-with-1 realizes the successor function. -/
 theorem natIncidence_succ (n : Nat) : natIncidence.glue n 1 = some (n + 1) := rfl
 
