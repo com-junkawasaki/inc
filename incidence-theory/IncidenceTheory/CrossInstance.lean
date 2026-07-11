@@ -5486,6 +5486,12 @@ noncomputable def IncDepRawSigmaFormationSubstitutionFiberResult.ofCoherence
 
 structure IncDepRawSubstitutionFiberModel where
   baseModel : Nat → Type u
+  typingFormation : ∀
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type},
+    IncDepRawTypingSemanticReady typing →
+      Sigma fun formation : IncDepRawWellFormed context type =>
+        IncDepRawFormationSemanticReady formation
   piCoherence : ∀
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
     {substitution : IncDepRawSubstitution source target}
@@ -5520,6 +5526,15 @@ structure IncDepRawSubstitutionFiberModel where
       (targetFormation := codomainFormation)
       domainResult.liftSubstitution),
     IncDepRawSigmaSubstitutionCoherence domainResult codomainResult
+
+def IncDepRawSubstitutionFiberModel.formationForTyping
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    (ready : IncDepRawTypingSemanticReady typing) :
+    Sigma fun formation : IncDepRawWellFormed context type =>
+      IncDepRawFormationSemanticReady formation :=
+  model.typingFormation ready
 
 def IncDepRawSubstitutionFiberModel.base
     (model : IncDepRawSubstitutionFiberModel.{u})

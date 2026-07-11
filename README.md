@@ -1155,6 +1155,11 @@ It currently establishes:
   shapes and all five formation shapes therefore have model-algebra methods; the
   remaining integration task is the mutual structural recursion that selects
   them from readiness evidence.
+  That audit exposed one missing input: readiness for apply, pair, and second did
+  not retain formation readiness for their instantiated output type.  The model
+  now supplies `typingFormation`, with `formationForTyping` as its accessor, for
+  every typing readiness witness.  The dispatcher can therefore obtain and
+  recursively interpret eliminator result formations instead of assuming them.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

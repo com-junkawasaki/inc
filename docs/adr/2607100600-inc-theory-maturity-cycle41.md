@@ -599,6 +599,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - `model.variable`を追加し、recursive type result、lookup formation alignment、replacement environment、最終variable
   equationを既存`toTypingSubstitution`へ接続した。全8 typing shapesと全5 formation shapesにmodel-algebra methodが揃い、
   残る統合作業はreadiness evidenceをmutual recursionして各methodを選択するstructural dispatcher本体となった。
+- dispatcher監査でapply/pair/second readinessがinstantiated output typeのformation readinessを保持しない不足を特定した。
+  modelへ全typing readinessに対する`typingFormation` providerと`formationForTyping` accessorを追加し、eliminator result
+  formationを仮定せず取得・再帰解釈できるようにした。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
