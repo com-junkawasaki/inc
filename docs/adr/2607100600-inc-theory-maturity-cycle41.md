@@ -109,8 +109,12 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - raw renaming calculus を追加した。de Bruijn index map と lookup preservation を束ね、
   binder 下の lift、term への構造的作用、全 typing derivation の preservation を証明。
   context head への weakening は `Nat.succ` renaming の特殊化として得られ、identity
-  renaming が全 term 上で中立であることも証明済み。次段は simultaneous typed
-  substitution と semantic substitution lemma。
+  renaming が全 term 上で中立であることも証明済み。
+- simultaneous typed substitution を追加した。各 target variable を typing proof 付き
+  source term に写し、binder lift は newest variable を固定し既存 replacement を weakening
+  する。全 typing rule に対する substitution preservation と identity substitution の
+  term-level中立則を証明済み。残る直近課題は substitution が誘導する typed environment
+  と evaluator の semantic substitution lemma。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」や carrier 可算性の除去ではなく、Incidence 固有の意味論とのさらに

@@ -429,8 +429,13 @@ It currently establishes:
   correctly under binders, acts structurally on terms, and preserves every
   typing derivation.  Insertion at the context head is the `Nat.succ`
   specialization, and identity renaming is proved neutral on all terms.
-  Simultaneous typed substitution and its semantic substitution lemma are the
-  next raw-calculus steps.
+  Simultaneous typed substitution is now implemented too: a substitution maps
+  every target variable to a source term together with its typing derivation;
+  lifting under a binder fixes the newest variable and weakens every replaced
+  older term.  Structural substitution preserves typing for every rule, and
+  identity substitution is neutral on all raw terms.  The remaining immediate
+  step is the semantic substitution lemma relating this syntactic operation to
+  evaluation under the induced typed environment.
 - the `inc_to_set` translation packaged as a functor from the discrete
   incidence carrier category to the category of types.  It is always faithful
   but never full or essentially surjective; explicit morphisms and objects

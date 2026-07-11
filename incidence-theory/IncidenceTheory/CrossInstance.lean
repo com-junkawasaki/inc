@@ -267,6 +267,93 @@ theorem IncRawTerm.rename_identity (term : IncRawTerm) :
   | apply function argument ihFunction ihArgument =>
       simp [IncRawTerm.rename, ihFunction, ihArgument]
 
+def IncRawTerm.substitute (replacement : Nat → IncRawTerm) :
+    IncRawTerm → IncRawTerm
+  | .var index => replacement index
+  | .unit => .unit
+  | .pair left right =>
+      .pair (left.substitute replacement) (right.substitute replacement)
+  | .first term => .first (term.substitute replacement)
+  | .second term => .second (term.substitute replacement)
+  | .lambda domain body =>
+      .lambda domain (body.substitute fun index =>
+        match index with
+        | 0 => .var 0
+        | next + 1 => (replacement next).rename Nat.succ)
+  | .apply function argument =>
+      .apply (function.substitute replacement) (argument.substitute replacement)
+
+structure IncRawSubstitution (source target : List IncRawType) where
+  term : Nat → IncRawTerm
+  preserves : ∀ {position type}, IncRawLookup target position type →
+    IncRawHasType source (term position) type
+
+def IncRawSubstitution.identity (context : List IncRawType) :
+    IncRawSubstitution context context where
+  term := IncRawTerm.var
+  preserves := IncRawHasType.varRule
+
+noncomputable def IncRawSubstitution.lift
+    {source target : List IncRawType}
+    (substitution : IncRawSubstitution source target)
+    (head : IncRawType) :
+    IncRawSubstitution (head :: source) (head :: target) where
+  term
+    | 0 => .var 0
+    | next + 1 => (substitution.term next).rename Nat.succ
+  preserves := by
+    intro position type lookup
+    cases lookup with
+    | here => exact IncRawHasType.varRule IncRawLookup.here
+    | there previous =>
+        exact (substitution.preserves previous).weaken head
+
+noncomputable def IncRawHasType.substitute
+    {source target : List IncRawType}
+    {term : IncRawTerm} {type : IncRawType}
+    (typing : IncRawHasType target term type)
+    (substitution : IncRawSubstitution source target) :
+    IncRawHasType source (term.substitute substitution.term) type := by
+  induction typing generalizing source with
+  | varRule lookup => exact substitution.preserves lookup
+  | unitRule => exact IncRawHasType.unitRule
+  | pairRule _ _ leftSubstitute rightSubstitute =>
+      exact IncRawHasType.pairRule
+        (leftSubstitute substitution) (rightSubstitute substitution)
+  | firstRule _ termSubstitute =>
+      exact IncRawHasType.firstRule (termSubstitute substitution)
+  | secondRule _ termSubstitute =>
+      exact IncRawHasType.secondRule (termSubstitute substitution)
+  | lambdaRule bodyTyping bodySubstitute =>
+      exact IncRawHasType.lambdaRule
+        (bodySubstitute (substitution.lift _))
+  | applyRule _ _ functionSubstitute argumentSubstitute =>
+      exact IncRawHasType.applyRule
+        (functionSubstitute substitution) (argumentSubstitute substitution)
+
+theorem IncRawTerm.substitute_identity (term : IncRawTerm) :
+    term.substitute IncRawTerm.var = term := by
+  induction term with
+  | var index => rfl
+  | unit => rfl
+  | pair left right ihLeft ihRight =>
+      simp [IncRawTerm.substitute, ihLeft, ihRight]
+  | first term ih => simp [IncRawTerm.substitute, ih]
+  | second term ih => simp [IncRawTerm.substitute, ih]
+  | lambda domain body ih =>
+      simp only [IncRawTerm.substitute]
+      congr 1
+      have liftedIdentity :
+          (fun index => match index with
+            | 0 => .var 0
+            | next + 1 => (IncRawTerm.var next).rename Nat.succ) =
+          IncRawTerm.var := by
+        funext index
+        cases index <;> rfl
+      rw [liftedIdentity, ih]
+  | apply function argument ihFunction ihArgument =>
+      simp [IncRawTerm.substitute, ihFunction, ihArgument]
+
 structure IncContext where
   Assignment : Type u
 
