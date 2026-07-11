@@ -673,6 +673,41 @@ theorem BisimulationQuotientIncidencePresentation.satisfies_iff
       IncidenceBoundarySatisfies source formula :=
   presentation.observationEmbedding.satisfies_iff formula
 
+theorem BisimulationQuotientIncidencePresentation.entails_iff
+    {I R T Q QR QT : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : Incidence I R T}
+    (presentation : BisimulationQuotientIncidencePresentation
+      (Q := Q) (QR := QR) (QT := QT) source)
+    (context : List (Formula I)) (formula : Formula I) :
+    IncidenceBoundaryEntails presentation.target
+        (Formula.mapContext presentation.classification.classify context)
+        (formula.map presentation.classification.classify) ↔
+      IncidenceBoundaryEntails source context formula :=
+  presentation.observationEmbedding.entails_iff context formula
+
+theorem BisimulationQuotientIncidencePresentation.leafSatisfies_iff
+    {I R T Q QR QT : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : Incidence I R T}
+    (presentation : BisimulationQuotientIncidencePresentation
+      (Q := Q) (QR := QR) (QT := QT) source)
+    (formula : Formula I) :
+    IncidenceLeafSatisfies presentation.target
+        (formula.map presentation.classification.classify) ↔
+      IncidenceLeafSatisfies source formula :=
+  presentation.observationEmbedding.leafSatisfies_iff formula
+
+theorem BisimulationQuotientIncidencePresentation.leafEntails_iff
+    {I R T Q QR QT : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : Incidence I R T}
+    (presentation : BisimulationQuotientIncidencePresentation
+      (Q := Q) (QR := QR) (QT := QT) source)
+    (context : List (Formula I)) (formula : Formula I) :
+    IncidenceLeafEntails presentation.target
+        (Formula.mapContext presentation.classification.classify context)
+        (formula.map presentation.classification.classify) ↔
+      IncidenceLeafEntails source context formula :=
+  presentation.observationEmbedding.leafEntails_iff context formula
+
 /- Unlike `cycleIncidence`'s `boundary`/`glue` (cycle 38), which failed
    the well-definedness check `Quotient.lift` needs, `simplexToShape`
    PASSES it -- this is exactly what `simplexToShape_distinguishes`
@@ -823,6 +858,26 @@ theorem simplexToShape_boundaryLogic_satisfies_iff
     IncidenceBoundarySatisfies shapeIncidence (formula.map simplexToShape) ↔
       IncidenceBoundarySatisfies simplexIncidence formula :=
   simplexQuotientIncidencePresentation.satisfies_iff formula
+
+theorem simplexToShape_boundaryLogic_entails_iff
+    (context : List (Formula SimplexId)) (formula : Formula SimplexId) :
+    IncidenceBoundaryEntails shapeIncidence
+        (Formula.mapContext simplexToShape context) (formula.map simplexToShape) ↔
+      IncidenceBoundaryEntails simplexIncidence context formula :=
+  simplexQuotientIncidencePresentation.entails_iff context formula
+
+theorem simplexToShape_leafLogic_satisfies_iff
+    (formula : Formula SimplexId) :
+    IncidenceLeafSatisfies shapeIncidence (formula.map simplexToShape) ↔
+      IncidenceLeafSatisfies simplexIncidence formula :=
+  simplexQuotientIncidencePresentation.leafSatisfies_iff formula
+
+theorem simplexToShape_leafLogic_entails_iff
+    (context : List (Formula SimplexId)) (formula : Formula SimplexId) :
+    IncidenceLeafEntails shapeIncidence
+        (Formula.mapContext simplexToShape context) (formula.map simplexToShape) ↔
+      IncidenceLeafEntails simplexIncidence context formula :=
+  simplexQuotientIncidencePresentation.leafEntails_iff context formula
 
 theorem simplexQuotientPresentation_equivalence :
     Nonempty (IncTypeEquivalence

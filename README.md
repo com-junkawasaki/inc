@@ -380,8 +380,10 @@ It currently establishes:
   `BisimulationQuotientIncidencePresentation` strengthens a classification
   target with an actual target Incidence and exact boundary-observation law;
   it supplies both the quotient type equivalence and a boundary-logic
-  embedding.  The simplex-to-shape quotient now instantiates this general
-  interface, so every translated formula has the same boundary truth on the
+  embedding.  The presentation automatically preserves and reflects boundary
+  and leaf truth as well as their finite-sequent entailment relations.  The
+  simplex-to-shape quotient instantiates this general interface, so every
+  translated formula and context has the same boundary/leaf semantics on the
   seven-element source and the three-class quotient presentation.
 
 The minimal category/functor/pushout vocabulary is also formalized. A functor
