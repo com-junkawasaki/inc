@@ -478,6 +478,13 @@ It currently establishes:
   The proof includes the nontrivial binder equation saying that lifting a
   composite index map equals composing the lifted maps, establishing the
   functorial syntax law needed by telescope renamings.
+  Dependent variable lookup now enforces the correct scope invariant: the newest
+  variable in `A :: Gamma` has type `A` weakened into the extended context,
+  rather than the unshifted tail-context expression.  On this invariant a
+  type-aware telescope renaming packages an index map with lookup preservation
+  at the renamed type.  Identity, target weakening, and binder lift are
+  constructed, with the lift proof checking both the newest and older-variable
+  cases against dependent type renaming composition.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite

@@ -1147,10 +1147,73 @@ def IncDepRawType.instantiate (codomain : IncDepRawType)
     | next + 1 => .var next
 
 inductive IncDepRawLookup : List IncDepRawType → Nat → IncDepRawType → Type
-  | here {context type} : IncDepRawLookup (type :: context) 0 type
+  | here {context type} :
+      IncDepRawLookup (type :: context) 0 (type.rename Nat.succ)
   | there {context index type head} :
       IncDepRawLookup context index type →
         IncDepRawLookup (head :: context) (index + 1) (type.rename Nat.succ)
+
+structure IncDepRawRenaming
+    (source target : List IncDepRawType) where
+  index : Nat → Nat
+  preserves : ∀ {position type}, IncDepRawLookup source position type →
+    IncDepRawLookup target (index position) (type.rename index)
+
+def IncDepRawRenaming.identity (context : List IncDepRawType) :
+    IncDepRawRenaming context context where
+  index := id
+  preserves := by
+    intro position type lookup
+    rw [IncDepRawType.rename_identity]
+    exact lookup
+
+def IncDepRawRenaming.weakenTarget
+    {source target : List IncDepRawType}
+    (renameMap : IncDepRawRenaming source target) (head : IncDepRawType) :
+    IncDepRawRenaming source (head :: target) where
+  index := fun position => renameMap.index position + 1
+  preserves := by
+    intro position type lookup
+    have lifted := IncDepRawLookup.there (head := head)
+      (renameMap.preserves lookup)
+    rw [IncDepRawType.rename_comp] at lifted
+    exact lifted
+
+def IncDepRawRenaming.lift
+    {source target : List IncDepRawType}
+    (renameMap : IncDepRawRenaming source target) (domain : IncDepRawType) :
+    IncDepRawRenaming (domain :: source)
+      (domain.rename renameMap.index :: target) where
+  index := IncDepRawTerm.liftRename renameMap.index
+  preserves := by
+    intro position type lookup
+    cases lookup with
+    | here =>
+        change IncDepRawLookup _ 0
+          ((domain.rename Nat.succ).rename
+            (IncDepRawTerm.liftRename renameMap.index))
+        have newest : IncDepRawLookup
+            (domain.rename renameMap.index :: target) 0
+            ((domain.rename renameMap.index).rename Nat.succ) :=
+          IncDepRawLookup.here
+        rw [IncDepRawType.rename_comp] at newest ⊢
+        have mapsEqual : IncDepRawTerm.liftRename renameMap.index ∘ Nat.succ =
+            Nat.succ ∘ renameMap.index := by
+          funext index
+          rfl
+        rw [mapsEqual]
+        exact newest
+    | there previous =>
+        have older := IncDepRawLookup.there
+          (head := domain.rename renameMap.index)
+          (renameMap.preserves previous)
+        rw [IncDepRawType.rename_comp] at older ⊢
+        have mapsEqual : IncDepRawTerm.liftRename renameMap.index ∘ Nat.succ =
+            Nat.succ ∘ renameMap.index := by
+          funext index
+          rfl
+        rw [mapsEqual]
+        exact older
 
 mutual
   inductive IncDepRawWellFormed : List IncDepRawType → IncDepRawType → Type
@@ -1212,7 +1275,8 @@ def incDepRawIdentity (type : IncDepRawType) : IncDepRawTerm :=
 
 def incDepRawIdentity_hasType
     (type : IncDepRawType) (typeWellFormed : IncDepRawWellFormed [] type) :
-    IncDepRawHasType [] (incDepRawIdentity type) (.pi type type) := by
+    IncDepRawHasType [] (incDepRawIdentity type)
+      (.pi type (type.rename Nat.succ)) := by
   exact IncDepRawHasType.lambdaRule typeWellFormed
     (IncDepRawHasType.varRule IncDepRawLookup.here)
 

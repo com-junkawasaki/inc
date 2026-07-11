@@ -152,6 +152,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - dependent raw type/term の renaming composition law も相互再帰で証明した。index map の
   composition を binder 下へ lift した結果が lift 済み map の composition と一致することを
   function extensionality で示し、telescope renaming に必要な functorial syntax law を得た。
+- dependent lookup の scope invariant を監査し、`A :: Γ` の newest variable の型を tail
+  context 表現 `A` のままではなく extended context へ weaken した `A.rename succ` とした。
+  これにより index map と「lookup を renamed type の lookup へ保存する証明」を束ねた
+  type-aware telescope renaming を構成できた。identity、target weakening、binder lift を実装し、
+  lift の newest/older variable 両 case を renaming composition と map extensionality で証明した。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性
