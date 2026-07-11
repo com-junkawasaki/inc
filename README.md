@@ -1098,6 +1098,12 @@ It currently establishes:
   `sigmaForward_second_eq_of_eq`.  The only explicit boundary left is the semantic
   alignment of the source derivation produced by the syntactic
   instantiate/substitute rewrite.
+  Dependent pair introduction is integrated too.  The general
+  `sigmaForward_eq_of_components` lemma reconstructs equality of dependent pairs
+  from domain equality and the transported codomain equality.  The uniform
+  `.pair` constructor obtains both from the recursive first and second results
+  and the canonical instantiated equivalence; only the exact substituted source
+  derivation's alignment with the canonical semantic pair remains explicit.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

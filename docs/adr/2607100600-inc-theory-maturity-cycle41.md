@@ -561,6 +561,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   substitution `.second` constructorへ統合した。recursive pair resultから第一成分coherenceを導出し、第二成分transportを
   `sigmaForward_second_eq_of_eq`で証明する。残るexplicit inputはsyntactic instantiate/substitute rewriteが生成するsource
   derivationのsemantic projection alignmentだけであり、第二射影の意味論的分岐は閉じた。
+- `sigmaForward_eq_of_components`でdomain equalityとtransport済みcodomain equalityからdependent pair equalityを再構成し、
+  uniform typing-substitution `.pair` constructorを実装した。recursive first/second resultsとcanonical instantiate equivalenceから
+  二component coherenceを導出する。explicit inputはexact substituted source derivationとcanonical semantic pairのalignmentだけで、
+  dependent pair introductionの意味論的分岐も閉じた。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
