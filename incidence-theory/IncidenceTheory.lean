@@ -3654,6 +3654,64 @@ noncomputable def IncCategoryEquivalence.pushoutPreservingFamily
     PushoutPreservingFamily equivalence.forward :=
   equivalence.strongPushoutPreservingFamily.toPushoutPreservingFamily
 
+abbrev MorphismSpan {Obj : Type u} (C : IncCategory Obj) :=
+  MorphismCospan C.op
+
+abbrev MorphismPullback {Obj : Type u} {C : IncCategory Obj}
+    (span : MorphismSpan C) :=
+  MorphismPushout span
+
+def IncFunctor.mapSpan
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) (span : MorphismSpan C) : MorphismSpan D :=
+  F.op.mapCospan span
+
+abbrev StrongPullbackPreserving
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) {span : MorphismSpan C}
+    (pullback : MorphismPullback span) :=
+  StrongPushoutPreserving F.op pullback
+
+abbrev PullbackPreserving
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) {span : MorphismSpan C}
+    (pullback : MorphismPullback span) :=
+  PushoutPreserving F.op pullback
+
+abbrev StrongPullbackPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) :=
+  StrongPushoutPreservingFamily F.op
+
+abbrev PullbackPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) :=
+  PushoutPreservingFamily F.op
+
+noncomputable def IncFunctorEquivalenceCriterion.strongPullbackPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F) :
+    StrongPullbackPreservingFamily F :=
+  criterion.op.toCoherentCategoryEquivalence.strongPushoutPreservingFamily
+
+noncomputable def IncFunctorEquivalenceCriterion.pullbackPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F) :
+    PullbackPreservingFamily F :=
+  criterion.strongPullbackPreservingFamily.toPushoutPreservingFamily
+
+noncomputable def IncCategoryEquivalence.strongPullbackPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    StrongPullbackPreservingFamily equivalence.forward :=
+  equivalence.forward_criterion.strongPullbackPreservingFamily
+
+noncomputable def IncCategoryEquivalence.pullbackPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    PullbackPreservingFamily equivalence.forward :=
+  equivalence.forward_criterion.pullbackPreservingFamily
+
 /- Uniform preservation is closed under translation composition.  The second
    family is applied to the actual mapped universal cocone selected by the
    first one, exactly as in the pointwise composition theorem above. -/
@@ -4497,6 +4555,18 @@ noncomputable def category_equivalence_preserves_pushouts
     (equivalence : IncCategoryEquivalence C D) :
     PushoutPreservingFamily equivalence.forward :=
   equivalence.pushoutPreservingFamily
+
+noncomputable def category_equivalence_strongly_preserves_pullbacks
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    StrongPullbackPreservingFamily equivalence.forward :=
+  equivalence.strongPullbackPreservingFamily
+
+noncomputable def category_equivalence_preserves_pullbacks
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    PullbackPreservingFamily equivalence.forward :=
+  equivalence.pullbackPreservingFamily
 
 /- Merkle-ID: foundation.axiomatization.limit_preservation
    Placeholder only for the unbundled `inc_to_set` assignment above. -/
