@@ -4435,12 +4435,25 @@ def inc_to_set {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) : I → 
     | [] => ULift Bool
     | _ :: _ => ULift Unit
 
-/- Preservation of (co)limits: NOT formalized. A real proof needs Inc → Set
-   /Cat/Type spelled out as genuine functors with pullback/pushout
-   preservation, which is a substantial separate development. Left as an
-   explicit placeholder, not a fake proof. -/
+/- The Inc-to-Set assignment above is not yet packaged as an `IncFunctor`, so
+   a theorem specifically about that assignment still requires a source
+   category of incidences.  The general categorical preservation theorem is
+   now available, however: every category equivalence strongly preserves all
+   pushouts, including the two mapped cocone legs. -/
+noncomputable def category_equivalence_strongly_preserves_pushouts
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    StrongPushoutPreservingFamily equivalence.forward :=
+  equivalence.strongPushoutPreservingFamily
+
+noncomputable def category_equivalence_preserves_pushouts
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    PushoutPreservingFamily equivalence.forward :=
+  equivalence.pushoutPreservingFamily
+
 /- Merkle-ID: foundation.axiomatization.limit_preservation
-   Placeholder: (co)limit preservation, not yet formalized. -/
+   Placeholder only for the unbundled `inc_to_set` assignment above. -/
 theorem preserves_limits {I R T : Type u} [DecidableEq I]
   (_inc : Incidence I R T) :
   True := trivial
