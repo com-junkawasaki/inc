@@ -3312,6 +3312,65 @@ theorem hfRecursiveIntegerDivides_trans
   refine ⟨firstFactor * secondFactor, productWithin, ?_⟩
   rw [thirdValue, secondValue, Int.mul_assoc]
 
+theorem hfRecursiveIntegerDivides_add
+    (bound : Nat) (divisor left right : Int)
+    (divisorWithin : HFRecursiveIntegerWithin bound divisor)
+    (dividesLeft : HFRecursiveIntegerDivides bound divisor left)
+    (dividesRight : HFRecursiveIntegerDivides bound divisor right)
+    (factorSumWithin : ∀ leftFactor rightFactor,
+      HFRecursiveIntegerWithin bound leftFactor →
+      HFRecursiveIntegerWithin bound rightFactor →
+      left = divisor * leftFactor → right = divisor * rightFactor →
+      HFRecursiveIntegerWithin bound (leftFactor + rightFactor)) :
+    HFRecursiveIntegerDivides bound divisor (left + right) := by
+  rcases (hfRecursiveIntegerDivides_iff
+    bound divisor left divisorWithin).mp dividesLeft with
+    ⟨leftFactor, leftFactorWithin, leftValue⟩
+  rcases (hfRecursiveIntegerDivides_iff
+    bound divisor right divisorWithin).mp dividesRight with
+    ⟨rightFactor, rightFactorWithin, rightValue⟩
+  have sumWithin := factorSumWithin leftFactor rightFactor
+    leftFactorWithin rightFactorWithin leftValue rightValue
+  apply (hfRecursiveIntegerDivides_iff
+    bound divisor (left + right) divisorWithin).mpr
+  refine ⟨leftFactor + rightFactor, sumWithin, ?_⟩
+  rw [leftValue, rightValue, Int.mul_add]
+
+theorem hfRecursiveIntegerDivides_mul_right
+    (bound : Nat) (divisor dividend multiplier : Int)
+    (divisorWithin : HFRecursiveIntegerWithin bound divisor)
+    (divides : HFRecursiveIntegerDivides bound divisor dividend)
+    (factorProductWithin : ∀ factor,
+      HFRecursiveIntegerWithin bound factor → dividend = divisor * factor →
+      HFRecursiveIntegerWithin bound (factor * multiplier)) :
+    HFRecursiveIntegerDivides bound divisor (dividend * multiplier) := by
+  rcases (hfRecursiveIntegerDivides_iff
+    bound divisor dividend divisorWithin).mp divides with
+    ⟨factor, factorWithin, dividendValue⟩
+  have productWithin := factorProductWithin factor factorWithin dividendValue
+  apply (hfRecursiveIntegerDivides_iff
+    bound divisor (dividend * multiplier) divisorWithin).mpr
+  refine ⟨factor * multiplier, productWithin, ?_⟩
+  rw [dividendValue, Int.mul_assoc]
+
+theorem hfRecursiveIntegerDivides_neg
+    (bound : Nat) (divisor dividend : Int)
+    (divisorWithin : HFRecursiveIntegerWithin bound divisor)
+    (divides : HFRecursiveIntegerDivides bound divisor dividend)
+    (negFactorWithin : ∀ factor,
+      HFRecursiveIntegerWithin bound factor → dividend = divisor * factor →
+      HFRecursiveIntegerWithin bound (-factor)) :
+    HFRecursiveIntegerDivides bound divisor (-dividend) := by
+  rcases (hfRecursiveIntegerDivides_iff
+    bound divisor dividend divisorWithin).mp divides with
+    ⟨factor, factorWithin, dividendValue⟩
+  have negWithin := negFactorWithin factor factorWithin dividendValue
+  apply (hfRecursiveIntegerDivides_iff
+    bound divisor (-dividend) divisorWithin).mpr
+  refine ⟨-factor, negWithin, ?_⟩
+  rw [dividendValue]
+  exact (Int.mul_neg divisor factor).symm
+
 /- The graph of the identity function on the internally represented finite
    ordinal `n`. -/
 def hfRecursiveNatIdentityGraph : Nat → HFRecursiveSet

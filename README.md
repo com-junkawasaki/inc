@@ -255,7 +255,10 @@ It currently establishes:
   Bounded integer divisibility is reconstructed from the multiplication graph,
   with an exact factor-existence law.  It is reflexive and transitive when the
   composed factor remains in the finite window; `1` divides every represented
-  integer, while `0` divides exactly `0`.
+  integer, while `0` divides exactly `0`.  Common divisors are closed under
+  addition, remain divisors after multiplying the dividend, and survive
+  negation, with precisely the factor-sum/product/negation window obligations
+  exposed by the finite presentation.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
