@@ -1320,6 +1320,39 @@ def IncNaturalIsomorphism.hcomp
     rw [beta.inv_hom_id, alpha.inv_hom_id]
     exact IncNaturalTransformation.hcomp_identity G K
 
+theorem IncNaturalIsomorphism.ext
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D}
+    {iso₁ iso₂ : IncNaturalIsomorphism F G}
+    (homEq : iso₁.hom = iso₂.hom) : iso₁ = iso₂ := by
+  have invEq : iso₁.inv = iso₂.inv := by
+    calc
+      iso₁.inv = (IncNaturalTransformation.identity F).vcomp iso₁.inv :=
+        (IncNaturalTransformation.identity_vcomp iso₁.inv).symm
+      _ = (iso₂.inv.vcomp iso₂.hom).vcomp iso₁.inv := by
+        rw [iso₂.hom_inv_id]
+      _ = iso₂.inv.vcomp (iso₂.hom.vcomp iso₁.inv) :=
+        IncNaturalTransformation.vcomp_assoc _ _ _
+      _ = iso₂.inv.vcomp (iso₁.hom.vcomp iso₁.inv) := by rw [homEq]
+      _ = iso₂.inv.vcomp (IncNaturalTransformation.identity G) := by
+        rw [iso₁.inv_hom_id]
+      _ = iso₂.inv := IncNaturalTransformation.vcomp_identity iso₂.inv
+  cases iso₁
+  cases iso₂
+  cases homEq
+  cases invEq
+  rfl
+
+theorem IncNaturalIsomorphism.hcomp_symm
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F G : IncFunctor C D} {H K : IncFunctor D E}
+    (beta : IncNaturalIsomorphism H K)
+    (alpha : IncNaturalIsomorphism F G) :
+    (beta.hcomp alpha).symm = beta.symm.hcomp alpha.symm := by
+  apply IncNaturalIsomorphism.ext
+  rfl
+
 def IncNaturalIsomorphism.trans
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     {F G H : IncFunctor C D}
@@ -1375,6 +1408,29 @@ def IncNaturalIsomorphism.trans
       _ = D.comp (beta.hom.app object) (beta.inv.app object) := by
             rw [D.id_comp]
       _ = D.id (H.obj object) := beta.inv_app_hom_app object
+
+theorem IncNaturalIsomorphism.hcomp_refl
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    (F : IncFunctor C D) (G : IncFunctor D E) :
+    (IncNaturalIsomorphism.refl G).hcomp (IncNaturalIsomorphism.refl F) =
+      IncNaturalIsomorphism.refl (G.comp F) := by
+  apply IncNaturalIsomorphism.ext
+  exact IncNaturalTransformation.hcomp_identity F G
+
+theorem IncNaturalIsomorphism.hcomp_trans_interchange
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F G H : IncFunctor C D} {K L M : IncFunctor D E}
+    (delta : IncNaturalIsomorphism L M)
+    (gamma : IncNaturalIsomorphism K L)
+    (beta : IncNaturalIsomorphism G H)
+    (alpha : IncNaturalIsomorphism F G) :
+    (delta.trans gamma).hcomp (beta.trans alpha) =
+      (delta.hcomp beta).trans (gamma.hcomp alpha) := by
+  apply IncNaturalIsomorphism.ext
+  exact IncNaturalTransformation.hcomp_vcomp_interchange
+    delta.hom gamma.hom beta.hom alpha.hom
 
 def IncNaturallyIsomorphic
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
