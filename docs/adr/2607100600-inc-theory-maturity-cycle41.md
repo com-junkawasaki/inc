@@ -414,6 +414,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   substitution variable lawをfiber-forward equationへ変換した。したがってnewest variableの値レベル
   coherenceはunchecked castなしで閉じた。残るのはreindexed lookup formationのpackage化と、recursive
   older-variable caseである。
+- fiber transportのcontext substitution自然性`FiberEquiv.reindex_transport`をdefinitionally証明した。
+  `lift_older_transport`はこの自然性、既存term coherence、lifted projection equationを合成し、binderで
+  weakenされたsource older termのtransportがlifted substitution後のtarget older termと一致することを
+  証明する。これでnewest/older両lookup caseのterm-level transport lawがcheckedとなり、自動foldへvariable
+  branchを挿入する前の残件はraw lookup-formation resultのpackage化だけになった。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

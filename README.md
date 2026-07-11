@@ -861,6 +861,14 @@ It currently establishes:
   law into that fiber-forward form.  Consequently the newest-variable value
   equation is closed without an unchecked cast; packaging its reindexed lookup
   formation, followed by the recursive older-variable case, remains.
+  Fiber transport is now natural under every context substitution:
+  `FiberEquiv.reindex_transport` proves that transporting a substituted term is
+  definitionally the same as substituting a transported term.
+  `lift_older_transport` combines this law, the prior term-coherence equation,
+  and the lifted projection equation to prove the binder-weakened older-term
+  equation.  Thus both newest and older lookup cases now have checked term-level
+  transport laws; only their raw lookup-formation result packaging remains
+  before the variable branch can be inserted into the automatic fold.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

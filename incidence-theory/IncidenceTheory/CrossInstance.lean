@@ -2794,6 +2794,17 @@ theorem IncTypeInContext.FiberEquiv.ofEq_transport_apply
   exact IncTypeInContext.FiberEquiv.ofEq_forward coherence assignment
     (term assignment)
 
+theorem IncTypeInContext.FiberEquiv.reindex_transport
+    {sourceContext targetContext : IncContext.{u}}
+    {source target : IncTypeInContext targetContext}
+    (equivalence : IncTypeInContext.FiberEquiv source target)
+    (substitution : sourceContext.Substitution targetContext)
+    (term : IncTerm source) :
+    (equivalence.reindex substitution).transport
+        (term.substitute substitution) =
+      (equivalence.transport term).substitute substitution := by
+  rfl
+
 theorem IncTypeInContext.FiberEquiv.transport_symm
     {context : IncContext.{u}} {source target : IncTypeInContext context}
     (equivalence : IncTypeInContext.FiberEquiv source target)
@@ -3869,6 +3880,41 @@ theorem IncDepRawSubstitutionSemanticResult.lift_variable_fiber
   rw [IncTypeInContext.FiberEquiv.ofEq_forward]
   exact (IncDepRawSubstitutionSemanticResult.lift_variable substitutionResult
     targetDomain sourceDomain coherence assignment value).symm
+
+theorem IncDepRawSubstitutionSemanticResult.lift_older_transport
+    {source target : List IncDepRawType} {domain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    {domainFormation : IncDepRawWellFormed target domain}
+    {substitutedDomainFormation : IncDepRawWellFormed source
+      (domain.substitute substitution.term)}
+    (targetDomain : IncDepRawFormationSemanticResult domainFormation targetResult)
+    (sourceDomain : IncDepRawFormationSemanticResult
+      substitutedDomainFormation sourceResult)
+    (domainCoherence : sourceDomain.semanticType =
+      targetDomain.semanticType.reindex substitutionResult.semanticSubstitution)
+    {sourceFamily : IncTypeInContext sourceResult.semanticContext}
+    {targetFamily : IncTypeInContext targetResult.semanticContext}
+    (familyEquivalence : IncTypeInContext.FiberEquiv sourceFamily
+      (targetFamily.reindex substitutionResult.semanticSubstitution))
+    (sourceTerm : IncTerm sourceFamily) (targetTerm : IncTerm targetFamily)
+    (termCoherence : familyEquivalence.transport sourceTerm =
+      targetTerm.substitute substitutionResult.semanticSubstitution) :
+    (familyEquivalence.reindex
+      (sourceResult.semanticContext.extendProjection sourceDomain.semanticType)).transport
+        (sourceTerm.substitute
+          (sourceResult.semanticContext.extendProjection sourceDomain.semanticType)) =
+      (targetTerm.substitute
+        (targetResult.semanticContext.extendProjection targetDomain.semanticType)).substitute
+          (IncDepRawSubstitutionSemanticResult.lift substitutionResult
+            targetDomain sourceDomain domainCoherence).semanticSubstitution := by
+  rw [IncTypeInContext.FiberEquiv.reindex_transport, termCoherence]
+  rfl
 
 structure IncDepRawFormationSubstitutionSemanticResult
     {source target : List IncDepRawType} {type : IncDepRawType}
