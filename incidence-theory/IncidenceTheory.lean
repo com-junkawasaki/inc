@@ -7087,6 +7087,18 @@ structure BehavioralBoundaryShapeEquivalence
   inv_hom : ∀ i, inv.map (hom.map i) = i
   hom_inv : ∀ j, hom.map (inv.map j) = j
 
+theorem BehavioralBoundaryShapeEquivalence.ext
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    {first second : BehavioralBoundaryShapeEquivalence source target}
+    (homEq : first.hom = second.hom) (invEq : first.inv = second.inv) :
+    first = second := by
+  cases first
+  cases second
+  cases homEq
+  cases invEq
+  rfl
+
 def BehavioralBoundaryShapeEquivalence.refl
     {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
     BehavioralBoundaryShapeEquivalence inc inc where
@@ -7128,6 +7140,71 @@ def BehavioralBoundaryShapeEquivalence.trans
         (firstEquivalence.inv.map (secondEquivalence.inv.map k))) = k
     rw [firstEquivalence.hom_inv, secondEquivalence.hom_inv]
 
+theorem BehavioralBoundaryShapeEquivalence.refl_trans
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BehavioralBoundaryShapeEquivalence source target) :
+    equivalence.trans (BehavioralBoundaryShapeEquivalence.refl source) =
+      equivalence := by
+  apply BehavioralBoundaryShapeEquivalence.ext
+  · exact BehavioralBoundaryShapeTranslation.comp_identity equivalence.hom
+  · exact BehavioralBoundaryShapeTranslation.identity_comp equivalence.inv
+
+theorem BehavioralBoundaryShapeEquivalence.trans_refl
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BehavioralBoundaryShapeEquivalence source target) :
+    (BehavioralBoundaryShapeEquivalence.refl target).trans equivalence =
+      equivalence := by
+  apply BehavioralBoundaryShapeEquivalence.ext
+  · exact BehavioralBoundaryShapeTranslation.identity_comp equivalence.hom
+  · exact BehavioralBoundaryShapeTranslation.comp_identity equivalence.inv
+
+theorem BehavioralBoundaryShapeEquivalence.trans_assoc
+    {I J K L R₁ T₁ R₂ T₂ R₃ T₃ R₄ T₄ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K] [DecidableEq L]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃} {fourth : Incidence L R₄ T₄}
+    (thirdEquivalence : BehavioralBoundaryShapeEquivalence third fourth)
+    (secondEquivalence : BehavioralBoundaryShapeEquivalence second third)
+    (firstEquivalence : BehavioralBoundaryShapeEquivalence first second) :
+    (thirdEquivalence.trans secondEquivalence).trans firstEquivalence =
+      thirdEquivalence.trans (secondEquivalence.trans firstEquivalence) := by
+  apply BehavioralBoundaryShapeEquivalence.ext
+  · exact BehavioralBoundaryShapeTranslation.comp_assoc
+      thirdEquivalence.hom secondEquivalence.hom firstEquivalence.hom
+  · exact (BehavioralBoundaryShapeTranslation.comp_assoc
+      firstEquivalence.inv secondEquivalence.inv thirdEquivalence.inv).symm
+
+theorem BehavioralBoundaryShapeEquivalence.symm_symm
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BehavioralBoundaryShapeEquivalence source target) :
+    equivalence.symm.symm = equivalence := by
+  apply BehavioralBoundaryShapeEquivalence.ext <;> rfl
+
+theorem BehavioralBoundaryShapeEquivalence.symm_trans_self
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BehavioralBoundaryShapeEquivalence source target) :
+    equivalence.symm.trans equivalence =
+      BehavioralBoundaryShapeEquivalence.refl source := by
+  apply BehavioralBoundaryShapeEquivalence.ext <;>
+    apply BehavioralBoundaryShapeTranslation.ext <;> funext value
+  · exact equivalence.inv_hom value
+  · exact equivalence.inv_hom value
+
+theorem BehavioralBoundaryShapeEquivalence.trans_symm_self
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BehavioralBoundaryShapeEquivalence source target) :
+    equivalence.trans equivalence.symm =
+      BehavioralBoundaryShapeEquivalence.refl target := by
+  apply BehavioralBoundaryShapeEquivalence.ext <;>
+    apply BehavioralBoundaryShapeTranslation.ext <;> funext value
+  · exact equivalence.hom_inv value
+  · exact equivalence.hom_inv value
+
 def BehavioralBoundaryShapeEquivalence.quotientEquivalence
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
     {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
@@ -7151,6 +7228,30 @@ def BehavioralBoundaryShapeEquivalence.quotientEquivalence
       (equivalence.hom.map (equivalence.inv.map representative)) =
         Quotient.mk (approxBisimSetoid target) representative
     rw [equivalence.hom_inv]
+
+theorem BehavioralBoundaryShapeEquivalence.quotientEquivalence_trans
+    {I J K R₁ T₁ R₂ T₂ R₃ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (secondEquivalence : BehavioralBoundaryShapeEquivalence second third)
+    (firstEquivalence : BehavioralBoundaryShapeEquivalence first second) :
+    (secondEquivalence.trans firstEquivalence).quotientEquivalence =
+      secondEquivalence.quotientEquivalence.trans
+        firstEquivalence.quotientEquivalence := by
+  apply IncTypeEquivalence.ext
+  · exact BehavioralBoundaryShapeTranslation.mapBisimulationQuotient_comp
+      secondEquivalence.hom firstEquivalence.hom
+  · exact BehavioralBoundaryShapeTranslation.mapBisimulationQuotient_comp
+      firstEquivalence.inv secondEquivalence.inv
+
+theorem BehavioralBoundaryShapeEquivalence.quotientEquivalence_symm
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BehavioralBoundaryShapeEquivalence source target) :
+    equivalence.symm.quotientEquivalence =
+      equivalence.quotientEquivalence.symm := by
+  apply IncTypeEquivalence.ext <;> rfl
 
 def BoundaryShapeEmbedding.identity
     {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
