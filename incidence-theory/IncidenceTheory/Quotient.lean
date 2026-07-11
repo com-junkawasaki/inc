@@ -335,6 +335,56 @@ theorem bisimulationQuotient_universal_property
   exact bisimulationQuotient_factorization_unique inc map candidate _
     candidateFactors (fun _ => rfl)
 
+def bisimulationQuotientLift
+    {I R T Q : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (map : I → Q)
+    (invariant : BisimulationInvariantMap inc map) :
+    Quotient (approxBisimSetoid inc) → Q :=
+  Quotient.lift map (fun _ _ bisimilar => invariant bisimilar)
+
+theorem bisimulationQuotientLift_mk
+    {I R T Q : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (map : I → Q)
+    (invariant : BisimulationInvariantMap inc map) (x : I) :
+    bisimulationQuotientLift inc map invariant
+      (Quotient.mk (approxBisimSetoid inc) x) = map x := rfl
+
+theorem bisimulationQuotientLift_unique
+    {I R T Q : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (map : I → Q)
+    (invariant : BisimulationInvariantMap inc map)
+    (candidate : Quotient (approxBisimSetoid inc) → Q)
+    (candidateFactors : ∀ x,
+      candidate (Quotient.mk (approxBisimSetoid inc) x) = map x) :
+    candidate = bisimulationQuotientLift inc map invariant :=
+  bisimulationQuotient_factorization_unique inc map candidate _
+    candidateFactors (bisimulationQuotientLift_mk inc map invariant)
+
+theorem bisimulationQuotientLift_mk_eq_identity
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    bisimulationQuotientLift inc
+      (Quotient.mk (approxBisimSetoid inc))
+      (fun _ _ bisimilar => Quotient.sound bisimilar) = id := by
+  apply bisimulationQuotient_factorization_unique inc
+    (Quotient.mk (approxBisimSetoid inc))
+  · intro x
+    rfl
+  · intro x
+    rfl
+
+theorem bisimulationQuotientLift_comp
+    {I R T Q P : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (map : I → Q)
+    (invariant : BisimulationInvariantMap inc map) (after : Q → P) :
+    bisimulationQuotientLift inc (after ∘ map)
+      (fun _ _ bisimilar => congrArg after (invariant bisimilar)) =
+      after ∘ bisimulationQuotientLift inc map invariant := by
+  apply bisimulationQuotient_factorization_unique inc (after ∘ map)
+  · intro x
+    rfl
+  · intro x
+    rfl
+
 /- Concrete confirmation against both faithful instances built so far
    in this project (`natIncidence`, cycle 4; `cycleIncidenceFixed`,
    cycle 27) -- not vacuous, two genuinely different faithful instances
