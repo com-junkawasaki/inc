@@ -780,6 +780,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - 保存projectionの公開computation theoremsをbase/unit formation、unit typing、Pi formation、variable typingについて追加した。5本すべて`rfl`であり、Pi式は
   二つのrecursive formation projectionsを、variable式はrecursive type-formation resultをreplacement providerへ渡す流れを明示する。巨大な生成mutual
   recursorをunfoldせずrewriteで保存定理を利用できる最初の安定APIになった。
+- `IncDepRawCoherentReadinessAlignmentProvider.toStrictTyping`を証明し、strict typing readiness alignmentを独立仮定から除いた。coherent treeの等式は
+  既存providerが供給し、strict structureの残るfieldは等式証明なのでproof irrelevanceにより一意である。推奨bundle constructor
+  `preservationDispatcherAligned`はseparate strict-alignment providerを要求せず、保存定理の明示的仮定を1つ削減する。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

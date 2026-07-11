@@ -1478,6 +1478,13 @@ It currently establishes:
   variable equation visibly consumes the recursive type-formation result before
   invoking the replacement provider.  These equations make the theorem usable
   by rewriting without unfolding the large generated mutual recursor.
+  One apparent preservation hypothesis has now been eliminated:
+  `IncDepRawCoherentReadinessAlignmentProvider.toStrictTyping` constructs strict
+  typing-readiness alignment from coherent alignment.  Equality of the coherent
+  tree is supplied by the existing provider; the remaining structure field is
+  itself an equality proof and is unique by proof irrelevance.
+  `preservationDispatcherAligned` is therefore the preferred bundle constructor
+  and no longer asks callers for a separate strict-alignment provider.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

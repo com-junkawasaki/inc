@@ -6178,6 +6178,21 @@ def IncDepRawStrictTypingReadinessAlignmentProvider.alignment
     first = second :=
   provider.align first second
 
+def IncDepRawCoherentReadinessAlignmentProvider.toStrictTyping
+    (provider : IncDepRawCoherentReadinessAlignmentProvider) :
+    IncDepRawStrictTypingReadinessAlignmentProvider where
+  align := by
+    intro context term type typing formation formationReady first second
+    cases first with
+    | mk firstReady firstEq =>
+        cases second with
+        | mk secondReady secondEq =>
+            have readyEq := provider.alignTyping firstReady secondReady
+            cases readyEq
+            have proofEq : firstEq = secondEq := Subsingleton.elim _ _
+            cases proofEq
+            rfl
+
 def IncDepRawStrictTypingDispatchReady.ofCoherent
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} {typing : IncDepRawHasType context term type}
@@ -11508,6 +11523,16 @@ noncomputable def IncDepRawSubstitutionFiberModel.preservationDispatcher
     { dispatch := fun ready targetTree replacements =>
         model.preserveTyping variableProvider readinessAlignment strictAlignment
           rebaseProvider instantiateProvider ready targetTree replacements }
+
+noncomputable def IncDepRawSubstitutionFiberModel.preservationDispatcherAligned
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider)
+    (instantiateProvider : IncDepRawInstantiateFormationCoherenceProvider) :
+    IncDepRawStrictMutualSubstitutionDispatcher :=
+  model.preservationDispatcher variableProvider readinessAlignment
+    readinessAlignment.toStrictTyping rebaseProvider instantiateProvider
 
 theorem IncDepRawSubstitutionFiberModel.preserveFormation_base
     (model : IncDepRawSubstitutionFiberModel.{u})
