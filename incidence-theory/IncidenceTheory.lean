@@ -3952,6 +3952,70 @@ theorem IncBinaryCoproduct.copair_unique
     mediator = coproduct.copair target first second :=
   coproduct.lift_unique _ _ _ _ mediator hfirst hsecond
 
+structure IncEqualizer {Obj : Type u} {C : IncCategory Obj}
+    {source target : Obj} (first second : C.Hom source target) where
+  object : Obj
+  inclusion : C.Hom object source
+  equalizes : C.comp first inclusion = C.comp second inclusion
+  lift : ∀ (candidate : Obj) (arrow : C.Hom candidate source),
+    C.comp first arrow = C.comp second arrow → C.Hom candidate object
+  lift_inclusion : ∀ candidate arrow equality,
+    C.comp inclusion (lift candidate arrow equality) = arrow
+  lift_unique : ∀ candidate arrow equality (mediator : C.Hom candidate object),
+    C.comp inclusion mediator = arrow → mediator = lift candidate arrow equality
+
+abbrev IncCoequalizer {Obj : Type u} {C : IncCategory Obj}
+    {source target : Obj} (first second : C.Hom source target) :=
+  @IncEqualizer Obj C.op target source first second
+
+def equalizerComparison
+    {Obj : Type u} {C : IncCategory Obj} {source target : Obj}
+    {first second : C.Hom source target}
+    (sourceEq targetEq : IncEqualizer first second) :
+    C.Hom sourceEq.object targetEq.object :=
+  targetEq.lift sourceEq.object sourceEq.inclusion sourceEq.equalizes
+
+theorem equalizerComparison_inclusion
+    {Obj : Type u} {C : IncCategory Obj} {source target : Obj}
+    {first second : C.Hom source target}
+    (sourceEq targetEq : IncEqualizer first second) :
+    C.comp targetEq.inclusion (equalizerComparison sourceEq targetEq) =
+      sourceEq.inclusion :=
+  targetEq.lift_inclusion _ _ _
+
+theorem equalizerComparison_self
+    {Obj : Type u} {C : IncCategory Obj} {source target : Obj}
+    {first second : C.Hom source target}
+    (equalizer : IncEqualizer first second) :
+    equalizerComparison equalizer equalizer = C.id equalizer.object := by
+  symm
+  apply equalizer.lift_unique
+  exact C.comp_id equalizer.inclusion
+
+theorem equalizerComparison_comp
+    {Obj : Type u} {C : IncCategory Obj} {source target : Obj}
+    {first second : C.Hom source target}
+    (firstEq secondEq thirdEq : IncEqualizer first second) :
+    equalizerComparison firstEq thirdEq =
+      C.comp (equalizerComparison secondEq thirdEq)
+        (equalizerComparison firstEq secondEq) := by
+  symm
+  apply thirdEq.lift_unique
+  rw [C.assoc, equalizerComparison_inclusion,
+    equalizerComparison_inclusion]
+
+def equalizer_unique_up_to_iso
+    {Obj : Type u} {C : IncCategory Obj} {source target : Obj}
+    {first second : C.Hom source target}
+    (left right : IncEqualizer first second) :
+    MorphismIso C left.object right.object where
+  hom := equalizerComparison left right
+  inv := equalizerComparison right left
+  inv_hom := by
+    rw [← equalizerComparison_comp, equalizerComparison_self]
+  hom_inv := by
+    rw [← equalizerComparison_comp, equalizerComparison_self]
+
 noncomputable def IncCategoryEquivalence.stronglyPreservesBinaryProduct
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (equivalence : IncCategoryEquivalence C D)
