@@ -6013,6 +6013,130 @@ structure LinearObservation {I R T : Type u} [DecidableEq I]
   laplacian : Matrix I I Int
   -- spectral data, ranks, etc.
 
+abbrev LinearObservationLanguage
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) :=
+  LinearObservation inc idx → Prop
+
+def indicatorLinearObservation
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (pivot : I) :
+    LinearObservation inc idx :=
+  ⟨fun row _ => if row = pivot then (1 : Int) else 0, fun _ _ => 0⟩
+
+def ContainsLinearIndicators
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx) : Prop :=
+  ∀ pivot, language (indicatorLinearObservation inc idx pivot)
+
+def AgreeOnLinearObservationLanguage
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx) (i j : I) : Prop :=
+  ∀ obs, language obs →
+    obs.boundary_matrix i = obs.boundary_matrix j ∧
+    obs.laplacian i = obs.laplacian j
+
+theorem indicator_complete_language_agreement_iff_eq
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx)
+    (containsIndicators : ContainsLinearIndicators inc idx language)
+    (i j : I) :
+    AgreeOnLinearObservationLanguage inc idx language i j ↔ i = j := by
+  constructor
+  · intro agrees
+    have rowsEqual :=
+      (agrees (indicatorLinearObservation inc idx i) (containsIndicators i)).left
+    have atColumn := congrFun rowsEqual j
+    by_cases equal : j = i
+    · exact equal.symm
+    · simp [indicatorLinearObservation, equal] at atColumn
+  · intro equal obs allowed
+    cases equal
+    exact ⟨rfl, rfl⟩
+
+theorem indicator_complete_language_separates_points
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx)
+    (containsIndicators : ContainsLinearIndicators inc idx language)
+    {i j : I} (different : i ≠ j) :
+    ∃ obs, language obs ∧
+      (obs.boundary_matrix i ≠ obs.boundary_matrix j ∨
+       obs.laplacian i ≠ obs.laplacian j) := by
+  refine ⟨indicatorLinearObservation inc idx i, containsIndicators i,
+    Or.inl ?_⟩
+  intro rowsEqual
+  have atColumn := congrFun rowsEqual i
+  simp [indicatorLinearObservation, Ne.symm different] at atColumn
+
+def languageObservationalSetoid
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx)
+    (containsIndicators : ContainsLinearIndicators inc idx language) : Setoid I where
+  r := AgreeOnLinearObservationLanguage inc idx language
+  iseqv := {
+    refl := fun i =>
+      (indicator_complete_language_agreement_iff_eq inc idx language
+        containsIndicators i i).mpr rfl
+    symm := fun {i j} related =>
+      (indicator_complete_language_agreement_iff_eq inc idx language
+        containsIndicators j i).mpr
+          ((indicator_complete_language_agreement_iff_eq inc idx language
+            containsIndicators i j).mp related).symm
+    trans := fun {i j k} first second => by
+      apply (indicator_complete_language_agreement_iff_eq inc idx language
+        containsIndicators i k).mpr
+      exact ((indicator_complete_language_agreement_iff_eq inc idx language
+        containsIndicators i j).mp first).trans
+          ((indicator_complete_language_agreement_iff_eq inc idx language
+            containsIndicators j k).mp second) }
+
+abbrev LanguageObservationQuotient
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx)
+    (containsIndicators : ContainsLinearIndicators inc idx language) :=
+  Quotient (languageObservationalSetoid inc idx language containsIndicators)
+
+def indicatorCompleteLanguageQuotientEquivalence
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx)
+    (containsIndicators : ContainsLinearIndicators inc idx language) :
+    IncTypeEquivalence I
+      (LanguageObservationQuotient inc idx language containsIndicators) where
+  forward := Quotient.mk
+    (languageObservationalSetoid inc idx language containsIndicators)
+  inverse := Quotient.lift id (by
+    intro i j related
+    exact (indicator_complete_language_agreement_iff_eq inc idx language
+      containsIndicators i j).mp related)
+  inverse_forward := by
+    intro value
+    rfl
+  forward_inverse := by
+    intro value
+    refine Quotient.inductionOn value ?_
+    intro representative
+    rfl
+
+theorem indicator_complete_language_bisimulation_completeness
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx)
+    (containsIndicators : ContainsLinearIndicators inc idx language)
+    {i j : I}
+    (agrees : AgreeOnLinearObservationLanguage inc idx language i j) :
+    approxBisim inc i j := by
+  have equal := (indicator_complete_language_agreement_iff_eq inc idx language
+    containsIndicators i j).mp agrees
+  cases equal
+  exact approxBisim_refl inc i
+
 theorem all_linear_observations_agree_iff_eq
     {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I) (i j : I) :
