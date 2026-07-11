@@ -172,6 +172,61 @@ theorem incidence_quotient_sound {I R T : Type u} [DecidableEq I]
       Quotient.mk (approxBisimSetoid inc) j :=
   Quotient.sound h
 
+/- Dependent types over an incidence carrier.  This is the semantic layer for
+   the requested dependent/higher-order internal language: a family assigns a
+   type to every incidence, its dependent sum is the total space, and its
+   dependent product is the type of sections.  Syntax and proof rules may be
+   interpreted in this layer without identifying dependent type equality with
+   behavioural bisimilarity. -/
+structure IncDependentFamily {I R T : Type u} [DecidableEq I]
+    (_inc : Incidence I R T) where
+  fiber : I → Type u
+
+abbrev IncDependentSum {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} (family : IncDependentFamily inc) : Type u :=
+  Sigma family.fiber
+
+abbrev IncDependentProduct {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} (family : IncDependentFamily inc) : Type u :=
+  ∀ i, family.fiber i
+
+def IncDependentFamily.reindex {I R T J : Type u} [DecidableEq I]
+    {inc : Incidence I R T} (family : IncDependentFamily inc) (map : J → I) :
+    J → Type u :=
+  fun j => family.fiber (map j)
+
+def IncDependentFamily.mapSum {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} {family target : IncDependentFamily inc}
+    (map : ∀ i, family.fiber i → target.fiber i) :
+    IncDependentSum family → IncDependentSum target
+  | ⟨i, value⟩ => ⟨i, map i value⟩
+
+theorem IncDependentFamily.mapSum_id {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} (family : IncDependentFamily inc) :
+    IncDependentFamily.mapSum (family := family) (target := family)
+      (fun _ value => value) = id := by
+  funext total
+  rcases total with ⟨i, value⟩
+  rfl
+
+theorem IncDependentFamily.mapSum_comp {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} {first second third : IncDependentFamily inc}
+    (f : ∀ i, first.fiber i → second.fiber i)
+    (g : ∀ i, second.fiber i → third.fiber i) :
+    IncDependentFamily.mapSum (family := second) (target := third) g ∘
+        IncDependentFamily.mapSum (family := first) (target := second) f =
+      IncDependentFamily.mapSum (family := first) (target := third)
+        (fun i value => g i (f i value)) := by
+  funext total
+  rcases total with ⟨i, value⟩
+  rfl
+
+theorem incDependentProduct_ext {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} {family : IncDependentFamily inc}
+    {left right : IncDependentProduct family}
+    (h : ∀ i, left i = right i) : left = right :=
+  funext h
+
 /- A classification is the general sufficient condition for the behavioural
    quotient to have a concrete, fully described carrier.  `respects` is the
    well-definedness condition for `Quotient.lift`; `reflects` prevents two
