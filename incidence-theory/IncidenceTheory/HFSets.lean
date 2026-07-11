@@ -2127,6 +2127,188 @@ theorem hfRecursiveNatMultiplicationGraph_total
   exact (hfRecursiveNatMultiplicationGraph_apply_iff bound _ _).mpr
     ⟨left, right, leftLess, rightLess, rfl, rfl⟩
 
+/- A bounded exponentiation table on internal finite ordinals. -/
+def hfRecursiveNatPowerRow (exponent : Nat) : Nat → HFRecursiveSet
+  | 0 => hfRecursiveEmpty
+  | baseBound + 1 =>
+    hfRecursiveUnion
+      (hfRecursiveSingletonGraph
+        (hfRecursiveOrderedPair (hfRecursiveNat baseBound) (hfRecursiveNat exponent))
+        (hfRecursiveNat (baseBound ^ exponent)))
+      (hfRecursiveNatPowerRow exponent baseBound)
+
+theorem hfRecursiveNatPowerRow_apply_iff
+    (exponent baseBound : Nat) (input output : HFRecursiveSet) :
+    HFRecursiveMember (hfRecursiveOrderedPair input output)
+      (hfRecursiveNatPowerRow exponent baseBound) ↔
+      ∃ base, base < baseBound ∧
+        input = hfRecursiveOrderedPair (hfRecursiveNat base) (hfRecursiveNat exponent) ∧
+        output = hfRecursiveNat (base ^ exponent) := by
+  induction baseBound with
+  | zero =>
+      constructor
+      · intro member
+        exact False.elim (hfRecursiveMember_empty _ member)
+      · rintro ⟨base, less, _, _⟩
+        exact False.elim (Nat.not_lt_zero base less)
+  | succ baseBound ih =>
+      rw [hfRecursiveNatPowerRow, hfRecursiveMember_union_iff,
+        hfRecursiveSingletonGraph_apply_iff, ih]
+      constructor
+      · rintro (⟨inputEq, outputEq⟩ | ⟨base, less, inputEq, outputEq⟩)
+        · exact ⟨baseBound, Nat.lt_succ_self baseBound, inputEq, outputEq⟩
+        · exact ⟨base, Nat.lt_trans less (Nat.lt_succ_self baseBound),
+            inputEq, outputEq⟩
+      · rintro ⟨base, less, inputEq, outputEq⟩
+        rcases Nat.lt_or_eq_of_le (Nat.le_of_lt_succ less) with earlier | rfl
+        · exact Or.inr ⟨base, earlier, inputEq, outputEq⟩
+        · exact Or.inl ⟨inputEq, outputEq⟩
+
+def hfRecursiveNatPowerRows (baseBound : Nat) : Nat → HFRecursiveSet
+  | 0 => hfRecursiveEmpty
+  | exponentBound + 1 =>
+    hfRecursiveUnion (hfRecursiveNatPowerRow exponentBound baseBound)
+      (hfRecursiveNatPowerRows baseBound exponentBound)
+
+theorem hfRecursiveNatPowerRows_apply_iff
+    (baseBound exponentBound : Nat) (input output : HFRecursiveSet) :
+    HFRecursiveMember (hfRecursiveOrderedPair input output)
+      (hfRecursiveNatPowerRows baseBound exponentBound) ↔
+      ∃ base exponent, base < baseBound ∧ exponent < exponentBound ∧
+        input = hfRecursiveOrderedPair (hfRecursiveNat base) (hfRecursiveNat exponent) ∧
+        output = hfRecursiveNat (base ^ exponent) := by
+  induction exponentBound with
+  | zero =>
+      constructor
+      · intro member
+        exact False.elim (hfRecursiveMember_empty _ member)
+      · rintro ⟨base, exponent, _, less, _, _⟩
+        exact False.elim (Nat.not_lt_zero exponent less)
+  | succ exponentBound ih =>
+      rw [hfRecursiveNatPowerRows, hfRecursiveMember_union_iff,
+        hfRecursiveNatPowerRow_apply_iff, ih]
+      constructor
+      · rintro (⟨base, baseLess, inputEq, outputEq⟩ |
+          ⟨base, exponent, baseLess, exponentLess, inputEq, outputEq⟩)
+        · exact ⟨base, exponentBound, baseLess,
+            Nat.lt_succ_self exponentBound, inputEq, outputEq⟩
+        · exact ⟨base, exponent, baseLess,
+            Nat.lt_trans exponentLess (Nat.lt_succ_self exponentBound),
+            inputEq, outputEq⟩
+      · rintro ⟨base, exponent, baseLess, exponentLess, inputEq, outputEq⟩
+        rcases Nat.lt_or_eq_of_le (Nat.le_of_lt_succ exponentLess) with earlier | rfl
+        · exact Or.inr ⟨base, exponent, baseLess, earlier, inputEq, outputEq⟩
+        · exact Or.inl ⟨base, baseLess, inputEq, outputEq⟩
+
+def hfRecursiveNatPowerGraph (bound : Nat) : HFRecursiveSet :=
+  hfRecursiveNatPowerRows bound bound
+
+theorem hfRecursiveNatPowerGraph_apply_iff
+    (bound : Nat) (input output : HFRecursiveSet) :
+    HFRecursiveMember (hfRecursiveOrderedPair input output)
+      (hfRecursiveNatPowerGraph bound) ↔
+      ∃ base exponent, base < bound ∧ exponent < bound ∧
+        input = hfRecursiveOrderedPair (hfRecursiveNat base) (hfRecursiveNat exponent) ∧
+        output = hfRecursiveNat (base ^ exponent) :=
+  hfRecursiveNatPowerRows_apply_iff bound bound input output
+
+theorem hfRecursiveNatPowerGraph_functional (bound : Nat) :
+    HFRecursiveFunctional (hfRecursiveNatPowerGraph bound) := by
+  intro input output₁ output₂ first second
+  rcases (hfRecursiveNatPowerGraph_apply_iff bound input output₁).mp first with
+    ⟨base, exponent, _, _, inputEq₁, outputEq₁⟩
+  rcases (hfRecursiveNatPowerGraph_apply_iff bound input output₂).mp second with
+    ⟨base', exponent', _, _, inputEq₂, outputEq₂⟩
+  have pairEq := inputEq₁.symm.trans inputEq₂
+  rcases hfRecursiveOrderedPair_injective pairEq with ⟨baseEq, exponentEq⟩
+  have baseIndexEq : base = base' := hfRecursiveNat_injective baseEq
+  have exponentIndexEq : exponent = exponent' := hfRecursiveNat_injective exponentEq
+  subst base'
+  subst exponent'
+  exact outputEq₁.trans outputEq₂.symm
+
+theorem hfRecursiveNatPowerGraph_total
+    (bound base exponent : Nat) (baseLess : base < bound)
+    (exponentLess : exponent < bound) :
+    ∃ output,
+      HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat base) (hfRecursiveNat exponent)) output)
+        (hfRecursiveNatPowerGraph bound) := by
+  refine ⟨hfRecursiveNat (base ^ exponent), ?_⟩
+  exact (hfRecursiveNatPowerGraph_apply_iff bound _ _).mpr
+    ⟨base, exponent, baseLess, exponentLess, rfl, rfl⟩
+
+theorem hfRecursiveNatPowerGraph_on_nats_iff
+    (bound base exponent : Nat) (baseLess : base < bound)
+    (exponentLess : exponent < bound) (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat base) (hfRecursiveNat exponent)) output)
+        (hfRecursiveNatPowerGraph bound) ↔
+      output = hfRecursiveNat (base ^ exponent) := by
+  constructor
+  · intro applies
+    rcases (hfRecursiveNatPowerGraph_apply_iff bound _ _).mp applies with
+      ⟨actualBase, actualExponent, _, _, inputEq, outputEq⟩
+    rcases hfRecursiveOrderedPair_injective inputEq with
+      ⟨baseEq, exponentEq⟩
+    have actualBaseEq : base = actualBase := hfRecursiveNat_injective baseEq
+    have actualExponentEq : exponent = actualExponent :=
+      hfRecursiveNat_injective exponentEq
+    subst actualBase
+    subst actualExponent
+    exact outputEq
+  · intro outputEq
+    exact (hfRecursiveNatPowerGraph_apply_iff bound _ _).mpr
+      ⟨base, exponent, baseLess, exponentLess, rfl, outputEq⟩
+
+theorem hfRecursiveNatPowerGraph_zero_exponent
+    (bound base : Nat) (baseLess : base < bound) (zeroLess : 0 < bound)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat base) (hfRecursiveNat 0)) output)
+        (hfRecursiveNatPowerGraph bound) ↔
+      output = hfRecursiveNat 1 := by
+  rw [hfRecursiveNatPowerGraph_on_nats_iff
+    bound base 0 baseLess zeroLess, Nat.pow_zero]
+
+theorem hfRecursiveNatPowerGraph_one_exponent
+    (bound base : Nat) (baseLess : base < bound) (oneLess : 1 < bound)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat base) (hfRecursiveNat 1)) output)
+        (hfRecursiveNatPowerGraph bound) ↔
+      output = hfRecursiveNat base := by
+  rw [hfRecursiveNatPowerGraph_on_nats_iff
+    bound base 1 baseLess oneLess, Nat.pow_one]
+
+theorem hfRecursiveNatPowerGraph_one_base
+    (bound exponent : Nat) (oneLess : 1 < bound)
+    (exponentLess : exponent < bound) (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat 1) (hfRecursiveNat exponent)) output)
+        (hfRecursiveNatPowerGraph bound) ↔
+      output = hfRecursiveNat 1 := by
+  rw [hfRecursiveNatPowerGraph_on_nats_iff
+    bound 1 exponent oneLess exponentLess, Nat.one_pow]
+
+theorem hfRecursiveNatPowerGraph_zero_base
+    (bound exponent : Nat) (zeroLess : 0 < bound)
+    (exponentLess : exponent < bound) (exponentPositive : 0 < exponent)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat 0) (hfRecursiveNat exponent)) output)
+        (hfRecursiveNatPowerGraph bound) ↔
+      output = hfRecursiveNat 0 := by
+  rw [hfRecursiveNatPowerGraph_on_nats_iff
+    bound 0 exponent zeroLess exponentLess,
+    Nat.zero_pow exponentPositive]
+
 theorem hfRecursiveNatMultiplicationGraph_on_nats_iff
     (bound left right : Nat) (leftLess : left < bound)
     (rightLess : right < bound) (output : HFRecursiveSet) :

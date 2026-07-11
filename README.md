@@ -174,6 +174,10 @@ It currently establishes:
   arguments.  The corresponding preservation-and-reflection equivalences are
   also proved for strict internal inclusion (proper subset), so these common
   summand/factor maps are order embeddings for both `≤` and `<`.
+  Bounded exponentiation is likewise represented by an internal graph with
+  exact application law `⟨m,n⟩ ↦ m^n`, functionality, and totality. Its
+  evaluation iff yields the internal laws `m^0=1`, `m^1=m`, `1^n=1`, and
+  `0^n=0` for positive `n`.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
