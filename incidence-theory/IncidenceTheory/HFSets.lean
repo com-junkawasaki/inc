@@ -2738,6 +2738,60 @@ theorem hfRecursiveNatPowerGraph_mul_exponents
   · exact congrArg hfRecursiveNat
       (Nat.pow_mul base firstExponent secondExponent)
 
+theorem hfRecursiveNatPowerGraph_mul_bases
+    (bound firstBase secondBase exponent : Nat)
+    (firstBaseLess : firstBase < bound) (secondBaseLess : secondBase < bound)
+    (exponentLess : exponent < bound)
+    (baseProductLess : firstBase * secondBase < bound)
+    (firstPowerLess : firstBase ^ exponent < bound)
+    (secondPowerLess : secondBase ^ exponent < bound) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat firstBase)
+            (hfRecursiveNat secondBase))
+          (hfRecursiveNat (firstBase * secondBase)))
+        (hfRecursiveNatMultiplicationGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat (firstBase * secondBase))
+            (hfRecursiveNat exponent))
+          (hfRecursiveNat ((firstBase * secondBase) ^ exponent)))
+        (hfRecursiveNatPowerGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat firstBase)
+            (hfRecursiveNat exponent))
+          (hfRecursiveNat (firstBase ^ exponent)))
+        (hfRecursiveNatPowerGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat secondBase)
+            (hfRecursiveNat exponent))
+          (hfRecursiveNat (secondBase ^ exponent)))
+        (hfRecursiveNatPowerGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat (firstBase ^ exponent))
+            (hfRecursiveNat (secondBase ^ exponent)))
+          (hfRecursiveNat (firstBase ^ exponent * secondBase ^ exponent)))
+        (hfRecursiveNatMultiplicationGraph bound) ∧
+    hfRecursiveNat ((firstBase * secondBase) ^ exponent) =
+      hfRecursiveNat (firstBase ^ exponent * secondBase ^ exponent) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact (hfRecursiveNatMultiplicationGraph_on_nats_iff bound
+      firstBase secondBase firstBaseLess secondBaseLess _).mpr rfl
+  · exact (hfRecursiveNatPowerGraph_on_nats_iff bound
+      (firstBase * secondBase) exponent baseProductLess exponentLess _).mpr rfl
+  · exact (hfRecursiveNatPowerGraph_on_nats_iff bound
+      firstBase exponent firstBaseLess exponentLess _).mpr rfl
+  · exact (hfRecursiveNatPowerGraph_on_nats_iff bound
+      secondBase exponent secondBaseLess exponentLess _).mpr rfl
+  · exact (hfRecursiveNatMultiplicationGraph_on_nats_iff bound
+      (firstBase ^ exponent) (secondBase ^ exponent)
+      firstPowerLess secondPowerLess _).mpr rfl
+  · exact congrArg hfRecursiveNat
+      (Nat.mul_pow firstBase secondBase exponent)
+
 theorem hfRecursiveNatShiftGraph_zero (n : Nat) :
     hfRecursiveNatShiftGraph 0 n = hfRecursiveNatIdentityGraph n := by
   induction n with
@@ -3639,6 +3693,38 @@ theorem hfRecursiveNat_mul_monotone
   exact Nat.mul_le_mul
     ((hfRecursiveNat_subset_iff a b).mp first)
     ((hfRecursiveNat_subset_iff c d).mp second)
+
+theorem hfRecursiveNat_pow_base_monotone
+    {a b : Nat} (exponent : Nat)
+    (ordered : HFRecursiveSubset (hfRecursiveNat a) (hfRecursiveNat b)) :
+    HFRecursiveSubset (hfRecursiveNat (a ^ exponent))
+      (hfRecursiveNat (b ^ exponent)) := by
+  apply (hfRecursiveNat_subset_iff (a ^ exponent) (b ^ exponent)).mpr
+  exact Nat.pow_le_pow_left ((hfRecursiveNat_subset_iff a b).mp ordered) exponent
+
+theorem hfRecursiveNat_pow_base_subset_iff
+    (a b exponent : Nat) (positive : 0 < exponent) :
+    HFRecursiveSubset (hfRecursiveNat (a ^ exponent))
+        (hfRecursiveNat (b ^ exponent)) ↔
+      HFRecursiveSubset (hfRecursiveNat a) (hfRecursiveNat b) := by
+  rw [hfRecursiveNat_subset_iff, hfRecursiveNat_subset_iff,
+    Nat.pow_le_pow_iff_left (Nat.ne_of_gt positive)]
+
+theorem hfRecursiveNat_pow_exponent_monotone
+    (base : Nat) (basePositive : 0 < base) {m n : Nat}
+    (ordered : HFRecursiveSubset (hfRecursiveNat m) (hfRecursiveNat n)) :
+    HFRecursiveSubset (hfRecursiveNat (base ^ m))
+      (hfRecursiveNat (base ^ n)) := by
+  apply (hfRecursiveNat_subset_iff (base ^ m) (base ^ n)).mpr
+  exact Nat.pow_le_pow_right basePositive ((hfRecursiveNat_subset_iff m n).mp ordered)
+
+theorem hfRecursiveNat_pow_exponent_subset_iff
+    (base m n : Nat) (baseGreaterOne : 1 < base) :
+    HFRecursiveSubset (hfRecursiveNat (base ^ m))
+        (hfRecursiveNat (base ^ n)) ↔
+      HFRecursiveSubset (hfRecursiveNat m) (hfRecursiveNat n) := by
+  rw [hfRecursiveNat_subset_iff, hfRecursiveNat_subset_iff,
+    Nat.pow_le_pow_iff_right baseGreaterOne]
 
 /- Strict inclusion is therefore not an external convention: it is exactly
    the strict natural-number order on the internally reconstructed ordinals. -/

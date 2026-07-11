@@ -180,7 +180,10 @@ It currently establishes:
   `0^n=0` for positive `n`.  Exponent addition and multiplication are linked
   to the three internal arithmetic graphs by checked computation diagrams:
   `a^(m+n)=a^m*a^n` and `a^(m*n)=(a^m)^n`, including every intermediate
-  addition, multiplication, and power application.
+  addition, multiplication, and power application.  The product law
+  `(a*b)^n=a^n*b^n` is checked in the same form.  Powers are monotone in the
+  base and, for positive bases, in the exponent; positive exponents and bases
+  greater than one give the corresponding inclusion-reflection equivalences.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
