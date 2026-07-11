@@ -267,6 +267,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   独立head-semantic providerは不要となった。`IncDepRawFullyCoherentCertifiedTyping`がこのtelescope certificateとcoherent term certificateを束ね、
   `toInput`、`interpretFullyCoherentCertified`、coherence theoremがjudgment-local synthesis仮定なしのend-to-end interpretationを与える。
   fully coherent certification levelではlocal synthesis branchが完了し、残るのはshared canonical preservation hypothesesというglobal境界である。
+- global境界を呼出しごとのparameterではなくmodel lawfulnessへ内包した。`IncDepRawLawfulSubstitutionFiberModel`はsemantic modelにvariable substitution、
+  readiness alignment、formation rebase lawsを追加し、`preservation`がcomplete canonical mutual dispatcherを、`interpretFullyCertified`とcoherence theoremが
+  追加引数なしの公開interpretation pathを与える。`IncDepRawEqualityLawfulSubstitutionFiberModel`はrebaseをformation-preservation resultのliteral uniquenessで
+  強化し、自動的にlawful modelへ変換する。これらはsyntax-local synthesisではなく真のsemantic model lawsである。特にdependent eliminationでは同じ
+  instantiate済みresult typeが内部derivationを一意に定めないため、readiness alignmentをoutput indexだけから一般導出する主張は採用しない。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

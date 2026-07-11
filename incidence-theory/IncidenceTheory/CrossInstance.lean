@@ -12429,6 +12429,62 @@ theorem
   exact model.interpretCertifiedCanonical_coherent
     (certified.toInput model hypotheses)
 
+/-- A substitution-fiber model together with the global laws required by the
+canonical mutual preservation theorem. -/
+structure IncDepRawLawfulSubstitutionFiberModel extends
+    IncDepRawSubstitutionFiberModel.{u} where
+  canonicalLaws : IncDepRawCanonicalSubstitutionPreservationHypotheses
+
+noncomputable def IncDepRawLawfulSubstitutionFiberModel.preservation
+    (model : IncDepRawLawfulSubstitutionFiberModel.{u}) :
+    IncDepRawStrictMutualSubstitutionDispatcher :=
+  model.toIncDepRawSubstitutionFiberModel.preservationCanonical
+    model.canonicalLaws
+
+noncomputable def
+    IncDepRawLawfulSubstitutionFiberModel.interpretFullyCertified
+    (model : IncDepRawLawfulSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawFullyCoherentCertifiedTyping context term type) :=
+  model.toIncDepRawSubstitutionFiberModel.interpretFullyCoherentCertified
+    model.canonicalLaws certified
+
+theorem
+    IncDepRawLawfulSubstitutionFiberModel.interpretFullyCertified_coherent
+    (model : IncDepRawLawfulSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawFullyCoherentCertifiedTyping context term type) :
+    let input := certified.toInput model.toIncDepRawSubstitutionFiberModel
+      model.canonicalLaws
+    let result := model.interpretFullyCertified certified
+    result.formationResult.semanticFiberEquivalence.transport
+        result.typingResult.sourceTermResult.semanticTerm =
+      result.typingResult.targetTermResult.semanticTerm.substitute
+        (IncDepRawSubstitutionSemanticResult.identity
+          input.contextResult).semanticSubstitution := by
+  exact model.toIncDepRawSubstitutionFiberModel
+    |>.interpretFullyCoherentCertified_coherent model.canonicalLaws certified
+
+/-- Equality of formation-preservation results is a stronger, often easier to
+state model law; it canonically supplies the rebase law. -/
+structure IncDepRawEqualityLawfulSubstitutionFiberModel extends
+    IncDepRawSubstitutionFiberModel.{u} where
+  variableLaw : IncDepRawVariableSubstitutionProvider
+  readinessLaw : IncDepRawCoherentReadinessAlignmentProvider
+  formationEqualityLaw : IncDepRawFormationSubstitutionFiberEqualityProvider
+
+noncomputable def
+    IncDepRawEqualityLawfulSubstitutionFiberModel.toLawful
+    (model : IncDepRawEqualityLawfulSubstitutionFiberModel.{u}) :
+    IncDepRawLawfulSubstitutionFiberModel.{u} where
+  toIncDepRawSubstitutionFiberModel := model.toIncDepRawSubstitutionFiberModel
+  canonicalLaws :=
+    { variableProvider := model.variableLaw
+      readinessProvider := model.readinessLaw
+      rebaseProvider := model.formationEqualityLaw.toRebase }
+
 theorem IncDepRawSubstitutionFiberModel.preservationCanonical_formation
     (model : IncDepRawSubstitutionFiberModel.{u})
     (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses)

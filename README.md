@@ -682,6 +682,19 @@ It currently establishes:
   closes the local synthesis branch for the fully coherent certification level;
   weaker raw certificates remain intentionally weaker rather than being given
   fabricated coherence evidence.
+  The remaining global boundary is now internalized as model lawfulness rather
+  than repeated theorem parameters.  `IncDepRawLawfulSubstitutionFiberModel`
+  extends the semantic model with variable substitution, readiness alignment,
+  and formation rebase laws.  Its `preservation` is the complete canonical
+  mutual substitution dispatcher, while `interpretFullyCertified` and its
+  coherence theorem expose the final public path from fully coherent syntax to
+  semantics without any additional arguments.  The stronger
+  `IncDepRawEqualityLawfulSubstitutionFiberModel` replaces the rebase law by
+  literal uniqueness of formation-preservation results and converts to the
+  lawful model automatically.  These are genuine semantic model laws, not
+  syntax-local obligations: readiness alignment cannot be derived merely from
+  the output index, because dependent elimination can hide different internal
+  derivations behind the same instantiated result type.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
