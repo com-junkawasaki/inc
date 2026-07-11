@@ -3661,6 +3661,68 @@ noncomputable def IncDepRawReadyTypingSemanticResult.second
     ⟨assignment, (pairResult.semanticTerm assignment).1⟩
   typingResult := IncDepRawTypingSemanticResult.second pairResult
 
+theorem IncDepRawTypingSemanticResult.pi_beta
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {body argument : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {bodyTyping : IncDepRawHasType (domain :: context) body codomain}
+    {argumentTyping : IncDepRawHasType context argument domain}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    {semanticDomain : IncTypeInContext contextResult.semanticContext}
+    {semanticCodomain : IncTypeInContext
+      (contextResult.semanticContext.extend semanticDomain)}
+    (bodyResult : IncDepRawTypingSemanticResult bodyTyping
+      (contextResult.extend (typeWellFormed := domainFormation) semanticDomain)
+      semanticCodomain)
+    (argumentResult : IncDepRawTypingSemanticResult argumentTyping contextResult
+      semanticDomain) :
+    IncPiTerm.apply
+      (IncPiTerm.lambda bodyResult.semanticTerm) argumentResult.semanticTerm =
+      fun assignment => bodyResult.semanticTerm
+        ⟨assignment, argumentResult.semanticTerm assignment⟩ := by
+  rfl
+
+theorem IncDepRawTypingSemanticResult.sigma_first_beta
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {first second : IncDepRawTerm}
+    {firstTyping : IncDepRawHasType context first domain}
+    {secondTyping : IncDepRawHasType context second (codomain.instantiate first)}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    {semanticDomain : IncTypeInContext contextResult.semanticContext}
+    {semanticCodomain : IncTypeInContext
+      (contextResult.semanticContext.extend semanticDomain)}
+    (firstResult : IncDepRawTypingSemanticResult firstTyping contextResult
+      semanticDomain)
+    (secondResult : IncDepRawTypingSemanticResult secondTyping contextResult
+      (fun assignment => semanticCodomain
+        ⟨assignment, firstResult.semanticTerm assignment⟩)) :
+    IncSigmaTerm.first
+      (IncSigmaTerm.pair firstResult.semanticTerm secondResult.semanticTerm) =
+      firstResult.semanticTerm := by
+  rfl
+
+theorem IncDepRawTypingSemanticResult.sigma_second_beta
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {first second : IncDepRawTerm}
+    {firstTyping : IncDepRawHasType context first domain}
+    {secondTyping : IncDepRawHasType context second (codomain.instantiate first)}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    {semanticDomain : IncTypeInContext contextResult.semanticContext}
+    {semanticCodomain : IncTypeInContext
+      (contextResult.semanticContext.extend semanticDomain)}
+    (firstResult : IncDepRawTypingSemanticResult firstTyping contextResult
+      semanticDomain)
+    (secondResult : IncDepRawTypingSemanticResult secondTyping contextResult
+      (fun assignment => semanticCodomain
+        ⟨assignment, firstResult.semanticTerm assignment⟩)) :
+    IncSigmaTerm.second
+      (IncSigmaTerm.pair firstResult.semanticTerm secondResult.semanticTerm) =
+      secondResult.semanticTerm := by
+  rfl
+
 noncomputable def incDepRawDependentRefl_readySemanticResult :
     IncDepRawReadyTypingSemanticResult incDepRawDependentRefl_semanticReady
       incDepRawEmptyContextSemanticTree where

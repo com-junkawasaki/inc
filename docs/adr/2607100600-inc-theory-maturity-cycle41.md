@@ -307,6 +307,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   はshape-indexed Pi/Sigma child resultとraw branch内のdomain/codomain readinessを消費し、正しく
   instantiateされたdependent fiberを返す。variable/unit/refl/lambdaと合わせ、全typing-readiness
   constructorに任意context tree上のgeneric semantic-result constructorが揃った。
+- algebraのcomputation soundnessもgeneric化した。任意interpreted context、dependent
+  domain/codomain、body/argument resultについてsemantic lambda applicationがextended assignment
+  上のbodyとdefinitionally一致する。任意dependent pair componentsについてfirst/second projection
+  が対応componentと一致する。Pi betaとSigma両betaはclosed Unit例に依存しない。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

@@ -711,6 +711,12 @@ It currently establishes:
   return correctly instantiated dependent fibers.  Together with variable,
   unit, reflexivity, and lambda, every typing-readiness constructor now has a
   generic semantic-result constructor over arbitrary context trees.
+  The algebra's computation soundness is now generic as well.  For arbitrary
+  interpreted contexts, dependent domains/codomains, body and argument results,
+  applying a semantic lambda is definitionally the body in the extended
+  assignment.  For arbitrary dependent pair components, first and second
+  projection are definitionally the corresponding semantic components.  These
+  Pi and both Sigma beta theorems no longer depend on the closed unit examples.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
