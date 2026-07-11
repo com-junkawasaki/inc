@@ -981,6 +981,40 @@ theorem Formula.logicalMap_rightInverse {Atom Atom' : Type u}
     Formula.logicalMap f (Formula.logicalMap g formula) = formula :=
   Formula.logicalMap_leftInverse g f hfg formula
 
+structure Formula.LogicalHeytingIsomorphism (Atom Atom' : Type u) where
+  forward : Formula.LogicalEquivalenceClass Atom →
+    Formula.LogicalEquivalenceClass Atom'
+  inverse : Formula.LogicalEquivalenceClass Atom' →
+    Formula.LogicalEquivalenceClass Atom
+  left_inverse : ∀ formula, inverse (forward formula) = formula
+  right_inverse : ∀ formula, forward (inverse formula) = formula
+  map_top : forward Formula.logicalTop = Formula.logicalTop
+  map_bottom : forward Formula.logicalBottom = Formula.logicalBottom
+  map_and : ∀ left right,
+    forward (Formula.logicalAnd left right) =
+      Formula.logicalAnd (forward left) (forward right)
+  map_or : ∀ left right,
+    forward (Formula.logicalOr left right) =
+      Formula.logicalOr (forward left) (forward right)
+  map_imp : ∀ left right,
+    forward (Formula.logicalImp left right) =
+      Formula.logicalImp (forward left) (forward right)
+
+def Formula.logicalMap_isomorphism {Atom Atom' : Type u}
+    (f : Atom → Atom') (g : Atom' → Atom)
+    (hgf : ∀ atom, g (f atom) = atom)
+    (hfg : ∀ atom', f (g atom') = atom') :
+    Formula.LogicalHeytingIsomorphism Atom Atom' where
+  forward := Formula.logicalMap f
+  inverse := Formula.logicalMap g
+  left_inverse := Formula.logicalMap_leftInverse f g hgf
+  right_inverse := Formula.logicalMap_rightInverse f g hfg
+  map_top := Formula.logicalMap_top f
+  map_bottom := Formula.logicalMap_bottom f
+  map_and := Formula.logicalMap_and f
+  map_or := Formula.logicalMap_or f
+  map_imp := Formula.logicalMap_imp f
+
 theorem Formula.logicalMap_injective_of_leftInverse {Atom Atom' : Type u}
     (f : Atom → Atom') (g : Atom' → Atom)
     (hgf : ∀ atom, g (f atom) = atom) :

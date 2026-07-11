@@ -284,6 +284,14 @@ theorem CoherentQuotientLogicalRetract.logicalMap_rightInverse
   Formula.logicalMap_rightInverse quotient.classification.classify
     retract.retraction retract.right_inverse formula
 
+def CoherentQuotient.logicalHeytingIsomorphism
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    (retract : CoherentQuotientLogicalRetract quotient) :
+    Formula.LogicalHeytingIsomorphism I Q :=
+  Formula.logicalMap_isomorphism quotient.classification.classify
+    retract.retraction retract.left_inverse retract.right_inverse
+
 theorem CoherentQuotient.logicalMap_injective
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
     {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
