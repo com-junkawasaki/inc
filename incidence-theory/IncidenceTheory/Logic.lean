@@ -1227,6 +1227,40 @@ theorem Formula.logicalMap_orderEmbedding_iff {Atom Atom' : Type u}
   · exact Formula.logicalMap_reflects_order_of_leftInverse f g hgf
   · exact Formula.logicalMap_monotone f
 
+theorem Formula.LogicalHeytingIsomorphism.monotone {Atom Atom' : Type u}
+    (iso : Formula.LogicalHeytingIsomorphism Atom Atom')
+    {left right : Formula.LogicalEquivalenceClass Atom} :
+    left ≤ right → iso.forward left ≤ iso.forward right := by
+  intro leftRight
+  change Formula.LogicalEntails left right at leftRight
+  change Formula.LogicalEntails (iso.forward left) (iso.forward right)
+  unfold Formula.LogicalEntails at leftRight ⊢
+  calc
+    Formula.logicalImp (iso.forward left) (iso.forward right) =
+        iso.forward (Formula.logicalImp left right) := (iso.map_imp left right).symm
+    _ = iso.forward Formula.logicalTop := congrArg iso.forward leftRight
+    _ = Formula.logicalTop := iso.map_top
+
+theorem Formula.LogicalHeytingIsomorphism.reflects_order {Atom Atom' : Type u}
+    (iso : Formula.LogicalHeytingIsomorphism Atom Atom')
+    {left right : Formula.LogicalEquivalenceClass Atom} :
+    iso.forward left ≤ iso.forward right → left ≤ right := by
+  intro mappedOrder
+  change Formula.LogicalEntails (iso.forward left) (iso.forward right) at mappedOrder
+  change Formula.LogicalEntails left right
+  unfold Formula.LogicalEntails at mappedOrder ⊢
+  apply iso.injective
+  rw [iso.map_imp, iso.map_top]
+  exact mappedOrder
+
+theorem Formula.LogicalHeytingIsomorphism.order_iff {Atom Atom' : Type u}
+    (iso : Formula.LogicalHeytingIsomorphism Atom Atom')
+    (left right : Formula.LogicalEquivalenceClass Atom) :
+    iso.forward left ≤ iso.forward right ↔ left ≤ right := by
+  constructor
+  · exact iso.reflects_order
+  · exact iso.monotone
+
 theorem Formula.logicalAnd_le_left {Atom : Type u}
     (left right : Formula.LogicalEquivalenceClass Atom) :
     Formula.logicalAnd left right ≤ left := by
