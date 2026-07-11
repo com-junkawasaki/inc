@@ -807,6 +807,10 @@ It currently establishes:
   all respected by identity transport.
   Backward transport now preserves composition and reversal too, making the
   identity groupoid laws symmetric in both directions.
+  These path maps are now lifted to the actual `IncIdentityType` representation,
+  `ULift (PLift equality)`, in both directions.  Both lifted reflexivity equations
+  compute definitionally, connecting the abstract groupoid API to semantic Id
+  witnesses used by the interpreter.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

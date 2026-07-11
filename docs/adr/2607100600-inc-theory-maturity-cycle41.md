@@ -373,6 +373,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - forward equality transportがpath reversalも保存することを証明し、refl/trans/symmのidentity
   groupoid基礎則を揃えた。
 - backward equality transportについてもtrans/symm保存を証明し、identity groupoid則を双方向で揃えた。
+- path mapを実際の`IncIdentityType`表現`ULift (PLift equality)`へ双方向にliftし、両方向の
+  reflexivity equationをdefinitionally証明した。abstract groupoid APIとinterpreterが使うsemantic
+  Id witnessを接続した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

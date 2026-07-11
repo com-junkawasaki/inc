@@ -3255,6 +3255,40 @@ def IncIdentityType
   fun assignment =>
     ULift.{u} (PLift (left assignment = right assignment))
 
+def IncFiberEquiv.mapIdentityWitness
+    {source target : Type u} (equivalence : IncFiberEquiv source target)
+    {left right : source}
+    (witness : ULift.{u} (PLift (left = right))) :
+    ULift.{u} (PLift
+      (equivalence.forward left = equivalence.forward right)) :=
+  ⟨⟨equivalence.mapEquality witness.down.down⟩⟩
+
+def IncFiberEquiv.mapIdentityWitnessBackward
+    {source target : Type u} (equivalence : IncFiberEquiv source target)
+    {left right : target}
+    (witness : ULift.{u} (PLift (left = right))) :
+    ULift.{u} (PLift
+      (equivalence.backward left = equivalence.backward right)) :=
+  ⟨⟨equivalence.mapEqualityBackward witness.down.down⟩⟩
+
+theorem IncFiberEquiv.mapIdentityWitness_refl
+    {source target : Type u} (equivalence : IncFiberEquiv source target)
+    (value : source) :
+    equivalence.mapIdentityWitness
+        (left := value) (right := value) ⟨⟨rfl⟩⟩ =
+      (⟨⟨rfl⟩⟩ : ULift.{u} (PLift
+        (equivalence.forward value = equivalence.forward value))) := by
+  rfl
+
+theorem IncFiberEquiv.mapIdentityWitnessBackward_refl
+    {source target : Type u} (equivalence : IncFiberEquiv source target)
+    (value : target) :
+    equivalence.mapIdentityWitnessBackward
+        (left := value) (right := value) ⟨⟨rfl⟩⟩ =
+      (⟨⟨rfl⟩⟩ : ULift.{u} (PLift
+        (equivalence.backward value = equivalence.backward value))) := by
+  rfl
+
 def IncIdentityTerm.refl
     {context : IncContext.{u}}
     {type : IncTypeInContext context}
