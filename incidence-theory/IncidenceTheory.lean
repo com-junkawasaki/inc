@@ -6004,6 +6004,10 @@ end LinearSemanticsSoundness
    T4: Completeness - linear observations determine equivalence -/
 namespace CompletenessTheory
 
+def BisimulationFaithful {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) : Prop :=
+  ∀ {i j}, approxBisim inc i j → i = j
+
 /- Linear observation functor -/
 /- Merkle-ID: foundation.axiomatization.linear_observation
    Linear observations: boundary matrices, Laplacians, spectra. -/
@@ -6196,6 +6200,42 @@ theorem indicator_complete_language_bisimulation_completeness
   cases equal
   exact approxBisim_refl inc i
 
+def CompleteLanguageBisimulationSound
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx) : Prop :=
+  ∀ {i j}, approxBisim inc i j →
+    AgreeOnLinearObservationLanguage inc idx language i j
+
+theorem complete_language_bisimulation_sound_iff_faithful
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx)
+    (complete : ContainsLinearIndicators inc idx language) :
+    CompleteLanguageBisimulationSound inc idx language ↔
+      BisimulationFaithful inc := by
+  constructor
+  · intro sound i j bisimilar
+    exact (indicator_complete_language_agreement_iff_eq inc idx language
+      complete i j).mp (sound bisimilar)
+  · intro faithful i j bisimilar
+    exact (indicator_complete_language_agreement_iff_eq inc idx language
+      complete i j).mpr (faithful bisimilar)
+
+theorem complete_language_observational_iff_bisimulation_of_faithful
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx)
+    (complete : ContainsLinearIndicators inc idx language)
+    (faithful : BisimulationFaithful inc) (i j : I) :
+    AgreeOnLinearObservationLanguage inc idx language i j ↔
+      approxBisim inc i j := by
+  constructor
+  · exact indicator_complete_language_bisimulation_completeness
+      inc idx language complete
+  · exact (complete_language_bisimulation_sound_iff_faithful
+      inc idx language complete).mpr faithful
+
 theorem indicator_language_agreement_iff_eq
     {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I) (i j : I) :
@@ -6373,10 +6413,6 @@ theorem observationQuotientToBisimulationQuotient_surjective
   intro representative
   exact ⟨Quotient.mk (linearObservationalSetoid inc idx) representative, rfl⟩
 
-def BisimulationFaithful {I R T : Type u} [DecidableEq I]
-    (inc : Incidence I R T) : Prop :=
-  ∀ {i j}, approxBisim inc i j → i = j
-
 theorem bisimulationFaithful_of_wellFounded_extensional
     {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (measure : I → Nat)
@@ -6388,6 +6424,21 @@ theorem bisimulationFaithful_of_wellFounded_extensional
   rcases bisimilar with ⟨relation, isBisimulation, related⟩
   exact incidence_bisim_faithful inc measure decreases extensional
     isBisimulation i j related
+
+theorem complete_language_soundness_of_wellFounded_extensional
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx)
+    (complete : ContainsLinearIndicators inc idx language)
+    (measure : I → Nat)
+    (decreases : ∀ i e, e ∈ inc.boundary i → measure e.i < measure i)
+    (extensional : ∀ x y, inc.typeFunc x = inc.typeFunc y →
+      boundaryMatched inc (· = ·) x y → x = y) :
+    CompleteLanguageBisimulationSound inc idx language :=
+  (complete_language_bisimulation_sound_iff_faithful
+    inc idx language complete).mpr
+      (bisimulationFaithful_of_wellFounded_extensional inc measure
+        decreases extensional)
 
 def observationBisimulationQuotientEquivalence
     {I R T : Type u} [DecidableEq I]
