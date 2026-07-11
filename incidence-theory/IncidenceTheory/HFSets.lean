@@ -1896,6 +1896,43 @@ theorem hfRecursiveNatAdditionGraph_total
   exact (hfRecursiveNatAdditionGraph_apply_iff bound _ _).mpr
     ⟨left, right, leftLess, rightLess, rfl, rfl⟩
 
+theorem hfRecursiveNatAdditionGraph_comm
+    (bound left right : Nat) (leftLess : left < bound)
+    (rightLess : right < bound) (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat left) (hfRecursiveNat right)) output)
+        (hfRecursiveNatAdditionGraph bound) ↔
+      HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat right) (hfRecursiveNat left)) output)
+        (hfRecursiveNatAdditionGraph bound) := by
+  constructor
+  · intro applies
+    rcases (hfRecursiveNatAdditionGraph_apply_iff bound _ _).mp applies with
+      ⟨actualLeft, actualRight, _, _, inputEq, outputEq⟩
+    rcases hfRecursiveOrderedPair_injective inputEq with
+      ⟨leftEq, rightEq⟩
+    have actualLeftEq : left = actualLeft := hfRecursiveNat_injective leftEq
+    have actualRightEq : right = actualRight := hfRecursiveNat_injective rightEq
+    subst actualLeft
+    subst actualRight
+    apply (hfRecursiveNatAdditionGraph_apply_iff bound _ _).mpr
+    refine ⟨right, left, rightLess, leftLess, rfl, ?_⟩
+    simpa [Nat.add_comm] using outputEq
+  · intro applies
+    rcases (hfRecursiveNatAdditionGraph_apply_iff bound _ _).mp applies with
+      ⟨actualRight, actualLeft, _, _, inputEq, outputEq⟩
+    rcases hfRecursiveOrderedPair_injective inputEq with
+      ⟨rightEq, leftEq⟩
+    have actualRightEq : right = actualRight := hfRecursiveNat_injective rightEq
+    have actualLeftEq : left = actualLeft := hfRecursiveNat_injective leftEq
+    subst actualRight
+    subst actualLeft
+    apply (hfRecursiveNatAdditionGraph_apply_iff bound _ _).mpr
+    refine ⟨left, right, leftLess, rightLess, rfl, ?_⟩
+    simpa [Nat.add_comm] using outputEq
+
 /- The analogous bounded multiplication table, again represented internally
    as a set of ordered input/output pairs. -/
 def hfRecursiveNatMultiplicationRow (right : Nat) : Nat → HFRecursiveSet
@@ -2008,6 +2045,43 @@ theorem hfRecursiveNatMultiplicationGraph_total
   refine ⟨hfRecursiveNat (left * right), ?_⟩
   exact (hfRecursiveNatMultiplicationGraph_apply_iff bound _ _).mpr
     ⟨left, right, leftLess, rightLess, rfl, rfl⟩
+
+theorem hfRecursiveNatMultiplicationGraph_comm
+    (bound left right : Nat) (leftLess : left < bound)
+    (rightLess : right < bound) (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat left) (hfRecursiveNat right)) output)
+        (hfRecursiveNatMultiplicationGraph bound) ↔
+      HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat right) (hfRecursiveNat left)) output)
+        (hfRecursiveNatMultiplicationGraph bound) := by
+  constructor
+  · intro applies
+    rcases (hfRecursiveNatMultiplicationGraph_apply_iff bound _ _).mp applies with
+      ⟨actualLeft, actualRight, _, _, inputEq, outputEq⟩
+    rcases hfRecursiveOrderedPair_injective inputEq with
+      ⟨leftEq, rightEq⟩
+    have actualLeftEq : left = actualLeft := hfRecursiveNat_injective leftEq
+    have actualRightEq : right = actualRight := hfRecursiveNat_injective rightEq
+    subst actualLeft
+    subst actualRight
+    apply (hfRecursiveNatMultiplicationGraph_apply_iff bound _ _).mpr
+    refine ⟨right, left, rightLess, leftLess, rfl, ?_⟩
+    simpa [Nat.mul_comm] using outputEq
+  · intro applies
+    rcases (hfRecursiveNatMultiplicationGraph_apply_iff bound _ _).mp applies with
+      ⟨actualRight, actualLeft, _, _, inputEq, outputEq⟩
+    rcases hfRecursiveOrderedPair_injective inputEq with
+      ⟨rightEq, leftEq⟩
+    have actualRightEq : right = actualRight := hfRecursiveNat_injective rightEq
+    have actualLeftEq : left = actualLeft := hfRecursiveNat_injective leftEq
+    subst actualRight
+    subst actualLeft
+    apply (hfRecursiveNatMultiplicationGraph_apply_iff bound _ _).mpr
+    refine ⟨left, right, leftLess, rightLess, rfl, ?_⟩
+    simpa [Nat.mul_comm] using outputEq
 
 theorem hfRecursiveNatShiftGraph_zero (n : Nat) :
     hfRecursiveNatShiftGraph 0 n = hfRecursiveNatIdentityGraph n := by

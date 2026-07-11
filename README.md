@@ -157,7 +157,9 @@ It currently establishes:
   functional and total on that finite square domain.
   The same construction is carried out independently for multiplication,
   with exact law `⟨m,n⟩ ↦ m*n` and checked functionality and totality on
-  every bounded finite square.
+  every bounded finite square.  Both internal application relations satisfy
+  commutativity: swapping the two encoded inputs preserves and reflects
+  application to every output.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
