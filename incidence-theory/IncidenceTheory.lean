@@ -7079,6 +7079,50 @@ theorem BehavioralBoundaryShapeTranslation.mapBisimulationQuotient_comp
   intro representative
   rfl
 
+structure BehavioralBoundaryShapeEmbedding
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂)
+    extends BehavioralBoundaryShapeTranslation source target where
+  reflectsBisimulation : ∀ {i j}, approxBisim target (map i) (map j) →
+    approxBisim source i j
+
+def BehavioralBoundaryShapeEmbedding.identity
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    BehavioralBoundaryShapeEmbedding inc inc where
+  toBehavioralBoundaryShapeTranslation :=
+    BehavioralBoundaryShapeTranslation.identity inc
+  reflectsBisimulation := fun bisimilar => bisimilar
+
+def BehavioralBoundaryShapeEmbedding.comp
+    {I J K R₁ T₁ R₂ T₂ R₃ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (secondMap : BehavioralBoundaryShapeEmbedding second third)
+    (firstMap : BehavioralBoundaryShapeEmbedding first second) :
+    BehavioralBoundaryShapeEmbedding first third where
+  toBehavioralBoundaryShapeTranslation :=
+    secondMap.toBehavioralBoundaryShapeTranslation.comp
+      firstMap.toBehavioralBoundaryShapeTranslation
+  reflectsBisimulation := fun bisimilar =>
+    firstMap.reflectsBisimulation
+      (secondMap.reflectsBisimulation bisimilar)
+
+theorem BehavioralBoundaryShapeEmbedding.mapBisimulationQuotient_injective
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (embedding : BehavioralBoundaryShapeEmbedding source target) :
+    ∀ {left right : IncidenceQuotient source},
+      embedding.toBehavioralBoundaryShapeTranslation.mapBisimulationQuotient left =
+        embedding.toBehavioralBoundaryShapeTranslation.mapBisimulationQuotient right →
+      left = right := by
+  intro left right imagesEqual
+  refine Quotient.inductionOn₂ left right ?_ imagesEqual
+  intro i j representativesEqual
+  apply Quotient.sound
+  apply embedding.reflectsBisimulation
+  exact Quotient.exact representativesEqual
+
 structure BehavioralBoundaryShapeEquivalence
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
     (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂) where
@@ -7228,6 +7272,26 @@ def BehavioralBoundaryShapeEquivalence.quotientEquivalence
       (equivalence.hom.map (equivalence.inv.map representative)) =
         Quotient.mk (approxBisimSetoid target) representative
     rw [equivalence.hom_inv]
+
+def BehavioralBoundaryShapeEquivalence.toEmbedding
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BehavioralBoundaryShapeEquivalence source target) :
+    BehavioralBoundaryShapeEmbedding source target where
+  toBehavioralBoundaryShapeTranslation := equivalence.hom
+  reflectsBisimulation := by
+    intro i j bisimilar
+    have reflected := equivalence.inv.preservesBisimulation bisimilar
+    simpa [equivalence.inv_hom] using reflected
+
+theorem BehavioralBoundaryShapeEquivalence.quotient_forward_injective
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BehavioralBoundaryShapeEquivalence source target) :
+    ∀ {left right : IncidenceQuotient source},
+      equivalence.quotientEquivalence.forward left =
+        equivalence.quotientEquivalence.forward right → left = right :=
+  equivalence.toEmbedding.mapBisimulationQuotient_injective
 
 theorem BehavioralBoundaryShapeEquivalence.quotientEquivalence_trans
     {I J K R₁ T₁ R₂ T₂ R₃ T₃ : Type u}
