@@ -141,6 +141,19 @@ theorem natIncidence_approxBisim_iff (m n : Nat) :
       hbisim m n hmn
   · intro h; subst h; exact approxBisim_refl natIncidence m
 
+theorem incidence_axioms_satisfiable :
+    Nonempty (Incidence Nat PeanoRole GraphType) :=
+  ⟨natIncidence⟩
+
+theorem incidence_axioms_have_nontrivial_model :
+    ∃ inc : Incidence Nat PeanoRole GraphType,
+      ∃ first second : Nat,
+        first ≠ second ∧ ¬ approxBisim inc first second := by
+  refine ⟨natIncidence, 0, 1, Nat.zero_ne_add_one 0, ?_⟩
+  intro bisimilar
+  have equal := (natIncidence_approxBisim_iff 0 1).mp bisimilar
+  exact Nat.zero_ne_add_one 0 equal
+
 /- Research cycle 1 (co-scientist step): does the same GluingSpec
    abstraction used for triIncidence (left-biased, non-commutative glue)
    also fit a genuinely commutative-monoid instance? Hypothesis: yes --
