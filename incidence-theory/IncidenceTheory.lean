@@ -4054,6 +4054,19 @@ def equalizer_unique_up_to_iso
   hom_inv := by
     rw [← equalizerComparison_comp, equalizerComparison_self]
 
+def coequalizer_unique_up_to_iso
+    {Obj : Type u} {C : IncCategory Obj} {source target : Obj}
+    {first second : C.Hom source target}
+    (left right : IncCoequalizer first second) :
+    MorphismIso C left.object right.object := by
+  let oppositeIso :=
+    equalizer_unique_up_to_iso (C := C.op) left right
+  exact
+    { hom := oppositeIso.inv
+      inv := oppositeIso.hom
+      inv_hom := oppositeIso.inv_hom
+      hom_inv := oppositeIso.hom_inv }
+
 theorem IncCoherentCategoryEquivalence.pulledEqualizerArrow_equalizes
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (coherent : IncCoherentCategoryEquivalence C D)
@@ -5323,6 +5336,12 @@ noncomputable def category_equivalence_strongly_preserves_finite_bicartesian_sha
     (equivalence : IncCategoryEquivalence C D) :
     StrongFiniteBicartesianPreservingFamily equivalence.forward :=
   equivalence.strongFiniteBicartesianPreservingFamily
+
+noncomputable def category_equivalence_strongly_preserves_finite_limits_colimits
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    StrongFiniteLimitColimitPreservingFamily equivalence.forward :=
+  equivalence.strongFiniteLimitColimitPreservingFamily
 
 /- Merkle-ID: foundation.axiomatization.limit_preservation
    Placeholder only for the unbundled `inc_to_set` assignment above. -/
