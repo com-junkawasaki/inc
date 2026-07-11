@@ -1092,6 +1092,12 @@ It currently establishes:
   alignments.  On terms, `sigmaForward_second_eq_of_eq` extracts the correctly
   transported second-component equality from equality of dependent pairs.  These
   are the two proof components required by the second Sigma projection branch.
+  They are now integrated by the uniform `.second` constructor.  It selects the
+  canonical instantiated result type, derives first-component coherence from the
+  recursive pair result, and proves second-component transport with
+  `sigmaForward_second_eq_of_eq`.  The only explicit boundary left is the semantic
+  alignment of the source derivation produced by the syntactic
+  instantiate/substitute rewrite.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
