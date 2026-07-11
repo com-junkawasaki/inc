@@ -3276,6 +3276,157 @@ theorem IncCoherentCategoryEquivalence.pulledPushoutCocone_commutes
     _ = C.comp (C.comp (G.map rightLeg) (unit.hom.app span.c))
         span.right := C.assoc _ _ _
 
+def IncCoherentCategoryEquivalence.mappedPushoutLift
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D)
+    {span : MorphismCospan C} (po : MorphismPushout span)
+    (q : DObj)
+    (leftLeg : D.Hom (coherent.equivalence.forward.obj span.b) q)
+    (rightLeg : D.Hom (coherent.equivalence.forward.obj span.c) q)
+    (commutes :
+      D.comp leftLeg (coherent.equivalence.forward.map span.left) =
+        D.comp rightLeg (coherent.equivalence.forward.map span.right)) :
+    D.Hom (coherent.equivalence.forward.obj po.apex) q :=
+  D.comp (coherent.equivalence.counit.hom.app q)
+    (coherent.equivalence.forward.map
+      (po.lift (coherent.equivalence.inverse.obj q)
+        (C.comp (coherent.equivalence.inverse.map leftLeg)
+          (coherent.equivalence.unit.hom.app span.b))
+        (C.comp (coherent.equivalence.inverse.map rightLeg)
+          (coherent.equivalence.unit.hom.app span.c))
+        (coherent.pulledPushoutCocone_commutes leftLeg rightLeg commutes)))
+
+theorem IncCoherentCategoryEquivalence.mappedPushoutLift_inl
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D)
+    {span : MorphismCospan C} (po : MorphismPushout span)
+    (q : DObj)
+    (leftLeg : D.Hom (coherent.equivalence.forward.obj span.b) q)
+    (rightLeg : D.Hom (coherent.equivalence.forward.obj span.c) q)
+    (commutes :
+      D.comp leftLeg (coherent.equivalence.forward.map span.left) =
+        D.comp rightLeg (coherent.equivalence.forward.map span.right)) :
+    D.comp (coherent.mappedPushoutLift po q leftLeg rightLeg commutes)
+        (coherent.equivalence.forward.map po.inl) = leftLeg := by
+  let F := coherent.equivalence.forward
+  let G := coherent.equivalence.inverse
+  let unit := coherent.equivalence.unit
+  let counit := coherent.equivalence.counit
+  let pulledCommutes :=
+    coherent.pulledPushoutCocone_commutes leftLeg rightLeg commutes
+  let sourceLift := po.lift (G.obj q)
+    (C.comp (G.map leftLeg) (unit.hom.app span.b))
+    (C.comp (G.map rightLeg) (unit.hom.app span.c)) pulledCommutes
+  have sourceLiftInl :
+      C.comp sourceLift po.inl =
+        C.comp (G.map leftLeg) (unit.hom.app span.b) :=
+    po.lift_inl _ _ _ _
+  have counitNaturality := counit.hom.naturality leftLeg
+  have counitNaturality' :
+      D.comp leftLeg (counit.hom.app (F.obj span.b)) =
+        D.comp (counit.hom.app q) ((F.comp G).map leftLeg) := by
+    simpa [IncFunctor.identity] using counitNaturality
+  change D.comp (D.comp (counit.hom.app q) (F.map sourceLift))
+      (F.map po.inl) = leftLeg
+  calc
+    D.comp (D.comp (counit.hom.app q) (F.map sourceLift))
+        (F.map po.inl) =
+      D.comp (counit.hom.app q)
+        (D.comp (F.map sourceLift) (F.map po.inl)) :=
+          (D.assoc _ _ _).symm
+    _ = D.comp (counit.hom.app q)
+        (F.map (C.comp sourceLift po.inl)) := by rw [F.map_comp]
+    _ = D.comp (counit.hom.app q)
+        (F.map (C.comp (G.map leftLeg) (unit.hom.app span.b))) := by
+          rw [sourceLiftInl]
+    _ = D.comp (counit.hom.app q)
+        (D.comp (F.map (G.map leftLeg))
+          (F.map (unit.hom.app span.b))) := by rw [F.map_comp]
+    _ = D.comp (counit.hom.app q)
+        (D.comp ((F.comp G).map leftLeg)
+          (counit.inv.app (F.obj span.b))) := by
+            simp only [IncFunctor.comp]
+            rw [coherent.counit_inv_forward_eq_map_unit]
+    _ = D.comp
+        (D.comp (counit.hom.app q) ((F.comp G).map leftLeg))
+        (counit.inv.app (F.obj span.b)) := D.assoc _ _ _
+    _ = D.comp
+        (D.comp leftLeg (counit.hom.app (F.obj span.b)))
+        (counit.inv.app (F.obj span.b)) := by
+          rw [counitNaturality']
+    _ = D.comp leftLeg
+        (D.comp (counit.hom.app (F.obj span.b))
+          (counit.inv.app (F.obj span.b))) := (D.assoc _ _ _).symm
+    _ = D.comp leftLeg (D.id (F.obj span.b)) := by
+      simpa [IncFunctor.identity] using congrArg (D.comp leftLeg)
+        (counit.inv_app_hom_app (F.obj span.b))
+    _ = leftLeg := D.comp_id _
+
+theorem IncCoherentCategoryEquivalence.mappedPushoutLift_inr
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D)
+    {span : MorphismCospan C} (po : MorphismPushout span)
+    (q : DObj)
+    (leftLeg : D.Hom (coherent.equivalence.forward.obj span.b) q)
+    (rightLeg : D.Hom (coherent.equivalence.forward.obj span.c) q)
+    (commutes :
+      D.comp leftLeg (coherent.equivalence.forward.map span.left) =
+        D.comp rightLeg (coherent.equivalence.forward.map span.right)) :
+    D.comp (coherent.mappedPushoutLift po q leftLeg rightLeg commutes)
+        (coherent.equivalence.forward.map po.inr) = rightLeg := by
+  let F := coherent.equivalence.forward
+  let G := coherent.equivalence.inverse
+  let unit := coherent.equivalence.unit
+  let counit := coherent.equivalence.counit
+  let pulledCommutes :=
+    coherent.pulledPushoutCocone_commutes leftLeg rightLeg commutes
+  let sourceLift := po.lift (G.obj q)
+    (C.comp (G.map leftLeg) (unit.hom.app span.b))
+    (C.comp (G.map rightLeg) (unit.hom.app span.c)) pulledCommutes
+  have sourceLiftInr :
+      C.comp sourceLift po.inr =
+        C.comp (G.map rightLeg) (unit.hom.app span.c) :=
+    po.lift_inr _ _ _ _
+  have counitNaturality' :
+      D.comp rightLeg (counit.hom.app (F.obj span.c)) =
+        D.comp (counit.hom.app q) ((F.comp G).map rightLeg) := by
+    simpa [IncFunctor.identity] using counit.hom.naturality rightLeg
+  change D.comp (D.comp (counit.hom.app q) (F.map sourceLift))
+      (F.map po.inr) = rightLeg
+  calc
+    D.comp (D.comp (counit.hom.app q) (F.map sourceLift))
+        (F.map po.inr) =
+      D.comp (counit.hom.app q)
+        (D.comp (F.map sourceLift) (F.map po.inr)) :=
+          (D.assoc _ _ _).symm
+    _ = D.comp (counit.hom.app q)
+        (F.map (C.comp sourceLift po.inr)) := by rw [F.map_comp]
+    _ = D.comp (counit.hom.app q)
+        (F.map (C.comp (G.map rightLeg) (unit.hom.app span.c))) := by
+          rw [sourceLiftInr]
+    _ = D.comp (counit.hom.app q)
+        (D.comp (F.map (G.map rightLeg))
+          (F.map (unit.hom.app span.c))) := by rw [F.map_comp]
+    _ = D.comp (counit.hom.app q)
+        (D.comp ((F.comp G).map rightLeg)
+          (counit.inv.app (F.obj span.c))) := by
+            simp only [IncFunctor.comp]
+            rw [coherent.counit_inv_forward_eq_map_unit]
+    _ = D.comp
+        (D.comp (counit.hom.app q) ((F.comp G).map rightLeg))
+        (counit.inv.app (F.obj span.c)) := D.assoc _ _ _
+    _ = D.comp
+        (D.comp rightLeg (counit.hom.app (F.obj span.c)))
+        (counit.inv.app (F.obj span.c)) := by
+          rw [counitNaturality']
+    _ = D.comp rightLeg
+        (D.comp (counit.hom.app (F.obj span.c))
+          (counit.inv.app (F.obj span.c))) := (D.assoc _ _ _).symm
+    _ = D.comp rightLeg (D.id (F.obj span.c)) := by
+      simpa [IncFunctor.identity] using congrArg (D.comp rightLeg)
+        (counit.inv_app_hom_app (F.obj span.c))
+    _ = rightLeg := D.comp_id _
+
 /- Uniform preservation is closed under translation composition.  The second
    family is applied to the actual mapped universal cocone selected by the
    first one, exactly as in the pointwise composition theorem above. -/
