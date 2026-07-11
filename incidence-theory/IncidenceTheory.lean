@@ -7046,6 +7046,24 @@ theorem incToSetFunctor_faithful_but_not_full
         (incToSetFunctor inc).map preimage = morphism) :=
   ⟨incToSetFunctor_faithful inc, incToSetFunctor_never_full inc⟩
 
+theorem incToSetFunctor_has_morphism_outside_image
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    ∃ source target,
+      ∃
+      (morphism : incTypeCategory.Hom
+        ((incToSetFunctor inc).obj source) ((incToSetFunctor inc).obj target)),
+      ∀ preimage : (incDiscreteCategory I).Hom source target,
+        (incToSetFunctor inc).map preimage ≠ morphism := by
+  classical
+  exact Classical.byContradiction (fun noWitness => by
+    apply incToSetFunctor_never_full inc
+    intro source target morphism
+    exact Classical.byContradiction (fun noPreimage => by
+      apply noWitness
+      refine ⟨source, target, morphism, ?_⟩
+      intro preimage imageEqual
+      exact noPreimage ⟨preimage, imageEqual⟩))
+
 theorem incToSetFunctor_not_essentiallySurjective
     {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
     ¬ IncFunctorEssentiallySurjective (incToSetFunctor inc) := by
