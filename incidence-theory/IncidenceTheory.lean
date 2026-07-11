@@ -6829,6 +6829,47 @@ theorem incToSetFunctor_obj {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (i : I) :
     (incToSetFunctor inc).obj ⟨i⟩ = inc_to_set inc i := rfl
 
+theorem incToSetFunctor_faithful {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) :
+    ∀ {source target} (left right :
+      (incDiscreteCategory I).Hom source target),
+      (incToSetFunctor inc).map left = (incToSetFunctor inc).map right →
+        left = right := by
+  intro source target left right _
+  cases left
+  cases right
+  rfl
+
+def incToSetDefault {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (i : I) : inc_to_set inc i := by
+  unfold inc_to_set
+  cases inc.boundary i with
+  | nil => exact ⟨false⟩
+  | cons head tail => exact ⟨()⟩
+
+theorem incToSetFunctor_not_full_of_distinct
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) {i j : I} (different : i ≠ j) :
+    ¬ (∀ (morphism : incTypeCategory.Hom
+        ((incToSetFunctor inc).obj ⟨i⟩) ((incToSetFunctor inc).obj ⟨j⟩)),
+      ∃ preimage : (incDiscreteCategory I).Hom ⟨i⟩ ⟨j⟩,
+        (incToSetFunctor inc).map preimage = morphism) := by
+  intro full
+  let constant : incTypeCategory.Hom
+      ((incToSetFunctor inc).obj ⟨i⟩) ((incToSetFunctor inc).obj ⟨j⟩) :=
+    ⟨fun _ => incToSetDefault inc j⟩
+  obtain ⟨preimage, _⟩ := full constant
+  apply different
+  exact congrArg IncLiftedObject.down preimage.equality
+
+theorem incToSetFunctor_not_fullyFaithful_of_distinct
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) {i j : I} (different : i ≠ j) :
+    ¬ IncFunctorFullyFaithful (incToSetFunctor inc) := by
+  intro fullyFaithful
+  exact incToSetFunctor_not_full_of_distinct inc different
+    fullyFaithful.full
+
 def inc_to_set_preserves_boundary_shape
     {I R₁ T₁ R₂ T₂ : Type u} [DecidableEq I]
     (source : Incidence I R₁ T₁) (target : Incidence I R₂ T₂)
