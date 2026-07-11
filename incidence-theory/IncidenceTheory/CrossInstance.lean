@@ -354,6 +354,41 @@ theorem IncRawTerm.substitute_identity (term : IncRawTerm) :
   | apply function argument ihFunction ihArgument =>
       simp [IncRawTerm.substitute, ihFunction, ihArgument]
 
+def IncRawSubstitution.drop
+    {source tail : List IncRawType} {head : IncRawType}
+    (substitution : IncRawSubstitution source (head :: tail)) :
+    IncRawSubstitution source tail where
+  term := fun index => substitution.term (index + 1)
+  preserves := fun lookup =>
+    substitution.preserves (IncRawLookup.there lookup)
+
+noncomputable def IncRawSubstitution.evaluate
+    {baseModel : Nat → Type u} {source : List IncRawType} :
+    {target : List IncRawType} →
+      IncRawSubstitution source target →
+      IncRawEnvironment baseModel source →
+      IncRawEnvironment baseModel target
+  | [], _, _ => IncRawEnvironment.empty
+  | _ :: _, substitution, environment =>
+      IncRawEnvironment.extend
+        ((substitution.preserves IncRawLookup.here).evaluate environment)
+        (substitution.drop.evaluate environment)
+
+theorem IncRawSubstitution.evaluate_lookup
+    {baseModel : Nat → Type u} {source target : List IncRawType}
+    (substitution : IncRawSubstitution source target)
+    (environment : IncRawEnvironment baseModel source)
+    {index : Nat} {type : IncRawType}
+    (lookup : IncRawLookup target index type) :
+    (substitution.preserves lookup).evaluate environment =
+      lookup.evaluate (substitution.evaluate environment) := by
+  induction lookup with
+  | here => rfl
+  | there previous ih =>
+      change
+        ((substitution.drop.preserves previous).evaluate environment) = _
+      exact ih substitution.drop
+
 structure IncContext where
   Assignment : Type u
 

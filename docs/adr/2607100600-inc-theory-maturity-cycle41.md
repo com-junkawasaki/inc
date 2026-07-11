@@ -113,8 +113,12 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - simultaneous typed substitution を追加した。各 target variable を typing proof 付き
   source term に写し、binder lift は newest variable を固定し既存 replacement を weakening
   する。全 typing rule に対する substitution preservation と identity substitution の
-  term-level中立則を証明済み。残る直近課題は substitution が誘導する typed environment
-  と evaluator の semantic substitution lemma。
+  term-level中立則を証明済み。残る直近課題は evaluator の full semantic substitution lemma。
+- typed substitution から target heterogeneous environment を再帰構成し、任意 variable
+  lookup について replacement term の source evaluation と induced target environment の
+  lookup evaluation が一致することを証明した。full semantic substitution の binder case
+  は proof-indexed evaluator recursor の definitional equalityでは閉じないため、明示的な
+  evaluator congruence/binder coherence が残る。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」や carrier 可算性の除去ではなく、Incidence 固有の意味論とのさらに

@@ -435,7 +435,13 @@ It currently establishes:
   older term.  Structural substitution preserves typing for every rule, and
   identity substitution is neutral on all raw terms.  The remaining immediate
   step is the semantic substitution lemma relating this syntactic operation to
-  evaluation under the induced typed environment.
+  evaluation under the induced typed environment.  Its environment layer is
+  now constructed: a typed substitution recursively evaluates to a target
+  heterogeneous environment, and every variable lookup is proved to agree
+  with evaluation of its replacement term.  Extending this lookup theorem
+  through lambda binders requires an explicit evaluator-congruence lemma rather
+  than definitional reduction of proof-indexed recursors; that binder-aware
+  coherence is the remaining part of the full semantic substitution theorem.
 - the `inc_to_set` translation packaged as a functor from the discrete
   incidence carrier category to the category of types.  It is always faithful
   but never full or essentially surjective; explicit morphisms and objects
