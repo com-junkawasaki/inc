@@ -219,6 +219,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   arbitrary renaming/substitution下の安定性、term definitional equalityへの包含、conversion-aware
   multi-step subject reductionを証明した。将来のsemantic soundness statementのoperational側を
   単一beta stepではなくnormalization sequenceのscopeまで固定した。
+- term definitional equalityを全dependent raw term上のSetoidとしてpackageし、そのQuotientを
+  canonical computation modelとした。quotient mapは任意definitional equality、one-step、
+  multi-stepで値が不変な一般evaluatorであり、Pi/Sigma具体例でもsoundnessをinstantiationした。
+  これは全termのsyntactic quotient semanticsで、未完のexternal contextual Pi/Sigma/Id model
+  へのinterpretationを置き換えるものではない。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

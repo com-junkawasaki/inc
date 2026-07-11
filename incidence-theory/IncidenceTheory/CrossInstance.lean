@@ -2038,6 +2038,31 @@ theorem IncDepRawSteps.subject_reduction
   IncDepRawHasTypeConversion.termConversion
     (IncDepRawHasTypeConversion.typed typing) steps.toDefEq
 
+def incDepRawDefEqSetoid : Setoid IncDepRawTerm where
+  r := IncDepRawDefEq
+  iseqv := ⟨IncDepRawDefEq.refl, IncDepRawDefEq.symm,
+    IncDepRawDefEq.trans⟩
+
+abbrev IncDepRawComputation := Quotient incDepRawDefEqSetoid
+
+def IncDepRawTerm.compute (term : IncDepRawTerm) : IncDepRawComputation :=
+  Quotient.mk incDepRawDefEqSetoid term
+
+theorem IncDepRawDefEq.compute_eq
+    {first second : IncDepRawTerm} (equal : IncDepRawDefEq first second) :
+    first.compute = second.compute :=
+  Quotient.sound equal
+
+theorem IncDepRawStep.compute_sound
+    {first second : IncDepRawTerm} (step : IncDepRawStep first second) :
+    first.compute = second.compute :=
+  (IncDepRawDefEq.ofStep step).compute_eq
+
+theorem IncDepRawSteps.compute_sound
+    {first second : IncDepRawTerm} (steps : IncDepRawSteps first second) :
+    first.compute = second.compute :=
+  steps.toDefEq.compute_eq
+
 theorem incDepRawDependentRefl_betaStep :
     IncDepRawStep (.apply incDepRawDependentRefl .unit) (.refl .unit) := by
   exact IncDepRawStep.piBeta
@@ -2049,6 +2074,19 @@ theorem incDepRawDependentPair_first_betaStep :
 theorem incDepRawDependentPair_second_betaStep :
     IncDepRawStep (.second incDepRawDependentPair) (.refl .unit) := by
   exact IncDepRawStep.sigmaSecondBeta
+
+theorem incDepRawDependentRefl_compute_sound :
+    (IncDepRawTerm.apply incDepRawDependentRefl .unit).compute =
+      (IncDepRawTerm.refl .unit).compute :=
+  incDepRawDependentRefl_betaStep.compute_sound
+
+theorem incDepRawDependentPair_compute_sound :
+    (IncDepRawTerm.first incDepRawDependentPair).compute =
+      IncDepRawTerm.unit.compute ∧
+    (IncDepRawTerm.second incDepRawDependentPair).compute =
+      (IncDepRawTerm.refl .unit).compute :=
+  ⟨incDepRawDependentPair_first_betaStep.compute_sound,
+    incDepRawDependentPair_second_betaStep.compute_sound⟩
 
 def incDepRawDependentRefl_application_hasType :
     IncDepRawHasType [] (.apply incDepRawDependentRefl .unit)

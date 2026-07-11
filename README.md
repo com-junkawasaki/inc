@@ -571,6 +571,13 @@ It currently establishes:
   satisfies conversion-aware subject reduction.  This fixes the operational
   side of the eventual semantic soundness statement at normalization-sequence
   scope rather than only at one isolated beta step.
+  Definitional equality is packaged as a setoid on all dependent raw terms, and
+  its quotient gives a canonical computation model.  The quotient map is a
+  general evaluator whose value is invariant under every definitional equality,
+  one-step reduction, and multi-step reduction.  The dependent Pi and Sigma
+  examples instantiate this soundness result.  This is an all-term syntactic
+  quotient semantics; it does not replace the still-pending interpretation into
+  the external contextual Pi/Sigma/identity model.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite
