@@ -1685,6 +1685,38 @@ theorem HFNatIncidenceImage.mul_eq_zero_iff
     · exact HFNatIncidenceImage.zero_mul right
     · exact HFNatIncidenceImage.mul_zero left
 
+theorem HFNatIncidenceImage.index_pos_of_ne_zero {value : HFNatIncidenceImage}
+    (nonzero : value ≠ hfNatIncidenceImageZero) : 0 < value.index := by
+  cases hindex : value.index with
+  | zero =>
+      exfalso
+      apply nonzero
+      apply HFNatIncidenceImage.eq_of_index_eq
+      unfold hfNatIncidenceImageZero
+      rw [HFNatIncidenceImage.index_encode]
+      exact hindex
+  | succ index => exact Nat.zero_lt_succ index
+
+theorem HFNatIncidenceImage.mul_left_cancel_of_ne_zero
+    {fixed left right : HFNatIncidenceImage}
+    (nonzero : fixed ≠ hfNatIncidenceImageZero) :
+    fixed.mul left = fixed.mul right → left = right := by
+  intro equal
+  apply HFNatIncidenceImage.eq_of_index_eq
+  have indexEqual := congrArg HFNatIncidenceImage.index equal
+  rw [HFNatIncidenceImage.index_mul, HFNatIncidenceImage.index_mul] at indexEqual
+  exact Nat.mul_left_cancel (HFNatIncidenceImage.index_pos_of_ne_zero nonzero) indexEqual
+
+theorem HFNatIncidenceImage.mul_right_cancel_of_ne_zero
+    {fixed left right : HFNatIncidenceImage}
+    (nonzero : fixed ≠ hfNatIncidenceImageZero) :
+    left.mul fixed = right.mul fixed → left = right := by
+  intro equal
+  apply HFNatIncidenceImage.eq_of_index_eq
+  have indexEqual := congrArg HFNatIncidenceImage.index equal
+  rw [HFNatIncidenceImage.index_mul, HFNatIncidenceImage.index_mul] at indexEqual
+  exact Nat.mul_right_cancel (HFNatIncidenceImage.index_pos_of_ne_zero nonzero) indexEqual
+
 structure HFNatIncidenceImageOrderedSemiringLaws where
   semiring : HFNatIncidenceImageSemiringLaws
   le : HFNatIncidenceImage → HFNatIncidenceImage → Prop
@@ -1705,6 +1737,12 @@ structure HFNatIncidenceImageOrderedSemiringLaws where
     semiring.add fixed left = semiring.add fixed right → left = right
   add_right_cancel : ∀ {fixed left right},
     semiring.add left fixed = semiring.add right fixed → left = right
+  mul_left_cancel_of_ne_zero : ∀ {fixed left right},
+    fixed ≠ semiring.zero →
+      semiring.mul fixed left = semiring.mul fixed right → left = right
+  mul_right_cancel_of_ne_zero : ∀ {fixed left right},
+    fixed ≠ semiring.zero →
+      semiring.mul left fixed = semiring.mul right fixed → left = right
 
 noncomputable def hfNatIncidenceImageOrderedSemiringLaws :
     HFNatIncidenceImageOrderedSemiringLaws where
@@ -1720,6 +1758,8 @@ noncomputable def hfNatIncidenceImageOrderedSemiringLaws :
   mul_eq_zero_iff := HFNatIncidenceImage.mul_eq_zero_iff
   add_left_cancel := HFNatIncidenceImage.add_left_cancel
   add_right_cancel := HFNatIncidenceImage.add_right_cancel
+  mul_left_cancel_of_ne_zero := HFNatIncidenceImage.mul_left_cancel_of_ne_zero
+  mul_right_cancel_of_ne_zero := HFNatIncidenceImage.mul_right_cancel_of_ne_zero
 
 /- Graph with nodes and edges as incidences. We take I as a sum of Node | Edge. -/
 inductive GId where | node (n : Nat) | edge (e : Nat)
