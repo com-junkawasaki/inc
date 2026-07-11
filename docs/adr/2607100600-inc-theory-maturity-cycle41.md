@@ -361,6 +361,7 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   dependent second fiberを順に写し、`sigmaBackward`はfirstを戻した後domain inverse lawに沿って
   second fiberを戻す。forward pair equationをdefinitionally証明し、indexをcollapseせずdependent
   pair/projection coherenceを構成するcoreを得た。
+- transported Sigma pairのfirst projectionがdomain forward transportとdefinitionally可換であることを証明した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

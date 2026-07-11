@@ -791,6 +791,7 @@ It currently establishes:
   before reversing the second fiber.  The forward pair equation is checked
   definitionally, supplying the constructive core for dependent pair and
   projection coherence without collapsing indices.
+  First projection commutes definitionally with this transport.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

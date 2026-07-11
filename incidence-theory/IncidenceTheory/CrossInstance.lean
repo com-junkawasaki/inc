@@ -2833,6 +2833,17 @@ theorem IncDependentFiberEquiv.sigmaForward_pair
         (dependentEquiv.codomainEquiv first).forward second⟩ := by
   rfl
 
+theorem IncDependentFiberEquiv.sigmaForward_first
+    {sourceDomain targetDomain : Type u}
+    {domainEquiv : IncFiberEquiv sourceDomain targetDomain}
+    {sourceCodomain : sourceDomain → Type u}
+    {targetCodomain : targetDomain → Type u}
+    (dependentEquiv : IncDependentFiberEquiv domainEquiv
+      sourceCodomain targetCodomain)
+    (value : Sigma sourceCodomain) :
+    (dependentEquiv.sigmaForward value).1 = domainEquiv.forward value.1 := by
+  rfl
+
 theorem IncTerm.substitute_identity
     {context : IncContext.{u}} {type : IncTypeInContext context}
     (term : IncTerm type) :
