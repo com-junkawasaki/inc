@@ -724,6 +724,12 @@ It currently establishes:
   re-established as one instance.  The future contextual interpreter therefore
   only needs to discharge primitive one-step soundness; the closure theorem is
   already generic.
+  This contract is packaged as `IncDepRawSoundEvaluator`, bundling a carrier,
+  evaluation map, and primitive one-step soundness.  Multi-step and definitional-
+  equality soundness are reusable methods of every such model.  The canonical
+  computation quotient instantiates the interface and its evaluator is proved
+  definitionally equal to the existing quotient map.  A contextual interpreter
+  can therefore become a sound model by supplying exactly these interface fields.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

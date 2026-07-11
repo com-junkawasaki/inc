@@ -2471,6 +2471,33 @@ theorem incDepRawCompute_evaluator_sound
   steps.evaluator_sound IncDepRawTerm.compute
     (fun step => step.compute_sound)
 
+structure IncDepRawSoundEvaluator where
+  Carrier : Type u
+  evaluate : IncDepRawTerm → Carrier
+  stepSound : ∀ {first second}, IncDepRawStep first second →
+    evaluate first = evaluate second
+
+theorem IncDepRawSoundEvaluator.stepsSound
+    (model : IncDepRawSoundEvaluator.{u})
+    {first second : IncDepRawTerm} (steps : IncDepRawSteps first second) :
+    model.evaluate first = model.evaluate second :=
+  steps.evaluator_sound model.evaluate model.stepSound
+
+theorem IncDepRawSoundEvaluator.defEqSound
+    (model : IncDepRawSoundEvaluator.{u})
+    {first second : IncDepRawTerm} (equal : IncDepRawDefEq first second) :
+    model.evaluate first = model.evaluate second :=
+  equal.evaluator_sound model.evaluate model.stepSound
+
+def incDepRawComputationSoundEvaluator : IncDepRawSoundEvaluator where
+  Carrier := IncDepRawComputation
+  evaluate := IncDepRawTerm.compute
+  stepSound := IncDepRawStep.compute_sound
+
+theorem incDepRawComputationSoundEvaluator_agrees (term : IncDepRawTerm) :
+    incDepRawComputationSoundEvaluator.evaluate term = term.compute := by
+  rfl
+
 theorem incDepRawDependentRefl_betaStep :
     IncDepRawStep (.apply incDepRawDependentRefl .unit) (.refl .unit) := by
   exact IncDepRawStep.piBeta

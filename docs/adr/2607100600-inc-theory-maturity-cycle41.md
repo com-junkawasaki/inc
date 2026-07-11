@@ -316,6 +316,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   definitional equalityのsoundnessを帰納的に導く。canonical computation quotient evaluatorを
   instanceとして再証明した。将来のcontextual interpreterはprimitive one-step soundnessだけを
   dischargeすればよく、closure theoremは既にgenericである。
+- carrier、evaluation map、primitive one-step soundnessを束ねる`IncDepRawSoundEvaluator` interfaceを
+  追加し、multi-step/definitional-equality soundnessを全modelのmethodとした。canonical
+  computation quotientをinstance化し、既存quotient mapとのdefinition equalityも証明した。
+  contextual interpreterはこのinterfaceのfieldだけを供給すればsound modelになれる。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
