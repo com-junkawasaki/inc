@@ -633,6 +633,20 @@ theorem finiteIncidence_kripke_entails_iff_derives
     KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
   kripke_entails_iff_derives_of_enumeration finiteIncidenceFormulaEnumeration context formula
 
+theorem finiteIncidence_derivationallyConsistent_iff_kripkeSatisfiable
+    (context : List (Formula FiniteIncidence)) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context :=
+  derivationallyConsistent_iff_kripkeSatisfiable_of_enumeration
+    finiteIncidenceFormulaEnumeration context
+
+theorem finiteIncidence_derivationallyConsistent_iff_has_canonical_world
+    (context : List (Formula FiniteIncidence)) :
+    DerivationallyConsistent context ↔
+      ∃ theory : PrimeTheory FiniteIncidence,
+        KripkeContextForces (canonicalKripkeModel FiniteIncidence) theory context :=
+  derivationallyConsistent_iff_has_canonical_world_of_enumeration
+    finiteIncidenceFormulaEnumeration context
+
 /-! A client need not unpack the Boolean coding or the general enumeration:
    every underivable finite-incidence sequent has an explicit canonical
    prime-theory world that forces its assumptions and refutes its conclusion. -/

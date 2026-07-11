@@ -4988,6 +4988,20 @@ theorem fin_kripke_entails_iff_derives (n : Nat)
     KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
   kripke_entails_iff_derives_of_enumeration (finFormulaEnumeration n) context formula
 
+theorem fin_derivationallyConsistent_iff_kripkeSatisfiable
+    (n : Nat) (context : List (Formula (Fin n))) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context :=
+  derivationallyConsistent_iff_kripkeSatisfiable_of_enumeration
+    (finFormulaEnumeration n) context
+
+theorem fin_derivationallyConsistent_iff_has_canonical_world
+    (n : Nat) (context : List (Formula (Fin n))) :
+    DerivationallyConsistent context ↔
+      ∃ theory : PrimeTheory (Fin n),
+        KripkeContextForces (canonicalKripkeModel (Fin n)) theory context :=
+  derivationallyConsistent_iff_has_canonical_world_of_enumeration
+    (finFormulaEnumeration n) context
+
 /-! Every finite atom language has a user-facing canonical counterworld
    theorem, including the empty language (`n = 0`). -/
 theorem fin_canonical_countermodel_of_not_derives (n : Nat)
@@ -5014,6 +5028,20 @@ theorem nat_kripke_entails_iff_derives
     (context : List (Formula Nat)) (formula : Formula Nat) :
     KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
   kripke_entails_iff_derives_of_atom_coding id id (fun _ => rfl) context formula
+
+theorem nat_derivationallyConsistent_iff_kripkeSatisfiable
+    (context : List (Formula Nat)) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context :=
+  derivationallyConsistent_iff_kripkeSatisfiable_of_enumeration
+    natFormulaEnumeration context
+
+theorem nat_derivationallyConsistent_iff_has_canonical_world
+    (context : List (Formula Nat)) :
+    DerivationallyConsistent context ↔
+      ∃ theory : PrimeTheory Nat,
+        KripkeContextForces (canonicalKripkeModel Nat) theory context :=
+  derivationallyConsistent_iff_has_canonical_world_of_enumeration
+    natFormulaEnumeration context
 
 theorem nat_canonical_countermodel_of_not_derives
     {context : List (Formula Nat)} {formula : Formula Nat}
@@ -5098,6 +5126,20 @@ theorem bool_kripke_entails_iff_derives
     (context : List (Formula Bool)) (formula : Formula Bool) :
     KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
   kripke_entails_iff_derives_of_enumeration boolFormulaEnumeration context formula
+
+theorem bool_derivationallyConsistent_iff_kripkeSatisfiable
+    (context : List (Formula Bool)) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context :=
+  derivationallyConsistent_iff_kripkeSatisfiable_of_enumeration
+    boolFormulaEnumeration context
+
+theorem bool_derivationallyConsistent_iff_has_canonical_world
+    (context : List (Formula Bool)) :
+    DerivationallyConsistent context ↔
+      ∃ theory : PrimeTheory Bool,
+        KripkeContextForces (canonicalKripkeModel Bool) theory context :=
+  derivationallyConsistent_iff_has_canonical_world_of_enumeration
+    boolFormulaEnumeration context
 
 theorem bool_canonical_countermodel_of_not_derives
     {context : List (Formula Bool)} {formula : Formula Bool}

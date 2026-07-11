@@ -79,6 +79,9 @@ It currently establishes:
   it is satisfied at a world of the canonical prime-theory model.  Thus the
   consistency result includes an explicit general model-existence theorem,
   rather than only the empty-context example.
+  User-facing consistency/model-existence equivalences are instantiated for
+  every `Fin n`, `Nat`, `Bool`, and the concrete `FiniteIncidence` atom
+  language, both for arbitrary Kripke models and canonical worlds.
   Public instances expose this counterworld construction for `Fin n`, `Bool`,
   `Nat`, and the concrete `FiniteIncidence` atom language.
   For the concrete `root` atom, excluded middle is shown underivable and
