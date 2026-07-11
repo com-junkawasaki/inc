@@ -401,6 +401,13 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   refl branchはunderlying term coherenceからId formationとtransported reflexivity coherenceを再帰的に
   導出した（equality witnessの同一視にはproof irrelevanceのみを使用）。残るfold branchはvariableと
   Pi/Sigmaのintroduction/eliminationである。
+- variable branchのsubstitution-aware invariantを
+  `IncDepRawVariableSubstitutionFiberResult`として追加した。general substitutionはvariableを別lookupでは
+  なく任意のwell-typed source termへ置換できるため、target lookup variable、
+  `substitution.preserves lookup`が保証するsource replacementのsemantic interpretation、両者のfiber
+  transport equationを保持する。このresultからuniform typing-substitution resultへの変換を証明した。
+  残るlookup recursionはidentityおよびlifted substitutionのnewest/older二分岐でこのresultを生成し、既存の
+  lift projection/variable equationへ接続することである。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

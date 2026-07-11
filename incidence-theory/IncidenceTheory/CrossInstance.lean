@@ -4062,6 +4062,29 @@ structure IncDepRawTypingSubstitutionFiberResult
       targetTermResult.semanticTerm.substitute
         substitutionResult.semanticSubstitution
 
+structure IncDepRawVariableSubstitutionFiberResult
+    {source target : List IncDepRawType} {position : Nat}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {lookup : IncDepRawLookup target position type}
+    {typeFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (typeResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := typeFormation) substitutionResult) where
+  targetVariable : IncTerm typeResult.targetFormationResult.semanticType
+  sourceReplacement : IncDepRawTypingSemanticResult
+    (substitution.preserves lookup) sourceResult
+    typeResult.sourceFormationResult.semanticType
+  variableCoherence :
+    typeResult.semanticFiberEquivalence.transport
+        sourceReplacement.semanticTerm =
+      targetVariable.substitute substitutionResult.semanticSubstitution
+
 def IncDepRawTypingSubstitutionFiberResult.identityFormation
     {source target : List IncDepRawType} {type : IncDepRawType}
     {left right : IncDepRawTerm}
@@ -4176,6 +4199,28 @@ def IncDepRawTypingSemanticResult.variable
     IncDepRawTypingSemanticResult (IncDepRawHasType.varRule lookup)
       contextResult semanticType where
   semanticTerm := semanticVariable
+
+def IncDepRawVariableSubstitutionFiberResult.toTyping
+    {source target : List IncDepRawType} {position : Nat}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {lookup : IncDepRawLookup target position type}
+    {typeFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {typeResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := typeFormation) substitutionResult}
+    (result : IncDepRawVariableSubstitutionFiberResult
+      (lookup := lookup) typeResult) :
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := IncDepRawHasType.varRule lookup) typeResult where
+  targetTermResult := IncDepRawTypingSemanticResult.variable result.targetVariable
+  sourceTermResult := result.sourceReplacement
+  semanticTerm_coherence := result.variableCoherence
 
 def IncDepRawLookupSemanticResult.toTyping
     {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}

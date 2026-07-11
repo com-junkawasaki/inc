@@ -845,6 +845,15 @@ It currently establishes:
   Id formation and proves transported-reflexivity coherence (using proof
   irrelevance only for equality witnesses).  Variable, Pi/Sigma introduction
   and elimination branches remain to complete the typing-substitution fold.
+  The variable branch now has a correctly substitution-aware invariant:
+  `IncDepRawVariableSubstitutionFiberResult` relates the target lookup variable
+  not to another lookup, but to the semantic interpretation of the arbitrary
+  source replacement certified by `substitution.preserves lookup`.  It stores
+  their fiber-transport equation and converts directly to the uniform typing
+  result.  This distinction is essential because a general substitution may
+  replace a variable by any well-typed term.  The remaining lookup recursion is
+  to generate this result for identity and for the newest/older cases of lifted
+  substitutions, using the existing lift projection/variable equations.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
