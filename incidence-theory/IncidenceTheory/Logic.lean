@@ -661,6 +661,34 @@ theorem derivablyEquivalent_equivalence {Atom : Type u} :
   symm := derivablyEquivalent_symm
   trans := derivablyEquivalent_trans
 
+theorem derivablyEquivalent_and_congr {Atom : Type u}
+    {left left' right right' : Formula Atom} :
+    Formula.DerivablyEquivalent left left' →
+      Formula.DerivablyEquivalent right right' →
+        Formula.DerivablyEquivalent (.and left right) (.and left' right') := by
+  intro leftEquivalent rightEquivalent
+  apply derives_iffI
+  · apply Derives.impI
+    apply Derives.andI
+    · apply Derives.impE
+      · exact derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem)
+          (derives_iffEL leftEquivalent)
+      · exact Derives.andEL (p := left) (q := right) (Derives.ax (by simp))
+    · apply Derives.impE
+      · exact derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem)
+          (derives_iffEL rightEquivalent)
+      · exact Derives.andER (p := left) (q := right) (Derives.ax (by simp))
+  · apply Derives.impI
+    apply Derives.andI
+    · apply Derives.impE
+      · exact derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem)
+          (derives_iffER leftEquivalent)
+      · exact Derives.andEL (p := left') (q := right') (Derives.ax (by simp))
+    · apply Derives.impE
+      · exact derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem)
+          (derives_iffER rightEquivalent)
+      · exact Derives.andER (p := left') (q := right') (Derives.ax (by simp))
+
 theorem inconsistent_extension_iff_derives_neg {Atom : Type u}
     {context : List (Formula Atom)} {formula : Formula Atom} :
     Derives (formula :: context) .bot ↔ Derives context formula.neg :=
