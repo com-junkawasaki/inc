@@ -904,6 +904,18 @@ theorem derives_or_and_distributive_iff {Atom : Type u}
   derives_iffI (derives_or_and_distributive p q r).left
     (derives_or_and_distributive p q r).right
 
+theorem Formula.logicalOr_distributes_over_and {Atom : Type u}
+    (p q r : Formula Atom) :
+    Formula.logicalOr (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) p)
+      (Formula.logicalAnd (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) q)
+        (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) r)) =
+      Formula.logicalAnd
+        (Formula.logicalOr (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) p)
+          (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) q))
+        (Formula.logicalOr (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) p)
+          (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) r)) := by
+  exact Quotient.sound (derives_or_and_distributive_iff p q r)
+
 theorem satisfies_or_and_distributive_iff {Atom : Type u}
     (valuation : Atom → Prop) (p q r : Formula Atom) :
     Satisfies valuation (Formula.iff (.or p (.and q r))
