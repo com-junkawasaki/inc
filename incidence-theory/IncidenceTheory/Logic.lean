@@ -4636,6 +4636,43 @@ theorem not_kripke_entails_of_not_derives_of_enumeration {Atom : Type u}
   intro hentails
   exact hnot ((kripke_entails_iff_derives_of_enumeration enumeration context formula).mp hentails)
 
+theorem not_derives_iff_has_kripke_countermodel_of_enumeration {Atom : Type u}
+    (enumeration : FormulaEnumeration Atom)
+    (context : List (Formula Atom)) (formula : Formula Atom) :
+    ¬ Derives context formula ↔
+      ∃ model : KripkeModel.{u, u} Atom,
+        ∃ world : model.World,
+          KripkeContextForces model world context ∧
+            ¬ KripkeForces model world formula := by
+  constructor
+  · intro hnot
+    obtain ⟨theory, hcontext, hformula⟩ :=
+      canonical_countermodel_of_not_derives_of_enumeration enumeration hnot
+    exact ⟨canonicalKripkeModel Atom, theory, hcontext, hformula⟩
+  · rintro ⟨model, world, hcontext, hnotformula⟩ derives
+    have entails : KripkeEntails.{u, u} context formula :=
+      derives_kripke_entails derives
+    exact hnotformula (entails model world hcontext)
+
+theorem derives_iff_no_kripke_countermodel_of_enumeration {Atom : Type u}
+    (enumeration : FormulaEnumeration Atom)
+    (context : List (Formula Atom)) (formula : Formula Atom) :
+    Derives context formula ↔
+      ¬ (∃ model : KripkeModel.{u, u} Atom,
+        ∃ world : model.World,
+          KripkeContextForces model world context ∧
+            ¬ KripkeForces model world formula) := by
+  constructor
+  · intro derives
+    rintro ⟨model, world, hcontext, hnotformula⟩
+    exact hnotformula ((derives_kripke_entails derives) model world hcontext)
+  · intro noCountermodel
+    apply Classical.byContradiction
+    intro hnot
+    exact noCountermodel
+      ((not_derives_iff_has_kripke_countermodel_of_enumeration
+        enumeration context formula).mp hnot)
+
 /- Incidence-specialized notation for clients of the core structure. -/
 abbrev IncidenceFormula (I : Type u) := Formula I
 
