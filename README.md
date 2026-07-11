@@ -61,7 +61,10 @@ It currently establishes:
   and AND behavior for leafhood.  These observations are constructively dual
   for every Incidence atom: boundary presence holds exactly when leafhood does
   not, and leafhood holds exactly when boundary presence does not; the atom
-  semantics inherits the same checked negation relation.  Its intuitionistic
+  semantics inherits the same checked negation relation.  Consequently every
+  boundary-observation embedding automatically preserves and reflects leaf
+  valuation, leaf-formula truth, and leaf-context satisfaction as well; this
+  dual transport is instantiated for the `Nat → PathId.node` embedding.  Its intuitionistic
   Kripke semantics, persistence theorem, and
   Kripke soundness theorem are checked; atom translations pull Kripke models
   back and preserve formula and context forcing exactly. Assumption substitution and cut are

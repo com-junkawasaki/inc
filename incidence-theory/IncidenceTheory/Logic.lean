@@ -5234,6 +5234,40 @@ theorem IncidenceBoundaryObservationEmbedding.satisfies_iff
   incidenceBoundarySatisfies_map_iff source target embedding.map
     embedding.boundary_iff formula
 
+theorem IncidenceBoundaryObservationEmbedding.leaf_iff
+    {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
+    {source : Incidence I R T} {target : Incidence I' R' T'}
+    (embedding : IncidenceBoundaryObservationEmbedding source target)
+    (atom : I) :
+    IncidenceLeafValuation target (embedding.map atom) ↔
+      IncidenceLeafValuation source atom := by
+  rw [incidenceLeafValuation_iff_not_boundary target (embedding.map atom),
+    incidenceLeafValuation_iff_not_boundary source atom,
+    embedding.boundary_iff atom]
+
+theorem IncidenceBoundaryObservationEmbedding.leafSatisfies_iff
+    {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
+    {source : Incidence I R T} {target : Incidence I' R' T'}
+    (embedding : IncidenceBoundaryObservationEmbedding source target)
+    (formula : Formula I) :
+    IncidenceLeafSatisfies target (formula.map embedding.map) ↔
+      IncidenceLeafSatisfies source formula := by
+  unfold IncidenceLeafSatisfies
+  rw [satisfies_map]
+  exact satisfies_congr embedding.leaf_iff formula
+
+theorem IncidenceBoundaryObservationEmbedding.leafContextSatisfies_iff
+    {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
+    {source : Incidence I R T} {target : Incidence I' R' T'}
+    (embedding : IncidenceBoundaryObservationEmbedding source target)
+    (context : List (Formula I)) :
+    IncidenceLeafContextSatisfies target
+        (Formula.mapContext embedding.map context) ↔
+      IncidenceLeafContextSatisfies source context := by
+  unfold IncidenceLeafContextSatisfies
+  rw [context_satisfies_map_iff]
+  exact contextSatisfies_congr embedding.leaf_iff context
+
 theorem IncidenceBoundaryObservationEmbedding.contextSatisfies_iff
     {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
     {source : Incidence I R T} {target : Incidence I' R' T'}
