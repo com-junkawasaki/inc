@@ -4188,6 +4188,146 @@ theorem IncCoherentCategoryEquivalence.mappedEqualizerLift_inclusion
         (counit.inv_app_hom_app candidate)
     _ = arrow := D.comp_id _
 
+theorem IncCoherentCategoryEquivalence.pulledEqualizerMediator_eq_sourceLift
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D)
+    {source target : CObj} {first second : C.Hom source target}
+    (equalizer : IncEqualizer first second)
+    (candidate : DObj)
+    (arrow : D.Hom candidate (coherent.equivalence.forward.obj source))
+    (equalizes :
+      D.comp (coherent.equivalence.forward.map first) arrow =
+        D.comp (coherent.equivalence.forward.map second) arrow)
+    (mediator : D.Hom candidate
+      (coherent.equivalence.forward.obj equalizer.object))
+    (mediator_inclusion :
+      D.comp (coherent.equivalence.forward.map equalizer.inclusion) mediator =
+        arrow) :
+    C.comp (coherent.equivalence.unit.inv.app equalizer.object)
+        (coherent.equivalence.inverse.map mediator) =
+      equalizer.lift (coherent.equivalence.inverse.obj candidate)
+        (C.comp (coherent.equivalence.unit.inv.app source)
+          (coherent.equivalence.inverse.map arrow))
+        (coherent.pulledEqualizerArrow_equalizes first second arrow equalizes) := by
+  let F := coherent.equivalence.forward
+  let G := coherent.equivalence.inverse
+  let unit := coherent.equivalence.unit
+  apply equalizer.lift_unique
+  have inclusionNaturality :
+      C.comp equalizer.inclusion (unit.inv.app equalizer.object) =
+        C.comp (unit.inv.app source) ((G.comp F).map equalizer.inclusion) := by
+    simpa [IncFunctor.identity] using unit.inv.naturality equalizer.inclusion
+  calc
+    C.comp equalizer.inclusion
+        (C.comp (unit.inv.app equalizer.object) (G.map mediator)) =
+      C.comp (C.comp equalizer.inclusion (unit.inv.app equalizer.object))
+        (G.map mediator) := C.assoc _ _ _
+    _ = C.comp
+        (C.comp (unit.inv.app source) ((G.comp F).map equalizer.inclusion))
+        (G.map mediator) := by rw [inclusionNaturality]
+    _ = C.comp (unit.inv.app source)
+        (C.comp ((G.comp F).map equalizer.inclusion) (G.map mediator)) :=
+          (C.assoc _ _ _).symm
+    _ = C.comp (unit.inv.app source)
+        (G.map (D.comp (F.map equalizer.inclusion) mediator)) := by
+          simp only [IncFunctor.comp]
+          rw [G.map_comp]
+    _ = C.comp (unit.inv.app source) (G.map arrow) := by
+          rw [mediator_inclusion]
+
+theorem IncCoherentCategoryEquivalence.mappedEqualizerLift_unique
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D)
+    {source target : CObj} {first second : C.Hom source target}
+    (equalizer : IncEqualizer first second)
+    (candidate : DObj)
+    (arrow : D.Hom candidate (coherent.equivalence.forward.obj source))
+    (equalizes :
+      D.comp (coherent.equivalence.forward.map first) arrow =
+        D.comp (coherent.equivalence.forward.map second) arrow)
+    (mediator : D.Hom candidate
+      (coherent.equivalence.forward.obj equalizer.object))
+    (mediator_inclusion :
+      D.comp (coherent.equivalence.forward.map equalizer.inclusion) mediator =
+        arrow) :
+    mediator = coherent.mappedEqualizerLift equalizer candidate arrow equalizes := by
+  let F := coherent.equivalence.forward
+  let G := coherent.equivalence.inverse
+  let unit := coherent.equivalence.unit
+  let counit := coherent.equivalence.counit
+  let pulledEqualizes :=
+    coherent.pulledEqualizerArrow_equalizes first second arrow equalizes
+  let sourceLift := equalizer.lift (G.obj candidate)
+    (C.comp (unit.inv.app source) (G.map arrow)) pulledEqualizes
+  have sourceEq :
+      C.comp (unit.inv.app equalizer.object) (G.map mediator) = sourceLift :=
+    coherent.pulledEqualizerMediator_eq_sourceLift equalizer candidate arrow
+      equalizes mediator mediator_inclusion
+  have counitNaturality :
+      D.comp mediator (counit.hom.app candidate) =
+        D.comp (counit.hom.app (F.obj equalizer.object))
+          ((F.comp G).map mediator) := by
+    simpa [IncFunctor.identity] using counit.hom.naturality mediator
+  change mediator = D.comp (F.map sourceLift) (counit.inv.app candidate)
+  calc
+    mediator = D.comp mediator (D.id candidate) := (D.comp_id mediator).symm
+    _ = D.comp mediator
+        (D.comp (counit.hom.app candidate) (counit.inv.app candidate)) := by
+          simpa [IncFunctor.identity] using congrArg (D.comp mediator)
+            (counit.inv_app_hom_app candidate).symm
+    _ = D.comp (D.comp mediator (counit.hom.app candidate))
+        (counit.inv.app candidate) := D.assoc _ _ _
+    _ = D.comp
+        (D.comp (counit.hom.app (F.obj equalizer.object))
+          ((F.comp G).map mediator))
+        (counit.inv.app candidate) := by rw [counitNaturality]
+    _ = D.comp
+        (D.comp (F.map (unit.inv.app equalizer.object))
+          (F.map (G.map mediator)))
+        (counit.inv.app candidate) := by
+          simp only [IncFunctor.comp]
+          rw [coherent.counit_hom_forward_eq_map_unit_inv]
+    _ = D.comp
+        (F.map (C.comp (unit.inv.app equalizer.object) (G.map mediator)))
+        (counit.inv.app candidate) := by rw [F.map_comp]
+    _ = D.comp (F.map sourceLift) (counit.inv.app candidate) := by
+          rw [sourceEq]
+
+def IncCoherentCategoryEquivalence.mapEqualizer
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D)
+    {source target : CObj} {first second : C.Hom source target}
+    (equalizer : IncEqualizer first second) :
+    IncEqualizer (coherent.equivalence.forward.map first)
+      (coherent.equivalence.forward.map second) where
+  object := coherent.equivalence.forward.obj equalizer.object
+  inclusion := coherent.equivalence.forward.map equalizer.inclusion
+  equalizes := by
+    rw [← coherent.equivalence.forward.map_comp,
+      equalizer.equalizes, coherent.equivalence.forward.map_comp]
+  lift := coherent.mappedEqualizerLift equalizer
+  lift_inclusion := coherent.mappedEqualizerLift_inclusion equalizer
+  lift_unique := by
+    intro candidate arrow equalizes mediator mediator_inclusion
+    exact coherent.mappedEqualizerLift_unique equalizer candidate arrow equalizes
+      mediator mediator_inclusion
+
+theorem IncCoherentCategoryEquivalence.mapEqualizer_object
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D)
+    {source target : CObj} {first second : C.Hom source target}
+    (equalizer : IncEqualizer first second) :
+    (coherent.mapEqualizer equalizer).object =
+      coherent.equivalence.forward.obj equalizer.object := rfl
+
+theorem IncCoherentCategoryEquivalence.mapEqualizer_inclusion
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D)
+    {source target : CObj} {first second : C.Hom source target}
+    (equalizer : IncEqualizer first second) :
+    (coherent.mapEqualizer equalizer).inclusion =
+      coherent.equivalence.forward.map equalizer.inclusion := rfl
+
 noncomputable def IncCategoryEquivalence.stronglyPreservesBinaryProduct
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (equivalence : IncCategoryEquivalence C D)
