@@ -128,6 +128,15 @@ theorem cycleIncidence_all_collapse (x y : CycleId) : approxBisim cycleIncidence
 
 theorem cycleIncidence_c0_ne_c1 : (CycleId.c0 : CycleId) ≠ CycleId.c1 := by simp
 
+theorem incidence_axioms_do_not_force_bisimulation_extensionality :
+    ¬ (∀ inc : Incidence CycleId CycleRole GraphType,
+      ∀ first second : CycleId,
+        approxBisim inc first second → first = second) := by
+  intro forcesExtensionality
+  exact cycleIncidence_c0_ne_c1
+    (forcesExtensionality cycleIncidence .c0 .c1
+      (cycleIncidence_all_collapse .c0 .c1))
+
 /- `glue` is commutative (`Z/4Z` addition) -- checked as a `decide`,
    the same way `natIncidence`'s commutativity was checked in cycle 1. -/
 theorem cycleIncidence_glue_comm (x y : CycleId) :
@@ -224,6 +233,7 @@ theorem cycleIncidenceFixed_approxBisim_iff (x y : CycleId) :
   · intro h
     subst h
     exact approxBisim_refl cycleIncidenceFixed x
+
 
 def cycleIdxFixed : List CycleId := [CycleId.c0, CycleId.c1, CycleId.c2, CycleId.c3]
 
