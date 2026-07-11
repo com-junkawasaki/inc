@@ -1136,6 +1136,11 @@ It currently establishes:
   formation cases.  Its `.pi` and `.sigma` methods now obtain the appropriate
   package from the provider and return the uniform parent result directly, so all
   four non-identity formation branches are model-dispatched.
+  Identity is now model-dispatched from the recursive type and two endpoint
+  typing results, completing all five formation shapes.  On the typing side,
+  `.typingUnit` and `.refl` expose the two non-binder leaf constructors through
+  the same model API.  This is the constructor algebra consumed by the pending
+  mutual structural dispatcher.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

@@ -587,6 +587,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   formation casesを既にdispatchし、binder branchも同じmodelからcoherence packageを取得できる。
 - model `.pi`/`.sigma` methodsを追加し、recursive domain/codomain resultsからproviderを呼び、uniform parent formation
   resultまで直接返すようにした。Identityを除くbase/unit/Pi/Sigmaの4 formation branchesがmodel-dispatchedとなった。
+- model `.identity`がrecursive type resultと左右endpoint typing resultsから5番目のformation resultを返すようにし、
+  全5 formation shapesをmodel APIへ統一した。typing側も`.typingUnit`/`.refl`で二つのnon-binder leaf constructorsを
+  model methods化し、pending mutual structural dispatcherが消費するconstructor algebraを具体化した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

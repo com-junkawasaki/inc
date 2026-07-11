@@ -5987,6 +5987,32 @@ noncomputable def IncDepRawFormationSubstitutionFiberResult.identity
   (IncDepRawTypingSubstitutionFiberResult.identityFormation
     typeResult leftResult rightResult).toFormationFiberResult
 
+noncomputable def IncDepRawSubstitutionFiberModel.identity
+    (_model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {typeFormation : IncDepRawWellFormed target type}
+    {leftTyping : IncDepRawHasType target left type}
+    {rightTyping : IncDepRawHasType target right type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (typeResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := typeFormation) substitutionResult)
+    (leftResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := leftTyping) typeResult)
+    (rightResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := rightTyping) typeResult) :
+    IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := IncDepRawWellFormed.identity
+        typeFormation leftTyping rightTyping) substitutionResult :=
+  IncDepRawFormationSubstitutionFiberResult.identity
+    typeResult leftResult rightResult
+
 def IncDepRawTypingSemanticResult.castType
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} {typing : IncDepRawHasType context term type}
@@ -6558,6 +6584,21 @@ def IncDepRawTypingSubstitutionFiberResult.unit
   sourceTermResult := IncDepRawTypingSemanticResult.unit sourceResult
   semanticTerm_coherence := rfl
 
+def IncDepRawSubstitutionFiberModel.typingUnit
+    (_model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) :
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := IncDepRawHasType.unitRule)
+      (IncDepRawFormationSubstitutionFiberResult.unit substitutionResult) :=
+  IncDepRawTypingSubstitutionFiberResult.unit substitutionResult
+
 theorem IncDepRawTypingSubstitutionFiberResult.unit_apply
     {source target : List IncDepRawType}
     {substitution : IncDepRawSubstitution source target}
@@ -6714,6 +6755,31 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.refl
       semanticTerm_coherence := ?_ }
   funext assignment
   apply IncIdentityType.witness_irrel
+
+noncomputable def IncDepRawSubstitutionFiberModel.refl
+    (_model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {termTyping : IncDepRawHasType target term type}
+    {typeFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (typeResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := typeFormation) substitutionResult)
+    (termResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := termTyping) typeResult) :
+    let identityResult :=
+      IncDepRawTypingSubstitutionFiberResult.identityFormation
+        typeResult termResult termResult
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := IncDepRawHasType.reflRule termTyping)
+      identityResult.toFormationFiberResult :=
+  IncDepRawTypingSubstitutionFiberResult.refl typeResult termResult
 
 noncomputable def IncDepRawTypingSubstitutionFiberResult.lambda
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
