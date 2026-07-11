@@ -977,6 +977,14 @@ It currently establishes:
   substitution.  `identity_term` checks definitionally that the environment's
   replacement is exactly the context lookup term.  The remaining environment
   constructor is binder lift, split into newest and older lookup cases.
+  Binder lift is now implemented for the replacement environment.  The newest
+  lookup is interpreted as the extended source-context variable over the
+  substituted domain; an older lookup reindexes its previous replacement type
+  and substitutes its previous replacement term along the source projection.
+  `lift_here_term` verifies the newest computation rule definitionally.  Identity
+  and lift constructors are therefore both available; the remaining variable
+  work is the final fiber-transport equation connecting this environment to the
+  target lookup interpretation.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

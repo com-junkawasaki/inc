@@ -485,6 +485,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   semantic type/termをraw identity substitutionの`preserves lookup` proofへ割り当てる。`identity_term`により
   environmentのreplacementがcontext lookup termそのものであることをdefinitionally確認した。残るenvironment
   constructorはbinder liftのnewest/older二分岐である。
+- replacement environmentのbinder `lift`を実装した。newest lookupはsubstituted domain上のextended
+  source-context variableとして解釈し、older lookupは既存replacement typeをsource projectionでreindex、termを
+  substituteする。`lift_here_term`でnewest計算則をdefinitionally確認した。identity/lift constructorが揃い、
+  variable branchに残るのはこのenvironmentとtarget lookup interpretationを結ぶ最終fiber-transport equationである。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
