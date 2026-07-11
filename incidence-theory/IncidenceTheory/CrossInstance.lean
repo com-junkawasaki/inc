@@ -871,6 +871,198 @@ theorem IncRawHasType.evaluate_substitute
       rw [functionIH substitution environment,
         argumentIH substitution environment]
 
+mutual
+  inductive IncDepRawType where
+    | base : Nat → IncDepRawType
+    | unit : IncDepRawType
+    | pi : IncDepRawType → IncDepRawType → IncDepRawType
+    | sigma : IncDepRawType → IncDepRawType → IncDepRawType
+    | identity : IncDepRawType → IncDepRawTerm → IncDepRawTerm →
+        IncDepRawType
+    deriving DecidableEq, Repr
+
+  inductive IncDepRawTerm where
+    | var : Nat → IncDepRawTerm
+    | unit : IncDepRawTerm
+    | lambda : IncDepRawType → IncDepRawTerm → IncDepRawTerm
+    | apply : IncDepRawTerm → IncDepRawTerm → IncDepRawTerm
+    | pair : IncDepRawTerm → IncDepRawTerm → IncDepRawTerm
+    | first : IncDepRawTerm → IncDepRawTerm
+    | second : IncDepRawTerm → IncDepRawTerm
+    | refl : IncDepRawTerm → IncDepRawTerm
+    deriving DecidableEq, Repr
+end
+
+mutual
+  def IncDepRawType.rename (renameMap : Nat → Nat) :
+      IncDepRawType → IncDepRawType
+    | .base index => .base index
+    | .unit => .unit
+    | .pi domain codomain =>
+        .pi (domain.rename renameMap)
+          (codomain.rename fun index => match index with
+            | 0 => 0
+            | next + 1 => renameMap next + 1)
+    | .sigma domain codomain =>
+        .sigma (domain.rename renameMap)
+          (codomain.rename fun index => match index with
+            | 0 => 0
+            | next + 1 => renameMap next + 1)
+    | .identity type left right =>
+        .identity (type.rename renameMap) (left.rename renameMap)
+          (right.rename renameMap)
+
+  def IncDepRawTerm.rename (renameMap : Nat → Nat) :
+      IncDepRawTerm → IncDepRawTerm
+    | .var index => .var (renameMap index)
+    | .unit => .unit
+    | .lambda domain body =>
+        .lambda (domain.rename renameMap)
+          (body.rename fun index => match index with
+            | 0 => 0
+            | next + 1 => renameMap next + 1)
+    | .apply function argument =>
+        .apply (function.rename renameMap) (argument.rename renameMap)
+    | .pair first second =>
+        .pair (first.rename renameMap) (second.rename renameMap)
+    | .first pair => .first (pair.rename renameMap)
+    | .second pair => .second (pair.rename renameMap)
+    | .refl term => .refl (term.rename renameMap)
+end
+
+def IncDepRawTerm.liftReplacement
+    (replacement : Nat → IncDepRawTerm) : Nat → IncDepRawTerm
+  | 0 => .var 0
+  | index + 1 => (replacement index).rename Nat.succ
+
+mutual
+  def IncDepRawType.substitute (replacement : Nat → IncDepRawTerm) :
+      IncDepRawType → IncDepRawType
+    | .base index => .base index
+    | .unit => .unit
+    | .pi domain codomain =>
+        .pi (domain.substitute replacement)
+          (codomain.substitute (IncDepRawTerm.liftReplacement replacement))
+    | .sigma domain codomain =>
+        .sigma (domain.substitute replacement)
+          (codomain.substitute (IncDepRawTerm.liftReplacement replacement))
+    | .identity type left right =>
+        .identity (type.substitute replacement) (left.substitute replacement)
+          (right.substitute replacement)
+
+  def IncDepRawTerm.substitute (replacement : Nat → IncDepRawTerm) :
+      IncDepRawTerm → IncDepRawTerm
+    | .var index => replacement index
+    | .unit => .unit
+    | .lambda domain body =>
+        .lambda (domain.substitute replacement)
+          (body.substitute (IncDepRawTerm.liftReplacement replacement))
+    | .apply function argument =>
+        .apply (function.substitute replacement) (argument.substitute replacement)
+    | .pair first second =>
+        .pair (first.substitute replacement) (second.substitute replacement)
+    | .first pair => .first (pair.substitute replacement)
+    | .second pair => .second (pair.substitute replacement)
+    | .refl term => .refl (term.substitute replacement)
+end
+
+def IncDepRawType.instantiate (codomain : IncDepRawType)
+    (argument : IncDepRawTerm) : IncDepRawType :=
+  codomain.substitute fun index => match index with
+    | 0 => argument
+    | next + 1 => .var next
+
+inductive IncDepRawLookup : List IncDepRawType → Nat → IncDepRawType → Type
+  | here {context type} : IncDepRawLookup (type :: context) 0 type
+  | there {context index type head} :
+      IncDepRawLookup context index type →
+        IncDepRawLookup (head :: context) (index + 1) (type.rename Nat.succ)
+
+mutual
+  inductive IncDepRawWellFormed : List IncDepRawType → IncDepRawType → Type
+    | base {context index} : IncDepRawWellFormed context (.base index)
+    | unit {context} : IncDepRawWellFormed context .unit
+    | pi {context domain codomain} :
+        IncDepRawWellFormed context domain →
+        IncDepRawWellFormed (domain :: context) codomain →
+        IncDepRawWellFormed context (.pi domain codomain)
+    | sigma {context domain codomain} :
+        IncDepRawWellFormed context domain →
+        IncDepRawWellFormed (domain :: context) codomain →
+        IncDepRawWellFormed context (.sigma domain codomain)
+    | identity {context type left right} :
+        IncDepRawWellFormed context type →
+        IncDepRawHasType context left type →
+        IncDepRawHasType context right type →
+        IncDepRawWellFormed context (.identity type left right)
+
+  inductive IncDepRawHasType :
+      List IncDepRawType → IncDepRawTerm → IncDepRawType → Type
+    | varRule {context index type} :
+        IncDepRawLookup context index type →
+        IncDepRawHasType context (.var index) type
+    | unitRule {context} : IncDepRawHasType context .unit .unit
+    | lambdaRule {context domain codomain body} :
+        IncDepRawWellFormed context domain →
+        IncDepRawHasType (domain :: context) body codomain →
+        IncDepRawHasType context (.lambda domain body) (.pi domain codomain)
+    | applyRule {context domain codomain function argument} :
+        IncDepRawHasType context function (.pi domain codomain) →
+        IncDepRawHasType context argument domain →
+        IncDepRawHasType context (.apply function argument)
+          (codomain.instantiate argument)
+    | pairRule {context domain codomain first second} :
+        IncDepRawHasType context first domain →
+        IncDepRawHasType context second (codomain.instantiate first) →
+        IncDepRawHasType context (.pair first second) (.sigma domain codomain)
+    | firstRule {context domain codomain pair} :
+        IncDepRawHasType context pair (.sigma domain codomain) →
+        IncDepRawHasType context (.first pair) domain
+    | secondRule {context domain codomain pair} :
+        IncDepRawHasType context pair (.sigma domain codomain) →
+        IncDepRawHasType context (.second pair)
+          (codomain.instantiate (.first pair))
+    | reflRule {context type term} :
+        IncDepRawHasType context term type →
+        IncDepRawHasType context (.refl term) (.identity type term term)
+end
+
+inductive IncDepRawContext.WellFormed : List IncDepRawType → Type
+  | empty : WellFormed []
+  | extend {context type} :
+      WellFormed context → IncDepRawWellFormed context type →
+      WellFormed (type :: context)
+
+def incDepRawIdentity (type : IncDepRawType) : IncDepRawTerm :=
+  .lambda type (.var 0)
+
+def incDepRawIdentity_hasType
+    (type : IncDepRawType) (typeWellFormed : IncDepRawWellFormed [] type) :
+    IncDepRawHasType [] (incDepRawIdentity type) (.pi type type) := by
+  exact IncDepRawHasType.lambdaRule typeWellFormed
+    (IncDepRawHasType.varRule IncDepRawLookup.here)
+
+def incDepRawRefl_hasType
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {term : IncDepRawTerm} (typing : IncDepRawHasType context term type) :
+    IncDepRawHasType context (.refl term) (.identity type term term) :=
+  IncDepRawHasType.reflRule typing
+
+def incDepRawDependentRefl : IncDepRawTerm :=
+  .lambda .unit (.refl (.var 0))
+
+def incDepRawDependentRefl_hasType :
+    IncDepRawHasType [] incDepRawDependentRefl
+      (.pi .unit (.identity .unit (.var 0) (.var 0))) := by
+  exact IncDepRawHasType.lambdaRule IncDepRawWellFormed.unit
+    (IncDepRawHasType.reflRule
+      (IncDepRawHasType.varRule IncDepRawLookup.here))
+
+theorem incDepRawDependentRefl_application_type :
+    (IncDepRawType.identity .unit (.var 0) (.var 0)).instantiate .unit =
+      .identity .unit .unit .unit := by
+  rfl
+
 structure IncContext where
   Assignment : Type u
 

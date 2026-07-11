@@ -136,6 +136,15 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   についても drop/full environment coherence を証明し、lambda binder を含む全 typing
   rule に対して「substitute 後の評価 = induced environment での元項の評価」という full
   semantic substitution theorem を得た。
+- genuinely dependent な独立 raw telescope layer を追加した。raw type は dependent Pi、
+  dependent Sigma、raw term endpoint を持つ identity type、raw term は lambda/application、
+  dependent pair/projection、refl を含む。type/term 相互の capture-avoiding rename と
+  simultaneous substitution、binder codomain の instantiate を定義し、type formation と
+  term typing を相互 inductive judgment として構成した。Pi/Sigma codomain は拡張 context
+  で検査され、application/second projection の結果型は実際に instantiate される。
+  `Pi (x : Unit), Id Unit x x` の closed inhabitant と unit 適用時の identity codomain 計算を
+  checked。残る bridge は dependent judgment の renaming/substitution preservation と、既存
+  semantic Pi/Sigma/Id context calculus への interpretation/soundness である。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

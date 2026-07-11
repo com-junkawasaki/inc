@@ -456,6 +456,19 @@ It currently establishes:
   and the full semantic substitution theorem holds for every typing rule:
   evaluating a substituted derivation equals evaluating the original
   derivation in the induced target environment.
+  A separate genuinely dependent raw telescope layer is now present too.
+  Raw types contain dependent Pi, dependent Sigma, and identity types whose
+  endpoints are raw terms; raw terms contain lambda/application, dependent
+  pairs/projections, and reflexivity.  Capture-avoiding renaming and simultaneous
+  substitution act mutually on types and terms, and codomain instantiation is
+  used by application and both dependent projections.  Mutually inductive type
+  formation and term typing judgments enforce that Pi/Sigma codomains are
+  checked in the extended context and that identity endpoints share a type.
+  The closed term `incDepRawDependentRefl` inhabits
+  `Pi (x : Unit), Id Unit x x`, and instantiating that codomain at unit computes
+  to `Id Unit unit unit`.  The remaining bridge is preservation of these
+  dependent judgments under renaming/substitution and their interpretation into
+  the checked semantic Pi/Sigma/identity context calculus.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite
