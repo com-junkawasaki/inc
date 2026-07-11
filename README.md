@@ -194,7 +194,10 @@ It currently establishes:
   representation.  A bounded internal negation graph covers both sign branches
   with exact law `z ↦ -z`; it is functional and total on its represented
   bounded domain, and the encoding satisfies double negation.  Integer
-  addition and multiplication graphs remain subsequent layers.
+  addition and multiplication are built from a reusable finite binary-operation
+  graph construction over the signed window.  Both have exact laws
+  `⟨x,y⟩ ↦ x+y` and `⟨x,y⟩ ↦ x*y`, and are functional and total on
+  their bounded two-dimensional domains.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
