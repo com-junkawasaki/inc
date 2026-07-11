@@ -27,6 +27,61 @@ import IncidenceTheory.PathComplex
 
 namespace IncidenceCore
 
+def IncDependentFamily.pullbackAlongBoundaryEmbedding
+    {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
+    {source : Incidence I R T} {target : Incidence I' R' T'}
+    (family : IncDependentFamily target)
+    (embedding : IncidenceBoundaryObservationEmbedding source target) :
+    IncDependentFamily source where
+  fiber := fun index => family.fiber (embedding.map index)
+
+def IncDependentFamily.pullbackSumToTarget
+    {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
+    {source : Incidence I R T} {target : Incidence I' R' T'}
+    (family : IncDependentFamily target)
+    (embedding : IncidenceBoundaryObservationEmbedding source target) :
+    IncDependentSum (family.pullbackAlongBoundaryEmbedding embedding) →
+      IncDependentSum family
+  | ⟨index, value⟩ => ⟨embedding.map index, value⟩
+
+def IncDependentFamily.pullbackProduct
+    {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
+    {source : Incidence I R T} {target : Incidence I' R' T'}
+    (family : IncDependentFamily target)
+    (embedding : IncidenceBoundaryObservationEmbedding source target)
+    (term : IncDependentProduct family) :
+    IncDependentProduct (family.pullbackAlongBoundaryEmbedding embedding) :=
+  fun index => term (embedding.map index)
+
+theorem IncDependentFamily.pullbackProduct_comp
+    {I I' I'' R T R' T' R'' T'' : Type u}
+    [DecidableEq I] [DecidableEq I'] [DecidableEq I'']
+    {source : Incidence I R T} {middle : Incidence I' R' T'}
+    {target : Incidence I'' R'' T''}
+    (family : IncDependentFamily target)
+    (second : IncidenceBoundaryObservationEmbedding middle target)
+    (first : IncidenceBoundaryObservationEmbedding source middle)
+    (term : IncDependentProduct family) :
+    family.pullbackProduct (second.comp first) term =
+      (family.pullbackAlongBoundaryEmbedding second).pullbackProduct first
+        (family.pullbackProduct second term) := by
+  rfl
+
+theorem IncDependentFamily.pullbackSumToTarget_comp
+    {I I' I'' R T R' T' R'' T'' : Type u}
+    [DecidableEq I] [DecidableEq I'] [DecidableEq I'']
+    {source : Incidence I R T} {middle : Incidence I' R' T'}
+    {target : Incidence I'' R'' T''}
+    (family : IncDependentFamily target)
+    (second : IncidenceBoundaryObservationEmbedding middle target)
+    (first : IncidenceBoundaryObservationEmbedding source middle) :
+    family.pullbackSumToTarget (second.comp first) =
+      family.pullbackSumToTarget second ∘
+        (family.pullbackAlongBoundaryEmbedding second).pullbackSumToTarget first := by
+  funext total
+  rcases total with ⟨index, value⟩
+  rfl
+
 /- Positive: `PairId.atom` is a boundary-natural embedding -- its
    boundary is exactly `natIncidence`'s, transported through `atom`
    pointwise (with `PeanoRole.pred` relabeled to `PairRole.chain`,

@@ -351,6 +351,14 @@ It currently establishes:
   identity laws.
 - quotient-level membership for recursive sets, with empty-set exclusion,
   embeddings of each union summand, and extensionality proved as theorems.
+- incidence-indexed dependent families, their dependent sums (`Σ`) and
+  dependent products (`Π`), reindexing, family morphisms and family
+  isomorphisms are reconstructed with identity/composition laws and induced
+  equivalences.  Boundary-observation embeddings now also pull such families
+  back; the induced maps on total spaces and sections satisfy checked
+  composition laws.  This is a concrete dependent-type fragment of the
+  internal language, not yet a completeness theorem for a full dependent
+  type theory.
 - the `inc_to_set` translation packaged as a functor from the discrete
   incidence carrier category to the category of types.  It is always faithful
   but never full or essentially surjective; explicit morphisms and objects
