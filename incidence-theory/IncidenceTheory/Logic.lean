@@ -1168,6 +1168,18 @@ theorem Formula.logicalAnd_distributes_over_or {Atom : Type u}
           (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) r)) := by
   exact Quotient.sound (derives_and_or_distributive_iff p q r)
 
+theorem Formula.logicalAnd_distrib_or {Atom : Type u}
+    (p q r : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalAnd p (Formula.logicalOr q r) =
+      Formula.logicalOr (Formula.logicalAnd p q) (Formula.logicalAnd p r) := by
+  refine Quotient.inductionOn p ?_
+  intro p
+  refine Quotient.inductionOn q ?_
+  intro q
+  refine Quotient.inductionOn r ?_
+  intro r
+  exact Formula.logicalAnd_distributes_over_or p q r
+
 theorem satisfies_and_or_distributive_iff {Atom : Type u}
     (valuation : Atom → Prop) (p q r : Formula Atom) :
     Satisfies valuation (Formula.iff (.and p (.or q r))
@@ -1236,6 +1248,18 @@ theorem Formula.logicalOr_distributes_over_and {Atom : Type u}
         (Formula.logicalOr (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) p)
           (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) r)) := by
   exact Quotient.sound (derives_or_and_distributive_iff p q r)
+
+theorem Formula.logicalOr_distrib_and {Atom : Type u}
+    (p q r : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalOr p (Formula.logicalAnd q r) =
+      Formula.logicalAnd (Formula.logicalOr p q) (Formula.logicalOr p r) := by
+  refine Quotient.inductionOn p ?_
+  intro p
+  refine Quotient.inductionOn q ?_
+  intro q
+  refine Quotient.inductionOn r ?_
+  intro r
+  exact Formula.logicalOr_distributes_over_and p q r
 
 theorem satisfies_or_and_distributive_iff {Atom : Type u}
     (valuation : Atom → Prop) (p q r : Formula Atom) :
