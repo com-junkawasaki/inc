@@ -1095,22 +1095,22 @@ It currently establishes:
   They are now integrated by the uniform `.second` constructor.  It selects the
   canonical instantiated result type, derives first-component coherence from the
   recursive pair result, and proves second-component transport with
-  `sigmaForward_second_eq_of_eq`.  The only explicit boundary left is the semantic
-  alignment of the source derivation produced by the syntactic
-  instantiate/substitute rewrite.
+  `sigmaForward_second_eq_of_eq`.  The exact substituted source derivation is now
+  assigned that canonical projection term directly, so no external alignment is
+  required.
   Dependent pair introduction is integrated too.  The general
   `sigmaForward_eq_of_components` lemma reconstructs equality of dependent pairs
   from domain equality and the transported codomain equality.  The uniform
   `.pair` constructor obtains both from the recursive first and second results
-  and the canonical instantiated equivalence; only the exact substituted source
-  derivation's alignment with the canonical semantic pair remains explicit.
+  and the canonical instantiated equivalence.  The exact substituted source
+  derivation receives the canonical pair term internally, with no alignment input.
   Application substitution is now integrated.  Pi round-trip laws alone do not
   identify evaluation of `piForward` at a transported argument with the
   recursively supplied codomain map, so `piForward_apply_transport` isolates the
   necessary evaluation-coherence law.  The uniform `.apply` constructor combines
   that law with recursive function and argument results and the canonical
-  instantiated formation result; only the exact substituted source derivation's
-  semantic alignment remains explicit.
+  instantiated formation result.  Its exact substituted source derivation is
+  interpreted by the canonical application term internally.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

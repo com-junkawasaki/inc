@@ -6517,16 +6517,7 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.apply
         domainResult codomainResult backward_forward
         forward_backward).toFormationFiberResult)
     (argumentResult : IncDepRawTypingSubstitutionFiberResult
-      (targetTyping := argumentTyping) domainResult)
-    (sourceApplyResult : IncDepRawTypingSemanticResult
-      ((IncDepRawHasType.applyRule functionTyping argumentTyping).substitute
-        substitution) sourceResult
-      (IncTypeInContext.instantiateFiber
-        codomainResult.sourceFormationResult.semanticType
-        argumentResult.sourceTermResult.semanticTerm))
-    (sourceApplyAlignment : sourceApplyResult.semanticTerm =
-      IncPiTerm.apply functionResult.sourceTermResult.semanticTerm
-        argumentResult.sourceTermResult.semanticTerm) :
+      (targetTyping := argumentTyping) domainResult) :
     IncDepRawTypingSubstitutionFiberResult
       (targetTyping := IncDepRawHasType.applyRule functionTyping argumentTyping)
       (IncDepRawFormationSubstitutionFiberResult.instantiateCanonical
@@ -6537,10 +6528,12 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.apply
   refine
     { targetTermResult := IncDepRawTypingSemanticResult.apply
         functionResult.targetTermResult argumentResult.targetTermResult
-      sourceTermResult := sourceApplyResult
+      sourceTermResult :=
+        { semanticTerm := IncPiTerm.apply
+            functionResult.sourceTermResult.semanticTerm
+            argumentResult.sourceTermResult.semanticTerm }
       semanticTerm_coherence := ?_ }
   funext assignment
-  rw [sourceApplyAlignment]
   change ((domainResult.instantiateFiberEquivalence codomainResult
       argumentResult.sourceTermResult.semanticTerm
       argumentResult.targetTermResult.semanticTerm
@@ -6603,15 +6596,7 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.pair
         instantiatedFormation domainResult codomainResult
         firstResult.sourceTermResult.semanticTerm
         firstResult.targetTermResult.semanticTerm
-        firstResult.semanticTerm_coherence))
-    (sourcePairResult : IncDepRawTypingSemanticResult
-      ((IncDepRawHasType.pairRule firstTyping secondTyping).substitute substitution)
-      sourceResult
-      (IncSigmaType domainResult.sourceFormationResult.semanticType
-        codomainResult.sourceFormationResult.semanticType))
-    (sourcePairAlignment : sourcePairResult.semanticTerm =
-      IncSigmaTerm.pair firstResult.sourceTermResult.semanticTerm
-        secondResult.sourceTermResult.semanticTerm) :
+        firstResult.semanticTerm_coherence)) :
     IncDepRawTypingSubstitutionFiberResult
       (targetTyping := IncDepRawHasType.pairRule firstTyping secondTyping)
       (IncDepRawSigmaFormationSubstitutionFiberResult.ofCodomainCoherence
@@ -6623,10 +6608,12 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.pair
   refine
     { targetTermResult := IncDepRawTypingSemanticResult.pair
         firstResult.targetTermResult secondResult.targetTermResult
-      sourceTermResult := sourcePairResult
+      sourceTermResult :=
+        { semanticTerm := IncSigmaTerm.pair
+            firstResult.sourceTermResult.semanticTerm
+            secondResult.sourceTermResult.semanticTerm }
       semanticTerm_coherence := ?_ }
   funext assignment
-  rw [sourcePairAlignment]
   let firstCoherence := congrFun firstResult.semanticTerm_coherence assignment
   have secondCoherence := congrFun secondResult.semanticTerm_coherence assignment
   change ((domainResult.instantiateFiberEquivalence codomainResult
@@ -6725,15 +6712,7 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.second
     (pairResult : IncDepRawTypingSubstitutionFiberResult
       (targetTyping := pairTyping)
       (IncDepRawSigmaFormationSubstitutionFiberResult.ofCodomainCoherence
-        domainResult codomainResult backward_forward forward_backward).toFormationFiberResult)
-    (sourceSecondResult : IncDepRawTypingSemanticResult
-      ((IncDepRawHasType.secondRule pairTyping).substitute substitution)
-      sourceResult
-      (IncTypeInContext.instantiateFiber
-        codomainResult.sourceFormationResult.semanticType
-        (IncSigmaTerm.first pairResult.sourceTermResult.semanticTerm)))
-    (sourceSecondAlignment : sourceSecondResult.semanticTerm =
-      IncSigmaTerm.second pairResult.sourceTermResult.semanticTerm) :
+        domainResult codomainResult backward_forward forward_backward).toFormationFiberResult) :
     let firstCoherence :
         domainResult.semanticFiberEquivalence.transport
             (IncSigmaTerm.first pairResult.sourceTermResult.semanticTerm) =
@@ -6772,10 +6751,11 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.second
   refine
     { targetTermResult := IncDepRawTypingSemanticResult.second
         pairResult.targetTermResult
-      sourceTermResult := sourceSecondResult
+      sourceTermResult :=
+        { semanticTerm := IncSigmaTerm.second
+            pairResult.sourceTermResult.semanticTerm }
       semanticTerm_coherence := ?_ }
   funext assignment
-  rw [sourceSecondAlignment]
   change ((domainResult.instantiateFiberEquivalence codomainResult
       (IncSigmaTerm.first pairResult.sourceTermResult.semanticTerm)
       (IncSigmaTerm.first pairResult.targetTermResult.semanticTerm)
