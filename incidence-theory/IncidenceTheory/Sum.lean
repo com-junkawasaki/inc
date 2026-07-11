@@ -154,6 +154,24 @@ theorem countablyPresentedIncidenceSum_internalLogic_complete
     KripkeEntails.{u, u} context formula ↔ Derives context formula :=
   (countablyPresentedIncidenceSum left right).internalLogic_complete context formula
 
+noncomputable def natSumCountablyPresentedIncidence :
+    CountablyPresentedIncidence (Nat ⊕ Nat) (PeanoRole ⊕ PeanoRole) GraphType :=
+  countablyPresentedIncidenceSum natCountablyPresentedIncidence
+    natCountablyPresentedIncidence
+
+theorem natSum_internalLogic_consistent_iff_model
+    (context : List (Formula (Nat ⊕ Nat))) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context :=
+  natSumCountablyPresentedIncidence.internalLogic_consistent_iff_model context
+
+theorem natSum_internalLogic_countermodel
+    {context : List (Formula (Nat ⊕ Nat))} {formula : Formula (Nat ⊕ Nat)}
+    (hnot : ¬ Derives context formula) :
+    ∃ theory : PrimeTheory (Nat ⊕ Nat),
+      KripkeContextForces (canonicalKripkeModel (Nat ⊕ Nat)) theory context ∧
+        ¬ KripkeForces (canonicalKripkeModel (Nat ⊕ Nat)) theory formula :=
+  natSumCountablyPresentedIncidence.internalLogic_countermodel hnot
+
 /- Is `x` a leaf (empty boundary), regardless of which side it's on? -/
 def sumIsLeaf {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
   (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) : (I1 ⊕ I2) → Prop

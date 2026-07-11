@@ -135,6 +135,25 @@ theorem countablyPresentedIncidenceProd_internalLogic_complete
     KripkeEntails.{u, u} context formula ↔ Derives context formula :=
   (countablyPresentedIncidenceProd left right).internalLogic_complete context formula
 
+noncomputable def natProductCountablyPresentedIncidence :
+    CountablyPresentedIncidence (Nat × Nat) (PeanoRole ⊕ PeanoRole)
+      (GraphType × GraphType) :=
+  countablyPresentedIncidenceProd natCountablyPresentedIncidence
+    natCountablyPresentedIncidence
+
+theorem natProduct_internalLogic_consistent_iff_model
+    (context : List (Formula (Nat × Nat))) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context :=
+  natProductCountablyPresentedIncidence.internalLogic_consistent_iff_model context
+
+theorem natProduct_internalLogic_countermodel
+    {context : List (Formula (Nat × Nat))} {formula : Formula (Nat × Nat)}
+    (hnot : ¬ Derives context formula) :
+    ∃ theory : PrimeTheory (Nat × Nat),
+      KripkeContextForces (canonicalKripkeModel (Nat × Nat)) theory context ∧
+        ¬ KripkeForces (canonicalKripkeModel (Nat × Nat)) theory formula :=
+  natProductCountablyPresentedIncidence.internalLogic_countermodel hnot
+
 theorem prodBoundary_mem_left {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
   (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (i1 : I1) (i2 : I2)
   (e1 : Endpoint I1 R1) (he1 : e1 ∈ inc1.boundary i1) :

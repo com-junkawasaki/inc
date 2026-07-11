@@ -89,6 +89,9 @@ It currently establishes:
   The generic `incidenceProd` and `incidenceSum` constructors lift to this packaged
   level, so composing presented incidence structures simultaneously composes their
   carrier, countable internal language, and checked Kripke completeness theorem.
+  This is instantiated non-vacuously for both `natIncidence × natIncidence` and
+  `natIncidence ⊕ natIncidence`: consistent contexts have Kripke models, and every
+  underivable formula has a canonical prime-theory counterworld in each language.
   In the converse direction, every nonderivable finite sequent has a checked
   canonical prime-theory counterworld for the supplied coding.
   For every supplied formula enumeration, a finite context is
