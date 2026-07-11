@@ -1553,6 +1553,13 @@ It currently establishes:
   transporting the source lambda and substituting the target lambda.  Unlike the
   unit leaf example, this path genuinely exercises binder recursion and variable
   replacement.
+  `preserveUnitVariableRefl` adds the first Identity-formation example in the
+  one-variable Unit context.  Its coherent formation tree recursively preserves
+  the Unit type and both variable endpoints; the reflexivity typing branch then
+  normalizes its recursive term result onto that exact type result before building
+  the Identity fiber.  The exported coherence theorem confirms the resulting
+  reflexivity term commutes with the identity substitution.  Together with the
+  lambda example, this exercises both cross-directions of the mutual recursion.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

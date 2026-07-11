@@ -814,6 +814,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - binder-level例`preserveUnitIdentityLambda`を追加した。`λ (x : Unit), x`のcoherent readinessを構成し、empty identity substitution下で保存する過程は
   semantic context extend、replacement lift、variable-provider branchを実際に通る。`preserveUnitIdentityLambda_coherent`はsource lambdaのfiber transportと
   target lambdaのsubstitutionが等しいことをchecked resultから取り出し、leafだけでなくbinder recursion全体がend-to-endで動くことを確認した。
+- 一要素Unit文脈のvariable reflexivityを保存する`preserveUnitVariableRefl`を追加した。Identity formation treeはUnit typeと左右variable endpointsを
+  typing側へ相互再帰し、refl typing branchはrecursive term resultを同じexact type resultへnormalizeしてIdentity fiberを構成する。coherence theoremは
+  reflexivity termがidentity substitutionと可換であることを示し、lambda例と合わせて相互再帰の両方向をend-to-endでexerciseする。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
