@@ -825,6 +825,18 @@ theorem Formula.logicalClass_eq_of_derivablyEquivalent {Atom : Type u}
       Quotient.mk (Formula.derivablyEquivalentSetoid Atom) right :=
   Quotient.sound equivalent
 
+theorem Formula.logicalClass_eq_iff_derives_iff {Atom : Type u}
+    (left right : Formula Atom) :
+    (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) left :
+        Formula.LogicalEquivalenceClass Atom) =
+      Quotient.mk (Formula.derivablyEquivalentSetoid Atom) right ↔
+      Derives [] (Formula.iff left right) := by
+  constructor
+  · exact Quotient.exact
+  · intro derives
+    apply Quotient.sound
+    exact derives
+
 def Formula.logicalAnd {Atom : Type u}
     (left right : Formula.LogicalEquivalenceClass Atom) :
     Formula.LogicalEquivalenceClass Atom :=

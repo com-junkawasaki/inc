@@ -36,6 +36,16 @@ theorem CoherentIncidence.kripke_complete
     KripkeEntails.{u, u} context formula ↔ Derives context formula :=
   coherent.completeLogic.kripke_complete context formula
 
+theorem CoherentIncidence.logicalClass_eq_iff_kripke_equivalent
+    {I R T : Type u} [DecidableEq I] (coherent : CoherentIncidence I R T)
+    (left right : Formula I) :
+    (Quotient.mk (Formula.derivablyEquivalentSetoid I) left :
+        Formula.LogicalEquivalenceClass I) =
+      Quotient.mk (Formula.derivablyEquivalentSetoid I) right ↔
+      KripkeEntails.{u, u} [] (Formula.iff left right) := by
+  rw [Formula.logicalClass_eq_iff_derives_iff]
+  exact (coherent.kripke_complete [] (Formula.iff left right)).symm
+
 theorem CoherentIncidence.internal_logic_heyting
     {I R T : Type u} [DecidableEq I] (_coherent : CoherentIncidence I R T) :
     Formula.LogicalHeytingAlgebraLaws I :=
