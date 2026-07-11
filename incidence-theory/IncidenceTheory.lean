@@ -6755,6 +6755,72 @@ def inc_to_set {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) : I → 
     | [] => ULift Bool
     | _ :: _ => ULift Unit
 
+structure IncLiftedObject (Obj : Type u) : Type (u + 1) where
+  down : Obj
+
+structure IncDiscreteHom {Obj : Type u}
+    (source target : IncLiftedObject Obj) : Type (u + 1) where
+  equality : source = target
+
+structure IncLiftedFunction (source target : Type u) : Type (u + 1) where
+  function : source → target
+
+def incDiscreteCategory (Obj : Type u) : IncCategory (IncLiftedObject Obj) where
+  Hom := IncDiscreteHom
+  id := fun _ => ⟨rfl⟩
+  comp := fun second first => ⟨first.equality.trans second.equality⟩
+  id_comp := by
+    intro source target morphism
+    rcases morphism with ⟨morphism⟩
+    cases morphism
+    rfl
+  comp_id := by
+    intro source target morphism
+    rcases morphism with ⟨morphism⟩
+    cases morphism
+    rfl
+  assoc := by
+    intro a b c d first second third
+    rcases third with ⟨third⟩
+    rcases second with ⟨second⟩
+    rcases first with ⟨first⟩
+    cases third
+    cases second
+    cases first
+    rfl
+
+def incTypeCategory : IncCategory (Type u) where
+  Hom := IncLiftedFunction
+  id := fun _ => ⟨id⟩
+  comp := fun second first => ⟨second.function ∘ first.function⟩
+  id_comp := by intro source target morphism; cases morphism; rfl
+  comp_id := by intro source target morphism; cases morphism; rfl
+  assoc := by intro a b c d first second third; cases first; cases second; cases third; rfl
+
+def incToSetFunctor {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) :
+    IncFunctor (incDiscreteCategory I) incTypeCategory where
+  obj := fun i => inc_to_set inc i.down
+  map := by
+    intro source target equal
+    rcases equal with ⟨equal⟩
+    cases equal
+    exact ⟨id⟩
+  map_id := by
+    intro object
+    rfl
+  map_comp := by
+    intro source middle target second first
+    rcases first with ⟨firstEqual⟩
+    rcases second with ⟨secondEqual⟩
+    cases firstEqual
+    cases secondEqual
+    rfl
+
+theorem incToSetFunctor_obj {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (i : I) :
+    (incToSetFunctor inc).obj ⟨i⟩ = inc_to_set inc i := rfl
+
 def inc_to_set_preserves_boundary_shape
     {I R₁ T₁ R₂ T₂ : Type u} [DecidableEq I]
     (source : Incidence I R₁ T₁) (target : Incidence I R₂ T₂)
@@ -7957,11 +8023,12 @@ theorem BoundaryShapeEquivalence.all_nonNullary_iff
       (equivalence.hom.preservesReflectsNullary i).mp sourceNullary
     exact targetNonNullary (equivalence.hom.map i) targetNullary
 
-/- The Inc-to-Set assignment above is not yet packaged as an `IncFunctor`, so
-   a theorem specifically about that assignment still requires a source
-   category of incidences.  The general categorical preservation theorem is
-   now available, however: every category equivalence strongly preserves all
-   pushouts, including the two mapped cocone legs. -/
+/- `incToSetFunctor` packages the assignment over the discrete carrier
+   category.  It therefore proves functoriality under object equality; a
+   category whose objects are whole incidence structures and whose morphisms
+   preserve boundary/glue would be a strictly richer construction.  The
+   general preservation theorem below applies whenever such a translation is
+   presented as a category equivalence. -/
 noncomputable def category_equivalence_strongly_preserves_pushouts
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (equivalence : IncCategoryEquivalence C D) :
