@@ -239,6 +239,12 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
   から形成する。raw formation全5constructorのcontextual targetがcheckedとなり、自動foldには
   lookup/term recursionが残る。
+- term-typing foldにもcompositional builderを追加した。resultはraw typing derivation、interpreted
+  context、semantic contextual typeでindexされ、unit、lambda/application、dependent pair、
+  Sigma両projection、reflを対応semantic operatorへ写す。application、pair second component、
+  second projectionは真のdependent fiberを保持する。variable builderはinterpreted lookup termを
+  受け取る。全term constructorのsemantic targetがcheckedとなり、自動foldの核心的残件は
+  recursive lookup interpretationとなった。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

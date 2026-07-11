@@ -2782,6 +2782,140 @@ def IncDepRawFormationSemanticResult.identity
   semanticType := IncIdentityType typeResult.semanticType
     leftSemantic rightSemantic
 
+structure IncDepRawTypingSemanticResult
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} (typing : IncDepRawHasType context term type)
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    (contextResult : IncDepRawContextSemanticResult contextWellFormed)
+    (semanticType : IncTypeInContext contextResult.semanticContext) where
+  semanticTerm : IncTerm semanticType
+
+def IncDepRawTypingSemanticResult.variable
+    {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    {semanticType : IncTypeInContext contextResult.semanticContext}
+    (semanticVariable : IncTerm semanticType) :
+    IncDepRawTypingSemanticResult (IncDepRawHasType.varRule lookup)
+      contextResult semanticType where
+  semanticTerm := semanticVariable
+
+def IncDepRawTypingSemanticResult.unit
+    {context : List IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    (contextResult : IncDepRawContextSemanticResult contextWellFormed) :
+    IncDepRawTypingSemanticResult
+      (IncDepRawHasType.unitRule (context := context)) contextResult
+      (fun _ => ULift Unit) where
+  semanticTerm := fun _ => ⟨()⟩
+
+def IncDepRawTypingSemanticResult.lambda
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {body : IncDepRawTerm}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {bodyTyping : IncDepRawHasType (domain :: context) body codomain}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    {semanticDomain : IncTypeInContext contextResult.semanticContext}
+    {semanticCodomain : IncTypeInContext
+      (contextResult.semanticContext.extend semanticDomain)}
+    (bodyResult : IncDepRawTypingSemanticResult bodyTyping
+      (contextResult.extend (typeWellFormed := domainFormation) semanticDomain)
+      semanticCodomain) :
+    IncDepRawTypingSemanticResult
+      (IncDepRawHasType.lambdaRule domainFormation bodyTyping) contextResult
+      (IncPiType semanticDomain semanticCodomain) where
+  semanticTerm := IncPiTerm.lambda bodyResult.semanticTerm
+
+def IncDepRawTypingSemanticResult.apply
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {function argument : IncDepRawTerm}
+    {functionTyping : IncDepRawHasType context function (.pi domain codomain)}
+    {argumentTyping : IncDepRawHasType context argument domain}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    {semanticDomain : IncTypeInContext contextResult.semanticContext}
+    {semanticCodomain : IncTypeInContext
+      (contextResult.semanticContext.extend semanticDomain)}
+    (functionResult : IncDepRawTypingSemanticResult functionTyping contextResult
+      (IncPiType semanticDomain semanticCodomain))
+    (argumentResult : IncDepRawTypingSemanticResult argumentTyping contextResult
+      semanticDomain) :
+    IncDepRawTypingSemanticResult
+      (IncDepRawHasType.applyRule functionTyping argumentTyping) contextResult
+      (fun assignment => semanticCodomain
+        ⟨assignment, argumentResult.semanticTerm assignment⟩) where
+  semanticTerm := IncPiTerm.apply functionResult.semanticTerm
+    argumentResult.semanticTerm
+
+def IncDepRawTypingSemanticResult.pair
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {first second : IncDepRawTerm}
+    {firstTyping : IncDepRawHasType context first domain}
+    {secondTyping : IncDepRawHasType context second (codomain.instantiate first)}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    {semanticDomain : IncTypeInContext contextResult.semanticContext}
+    {semanticCodomain : IncTypeInContext
+      (contextResult.semanticContext.extend semanticDomain)}
+    (firstResult : IncDepRawTypingSemanticResult firstTyping contextResult
+      semanticDomain)
+    (secondResult : IncDepRawTypingSemanticResult secondTyping contextResult
+      (fun assignment => semanticCodomain
+        ⟨assignment, firstResult.semanticTerm assignment⟩)) :
+    IncDepRawTypingSemanticResult
+      (IncDepRawHasType.pairRule firstTyping secondTyping) contextResult
+      (IncSigmaType semanticDomain semanticCodomain) where
+  semanticTerm := IncSigmaTerm.pair firstResult.semanticTerm
+    secondResult.semanticTerm
+
+def IncDepRawTypingSemanticResult.first
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    {semanticDomain : IncTypeInContext contextResult.semanticContext}
+    {semanticCodomain : IncTypeInContext
+      (contextResult.semanticContext.extend semanticDomain)}
+    (pairResult : IncDepRawTypingSemanticResult pairTyping contextResult
+      (IncSigmaType semanticDomain semanticCodomain)) :
+    IncDepRawTypingSemanticResult
+      (IncDepRawHasType.firstRule pairTyping) contextResult semanticDomain where
+  semanticTerm := IncSigmaTerm.first pairResult.semanticTerm
+
+def IncDepRawTypingSemanticResult.second
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    {semanticDomain : IncTypeInContext contextResult.semanticContext}
+    {semanticCodomain : IncTypeInContext
+      (contextResult.semanticContext.extend semanticDomain)}
+    (pairResult : IncDepRawTypingSemanticResult pairTyping contextResult
+      (IncSigmaType semanticDomain semanticCodomain)) :
+    IncDepRawTypingSemanticResult
+      (IncDepRawHasType.secondRule pairTyping) contextResult
+      (fun assignment => semanticCodomain
+        ⟨assignment, (pairResult.semanticTerm assignment).1⟩) where
+  semanticTerm := IncSigmaTerm.second pairResult.semanticTerm
+
+def IncDepRawTypingSemanticResult.refl
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {term : IncDepRawTerm} {termTyping : IncDepRawHasType context term type}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    {semanticType : IncTypeInContext contextResult.semanticContext}
+    (termResult : IncDepRawTypingSemanticResult termTyping contextResult
+      semanticType) :
+    IncDepRawTypingSemanticResult
+      (IncDepRawHasType.reflRule termTyping) contextResult
+      (IncIdentityType semanticType termResult.semanticTerm
+        termResult.semanticTerm) where
+  semanticTerm := IncIdentityTerm.refl termResult.semanticTerm
+
 def incDepRawClosedContextSemantic
     {term : IncDepRawTerm} {type : IncDepRawType}
     (certified : IncDepRawCertifiedTyping [] term type) :

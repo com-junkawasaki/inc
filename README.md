@@ -602,6 +602,14 @@ It currently establishes:
   interpreted type with two semantic terms.  All five raw formation constructors
   therefore have checked targets in the contextual calculus; lookup and term
   recursion remain before the builders can be assembled automatically.
+  The term-typing half now has matching compositional builders.  A typing result
+  is indexed by its raw derivation, interpreted context, and semantic contextual
+  type.  Builders map unit, lambda/application, dependent pairing, both Sigma
+  projections, and reflexivity directly to the corresponding semantic operators;
+  the application, pair-second, and second-projection results retain their true
+  dependent fibers.  A variable builder consumes an interpreted lookup term.
+  Thus every term constructor has a checked semantic target, leaving recursive
+  lookup interpretation as the core missing piece of the automatic fold.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
