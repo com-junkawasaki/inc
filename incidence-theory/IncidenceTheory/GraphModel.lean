@@ -674,6 +674,24 @@ theorem finiteIncidence_derives_iff_no_kripke_countermodel
   derives_iff_no_kripke_countermodel_of_enumeration
     finiteIncidenceFormulaEnumeration context formula
 
+theorem finiteIncidence_internal_logic_consistent :
+    ¬ Derives ([] : List (Formula FiniteIncidence)) .bot :=
+  empty_context_consistent FiniteIncidence
+
+theorem finiteIncidence_bottom_has_kripke_countermodel :
+    ∃ model : KripkeModel.{0, 0} FiniteIncidence,
+      ∃ world : model.World,
+        KripkeContextForces model world [] ∧
+          ¬ KripkeForces model world .bot :=
+  (finiteIncidence_not_derives_iff_has_kripke_countermodel [] .bot).mp
+    finiteIncidence_internal_logic_consistent
+
+theorem finiteIncidence_internal_logic_nontrivial :
+    ¬ (∀ formula : Formula FiniteIncidence,
+      Derives [] formula) := by
+  intro derivesEverything
+  exact finiteIncidence_internal_logic_consistent (derivesEverything .bot)
+
 /-! ### A concrete constructive boundary
 
 The preceding completeness result is not merely an abstract transport result:
