@@ -462,6 +462,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   renamingとtarget weakeningを選び、任意readiness treeのrenamed-readiness packageを返す。older lookup
   branchはconstructor recursionを再実装せずdispatcherを再利用でき、残件はraw weakened resultとsemantic
   projection resultのalignmentだけになった。
+- renamed-result `weakenSemantic`をformation/typing双方に追加し、そのalignmentを構成した。total dispatcherが
+  選んだ任意renamed derivationをindexとして保持したまま、familyをprojection reindex、termをprojection
+  substitutionで解釈し、term計算則はdefinitionally成立する。semantic weakeningはcanonical proof objectとの
+  equalityに依存しなくなり、older lookupの残件はこのaligned resultをlookup recursion自体とpackageすることだけである。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

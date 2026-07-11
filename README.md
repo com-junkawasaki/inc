@@ -940,6 +940,13 @@ It currently establishes:
   readiness tree.  The older lookup branch can therefore reuse the total
   dispatcher instead of reproducing constructor recursion; its remaining work
   is only to align this raw weakened result with the semantic projection result.
+  That alignment is now constructed for both formations and typings by the
+  renamed-result `weakenSemantic` operations.  They retain whichever renamed
+  derivation the total dispatcher selected while interpreting its family by
+  projection reindexing and its term by projection substitution.  The term
+  computation equation is definitional.  Thus semantic weakening no longer
+  depends on equality with the canonical proof object; the remaining older
+  lookup step is to package this aligned result with the lookup recursion itself.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

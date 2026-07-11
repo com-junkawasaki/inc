@@ -4670,6 +4670,62 @@ theorem IncDepRawTypingSemanticResult.weaken_semanticTerm
         (contextResult.semanticContext.extendProjection headResult.semanticType) := by
   rfl
 
+noncomputable def IncDepRawFormationRenamedReadyResult.weakenSemantic
+    {context : List IncDepRawType} {type head : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawFormationSemanticReady formation}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {headWellFormed : IncDepRawWellFormed context head}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    (renamed : IncDepRawFormationRenamedReadyResult ready
+      ((IncDepRawRenaming.identity context).weakenTarget head))
+    (typeResult : IncDepRawFormationSemanticResult formation contextResult)
+    (headResult : IncDepRawFormationSemanticResult headWellFormed contextResult) :
+    IncDepRawFormationSemanticResult renamed.renamedFormation
+      (contextResult.extend (typeWellFormed := headWellFormed)
+        headResult.semanticType) where
+  semanticType := typeResult.semanticType.reindex
+    (contextResult.semanticContext.extendProjection headResult.semanticType)
+
+noncomputable def IncDepRawTypingRenamedReadyResult.weakenSemantic
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type head : IncDepRawType}
+    {typing : IncDepRawHasType context term type}
+    {ready : IncDepRawTypingSemanticReady typing}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {headWellFormed : IncDepRawWellFormed context head}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    {semanticType : IncTypeInContext contextResult.semanticContext}
+    (renamed : IncDepRawTypingRenamedReadyResult ready
+      ((IncDepRawRenaming.identity context).weakenTarget head))
+    (typingResult : IncDepRawTypingSemanticResult typing contextResult semanticType)
+    (headResult : IncDepRawFormationSemanticResult headWellFormed contextResult) :
+    IncDepRawTypingSemanticResult renamed.renamedTyping
+      (contextResult.extend (typeWellFormed := headWellFormed)
+        headResult.semanticType)
+      (semanticType.reindex
+        (contextResult.semanticContext.extendProjection headResult.semanticType)) where
+  semanticTerm := typingResult.semanticTerm.substitute
+    (contextResult.semanticContext.extendProjection headResult.semanticType)
+
+theorem IncDepRawTypingRenamedReadyResult.weakenSemantic_term
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type head : IncDepRawType}
+    {typing : IncDepRawHasType context term type}
+    {ready : IncDepRawTypingSemanticReady typing}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {headWellFormed : IncDepRawWellFormed context head}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    {semanticType : IncTypeInContext contextResult.semanticContext}
+    (renamed : IncDepRawTypingRenamedReadyResult ready
+      ((IncDepRawRenaming.identity context).weakenTarget head))
+    (typingResult : IncDepRawTypingSemanticResult typing contextResult semanticType)
+    (headResult : IncDepRawFormationSemanticResult headWellFormed contextResult) :
+    (renamed.weakenSemantic typingResult headResult).semanticTerm =
+      typingResult.semanticTerm.substitute
+        (contextResult.semanticContext.extendProjection headResult.semanticType) := by
+  rfl
+
 structure IncDepRawTypingFormationSemanticResult
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} {typing : IncDepRawHasType context term type}
