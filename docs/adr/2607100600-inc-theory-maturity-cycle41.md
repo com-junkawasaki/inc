@@ -510,6 +510,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   index上のcodomain equivalence間coherenceが追加データとして必要である。`IncDependentPiFiberEquiv`にPiの
   両round-trip lawを明示保持し、`toFiberEquiv`でfunction-space equivalenceを構成した。Pi formation substitutionは
   pointwise mapだけでなく、この強いcoherenceを再帰構成する必要がある。
+- 強化Pi invariantを`IncDependentPiTypeInContextFiberEquiv`でcontext familyへliftした。各context assignmentで
+  domain fiber equivalenceと二codomain familyからcoherent dependent Pi equivalenceを保持し、
+  `piFiberEquivalence`が対応する`IncPiType`間の`IncTypeInContext.FiberEquiv`を構成する。Pi
+  formation-substitution resultは一つのexplicit contextual coherence objectを受け取り標準fiber interfaceを返せる。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

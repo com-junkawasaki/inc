@@ -3516,6 +3516,31 @@ theorem IncPiType.reindex
         (codomain.reindex (substitution.liftDependent domain)) := by
   rfl
 
+structure IncDependentPiTypeInContextFiberEquiv
+    {context : IncContext.{u}}
+    {sourceDomain targetDomain : IncTypeInContext context}
+    (domainEquiv : IncTypeInContext.FiberEquiv sourceDomain targetDomain)
+    (sourceCodomain : IncTypeInContext (context.extend sourceDomain))
+    (targetCodomain : IncTypeInContext (context.extend targetDomain)) where
+  fiberEquiv : ∀ assignment,
+    IncDependentPiFiberEquiv (domainEquiv.fiberEquiv assignment)
+      (fun value => sourceCodomain ⟨assignment, value⟩)
+      (fun value => targetCodomain ⟨assignment, value⟩)
+
+def IncDependentPiTypeInContextFiberEquiv.piFiberEquivalence
+    {context : IncContext.{u}}
+    {sourceDomain targetDomain : IncTypeInContext context}
+    {domainEquiv : IncTypeInContext.FiberEquiv sourceDomain targetDomain}
+    {sourceCodomain : IncTypeInContext (context.extend sourceDomain)}
+    {targetCodomain : IncTypeInContext (context.extend targetDomain)}
+    (equivalence : IncDependentPiTypeInContextFiberEquiv domainEquiv
+      sourceCodomain targetCodomain) :
+    IncTypeInContext.FiberEquiv
+      (IncPiType sourceDomain sourceCodomain)
+      (IncPiType targetDomain targetCodomain) where
+  fiberEquiv := fun assignment =>
+    (equivalence.fiberEquiv assignment).toFiberEquiv
+
 def IncPiTerm.lambda
     {context : IncContext.{u}}
     {domain : IncTypeInContext context}

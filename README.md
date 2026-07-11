@@ -1022,6 +1022,13 @@ It currently establishes:
   round-trip laws explicitly and `toFiberEquiv` produces the resulting function-
   space equivalence.  Pi formation substitution must recursively construct this
   stronger coherence rather than assume pointwise fiber maps suffice.
+  This stronger Pi invariant is now lifted to contextual families by
+  `IncDependentPiTypeInContextFiberEquiv`.  It stores a coherent dependent Pi
+  equivalence at every context assignment, using the pointwise domain fiber
+  equivalence and the two codomain families.  `piFiberEquivalence` converts it
+  into an `IncTypeInContext.FiberEquiv` between the corresponding `IncPiType`
+  families.  The Pi formation-substitution result can now consume one explicit
+  contextual coherence object and expose the standard fiber interface.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
