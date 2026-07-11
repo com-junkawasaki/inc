@@ -3771,6 +3771,30 @@ structure IncInitialObject {Obj : Type u} (C : IncCategory Obj) where
 abbrev IncTerminalObject {Obj : Type u} (C : IncCategory Obj) :=
   IncInitialObject C.op
 
+def initialObjects_unique_up_to_iso
+    {Obj : Type u} {C : IncCategory Obj}
+    (first second : IncInitialObject C) :
+    MorphismIso C first.object second.object where
+  hom := first.to second.object
+  inv := second.to first.object
+  inv_hom := by
+    exact (first.unique first.object _).trans
+      (first.unique first.object (C.id first.object)).symm
+  hom_inv := by
+    exact (second.unique second.object _).trans
+      (second.unique second.object (C.id second.object)).symm
+
+def terminalObjects_unique_up_to_iso
+    {Obj : Type u} {C : IncCategory Obj}
+    (first second : IncTerminalObject C) :
+    MorphismIso C first.object second.object := by
+  let oppositeIso := initialObjects_unique_up_to_iso (C := C.op) first second
+  exact
+    { hom := oppositeIso.inv
+      inv := oppositeIso.hom
+      inv_hom := oppositeIso.inv_hom
+      hom_inv := oppositeIso.hom_inv }
+
 def IncCoherentCategoryEquivalence.mapInitialObject
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (coherent : IncCoherentCategoryEquivalence C D)
@@ -3865,6 +3889,26 @@ theorem IncCategoryEquivalence.mapTerminalObject_to_image
       equivalence.forward.map (terminal.to source) := by
   symm
   exact (equivalence.mapTerminalObject terminal).unique _ _
+
+theorem IncCategoryEquivalence.initialObject_exists_iff
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    Nonempty (IncInitialObject C) ↔ Nonempty (IncInitialObject D) := by
+  constructor
+  · rintro ⟨initial⟩
+    exact ⟨equivalence.mapInitialObject initial⟩
+  · rintro ⟨initial⟩
+    exact ⟨equivalence.symm.mapInitialObject initial⟩
+
+theorem IncCategoryEquivalence.terminalObject_exists_iff
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    Nonempty (IncTerminalObject C) ↔ Nonempty (IncTerminalObject D) := by
+  constructor
+  · rintro ⟨terminal⟩
+    exact ⟨equivalence.mapTerminalObject terminal⟩
+  · rintro ⟨terminal⟩
+    exact ⟨equivalence.symm.mapTerminalObject terminal⟩
 
 structure StrongFiniteBicartesianPreservingFamily
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
