@@ -36,6 +36,15 @@ theorem CoherentIncidence.kripke_complete
     KripkeEntails.{u, u} context formula ↔ Derives context formula :=
   coherent.completeLogic.kripke_complete context formula
 
+/- Relative consistency at the internal-logic level: the empty coherent
+   theory has a Kripke model and therefore cannot derive bottom.  This is a
+   theorem of the Lean metatheory used by the project; it deliberately does
+   not claim that Lean proves its own consistency. -/
+theorem CoherentIncidence.empty_logic_consistent
+    {I R T : Type u} [DecidableEq I] (_coherent : CoherentIncidence I R T) :
+    DerivationallyConsistent ([] : List (Formula I)) :=
+  empty_context_consistent I
+
 def mapEndpoint {I R Q : Type u} (classify : I → Q)
     (endpoint : Endpoint I R) : Endpoint Q R :=
   { i := classify endpoint.i,

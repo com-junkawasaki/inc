@@ -1823,6 +1823,14 @@ noncomputable def terminalCoherentIncidence :
   chainPushout := terminalChainComplexPushoutIncidence
   completeLogic := terminalCompleteLogic
 
+theorem coherentIncidence_has_model :
+    Nonempty (CoherentIncidence Unit GraphRole GraphType) :=
+  ⟨terminalCoherentIncidence⟩
+
+theorem terminalCoherentIncidence_empty_logic_consistent :
+    DerivationallyConsistent ([] : List (Formula Unit)) :=
+  terminalCoherentIncidence.empty_logic_consistent
+
 def terminalQuotientClassification :
     BisimulationQuotientClassification (Q := Unit)
       terminalCoherentIncidence.chainPushout.inc where
