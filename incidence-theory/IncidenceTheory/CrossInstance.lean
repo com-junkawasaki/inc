@@ -5245,6 +5245,52 @@ structure IncDepRawReadyVariableFormationSemanticResult
     (contextTree.interpretLookup lookup).semanticType =
       formationResult.semanticType
 
+noncomputable def IncDepRawReadyVariableFormationSemanticResult.here
+    {context : List IncDepRawType} {head : IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {headWellFormed : IncDepRawWellFormed context head}
+    {headReady : IncDepRawFormationSemanticReady headWellFormed}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    (contextTree : IncDepRawContextSemanticTree contextResult)
+    (headResult : IncDepRawFormationSemanticResult headWellFormed contextResult) :
+    let renamed := headReady.weakenResult (head := head)
+    let extendedTree := IncDepRawContextSemanticTree.extend contextTree headResult
+    IncDepRawReadyVariableFormationSemanticResult
+      (lookup := IncDepRawLookup.here (context := context) (type := head))
+      renamed.renamedReady extendedTree := by
+  dsimp
+  let renamed := headReady.weakenResult (head := head)
+  refine
+    { formationResult := renamed.weakenSemantic headResult headResult
+      lookupType_coherence := rfl }
+
+noncomputable def IncDepRawReadyVariableFormationSemanticResult.there
+    {context : List IncDepRawType} {position : Nat} {type head : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {typeFormation : IncDepRawWellFormed context type}
+    {typeReady : IncDepRawFormationSemanticReady typeFormation}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {headWellFormed : IncDepRawWellFormed context head}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    {contextTree : IncDepRawContextSemanticTree contextResult}
+    (previous : IncDepRawReadyVariableFormationSemanticResult
+      (lookup := lookup) typeReady contextTree)
+    (headResult : IncDepRawFormationSemanticResult headWellFormed contextResult) :
+    let renamed := typeReady.weakenResult (head := head)
+    let extendedTree := IncDepRawContextSemanticTree.extend contextTree headResult
+    IncDepRawReadyVariableFormationSemanticResult
+      (lookup := IncDepRawLookup.there (head := head) lookup)
+      renamed.renamedReady extendedTree := by
+  dsimp
+  let renamed := typeReady.weakenResult (head := head)
+  let extendedTree := IncDepRawContextSemanticTree.extend contextTree headResult
+  refine
+    { formationResult := renamed.weakenSemantic previous.formationResult headResult
+      lookupType_coherence := ?_ }
+  exact congrArg (fun family => family.reindex
+    (contextResult.semanticContext.extendProjection headResult.semanticType))
+    previous.lookupType_coherence
+
 noncomputable def IncDepRawReadyVariableFormationSemanticResult.toTypingFormation
     {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
     {lookup : IncDepRawLookup context position type}

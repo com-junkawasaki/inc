@@ -466,6 +466,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   選んだ任意renamed derivationをindexとして保持したまま、familyをprojection reindex、termをprojection
   substitutionで解釈し、term計算則はdefinitionally成立する。semantic weakeningはcanonical proof objectとの
   equalityに依存しなくなり、older lookupの残件はこのaligned resultをlookup recursion自体とpackageすることだけである。
+- lookup alignment recursionの`here`/`there`両constructorを完成した。`here`はhead formationを自身の
+  extended contextへweakenしてnewest alignmentをdefinitionally閉じる。`there`はtail formationのtotal
+  readiness weakeningとsemantic weakeningを再利用し、lookup equalityをprojection reindexで保存する。
+  newest/older raw lookup formationはcontext treeと再帰的にalignedとなり、次はこのresultをsubstitutionが
+  preserveするreplacement typingと合成する。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

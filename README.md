@@ -947,6 +947,14 @@ It currently establishes:
   computation equation is definitional.  Thus semantic weakening no longer
   depends on equality with the canonical proof object; the remaining older
   lookup step is to package this aligned result with the lookup recursion itself.
+  The lookup recursion now has both alignment constructors.
+  `IncDepRawReadyVariableFormationSemanticResult.here` weakens the head
+  formation into its own extended context and closes the newest-variable
+  alignment definitionally.  `there` reuses the total readiness weakening and
+  semantic weakening of the tail formation, then preserves its lookup equality
+  by projection reindexing.  Thus newest and older raw lookup formations are now
+  recursively aligned with the context tree; the next step is combining this
+  result with substitution-preserved replacement typings.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
