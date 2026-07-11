@@ -705,6 +705,12 @@ It currently establishes:
   context tree, and uses the body's inferred dependent semantic type as the Pi
   codomain.  These are generic constructors over arbitrary telescopes, not only
   packages of the closed examples.
+  The ready-result algebra now also implements application, dependent pairing,
+  and both projections.  These constructors consume shape-indexed Pi/Sigma child
+  results plus the domain/codomain readiness carried by their raw branches, and
+  return correctly instantiated dependent fibers.  Together with variable,
+  unit, reflexivity, and lambda, every typing-readiness constructor now has a
+  generic semantic-result constructor over arbitrary context trees.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

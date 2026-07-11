@@ -3557,6 +3557,110 @@ noncomputable def IncDepRawReadyTypingSemanticResult.lambda
   semanticType := IncPiType domainResult.semanticType bodyResult.semanticType
   typingResult := IncDepRawTypingSemanticResult.lambda bodyResult.typingResult
 
+noncomputable def IncDepRawReadyTypingSemanticResult.apply
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {function argument : IncDepRawTerm}
+    {functionTyping : IncDepRawHasType context function (.pi domain codomain)}
+    {argumentTyping : IncDepRawHasType context argument domain}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {domainReady : IncDepRawFormationSemanticReady domainFormation}
+    {codomainReady : IncDepRawFormationSemanticReady codomainFormation}
+    {functionReady : IncDepRawTypingSemanticReady functionTyping}
+    {argumentReady : IncDepRawTypingSemanticReady argumentTyping}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    {contextTree : IncDepRawContextSemanticTree contextResult}
+    {semanticDomain : IncTypeInContext contextResult.semanticContext}
+    {semanticCodomain : IncTypeInContext
+      (contextResult.semanticContext.extend semanticDomain)}
+    (functionResult : IncDepRawTypingSemanticResult functionTyping contextResult
+      (IncPiType semanticDomain semanticCodomain))
+    (argumentResult : IncDepRawTypingSemanticResult argumentTyping contextResult
+      semanticDomain) :
+    IncDepRawReadyTypingSemanticResult
+      (IncDepRawTypingSemanticReady.applyRule domainReady codomainReady
+        functionReady argumentReady) contextTree where
+  semanticType := fun assignment => semanticCodomain
+    ⟨assignment, argumentResult.semanticTerm assignment⟩
+  typingResult := IncDepRawTypingSemanticResult.apply
+    functionResult argumentResult
+
+noncomputable def IncDepRawReadyTypingSemanticResult.pair
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {first second : IncDepRawTerm}
+    {firstTyping : IncDepRawHasType context first domain}
+    {secondTyping : IncDepRawHasType context second (codomain.instantiate first)}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {domainReady : IncDepRawFormationSemanticReady domainFormation}
+    {codomainReady : IncDepRawFormationSemanticReady codomainFormation}
+    {firstReady : IncDepRawTypingSemanticReady firstTyping}
+    {secondReady : IncDepRawTypingSemanticReady secondTyping}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    {contextTree : IncDepRawContextSemanticTree contextResult}
+    {semanticDomain : IncTypeInContext contextResult.semanticContext}
+    {semanticCodomain : IncTypeInContext
+      (contextResult.semanticContext.extend semanticDomain)}
+    (firstResult : IncDepRawTypingSemanticResult firstTyping contextResult
+      semanticDomain)
+    (secondResult : IncDepRawTypingSemanticResult secondTyping contextResult
+      (fun assignment => semanticCodomain ⟨assignment,
+        firstResult.semanticTerm assignment⟩)) :
+    IncDepRawReadyTypingSemanticResult
+      (IncDepRawTypingSemanticReady.pairRule domainReady codomainReady
+        firstReady secondReady) contextTree where
+  semanticType := IncSigmaType semanticDomain semanticCodomain
+  typingResult := IncDepRawTypingSemanticResult.pair firstResult secondResult
+
+noncomputable def IncDepRawReadyTypingSemanticResult.first
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {domainReady : IncDepRawFormationSemanticReady domainFormation}
+    {codomainReady : IncDepRawFormationSemanticReady codomainFormation}
+    {pairReady : IncDepRawTypingSemanticReady pairTyping}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    {contextTree : IncDepRawContextSemanticTree contextResult}
+    {semanticDomain : IncTypeInContext contextResult.semanticContext}
+    {semanticCodomain : IncTypeInContext
+      (contextResult.semanticContext.extend semanticDomain)}
+    (pairResult : IncDepRawTypingSemanticResult pairTyping contextResult
+      (IncSigmaType semanticDomain semanticCodomain)) :
+    IncDepRawReadyTypingSemanticResult
+      (IncDepRawTypingSemanticReady.firstRule domainReady codomainReady pairReady)
+      contextTree where
+  semanticType := semanticDomain
+  typingResult := IncDepRawTypingSemanticResult.first pairResult
+
+noncomputable def IncDepRawReadyTypingSemanticResult.second
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {domainReady : IncDepRawFormationSemanticReady domainFormation}
+    {codomainReady : IncDepRawFormationSemanticReady codomainFormation}
+    {pairReady : IncDepRawTypingSemanticReady pairTyping}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    {contextTree : IncDepRawContextSemanticTree contextResult}
+    {semanticDomain : IncTypeInContext contextResult.semanticContext}
+    {semanticCodomain : IncTypeInContext
+      (contextResult.semanticContext.extend semanticDomain)}
+    (pairResult : IncDepRawTypingSemanticResult pairTyping contextResult
+      (IncSigmaType semanticDomain semanticCodomain)) :
+    IncDepRawReadyTypingSemanticResult
+      (IncDepRawTypingSemanticReady.secondRule domainReady codomainReady pairReady)
+      contextTree where
+  semanticType := fun assignment => semanticCodomain
+    ⟨assignment, (pairResult.semanticTerm assignment).1⟩
+  typingResult := IncDepRawTypingSemanticResult.second pairResult
+
 noncomputable def incDepRawDependentRefl_readySemanticResult :
     IncDepRawReadyTypingSemanticResult incDepRawDependentRefl_semanticReady
       incDepRawEmptyContextSemanticTree where
