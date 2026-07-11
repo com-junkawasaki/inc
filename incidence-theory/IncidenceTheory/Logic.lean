@@ -4673,6 +4673,38 @@ theorem derives_iff_no_kripke_countermodel_of_enumeration {Atom : Type u}
       ((not_derives_iff_has_kripke_countermodel_of_enumeration
         enumeration context formula).mp hnot)
 
+def KripkeSatisfiable {Atom : Type u} (context : List (Formula Atom)) : Prop :=
+  ∃ model : KripkeModel.{u, u} Atom,
+    ∃ world : model.World, KripkeContextForces model world context
+
+theorem derivationallyConsistent_iff_kripkeSatisfiable_of_enumeration
+    {Atom : Type u} (enumeration : FormulaEnumeration Atom)
+    (context : List (Formula Atom)) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context := by
+  constructor
+  · intro consistent
+    obtain ⟨model, world, holds, notBot⟩ :=
+      (not_derives_iff_has_kripke_countermodel_of_enumeration
+        enumeration context Formula.bot).mp consistent
+    exact ⟨model, world, holds⟩
+  · rintro ⟨model, world, holds⟩
+    exact kripke_satisfiable_consistent holds
+
+theorem derivationallyConsistent_iff_has_canonical_world_of_enumeration
+    {Atom : Type u} (enumeration : FormulaEnumeration Atom)
+    (context : List (Formula Atom)) :
+    DerivationallyConsistent context ↔
+      ∃ theory : PrimeTheory Atom,
+        KripkeContextForces (canonicalKripkeModel Atom) theory context := by
+  constructor
+  · intro consistent
+    obtain ⟨theory, holds, notBot⟩ :=
+      canonical_countermodel_of_not_derives_of_enumeration
+        enumeration consistent
+    exact ⟨theory, holds⟩
+  · rintro ⟨theory, holds⟩
+    exact kripke_satisfiable_consistent holds
+
 /- Incidence-specialized notation for clients of the core structure. -/
 abbrev IncidenceFormula (I : Type u) := Formula I
 

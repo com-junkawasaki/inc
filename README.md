@@ -74,6 +74,11 @@ It currently establishes:
   formula enumeration and hence the corresponding Kripke-completeness theorem.
   In the converse direction, every nonderivable finite sequent has a checked
   canonical prime-theory counterworld for the supplied coding.
+  For every supplied formula enumeration, a finite context is
+  derivationally consistent exactly when it is Kripke-satisfiable; equivalently,
+  it is satisfied at a world of the canonical prime-theory model.  Thus the
+  consistency result includes an explicit general model-existence theorem,
+  rather than only the empty-context example.
   Public instances expose this counterworld construction for `Fin n`, `Bool`,
   `Nat`, and the concrete `FiniteIncidence` atom language.
   For the concrete `root` atom, excluded middle is shown underivable and
