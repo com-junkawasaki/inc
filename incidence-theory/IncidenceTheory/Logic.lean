@@ -3450,6 +3450,28 @@ theorem excluded_middle_not_derivable {Atom : Type u} (atom : Atom) :
   · exact Bool.noConfusion hatom.left
   · exact hneg true (Or.inl rfl) ⟨rfl, rfl⟩
 
+theorem Formula.logicalBottom_ne_top (Atom : Type u) :
+    (Formula.logicalBottom : Formula.LogicalEquivalenceClass Atom) ≠
+      Formula.logicalTop := by
+  intro equal
+  have equivalent : Formula.DerivablyEquivalent (.bot : Formula Atom) .top :=
+    Quotient.exact equal
+  exact empty_context_consistent Atom
+    (Derives.impE (derives_iffER equivalent) Derives.topI)
+
+theorem Formula.logicalExcludedMiddle_ne_top {Atom : Type u} (atom : Atom) :
+    Formula.logicalOr
+        (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) (.atom atom))
+        (Formula.logicalNeg
+          (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) (.atom atom))) ≠
+      Formula.logicalTop := by
+  intro equal
+  have equivalent : Formula.DerivablyEquivalent
+      (.or (.atom atom) (Formula.neg (.atom atom))) .top := by
+    exact Quotient.exact equal
+  exact excluded_middle_not_derivable atom
+    (Derives.impE (derives_iffER equivalent) Derives.topI)
+
 /- The intuitionistically valid double-negated form is nevertheless derivable.
    Together with `excluded_middle_not_derivable`, this records the precise
    constructive boundary of the implemented internal logic. -/

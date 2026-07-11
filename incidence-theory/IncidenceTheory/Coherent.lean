@@ -41,6 +41,21 @@ theorem CoherentIncidence.internal_logic_heyting
     Formula.LogicalHeytingAlgebraLaws I :=
   Formula.logicalHeytingAlgebraLaws I
 
+theorem CoherentIncidence.internal_logic_nontrivial
+    {I R T : Type u} [DecidableEq I] (_coherent : CoherentIncidence I R T) :
+    (Formula.logicalBottom : Formula.LogicalEquivalenceClass I) ≠ Formula.logicalTop :=
+  Formula.logicalBottom_ne_top I
+
+theorem CoherentIncidence.internal_logic_not_boolean
+    {I R T : Type u} [DecidableEq I] (_coherent : CoherentIncidence I R T)
+    (incidence : I) :
+    Formula.logicalOr
+        (Quotient.mk (Formula.derivablyEquivalentSetoid I) (.atom incidence))
+        (Formula.logicalNeg
+          (Quotient.mk (Formula.derivablyEquivalentSetoid I) (.atom incidence))) ≠
+      Formula.logicalTop :=
+  Formula.logicalExcludedMiddle_ne_top incidence
+
 /- Relative consistency at the internal-logic level: the empty coherent
    theory has a Kripke model and therefore cannot derive bottom.  This is a
    theorem of the Lean metatheory used by the project; it deliberately does
