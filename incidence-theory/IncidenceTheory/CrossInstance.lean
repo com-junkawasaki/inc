@@ -9483,6 +9483,30 @@ structure IncDepRawFormationSubstitutionFiberRebaseProvider where
       (targetFormation := targetFormation) substitutionResult),
     IncDepRawFormationSubstitutionFiberRebase first second
 
+structure IncDepRawFormationSubstitutionFiberEqualityProvider where
+  equal : ∀
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (first second : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult),
+    first = second
+
+def IncDepRawFormationSubstitutionFiberEqualityProvider.toRebase
+    (provider : IncDepRawFormationSubstitutionFiberEqualityProvider) :
+    IncDepRawFormationSubstitutionFiberRebaseProvider where
+  provide := by
+    intro source target type substitution targetFormation sourceWellFormed
+      targetWellFormed sourceResult targetResult substitutionResult first second
+    cases provider.equal first second
+    exact IncDepRawFormationSubstitutionFiberRebase.refl first
+
 def IncDepRawFormationSubstitutionFiberRebaseProvider.rebase
     (provider : IncDepRawFormationSubstitutionFiberRebaseProvider)
     {source target : List IncDepRawType} {type : IncDepRawType}
@@ -11198,6 +11222,11 @@ structure IncDepRawCanonicalSubstitutionPreservationHypotheses where
   readinessProvider : IncDepRawCoherentReadinessAlignmentProvider
   rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider
 
+structure IncDepRawCanonicalSubstitutionPreservationEqualityHypotheses where
+  variableProvider : IncDepRawVariableSubstitutionProvider
+  readinessProvider : IncDepRawCoherentReadinessAlignmentProvider
+  equalityProvider : IncDepRawFormationSubstitutionFiberEqualityProvider
+
 abbrev IncDepRawStrictFormationSubstitutionFoldMotive
     {target : List IncDepRawType} {type : IncDepRawType}
     {targetFormation : IncDepRawWellFormed target type}
@@ -11944,11 +11973,22 @@ noncomputable def IncDepRawSubstitutionFiberModel.preservationCanonical
         model.preserveFormationCanonical hypotheses.variableProvider
           hypotheses.readinessProvider hypotheses.readinessProvider.toStrictTyping
           hypotheses.rebaseProvider ready targetTree replacements }
+
   typing :=
     { dispatch := fun ready targetTree replacements =>
         model.preserveTypingCanonical hypotheses.variableProvider
           hypotheses.readinessProvider hypotheses.readinessProvider.toStrictTyping
           hypotheses.rebaseProvider ready targetTree replacements }
+
+noncomputable def IncDepRawSubstitutionFiberModel.preservationCanonicalOfEquality
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses :
+      IncDepRawCanonicalSubstitutionPreservationEqualityHypotheses) :
+    IncDepRawStrictMutualSubstitutionDispatcher :=
+  model.preservationCanonical
+    { variableProvider := hypotheses.variableProvider
+      readinessProvider := hypotheses.readinessProvider
+      rebaseProvider := hypotheses.equalityProvider.toRebase }
 
 noncomputable def IncDepRawSubstitutionFiberModel.preservationDispatcher
     (model : IncDepRawSubstitutionFiberModel.{u})

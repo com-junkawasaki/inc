@@ -1524,6 +1524,14 @@ It currently establishes:
   preservation theorem, not merely from isolated constructors.  The general
   four-hypothesis theorem remains available when an independently dispatched
   structural result must be preserved exactly.
+  A second route now reduces the fiber-rebase implementation burden.
+  `IncDepRawFormationSubstitutionFiberEqualityProvider.toRebase` turns literal
+  uniqueness of semantic formation results into the required source/target fiber
+  equivalences and naturality square; after rewriting the two results equal, all
+  three are reflexive.  `preservationCanonicalOfEquality` accepts this stronger
+  but often easier-to-prove uniqueness interface.  Concrete semantic models can
+  therefore establish result proof-uniqueness instead of constructing every
+  rebase component manually.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

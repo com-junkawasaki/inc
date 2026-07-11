@@ -802,6 +802,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `preservationCanonical`が両者をbundleする。`IncDepRawCanonicalSubstitutionPreservationHypotheses`はvariable replacement、coherent readiness alignment、
   general fiber rebaseの3 fieldsだけを持つため、instantiate coherenceは孤立constructorだけでなくcomplete canonical preservation theoremから除去された。
   独立dispatchされたstructural resultをexactに尊重する場合は従来の4-hypothesis general theoremを使う。
+- fiber rebaseを具体化する別経路として`IncDepRawFormationSubstitutionFiberEqualityProvider.toRebase`を追加した。semantic formation resultsのliteral
+  uniquenessがあれば二resultsをrewriteした後、source/target fiber equivalencesとnaturality squareをすべてreflexiveに構成できる。
+  `preservationCanonicalOfEquality`はこのstrongerだが具体モデルでは証明しやすいinterfaceを受け取り、各rebase componentの手動構成を不要にする。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
