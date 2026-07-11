@@ -1244,6 +1244,49 @@ theorem IncNaturalIsomorphism.inv_app_hom_app
     iso.inv_hom_id
   exact component
 
+theorem IncNaturalIsomorphism.source_map_eq_conjugate
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (iso : IncNaturalIsomorphism F G)
+    {source target : CObj} (morphism : C.Hom source target) :
+    F.map morphism =
+      D.comp (iso.inv.app target)
+        (D.comp (G.map morphism) (iso.hom.app source)) := by
+  calc
+    F.map morphism = D.comp (D.id (F.obj target)) (F.map morphism) :=
+      (D.id_comp _).symm
+    _ = D.comp
+        (D.comp (iso.inv.app target) (iso.hom.app target))
+        (F.map morphism) := by rw [iso.hom_app_inv_app]
+    _ = D.comp (iso.inv.app target)
+        (D.comp (iso.hom.app target) (F.map morphism)) :=
+      (D.assoc _ _ _).symm
+    _ = D.comp (iso.inv.app target)
+        (D.comp (G.map morphism) (iso.hom.app source)) := by
+      rw [iso.hom.naturality morphism]
+
+theorem IncNaturalIsomorphism.target_map_eq_conjugate
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (iso : IncNaturalIsomorphism F G)
+    {source target : CObj} (morphism : C.Hom source target) :
+    G.map morphism =
+      D.comp (iso.hom.app target)
+        (D.comp (F.map morphism) (iso.inv.app source)) := by
+  calc
+    G.map morphism = D.comp (G.map morphism) (D.id (G.obj source)) :=
+      (D.comp_id _).symm
+    _ = D.comp (G.map morphism)
+        (D.comp (iso.hom.app source) (iso.inv.app source)) := by
+      rw [iso.inv_app_hom_app]
+    _ = D.comp
+        (D.comp (G.map morphism) (iso.hom.app source))
+        (iso.inv.app source) := D.assoc _ _ _
+    _ = D.comp
+        (D.comp (iso.hom.app target) (F.map morphism))
+        (iso.inv.app source) := by rw [iso.hom.naturality morphism]
+    _ = D.comp (iso.hom.app target)
+        (D.comp (F.map morphism) (iso.inv.app source)) :=
+      (D.assoc _ _ _).symm
+
 def IncFunctor.comp_assoc_iso
     {AObj BObj CObj DObj : Type u}
     {A : IncCategory AObj} {B : IncCategory BObj}
@@ -1514,6 +1557,64 @@ structure IncFunctorFullyFaithful
     F.map left = F.map right → left = right
   full : ∀ {source target} (morphism : D.Hom (F.obj source) (F.obj target)),
     ∃ preimage : C.Hom source target, F.map preimage = morphism
+
+theorem IncFunctorFullyFaithful.transport
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (iso : IncNaturalIsomorphism F G)
+    (hF : IncFunctorFullyFaithful F) : IncFunctorFullyFaithful G where
+  faithful := by
+    intro source target left right equality
+    apply hF.faithful left right
+    rw [iso.source_map_eq_conjugate left]
+    rw [iso.source_map_eq_conjugate right]
+    rw [equality]
+  full := by
+    intro source target morphism
+    obtain ⟨preimage, preimageEq⟩ := hF.full
+      (D.comp (iso.inv.app target)
+        (D.comp morphism (iso.hom.app source)))
+    refine ⟨preimage, ?_⟩
+    rw [iso.target_map_eq_conjugate, preimageEq]
+    calc
+      D.comp (iso.hom.app target)
+          (D.comp
+            (D.comp (iso.inv.app target)
+              (D.comp morphism (iso.hom.app source)))
+            (iso.inv.app source)) =
+        D.comp (iso.hom.app target)
+          (D.comp (iso.inv.app target)
+            (D.comp (D.comp morphism (iso.hom.app source))
+              (iso.inv.app source))) := by
+          exact congrArg (D.comp (iso.hom.app target))
+            (D.assoc (iso.inv.app target)
+              (D.comp morphism (iso.hom.app source))
+              (iso.inv.app source)).symm
+      _ =
+        D.comp
+          (D.comp (iso.hom.app target) (iso.inv.app target))
+          (D.comp (D.comp morphism (iso.hom.app source))
+            (iso.inv.app source)) :=
+          D.assoc _ _ _
+      _ =
+        D.comp
+          (D.comp (iso.hom.app target) (iso.inv.app target))
+          (D.comp morphism
+            (D.comp (iso.hom.app source) (iso.inv.app source))) := by
+          rw [D.assoc morphism]
+      _ = D.comp (D.id (G.obj target))
+          (D.comp morphism (D.id (G.obj source))) := by
+        rw [iso.inv_app_hom_app, iso.inv_app_hom_app]
+      _ = morphism := by rw [D.comp_id, D.id_comp]
+
+theorem IncFunctorFullyFaithful.iff_of_naturallyIsomorphic
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (iso : IncNaturalIsomorphism F G) :
+    IncFunctorFullyFaithful F ↔ IncFunctorFullyFaithful G := by
+  constructor
+  · intro hF
+    exact hF.transport iso
+  · intro hG
+    exact hG.transport iso.symm
 
 def IncFunctorEssentiallySurjective
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
