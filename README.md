@@ -203,7 +203,10 @@ It currently establishes:
   zero and one laws, all stated as internal graph applications.  With explicit
   window hypotheses for intermediate values, addition and multiplication are
   associative and multiplication distributes over addition from both sides;
-  the proofs certify the complete internal computation diagrams.
+  the proofs certify the complete internal computation diagrams.  Addition
+  has left and right cancellation, multiplication cancels a common nonzero
+  factor from either side, and an internal product evaluates to zero exactly
+  when one of its encoded integer factors is zero.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.

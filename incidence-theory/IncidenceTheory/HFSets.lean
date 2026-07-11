@@ -2411,6 +2411,128 @@ theorem hfRecursiveIntegerMultiplicationGraph_right_distributes_over_addition
       bound (a * c) (b * c) acWithin bcWithin _).mpr rfl
   · exact congrArg hfRecursiveInteger (Int.add_mul a b c)
 
+theorem hfRecursiveIntegerAdditionGraph_right_cancel
+    (bound : Nat) (left₁ left₂ right : Int)
+    (left₁Within : HFRecursiveIntegerWithin bound left₁)
+    (left₂Within : HFRecursiveIntegerWithin bound left₂)
+    (rightWithin : HFRecursiveIntegerWithin bound right)
+    (output : HFRecursiveSet)
+    (first : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger left₁)
+          (hfRecursiveInteger right)) output)
+      (hfRecursiveIntegerAdditionGraph bound))
+    (second : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger left₂)
+          (hfRecursiveInteger right)) output)
+      (hfRecursiveIntegerAdditionGraph bound)) :
+    left₁ = left₂ := by
+  have firstValue := (hfRecursiveIntegerAdditionGraph_on_integers_iff
+    bound left₁ right left₁Within rightWithin output).mp first
+  have secondValue := (hfRecursiveIntegerAdditionGraph_on_integers_iff
+    bound left₂ right left₂Within rightWithin output).mp second
+  have sumEq : left₁ + right = left₂ + right :=
+    hfRecursiveInteger_injective (firstValue.symm.trans secondValue)
+  omega
+
+theorem hfRecursiveIntegerAdditionGraph_left_cancel
+    (bound : Nat) (left right₁ right₂ : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (right₁Within : HFRecursiveIntegerWithin bound right₁)
+    (right₂Within : HFRecursiveIntegerWithin bound right₂)
+    (output : HFRecursiveSet)
+    (first : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger left)
+          (hfRecursiveInteger right₁)) output)
+      (hfRecursiveIntegerAdditionGraph bound))
+    (second : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger left)
+          (hfRecursiveInteger right₂)) output)
+      (hfRecursiveIntegerAdditionGraph bound)) :
+    right₁ = right₂ := by
+  have firstValue := (hfRecursiveIntegerAdditionGraph_on_integers_iff
+    bound left right₁ leftWithin right₁Within output).mp first
+  have secondValue := (hfRecursiveIntegerAdditionGraph_on_integers_iff
+    bound left right₂ leftWithin right₂Within output).mp second
+  have sumEq : left + right₁ = left + right₂ :=
+    hfRecursiveInteger_injective (firstValue.symm.trans secondValue)
+  exact Int.add_left_cancel sumEq
+
+theorem hfRecursiveIntegerMultiplicationGraph_right_cancel
+    (bound : Nat) (left₁ left₂ right : Int)
+    (left₁Within : HFRecursiveIntegerWithin bound left₁)
+    (left₂Within : HFRecursiveIntegerWithin bound left₂)
+    (rightWithin : HFRecursiveIntegerWithin bound right)
+    (rightNonzero : right ≠ 0) (output : HFRecursiveSet)
+    (first : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger left₁)
+          (hfRecursiveInteger right)) output)
+      (hfRecursiveIntegerMultiplicationGraph bound))
+    (second : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger left₂)
+          (hfRecursiveInteger right)) output)
+      (hfRecursiveIntegerMultiplicationGraph bound)) :
+    left₁ = left₂ := by
+  have firstValue := (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+    bound left₁ right left₁Within rightWithin output).mp first
+  have secondValue := (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+    bound left₂ right left₂Within rightWithin output).mp second
+  have productEq : left₁ * right = left₂ * right :=
+    hfRecursiveInteger_injective (firstValue.symm.trans secondValue)
+  exact Int.eq_of_mul_eq_mul_right rightNonzero productEq
+
+theorem hfRecursiveIntegerMultiplicationGraph_left_cancel
+    (bound : Nat) (left right₁ right₂ : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (leftNonzero : left ≠ 0)
+    (right₁Within : HFRecursiveIntegerWithin bound right₁)
+    (right₂Within : HFRecursiveIntegerWithin bound right₂)
+    (output : HFRecursiveSet)
+    (first : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger left)
+          (hfRecursiveInteger right₁)) output)
+      (hfRecursiveIntegerMultiplicationGraph bound))
+    (second : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger left)
+          (hfRecursiveInteger right₂)) output)
+      (hfRecursiveIntegerMultiplicationGraph bound)) :
+    right₁ = right₂ := by
+  have firstValue := (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+    bound left right₁ leftWithin right₁Within output).mp first
+  have secondValue := (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+    bound left right₂ leftWithin right₂Within output).mp second
+  have productEq : left * right₁ = left * right₂ :=
+    hfRecursiveInteger_injective (firstValue.symm.trans secondValue)
+  exact Int.eq_of_mul_eq_mul_left leftNonzero productEq
+
+theorem hfRecursiveIntegerMultiplicationGraph_eq_zero_iff
+    (bound : Nat) (left right : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (rightWithin : HFRecursiveIntegerWithin bound right) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger left)
+            (hfRecursiveInteger right))
+          (hfRecursiveInteger 0))
+        (hfRecursiveIntegerMultiplicationGraph bound) ↔
+      left = 0 ∨ right = 0 := by
+  rw [hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+    bound left right leftWithin rightWithin]
+  constructor
+  · intro valueEq
+    have indexEq : 0 = left * right := hfRecursiveInteger_injective valueEq
+    exact Int.mul_eq_zero.mp indexEq.symm
+  · intro zeroFactor
+    apply congrArg hfRecursiveInteger
+    exact (Int.mul_eq_zero.mpr zeroFactor).symm
+
 /- The graph of the identity function on the internally represented finite
    ordinal `n`. -/
 def hfRecursiveNatIdentityGraph : Nat → HFRecursiveSet
