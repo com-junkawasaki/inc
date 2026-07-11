@@ -678,6 +678,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - applicationと第二射影のsemantic constructorに`applyRebased`/`secondRebased`を追加した。各constructorはまずchecked
   canonical typing resultを構成し、instantiate alignmentを介して選択されたstructural output formationへtransportする。
   これで両eliminatorはisolated canonical familyで停止せず、structural mutual recursionが再利用可能なresultを返せる。
+- package-level `dispatchApplyStructural`/`dispatchSecondStructural`を追加し、rebased eliminatorをrecursive dispatcherへ公開した。
+  aligned child package、structurally computed output formation、そのtwo-endpoint instantiate witnessを受け取り、formation resultと
+  typing resultが同一のrebased fiber equivalenceを共有するcomplete dispatch packageを返す。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

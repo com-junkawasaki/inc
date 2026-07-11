@@ -1287,6 +1287,11 @@ It currently establishes:
   to the selected structural output formation.  Thus both eliminators can return
   a result usable by structural mutual recursion rather than stopping at an
   isolated canonical family.
+  Package-level `dispatchApplyStructural` and `dispatchSecondStructural` now
+  expose those rebased eliminators to the recursive dispatcher.  They consume
+  aligned child packages, the structurally computed output formation, and its
+  two-endpoint instantiate witness, then return a complete dispatch package
+  whose formation and typing results share the same rebased fiber equivalence.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

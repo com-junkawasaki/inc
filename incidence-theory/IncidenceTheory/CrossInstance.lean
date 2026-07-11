@@ -9155,6 +9155,59 @@ noncomputable def IncDepRawSubstitutionFiberModel.dispatchSecondAligned
         { formationAlignment := rfl
           resultAlignment := HEq.rfl } }
 
+noncomputable def IncDepRawSubstitutionFiberModel.dispatchSecondStructural
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {pairTyping : IncDepRawHasType target pair (.sigma domain codomain)}
+    (instantiatedFormation : IncDepRawWellFormed target
+      (codomain.instantiate (.first pair)))
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (resultReady : IncDepRawFormationDispatchReady instantiatedFormation)
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (codomainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := codomainFormation) domainResult.liftSubstitution)
+    (pairResult : IncDepRawTypingSubstitutionDispatchResult pairTyping
+      substitutionResult)
+    (pairAlignment : IncDepRawTypingSubstitutionDispatchAlignment pairResult
+      (model.sigma domainResult codomainResult))
+    (structuralResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := instantiatedFormation) substitutionResult)
+    (instantiateAlignment : IncDepRawInstantiateFormationAlignment domainResult
+      codomainResult
+      (IncSigmaTerm.first
+        pairAlignment.typingResult.sourceTermResult.semanticTerm)
+      (IncSigmaTerm.first
+        pairAlignment.typingResult.targetTermResult.semanticTerm)
+      structuralResult) :
+    IncDepRawTypingSubstitutionDispatchResult
+      (IncDepRawHasType.secondRule pairTyping) substitutionResult := by
+  let alignedPair := pairAlignment.typingResult
+  let firstCoherence :
+      domainResult.semanticFiberEquivalence.transport
+          (IncSigmaTerm.first alignedPair.sourceTermResult.semanticTerm) =
+        (IncSigmaTerm.first alignedPair.targetTermResult.semanticTerm).substitute
+          substitutionResult.semanticSubstitution := by
+    funext assignment
+    exact congrArg Sigma.fst
+      (congrFun alignedPair.semanticTerm_coherence assignment)
+  let alignedFormation := instantiateAlignment.toAlignedResult firstCoherence
+  exact
+    { typeFormation := instantiatedFormation
+      typeReady := resultReady
+      formationResult := alignedFormation.toFormationFiberResult
+      typingResult := model.secondRebased instantiatedFormation domainResult
+        codomainResult alignedPair structuralResult instantiateAlignment }
+
 noncomputable def IncDepRawSubstitutionFiberModel.dispatchApply
     (model : IncDepRawSubstitutionFiberModel.{u})
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
@@ -9249,6 +9302,58 @@ noncomputable def IncDepRawSubstitutionFiberModel.dispatchApplyAligned
       alignment :=
         { formationAlignment := rfl
           resultAlignment := HEq.rfl } }
+
+noncomputable def IncDepRawSubstitutionFiberModel.dispatchApplyStructural
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {function argument : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {functionTyping : IncDepRawHasType target function (.pi domain codomain)}
+    {argumentTyping : IncDepRawHasType target argument domain}
+    (instantiatedFormation : IncDepRawWellFormed target
+      (codomain.instantiate argument))
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (resultReady : IncDepRawFormationDispatchReady instantiatedFormation)
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (codomainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := codomainFormation) domainResult.liftSubstitution)
+    (functionResult : IncDepRawTypingSubstitutionDispatchResult functionTyping
+      substitutionResult)
+    (argumentResult : IncDepRawTypingSubstitutionDispatchResult argumentTyping
+      substitutionResult)
+    (functionAlignment : IncDepRawTypingSubstitutionDispatchAlignment
+      functionResult (model.pi domainResult codomainResult))
+    (argumentAlignment : IncDepRawTypingSubstitutionDispatchAlignment
+      argumentResult domainResult)
+    (structuralResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := instantiatedFormation) substitutionResult)
+    (instantiateAlignment : IncDepRawInstantiateFormationAlignment domainResult
+      codomainResult
+      argumentAlignment.typingResult.sourceTermResult.semanticTerm
+      argumentAlignment.typingResult.targetTermResult.semanticTerm
+      structuralResult) :
+    IncDepRawTypingSubstitutionDispatchResult
+      (IncDepRawHasType.applyRule functionTyping argumentTyping)
+      substitutionResult := by
+  let alignedFunction := functionAlignment.typingResult
+  let alignedArgument := argumentAlignment.typingResult
+  let alignedFormation := instantiateAlignment.toAlignedResult
+    alignedArgument.semanticTerm_coherence
+  exact
+    { typeFormation := instantiatedFormation
+      typeReady := resultReady
+      formationResult := alignedFormation.toFormationFiberResult
+      typingResult := model.applyRebased instantiatedFormation domainResult
+        codomainResult alignedFunction alignedArgument structuralResult
+        instantiateAlignment }
 
 noncomputable def IncDepRawSubstitutionFiberModel.dispatchPair
     (model : IncDepRawSubstitutionFiberModel.{u})
