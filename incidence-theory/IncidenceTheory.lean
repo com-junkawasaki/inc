@@ -3868,6 +3868,42 @@ abbrev IncBinaryProduct {Obj : Type u} {C : IncCategory Obj}
     (terminal : IncTerminalObject C) (left right : Obj) :=
   MorphismPullback (binaryProductSpan terminal left right)
 
+def IncBinaryProduct.pair
+    {Obj : Type u} {C : IncCategory Obj}
+    {terminal : IncTerminalObject C} {left right : Obj}
+    (product : IncBinaryProduct terminal left right)
+    (source : Obj) (first : C.Hom source left) (second : C.Hom source right) :
+    C.Hom source product.apex :=
+  product.lift source first second (by
+    exact terminal.unique source _ |>.trans (terminal.unique source _).symm)
+
+theorem IncBinaryProduct.pair_fst
+    {Obj : Type u} {C : IncCategory Obj}
+    {terminal : IncTerminalObject C} {left right source : Obj}
+    (product : IncBinaryProduct terminal left right)
+    (first : C.Hom source left) (second : C.Hom source right) :
+    C.comp product.inl (product.pair source first second) = first := by
+  exact product.lift_inl _ _ _ _
+
+theorem IncBinaryProduct.pair_snd
+    {Obj : Type u} {C : IncCategory Obj}
+    {terminal : IncTerminalObject C} {left right source : Obj}
+    (product : IncBinaryProduct terminal left right)
+    (first : C.Hom source left) (second : C.Hom source right) :
+    C.comp product.inr (product.pair source first second) = second := by
+  exact product.lift_inr _ _ _ _
+
+theorem IncBinaryProduct.pair_unique
+    {Obj : Type u} {C : IncCategory Obj}
+    {terminal : IncTerminalObject C} {left right source : Obj}
+    (product : IncBinaryProduct terminal left right)
+    (first : C.Hom source left) (second : C.Hom source right)
+    (mediator : C.Hom source product.apex)
+    (hfirst : C.comp product.inl mediator = first)
+    (hsecond : C.comp product.inr mediator = second) :
+    mediator = product.pair source first second := by
+  exact product.lift_unique _ _ _ _ mediator hfirst hsecond
+
 def binaryCoproductCospan {Obj : Type u} {C : IncCategory Obj}
     (initial : IncInitialObject C) (left right : Obj) : MorphismCospan C where
   a := initial.object
@@ -3879,6 +3915,42 @@ def binaryCoproductCospan {Obj : Type u} {C : IncCategory Obj}
 abbrev IncBinaryCoproduct {Obj : Type u} {C : IncCategory Obj}
     (initial : IncInitialObject C) (left right : Obj) :=
   MorphismPushout (binaryCoproductCospan initial left right)
+
+def IncBinaryCoproduct.copair
+    {Obj : Type u} {C : IncCategory Obj}
+    {initial : IncInitialObject C} {left right : Obj}
+    (coproduct : IncBinaryCoproduct initial left right)
+    (target : Obj) (first : C.Hom left target) (second : C.Hom right target) :
+    C.Hom coproduct.apex target :=
+  coproduct.lift target first second (by
+    exact initial.unique target _ |>.trans (initial.unique target _).symm)
+
+theorem IncBinaryCoproduct.inl_copair
+    {Obj : Type u} {C : IncCategory Obj}
+    {initial : IncInitialObject C} {left right target : Obj}
+    (coproduct : IncBinaryCoproduct initial left right)
+    (first : C.Hom left target) (second : C.Hom right target) :
+    C.comp (coproduct.copair target first second) coproduct.inl = first :=
+  coproduct.lift_inl _ _ _ _
+
+theorem IncBinaryCoproduct.inr_copair
+    {Obj : Type u} {C : IncCategory Obj}
+    {initial : IncInitialObject C} {left right target : Obj}
+    (coproduct : IncBinaryCoproduct initial left right)
+    (first : C.Hom left target) (second : C.Hom right target) :
+    C.comp (coproduct.copair target first second) coproduct.inr = second :=
+  coproduct.lift_inr _ _ _ _
+
+theorem IncBinaryCoproduct.copair_unique
+    {Obj : Type u} {C : IncCategory Obj}
+    {initial : IncInitialObject C} {left right target : Obj}
+    (coproduct : IncBinaryCoproduct initial left right)
+    (first : C.Hom left target) (second : C.Hom right target)
+    (mediator : C.Hom coproduct.apex target)
+    (hfirst : C.comp mediator coproduct.inl = first)
+    (hsecond : C.comp mediator coproduct.inr = second) :
+    mediator = coproduct.copair target first second :=
+  coproduct.lift_unique _ _ _ _ mediator hfirst hsecond
 
 noncomputable def IncCategoryEquivalence.stronglyPreservesBinaryProduct
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
