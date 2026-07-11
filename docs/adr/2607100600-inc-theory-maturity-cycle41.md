@@ -535,6 +535,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - Identityにもuniform `.identity` constructorを追加した。recursive type formation resultと左右endpointの
   typing-substitution resultsからendpoint transport equationを再利用し、直接parent formation fiber resultを返す。
   これでbase/unit/Pi/Sigma/Identityの全5 shapeにdispatcher-readyなdirect constructorが揃った。
+- Pi/Sigma双方にcanonical `dependentEquiv`と`ofCodomainCoherence`を追加した。codomain mapは任意入力でなくrecursive
+  codomain formation resultのactual fiber equivalenceから構成され、外部入力は不可欠な二round-trip lawだけである。
+  これにより後続lambda/pair/projection typing branchでformationが使うmapとterm coherenceが使うmapの同一性を保持する。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
