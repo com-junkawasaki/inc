@@ -10979,6 +10979,42 @@ structure IncDepRawStrictMutualSubstitutionDispatcher where
   formation : IncDepRawStrictFormationSubstitutionDispatcher
   typing : IncDepRawStrictTypingSubstitutionDispatcher
 
+abbrev IncDepRawStrictFormationSubstitutionFoldMotive
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    (ready : IncDepRawCoherentFormationDispatchReady targetFormation) :=
+  ∀ {source : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult},
+    IncDepRawContextSemanticTree targetResult →
+    IncDepRawSubstitutionReplacementSemanticResult substitutionResult →
+    IncDepRawStrictFormationSubstitutionDispatchResult ready substitutionResult
+
+abbrev IncDepRawStrictTypingSubstitutionFoldMotive
+    {target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    (ready : IncDepRawCoherentTypingDispatchReady targetTyping
+      targetFormation) :=
+  ∀ {source : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult},
+    IncDepRawContextSemanticTree targetResult →
+    IncDepRawSubstitutionReplacementSemanticResult substitutionResult →
+    IncDepRawStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.ofCoherent ready) substitutionResult
+
 noncomputable def IncDepRawStrictTypingSubstitutionDispatcher.run
     (dispatcher : IncDepRawStrictTypingSubstitutionDispatcher)
     {source target : List IncDepRawType} {term : IncDepRawTerm}

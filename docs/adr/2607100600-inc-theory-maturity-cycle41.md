@@ -765,6 +765,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   対応するものを選び、構築されたstrict readinessを入力treeのexact indexへtransportする。reflではformation readinessとstrict typing readinessの
   二段transportも実行する。このrecursorを`strictTypingDispatcher`でinterface化したため、formation/typing双方のrecursive halfとadapterが揃った。
   残件は二つのdispatcher valuesをwell-foundedなmutual definitionとして結び、保存定理projectionを公開する工程である。
+- mutual knotの構成方法をLean生成の相互inductive recursorに固定し、その二つのdependent motivesを
+  `IncDepRawStrictFormationSubstitutionFoldMotive`/`IncDepRawStrictTypingSubstitutionFoldMotive`として定義した。各motiveはsource substitution semantics、
+  target context tree、replacement interpretationを量化してexact strict resultを返す。生成recursorはformation handlerへtyping IHを、typing handlerへ
+  formation IHを直接渡すため、opaqueなrecursive dispatcher valueや手製Nat measureではなく構造再帰としてfinal knotを構成できる。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

@@ -1446,6 +1446,15 @@ It currently establishes:
   the formation fold.  Thus both recursive halves and both adapters are checked;
   the remaining step is tying the two dispatcher values into one well-founded
   mutual definition and exposing its preservation projections.
+  The mutual-recursion route is now fixed at the type level by
+  `IncDepRawStrictFormationSubstitutionFoldMotive` and
+  `IncDepRawStrictTypingSubstitutionFoldMotive`.  These are the two motives for
+  Lean's generated mutual recursor over coherent formation/typing readiness;
+  each motive quantifies the source substitution semantics, target context tree,
+  and replacement interpretation and returns the exact strict result.  The
+  generated recursor supplies formation handlers with typing induction hypotheses
+  and typing handlers with formation induction hypotheses, so the final knot can
+  be structural rather than relying on an opaque recursive dispatcher value.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
