@@ -135,6 +135,33 @@ theorem countablyPresentedIncidenceProd_internalLogic_complete
     KripkeEntails.{u, u} context formula ↔ Derives context formula :=
   (countablyPresentedIncidenceProd left right).internalLogic_complete context formula
 
+theorem incidenceProd_boundaryValuation_iff
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (left : Incidence I1 R1 T1) (right : Incidence I2 R2 T2)
+    (leftAtom : I1) (rightAtom : I2) :
+    IncidenceBoundaryValuation (incidenceProd left right) (leftAtom, rightAtom) ↔
+      IncidenceBoundaryValuation left leftAtom ∨
+        IncidenceBoundaryValuation right rightAtom := by
+  simp only [IncidenceBoundaryValuation, incidenceProd, prodBoundary,
+    List.mem_append, List.mem_map]
+  constructor
+  · rintro ⟨endpoint, ⟨source, member, rfl⟩ | ⟨source, member, rfl⟩⟩
+    · exact Or.inl ⟨source, member⟩
+    · exact Or.inr ⟨source, member⟩
+  · rintro (⟨source, member⟩ | ⟨source, member⟩)
+    · exact ⟨_, Or.inl ⟨source, member, rfl⟩⟩
+    · exact ⟨_, Or.inr ⟨source, member, rfl⟩⟩
+
+theorem incidenceProd_boundaryAtom_satisfies_iff
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (left : Incidence I1 R1 T1) (right : Incidence I2 R2 T2)
+    (leftAtom : I1) (rightAtom : I2) :
+    IncidenceBoundarySatisfies (incidenceProd left right)
+        (.atom (leftAtom, rightAtom)) ↔
+      IncidenceBoundaryValuation left leftAtom ∨
+        IncidenceBoundaryValuation right rightAtom :=
+  incidenceProd_boundaryValuation_iff left right leftAtom rightAtom
+
 noncomputable def natProductCountablyPresentedIncidence :
     CountablyPresentedIncidence (Nat × Nat) (PeanoRole ⊕ PeanoRole)
       (GraphType × GraphType) :=

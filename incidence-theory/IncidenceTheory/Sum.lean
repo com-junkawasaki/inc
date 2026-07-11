@@ -154,6 +154,32 @@ theorem countablyPresentedIncidenceSum_internalLogic_complete
     KripkeEntails.{u, u} context formula ↔ Derives context formula :=
   (countablyPresentedIncidenceSum left right).internalLogic_complete context formula
 
+theorem incidenceSum_boundaryValuation_inl_iff
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (left : Incidence I1 R1 T1) (right : Incidence I2 R2 T2)
+    (atom : I1) :
+    IncidenceBoundaryValuation (incidenceSum left right) (Sum.inl atom) ↔
+      IncidenceBoundaryValuation left atom := by
+  simp only [IncidenceBoundaryValuation, incidenceSum, sumBoundary, List.mem_map]
+  constructor
+  · rintro ⟨_, source, member, rfl⟩
+    exact ⟨source, member⟩
+  · rintro ⟨source, member⟩
+    exact ⟨_, source, member, rfl⟩
+
+theorem incidenceSum_boundaryValuation_inr_iff
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (left : Incidence I1 R1 T1) (right : Incidence I2 R2 T2)
+    (atom : I2) :
+    IncidenceBoundaryValuation (incidenceSum left right) (Sum.inr atom) ↔
+      IncidenceBoundaryValuation right atom := by
+  simp only [IncidenceBoundaryValuation, incidenceSum, sumBoundary, List.mem_map]
+  constructor
+  · rintro ⟨_, source, member, rfl⟩
+    exact ⟨source, member⟩
+  · rintro ⟨source, member⟩
+    exact ⟨_, source, member, rfl⟩
+
 noncomputable def natSumCountablyPresentedIncidence :
     CountablyPresentedIncidence (Nat ⊕ Nat) (PeanoRole ⊕ PeanoRole) GraphType :=
   countablyPresentedIncidenceSum natCountablyPresentedIncidence
