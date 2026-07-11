@@ -501,6 +501,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   projectionでreindexし、lifted environmentのolder replacementがlifted semantic substitution下のtarget
   older termと一致する。`lift_here_fiber`と合わせて最終variable-coherence二分岐がcheckedとなり、次はlookup
   formation alignmentと合成してtotal substitution dispatcherのvariable branchへ組み込む。
+- variable branchの統合constructor `toTypingSubstitution`を追加した。aligned target lookup formation、
+  formation-substitution fiber result、replacement environment、source/target family alignment、最終term equationを
+  合成し、uniform `IncDepRawTypingSubstitutionFiberResult`を直接返す。中間cast/packageはchecked API内部へ隠蔽され、
+  total dispatcherに残るのは各typing constructorでformation result/equationを再帰供給することになった。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

@@ -1006,6 +1006,14 @@ It currently establishes:
   variable-coherence branches are checked; the next task is assembling them
   with lookup formation alignment into the variable branch of the total
   substitution dispatcher.
+  The variable branch now has a single integration constructor,
+  `toTypingSubstitution`.  It combines the aligned target lookup formation, the
+  formation-substitution fiber result, the replacement environment, explicit
+  source/target family alignments, and the final term equation, then returns the
+  uniform `IncDepRawTypingSubstitutionFiberResult` directly.  Intermediate casts
+  and variable packages are hidden inside the checked API.  The remaining total
+  dispatcher work is to recursively supply these formation results and
+  equations for each typing constructor.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
