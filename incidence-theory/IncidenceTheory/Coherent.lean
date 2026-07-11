@@ -46,6 +46,28 @@ theorem CoherentIncidence.logicalClass_eq_iff_kripke_equivalent
   rw [Formula.logicalClass_eq_iff_derives_iff]
   exact (coherent.kripke_complete [] (Formula.iff left right)).symm
 
+theorem CoherentIncidence.logicalClass_le_iff_kripke_entails
+    {I R T : Type u} [DecidableEq I] (coherent : CoherentIncidence I R T)
+    (left right : Formula I) :
+    (Quotient.mk (Formula.derivablyEquivalentSetoid I) left :
+        Formula.LogicalEquivalenceClass I) ≤
+      Quotient.mk (Formula.derivablyEquivalentSetoid I) right ↔
+      KripkeEntails.{u, u} [] (.imp left right) := by
+  change Formula.LogicalEntails
+      (Quotient.mk (Formula.derivablyEquivalentSetoid I) left)
+      (Quotient.mk (Formula.derivablyEquivalentSetoid I) right) ↔ _
+  rw [logicalEntails_mk_iff_derives]
+  exact (coherent.kripke_complete [] (.imp left right)).symm
+
+theorem CoherentIncidence.logicalClass_eq_top_iff_kripke_valid
+    {I R T : Type u} [DecidableEq I] (coherent : CoherentIncidence I R T)
+    (formula : Formula I) :
+    (Quotient.mk (Formula.derivablyEquivalentSetoid I) formula :
+        Formula.LogicalEquivalenceClass I) = Formula.logicalTop ↔
+      KripkeEntails.{u, u} [] formula := by
+  rw [logicalClass_eq_top_iff_derives]
+  exact (coherent.kripke_complete [] formula).symm
+
 theorem CoherentIncidence.internal_logic_heyting
     {I R T : Type u} [DecidableEq I] (_coherent : CoherentIncidence I R T) :
     Formula.LogicalHeytingAlgebraLaws I :=
@@ -272,6 +294,18 @@ theorem CoherentQuotient.translate_derivation_iff
   constructor
   · exact quotient.reflect_derivation retract
   · exact quotient.translate_derivation
+
+theorem CoherentQuotient.translate_kripke_entails_iff
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    (retract : CoherentQuotientLogicalRetract quotient)
+    (context : List (Formula I)) (formula : Formula I) :
+    KripkeEntails.{u, u}
+        (Formula.mapContext quotient.classification.classify context)
+        (formula.map quotient.classification.classify) ↔
+      KripkeEntails.{u, u} context formula := by
+  rw [quotient.target.kripke_complete, source.kripke_complete]
+  exact quotient.translate_derivation_iff retract context formula
 
 theorem CoherentQuotient.reflect_satisfies
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
