@@ -3427,6 +3427,72 @@ theorem IncCoherentCategoryEquivalence.mappedPushoutLift_inr
         (counit.inv_app_hom_app (F.obj span.c))
     _ = rightLeg := D.comp_id _
 
+theorem IncCoherentCategoryEquivalence.pulledMediator_eq_sourceLift
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D)
+    {span : MorphismCospan C} (po : MorphismPushout span)
+    (q : DObj)
+    (leftLeg : D.Hom (coherent.equivalence.forward.obj span.b) q)
+    (rightLeg : D.Hom (coherent.equivalence.forward.obj span.c) q)
+    (commutes :
+      D.comp leftLeg (coherent.equivalence.forward.map span.left) =
+        D.comp rightLeg (coherent.equivalence.forward.map span.right))
+    (mediator : D.Hom (coherent.equivalence.forward.obj po.apex) q)
+    (mediator_inl :
+      D.comp mediator (coherent.equivalence.forward.map po.inl) = leftLeg)
+    (mediator_inr :
+      D.comp mediator (coherent.equivalence.forward.map po.inr) = rightLeg) :
+    C.comp (coherent.equivalence.inverse.map mediator)
+        (coherent.equivalence.unit.hom.app po.apex) =
+      po.lift (coherent.equivalence.inverse.obj q)
+        (C.comp (coherent.equivalence.inverse.map leftLeg)
+          (coherent.equivalence.unit.hom.app span.b))
+        (C.comp (coherent.equivalence.inverse.map rightLeg)
+          (coherent.equivalence.unit.hom.app span.c))
+        (coherent.pulledPushoutCocone_commutes leftLeg rightLeg commutes) := by
+  let F := coherent.equivalence.forward
+  let G := coherent.equivalence.inverse
+  let unit := coherent.equivalence.unit
+  apply po.lift_unique
+  · calc
+      C.comp (C.comp (G.map mediator) (unit.hom.app po.apex)) po.inl =
+        C.comp (G.map mediator)
+          (C.comp (unit.hom.app po.apex) po.inl) :=
+            (C.assoc _ _ _).symm
+      _ = C.comp (G.map mediator)
+          (C.comp ((G.comp F).map po.inl) (unit.hom.app span.b)) := by
+            have naturality := unit.hom.naturality po.inl
+            simpa [IncFunctor.identity] using congrArg (C.comp (G.map mediator))
+              naturality.symm
+      _ = C.comp
+          (C.comp (G.map mediator) ((G.comp F).map po.inl))
+          (unit.hom.app span.b) := C.assoc _ _ _
+      _ = C.comp (G.map (D.comp mediator (F.map po.inl)))
+          (unit.hom.app span.b) := by
+            simp only [IncFunctor.comp]
+            rw [G.map_comp]
+      _ = C.comp (G.map leftLeg) (unit.hom.app span.b) := by
+            rw [mediator_inl]
+  · calc
+      C.comp (C.comp (G.map mediator) (unit.hom.app po.apex)) po.inr =
+        C.comp (G.map mediator)
+          (C.comp (unit.hom.app po.apex) po.inr) :=
+            (C.assoc _ _ _).symm
+      _ = C.comp (G.map mediator)
+          (C.comp ((G.comp F).map po.inr) (unit.hom.app span.c)) := by
+            have naturality := unit.hom.naturality po.inr
+            simpa [IncFunctor.identity] using congrArg (C.comp (G.map mediator))
+              naturality.symm
+      _ = C.comp
+          (C.comp (G.map mediator) ((G.comp F).map po.inr))
+          (unit.hom.app span.c) := C.assoc _ _ _
+      _ = C.comp (G.map (D.comp mediator (F.map po.inr)))
+          (unit.hom.app span.c) := by
+            simp only [IncFunctor.comp]
+            rw [G.map_comp]
+      _ = C.comp (G.map rightLeg) (unit.hom.app span.c) := by
+            rw [mediator_inr]
+
 /- Uniform preservation is closed under translation composition.  The second
    family is applied to the actual mapped universal cocone selected by the
    first one, exactly as in the pointwise composition theorem above. -/
