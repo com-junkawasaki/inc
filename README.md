@@ -595,6 +595,13 @@ It currently establishes:
   of the unique empty-context derivation; the dependent Pi and Sigma examples
   are checked through that embedding.  The recursive constructor interpreter
   producing these results for every certified judgment remains pending.
+  The type-formation half of that recursive fold now has compositional builders.
+  Base types become constant contextual families supplied by a base model, unit
+  becomes the lifted unit family, Pi and Sigma combine domain and codomain results
+  across semantic context extension, and identity formation combines an
+  interpreted type with two semantic terms.  All five raw formation constructors
+  therefore have checked targets in the contextual calculus; lookup and term
+  recursion remain before the builders can be assembled automatically.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

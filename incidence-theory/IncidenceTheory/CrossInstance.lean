@@ -2709,6 +2709,79 @@ structure IncDepRawSemanticResult
   semanticType : IncTypeInContext contextResult.semanticContext
   semanticTerm : IncTerm semanticType
 
+structure IncDepRawFormationSemanticResult
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    (formation : IncDepRawWellFormed context type)
+    (contextResult : IncDepRawContextSemanticResult contextWellFormed) where
+  semanticType : IncTypeInContext contextResult.semanticContext
+
+def IncDepRawFormationSemanticResult.base
+    {context : List IncDepRawType} {index : Nat}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    (contextResult : IncDepRawContextSemanticResult contextWellFormed)
+    (baseModel : Nat → Type u) :
+    IncDepRawFormationSemanticResult
+      (IncDepRawWellFormed.base (context := context) (index := index))
+      contextResult where
+  semanticType := fun _ => baseModel index
+
+def IncDepRawFormationSemanticResult.unit
+    {context : List IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    (contextResult : IncDepRawContextSemanticResult contextWellFormed) :
+    IncDepRawFormationSemanticResult
+      (IncDepRawWellFormed.unit (context := context)) contextResult where
+  semanticType := fun _ => ULift Unit
+
+def IncDepRawFormationSemanticResult.pi
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    (domainResult : IncDepRawFormationSemanticResult
+      domainFormation contextResult)
+    (codomainResult : IncDepRawFormationSemanticResult codomainFormation
+      (contextResult.extend (typeWellFormed := domainFormation)
+        domainResult.semanticType)) :
+    IncDepRawFormationSemanticResult
+      (IncDepRawWellFormed.pi domainFormation codomainFormation)
+      contextResult where
+  semanticType := IncPiType domainResult.semanticType codomainResult.semanticType
+
+def IncDepRawFormationSemanticResult.sigma
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    (domainResult : IncDepRawFormationSemanticResult
+      domainFormation contextResult)
+    (codomainResult : IncDepRawFormationSemanticResult codomainFormation
+      (contextResult.extend (typeWellFormed := domainFormation)
+        domainResult.semanticType)) :
+    IncDepRawFormationSemanticResult
+      (IncDepRawWellFormed.sigma domainFormation codomainFormation)
+      contextResult where
+  semanticType := IncSigmaType domainResult.semanticType codomainResult.semanticType
+
+def IncDepRawFormationSemanticResult.identity
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {typeFormation : IncDepRawWellFormed context type}
+    {leftTyping : IncDepRawHasType context left type}
+    {rightTyping : IncDepRawHasType context right type}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    (typeResult : IncDepRawFormationSemanticResult typeFormation contextResult)
+    (leftSemantic rightSemantic : IncTerm typeResult.semanticType) :
+    IncDepRawFormationSemanticResult
+      (IncDepRawWellFormed.identity typeFormation leftTyping rightTyping)
+      contextResult where
+  semanticType := IncIdentityType typeResult.semanticType
+    leftSemantic rightSemantic
+
 def incDepRawClosedContextSemantic
     {term : IncDepRawTerm} {type : IncDepRawType}
     (certified : IncDepRawCertifiedTyping [] term type) :

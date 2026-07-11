@@ -234,6 +234,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   contextual typeとそのtermを割り当てる。empty-context derivationのproof indexをcase analysis
   するclosed-to-general embeddingを構成し、Pi/Sigma例を一般APIへ載せた。全certified judgmentを
   生成するrecursive constructor interpreter自体は引き続き未完である。
+- recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
+  base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
+  extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
+  から形成する。raw formation全5constructorのcontextual targetがcheckedとなり、自動foldには
+  lookup/term recursionが残る。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
