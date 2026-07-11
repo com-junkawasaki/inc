@@ -1175,6 +1175,12 @@ It currently establishes:
   naturality of any family/term coherence under the fiber-lifted binder, and
   `liftResult_there_fiber` applies it to older replacements.  Here and there
   replacement coherence are both available without equality-based lifting.
+  A total structural dispatcher now runs for the non-identity formation spine.
+  `IncDepRawNonIdentityFormationReady` mirrors base, unit, Pi, and Sigma readiness;
+  `dispatchSubstitution` recursively computes domain results, fiber-lifts the
+  substitution for codomains, and calls the model algebra.  `toSemanticReady`
+  embeds this evidence into the existing readiness API.  Identity remains the
+  point where formation and typing recursion must become mutual.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

@@ -5782,6 +5782,69 @@ noncomputable def IncDepRawSubstitutionFiberModel.sigma
   IncDepRawFormationSubstitutionFiberResult.sigmaCoherent domainResult
     codomainResult (model.sigmaCoherence domainResult codomainResult)
 
+inductive IncDepRawNonIdentityFormationReady :
+    {context : List IncDepRawType} → {type : IncDepRawType} →
+    IncDepRawWellFormed context type → Type
+  | base {context index} :
+      IncDepRawNonIdentityFormationReady
+        (IncDepRawWellFormed.base (context := context) (index := index))
+  | unit {context} :
+      IncDepRawNonIdentityFormationReady
+        (IncDepRawWellFormed.unit (context := context))
+  | pi {context domain codomain}
+      {domainFormation : IncDepRawWellFormed context domain}
+      {codomainFormation : IncDepRawWellFormed (domain :: context) codomain} :
+      IncDepRawNonIdentityFormationReady domainFormation →
+      IncDepRawNonIdentityFormationReady codomainFormation →
+      IncDepRawNonIdentityFormationReady
+        (IncDepRawWellFormed.pi domainFormation codomainFormation)
+  | sigma {context domain codomain}
+      {domainFormation : IncDepRawWellFormed context domain}
+      {codomainFormation : IncDepRawWellFormed (domain :: context) codomain} :
+      IncDepRawNonIdentityFormationReady domainFormation →
+      IncDepRawNonIdentityFormationReady codomainFormation →
+      IncDepRawNonIdentityFormationReady
+        (IncDepRawWellFormed.sigma domainFormation codomainFormation)
+
+noncomputable def IncDepRawNonIdentityFormationReady.toSemanticReady
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawNonIdentityFormationReady formation) :
+    IncDepRawFormationSemanticReady formation := by
+  induction ready with
+  | base => exact IncDepRawFormationSemanticReady.base
+  | unit => exact IncDepRawFormationSemanticReady.unit
+  | pi _ _ domainIH codomainIH =>
+      exact IncDepRawFormationSemanticReady.pi domainIH codomainIH
+  | sigma _ _ domainIH codomainIH =>
+      exact IncDepRawFormationSemanticReady.sigma domainIH codomainIH
+
+noncomputable def IncDepRawNonIdentityFormationReady.dispatchSubstitution
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    (ready : IncDepRawNonIdentityFormationReady targetFormation) :
+    IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult := by
+  induction ready generalizing source sourceWellFormed sourceResult with
+  | base => exact model.base substitutionResult
+  | unit => exact model.unit substitutionResult
+  | pi domainReady codomainReady domainIH codomainIH =>
+      let domainResult := domainIH substitutionResult
+      let codomainResult := codomainIH domainResult.liftSubstitution
+      exact model.pi domainResult codomainResult
+  | sigma domainReady codomainReady domainIH codomainIH =>
+      let domainResult := domainIH substitutionResult
+      let codomainResult := codomainIH domainResult.liftSubstitution
+      exact model.sigma domainResult codomainResult
+
 inductive IncDepRawContextSemanticTree :
     {context : List IncDepRawType} →
     {wellFormed : IncDepRawContext.WellFormed context} →

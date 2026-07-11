@@ -611,6 +611,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - 任意family/term coherenceのbinder自然性`liftFiber_older_transport`と、それをolder replacementへ適用する
   `liftResult_there_fiber`を証明した。here/there両replacement coherenceがequality-based liftなしで揃い、binder下
   lookup recursionの一般fiber版が完成した。
+- base/unit/Pi/Sigmaをmirrorする`IncDepRawNonIdentityFormationReady`とtotal `dispatchSubstitution`を実装した。readiness
+  treeをstructural recursionし、Pi/Sigmaではrecursive domain resultからsubstitutionをfiber-liftしてcodomainを再帰処理し、
+  model algebraへ接続する。`toSemanticReady`で既存readiness APIにも埋め込んだ。Identityがformation/typing mutual recursionへ
+  移行する残りの接点である。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
