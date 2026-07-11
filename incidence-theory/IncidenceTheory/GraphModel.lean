@@ -1185,6 +1185,82 @@ def hfNatIncidenceEmbedding : HFNatIncidenceEmbedding where
   successor_boundary := hfIncidence_vonNeumann_succ_boundary
   successor_nonempty := hfIncidence_vonNeumann_succ_boundary_nonempty
 
+theorem hf_vonNeumann_approxBisim_iff_eq (m n : Nat) :
+    approxBisim hfIncidence (HFSet.vonNeumann m) (HFSet.vonNeumann n) ↔ m = n := by
+  constructor
+  · intro bisim
+    induction m generalizing n with
+    | zero =>
+        cases n with
+        | zero => rfl
+        | succ n =>
+            rcases bisim with ⟨rel, hrel, hzeroSucc⟩
+            rcases hrel _ _ hzeroSucc with ⟨_, matched⟩
+            let endpoint : Endpoint HFSet GraphRole :=
+              { i := HFSet.vonNeumann n, role := .src, sign := .pos,
+                mult := 1, mult_pos := by omega }
+            have hendpoint : endpoint ∈
+                hfIncidence.boundary (HFSet.vonNeumann (n + 1)) := by
+              rw [hfIncidence_vonNeumann_succ_boundary]
+              simp [hfNatPredecessorBoundary, endpoint]
+            rcases matched.right endpoint hendpoint with ⟨endpoint', hempty, _⟩
+            have impossible : False := by
+              rw [hfIncidence_vonNeumann_zero_boundary] at hempty
+              simp at hempty
+            exact False.elim impossible
+    | succ m ih =>
+        cases n with
+        | zero =>
+            rcases bisim with ⟨rel, hrel, hsuccZero⟩
+            rcases hrel _ _ hsuccZero with ⟨_, matched⟩
+            let endpoint : Endpoint HFSet GraphRole :=
+              { i := HFSet.vonNeumann m, role := .src, sign := .pos,
+                mult := 1, mult_pos := by omega }
+            have hendpoint : endpoint ∈
+                hfIncidence.boundary (HFSet.vonNeumann (m + 1)) := by
+              rw [hfIncidence_vonNeumann_succ_boundary]
+              simp [hfNatPredecessorBoundary, endpoint]
+            rcases matched.left endpoint hendpoint with ⟨endpoint', hempty, _⟩
+            have impossible : False := by
+              rw [hfIncidence_vonNeumann_zero_boundary] at hempty
+              simp at hempty
+            exact False.elim impossible
+        | succ n =>
+            rcases bisim with ⟨rel, hrel, hsucc⟩
+            rcases hrel _ _ hsucc with ⟨_, matched⟩
+            let endpoint : Endpoint HFSet GraphRole :=
+              { i := HFSet.vonNeumann m, role := .src, sign := .pos,
+                mult := 1, mult_pos := by omega }
+            have hendpoint : endpoint ∈
+                hfIncidence.boundary (HFSet.vonNeumann (m + 1)) := by
+              rw [hfIncidence_vonNeumann_succ_boundary]
+              simp [hfNatPredecessorBoundary, endpoint]
+            rcases matched.left endpoint hendpoint with
+              ⟨endpoint', htarget, _, hpredecessor⟩
+            have targetEq : endpoint'.i = HFSet.vonNeumann n := by
+              rw [hfIncidence_vonNeumann_succ_boundary] at htarget
+              rcases List.mem_cons.mp htarget with hsrc | htail
+              · rw [hsrc]
+              · have hdst := List.mem_singleton.mp htail
+                rw [hdst]
+            have predecessorBisim : approxBisim hfIncidence
+                (HFSet.vonNeumann m) (HFSet.vonNeumann n) := by
+              exact ⟨rel, hrel, targetEq ▸ hpredecessor⟩
+            have indexEq : m = n := ih n predecessorBisim
+            exact congrArg Nat.succ indexEq
+  · intro equal
+    subst n
+    exact approxBisim_refl hfIncidence _
+
+structure HFNatIncidenceFaithfulEmbedding where
+  embedding : HFNatIncidenceEmbedding
+  bisim_iff_eq : ∀ m n,
+    approxBisim hfIncidence (embedding.encode m) (embedding.encode n) ↔ m = n
+
+def hfNatIncidenceFaithfulEmbedding : HFNatIncidenceFaithfulEmbedding where
+  embedding := hfNatIncidenceEmbedding
+  bisim_iff_eq := hf_vonNeumann_approxBisim_iff_eq
+
 /- Graph with nodes and edges as incidences. We take I as a sum of Node | Edge. -/
 inductive GId where | node (n : Nat) | edge (e : Nat)
 deriving DecidableEq, Repr
