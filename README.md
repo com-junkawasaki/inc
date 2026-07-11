@@ -1314,6 +1314,11 @@ It currently establishes:
   with `pairCoherent`, all three instantiate-crossing semantic rules have one
   uniform coherence interface; their rule-specific code only supplies the
   argument term and its already proved substitution equation.
+  Package-level `dispatchApplyCoherent` and `dispatchSecondCoherent` complete the
+  same unification above the semantic layer.  Alongside
+  `dispatchPairStructural`/`pairCoherent`, a mutual dispatcher can now pass one
+  instantiate-coherence object through every dependent branch without unpacking
+  its endpoint or naturality fields.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
