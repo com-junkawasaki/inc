@@ -6167,6 +6167,55 @@ def observationBisimulationQuotientEquivalence
     intro representative
     rfl
 
+theorem observationQuotientToBisimulationQuotient_injective_iff_faithful
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) :
+    (∀ {left right : LinearObservationQuotient inc idx},
+      observationQuotientToBisimulationQuotient inc idx left =
+        observationQuotientToBisimulationQuotient inc idx right →
+      left = right) ↔ BisimulationFaithful inc := by
+  constructor
+  · intro injective i j bisimilar
+    have imagesEqual :
+        observationQuotientToBisimulationQuotient inc idx
+            (Quotient.mk (linearObservationalSetoid inc idx) i) =
+          observationQuotientToBisimulationQuotient inc idx
+            (Quotient.mk (linearObservationalSetoid inc idx) j) :=
+      Quotient.sound bisimilar
+    have observationClassesEqual := injective imagesEqual
+    exact (linearObservationallyEquivalent_iff_eq inc idx i j).mp
+      (Quotient.exact observationClassesEqual)
+  · intro faithful left right imagesEqual
+    let equivalence := observationBisimulationQuotientEquivalence inc idx faithful
+    have inverseImagesEqual :
+        equivalence.inverse (equivalence.forward left) =
+          equivalence.inverse (equivalence.forward right) :=
+      congrArg equivalence.inverse imagesEqual
+    rw [equivalence.inverse_forward, equivalence.inverse_forward]
+      at inverseImagesEqual
+    exact inverseImagesEqual
+
+theorem observationQuotientToBisimulationQuotient_bijective_iff_faithful
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) :
+    ((∀ {left right : LinearObservationQuotient inc idx},
+        observationQuotientToBisimulationQuotient inc idx left =
+          observationQuotientToBisimulationQuotient inc idx right →
+        left = right) ∧
+      (∀ target : IncidenceQuotient inc,
+        ∃ source : LinearObservationQuotient inc idx,
+          observationQuotientToBisimulationQuotient inc idx source = target)) ↔
+      BisimulationFaithful inc := by
+  constructor
+  · intro bijective
+    exact (observationQuotientToBisimulationQuotient_injective_iff_faithful
+      inc idx).mp bijective.left
+  · intro faithful
+    exact ⟨
+      (observationQuotientToBisimulationQuotient_injective_iff_faithful
+        inc idx).mpr faithful,
+      observationQuotientToBisimulationQuotient_surjective inc idx⟩
+
 def observationBisimulationQuotientEquivalence_of_wellFounded_extensional
     {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I) (measure : I → Nat)
