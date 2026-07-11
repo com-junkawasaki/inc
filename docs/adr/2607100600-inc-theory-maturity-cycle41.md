@@ -761,6 +761,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   instantiated structural resultを独立dispatchし、recursive term resultsをexact Pi/Sigma/domain/instantiate fiberへnormalizeしてからstrict semantic
   constructorへ渡す。apply/pair/secondのinstantiate naturalityは明示的coherence providerから取得する。残件はcoherent typing tree上でこれら8枝を
   選択する単一recursorと、formation dispatcherとのmutual knotの具体化である。
+- coherent typing readiness tree上の単一8-way recursor `foldStrictTyping`を実装した。構文的にtyping childrenへ再帰し、全8 checked branchesから
+  対応するものを選び、構築されたstrict readinessを入力treeのexact indexへtransportする。reflではformation readinessとstrict typing readinessの
+  二段transportも実行する。このrecursorを`strictTypingDispatcher`でinterface化したため、formation/typing双方のrecursive halfとadapterが揃った。
+  残件は二つのdispatcher valuesをwell-foundedなmutual definitionとして結び、保存定理projectionを公開する工程である。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

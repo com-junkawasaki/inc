@@ -6159,6 +6159,25 @@ structure IncDepRawStrictTypingDispatchReady
   ready : IncDepRawCoherentTypingDispatchReady typing formation
   formationReady_eq : ready.formationReady = formationReady
 
+structure IncDepRawStrictTypingReadinessAlignmentProvider where
+  align : ∀
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    {formationReady : IncDepRawCoherentFormationDispatchReady formation}
+    (first second : IncDepRawStrictTypingDispatchReady typing formationReady),
+    first = second
+
+def IncDepRawStrictTypingReadinessAlignmentProvider.alignment
+    (provider : IncDepRawStrictTypingReadinessAlignmentProvider)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    {formationReady : IncDepRawCoherentFormationDispatchReady formation}
+    (first second : IncDepRawStrictTypingDispatchReady typing formationReady) :
+    first = second :=
+  provider.align first second
+
 def IncDepRawStrictTypingDispatchReady.ofCoherent
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} {typing : IncDepRawHasType context term type}
@@ -9475,6 +9494,30 @@ def IncDepRawStrictTypingSubstitutionDispatchResult.castFormationReady
   cases readinessEq
   exact result
 
+def IncDepRawStrictTypingSubstitutionDispatchResult.castReady
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {targetFormationReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    {firstReady secondReady : IncDepRawStrictTypingDispatchReady targetTyping
+      targetFormationReady}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawStrictTypingSubstitutionDispatchResult firstReady
+      substitutionResult)
+    (readinessEq : firstReady = secondReady) :
+    IncDepRawStrictTypingSubstitutionDispatchResult secondReady
+      substitutionResult := by
+  cases readinessEq
+  exact result
+
 def IncDepRawStrictFormationSubstitutionDispatchResult.toFormationResult
     {source target : List IncDepRawType} {type : IncDepRawType}
     {substitution : IncDepRawSubstitution source target}
@@ -11460,6 +11503,127 @@ noncomputable def IncDepRawSubstitutionFiberModel.foldStrictPair
     domainResult.formationResult codomainResult.formationResult
     alignedFirst.typingResult structuralResult.formationResult
     alignedSecond.typingResult coherence
+
+noncomputable def IncDepRawSubstitutionFiberModel.foldStrictTyping
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (formationDispatcher : IncDepRawStrictFormationSubstitutionDispatcher)
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (strictAlignment : IncDepRawStrictTypingReadinessAlignmentProvider)
+    (rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider)
+    (instantiateProvider : IncDepRawInstantiateFormationCoherenceProvider)
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (ready : IncDepRawCoherentTypingDispatchReady targetTyping targetFormation)
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult) :
+    IncDepRawStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.ofCoherent ready) substitutionResult :=
+  match ready with
+  | .varRule typeReady =>
+      variableProvider.foldStrictVariable formationDispatcher typeReady
+        targetTree replacements
+  | .unitRule => model.foldStrictUnit substitutionResult
+  | .lambdaRule domainReady bodyReady =>
+      let domainResult := formationDispatcher.run domainReady targetTree
+        replacements
+      let extendedTree := IncDepRawContextSemanticTree.extend targetTree
+        domainResult.formationResult.targetFormationResult
+      let liftedReplacements := replacements.liftResult
+        domainResult.formationResult
+      let bodyResult := model.foldStrictTyping formationDispatcher
+        variableProvider readinessAlignment strictAlignment rebaseProvider
+        instantiateProvider bodyReady extendedTree liftedReplacements
+      let result := model.foldStrictLambda formationDispatcher readinessAlignment
+        rebaseProvider domainReady bodyReady.formationReady bodyReady targetTree
+        replacements bodyResult
+      result.castReady (strictAlignment.alignment _ _)
+  | .applyRule domainReady codomainReady resultReady functionReady
+      argumentReady =>
+      let functionResult := model.foldStrictTyping formationDispatcher
+        variableProvider readinessAlignment strictAlignment rebaseProvider
+        instantiateProvider functionReady targetTree replacements
+      let argumentResult := model.foldStrictTyping formationDispatcher
+        variableProvider readinessAlignment strictAlignment rebaseProvider
+        instantiateProvider argumentReady targetTree replacements
+      let result := model.foldStrictApply formationDispatcher readinessAlignment
+        rebaseProvider instantiateProvider domainReady codomainReady resultReady
+        functionReady argumentReady targetTree replacements functionResult
+        argumentResult
+      result.castReady (strictAlignment.alignment _ _)
+  | .pairRule domainReady codomainReady resultReady firstReady secondReady =>
+      let firstResult := model.foldStrictTyping formationDispatcher
+        variableProvider readinessAlignment strictAlignment rebaseProvider
+        instantiateProvider firstReady targetTree replacements
+      let secondResult := model.foldStrictTyping formationDispatcher
+        variableProvider readinessAlignment strictAlignment rebaseProvider
+        instantiateProvider secondReady targetTree replacements
+      let result := model.foldStrictPair formationDispatcher readinessAlignment
+        rebaseProvider instantiateProvider domainReady codomainReady resultReady
+        firstReady secondReady targetTree replacements firstResult secondResult
+      result.castReady (strictAlignment.alignment _ _)
+  | .firstRule domainReady codomainReady pairReady =>
+      let pairResult := model.foldStrictTyping formationDispatcher
+        variableProvider readinessAlignment strictAlignment rebaseProvider
+        instantiateProvider pairReady targetTree replacements
+      let result := model.foldStrictFirst formationDispatcher readinessAlignment
+        rebaseProvider domainReady codomainReady pairReady targetTree replacements
+        pairResult
+      result.castReady (strictAlignment.alignment _ _)
+  | .secondRule domainReady codomainReady resultReady pairReady =>
+      let pairResult := model.foldStrictTyping formationDispatcher
+        variableProvider readinessAlignment strictAlignment rebaseProvider
+        instantiateProvider pairReady targetTree replacements
+      let result := model.foldStrictSecond formationDispatcher readinessAlignment
+        rebaseProvider instantiateProvider domainReady codomainReady resultReady
+        pairReady targetTree replacements pairResult
+      result.castReady (strictAlignment.alignment _ _)
+  | .reflRule typeReady termReady =>
+      let termResult := model.foldStrictTyping formationDispatcher
+        variableProvider readinessAlignment strictAlignment rebaseProvider
+        instantiateProvider termReady targetTree replacements
+      let result := model.foldStrictRefl formationDispatcher readinessAlignment
+        rebaseProvider typeReady termReady targetTree replacements termResult
+      let targetReady := IncDepRawStrictTypingDispatchReady.ofCoherent
+        (IncDepRawCoherentTypingDispatchReady.reflRule typeReady termReady)
+      let formationEq := readinessAlignment.alignFormation
+        (IncDepRawCoherentFormationDispatchReady.identityStrict typeReady
+          ((IncDepRawStrictTypingDispatchReady.ofCoherent termReady)
+            |>.castFormationReady
+              (readinessAlignment.alignFormation termReady.formationReady
+                typeReady))
+          ((IncDepRawStrictTypingDispatchReady.ofCoherent termReady)
+            |>.castFormationReady
+              (readinessAlignment.alignFormation termReady.formationReady
+                typeReady)))
+        (IncDepRawCoherentTypingDispatchReady.reflRule typeReady
+          termReady).formationReady
+      let shifted := result.castFormationReady formationEq
+      shifted.castReady (strictAlignment.alignment _ targetReady)
+
+noncomputable def IncDepRawSubstitutionFiberModel.strictTypingDispatcher
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (formationDispatcher : IncDepRawStrictFormationSubstitutionDispatcher)
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (strictAlignment : IncDepRawStrictTypingReadinessAlignmentProvider)
+    (rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider)
+    (instantiateProvider : IncDepRawInstantiateFormationCoherenceProvider) :
+    IncDepRawStrictTypingSubstitutionDispatcher where
+  dispatch := fun ready targetTree replacements =>
+    model.foldStrictTyping formationDispatcher variableProvider
+      readinessAlignment strictAlignment rebaseProvider instantiateProvider
+      ready targetTree replacements
 
 noncomputable def IncDepRawReadyTypingSemanticResult.variable
     {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}

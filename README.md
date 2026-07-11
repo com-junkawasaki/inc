@@ -1437,6 +1437,15 @@ It currently establishes:
   rules therefore have both low-level strict constructors and fold-level branch
   combinators.  Only the single recursor that selects these branches and ties it
   to the formation dispatcher remains in the preservation assembly.
+  That selector is now implemented as `foldStrictTyping`: it structurally
+  recurses over the coherent typing readiness tree, invokes the corresponding
+  one of all eight checked branches, and transports each constructed strict
+  readiness back to the exact input index.  Reflexivity exercises the full
+  two-stage transport (formation readiness, then strict typing readiness).
+  `strictTypingDispatcher` packages this recursor as the interface consumed by
+  the formation fold.  Thus both recursive halves and both adapters are checked;
+  the remaining step is tying the two dispatcher values into one well-founded
+  mutual definition and exposing its preservation projections.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
