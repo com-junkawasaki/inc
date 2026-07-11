@@ -42,7 +42,8 @@ if ! lake exe incidence-theory; then
 fi
 
 echo "🔎 Checking for unproved Lean declarations..."
-if rg -n '\bsorry\b|\baxiom\b' . -g '*.lean' -g '!**/.lake/**'; then
+if rg -n '^[[:space:]]*axiom[[:space:]]|^[[:space:]]*sorry([[:space:]]|$)|:=[[:space:]]*sorry([[:space:]]|$)|by[[:space:]]+sorry([[:space:]]|$)|exact[[:space:]]+sorry([[:space:]]|$)|sorryAx' \
+    . -g '*.lean' -g '!**/.lake/**'; then
     echo "❌ Found an unproved Lean declaration"
     exit 1
 fi

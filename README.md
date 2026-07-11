@@ -185,6 +185,30 @@ It currently establishes:
   identity laws.
 - quotient-level membership for recursive sets, with empty-set exclusion,
   embeddings of each union summand, and extensionality proved as theorems.
+- the `inc_to_set` translation packaged as a functor from the discrete
+  incidence carrier category to the category of types.  It is always faithful
+  but never full or essentially surjective; explicit morphisms and objects
+  outside its image are constructed.  Every translated fiber is classified
+  exactly: nullary incidences give `ULift Bool`, non-nullary incidences give
+  `ULift Unit`.  Consequently the Boolean boundary-shape code is a complete
+  invariant for this translation.  For an arbitrary carrier map, preservation
+  of that code, existence of a boundary-shape translation, pointwise fiber
+  equivalence, and natural isomorphism of the induced Set-valued functors are
+  all proved equivalent.
+- a general bisimulation-quotient theory.  The quotient map is always
+  surjective, and is injective (equivalently bijective) exactly when the
+  incidence is bisimulation-faithful; non-faithfulness is exactly witnessed by
+  two distinct points collapsing to one quotient class.  Maps out of the
+  quotient satisfy the expected universal property: factorization exists
+  exactly for bisimulation-invariant maps and is unique, with checked beta,
+  identity, and composition laws for the canonical lift.
+  `BisimulationQuotientClassification` now produces an explicit type
+  equivalence between the quotient and any complete classification target.
+  Any two such targets are connected by a unique classification-preserving
+  equivalence, with identity, composition, symmetry, and target-transport
+  coherence laws.  The seven-element simplex model instantiates this result
+  as an explicit equivalence with its three shape classes, including computed
+  inverse representatives for vertex, edge, and face.
 
 The minimal category/functor/pushout vocabulary is also formalized. A functor
 is proved to map a pushout cocone to a commuting cocone; preservation of the
@@ -196,8 +220,11 @@ The terminal category supplies a concrete pushout-preserving identity
 translation, while the trivial incidence model supplies concrete T2–T4
 witnesses.
 
-Pushout universality, generic boundary-square-zero, linear completeness, and
-  translation preservation need additional categorical or linear hypotheses.
+Pushout universality and generic boundary-square-zero need additional
+categorical or linear hypotheses.  Linear-observation completeness and the
+boundary-shape/Set translation preservation-and-reflection results are proved
+under their explicit hypotheses; they are not asserted for arbitrary
+translations.
 For example, `BoundaryRowBalanced` is now the explicit checked hypothesis
 under which the derived Laplacian has zero row and column sums.
 Pointwise boundary equality transports this balance condition and its
