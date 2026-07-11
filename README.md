@@ -903,6 +903,13 @@ It currently establishes:
   differences while preserving the exact renamed term/type indices.  Typing
   Pi/Sigma/Id constructors still need explicit handling of their
   `instantiate_rename` type equalities.
+  The derivation-independent API now also closes variable readiness, identity
+  formation, lambda typing, first projection, and reflexivity typing.  These
+  constructors compose the renamed child derivations directly and retain their
+  readiness evidence.  Of the eight typing-readiness constructors, only the
+  three genuinely index-transporting cases—application, dependent pairing, and
+  second projection—remain; the other five now rename without any derivation
+  equality assumption.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

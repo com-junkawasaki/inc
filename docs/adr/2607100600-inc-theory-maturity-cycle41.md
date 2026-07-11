@@ -440,6 +440,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   derivationとreadiness witnessをexistentialに保持し、正確なrenamed term/type indexは維持しつつderivation
   choiceの差を吸収する。Base/Unitのatomic constructorに加え、lifted renamingを使うformation Pi/Sigma
   compositionをcheckedにした。typing Pi/Sigma/Idには`instantiate_rename` type equalityの明示処理が残る。
+- proof-index-independent APIをvariable readiness、identity formation、typing lambda、first projection、
+  reflexivityへ拡張した。renamed child derivationとreadiness evidenceを直接合成する。typing readinessの
+  8 constructor中、残るのは実際にindex transportを行うapplication、dependent pair、second projectionの
+  3 branchだけであり、他の5 branchはderivation equality仮定なしでrename可能になった。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
