@@ -798,6 +798,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `dispatchStrictApplyCanonical`/`dispatchStrictPairCanonical`/`dispatchStrictSecondCanonical`を追加した。これらは`instantiateCanonical`を直接
   return/consumeするためinstantiate-coherence providerを要求しない。一般保存foldは独立dispatchされたstructural formation treeを尊重するが、canonical
   formation resultsを選ぶclientは3 rulesすべてをprovider-free fragmentで実行できる。
+- canonical choiceを相互再帰全体へ拡張した。`preserveFormationCanonical`/`preserveTypingCanonical`はdependent 3 handlersをcanonical版へ差し替え、
+  `preservationCanonical`が両者をbundleする。`IncDepRawCanonicalSubstitutionPreservationHypotheses`はvariable replacement、coherent readiness alignment、
+  general fiber rebaseの3 fieldsだけを持つため、instantiate coherenceは孤立constructorだけでなくcomplete canonical preservation theoremから除去された。
+  独立dispatchされたstructural resultをexactに尊重する場合は従来の4-hypothesis general theoremを使う。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

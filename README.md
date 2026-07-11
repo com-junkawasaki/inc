@@ -1515,6 +1515,15 @@ It currently establishes:
   The general preservation fold still follows the independently dispatched
   structural formation tree, but clients that choose canonical formation results
   can now execute all three dependent rules in the provider-free fragment.
+  This choice now extends through the entire mutual recursion.
+  `preserveFormationCanonical` and `preserveTypingCanonical` replace the three
+  dependent handlers with their canonical versions, and
+  `preservationCanonical` bundles them.  Its hypotheses structure has only three
+  fields—variable replacement, coherent readiness alignment, and general fiber
+  rebase—so instantiate coherence has been removed from the complete canonical
+  preservation theorem, not merely from isolated constructors.  The general
+  four-hypothesis theorem remains available when an independently dispatched
+  structural result must be preserved exactly.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
