@@ -2875,6 +2875,25 @@ def IncDepRawFormationSemanticResult.identity
   semanticType := IncIdentityType typeResult.semanticType
     leftSemantic rightSemantic
 
+inductive IncDepRawContextSemanticTree :
+    {context : List IncDepRawType} →
+    {wellFormed : IncDepRawContext.WellFormed context} →
+    (result : IncDepRawContextSemanticResult.{u} wellFormed) → Type (u + 2)
+  | empty : IncDepRawContextSemanticTree incDepRawEmptyContextSemantic
+  | extend {context : List IncDepRawType} {type : IncDepRawType}
+      {contextWellFormed : IncDepRawContext.WellFormed context}
+      {typeWellFormed : IncDepRawWellFormed context type}
+      {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+      (tail : IncDepRawContextSemanticTree contextResult)
+      (head : IncDepRawFormationSemanticResult.{u} typeWellFormed contextResult) :
+      IncDepRawContextSemanticTree
+        (contextResult.extend (typeWellFormed := typeWellFormed)
+          head.semanticType)
+
+def incDepRawEmptyContextSemanticTree :
+    IncDepRawContextSemanticTree incDepRawEmptyContextSemantic :=
+  IncDepRawContextSemanticTree.empty
+
 structure IncDepRawTypingSemanticResult
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} (typing : IncDepRawHasType context term type)
@@ -2940,6 +2959,24 @@ def IncDepRawLookupSemanticResult.toTyping
     IncDepRawTypingSemanticResult (IncDepRawHasType.varRule lookup)
       contextResult lookupResult.semanticType :=
   IncDepRawTypingSemanticResult.variable lookupResult.semanticTerm
+
+noncomputable def IncDepRawContextSemanticTree.interpretLookup
+    {context : List IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    (tree : IncDepRawContextSemanticTree contextResult)
+    {position : Nat} {type : IncDepRawType}
+    (lookup : IncDepRawLookup context position type) :
+    IncDepRawLookupSemanticResult lookup contextResult := by
+  induction tree generalizing position type with
+  | empty => cases lookup
+  | extend tail head ih =>
+      cases lookup with
+      | here =>
+          exact IncDepRawLookupSemanticResult.here head.semanticType
+      | there previous =>
+          exact IncDepRawLookupSemanticResult.there (ih previous)
+            head.semanticType
 
 def IncDepRawTypingSemanticResult.unit
     {context : List IncDepRawType}

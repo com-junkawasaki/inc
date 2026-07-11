@@ -255,6 +255,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `IncDepRawTypingDeeplyWellFormed`を追加した。これをcontext/type/root typing certificationと
   束ねた`IncDepRawDeepCertifiedTyping`を定義し、Pi/reflとSigma/pair例をdeep certifyした。
   mutual semantic foldに必要な全intermediate formation dataが明示的に揃った。
+- semantic contextのconstructor historyを保持するdependent treeを追加した。empty nodeはempty
+  semantic context、extend nodeはtail treeとinterpreted head formationを保持する。このtreeの
+  構造再帰でlookup interpreterを実装し、emptyはimpossible、newestはextension variable、olderは
+  tail lookupを再帰interpret後projectionでreindexする。任意depth variableのsemantic termが
+  自動生成され、残るfold作業はformation/typing recursionをこのcontext treeと調整すること。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

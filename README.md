@@ -626,6 +626,15 @@ It currently establishes:
   Pi/reflexivity and Sigma/pair examples are deeply certified.  This supplies the
   intermediate formation data that application and projection branches of the
   mutual semantic fold could not recover from root certification alone.
+  Semantic contexts now retain their constructor history in a dependent tree:
+  the empty node records the empty semantic context, while each extension stores
+  the tail tree and the interpreted head formation.  Structural recursion over
+  this tree implements lookup interpretation automatically.  The empty case is
+  impossible, the newest case returns the semantic extension variable, and the
+  older case recursively interprets the tail lookup before projection reindexing.
+  Arbitrary-depth variables therefore no longer require a manually supplied
+  semantic term; the remaining fold work is coordinating formation and typing
+  recursion around this context tree.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
