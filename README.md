@@ -1145,6 +1145,10 @@ It currently establishes:
   the canonical Pi package internally and consume only recursive child results
   (plus the raw instantiated formation required by application).  The dispatcher
   no longer carries Pi laws through either typing branch.
+  Sigma typing is model-dispatched too: `model.pair`, `model.first`, and
+  `model.second` obtain the canonical Sigma package internally.  Together with
+  unit, refl, lambda, and apply, every non-variable typing constructor is now in
+  the model algebra.  Variable dispatch remains the lookup/replacement bridge.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

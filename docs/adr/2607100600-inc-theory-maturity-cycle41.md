@@ -593,6 +593,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - `model.lambda`/`model.apply`を追加した。canonical Pi coherence packageはmodel内部で取得され、recursive child results
   （applyでは加えてraw instantiated formation）だけからtyping resultを返す。dispatcherがPi lawsをtyping branchへ
   明示搬送する必要を除去した。
+- `model.pair`/`model.first`/`model.second`もcanonical Sigma packageを内部取得する形で追加した。unit/refl/lambda/applyと
+  合わせ、variable以外の全typing constructorsがmodel algebraへ入った。残るtyping constructor境界はlookup/replacementを
+  接続するvariable dispatchである。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
