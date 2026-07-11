@@ -482,6 +482,94 @@ theorem BisimulationQuotientClassification.canonicalBoundary_unique
   rcases classification.surjective q with ⟨x, rfl⟩
   rw [realizes, classification.canonicalBoundary_classify]
 
+theorem approxBisim_typeFunc_eq
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {x y : I} (bisimilar : approxBisim inc x y) :
+    inc.typeFunc x = inc.typeFunc y := by
+  rcases bisimilar with ⟨relation, isBisimulation, related⟩
+  exact (isBisimulation x y related).left
+
+def BisimulationQuotientClassification.typeInvariant
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (_classification : BisimulationQuotientClassification (Q := Q) inc) :
+    BisimulationInvariantMap inc inc.typeFunc :=
+  fun _ _ bisimilar => approxBisim_typeFunc_eq bisimilar
+
+noncomputable def BisimulationQuotientClassification.canonicalType
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc) :
+    Q → T :=
+  bisimulationQuotientLift inc inc.typeFunc classification.typeInvariant ∘
+    classification.equivalence.inverse
+
+theorem BisimulationQuotientClassification.canonicalType_classify
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (x : I) :
+    classification.canonicalType (classification.classify x) =
+      inc.typeFunc x := by
+  unfold canonicalType
+  change bisimulationQuotientLift inc inc.typeFunc classification.typeInvariant
+      (classification.equivalence.inverse (classification.classify x)) = _
+  have inverseClassify := classification.equivalence.inverse_forward
+    (Quotient.mk (approxBisimSetoid inc) x)
+  change classification.equivalence.inverse (classification.classify x) =
+    Quotient.mk (approxBisimSetoid inc) x at inverseClassify
+  rw [inverseClassify]
+  rfl
+
+theorem BisimulationQuotientClassification.canonicalType_unique
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (candidate : Q → T)
+    (realizes : ∀ x, candidate (classification.classify x) = inc.typeFunc x) :
+    candidate = classification.canonicalType := by
+  funext q
+  rcases classification.surjective q with ⟨x, rfl⟩
+  rw [realizes, classification.canonicalType_classify]
+
+theorem BisimulationQuotientClassification.canonicalBoundary_type_consistent
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (boundaryInvariant : classification.BoundaryInvariant) :
+    ∀ (q : Q) (e : Endpoint Q R),
+      e ∈ classification.canonicalBoundary boundaryInvariant q →
+      classification.canonicalType e.i = classification.canonicalType q := by
+  intro q e member
+  rcases classification.surjective q with ⟨x, rfl⟩
+  rw [classification.canonicalBoundary_classify] at member
+  rcases List.mem_map.mp member with ⟨sourceEndpoint, sourceMember, endpointEq⟩
+  subst e
+  simp only [BisimulationQuotientClassification.canonicalType_classify]
+  exact inc.type_consistent x sourceEndpoint sourceMember
+
+theorem BisimulationQuotientClassification.canonicalBoundary_sign_rules
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (boundaryInvariant : classification.BoundaryInvariant) :
+    ∀ (q : Q) (e : Endpoint Q R),
+      e ∈ classification.canonicalBoundary boundaryInvariant q →
+      e.sign = Sign.neg ∨ e.sign = Sign.zero ∨ e.sign = Sign.pos := by
+  intro q e member
+  rcases classification.surjective q with ⟨x, rfl⟩
+  rw [classification.canonicalBoundary_classify] at member
+  rcases List.mem_map.mp member with ⟨sourceEndpoint, sourceMember, endpointEq⟩
+  subst e
+  exact inc.sign_rules x sourceEndpoint sourceMember
+
+theorem BisimulationQuotientClassification.canonicalBoundary_multiplicities
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (boundaryInvariant : classification.BoundaryInvariant) :
+    ∀ (q : Q) (e : Endpoint Q R),
+      e ∈ classification.canonicalBoundary boundaryInvariant q → e.mult ≥ 1 := by
+  intro q e member
+  rcases classification.surjective q with ⟨x, rfl⟩
+  rw [classification.canonicalBoundary_classify] at member
+  rcases List.mem_map.mp member with ⟨sourceEndpoint, sourceMember, endpointEq⟩
+  subst e
+  exact inc.multiplicities x sourceEndpoint sourceMember
+
 def BisimulationQuotientClassification.mappedSourceGlue
     {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
     (classification : BisimulationQuotientClassification (Q := Q) inc)
@@ -580,6 +668,84 @@ theorem BisimulationQuotientClassification.canonicalGlue_unit_right
   rcases classification.surjective q with ⟨x, rfl⟩
   rw [classification.canonicalGlue_classify]
   simp [BisimulationQuotientClassification.mappedSourceGlue, inc.unit_right]
+
+/- The full coherence package is defined below, after
+   `IncidenceCandidateData`, which it constructs. -/
+/-
+structure CanonicalQuotientIncidenceCoherence
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc) where
+  boundaryInvariant : classification.BoundaryInvariant
+  glueInvariant : classification.GlueInvariant
+  boundary_no_self : ∀ q,
+    ¬ ∃ e ∈ classification.canonicalBoundary boundaryInvariant q, e.i = q
+  glue_type_preserve : ∀ x y q,
+    classification.mappedSourceGlue x y = some q →
+      classification.canonicalType q = inc.typeFunc x
+
+noncomputable def CanonicalQuotientIncidenceCoherence.candidate
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {inc : Incidence I R T}
+    {classification : BisimulationQuotientClassification (Q := Q) inc}
+    (coherence : CanonicalQuotientIncidenceCoherence classification) :
+    IncidenceCandidateData Q R T where
+  boundary := classification.canonicalBoundary coherence.boundaryInvariant
+  typeFunc := classification.canonicalType
+  glue := classification.canonicalGlue coherence.glueInvariant
+  unit := classification.classify inc.unit
+  guards := Guards.permissive Q
+  type_consistent :=
+    classification.canonicalBoundary_type_consistent coherence.boundaryInvariant
+  sign_rules :=
+    classification.canonicalBoundary_sign_rules coherence.boundaryInvariant
+  multiplicities :=
+    classification.canonicalBoundary_multiplicities coherence.boundaryInvariant
+  unit_left := classification.canonicalGlue_unit_left coherence.glueInvariant
+  unit_right := classification.canonicalGlue_unit_right coherence.glueInvariant
+  type_preserve := by
+    intro q r k _ glueEq
+    rcases classification.surjective q with ⟨x, rfl⟩
+    rcases classification.surjective r with ⟨y, rfl⟩
+    rw [classification.canonicalGlue_classify] at glueEq
+    exact (coherence.glue_type_preserve x y k glueEq).trans
+      (classification.canonicalType_classify x).symm
+
+theorem CanonicalQuotientIncidenceCoherence.candidate_noBoundarySelfLoop
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {inc : Incidence I R T}
+    {classification : BisimulationQuotientClassification (Q := Q) inc}
+    (coherence : CanonicalQuotientIncidenceCoherence classification) :
+    coherence.candidate.HasNoBoundarySelfLoop :=
+  coherence.boundary_no_self
+
+noncomputable def CanonicalQuotientIncidenceCoherence.toIncidence
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {inc : Incidence I R T}
+    {classification : BisimulationQuotientClassification (Q := Q) inc}
+    (coherence : CanonicalQuotientIncidenceCoherence classification) :
+    Incidence Q R T :=
+  coherence.candidate.toIncidence coherence.candidate_noBoundarySelfLoop
+
+theorem CanonicalQuotientIncidenceCoherence.toIncidence_boundary_classify
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {inc : Incidence I R T}
+    {classification : BisimulationQuotientClassification (Q := Q) inc}
+    (coherence : CanonicalQuotientIncidenceCoherence classification) (x : I) :
+    coherence.toIncidence.boundary (classification.classify x) =
+      classification.mappedSourceBoundary x :=
+  classification.canonicalBoundary_classify coherence.boundaryInvariant x
+
+theorem CanonicalQuotientIncidenceCoherence.toIncidence_glue_classify
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {inc : Incidence I R T}
+    {classification : BisimulationQuotientClassification (Q := Q) inc}
+    (coherence : CanonicalQuotientIncidenceCoherence classification) (x y : I) :
+    coherence.toIncidence.glue
+        (classification.classify x) (classification.classify y) =
+      classification.mappedSourceGlue x y :=
+  classification.canonicalGlue_classify coherence.glueInvariant x y
+-/
 
 noncomputable def BisimulationQuotientClassification.targetEquivalence
     {I R T Q₁ Q₂ : Type u} [DecidableEq I] {inc : Incidence I R T}
@@ -896,6 +1062,80 @@ theorem IncidenceCandidateData.realizedBy_iff_noBoundarySelfLoop
     simpa [boundaryEq] using selfLoop
   · intro noSelfLoop
     exact ⟨data.toIncidence noSelfLoop, rfl, rfl, rfl, rfl, rfl⟩
+
+structure CanonicalQuotientIncidenceCoherence
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc) where
+  boundaryInvariant : classification.BoundaryInvariant
+  glueInvariant : classification.GlueInvariant
+  boundary_no_self : ∀ q,
+    ¬ ∃ e ∈ classification.canonicalBoundary boundaryInvariant q, e.i = q
+  glue_type_preserve : ∀ x y q,
+    classification.mappedSourceGlue x y = some q →
+      classification.canonicalType q = inc.typeFunc x
+
+noncomputable def CanonicalQuotientIncidenceCoherence.candidate
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {inc : Incidence I R T}
+    {classification : BisimulationQuotientClassification (Q := Q) inc}
+    (coherence : CanonicalQuotientIncidenceCoherence classification) :
+    IncidenceCandidateData Q R T where
+  boundary := classification.canonicalBoundary coherence.boundaryInvariant
+  typeFunc := classification.canonicalType
+  glue := classification.canonicalGlue coherence.glueInvariant
+  unit := classification.classify inc.unit
+  guards := Guards.permissive Q
+  type_consistent :=
+    classification.canonicalBoundary_type_consistent coherence.boundaryInvariant
+  sign_rules :=
+    classification.canonicalBoundary_sign_rules coherence.boundaryInvariant
+  multiplicities :=
+    classification.canonicalBoundary_multiplicities coherence.boundaryInvariant
+  unit_left := classification.canonicalGlue_unit_left coherence.glueInvariant
+  unit_right := classification.canonicalGlue_unit_right coherence.glueInvariant
+  type_preserve := by
+    intro q r k _ glueEq
+    rcases classification.surjective q with ⟨x, rfl⟩
+    rcases classification.surjective r with ⟨y, rfl⟩
+    rw [classification.canonicalGlue_classify] at glueEq
+    exact (coherence.glue_type_preserve x y k glueEq).trans
+      (classification.canonicalType_classify x).symm
+
+theorem CanonicalQuotientIncidenceCoherence.candidate_noBoundarySelfLoop
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {inc : Incidence I R T}
+    {classification : BisimulationQuotientClassification (Q := Q) inc}
+    (coherence : CanonicalQuotientIncidenceCoherence classification) :
+    coherence.candidate.HasNoBoundarySelfLoop :=
+  coherence.boundary_no_self
+
+noncomputable def CanonicalQuotientIncidenceCoherence.toIncidence
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {inc : Incidence I R T}
+    {classification : BisimulationQuotientClassification (Q := Q) inc}
+    (coherence : CanonicalQuotientIncidenceCoherence classification) :
+    Incidence Q R T :=
+  coherence.candidate.toIncidence coherence.candidate_noBoundarySelfLoop
+
+theorem CanonicalQuotientIncidenceCoherence.toIncidence_boundary_classify
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {inc : Incidence I R T}
+    {classification : BisimulationQuotientClassification (Q := Q) inc}
+    (coherence : CanonicalQuotientIncidenceCoherence classification) (x : I) :
+    coherence.toIncidence.boundary (classification.classify x) =
+      classification.mappedSourceBoundary x :=
+  classification.canonicalBoundary_classify coherence.boundaryInvariant x
+
+theorem CanonicalQuotientIncidenceCoherence.toIncidence_glue_classify
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {inc : Incidence I R T}
+    {classification : BisimulationQuotientClassification (Q := Q) inc}
+    (coherence : CanonicalQuotientIncidenceCoherence classification) (x y : I) :
+    coherence.toIncidence.glue
+        (classification.classify x) (classification.classify y) =
+      classification.mappedSourceGlue x y :=
+  classification.canonicalGlue_classify coherence.glueInvariant x y
 
 def GradedIncidenceData.candidate
     {Q QR QT : Type u} [DecidableEq Q]

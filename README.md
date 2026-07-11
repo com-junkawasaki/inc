@@ -434,6 +434,16 @@ It currently establishes:
   condition (two bisimilar vertices produce different mapped glue results
   against the face), formally explaining why `shapeIncidence.glue` must be an
   independently chosen operation rather than descended source glue.
+  Source `typeFunc` always descends—bisimilarity preserves types by
+  definition—and its canonical lift has beta and uniqueness laws.  Together
+  with canonical boundary it automatically satisfies type consistency, sign
+  validity, and positive multiplicity.  Finally,
+  `CanonicalQuotientIncidenceCoherence` packages boundary/glue invariance,
+  absence of descended self-loops, and glue type preservation; from this
+  certificate the library constructs a complete quotient Incidence with
+  permissive guards and proves exact boundary/glue beta laws.  Transport of a
+  non-permissive source guard policy, rather than construction of an Incidence
+  itself, remains a separate refinement.
 
 The minimal category/functor/pushout vocabulary is also formalized. A functor
 is proved to map a pushout cocone to a commuting cocone; preservation of the

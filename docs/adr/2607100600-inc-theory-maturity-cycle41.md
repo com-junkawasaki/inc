@@ -49,12 +49,17 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   descent の一意性、beta、左右 unit law を証明済み。simplex 分類ではこの不変性が
   実際に偽であり、`shapeIncidence.glue` が source glue の descent ではない理由を
   一般条件の失敗として示した。
+- `typeFunc` は bisimulation が型を保存する定義から無条件に canonical descent し、
+  beta・一意性を満たす。canonical boundary と組み合わせた type consistency、sign
+  rule、positive multiplicity も source 公理から transport される。boundary/glue
+  invariance、no-self-loop、glue type preservation を束ねる coherence certificate から
+  permissive guards を持つ完全な quotient Incidence を構成し、boundary/glue beta 則を
+  証明済み。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」ではなく、非可算 carrier への完全性条件の拡張、Incidence 固有の
 意味論とのさらに強い接続、依存型・圏論の内部再構成、より広い数学ライブラリ化、
-および boundary/glue が descent した後に type/guard/type-preservation を含む全
-Incidence 構造が source からいつ transport できるかという coherence 条件である
+および non-permissive な source guard policy 自体を quotient へ transport する条件である
 （boundary と binary glue の descent は各 invariance 条件と必要十分かつ一意、raw
 target data の実現可能性は no-self-loop と必要十分であり、さらに grade-decreasing
 条件から従うことまで現在証明済み）。
