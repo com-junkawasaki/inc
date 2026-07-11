@@ -229,6 +229,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `IncDepRawCertifiedTyping`を追加し、dependent Pi/reflとSigma/pairのclosed例をcertifyした。
   certified judgmentがtype-aware renamingとtyped dependent substitutionで保存されることも
   証明。general semantic interpreter signatureを妨げていた暗黙premiseを除去した。
+- semantic result APIを任意certified telescopeへ一般化した。well-formed raw contextにsemantic
+  contextを割り当て、semantic dependent extensionでcontextを延長し、certified open judgmentに
+  contextual typeとそのtermを割り当てる。empty-context derivationのproof indexをcase analysis
+  するclosed-to-general embeddingを構成し、Pi/Sigma例を一般APIへ載せた。全certified judgmentを
+  生成するrecursive constructor interpreter自体は引き続き未完である。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

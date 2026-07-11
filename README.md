@@ -587,6 +587,14 @@ It currently establishes:
   substitution whenever the destination/source telescope is certified.  This
   removes an implicit premise that previously prevented a well-typed general
   semantic interpreter signature.
+  The semantic result API now works over arbitrary certified telescopes.  A
+  well-formed raw context is assigned a semantic context, context extension is
+  realized by semantic dependent extension, and a certified open judgment is
+  assigned a contextual type together with a term of that type.  The earlier
+  closed result embeds into this general API with proof-index-aware elimination
+  of the unique empty-context derivation; the dependent Pi and Sigma examples
+  are checked through that embedding.  The recursive constructor interpreter
+  producing these results for every certified judgment remains pending.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
