@@ -2,6 +2,7 @@ import IncidenceTheory
 import IncidenceTheory.FiniteSet
 import IncidenceTheory.HFSets
 import IncidenceTheory.Logic
+import IncidenceTheory.Coherent
 
 /- Merkle-ID: implementation.graph_model
    story.jsonnet → implementation.nodes.graph_model
@@ -1813,6 +1814,14 @@ def terminalChainComplexPushoutIncidence :
     intro idx
     exact empty_boundaries_square_zero trivialIncidence idx (by intro i; rfl)
   glue_pushout := terminalIncidencePushoutSpec
+
+noncomputable def terminalCompleteLogic : CompletePropositionalInternalLogic Unit :=
+  completeLogicOfAtomCoding (fun _ => ()) (fun _ => 0) (fun _ => rfl)
+
+noncomputable def terminalCoherentIncidence :
+    CoherentIncidence Unit GraphRole GraphType where
+  chainPushout := terminalChainComplexPushoutIncidence
+  completeLogic := terminalCompleteLogic
 
 example (idx : List Unit) (i k : Unit) (hi : i ∈ idx) (hk : k ∈ idx) :
     boundary_composition terminalChainComplexPushoutIncidence.inc idx i k = 0 :=
