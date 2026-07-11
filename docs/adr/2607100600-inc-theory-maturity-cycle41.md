@@ -649,6 +649,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   alignmentをdispatch packageと一体で返す`IncDepRawTypingSubstitutionAlignedDispatchResult`と、そのtransport済みtermを返す
   `typingResult`を追加した。`dispatchFirstAligned`が第一射影branchをこの強い返り値へdefinitionally packageできることを
   証明し、mutual recursionのoutput shapeを実際のnon-leaf branchで検証した。
+- 強い返り値を`dispatchApplyAligned`/`dispatchPairAligned`/`dispatchSecondAligned`へ拡張し、dependent non-leaf 4 branch
+  すべてを覆盖した。第二射影のdependent formation計算は`secondCanonical`として命名し、dispatcher本体とalignment
+  certificateが文字通り同じresultを共有する。各branch outputはpost-hoc semantic castなしにcanonical formation resultへ
+  align済みとなった。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

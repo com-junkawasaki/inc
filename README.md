@@ -1237,6 +1237,12 @@ It currently establishes:
   expected canonical result; its `typingResult` projects the transported term.
   `dispatchFirstAligned` proves the first real branch inhabits this stronger
   return type definitionally, establishing the output shape for mutual recursion.
+  The stronger return type now covers every dependent non-leaf branch through
+  `dispatchApplyAligned`, `dispatchPairAligned`, and `dispatchSecondAligned` as
+  well.  `secondCanonical` names the dependent second-projection formation
+  calculation so the dispatcher and its alignment certificate share literally
+  the same result.  All four branch outputs therefore expose their canonical
+  formation result without a post-hoc semantic cast.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
