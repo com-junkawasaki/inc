@@ -1896,6 +1896,51 @@ theorem hfRecursiveNatAdditionGraph_total
   exact (hfRecursiveNatAdditionGraph_apply_iff bound _ _).mpr
     ⟨left, right, leftLess, rightLess, rfl, rfl⟩
 
+theorem hfRecursiveNatAdditionGraph_on_nats_iff
+    (bound left right : Nat) (leftLess : left < bound)
+    (rightLess : right < bound) (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat left) (hfRecursiveNat right)) output)
+        (hfRecursiveNatAdditionGraph bound) ↔
+      output = hfRecursiveNat (left + right) := by
+  constructor
+  · intro applies
+    rcases (hfRecursiveNatAdditionGraph_apply_iff bound _ _).mp applies with
+      ⟨actualLeft, actualRight, _, _, inputEq, outputEq⟩
+    rcases hfRecursiveOrderedPair_injective inputEq with
+      ⟨leftEq, rightEq⟩
+    have actualLeftEq : left = actualLeft := hfRecursiveNat_injective leftEq
+    have actualRightEq : right = actualRight := hfRecursiveNat_injective rightEq
+    subst actualLeft
+    subst actualRight
+    exact outputEq
+  · intro outputEq
+    exact (hfRecursiveNatAdditionGraph_apply_iff bound _ _).mpr
+      ⟨left, right, leftLess, rightLess, rfl, outputEq⟩
+
+theorem hfRecursiveNatAdditionGraph_zero_right
+    (bound left : Nat) (leftLess : left < bound) (zeroLess : 0 < bound)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat left) (hfRecursiveNat 0)) output)
+        (hfRecursiveNatAdditionGraph bound) ↔
+      output = hfRecursiveNat left := by
+  rw [hfRecursiveNatAdditionGraph_on_nats_iff bound left 0 leftLess zeroLess,
+    Nat.add_zero]
+
+theorem hfRecursiveNatAdditionGraph_zero_left
+    (bound right : Nat) (zeroLess : 0 < bound) (rightLess : right < bound)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat 0) (hfRecursiveNat right)) output)
+        (hfRecursiveNatAdditionGraph bound) ↔
+      output = hfRecursiveNat right := by
+  rw [hfRecursiveNatAdditionGraph_on_nats_iff bound 0 right zeroLess rightLess,
+    Nat.zero_add]
+
 theorem hfRecursiveNatAdditionGraph_comm
     (bound left right : Nat) (leftLess : left < bound)
     (rightLess : right < bound) (output : HFRecursiveSet) :
@@ -2045,6 +2090,73 @@ theorem hfRecursiveNatMultiplicationGraph_total
   refine ⟨hfRecursiveNat (left * right), ?_⟩
   exact (hfRecursiveNatMultiplicationGraph_apply_iff bound _ _).mpr
     ⟨left, right, leftLess, rightLess, rfl, rfl⟩
+
+theorem hfRecursiveNatMultiplicationGraph_on_nats_iff
+    (bound left right : Nat) (leftLess : left < bound)
+    (rightLess : right < bound) (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat left) (hfRecursiveNat right)) output)
+        (hfRecursiveNatMultiplicationGraph bound) ↔
+      output = hfRecursiveNat (left * right) := by
+  constructor
+  · intro applies
+    rcases (hfRecursiveNatMultiplicationGraph_apply_iff bound _ _).mp applies with
+      ⟨actualLeft, actualRight, _, _, inputEq, outputEq⟩
+    rcases hfRecursiveOrderedPair_injective inputEq with
+      ⟨leftEq, rightEq⟩
+    have actualLeftEq : left = actualLeft := hfRecursiveNat_injective leftEq
+    have actualRightEq : right = actualRight := hfRecursiveNat_injective rightEq
+    subst actualLeft
+    subst actualRight
+    exact outputEq
+  · intro outputEq
+    exact (hfRecursiveNatMultiplicationGraph_apply_iff bound _ _).mpr
+      ⟨left, right, leftLess, rightLess, rfl, outputEq⟩
+
+theorem hfRecursiveNatMultiplicationGraph_zero_right
+    (bound left : Nat) (leftLess : left < bound) (zeroLess : 0 < bound)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat left) (hfRecursiveNat 0)) output)
+        (hfRecursiveNatMultiplicationGraph bound) ↔
+      output = hfRecursiveNat 0 := by
+  rw [hfRecursiveNatMultiplicationGraph_on_nats_iff bound left 0 leftLess zeroLess,
+    Nat.mul_zero]
+
+theorem hfRecursiveNatMultiplicationGraph_zero_left
+    (bound right : Nat) (zeroLess : 0 < bound) (rightLess : right < bound)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat 0) (hfRecursiveNat right)) output)
+        (hfRecursiveNatMultiplicationGraph bound) ↔
+      output = hfRecursiveNat 0 := by
+  rw [hfRecursiveNatMultiplicationGraph_on_nats_iff bound 0 right zeroLess rightLess,
+    Nat.zero_mul]
+
+theorem hfRecursiveNatMultiplicationGraph_one_right
+    (bound left : Nat) (leftLess : left < bound) (oneLess : 1 < bound)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat left) (hfRecursiveNat 1)) output)
+        (hfRecursiveNatMultiplicationGraph bound) ↔
+      output = hfRecursiveNat left := by
+  rw [hfRecursiveNatMultiplicationGraph_on_nats_iff bound left 1 leftLess oneLess,
+    Nat.mul_one]
+
+theorem hfRecursiveNatMultiplicationGraph_one_left
+    (bound right : Nat) (oneLess : 1 < bound) (rightLess : right < bound)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat 1) (hfRecursiveNat right)) output)
+        (hfRecursiveNatMultiplicationGraph bound) ↔
+      output = hfRecursiveNat right := by
+  rw [hfRecursiveNatMultiplicationGraph_on_nats_iff bound 1 right oneLess rightLess,
+    Nat.one_mul]
 
 theorem hfRecursiveNatMultiplicationGraph_comm
     (bound left right : Nat) (leftLess : left < bound)

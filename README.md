@@ -159,7 +159,9 @@ It currently establishes:
   with exact law `⟨m,n⟩ ↦ m*n` and checked functionality and totality on
   every bounded finite square.  Both internal application relations satisfy
   commutativity: swapping the two encoded inputs preserves and reflects
-  application to every output.
+  application to every output.  Evaluation on encoded naturals is classified
+  by an output-equality iff, from which the left/right additive identity,
+  multiplicative zero, and multiplicative identity laws are proved internally.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
