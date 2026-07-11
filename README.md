@@ -412,7 +412,12 @@ It currently establishes:
   a Sigma type, substitutions are assignment maps with identity/associative
   composition, and types and terms reindex functorially.  Extended contexts
   expose their projection and variable, while substitution extension satisfies
-  both projection and variable beta laws.  What remains is an independent raw
+  both projection and variable beta laws.  This semantic calculus now has
+  genuinely dependent connectives over context extension: dependent Pi with
+  lambda/application and beta/eta laws, and dependent Sigma with pairing,
+  first/second projections, both beta laws, and eta.  Codomains are indexed by
+  the extended assignment `⟨environment, value⟩`, rather than being ordinary
+  nondependent function or product types.  What remains is an independent raw
   telescope/term syntax and inductive typing judgment whose interpretation is
   this checked semantic calculus.  The first independent raw layer is now
   implemented: de Bruijn variables, unit, products, functions, pairing,

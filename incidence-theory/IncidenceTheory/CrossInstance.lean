@@ -751,6 +751,116 @@ theorem IncContext.Substitution.extend_variable
         (substitution.extend family term) = term := by
   rfl
 
+def IncPiType
+    {context : IncContext.{u}}
+    (domain : IncTypeInContext context)
+    (codomain : IncTypeInContext (context.extend domain)) :
+    IncTypeInContext context :=
+  fun assignment => ∀ value : domain assignment,
+    codomain ⟨assignment, value⟩
+
+def IncPiTerm.lambda
+    {context : IncContext.{u}}
+    {domain : IncTypeInContext context}
+    {codomain : IncTypeInContext (context.extend domain)}
+    (body : IncTerm codomain) :
+    IncTerm (IncPiType domain codomain) :=
+  fun assignment value => body ⟨assignment, value⟩
+
+def IncPiTerm.apply
+    {context : IncContext.{u}}
+    {domain : IncTypeInContext context}
+    {codomain : IncTypeInContext (context.extend domain)}
+    (function : IncTerm (IncPiType domain codomain))
+    (argument : IncTerm domain) :
+    IncTerm (fun assignment => codomain ⟨assignment, argument assignment⟩) :=
+  fun assignment => function assignment (argument assignment)
+
+theorem IncPiTerm.beta
+    {context : IncContext.{u}}
+    {domain : IncTypeInContext context}
+    {codomain : IncTypeInContext (context.extend domain)}
+    (body : IncTerm codomain) (argument : IncTerm domain) :
+    IncPiTerm.apply (IncPiTerm.lambda body) argument =
+      fun assignment => body ⟨assignment, argument assignment⟩ := by
+  rfl
+
+theorem IncPiTerm.eta
+    {context : IncContext.{u}}
+    {domain : IncTypeInContext context}
+    {codomain : IncTypeInContext (context.extend domain)}
+    (function : IncTerm (IncPiType domain codomain)) :
+    IncPiTerm.lambda
+      (fun extended => function extended.1 extended.2) = function := by
+  rfl
+
+def IncSigmaType
+    {context : IncContext.{u}}
+    (domain : IncTypeInContext context)
+    (codomain : IncTypeInContext (context.extend domain)) :
+    IncTypeInContext context :=
+  fun assignment => Sigma fun value : domain assignment =>
+    codomain ⟨assignment, value⟩
+
+def IncSigmaTerm.pair
+    {context : IncContext.{u}}
+    {domain : IncTypeInContext context}
+    {codomain : IncTypeInContext (context.extend domain)}
+    (first : IncTerm domain)
+    (second : IncTerm (fun assignment =>
+      codomain ⟨assignment, first assignment⟩)) :
+    IncTerm (IncSigmaType domain codomain) :=
+  fun assignment => ⟨first assignment, second assignment⟩
+
+def IncSigmaTerm.first
+    {context : IncContext.{u}}
+    {domain : IncTypeInContext context}
+    {codomain : IncTypeInContext (context.extend domain)}
+    (pair : IncTerm (IncSigmaType domain codomain)) :
+    IncTerm domain :=
+  fun assignment => (pair assignment).1
+
+def IncSigmaTerm.second
+    {context : IncContext.{u}}
+    {domain : IncTypeInContext context}
+    {codomain : IncTypeInContext (context.extend domain)}
+    (pair : IncTerm (IncSigmaType domain codomain)) :
+    IncTerm (fun assignment =>
+      codomain ⟨assignment, (pair assignment).1⟩) :=
+  fun assignment => (pair assignment).2
+
+theorem IncSigmaTerm.first_beta
+    {context : IncContext.{u}}
+    {domain : IncTypeInContext context}
+    {codomain : IncTypeInContext (context.extend domain)}
+    (first : IncTerm domain)
+    (second : IncTerm (fun assignment =>
+      codomain ⟨assignment, first assignment⟩)) :
+    IncSigmaTerm.first (IncSigmaTerm.pair first second) = first := by
+  rfl
+
+theorem IncSigmaTerm.second_beta
+    {context : IncContext.{u}}
+    {domain : IncTypeInContext context}
+    {codomain : IncTypeInContext (context.extend domain)}
+    (first : IncTerm domain)
+    (second : IncTerm (fun assignment =>
+      codomain ⟨assignment, first assignment⟩)) :
+    IncSigmaTerm.second (IncSigmaTerm.pair first second) = second := by
+  rfl
+
+theorem IncSigmaTerm.eta
+    {context : IncContext.{u}}
+    {domain : IncTypeInContext context}
+    {codomain : IncTypeInContext (context.extend domain)}
+    (pair : IncTerm (IncSigmaType domain codomain)) :
+    IncSigmaTerm.pair (IncSigmaTerm.first pair) (IncSigmaTerm.second pair) = pair := by
+  funext assignment
+  change ⟨(pair assignment).1, (pair assignment).2⟩ = pair assignment
+  generalize valueEq : pair assignment = value
+  cases value
+  rfl
+
 def IncIdentityFamily
     {I R T : Type u} [DecidableEq (I × I)]
     (pairIncidence : Incidence (I × I) R T) :

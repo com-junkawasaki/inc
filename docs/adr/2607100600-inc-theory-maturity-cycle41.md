@@ -100,6 +100,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   projection/variable と substitution extension を構成し、projection/variable beta 則も
   checked。残るのはこの意味論とは独立した raw telescope/term syntax と inductive
   typing derivation、および interpretation の soundness である。
+- semantic context extension 上に dependent Pi/Sigma を構成した。Pi formation、lambda、
+  application、beta/eta、Sigma formation、pair、first/second projections、両 beta、eta を
+  証明済み。codomain は extended assignment `⟨environment,value⟩` に依存し、通常の
+  nondependent function/product の別名ではない。
 - independent raw core syntax として de Bruijn variable、unit、product、function、pair、
   projections、lambda、application を定義し、context lookup と typing judgment を inductive
   derivation data として構成した。lookup determinism を証明し、任意の base-type model、
