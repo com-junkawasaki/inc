@@ -104,6 +104,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   application、beta/eta、Sigma formation、pair、first/second projections、両 beta、eta を
   証明済み。codomain は extended assignment `⟨environment,value⟩` に依存し、通常の
   nondependent function/product の別名ではない。
+- base substitution の dependent context lift を定義し、projection/newest variable と
+  の coherence を証明した。Pi/Sigma formation の reindex stability、Pi lambda/apply、
+  Sigma pair/first/second の substitution naturality も checked で、beta/eta だけでなく
+  context substitution discipline まで成立する。
 - independent raw core syntax として de Bruijn variable、unit、product、function、pair、
   projections、lambda、application を定義し、context lookup と typing judgment を inductive
   derivation data として構成した。lookup determinism を証明し、任意の base-type model、

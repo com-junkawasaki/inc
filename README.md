@@ -417,7 +417,12 @@ It currently establishes:
   lambda/application and beta/eta laws, and dependent Sigma with pairing,
   first/second projections, both beta laws, and eta.  Codomains are indexed by
   the extended assignment `⟨environment, value⟩`, rather than being ordinary
-  nondependent function or product types.  What remains is an independent raw
+  nondependent function or product types.  Base substitutions lift canonically
+  to extended contexts, commuting with projection and the newest variable.
+  Dependent Pi and Sigma formation are stable under this lift, and substitution
+  is natural for Pi lambda/application as well as Sigma pairing and both
+  projections.  Thus these connectives satisfy context-substitution discipline
+  in addition to their beta/eta laws.  What remains is an independent raw
   telescope/term syntax and inductive typing judgment whose interpretation is
   this checked semantic calculus.  The first independent raw layer is now
   implemented: de Bruijn variables, unit, products, functions, pairing,

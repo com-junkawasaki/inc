@@ -759,6 +759,43 @@ def IncPiType
   fun assignment => ∀ value : domain assignment,
     codomain ⟨assignment, value⟩
 
+def IncContext.Substitution.liftDependent
+    {source target : IncContext.{u}}
+    (substitution : source.Substitution target)
+    (domain : IncTypeInContext target) :
+    (source.extend (domain.reindex substitution)).Substitution
+      (target.extend domain) :=
+  fun extended => ⟨substitution extended.1, extended.2⟩
+
+theorem IncContext.Substitution.liftDependent_projection
+    {source target : IncContext.{u}}
+    (substitution : source.Substitution target)
+    (domain : IncTypeInContext target) :
+    (target.extendProjection domain).comp
+        (substitution.liftDependent domain) =
+      substitution.comp
+        (source.extendProjection (domain.reindex substitution)) := by
+  rfl
+
+theorem IncContext.Substitution.liftDependent_variable
+    {source target : IncContext.{u}}
+    (substitution : source.Substitution target)
+    (domain : IncTypeInContext target) :
+    (target.extendVariable domain).substitute
+        (substitution.liftDependent domain) =
+      source.extendVariable (domain.reindex substitution) := by
+  rfl
+
+theorem IncPiType.reindex
+    {source target : IncContext.{u}}
+    (substitution : source.Substitution target)
+    (domain : IncTypeInContext target)
+    (codomain : IncTypeInContext (target.extend domain)) :
+    (IncPiType domain codomain).reindex substitution =
+      IncPiType (domain.reindex substitution)
+        (codomain.reindex (substitution.liftDependent domain)) := by
+  rfl
+
 def IncPiTerm.lambda
     {context : IncContext.{u}}
     {domain : IncTypeInContext context}
@@ -794,6 +831,31 @@ theorem IncPiTerm.eta
       (fun extended => function extended.1 extended.2) = function := by
   rfl
 
+theorem IncPiTerm.lambda_substitute
+    {source target : IncContext.{u}}
+    (substitution : source.Substitution target)
+    {domain : IncTypeInContext target}
+    {codomain : IncTypeInContext (target.extend domain)}
+    (body : IncTerm codomain) :
+    (IncPiTerm.lambda body).substitute substitution =
+      IncPiTerm.lambda
+        (body.substitute (substitution.liftDependent domain)) := by
+  rfl
+
+theorem IncPiTerm.apply_substitute
+    {source target : IncContext.{u}}
+    (substitution : source.Substitution target)
+    {domain : IncTypeInContext target}
+    {codomain : IncTypeInContext (target.extend domain)}
+    (function : IncTerm (IncPiType domain codomain))
+    (argument : IncTerm domain) :
+    ∀ assignment,
+      (IncPiTerm.apply function argument).substitute substitution assignment =
+        function (substitution assignment)
+          (argument (substitution assignment)) := by
+  intro assignment
+  rfl
+
 def IncSigmaType
     {context : IncContext.{u}}
     (domain : IncTypeInContext context)
@@ -801,6 +863,16 @@ def IncSigmaType
     IncTypeInContext context :=
   fun assignment => Sigma fun value : domain assignment =>
     codomain ⟨assignment, value⟩
+
+theorem IncSigmaType.reindex
+    {source target : IncContext.{u}}
+    (substitution : source.Substitution target)
+    (domain : IncTypeInContext target)
+    (codomain : IncTypeInContext (target.extend domain)) :
+    (IncSigmaType domain codomain).reindex substitution =
+      IncSigmaType (domain.reindex substitution)
+        (codomain.reindex (substitution.liftDependent domain)) := by
+  rfl
 
 def IncSigmaTerm.pair
     {context : IncContext.{u}}
@@ -859,6 +931,43 @@ theorem IncSigmaTerm.eta
   change ⟨(pair assignment).1, (pair assignment).2⟩ = pair assignment
   generalize valueEq : pair assignment = value
   cases value
+  rfl
+
+theorem IncSigmaTerm.pair_substitute
+    {source target : IncContext.{u}}
+    (substitution : source.Substitution target)
+    {domain : IncTypeInContext target}
+    {codomain : IncTypeInContext (target.extend domain)}
+    (first : IncTerm domain)
+    (second : IncTerm (fun assignment =>
+      codomain ⟨assignment, first assignment⟩)) :
+    ∀ assignment,
+      (IncSigmaTerm.pair first second).substitute substitution assignment =
+        ⟨first (substitution assignment),
+          second (substitution assignment)⟩ := by
+  intro assignment
+  rfl
+
+theorem IncSigmaTerm.first_substitute
+    {source target : IncContext.{u}}
+    (substitution : source.Substitution target)
+    {domain : IncTypeInContext target}
+    {codomain : IncTypeInContext (target.extend domain)}
+    (pair : IncTerm (IncSigmaType domain codomain)) :
+    (IncSigmaTerm.first pair).substitute substitution =
+      fun assignment => (pair (substitution assignment)).1 := by
+  rfl
+
+theorem IncSigmaTerm.second_substitute
+    {source target : IncContext.{u}}
+    (substitution : source.Substitution target)
+    {domain : IncTypeInContext target}
+    {codomain : IncTypeInContext (target.extend domain)}
+    (pair : IncTerm (IncSigmaType domain codomain)) :
+    ∀ assignment,
+      (IncSigmaTerm.second pair).substitute substitution assignment =
+        (pair (substitution assignment)).2 := by
+  intro assignment
   rfl
 
 def IncIdentityFamily
