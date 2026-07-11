@@ -31,11 +31,16 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - nontrivial theorem として、内部平方和 `x*x + y*y = 0` から `x=0 ∧ y=0`、
   coprime pair の共通 divisor が `±1`、bounded Euclid lemma などを証明済み。
 - `verify.sh` は clean 56-job build、実行例、未証明宣言検査を通し、`sorryAx` は 0。
+- quotient target の一般十分条件として、自然数 grade が全 boundary edge で厳密に
+  減少する raw data から `Incidence` の well-foundedness を導出する構成を証明済み。
+  完全な bisimulation 分類と組み合わせる graded quotient presentation を定義し、
+  simplex-to-shape の成功例は grade 0/1/2 を用いてこの一般構成から得られる。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」ではなく、非可算 carrier への完全性条件の拡張、Incidence 固有の
 意味論とのさらに強い接続、依存型・圏論の内部再構成、より広い数学ライブラリ化、
-および quotient 成功条件の一般定理化である。
+および quotient 成功条件の必要十分条件への強化である（grade-decreasing という一般
+十分条件までは現在証明済み）。
 
 ## Context
 

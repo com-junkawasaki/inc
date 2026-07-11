@@ -645,6 +645,71 @@ structure BisimulationQuotientIncidencePresentation
     IncidenceBoundaryValuation target (classification.classify atom) ↔
       IncidenceBoundaryValuation source atom
 
+/- A reusable sufficient condition for constructing the target Incidence of a
+   quotient presentation.  The only structurally difficult Incidence
+   obligation on a collapsed carrier is absence of boundary self-loops.  A
+   natural-number grading which strictly decreases along every boundary edge
+   discharges that obligation uniformly. -/
+structure GradedIncidenceData (Q QR QT : Type u) [DecidableEq Q] where
+  boundary : Q → Boundary Q QR
+  typeFunc : Q → QT
+  glue : Q → Q → Option Q
+  unit : Q
+  guards : Guards Q
+  grade : Q → Nat
+  boundary_decreases : ∀ (q : Q) (e : Endpoint Q QR),
+    e ∈ boundary q → grade e.i < grade q
+  type_consistent : ∀ (q : Q) (e : Endpoint Q QR),
+    e ∈ boundary q → typeFunc e.i = typeFunc q
+  sign_rules : ∀ (q : Q) (e : Endpoint Q QR), e ∈ boundary q →
+    e.sign = Sign.neg ∨ e.sign = Sign.zero ∨ e.sign = Sign.pos
+  multiplicities : ∀ (q : Q) (e : Endpoint Q QR),
+    e ∈ boundary q → e.mult ≥ 1
+  unit_left : ∀ q, glue unit q = some q
+  unit_right : ∀ q, glue q unit = some q
+  type_preserve : ∀ {i j k}, guards.allow i j →
+    glue i j = some k → typeFunc k = typeFunc i
+
+def GradedIncidenceData.toIncidence
+    {Q QR QT : Type u} [DecidableEq Q]
+    (data : GradedIncidenceData Q QR QT) : Incidence Q QR QT where
+  boundary := data.boundary
+  typeFunc := data.typeFunc
+  glue := data.glue
+  unit := data.unit
+  guards := data.guards
+  type_consistent := data.type_consistent
+  sign_rules := data.sign_rules
+  multiplicities := data.multiplicities
+  well_founded := by
+    rintro q ⟨e, member, self⟩
+    have decreases := data.boundary_decreases q e member
+    rw [self] at decreases
+    exact Nat.lt_irrefl _ decreases
+  unit_left := data.unit_left
+  unit_right := data.unit_right
+  type_preserve := data.type_preserve
+
+structure GradedBisimulationQuotientPresentation
+    {I R T Q QR QT : Type u} [DecidableEq I] [DecidableEq Q]
+    (source : Incidence I R T) where
+  classification : BisimulationQuotientClassification (Q := Q) source
+  data : GradedIncidenceData Q QR QT
+  boundary_iff : ∀ atom,
+    IncidenceBoundaryValuation data.toIncidence (classification.classify atom) ↔
+      IncidenceBoundaryValuation source atom
+
+def GradedBisimulationQuotientPresentation.toPresentation
+    {I R T Q QR QT : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : Incidence I R T}
+    (graded : GradedBisimulationQuotientPresentation
+      (Q := Q) (QR := QR) (QT := QT) source) :
+    BisimulationQuotientIncidencePresentation
+      (Q := Q) (QR := QR) (QT := QT) source where
+  classification := graded.classification
+  target := graded.data.toIncidence
+  boundary_iff := graded.boundary_iff
+
 noncomputable def BisimulationQuotientIncidencePresentation.quotientEquivalence
     {I R T Q QR QT : Type u} [DecidableEq I] [DecidableEq Q]
     {source : Incidence I R T}
@@ -941,14 +1006,25 @@ def shapeBoundary : SimplexShape → Boundary SimplexShape SimplexRole
     , { i := .edgeShape, role := SimplexRole.dst, sign := Sign.neg, mult := 1 }
     , { i := .edgeShape, role := SimplexRole.dst, sign := Sign.pos, mult := 1 } ]
 
-def shapeIncidence : Incidence SimplexShape SimplexRole GraphType where
+def simplexShapeGrade : SimplexShape → Nat
+  | .vertex => 0
+  | .edgeShape => 1
+  | .faceShape => 2
+
+def shapeGradedIncidenceData :
+    GradedIncidenceData SimplexShape SimplexRole GraphType where
   boundary := shapeBoundary
   typeFunc := fun _ => GraphType.unit
   glue     := fun i j => if i = SimplexShape.vertex then some j else some i
   unit     := SimplexShape.vertex
   guards   := Guards.permissive SimplexShape
-  boundaryMatrix := fun _ _ => 0
-  laplacian := fun _ _ => 0
+  grade := simplexShapeGrade
+  boundary_decreases := by
+    intro i e h
+    cases i <;> simp [shapeBoundary] at h <;>
+      first
+        | (rcases h with h | h | h <;> subst h <;> simp [simplexShapeGrade])
+        | (rcases h with h | h <;> subst h <;> simp [simplexShapeGrade])
   type_consistent := fun i e h => rfl
   sign_rules := by
     intro i e h
@@ -958,27 +1034,31 @@ def shapeIncidence : Incidence SimplexShape SimplexRole GraphType where
     intro i e h
     cases i <;> simp [shapeBoundary] at h <;>
       first | (rcases h with h | h | h <;> subst h <;> simp) | (rcases h with h | h <;> subst h <;> simp)
-  well_founded := by
-    rintro i ⟨e, he, hei⟩
-    cases i <;> simp [shapeBoundary] at he <;>
-      first
-        | (rcases he with he | he | he <;> subst he <;> simp_all)
-        | (rcases he with he | he <;> subst he <;> simp_all)
   unit_left := by intro i; simp
   unit_right := by intro i; by_cases h : i = SimplexShape.vertex <;> simp [h]
   type_preserve := fun _ _ => rfl
 
-def simplexQuotientIncidencePresentation :
-    BisimulationQuotientIncidencePresentation
+def shapeIncidence : Incidence SimplexShape SimplexRole GraphType :=
+  shapeGradedIncidenceData.toIncidence
+
+def simplexGradedQuotientPresentation :
+    GradedBisimulationQuotientPresentation
       (Q := SimplexShape) (QR := SimplexRole) (QT := GraphType)
       simplexIncidence where
   classification := simplexBisimulationQuotientClassification
-  target := shapeIncidence
+  data := shapeGradedIncidenceData
   boundary_iff := by
     intro atom
     cases atom <;>
       simp [IncidenceBoundaryValuation, simplexBisimulationQuotientClassification,
-        simplexToShape, simplexIncidence, simplexBoundary, shapeIncidence, shapeBoundary]
+        simplexToShape, simplexIncidence, simplexBoundary,
+        shapeGradedIncidenceData, GradedIncidenceData.toIncidence, shapeBoundary]
+
+def simplexQuotientIncidencePresentation :
+    BisimulationQuotientIncidencePresentation
+      (Q := SimplexShape) (QR := SimplexRole) (QT := GraphType)
+      simplexIncidence :=
+  simplexGradedQuotientPresentation.toPresentation
 
 theorem simplexToShape_boundaryLogic_satisfies_iff
     (formula : Formula SimplexId) :

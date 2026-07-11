@@ -405,6 +405,14 @@ It currently establishes:
   with a nonempty boundary forces both the presentation target and the actual
   bisimulation quotient to contain two distinct points: the target boundary
   endpoint and its owner cannot coincide by well-foundedness.
+  A reusable positive sufficient condition is now formalized too:
+  `GradedIncidenceData` constructs an Incidence whenever every boundary edge
+  strictly lowers a natural-number grade, deriving the no-self-loop obligation
+  rather than assuming it.  `GradedBisimulationQuotientPresentation` combines
+  this construction with a complete bisimulation classification and promotes
+  it to the full quotient-presentation interface.  The simplex-to-shape model
+  is now instantiated through this theorem with grades 0, 1, and 2, replacing
+  its former one-off well-foundedness proof.
 
 The minimal category/functor/pushout vocabulary is also formalized. A functor
 is proved to map a pushout cocone to a commuting cocone; preservation of the
