@@ -5047,6 +5047,18 @@ def IncidenceBoundaryValuation {I R T : Type u} [DecidableEq I]
     (incidence : Incidence I R T) (atom : I) : Prop :=
   ∃ endpoint, endpoint ∈ incidence.boundary atom
 
+def IncidenceLeafValuation {I R T : Type u} [DecidableEq I]
+    (incidence : Incidence I R T) (atom : I) : Prop :=
+  incidence.boundary atom = []
+
+def IncidenceLeafSatisfies {I R T : Type u} [DecidableEq I]
+    (incidence : Incidence I R T) (formula : Formula I) : Prop :=
+  Satisfies (IncidenceLeafValuation incidence) formula
+
+def IncidenceLeafContextSatisfies {I R T : Type u} [DecidableEq I]
+    (incidence : Incidence I R T) (context : List (Formula I)) : Prop :=
+  ContextSatisfies (IncidenceLeafValuation incidence) context
+
 def IncidenceBoundarySatisfies {I R T : Type u} [DecidableEq I]
     (incidence : Incidence I R T) (formula : Formula I) : Prop :=
   Satisfies (IncidenceBoundaryValuation incidence) formula
@@ -5073,6 +5085,14 @@ theorem derives_incidenceBoundary_sound
     (derivation : Derives context formula)
     (holds : IncidenceBoundaryContextSatisfies incidence context) :
     IncidenceBoundarySatisfies incidence formula :=
+  derives_sound derivation holds
+
+theorem derives_incidenceLeaf_sound
+    {I R T : Type u} [DecidableEq I] {incidence : Incidence I R T}
+    {context : List (Formula I)} {formula : Formula I}
+    (derivation : Derives context formula)
+    (holds : IncidenceLeafContextSatisfies incidence context) :
+    IncidenceLeafSatisfies incidence formula :=
   derives_sound derivation holds
 
 theorem derives_incidenceBoundary_entails

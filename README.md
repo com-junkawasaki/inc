@@ -53,7 +53,12 @@ It currently establishes:
   completeness belongs to the all-model Kripke semantics below.  Boundary truth
   also interacts exactly with the generic constructors: a product atom has an
   inhabited boundary iff either component does, while an atom injected into an
-  incidence sum has boundary truth exactly when its source-side atom does.  Its intuitionistic
+  incidence sum has boundary truth exactly when its source-side atom does.  The
+  dual leaf valuation (truth means empty boundary) is sound for derivations and
+  makes a product atom true exactly when both component atoms are leaves; sum
+  injections again preserve and reflect the corresponding source-side truth.
+  Thus the same constructors induce checked OR behavior for boundary presence
+  and AND behavior for leafhood.  Its intuitionistic
   Kripke semantics, persistence theorem, and
   Kripke soundness theorem are checked; atom translations pull Kripke models
   back and preserve formula and context forcing exactly. Assumption substitution and cut are

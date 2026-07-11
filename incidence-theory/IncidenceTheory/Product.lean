@@ -162,6 +162,25 @@ theorem incidenceProd_boundaryAtom_satisfies_iff
         IncidenceBoundaryValuation right rightAtom :=
   incidenceProd_boundaryValuation_iff left right leftAtom rightAtom
 
+theorem incidenceProd_leafValuation_iff
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (left : Incidence I1 R1 T1) (right : Incidence I2 R2 T2)
+    (leftAtom : I1) (rightAtom : I2) :
+    IncidenceLeafValuation (incidenceProd left right) (leftAtom, rightAtom) ↔
+      IncidenceLeafValuation left leftAtom ∧
+        IncidenceLeafValuation right rightAtom := by
+  simp [IncidenceLeafValuation, incidenceProd, prodBoundary]
+
+theorem incidenceProd_leafAtom_satisfies_iff
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (left : Incidence I1 R1 T1) (right : Incidence I2 R2 T2)
+    (leftAtom : I1) (rightAtom : I2) :
+    IncidenceLeafSatisfies (incidenceProd left right)
+        (.atom (leftAtom, rightAtom)) ↔
+      IncidenceLeafValuation left leftAtom ∧
+        IncidenceLeafValuation right rightAtom :=
+  incidenceProd_leafValuation_iff left right leftAtom rightAtom
+
 noncomputable def natProductCountablyPresentedIncidence :
     CountablyPresentedIncidence (Nat × Nat) (PeanoRole ⊕ PeanoRole)
       (GraphType × GraphType) :=

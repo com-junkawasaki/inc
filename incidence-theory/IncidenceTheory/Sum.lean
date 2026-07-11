@@ -180,6 +180,22 @@ theorem incidenceSum_boundaryValuation_inr_iff
   · rintro ⟨source, member⟩
     exact ⟨_, source, member, rfl⟩
 
+theorem incidenceSum_leafValuation_inl_iff
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (left : Incidence I1 R1 T1) (right : Incidence I2 R2 T2)
+    (atom : I1) :
+    IncidenceLeafValuation (incidenceSum left right) (Sum.inl atom) ↔
+      IncidenceLeafValuation left atom := by
+  simp [IncidenceLeafValuation, incidenceSum, sumBoundary]
+
+theorem incidenceSum_leafValuation_inr_iff
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (left : Incidence I1 R1 T1) (right : Incidence I2 R2 T2)
+    (atom : I2) :
+    IncidenceLeafValuation (incidenceSum left right) (Sum.inr atom) ↔
+      IncidenceLeafValuation right atom := by
+  simp [IncidenceLeafValuation, incidenceSum, sumBoundary]
+
 noncomputable def natSumCountablyPresentedIncidence :
     CountablyPresentedIncidence (Nat ⊕ Nat) (PeanoRole ⊕ PeanoRole) GraphType :=
   countablyPresentedIncidenceSum natCountablyPresentedIncidence
