@@ -195,6 +195,20 @@ def IncDependentFamily.reindex {I R T J : Type u} [DecidableEq I]
     J → Type u :=
   fun j => family.fiber (map j)
 
+theorem IncDependentFamily.reindex_id
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (family : IncDependentFamily inc) :
+    family.reindex id = family.fiber := by
+  funext index
+  rfl
+
+theorem IncDependentFamily.reindex_comp
+    {I R T J K : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (family : IncDependentFamily inc) (first : J → I) (second : K → J) :
+    family.reindex (first ∘ second) = fun index => family.reindex first (second index) := by
+  funext index
+  rfl
+
 def IncDependentFamily.mapSum {I R T : Type u} [DecidableEq I]
     {inc : Incidence I R T} {family target : IncDependentFamily inc}
     (map : ∀ i, family.fiber i → target.fiber i) :
