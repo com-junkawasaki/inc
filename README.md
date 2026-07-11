@@ -1274,6 +1274,13 @@ It currently establishes:
   `rebaseToCanonical` and `rebaseFromCanonical` lift those witnesses directly to
   typing-substitution results.  Application and second projection can therefore
   cross the instantiate boundary without requiring definitional equality.
+  The exact recursive obligation is now represented by
+  `IncDepRawInstantiateFormationAlignment`: only the source and target structural
+  families must be identified with their canonical instantiated families.
+  `toAlignedResult` combines those endpoint equations with the already proved
+  canonical substitution equivalence.  The canonical result itself has a
+  definitionally reflexive `canonical` witness, confirming that this interface
+  adds no assumption in the normal constructor path.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

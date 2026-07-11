@@ -671,6 +671,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `toCanonicalRebase`/`fromCanonicalRebase`がstructural/canonical formation result間の両方向checked rebaseを返す。
   `rebaseToCanonical`/`rebaseFromCanonical`はこれをtyping-substitution resultへ直接liftする。したがってapplicationと第二射影は
   definitional equalityを要求せずinstantiate境界を横断できる。
+- recursive obligationを`IncDepRawInstantiateFormationAlignment`として最小化した。structural source/target familyを各canonical
+  instantiated familyへ同定する二endpoint equationだけを保持し、`toAlignedResult`が既証明のcanonical substitution equivalenceと
+  合成する。canonical result自身にはdefinitionally reflexiveな`canonical` witnessを構成したため、通常constructor pathでは
+  このinterfaceが追加仮定を導入しないこともcheckedである。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
