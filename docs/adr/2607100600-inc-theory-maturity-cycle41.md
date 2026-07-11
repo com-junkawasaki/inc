@@ -435,6 +435,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   transportを含み、renamed typing derivationとconstructor derivationがdefinitionally一致しないことを確認した。
   composite readiness layerはこれらindex equalityとmutual termination measureを明示的に保持してから
   Pi/Sigma/Id branchを組み立てる必要がある。
+- derivation object自体のequalityを要求しないrename interfaceとして
+  `IncDepRawFormationRenamedReadyResult`/`IncDepRawTypingRenamedReadyResult`を導入した。renamed raw judgmentの
+  derivationとreadiness witnessをexistentialに保持し、正確なrenamed term/type indexは維持しつつderivation
+  choiceの差を吸収する。Base/Unitのatomic constructorに加え、lifted renamingを使うformation Pi/Sigma
+  compositionをcheckedにした。typing Pi/Sigma/Idには`instantiate_rename` type equalityの明示処理が残る。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

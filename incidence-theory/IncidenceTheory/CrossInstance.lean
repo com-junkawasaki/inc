@@ -1977,6 +1977,85 @@ def IncDepRawTypingSemanticReady.renameUnit
       ((IncDepRawHasType.unitRule (context := source)).rename renameMap) :=
   IncDepRawTypingSemanticReady.unitRule
 
+structure IncDepRawFormationRenamedReadyResult
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed source type}
+    (_ready : IncDepRawFormationSemanticReady formation)
+    (renameMap : IncDepRawRenaming source target) where
+  renamedFormation : IncDepRawWellFormed target
+    (type.rename renameMap.index)
+  renamedReady : IncDepRawFormationSemanticReady renamedFormation
+
+structure IncDepRawTypingRenamedReadyResult
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType source term type}
+    (_ready : IncDepRawTypingSemanticReady typing)
+    (renameMap : IncDepRawRenaming source target) where
+  renamedTyping : IncDepRawHasType target
+    (term.rename renameMap.index) (type.rename renameMap.index)
+  renamedReady : IncDepRawTypingSemanticReady renamedTyping
+
+def IncDepRawFormationRenamedReadyResult.base
+    {source target : List IncDepRawType} {index : Nat}
+    (renameMap : IncDepRawRenaming source target) :
+    IncDepRawFormationRenamedReadyResult
+      (IncDepRawFormationSemanticReady.base (context := source) (index := index))
+      renameMap where
+  renamedFormation := IncDepRawWellFormed.base
+  renamedReady := IncDepRawFormationSemanticReady.base
+
+def IncDepRawFormationRenamedReadyResult.unit
+    {source target : List IncDepRawType}
+    (renameMap : IncDepRawRenaming source target) :
+    IncDepRawFormationRenamedReadyResult
+      (IncDepRawFormationSemanticReady.unit (context := source)) renameMap where
+  renamedFormation := IncDepRawWellFormed.unit
+  renamedReady := IncDepRawFormationSemanticReady.unit
+
+def IncDepRawTypingRenamedReadyResult.unit
+    {source target : List IncDepRawType}
+    (renameMap : IncDepRawRenaming source target) :
+    IncDepRawTypingRenamedReadyResult
+      (IncDepRawTypingSemanticReady.unitRule (context := source)) renameMap where
+  renamedTyping := IncDepRawHasType.unitRule
+  renamedReady := IncDepRawTypingSemanticReady.unitRule
+
+def IncDepRawFormationRenamedReadyResult.pi
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed source domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: source) codomain}
+    {domainReady : IncDepRawFormationSemanticReady domainFormation}
+    {codomainReady : IncDepRawFormationSemanticReady codomainFormation}
+    (renameMap : IncDepRawRenaming source target)
+    (domainResult : IncDepRawFormationRenamedReadyResult domainReady renameMap)
+    (codomainResult : IncDepRawFormationRenamedReadyResult codomainReady
+      (renameMap.lift domain)) :
+    IncDepRawFormationRenamedReadyResult
+      (IncDepRawFormationSemanticReady.pi domainReady codomainReady)
+      renameMap where
+  renamedFormation := IncDepRawWellFormed.pi
+    domainResult.renamedFormation codomainResult.renamedFormation
+  renamedReady := IncDepRawFormationSemanticReady.pi
+    domainResult.renamedReady codomainResult.renamedReady
+
+def IncDepRawFormationRenamedReadyResult.sigma
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed source domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: source) codomain}
+    {domainReady : IncDepRawFormationSemanticReady domainFormation}
+    {codomainReady : IncDepRawFormationSemanticReady codomainFormation}
+    (renameMap : IncDepRawRenaming source target)
+    (domainResult : IncDepRawFormationRenamedReadyResult domainReady renameMap)
+    (codomainResult : IncDepRawFormationRenamedReadyResult codomainReady
+      (renameMap.lift domain)) :
+    IncDepRawFormationRenamedReadyResult
+      (IncDepRawFormationSemanticReady.sigma domainReady codomainReady)
+      renameMap where
+  renamedFormation := IncDepRawWellFormed.sigma
+    domainResult.renamedFormation codomainResult.renamedFormation
+  renamedReady := IncDepRawFormationSemanticReady.sigma
+    domainResult.renamedReady codomainResult.renamedReady
+
 noncomputable def IncDepRawTypingSemanticReady.toDeeplyWellFormed
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} {typing : IncDepRawHasType context term type}

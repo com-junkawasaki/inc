@@ -894,6 +894,15 @@ It currently establishes:
   than definitionally the corresponding constructor derivations.  The remaining
   readiness layer must retain those index equalities explicitly, together with
   a mutual termination measure, before the Pi/Sigma/Id cases can be assembled.
+  The rename interface has now been refactored to avoid demanding equality of
+  derivation objects.  `IncDepRawFormationRenamedReadyResult` and
+  `IncDepRawTypingRenamedReadyResult` existentially retain a derivation of the
+  renamed raw judgment together with its readiness witness.  Atomic Base/Unit
+  constructors inhabit these results, and formation Pi/Sigma composition now
+  closes using the lifted renaming.  This absorbs harmless derivation-choice
+  differences while preserving the exact renamed term/type indices.  Typing
+  Pi/Sigma/Id constructors still need explicit handling of their
+  `instantiate_rename` type equalities.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
