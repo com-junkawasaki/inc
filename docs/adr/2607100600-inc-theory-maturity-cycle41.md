@@ -175,6 +175,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   pair/first/second、reflの全ruleを処理した。application、pairのsecond component、second
   projectionのdependent result typeはinstantiation naturalityでtransportしており、closed
   weakeningだけでなく完全なjudgment-level renaming preservationが成立する。
+- type-aware dependent simultaneous substitutionを、term replacement mapと「各replacementが
+  同じmapでsubstituteされたlookup型を持つ」証明の組として構成した。identity substitutionと
+  binder liftを実装。liftはnewest variableを固定し、older replacementをrenamed source
+  telescopeへweakeningし、両caseのdependent lookup型を二方向のfusion lawで整列する。
+  dependent formation/typing substitution preservationの入力構造が成立した。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

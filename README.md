@@ -507,6 +507,13 @@ It currently establishes:
   reflexivity.  Instantiation naturality supplies the required transports for
   all dependent result types, so this is a full judgment-preservation theorem,
   not merely weakening of closed examples.
+  A type-aware dependent simultaneous substitution is now packaged as a term
+  replacement map together with typing of every replacement at the lookup type
+  transformed by that same map.  Identity substitution and binder lift are
+  constructed.  The lift fixes the newest variable, weakens every older
+  replacement through the renamed source telescope, and uses both fusion laws
+  to align the weakened lookup types.  This provides the substitution object
+  required for full dependent formation/typing preservation.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite

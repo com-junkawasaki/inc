@@ -1556,6 +1556,67 @@ mutual
         exact IncDepRawHasType.reflRule (termTyping.rename renameMap)
 end
 
+structure IncDepRawSubstitution
+    (source target : List IncDepRawType) where
+  term : Nat → IncDepRawTerm
+  preserves : ∀ {position type}, IncDepRawLookup target position type →
+    IncDepRawHasType source (term position) (type.substitute term)
+
+noncomputable def IncDepRawSubstitution.identity
+    (context : List IncDepRawType) :
+    IncDepRawSubstitution context context where
+  term := IncDepRawTerm.var
+  preserves := by
+    intro position type lookup
+    rw [IncDepRawType.substitute_identity]
+    exact IncDepRawHasType.varRule lookup
+
+noncomputable def IncDepRawSubstitution.lift
+    {source target : List IncDepRawType}
+    (substitution : IncDepRawSubstitution source target)
+    (domain : IncDepRawType) :
+    IncDepRawSubstitution
+      (domain.substitute substitution.term :: source)
+      (domain :: target) where
+  term := IncDepRawTerm.liftReplacement substitution.term
+  preserves := by
+    intro position type lookup
+    cases lookup with
+    | here =>
+        have newest : IncDepRawHasType
+            (domain.substitute substitution.term :: source) (.var 0)
+            ((domain.substitute substitution.term).rename Nat.succ) :=
+          IncDepRawHasType.varRule IncDepRawLookup.here
+        rw [IncDepRawType.substitute_rename] at newest
+        have mapEq : (fun index =>
+            (substitution.term index).rename Nat.succ) =
+            IncDepRawTerm.liftReplacement substitution.term ∘ Nat.succ := by
+          funext index
+          rfl
+        rw [mapEq] at newest
+        rw [← IncDepRawType.rename_substitute] at newest
+        exact newest
+    | there previous =>
+        have replacementTyping := substitution.preserves previous
+        have weakened := replacementTyping.rename
+          ((IncDepRawRenaming.identity source).weakenTarget
+            (domain.substitute substitution.term))
+        have indexEq :
+            ((IncDepRawRenaming.identity source).weakenTarget
+              (domain.substitute substitution.term)).index = Nat.succ := by
+          funext index
+          rfl
+        rw [indexEq] at weakened
+        rw [IncDepRawType.substitute_rename] at weakened
+        have mapEq : (fun index =>
+            (substitution.term index).rename Nat.succ) =
+            IncDepRawTerm.liftReplacement substitution.term ∘ Nat.succ := by
+          funext index
+          rfl
+        rw [mapEq] at weakened
+        rw [← IncDepRawType.rename_substitute] at weakened
+        exact weakened
+
 inductive IncDepRawContext.WellFormed : List IncDepRawType → Type
   | empty : WellFormed []
   | extend {context type} :
