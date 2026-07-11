@@ -3215,6 +3215,67 @@ def StrongPushoutPreservingFamily.identity
     StrongPushoutPreservingFamily (IncFunctor.identity C) where
   preserves := StrongPushoutPreserving.identity
 
+theorem IncCoherentCategoryEquivalence.pulledPushoutCocone_commutes
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D)
+    {span : MorphismCospan C} {q : DObj}
+    (leftLeg : D.Hom (coherent.equivalence.forward.obj span.b) q)
+    (rightLeg : D.Hom (coherent.equivalence.forward.obj span.c) q)
+    (commutes :
+      D.comp leftLeg (coherent.equivalence.forward.map span.left) =
+        D.comp rightLeg (coherent.equivalence.forward.map span.right)) :
+    C.comp
+        (C.comp (coherent.equivalence.inverse.map leftLeg)
+          (coherent.equivalence.unit.hom.app span.b))
+        span.left =
+      C.comp
+        (C.comp (coherent.equivalence.inverse.map rightLeg)
+          (coherent.equivalence.unit.hom.app span.c))
+        span.right := by
+  let F := coherent.equivalence.forward
+  let G := coherent.equivalence.inverse
+  let unit := coherent.equivalence.unit
+  have unitLeft :
+      C.comp ((G.comp F).map span.left) (unit.hom.app span.a) =
+        C.comp (unit.hom.app span.b) span.left := by
+    simpa [IncFunctor.identity] using unit.hom.naturality span.left
+  have unitRight :
+      C.comp ((G.comp F).map span.right) (unit.hom.app span.a) =
+        C.comp (unit.hom.app span.c) span.right := by
+    simpa [IncFunctor.identity] using unit.hom.naturality span.right
+  calc
+    C.comp (C.comp (G.map leftLeg) (unit.hom.app span.b)) span.left =
+      C.comp (G.map leftLeg)
+        (C.comp (unit.hom.app span.b) span.left) :=
+          (C.assoc _ _ _).symm
+    _ = C.comp (G.map leftLeg)
+        (C.comp ((G.comp F).map span.left) (unit.hom.app span.a)) := by
+          rw [unitLeft]
+    _ = C.comp
+        (C.comp (G.map leftLeg) ((G.comp F).map span.left))
+        (unit.hom.app span.a) := C.assoc _ _ _
+    _ = C.comp
+        (G.map (D.comp leftLeg (F.map span.left)))
+        (unit.hom.app span.a) := by
+          simp only [IncFunctor.comp]
+          rw [G.map_comp]
+    _ = C.comp
+        (G.map (D.comp rightLeg (F.map span.right)))
+        (unit.hom.app span.a) := by rw [commutes]
+    _ = C.comp
+        (C.comp (G.map rightLeg) ((G.comp F).map span.right))
+        (unit.hom.app span.a) := by
+          simp only [IncFunctor.comp]
+          rw [G.map_comp]
+    _ = C.comp (G.map rightLeg)
+        (C.comp ((G.comp F).map span.right) (unit.hom.app span.a)) :=
+          (C.assoc _ _ _).symm
+    _ = C.comp (G.map rightLeg)
+        (C.comp (unit.hom.app span.c) span.right) := by
+          rw [unitRight]
+    _ = C.comp (C.comp (G.map rightLeg) (unit.hom.app span.c))
+        span.right := C.assoc _ _ _
+
 /- Uniform preservation is closed under translation composition.  The second
    family is applied to the actual mapped universal cocone selected by the
    first one, exactly as in the pointwise composition theorem above. -/
