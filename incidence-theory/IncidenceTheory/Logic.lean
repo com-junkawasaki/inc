@@ -140,6 +140,29 @@ theorem Formula.map_leftInverse {Atom Atom' : Type u} (f : Atom → Atom')
     (formula.map f).map g = formula := by
   induction formula <;> simp [Formula.map, *]
 
+theorem Formula.map_surjective {Atom Atom' : Type u} (f : Atom → Atom')
+    (surjective : ∀ target, ∃ source, f source = target) :
+    ∀ formula : Formula Atom', ∃ source : Formula Atom, source.map f = formula := by
+  intro formula
+  induction formula with
+  | atom atom =>
+      obtain ⟨source, rfl⟩ := surjective atom
+      exact ⟨.atom source, rfl⟩
+  | top => exact ⟨.top, rfl⟩
+  | bot => exact ⟨.bot, rfl⟩
+  | and left right ihLeft ihRight =>
+      obtain ⟨leftSource, hleft⟩ := ihLeft
+      obtain ⟨rightSource, hright⟩ := ihRight
+      exact ⟨.and leftSource rightSource, by simp [Formula.map, hleft, hright]⟩
+  | or left right ihLeft ihRight =>
+      obtain ⟨leftSource, hleft⟩ := ihLeft
+      obtain ⟨rightSource, hright⟩ := ihRight
+      exact ⟨.or leftSource rightSource, by simp [Formula.map, hleft, hright]⟩
+  | imp left right ihLeft ihRight =>
+      obtain ⟨leftSource, hleft⟩ := ihLeft
+      obtain ⟨rightSource, hright⟩ := ihRight
+      exact ⟨.imp leftSource rightSource, by simp [Formula.map, hleft, hright]⟩
+
 theorem Formula.mapContext_leftInverse {Atom Atom' : Type u} (f : Atom → Atom')
     (g : Atom' → Atom) (hgf : ∀ atom, g (f atom) = atom)
     (context : List (Formula Atom)) :
@@ -959,6 +982,20 @@ theorem Formula.logicalMap_injective_of_leftInverse {Atom Atom' : Type u}
   intro left right equal
   have mappedEqual := congrArg (Formula.logicalMap g) equal
   simpa only [Formula.logicalMap_leftInverse f g hgf] using mappedEqual
+
+theorem Formula.logicalMap_surjective {Atom Atom' : Type u} (f : Atom → Atom')
+    (surjective : ∀ target, ∃ source, f source = target) :
+    ∀ target : Formula.LogicalEquivalenceClass Atom',
+      ∃ source : Formula.LogicalEquivalenceClass Atom,
+        Formula.logicalMap f source = target := by
+  intro target
+  refine Quotient.inductionOn target ?_
+  intro formula
+  obtain ⟨source, hsource⟩ := Formula.map_surjective f surjective formula
+  exact ⟨Quotient.mk (Formula.derivablyEquivalentSetoid Atom) source, by
+    change Quotient.mk (Formula.derivablyEquivalentSetoid Atom') (source.map f) =
+      Quotient.mk (Formula.derivablyEquivalentSetoid Atom') formula
+    rw [hsource]⟩
 
 def Formula.LogicalEntails {Atom : Type u}
     (left right : Formula.LogicalEquivalenceClass Atom) : Prop :=

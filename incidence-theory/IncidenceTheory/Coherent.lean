@@ -274,6 +274,26 @@ theorem CoherentQuotient.logicalMap_injective
   Formula.logicalMap_injective_of_leftInverse quotient.classification.classify
     retract.retraction retract.left_inverse
 
+theorem CoherentQuotient.logicalMap_surjective
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source) :
+    ∀ target : Formula.LogicalEquivalenceClass Q,
+      ∃ sourceFormula : Formula.LogicalEquivalenceClass I,
+        quotient.logicalMap sourceFormula = target :=
+  Formula.logicalMap_surjective quotient.classification.classify
+    quotient.classification.surjective
+
+theorem CoherentQuotient.logicalMap_bijective
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    (retract : CoherentQuotientLogicalRetract quotient) :
+    (∀ ⦃left right : Formula.LogicalEquivalenceClass I⦄,
+      quotient.logicalMap left = quotient.logicalMap right → left = right) ∧
+    (∀ target : Formula.LogicalEquivalenceClass Q,
+      ∃ sourceFormula : Formula.LogicalEquivalenceClass I,
+        quotient.logicalMap sourceFormula = target) :=
+  ⟨quotient.logicalMap_injective retract, quotient.logicalMap_surjective⟩
+
 theorem CoherentQuotient.logicalMap_orderEmbedding_iff
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
     {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
