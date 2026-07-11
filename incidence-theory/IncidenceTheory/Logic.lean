@@ -746,6 +746,36 @@ theorem Formula.logicalClass_eq_of_derivablyEquivalent {Atom : Type u}
       Quotient.mk (Formula.derivablyEquivalentSetoid Atom) right :=
   Quotient.sound equivalent
 
+def Formula.logicalAnd {Atom : Type u}
+    (left right : Formula.LogicalEquivalenceClass Atom) :
+    Formula.LogicalEquivalenceClass Atom :=
+  Quotient.liftOn₂ left right
+    (fun left right => Quotient.mk (Formula.derivablyEquivalentSetoid Atom) (.and left right))
+    (by
+      intro left right left' right' hleft hright
+      exact Quotient.sound (derivablyEquivalent_and_congr hleft hright))
+
+def Formula.logicalOr {Atom : Type u}
+    (left right : Formula.LogicalEquivalenceClass Atom) :
+    Formula.LogicalEquivalenceClass Atom :=
+  Quotient.liftOn₂ left right
+    (fun left right => Quotient.mk (Formula.derivablyEquivalentSetoid Atom) (.or left right))
+    (by
+      intro left right left' right' hleft hright
+      exact Quotient.sound (derivablyEquivalent_or_congr hleft hright))
+
+theorem Formula.logicalAnd_mk {Atom : Type u} (left right : Formula Atom) :
+    Formula.logicalAnd
+      (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) left)
+      (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) right) =
+      Quotient.mk (Formula.derivablyEquivalentSetoid Atom) (.and left right) := rfl
+
+theorem Formula.logicalOr_mk {Atom : Type u} (left right : Formula Atom) :
+    Formula.logicalOr
+      (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) left)
+      (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) right) =
+      Quotient.mk (Formula.derivablyEquivalentSetoid Atom) (.or left right) := rfl
+
 theorem inconsistent_extension_iff_derives_neg {Atom : Type u}
     {context : List (Formula Atom)} {formula : Formula Atom} :
     Derives (formula :: context) .bot ↔ Derives context formula.neg :=
@@ -804,6 +834,18 @@ theorem derives_and_or_distributive_iff {Atom : Type u}
       (.or (.and p q) (.and p r))) :=
   derives_iffI (derives_and_or_distributive p q r).left
     (derives_and_or_distributive p q r).right
+
+theorem Formula.logicalAnd_distributes_over_or {Atom : Type u}
+    (p q r : Formula Atom) :
+    Formula.logicalAnd (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) p)
+      (Formula.logicalOr (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) q)
+        (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) r)) =
+      Formula.logicalOr
+        (Formula.logicalAnd (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) p)
+          (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) q))
+        (Formula.logicalAnd (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) p)
+          (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) r)) := by
+  exact Quotient.sound (derives_and_or_distributive_iff p q r)
 
 theorem satisfies_and_or_distributive_iff {Atom : Type u}
     (valuation : Atom → Prop) (p q r : Formula Atom) :
