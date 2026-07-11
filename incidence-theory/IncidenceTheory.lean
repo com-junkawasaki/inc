@@ -1624,6 +1624,58 @@ def IncFunctorEssentiallySurjective
     ∃ inv : D.Hom target (F.obj source),
       D.comp inv hom = D.id (F.obj source) ∧ D.comp hom inv = D.id target
 
+theorem IncFunctorEssentiallySurjective.transport
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (iso : IncNaturalIsomorphism F G)
+    (hF : IncFunctorEssentiallySurjective F) :
+    IncFunctorEssentiallySurjective G := by
+  intro target
+  obtain ⟨source, hom, inv, inv_hom, hom_inv⟩ := hF target
+  refine ⟨source,
+    D.comp hom (iso.inv.app source),
+    D.comp (iso.hom.app source) inv, ?_, ?_⟩
+  · calc
+      D.comp (D.comp (iso.hom.app source) inv)
+          (D.comp hom (iso.inv.app source)) =
+        D.comp (iso.hom.app source)
+          (D.comp inv (D.comp hom (iso.inv.app source))) :=
+            (D.assoc _ _ _).symm
+      _ = D.comp (iso.hom.app source)
+          (D.comp (D.comp inv hom) (iso.inv.app source)) := by
+            rw [D.assoc inv hom]
+      _ = D.comp (iso.hom.app source)
+          (D.comp (D.id (F.obj source)) (iso.inv.app source)) := by
+            rw [inv_hom]
+      _ = D.comp (iso.hom.app source) (iso.inv.app source) := by
+            rw [D.id_comp]
+      _ = D.id (G.obj source) := iso.inv_app_hom_app source
+  · calc
+      D.comp (D.comp hom (iso.inv.app source))
+          (D.comp (iso.hom.app source) inv) =
+        D.comp hom
+          (D.comp (iso.inv.app source)
+            (D.comp (iso.hom.app source) inv)) :=
+              (D.assoc _ _ _).symm
+      _ = D.comp hom
+          (D.comp
+            (D.comp (iso.inv.app source) (iso.hom.app source)) inv) := by
+              rw [D.assoc (iso.inv.app source) (iso.hom.app source)]
+      _ = D.comp hom (D.comp (D.id (F.obj source)) inv) := by
+            rw [iso.hom_app_inv_app]
+      _ = D.comp hom inv := by rw [D.id_comp]
+      _ = D.id target := hom_inv
+
+theorem IncFunctorEssentiallySurjective.iff_of_naturallyIsomorphic
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (iso : IncNaturalIsomorphism F G) :
+    IncFunctorEssentiallySurjective F ↔
+      IncFunctorEssentiallySurjective G := by
+  constructor
+  · intro hF
+    exact hF.transport iso
+  · intro hG
+    exact hG.transport iso.symm
+
 structure IncCategoryEquivalence
     {CObj DObj : Type u} (C : IncCategory CObj) (D : IncCategory DObj) where
   forward : IncFunctor C D
