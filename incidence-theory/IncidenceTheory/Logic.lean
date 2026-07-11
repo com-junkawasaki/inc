@@ -972,6 +972,111 @@ theorem Formula.logicalAnd_le_iff_le_logicalImp {Atom : Type u}
     Formula.logicalAnd p q ≤ r ↔ p ≤ Formula.logicalImp q r :=
   Formula.logicalEntails_and_iff p q r
 
+theorem logicalEntails_mk_iff_derives {Atom : Type u} (left right : Formula Atom) :
+    Formula.LogicalEntails
+        (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) left)
+        (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) right) ↔
+      Derives [] (.imp left right) :=
+  logicalImp_class_eq_top_iff_derives left right
+
+theorem Formula.logicalAnd_le_left {Atom : Type u}
+    (left right : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalAnd left right ≤ left := by
+  refine Quotient.inductionOn left ?_
+  intro left
+  refine Quotient.inductionOn right ?_
+  intro right
+  apply (logicalEntails_mk_iff_derives (.and left right) left).2
+  apply Derives.impI
+  exact Derives.andEL (p := left) (q := right) (Derives.ax (by simp))
+
+theorem Formula.logicalAnd_le_right {Atom : Type u}
+    (left right : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalAnd left right ≤ right := by
+  refine Quotient.inductionOn left ?_
+  intro left
+  refine Quotient.inductionOn right ?_
+  intro right
+  apply (logicalEntails_mk_iff_derives (.and left right) right).2
+  apply Derives.impI
+  exact Derives.andER (p := left) (q := right) (Derives.ax (by simp))
+
+theorem Formula.le_logicalAnd_iff {Atom : Type u}
+    (lower left right : Formula.LogicalEquivalenceClass Atom) :
+    lower ≤ Formula.logicalAnd left right ↔ lower ≤ left ∧ lower ≤ right := by
+  refine Quotient.inductionOn lower ?_
+  intro lower
+  refine Quotient.inductionOn left ?_
+  intro left
+  refine Quotient.inductionOn right ?_
+  intro right
+  constructor
+  · intro lowerAnd
+    have derives : Derives [] (.imp lower (.and left right)) :=
+      (logicalEntails_mk_iff_derives lower (.and left right)).1 lowerAnd
+    constructor
+    · apply (logicalEntails_mk_iff_derives lower left).2
+      apply Derives.impI
+      exact Derives.andEL (Derives.impE
+        (derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem) derives)
+        (Derives.ax (by simp)))
+    · apply (logicalEntails_mk_iff_derives lower right).2
+      apply Derives.impI
+      exact Derives.andER (Derives.impE
+        (derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem) derives)
+        (Derives.ax (by simp)))
+  · rintro ⟨lowerLeft, lowerRight⟩
+    have hleft := (logicalEntails_mk_iff_derives lower left).1 lowerLeft
+    have hright := (logicalEntails_mk_iff_derives lower right).1 lowerRight
+    apply (logicalEntails_mk_iff_derives lower (.and left right)).2
+    apply Derives.impI
+    apply Derives.andI
+    · exact Derives.impE
+        (derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem) hleft)
+        (Derives.ax (by simp))
+    · exact Derives.impE
+        (derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem) hright)
+        (Derives.ax (by simp))
+
+theorem Formula.logicalOr_le_iff {Atom : Type u}
+    (left right upper : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalOr left right ≤ upper ↔ left ≤ upper ∧ right ≤ upper := by
+  refine Quotient.inductionOn left ?_
+  intro left
+  refine Quotient.inductionOn right ?_
+  intro right
+  refine Quotient.inductionOn upper ?_
+  intro upper
+  constructor
+  · intro orUpper
+    have derives := (logicalEntails_mk_iff_derives (.or left right) upper).1 orUpper
+    constructor
+    · apply (logicalEntails_mk_iff_derives left upper).2
+      apply Derives.impI
+      exact Derives.impE
+        (derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem) derives)
+        (Derives.orIL (Derives.ax (by simp)))
+    · apply (logicalEntails_mk_iff_derives right upper).2
+      apply Derives.impI
+      exact Derives.impE
+        (derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem) derives)
+        (Derives.orIR (Derives.ax (by simp)))
+  · rintro ⟨leftUpper, rightUpper⟩
+    have hleft := (logicalEntails_mk_iff_derives left upper).1 leftUpper
+    have hright := (logicalEntails_mk_iff_derives right upper).1 rightUpper
+    apply (logicalEntails_mk_iff_derives (.or left right) upper).2
+    apply Derives.impI
+    refine Derives.orE (p := left) (q := right) (r := upper)
+      (Derives.ax (by simp)) ?_ ?_
+    · exact Derives.impE
+        (derives_weaken (source := []) (target := left :: [.or left right])
+          (by intro formula hmem; simp at hmem) hleft)
+        (Derives.ax (by simp))
+    · exact Derives.impE
+        (derives_weaken (source := []) (target := right :: [.or left right])
+          (by intro formula hmem; simp at hmem) hright)
+        (Derives.ax (by simp))
+
 theorem inconsistent_extension_iff_derives_neg {Atom : Type u}
     {context : List (Formula Atom)} {formula : Formula Atom} :
     Derives (formula :: context) .bot ↔ Derives context formula.neg :=
