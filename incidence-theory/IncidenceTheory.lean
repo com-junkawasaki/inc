@@ -6253,6 +6253,48 @@ theorem distinct_bisimilar_points_witness_observation_map_noninjective
       (Quotient.exact equal)
   · exact @Quotient.sound I (approxBisimSetoid inc) i j bisimilar
 
+def ObservationMapCollapses
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) : Prop :=
+  ∃ left right : LinearObservationQuotient inc idx,
+    left ≠ right ∧
+    observationQuotientToBisimulationQuotient inc idx left =
+      observationQuotientToBisimulationQuotient inc idx right
+
+theorem observationMapCollapses_iff_exists_distinct_bisimilar
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) :
+    ObservationMapCollapses inc idx ↔
+      ∃ i j : I, i ≠ j ∧ approxBisim inc i j := by
+  constructor
+  · rintro ⟨left, right, classesDifferent, imagesEqual⟩
+    let carrierEquivalence := linearObservationQuotientEquivalence inc idx
+    let i := carrierEquivalence.inverse left
+    let j := carrierEquivalence.inverse right
+    refine ⟨i, j, ?_, ?_⟩
+    · intro equal
+      apply classesDifferent
+      have forwardEqual : carrierEquivalence.forward i =
+          carrierEquivalence.forward j := congrArg carrierEquivalence.forward equal
+      rw [carrierEquivalence.forward_inverse,
+        carrierEquivalence.forward_inverse] at forwardEqual
+      exact forwardEqual
+    · exact (observationQuotientToBisimulationQuotient_kernel
+        inc idx left right).mp imagesEqual
+  · rintro ⟨i, j, different, bisimilar⟩
+    exact distinct_bisimilar_points_witness_observation_map_noninjective
+      inc idx different bisimilar
+
+theorem observationMapCollapses_implies_not_faithful
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (collapses : ObservationMapCollapses inc idx) :
+    ¬ BisimulationFaithful inc := by
+  intro faithful
+  obtain ⟨i, j, different, bisimilar⟩ :=
+    (observationMapCollapses_iff_exists_distinct_bisimilar inc idx).mp collapses
+  exact different (faithful bisimilar)
+
 def observationBisimulationQuotientEquivalence_of_wellFounded_extensional
     {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I) (measure : I → Nat)
