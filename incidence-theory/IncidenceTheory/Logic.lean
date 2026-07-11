@@ -5196,6 +5196,21 @@ theorem FiniteSupportNatCoding.derives_of_translated_kripke_entails
     ⟨contextRoundtrip, conclusionRoundtrip⟩
   simpa only [contextRoundtrip, conclusionRoundtrip] using decodedDerives
 
+theorem kripke_entails_iff_derives_of_nonempty_atoms
+    {Atom : Type u} [BEq Atom] [LawfulBEq Atom] [Nonempty Atom]
+    (context : List (Formula Atom)) (conclusion : Formula Atom) :
+    KripkeEntails.{u, u} context conclusion ↔ Derives context conclusion := by
+  constructor
+  · intro entails
+    let support := Formula.sequentAtoms context conclusion
+    let coding : FiniteSupportNatCoding Atom support :=
+      finiteSupportNatCodingOfFallback support (Classical.choice inferInstance)
+    apply coding.derives_of_translated_kripke_entails context conclusion
+    · intro atom member
+      exact member
+    · exact kripke_entails_map coding.encode entails
+  · exact derives_kripke_entails
+
 theorem CountableAtomCoding.sum_kripke_complete {Left Right : Type u}
     (left : CountableAtomCoding Left) (right : CountableAtomCoding Right)
     (context : List (Formula (Sum Left Right)))

@@ -139,9 +139,13 @@ It currently establishes:
   completeness theorem applies to the translated sequent.  If that translated
   sequent is semantically valid, its derivation decodes back to a derivation of
   the original sequent using only the support-local roundtrip law.  What
-  remains for arbitrary-carrier completeness is transporting validity (or a
-  countermodel) between the original and this support-restricted translation,
-  plus the atom-free empty-support branch.
+  remained was validity transport; the existing Kripke pullback/map theorem
+  supplies it directly.  Consequently every nonempty atom carrier with lawful
+  decidable equality—countable or uncountable—now satisfies the full theorem
+  `KripkeEntails ↔ Derives` for every finite sequent, without any global atom
+  enumeration.  Only the genuinely empty atom type remains as a separate
+  universe-polymorphic branch (the concrete `Fin 0` language was already
+  complete).
   This is instantiated non-vacuously for both `natIncidence × natIncidence` and
   `natIncidence ⊕ natIncidence`: consistent contexts have Kripke models, and every
   underivable formula has a canonical prime-theory counterworld in each language.

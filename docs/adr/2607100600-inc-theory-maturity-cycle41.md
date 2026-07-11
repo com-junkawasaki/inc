@@ -72,8 +72,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   に置き換える基盤である。非空 support には `List.idxOf`/`List.getD` から `ULift Nat`
   code/retraction を構成し、support-local left inverse を証明済み。`ULift Nat` の global
   countable coding に既存 Kripke 完全性を適用し、翻訳 sequent の semantic validity から
-  元 sequent の derivation を decode で復元する定理も得た。残るのは validity/countermodel
-  の翻訳 transport と atom-free な empty-support 分岐である。
+  元 sequent の derivation を decode で復元する定理も得た。既存の Kripke map/pullback
+  定理で元 validity を翻訳 validity へ移し、非空かつ lawful decidable equality を持つ
+  任意 atom carrier（非可算を含む）について `KripkeEntails ↔ Derives` を global coding
+  仮定なしで証明済み。残るのは universe-polymorphic な空 atom 型の分岐のみである
+  （具体的 `Fin 0` 完全性は既に証明済み）。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」ではなく、非可算 carrier への完全性条件の拡張、Incidence 固有の
