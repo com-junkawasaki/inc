@@ -668,6 +668,20 @@ It currently establishes:
   well-formedness nor the older semantic-readiness tree alone indexes every
   identity endpoint by the same formation proof, so silently coercing either to
   coherent certification would assert coherence that its type does not contain.
+  Coherent telescope synthesis is now closed as well.
+  `IncDepRawCoherentContext.WellFormed` stores coherent readiness at every head;
+  its `synthesize` recursion interprets the tail, runs the already-proved
+  canonical formation-preservation dispatcher at the identity substitution, and
+  extends the semantic context with the resulting head family.  No separate
+  head-semantic provider is needed.  Finally,
+  `IncDepRawFullyCoherentCertifiedTyping` combines that telescope certificate
+  with coherent term certification.  `toInput`,
+  `interpretFullyCoherentCertified`, and its coherence theorem provide an
+  end-to-end interpretation with no judgment-local synthesis assumptions at
+  all.  Only the shared canonical preservation hypotheses remain global.  This
+  closes the local synthesis branch for the fully coherent certification level;
+  weaker raw certificates remain intentionally weaker rather than being given
+  fabricated coherence evidence.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

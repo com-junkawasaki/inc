@@ -262,6 +262,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `interpretCoherentlyCertified`と`interpretCoherentlyCertified_coherent`がcanonical interpretationとsemantic-term equationを与える。
   coherent certification後はreadiness synthesizerを別途仮定せず、local残件はtelescope/head semanticsだけになる。deep well-formednessや旧semantic-readyは
   identity endpointすべてを同一formation proofへindexしないため、それらからの無条件coercionは行わない。
+- coherent telescope synthesisも閉じた。`IncDepRawCoherentContext.WellFormed`は各headのcoherent readinessを保持し、`synthesize`はtailを再帰解釈して
+  既証明のcanonical formation-preservation dispatcherをidentity substitutionで実行し、得られたhead familyでsemantic contextをextendする。
+  独立head-semantic providerは不要となった。`IncDepRawFullyCoherentCertifiedTyping`がこのtelescope certificateとcoherent term certificateを束ね、
+  `toInput`、`interpretFullyCoherentCertified`、coherence theoremがjudgment-local synthesis仮定なしのend-to-end interpretationを与える。
+  fully coherent certification levelではlocal synthesis branchが完了し、残るのはshared canonical preservation hypothesesというglobal境界である。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

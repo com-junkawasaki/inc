@@ -12337,6 +12337,98 @@ theorem
   exact model.interpretCertifiedCanonical_coherent
     ((certified.toWitness contexts).withHypotheses hypotheses)
 
+namespace IncDepRawCoherentContext
+
+/-- A telescope whose head formations carry the coherent recursive evidence
+needed by semantic interpretation. -/
+inductive WellFormed : List IncDepRawType → Type
+  | empty : WellFormed []
+  | extend {context type}
+      (tail : WellFormed context)
+      {formation : IncDepRawWellFormed context type}
+      (head : IncDepRawCoherentFormationDispatchReady formation) :
+      WellFormed (type :: context)
+
+def WellFormed.toRaw {context : List IncDepRawType} :
+    WellFormed context → IncDepRawContext.WellFormed context
+  | .empty => .empty
+  | @extend _ _ tail formation _ => .extend tail.toRaw formation
+
+noncomputable def WellFormed.synthesize
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses)
+    {context : List IncDepRawType}
+    (wellFormed : WellFormed context) :
+    Sigma fun result : IncDepRawContextSemanticResult wellFormed.toRaw =>
+      IncDepRawContextSemanticTree result :=
+  match wellFormed with
+  | .empty => ⟨incDepRawEmptyContextSemantic,
+      incDepRawEmptyContextSemanticTree⟩
+  | .extend tail head =>
+      let tailResult := tail.synthesize model hypotheses
+      let replacements :=
+        IncDepRawSubstitutionReplacementSemanticResult.identity tailResult.2
+      let headDispatch :=
+        (model.preservationCanonical hypotheses).formation.dispatch
+          head tailResult.2 replacements
+      let headResult := headDispatch.formationResult.targetFormationResult
+      let result := tailResult.1.extend headResult.semanticType
+      ⟨result, IncDepRawContextSemanticTree.extend tailResult.2 headResult⟩
+
+end IncDepRawCoherentContext
+
+/-- A judgment with both a coherently certified telescope and a coherently
+certified typing derivation. -/
+structure IncDepRawFullyCoherentCertifiedTyping
+    (context : List IncDepRawType) (term : IncDepRawTerm)
+    (type : IncDepRawType) where
+  contextWellFormed : IncDepRawCoherentContext.WellFormed context
+  typeWellFormed : IncDepRawWellFormed context type
+  typing : IncDepRawHasType context term type
+  readiness : IncDepRawCoherentTypingDispatchReady typing typeWellFormed
+
+noncomputable def IncDepRawFullyCoherentCertifiedTyping.toInput
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawFullyCoherentCertifiedTyping context term type) :
+    IncDepRawCertifiedCanonicalSemanticInput
+      { contextWellFormed := certified.contextWellFormed.toRaw
+        typeWellFormed := certified.typeWellFormed
+        typing := certified.typing } :=
+  let contextResult := certified.contextWellFormed.synthesize model hypotheses
+  { contextResult := contextResult.1
+    contextTree := contextResult.2
+    readiness := certified.readiness
+    preservationHypotheses := hypotheses }
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.interpretFullyCoherentCertified
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawFullyCoherentCertifiedTyping context term type) :=
+  model.interpretCertifiedCanonical (certified.toInput model hypotheses)
+
+theorem
+    IncDepRawSubstitutionFiberModel.interpretFullyCoherentCertified_coherent
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawFullyCoherentCertifiedTyping context term type) :
+    let input := certified.toInput model hypotheses
+    let result := model.interpretFullyCoherentCertified hypotheses certified
+    result.formationResult.semanticFiberEquivalence.transport
+        result.typingResult.sourceTermResult.semanticTerm =
+      result.typingResult.targetTermResult.semanticTerm.substitute
+        (IncDepRawSubstitutionSemanticResult.identity
+          input.contextResult).semanticSubstitution := by
+  exact model.interpretCertifiedCanonical_coherent
+    (certified.toInput model hypotheses)
+
 theorem IncDepRawSubstitutionFiberModel.preservationCanonical_formation
     (model : IncDepRawSubstitutionFiberModel.{u})
     (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses)
