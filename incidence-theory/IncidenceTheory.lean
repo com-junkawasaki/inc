@@ -410,6 +410,33 @@ theorem IncDependentFamilyMorphism.mapProduct_comp
   funext value i
   rfl
 
+theorem IncDependentFamilyMorphism.reindexProduct_naturality
+    {I R T J : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (morphism : IncDependentFamilyMorphism source target)
+    (baseMap : J → I) (term : IncDependentProduct source) :
+    target.reindexProduct baseMap (morphism.mapProduct term) =
+      fun index => morphism.app (baseMap index)
+        (source.reindexProduct baseMap term index) := by
+  funext index
+  rfl
+
+theorem IncDependentFamilyMorphism.reindexSum_naturality
+    {I R T J : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (morphism : IncDependentFamilyMorphism source target)
+    (baseMap : J → I) :
+    morphism.mapSum ∘ source.reindexSum baseMap =
+      target.reindexSum baseMap ∘
+        (fun total : Sigma (source.reindex baseMap) =>
+          match total with
+          | ⟨index, value⟩ =>
+              (⟨index, morphism.app (baseMap index) value⟩ :
+                Sigma (target.reindex baseMap))) := by
+  funext total
+  rcases total with ⟨index, value⟩
+  rfl
+
 /- A classification is the general sufficient condition for the behavioural
    quotient to have a concrete, fully described carrier.  `respects` is the
    well-definedness condition for `Quotient.lift`; `reflects` prevents two
