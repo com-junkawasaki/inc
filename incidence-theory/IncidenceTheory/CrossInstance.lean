@@ -3422,6 +3422,68 @@ def IncDepRawTypingSemanticResult.refl
         termResult.semanticTerm) where
   semanticTerm := IncIdentityTerm.refl termResult.semanticTerm
 
+noncomputable def incDepRawOneUnitVariableTypingSemantic :=
+  incDepRawOneUnitContextSemanticTree.interpretVariable
+    (IncDepRawLookup.here (context := []) (type := IncDepRawType.unit))
+
+noncomputable def incDepRawOneUnitReflTypingSemantic :=
+  IncDepRawTypingSemanticResult.refl
+    incDepRawOneUnitVariableTypingSemantic
+
+noncomputable def incDepRawDependentReflTypingSemantic :=
+  IncDepRawTypingSemanticResult.lambda
+    incDepRawOneUnitReflTypingSemantic
+
+noncomputable def incDepRawClosedUnitTypingSemantic :=
+  incDepRawEmptyContextSemanticTree.interpretUnit
+
+noncomputable def incDepRawDependentReflApplicationTypingSemantic :=
+  IncDepRawTypingSemanticResult.apply
+    incDepRawDependentReflTypingSemantic
+    incDepRawClosedUnitTypingSemantic
+
+theorem incDepRawDependentReflTypingSemantic_beta :
+    incDepRawDependentReflApplicationTypingSemantic.semanticTerm =
+      IncIdentityTerm.refl incDepUnitTerm := by
+  rfl
+
+noncomputable def incDepRawClosedUnitReflTypingSemantic :=
+  IncDepRawTypingSemanticResult.refl incDepRawClosedUnitTypingSemantic
+
+noncomputable def incDepRawClosedUnitReflFiberTypingSemantic :
+    IncDepRawTypingSemanticResult
+      (IncDepRawHasType.reflRule
+        (IncDepRawHasType.unitRule (context := [])))
+      incDepRawEmptyContextSemantic
+      (fun assignment => incDepRawDependentReflSemanticCodomain
+        ⟨assignment, incDepRawClosedUnitTypingSemantic.semanticTerm assignment⟩) where
+  semanticTerm := fun _ => ⟨⟨rfl⟩⟩
+
+noncomputable def incDepRawDependentPairTypingSemantic :=
+  IncDepRawTypingSemanticResult.pair
+    (domain := IncDepRawType.unit)
+    (codomain := .identity .unit (.var 0) (.var 0))
+    (first := IncDepRawTerm.unit) (second := .refl .unit)
+    (firstTyping := IncDepRawHasType.unitRule)
+    (secondTyping := IncDepRawHasType.reflRule IncDepRawHasType.unitRule)
+    (semanticCodomain := incDepRawDependentReflSemanticCodomain)
+    incDepRawClosedUnitTypingSemantic incDepRawClosedUnitReflFiberTypingSemantic
+
+noncomputable def incDepRawDependentPairFirstTypingSemantic :=
+  IncDepRawTypingSemanticResult.first incDepRawDependentPairTypingSemantic
+
+noncomputable def incDepRawDependentPairSecondTypingSemantic :=
+  IncDepRawTypingSemanticResult.second incDepRawDependentPairTypingSemantic
+
+theorem incDepRawDependentPairFirstTypingSemantic_beta :
+    incDepRawDependentPairFirstTypingSemantic.semanticTerm = incDepUnitTerm := by
+  rfl
+
+theorem incDepRawDependentPairSecondTypingSemantic_beta :
+    incDepRawDependentPairSecondTypingSemantic.semanticTerm =
+      IncIdentityTerm.refl incDepUnitTerm := by
+  rfl
+
 def incDepRawClosedContextSemantic
     {term : IncDepRawTerm} {type : IncDepRawType}
     (certified : IncDepRawCertifiedTyping [] term type) :

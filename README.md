@@ -683,6 +683,14 @@ It currently establishes:
   On the two-variable telescope, both newest and older variable typing results
   are generated automatically and evaluate to `assignment.2` and
   `assignment.1.2`; a unit result is generated in the same open context.
+  Composite fold paths now execute too.  For dependent Pi, the implementation
+  chains context extension, variable interpretation, reflexivity, lambda, and
+  application builders; the resulting application is definitionally semantic
+  reflexivity.  For dependent Sigma, unit and the correctly indexed reflexivity
+  fiber feed the pair builder, then both projection builders; their results are
+  definitionally unit and reflexivity.  Thus every non-atomic term builder is
+  exercised in an end-to-end typed semantic construction, including dependent
+  fiber index alignment.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

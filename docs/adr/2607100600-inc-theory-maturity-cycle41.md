@@ -289,6 +289,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `interpretUnit`は任意interpreted contextでunit resultを返す。2変数telescopeでnewest/older
   variable typing resultが自動生成され`assignment.2`/`assignment.1.2`へ評価され、同じopen
   contextでunit resultも生成できることをchecked。
+- composite fold pathも実行した。dependent Piではcontext extension、variable interpretation、
+  refl、lambda、application builderを連結し、結果がdefinitionally semantic reflとなる。
+  dependent Sigmaではunitと正しいfiber index上のreflをpair builderへ渡し、両projection builderの
+  結果がdefinitionally unit/reflとなる。dependent fiber index alignmentを含む全non-atomic term
+  builderをend-to-end typed semantic constructionで検証した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
