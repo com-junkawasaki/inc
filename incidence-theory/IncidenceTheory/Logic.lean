@@ -1724,6 +1724,80 @@ theorem Formula.logicalNeg_or {Atom : Type u}
   intro q
   exact Quotient.sound (derives_neg_or_deMorgan_iff p q)
 
+theorem derives_top_imp_iff {Atom : Type u} (formula : Formula Atom) :
+    Derives [] (Formula.iff (.imp .top formula) formula) := by
+  apply derives_iffI
+  · apply Derives.impI
+    exact Derives.impE (Derives.ax (by simp)) Derives.topI
+  · apply Derives.impI
+    apply Derives.impI
+    exact Derives.ax (p := formula) (by simp)
+
+theorem derives_imp_top_iff {Atom : Type u} (formula : Formula Atom) :
+    Derives [] (Formula.iff (.imp formula .top) .top) := by
+  apply derives_iffI
+  · apply Derives.impI
+    exact Derives.topI
+  · apply Derives.impI
+    apply Derives.impI
+    exact Derives.topI
+
+theorem derives_bottom_imp_iff {Atom : Type u} (formula : Formula Atom) :
+    Derives [] (Formula.iff (.imp .bot formula) .top) := by
+  apply derives_iffI
+  · apply Derives.impI
+    exact Derives.topI
+  · apply Derives.impI
+    apply Derives.impI
+    exact Derives.botE (Derives.ax (by simp))
+
+theorem derives_imp_self_iff {Atom : Type u} (formula : Formula Atom) :
+    Derives [] (Formula.iff (.imp formula formula) .top) := by
+  apply derives_iffI
+  · apply Derives.impI
+    exact Derives.topI
+  · apply Derives.impI
+    apply Derives.impI
+    exact Derives.ax (p := formula) (by simp)
+
+theorem Formula.logicalTop_imp {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalImp Formula.logicalTop formula = formula := by
+  refine Quotient.inductionOn formula ?_
+  intro formula
+  exact Quotient.sound (derives_top_imp_iff formula)
+
+theorem Formula.logicalImp_top {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalImp formula Formula.logicalTop = Formula.logicalTop := by
+  refine Quotient.inductionOn formula ?_
+  intro formula
+  exact Quotient.sound (derives_imp_top_iff formula)
+
+theorem Formula.logicalBottom_imp {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalImp Formula.logicalBottom formula = Formula.logicalTop := by
+  refine Quotient.inductionOn formula ?_
+  intro formula
+  exact Quotient.sound (derives_bottom_imp_iff formula)
+
+theorem Formula.logicalImp_self {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalImp formula formula = Formula.logicalTop := by
+  refine Quotient.inductionOn formula ?_
+  intro formula
+  exact Quotient.sound (derives_imp_self_iff formula)
+
+theorem Formula.logicalNeg_top {Atom : Type u} :
+    Formula.logicalNeg (Formula.logicalTop : Formula.LogicalEquivalenceClass Atom) =
+      Formula.logicalBottom := by
+  exact Formula.logicalTop_imp Formula.logicalBottom
+
+theorem Formula.logicalNeg_bottom {Atom : Type u} :
+    Formula.logicalNeg (Formula.logicalBottom : Formula.LogicalEquivalenceClass Atom) =
+      Formula.logicalTop := by
+  exact Formula.logicalBottom_imp Formula.logicalBottom
+
 theorem satisfies_or_and_distributive_iff {Atom : Type u}
     (valuation : Atom → Prop) (p q r : Formula Atom) :
     Satisfies valuation (Formula.iff (.or p (.and q r))
