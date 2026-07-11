@@ -2086,6 +2086,122 @@ theorem IncFunctorEquivalenceCriterion.inverseMap_spec
     (D.comp (criterion.inverseObj_iso target).inv
       (D.comp morphism (criterion.inverseObj_iso source).hom)))
 
+theorem IncFunctorEquivalenceCriterion.inverseMap_id
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F)
+    (object : DObj) :
+    criterion.inverseMap (D.id object) =
+      C.id (criterion.inverseObj object) := by
+  apply criterion.fullyFaithful.faithful
+  rw [criterion.inverseMap_spec, F.map_id]
+  rw [D.id_comp, (criterion.inverseObj_iso object).inv_hom]
+
+theorem IncFunctorEquivalenceCriterion.inverseMap_comp
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F)
+    {source middle target : DObj}
+    (second : D.Hom middle target) (first : D.Hom source middle) :
+    criterion.inverseMap (D.comp second first) =
+      C.comp (criterion.inverseMap second) (criterion.inverseMap first) := by
+  apply criterion.fullyFaithful.faithful
+  rw [criterion.inverseMap_spec, F.map_comp]
+  rw [criterion.inverseMap_spec, criterion.inverseMap_spec]
+  let sourceIso := criterion.inverseObj_iso source
+  let middleIso := criterion.inverseObj_iso middle
+  let targetIso := criterion.inverseObj_iso target
+  change D.comp targetIso.inv
+      (D.comp (D.comp second first) sourceIso.hom) =
+    D.comp
+      (D.comp targetIso.inv (D.comp second middleIso.hom))
+      (D.comp middleIso.inv (D.comp first sourceIso.hom))
+  calc
+    D.comp targetIso.inv (D.comp (D.comp second first) sourceIso.hom) =
+      D.comp targetIso.inv
+        (D.comp second (D.comp first sourceIso.hom)) := by
+          rw [D.assoc second first]
+    _ = D.comp targetIso.inv
+        (D.comp second
+          (D.comp (D.id middle) (D.comp first sourceIso.hom))) := by
+            rw [D.id_comp]
+    _ = D.comp targetIso.inv
+        (D.comp second
+          (D.comp (D.comp middleIso.hom middleIso.inv)
+            (D.comp first sourceIso.hom))) := by
+              rw [middleIso.hom_inv]
+    _ = D.comp
+        (D.comp targetIso.inv (D.comp second middleIso.hom))
+        (D.comp middleIso.inv (D.comp first sourceIso.hom)) := by
+          rw [← D.assoc, ← D.assoc, ← D.assoc, D.assoc targetIso.inv]
+
+noncomputable def IncFunctorEquivalenceCriterion.inverseFunctor
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F) :
+    IncFunctor D C where
+  obj := criterion.inverseObj
+  map := criterion.inverseMap
+  map_id := criterion.inverseMap_id
+  map_comp := criterion.inverseMap_comp
+
+noncomputable def IncFunctorEquivalenceCriterion.counit
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F) :
+    IncNaturalIsomorphism (F.comp criterion.inverseFunctor)
+      (IncFunctor.identity D) where
+  hom :=
+    { app := fun object => (criterion.inverseObj_iso object).hom
+      naturality := by
+        intro source target morphism
+        change D.comp morphism (criterion.inverseObj_iso source).hom =
+          D.comp (criterion.inverseObj_iso target).hom
+            (F.map (criterion.inverseMap morphism))
+        rw [criterion.inverseMap_spec]
+        symm
+        calc
+          D.comp (criterion.inverseObj_iso target).hom
+              (D.comp (criterion.inverseObj_iso target).inv
+                (D.comp morphism (criterion.inverseObj_iso source).hom)) =
+            D.comp
+              (D.comp (criterion.inverseObj_iso target).hom
+                (criterion.inverseObj_iso target).inv)
+              (D.comp morphism (criterion.inverseObj_iso source).hom) :=
+                D.assoc _ _ _
+          _ = D.comp (D.id target)
+              (D.comp morphism (criterion.inverseObj_iso source).hom) := by
+                rw [(criterion.inverseObj_iso target).hom_inv]
+          _ = D.comp morphism (criterion.inverseObj_iso source).hom :=
+                D.id_comp _ }
+  inv :=
+    { app := fun object => (criterion.inverseObj_iso object).inv
+      naturality := by
+        intro source target morphism
+        change D.comp (F.map (criterion.inverseMap morphism))
+            (criterion.inverseObj_iso source).inv =
+          D.comp (criterion.inverseObj_iso target).inv morphism
+        rw [criterion.inverseMap_spec]
+        calc
+          D.comp
+              (D.comp (criterion.inverseObj_iso target).inv
+                (D.comp morphism (criterion.inverseObj_iso source).hom))
+              (criterion.inverseObj_iso source).inv =
+            D.comp (criterion.inverseObj_iso target).inv
+              (D.comp morphism
+                (D.comp (criterion.inverseObj_iso source).hom
+                  (criterion.inverseObj_iso source).inv)) := by
+                    rw [← D.assoc, ← D.assoc]
+          _ = D.comp (criterion.inverseObj_iso target).inv
+              (D.comp morphism (D.id source)) := by
+                rw [(criterion.inverseObj_iso source).hom_inv]
+          _ = D.comp (criterion.inverseObj_iso target).inv morphism := by
+                rw [D.comp_id] }
+  hom_inv_id := by
+    apply IncNaturalTransformation.ext
+    intro object
+    exact (criterion.inverseObj_iso object).inv_hom
+  inv_hom_id := by
+    apply IncNaturalTransformation.ext
+    intro object
+    exact (criterion.inverseObj_iso object).hom_inv
+
 theorem IncFunctorEquivalenceCriterion.identity
     {Obj : Type u} (C : IncCategory Obj) :
     IncFunctorEquivalenceCriterion (IncFunctor.identity C) where
