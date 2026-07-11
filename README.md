@@ -63,7 +63,8 @@ It currently establishes:
   not, and leafhood holds exactly when boundary presence does not; the atom
   semantics inherits the same checked negation relation.  Consequently every
   boundary-observation embedding automatically preserves and reflects leaf
-  valuation, leaf-formula truth, and leaf-context satisfaction as well; this
+  valuation, leaf-formula truth, leaf-context satisfaction, and leaf semantic
+  consequence as well.  Derivations are sound for leaf entailment, and the full
   dual transport is instantiated for the `Nat → PathId.node` embedding.  Its intuitionistic
   Kripke semantics, persistence theorem, and
   Kripke soundness theorem are checked; atom translations pull Kripke models

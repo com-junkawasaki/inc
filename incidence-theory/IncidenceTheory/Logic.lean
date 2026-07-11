@@ -5059,6 +5059,12 @@ def IncidenceLeafContextSatisfies {I R T : Type u} [DecidableEq I]
     (incidence : Incidence I R T) (context : List (Formula I)) : Prop :=
   ContextSatisfies (IncidenceLeafValuation incidence) context
 
+def IncidenceLeafEntails {I R T : Type u} [DecidableEq I]
+    (incidence : Incidence I R T) (context : List (Formula I))
+    (formula : Formula I) : Prop :=
+  IncidenceLeafContextSatisfies incidence context →
+    IncidenceLeafSatisfies incidence formula
+
 theorem incidenceBoundaryValuation_iff_not_leaf
     {I R T : Type u} [DecidableEq I]
     (incidence : Incidence I R T) (atom : I) :
@@ -5135,6 +5141,13 @@ theorem derives_incidenceLeaf_sound
     (holds : IncidenceLeafContextSatisfies incidence context) :
     IncidenceLeafSatisfies incidence formula :=
   derives_sound derivation holds
+
+theorem derives_incidenceLeaf_entails
+    {I R T : Type u} [DecidableEq I] {incidence : Incidence I R T}
+    {context : List (Formula I)} {formula : Formula I}
+    (derivation : Derives context formula) :
+    IncidenceLeafEntails incidence context formula :=
+  fun holds => derives_incidenceLeaf_sound derivation holds
 
 theorem derives_incidenceBoundary_entails
     {I R T : Type u} [DecidableEq I] {incidence : Incidence I R T}
@@ -5267,6 +5280,24 @@ theorem IncidenceBoundaryObservationEmbedding.leafContextSatisfies_iff
   unfold IncidenceLeafContextSatisfies
   rw [context_satisfies_map_iff]
   exact contextSatisfies_congr embedding.leaf_iff context
+
+theorem IncidenceBoundaryObservationEmbedding.leafEntails_iff
+    {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
+    {source : Incidence I R T} {target : Incidence I' R' T'}
+    (embedding : IncidenceBoundaryObservationEmbedding source target)
+    (context : List (Formula I)) (formula : Formula I) :
+    IncidenceLeafEntails target (Formula.mapContext embedding.map context)
+        (formula.map embedding.map) ↔
+      IncidenceLeafEntails source context formula := by
+  constructor
+  · intro targetEntails sourceHolds
+    apply (embedding.leafSatisfies_iff formula).mp
+    apply targetEntails
+    exact (embedding.leafContextSatisfies_iff context).mpr sourceHolds
+  · intro sourceEntails targetHolds
+    apply (embedding.leafSatisfies_iff formula).mpr
+    apply sourceEntails
+    exact (embedding.leafContextSatisfies_iff context).mp targetHolds
 
 theorem IncidenceBoundaryObservationEmbedding.contextSatisfies_iff
     {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']

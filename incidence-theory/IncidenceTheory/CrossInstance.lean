@@ -166,6 +166,13 @@ theorem natToPath_leafLogic_context_iff (context : List (Formula Nat)) :
       IncidenceLeafContextSatisfies natIncidence context :=
   natToPathBoundaryObservationEmbedding.leafContextSatisfies_iff context
 
+theorem natToPath_leafLogic_entails_iff
+    (context : List (Formula Nat)) (formula : Formula Nat) :
+    IncidenceLeafEntails pathIncidenceChained
+        (Formula.mapContext PathId.node context) (formula.map PathId.node) ↔
+      IncidenceLeafEntails natIncidence context formula :=
+  natToPathBoundaryObservationEmbedding.leafEntails_iff context formula
+
 theorem node_unit_natural :
   PathId.node natIncidence.unit = pathIncidenceChained.unit := by
   simp [natIncidence, pathIncidenceChained]
