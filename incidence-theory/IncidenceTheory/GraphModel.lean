@@ -1796,6 +1796,63 @@ noncomputable def hfNatIncidenceImageOrderedSemiringLaws :
   mul_left_cancel_of_ne_zero := HFNatIncidenceImage.mul_left_cancel_of_ne_zero
   mul_right_cancel_of_ne_zero := HFNatIncidenceImage.mul_right_cancel_of_ne_zero
 
+def HFNatIncidenceImage.lt (left right : HFNatIncidenceImage) : Prop :=
+  left.index < right.index
+
+noncomputable def HFNatIncidenceImage.div
+    (dividend divisor : HFNatIncidenceImage) : HFNatIncidenceImage :=
+  hfNatIncidenceImageEncode (dividend.index / divisor.index)
+
+noncomputable def HFNatIncidenceImage.mod
+    (dividend divisor : HFNatIncidenceImage) : HFNatIncidenceImage :=
+  hfNatIncidenceImageEncode (dividend.index % divisor.index)
+
+theorem HFNatIncidenceImage.index_div (dividend divisor : HFNatIncidenceImage) :
+    (dividend.div divisor).index = dividend.index / divisor.index :=
+  HFNatIncidenceImage.index_encode _
+
+theorem HFNatIncidenceImage.index_mod (dividend divisor : HFNatIncidenceImage) :
+    (dividend.mod divisor).index = dividend.index % divisor.index :=
+  HFNatIncidenceImage.index_encode _
+
+theorem HFNatIncidenceImage.div_add_mod
+    (dividend divisor : HFNatIncidenceImage) :
+    (divisor.mul (dividend.div divisor)).add (dividend.mod divisor) = dividend := by
+  apply HFNatIncidenceImage.eq_of_index_eq
+  rw [HFNatIncidenceImage.index_add, HFNatIncidenceImage.index_mul,
+    HFNatIncidenceImage.index_div, HFNatIncidenceImage.index_mod]
+  exact Nat.div_add_mod dividend.index divisor.index
+
+theorem HFNatIncidenceImage.mod_lt
+    (dividend : HFNatIncidenceImage) {divisor : HFNatIncidenceImage}
+    (nonzero : divisor ≠ hfNatIncidenceImageZero) :
+    (dividend.mod divisor).lt divisor := by
+  unfold HFNatIncidenceImage.lt
+  rw [HFNatIncidenceImage.index_mod]
+  exact Nat.mod_lt dividend.index
+    (HFNatIncidenceImage.index_pos_of_ne_zero nonzero)
+
+structure HFNatIncidenceImageEuclideanLaws where
+  orderedSemiring : HFNatIncidenceImageOrderedSemiringLaws
+  div : HFNatIncidenceImage → HFNatIncidenceImage → HFNatIncidenceImage
+  mod : HFNatIncidenceImage → HFNatIncidenceImage → HFNatIncidenceImage
+  lt : HFNatIncidenceImage → HFNatIncidenceImage → Prop
+  div_add_mod : ∀ dividend divisor,
+    orderedSemiring.semiring.add
+      (orderedSemiring.semiring.mul divisor (div dividend divisor))
+      (mod dividend divisor) = dividend
+  mod_lt : ∀ dividend {divisor},
+    divisor ≠ orderedSemiring.semiring.zero → lt (mod dividend divisor) divisor
+
+noncomputable def hfNatIncidenceImageEuclideanLaws :
+    HFNatIncidenceImageEuclideanLaws where
+  orderedSemiring := hfNatIncidenceImageOrderedSemiringLaws
+  div := HFNatIncidenceImage.div
+  mod := HFNatIncidenceImage.mod
+  lt := HFNatIncidenceImage.lt
+  div_add_mod := HFNatIncidenceImage.div_add_mod
+  mod_lt := HFNatIncidenceImage.mod_lt
+
 /- Graph with nodes and edges as incidences. We take I as a sum of Node | Edge. -/
 inductive GId where | node (n : Nat) | edge (e : Nat)
 deriving DecidableEq, Repr
