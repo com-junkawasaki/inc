@@ -1504,6 +1504,44 @@ def MorphismIso.trans {Obj : Type u} {C : IncCategory Obj}
       C.assoc first.hom first.inv second.inv,
       first.hom_inv, C.id_comp, second.hom_inv]
 
+def IncFunctor.mapIso
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) {source target : CObj}
+    (iso : MorphismIso C source target) : MorphismIso D (F.obj source) (F.obj target) where
+  hom := F.map iso.hom
+  inv := F.map iso.inv
+  inv_hom := by
+    rw [← F.map_comp, iso.inv_hom, F.map_id]
+  hom_inv := by
+    rw [← F.map_comp, iso.hom_inv, F.map_id]
+
+noncomputable def IncFunctorFullyFaithful.reflectIso
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (fullyFaithful : IncFunctorFullyFaithful F)
+    {source target : CObj}
+    (iso : MorphismIso D (F.obj source) (F.obj target)) :
+    MorphismIso C source target := by
+  let hom := Classical.choose (fullyFaithful.full iso.hom)
+  have homMap := Classical.choose_spec (fullyFaithful.full iso.hom)
+  let inv := Classical.choose (fullyFaithful.full iso.inv)
+  have invMap := Classical.choose_spec (fullyFaithful.full iso.inv)
+  exact
+    { hom := hom
+      inv := inv
+      inv_hom := by
+        apply fullyFaithful.faithful
+        rw [F.map_comp, invMap, homMap, iso.inv_hom, F.map_id]
+      hom_inv := by
+        apply fullyFaithful.faithful
+        rw [F.map_comp, homMap, invMap, iso.hom_inv, F.map_id] }
+
+noncomputable def IncCategoryEquivalence.forward_reflectIso
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) {source target : CObj}
+    (iso : MorphismIso D (equivalence.forward.obj source)
+      (equivalence.forward.obj target)) : MorphismIso C source target :=
+  equivalence.forward_fullyFaithful.reflectIso iso
+
 theorem MorphismIso.trans_hom {Obj : Type u} {C : IncCategory Obj}
     {source middle target : Obj} (first : MorphismIso C source middle)
     (second : MorphismIso C middle target) :
