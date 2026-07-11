@@ -1267,6 +1267,13 @@ It currently establishes:
   and proves the substituted-term coherence in the new formation result.
   Reflexive and transitive rebase witnesses are checked, so several recursive
   normalization steps can be composed without collapsing them to equality.
+  The pre-existing aligned instantiate package is now connected to this layer.
+  `canonicalFiberResult` exposes its canonical endpoint, while
+  `toCanonicalRebase` and `fromCanonicalRebase` give checked rebases in both
+  directions between the structural and canonical formation results.
+  `rebaseToCanonical` and `rebaseFromCanonical` lift those witnesses directly to
+  typing-substitution results.  Application and second projection can therefore
+  cross the instantiate boundary without requiring definitional equality.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

@@ -667,6 +667,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   substitution fiber equivalenceに関して作るnaturality squareを保持する。`IncDepRawTypingSubstitutionFiberResult.rebase`は
   source/target両termをtransportし、新formation result上のsubstituted-term coherenceを証明する。rebaseのreflexive witnessと
   transitive compositionもcheckedにし、複数のrecursive normalization stepをequalityへ潰さず合成可能にした。
+- 既存のaligned instantiate packageをrebase層へ接続した。`canonicalFiberResult`がcanonical endpointを公開し、
+  `toCanonicalRebase`/`fromCanonicalRebase`がstructural/canonical formation result間の両方向checked rebaseを返す。
+  `rebaseToCanonical`/`rebaseFromCanonical`はこれをtyping-substitution resultへ直接liftする。したがってapplicationと第二射影は
+  definitional equalityを要求せずinstantiate境界を横断できる。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

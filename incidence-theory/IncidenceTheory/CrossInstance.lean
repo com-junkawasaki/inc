@@ -6363,6 +6363,72 @@ structure IncDepRawFormationSubstitutionFiberRebase
         substitutionResult.semanticSubstitution).transport
           (left.semanticFiberEquivalence.transport term)
 
+def IncDepRawAlignedFormationSubstitutionFiberResult.canonicalFiberResult
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawAlignedFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult) :
+    IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult where
+  targetFormationResult := { semanticType := result.targetCanonical }
+  sourceFormationResult := { semanticType := result.sourceCanonical }
+  semanticFiberEquivalence := result.canonicalEquivalence
+
+noncomputable def IncDepRawAlignedFormationSubstitutionFiberResult.toCanonicalRebase
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawAlignedFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult) :
+    IncDepRawFormationSubstitutionFiberRebase result.toFormationFiberResult
+      result.canonicalFiberResult := by
+  cases result with
+  | mk targetFormationResult sourceFormationResult sourceCanonical
+      targetCanonical sourceAlignment targetAlignment canonicalEquivalence =>
+      cases sourceAlignment
+      cases targetAlignment
+      exact
+        { sourceEquivalence := IncTypeInContext.FiberEquiv.refl _
+          targetEquivalence := IncTypeInContext.FiberEquiv.refl _
+          naturality := by intro term; rfl }
+
+noncomputable def IncDepRawAlignedFormationSubstitutionFiberResult.fromCanonicalRebase
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawAlignedFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult) :
+    IncDepRawFormationSubstitutionFiberRebase result.canonicalFiberResult
+      result.toFormationFiberResult := by
+  cases result with
+  | mk targetFormationResult sourceFormationResult sourceCanonical
+      targetCanonical sourceAlignment targetAlignment canonicalEquivalence =>
+      cases sourceAlignment
+      cases targetAlignment
+      exact
+        { sourceEquivalence := IncTypeInContext.FiberEquiv.refl _
+          targetEquivalence := IncTypeInContext.FiberEquiv.refl _
+          naturality := by intro term; rfl }
+
 def IncDepRawFormationSubstitutionFiberRebase.refl
     {source target : List IncDepRawType} {type : IncDepRawType}
     {substitution : IncDepRawSubstitution source target}
@@ -6442,6 +6508,46 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.rebase
     rw [rebase.naturality result.sourceTermResult.semanticTerm,
       result.semanticTerm_coherence,
       IncTypeInContext.FiberEquiv.reindex_transport]
+
+noncomputable def IncDepRawTypingSubstitutionFiberResult.rebaseToCanonical
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {aligned : IncDepRawAlignedFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult}
+    (result : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := targetTyping) aligned.toFormationFiberResult) :
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := targetTyping) aligned.canonicalFiberResult :=
+  result.rebase aligned.toCanonicalRebase
+
+noncomputable def IncDepRawTypingSubstitutionFiberResult.rebaseFromCanonical
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {aligned : IncDepRawAlignedFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult}
+    (result : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := targetTyping) aligned.canonicalFiberResult) :
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := targetTyping) aligned.toFormationFiberResult :=
+  result.rebase aligned.fromCanonicalRebase
 
 structure IncDepRawVariableSubstitutionFiberResult
     {source target : List IncDepRawType} {position : Nat}
