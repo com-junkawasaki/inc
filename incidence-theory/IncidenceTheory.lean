@@ -3282,6 +3282,16 @@ structure IncTypeEquivalence (A B : Type u) where
   inverse_forward : ∀ value, inverse (forward value) = value
   forward_inverse : ∀ value, forward (inverse value) = value
 
+theorem IncTypeEquivalence.ext {A B : Type u}
+    {first second : IncTypeEquivalence A B}
+    (forwardEq : first.forward = second.forward)
+    (inverseEq : first.inverse = second.inverse) : first = second := by
+  cases first
+  cases second
+  cases forwardEq
+  cases inverseEq
+  rfl
+
 def IncTypeEquivalence.refl (A : Type u) : IncTypeEquivalence A A where
   forward := id
   inverse := id
@@ -3306,6 +3316,45 @@ def IncTypeEquivalence.trans {A B C : Type u}
   forward_inverse := by
     intro value
     rw [first.forward_inverse, second.forward_inverse]
+
+theorem IncTypeEquivalence.refl_trans {A B : Type u}
+    (equivalence : IncTypeEquivalence A B) :
+    equivalence.trans (IncTypeEquivalence.refl A) = equivalence := by
+  apply IncTypeEquivalence.ext <;> rfl
+
+theorem IncTypeEquivalence.trans_refl {A B : Type u}
+    (equivalence : IncTypeEquivalence A B) :
+    (IncTypeEquivalence.refl B).trans equivalence = equivalence := by
+  apply IncTypeEquivalence.ext <;> rfl
+
+theorem IncTypeEquivalence.trans_assoc {A B C D : Type u}
+    (third : IncTypeEquivalence C D) (second : IncTypeEquivalence B C)
+    (first : IncTypeEquivalence A B) :
+    (third.trans second).trans first = third.trans (second.trans first) := by
+  apply IncTypeEquivalence.ext <;> rfl
+
+theorem IncTypeEquivalence.symm_symm {A B : Type u}
+    (equivalence : IncTypeEquivalence A B) :
+    equivalence.symm.symm = equivalence := by
+  apply IncTypeEquivalence.ext <;> rfl
+
+theorem IncTypeEquivalence.symm_trans_self {A B : Type u}
+    (equivalence : IncTypeEquivalence A B) :
+    equivalence.symm.trans equivalence = IncTypeEquivalence.refl A := by
+  apply IncTypeEquivalence.ext
+  · funext value
+    exact equivalence.inverse_forward value
+  · funext value
+    exact equivalence.inverse_forward value
+
+theorem IncTypeEquivalence.trans_symm_self {A B : Type u}
+    (equivalence : IncTypeEquivalence A B) :
+    equivalence.trans equivalence.symm = IncTypeEquivalence.refl B := by
+  apply IncTypeEquivalence.ext
+  · funext value
+    exact equivalence.forward_inverse value
+  · funext value
+    exact equivalence.forward_inverse value
 
 def IncDependentFamilyIsomorphism.sumEquivalence
     {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
@@ -3430,6 +3479,59 @@ theorem IncDependentFamilyIsomorphism.fiberEquivalence_trans_forward
       (secondIso.fiberEquivalence index).forward ∘
         (firstIso.fiberEquivalence index).forward := by
   rfl
+
+theorem IncDependentFamilyIsomorphism.sumEquivalence_trans
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {first second third : IncDependentFamily inc}
+    (secondIso : IncDependentFamilyIsomorphism second third)
+    (firstIso : IncDependentFamilyIsomorphism first second) :
+    (secondIso.trans firstIso).sumEquivalence =
+      secondIso.sumEquivalence.trans firstIso.sumEquivalence := by
+  apply IncTypeEquivalence.ext
+  · exact secondIso.sumEquivalence_trans_forward firstIso
+  · exact secondIso.sumEquivalence_trans_inverse firstIso
+
+theorem IncDependentFamilyIsomorphism.productEquivalence_trans
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {first second third : IncDependentFamily inc}
+    (secondIso : IncDependentFamilyIsomorphism second third)
+    (firstIso : IncDependentFamilyIsomorphism first second) :
+    (secondIso.trans firstIso).productEquivalence =
+      secondIso.productEquivalence.trans firstIso.productEquivalence := by
+  apply IncTypeEquivalence.ext
+  · exact secondIso.productEquivalence_trans_forward firstIso
+  · exact secondIso.productEquivalence_trans_inverse firstIso
+
+theorem IncDependentFamilyIsomorphism.fiberEquivalence_trans
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {first second third : IncDependentFamily inc}
+    (secondIso : IncDependentFamilyIsomorphism second third)
+    (firstIso : IncDependentFamilyIsomorphism first second) (index : I) :
+    (secondIso.trans firstIso).fiberEquivalence index =
+      (secondIso.fiberEquivalence index).trans
+        (firstIso.fiberEquivalence index) := by
+  apply IncTypeEquivalence.ext <;> rfl
+
+theorem IncDependentFamilyIsomorphism.sumEquivalence_symm
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target) :
+    iso.symm.sumEquivalence = iso.sumEquivalence.symm := by
+  apply IncTypeEquivalence.ext <;> rfl
+
+theorem IncDependentFamilyIsomorphism.productEquivalence_symm
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target) :
+    iso.symm.productEquivalence = iso.productEquivalence.symm := by
+  apply IncTypeEquivalence.ext <;> rfl
+
+theorem IncDependentFamilyIsomorphism.fiberEquivalence_symm
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target) (index : I) :
+    iso.symm.fiberEquivalence index = (iso.fiberEquivalence index).symm := by
+  apply IncTypeEquivalence.ext <;> rfl
 
 def IncCategoryEquivalence.objectIsoClassEquivalence
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
