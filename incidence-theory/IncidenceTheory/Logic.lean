@@ -671,23 +671,65 @@ theorem derivablyEquivalent_and_congr {Atom : Type u}
   · apply Derives.impI
     apply Derives.andI
     · apply Derives.impE
-      · exact derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem)
-          (derives_iffEL leftEquivalent)
+      · exact derives_weaken (source := []) (target := (.and left right) :: [])
+          (by intro formula hmem; simp at hmem)
+          (derives_iffEL (context := []) (left := left) (right := left') leftEquivalent)
       · exact Derives.andEL (p := left) (q := right) (Derives.ax (by simp))
     · apply Derives.impE
-      · exact derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem)
-          (derives_iffEL rightEquivalent)
+      · exact derives_weaken (source := []) (target := (.and left right) :: [])
+          (by intro formula hmem; simp at hmem)
+          (derives_iffEL (context := []) (left := right) (right := right') rightEquivalent)
       · exact Derives.andER (p := left) (q := right) (Derives.ax (by simp))
   · apply Derives.impI
     apply Derives.andI
     · apply Derives.impE
-      · exact derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem)
-          (derives_iffER leftEquivalent)
+      · exact derives_weaken (source := []) (target := (.and left' right') :: [])
+          (by intro formula hmem; simp at hmem)
+          (derives_iffER (context := []) (left := left) (right := left') leftEquivalent)
       · exact Derives.andEL (p := left') (q := right') (Derives.ax (by simp))
     · apply Derives.impE
-      · exact derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem)
-          (derives_iffER rightEquivalent)
+      · exact derives_weaken (source := []) (target := (.and left' right') :: [])
+          (by intro formula hmem; simp at hmem)
+          (derives_iffER (context := []) (left := right) (right := right') rightEquivalent)
       · exact Derives.andER (p := left') (q := right') (Derives.ax (by simp))
+
+theorem derivablyEquivalent_or_congr {Atom : Type u}
+    {left left' right right' : Formula Atom} :
+    Formula.DerivablyEquivalent left left' →
+      Formula.DerivablyEquivalent right right' →
+        Formula.DerivablyEquivalent (.or left right) (.or left' right') := by
+  intro leftEquivalent rightEquivalent
+  apply derives_iffI
+  · apply Derives.impI
+    refine Derives.orE (p := left) (q := right) (r := .or left' right')
+      (Derives.ax (by simp)) ?_ ?_
+    · apply Derives.orIL
+      apply Derives.impE
+      · exact derives_weaken (source := []) (target := left :: (.or left right) :: [])
+          (by intro formula hmem; simp at hmem)
+          (derives_iffEL (context := []) (left := left) (right := left') leftEquivalent)
+      · exact Derives.ax (by simp)
+    · apply Derives.orIR
+      apply Derives.impE
+      · exact derives_weaken (source := []) (target := right :: (.or left right) :: [])
+          (by intro formula hmem; simp at hmem)
+          (derives_iffEL (context := []) (left := right) (right := right') rightEquivalent)
+      · exact Derives.ax (by simp)
+  · apply Derives.impI
+    refine Derives.orE (p := left') (q := right') (r := .or left right)
+      (Derives.ax (by simp)) ?_ ?_
+    · apply Derives.orIL
+      apply Derives.impE
+      · exact derives_weaken (source := []) (target := left' :: (.or left' right') :: [])
+          (by intro formula hmem; simp at hmem)
+          (derives_iffER (context := []) (left := left) (right := left') leftEquivalent)
+      · exact Derives.ax (by simp)
+    · apply Derives.orIR
+      apply Derives.impE
+      · exact derives_weaken (source := []) (target := right' :: (.or left' right') :: [])
+          (by intro formula hmem; simp at hmem)
+          (derives_iffER (context := []) (left := right) (right := right') rightEquivalent)
+      · exact Derives.ax (by simp)
 
 theorem inconsistent_extension_iff_derives_neg {Atom : Type u}
     {context : List (Formula Atom)} {formula : Formula Atom} :
