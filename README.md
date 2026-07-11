@@ -384,7 +384,10 @@ It currently establishes:
   and leaf truth as well as their finite-sequent entailment relations.  The
   simplex-to-shape quotient instantiates this general interface, so every
   translated formula and context has the same boundary/leaf semantics on the
-  seven-element source and the three-class quotient presentation.
+  seven-element source and the three-class quotient presentation.  Moreover,
+  any two quotient Incidence presentations of the same source are connected by
+  the unique classification equivalence as a boundary-observation embedding;
+  boundary and leaf truth therefore agree across all such presentation targets.
 
 The minimal category/functor/pushout vocabulary is also formalized. A functor
 is proved to map a pushout cocone to a commuting cocone; preservation of the

@@ -708,6 +708,50 @@ theorem BisimulationQuotientIncidencePresentation.leafEntails_iff
       IncidenceLeafEntails source context formula :=
   presentation.observationEmbedding.leafEntails_iff context formula
 
+noncomputable def BisimulationQuotientIncidencePresentation.targetObservationEmbedding
+    {I R T Q₁ QR₁ QT₁ Q₂ QR₂ QT₂ : Type u}
+    [DecidableEq I] [DecidableEq Q₁] [DecidableEq Q₂]
+    {source : Incidence I R T}
+    (first : BisimulationQuotientIncidencePresentation
+      (Q := Q₁) (QR := QR₁) (QT := QT₁) source)
+    (second : BisimulationQuotientIncidencePresentation
+      (Q := Q₂) (QR := QR₂) (QT := QT₂) source) :
+    IncidenceBoundaryObservationEmbedding first.target second.target where
+  map := (first.classification.targetEquivalence second.classification).forward
+  boundary_iff := by
+    intro targetAtom
+    rcases first.classification.surjective targetAtom with ⟨sourceAtom, rfl⟩
+    rw [BisimulationQuotientClassification.targetEquivalence_classify]
+    exact (second.boundary_iff sourceAtom).trans (first.boundary_iff sourceAtom).symm
+
+theorem BisimulationQuotientIncidencePresentation.targetSatisfies_iff
+    {I R T Q₁ QR₁ QT₁ Q₂ QR₂ QT₂ : Type u}
+    [DecidableEq I] [DecidableEq Q₁] [DecidableEq Q₂]
+    {source : Incidence I R T}
+    (first : BisimulationQuotientIncidencePresentation
+      (Q := Q₁) (QR := QR₁) (QT := QT₁) source)
+    (second : BisimulationQuotientIncidencePresentation
+      (Q := Q₂) (QR := QR₂) (QT := QT₂) source)
+    (formula : Formula Q₁) :
+    IncidenceBoundarySatisfies second.target
+        (formula.map (first.targetObservationEmbedding second).map) ↔
+      IncidenceBoundarySatisfies first.target formula :=
+  (first.targetObservationEmbedding second).satisfies_iff formula
+
+theorem BisimulationQuotientIncidencePresentation.targetLeafSatisfies_iff
+    {I R T Q₁ QR₁ QT₁ Q₂ QR₂ QT₂ : Type u}
+    [DecidableEq I] [DecidableEq Q₁] [DecidableEq Q₂]
+    {source : Incidence I R T}
+    (first : BisimulationQuotientIncidencePresentation
+      (Q := Q₁) (QR := QR₁) (QT := QT₁) source)
+    (second : BisimulationQuotientIncidencePresentation
+      (Q := Q₂) (QR := QR₂) (QT := QT₂) source)
+    (formula : Formula Q₁) :
+    IncidenceLeafSatisfies second.target
+        (formula.map (first.targetObservationEmbedding second).map) ↔
+      IncidenceLeafSatisfies first.target formula :=
+  (first.targetObservationEmbedding second).leafSatisfies_iff formula
+
 /- Unlike `cycleIncidence`'s `boundary`/`glue` (cycle 38), which failed
    the well-definedness check `Quotient.lift` needs, `simplexToShape`
    PASSES it -- this is exactly what `simplexToShape_distinguishes`
