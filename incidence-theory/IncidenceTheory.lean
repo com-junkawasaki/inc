@@ -2534,6 +2534,61 @@ noncomputable def IncCategoryEquivalence.forward_reflectIso
       (equivalence.forward.obj target)) : MorphismIso C source target :=
   equivalence.forward_fullyFaithful.reflectIso iso
 
+def IncObjectsIsomorphic {Obj : Type u} (C : IncCategory Obj)
+    (source target : Obj) : Prop :=
+  Nonempty (MorphismIso C source target)
+
+theorem incObjectsIsomorphic_equivalence
+    {Obj : Type u} (C : IncCategory Obj) :
+    Equivalence (IncObjectsIsomorphic C) where
+  refl := by
+    intro object
+    exact ⟨MorphismIso.refl object⟩
+  symm := by
+    intro source target h
+    rcases h with ⟨iso⟩
+    exact ⟨iso.symm⟩
+  trans := by
+    intro source middle target h₁ h₂
+    rcases h₁ with ⟨first⟩
+    rcases h₂ with ⟨second⟩
+    exact ⟨first.trans second⟩
+
+theorem IncFunctor.preservesObjectsIsomorphic
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) {source target : CObj} :
+    IncObjectsIsomorphic C source target →
+      IncObjectsIsomorphic D (F.obj source) (F.obj target) := by
+  rintro ⟨iso⟩
+  exact ⟨F.mapIso iso⟩
+
+theorem IncFunctorFullyFaithful.reflectsObjectsIsomorphic
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (fullyFaithful : IncFunctorFullyFaithful F)
+    {source target : CObj} :
+    IncObjectsIsomorphic D (F.obj source) (F.obj target) →
+      IncObjectsIsomorphic C source target := by
+  rintro ⟨iso⟩
+  exact ⟨fullyFaithful.reflectIso iso⟩
+
+theorem IncFunctorFullyFaithful.objectsIsomorphic_iff
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (fullyFaithful : IncFunctorFullyFaithful F)
+    {source target : CObj} :
+    IncObjectsIsomorphic C source target ↔
+      IncObjectsIsomorphic D (F.obj source) (F.obj target) := by
+  constructor
+  · exact F.preservesObjectsIsomorphic
+  · exact fullyFaithful.reflectsObjectsIsomorphic
+
+theorem IncCategoryEquivalence.forward_objectsIsomorphic_iff
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) {source target : CObj} :
+    IncObjectsIsomorphic C source target ↔
+      IncObjectsIsomorphic D (equivalence.forward.obj source)
+        (equivalence.forward.obj target) :=
+  equivalence.forward_fullyFaithful.objectsIsomorphic_iff
+
 theorem MorphismIso.trans_hom {Obj : Type u} {C : IncCategory Obj}
     {source middle target : Obj} (first : MorphismIso C source middle)
     (second : MorphismIso C middle target) :
