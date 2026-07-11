@@ -5007,6 +5007,33 @@ theorem IncDepRawSubstitutionReplacementSemanticResult.lift_here_term
       sourceResult.semanticContext.extendVariable sourceDomain.semanticType := by
   rfl
 
+theorem IncDepRawSubstitutionReplacementSemanticResult.lift_there_term
+    {source target : List IncDepRawType} {domain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult)
+    {domainFormation : IncDepRawWellFormed target domain}
+    {substitutedDomainFormation : IncDepRawWellFormed source
+      (domain.substitute substitution.term)}
+    (targetDomain : IncDepRawFormationSemanticResult domainFormation targetResult)
+    (sourceDomain : IncDepRawFormationSemanticResult
+      substitutedDomainFormation sourceResult)
+    (coherence : sourceDomain.semanticType = targetDomain.semanticType.reindex
+      substitutionResult.semanticSubstitution)
+    {position type} (lookup : IncDepRawLookup target position type) :
+    ((IncDepRawSubstitutionReplacementSemanticResult.lift substitutionResult
+      replacements targetDomain sourceDomain coherence).typingResult
+        (IncDepRawLookup.there (head := domain) lookup)).semanticTerm =
+      (replacements.typingResult lookup).semanticTerm.substitute
+        (sourceResult.semanticContext.extendProjection sourceDomain.semanticType) := by
+  rfl
+
 def IncDepRawContextSemanticTree.interpretUnit
     {context : List IncDepRawType}
     {contextWellFormed : IncDepRawContext.WellFormed context}

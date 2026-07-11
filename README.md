@@ -985,6 +985,13 @@ It currently establishes:
   and lift constructors are therefore both available; the remaining variable
   work is the final fiber-transport equation connecting this environment to the
   target lookup interpretation.
+  The older replacement computation rule is now exported as
+  `lift_there_term`: looking up an older variable in the lifted environment is
+  definitionally the previous replacement term substituted along the source
+  projection.  Together with `lift_here_term`, both environment branches now
+  expose the exact normal forms required by `lift_variable_fiber` and
+  `lift_older_transport`.  The next step is packaging those two existing
+  equations into the final variable-coherence recursion.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

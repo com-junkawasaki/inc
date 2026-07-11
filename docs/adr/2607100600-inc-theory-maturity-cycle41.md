@@ -489,6 +489,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   source-context variableとして解釈し、older lookupは既存replacement typeをsource projectionでreindex、termを
   substituteする。`lift_here_term`でnewest計算則をdefinitionally確認した。identity/lift constructorが揃い、
   variable branchに残るのはこのenvironmentとtarget lookup interpretationを結ぶ最終fiber-transport equationである。
+- older replacement計算則`lift_there_term`を公開定理として証明した。lifted environmentのolder lookupは
+  previous replacement termをsource projectionでsubstituteしたものへdefinitionally計算される。
+  `lift_here_term`と合わせて両branchの正規形が揃い、既存`lift_variable_fiber`/`lift_older_transport`を最終
+  variable-coherence recursionへpackageする段階だけが残る。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
