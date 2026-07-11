@@ -2022,6 +2022,59 @@ theorem IncFunctorEssentiallySurjective.comp
   exact ⟨source, composite.hom, composite.inv,
     composite.inv_hom, composite.hom_inv⟩
 
+structure IncFunctorEquivalenceCriterion
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) : Prop where
+  fullyFaithful : IncFunctorFullyFaithful F
+  essentiallySurjective : IncFunctorEssentiallySurjective F
+
+theorem IncFunctorEquivalenceCriterion.identity
+    {Obj : Type u} (C : IncCategory Obj) :
+    IncFunctorEquivalenceCriterion (IncFunctor.identity C) where
+  fullyFaithful := IncFunctor.identity_fullyFaithful C
+  essentiallySurjective := IncFunctor.identity_essentiallySurjective C
+
+theorem IncFunctorEquivalenceCriterion.comp
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F : IncFunctor C D} {G : IncFunctor D E}
+    (hG : IncFunctorEquivalenceCriterion G)
+    (hF : IncFunctorEquivalenceCriterion F) :
+    IncFunctorEquivalenceCriterion (G.comp F) where
+  fullyFaithful := hG.fullyFaithful.comp hF.fullyFaithful
+  essentiallySurjective := hG.essentiallySurjective.comp hF.essentiallySurjective
+
+theorem IncFunctorEquivalenceCriterion.transport
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (iso : IncNaturalIsomorphism F G)
+    (hF : IncFunctorEquivalenceCriterion F) :
+    IncFunctorEquivalenceCriterion G where
+  fullyFaithful := hF.fullyFaithful.transport iso
+  essentiallySurjective := hF.essentiallySurjective.transport iso
+
+theorem IncFunctorEquivalenceCriterion.iff_of_naturallyIsomorphic
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (iso : IncNaturalIsomorphism F G) :
+    IncFunctorEquivalenceCriterion F ↔ IncFunctorEquivalenceCriterion G := by
+  constructor
+  · intro hF
+    exact hF.transport iso
+  · intro hG
+    exact hG.transport iso.symm
+
+theorem IncCategoryEquivalence.forward_criterion
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    IncFunctorEquivalenceCriterion equivalence.forward where
+  fullyFaithful := equivalence.forward_fullyFaithful
+  essentiallySurjective := equivalence.forward_essentiallySurjective
+
+theorem IncCategoryEquivalence.inverse_criterion
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    IncFunctorEquivalenceCriterion equivalence.inverse :=
+  equivalence.symm.forward_criterion
+
 noncomputable def IncFunctorFullyFaithful.reflectIso
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     {F : IncFunctor C D} (fullyFaithful : IncFunctorFullyFaithful F)
