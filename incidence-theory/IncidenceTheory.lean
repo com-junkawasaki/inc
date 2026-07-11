@@ -748,6 +748,24 @@ def glue_creates_pushout {I R T : Type u} [DecidableEq I]
     { pushout : PushoutWitness (spec.diagram i j) // pushout.apex = k } :=
   spec.witness hglue
 
+/- A strengthened Inc layer packages exactly the two pieces of data that are
+   absent from the bare interface: the chain-complex law and a universal
+   gluing presentation.  Consequently its theorems are unconditional for
+   every value of this type, while the countermodel in `Peano.lean` prevents
+   them from being theorems of bare `Incidence`. -/
+structure ChainComplexPushoutIncidence (I R T : Type u) [DecidableEq I] where
+  inc : Incidence I R T
+  boundary_square_zero : BoundarySquareZeroEverywhere inc
+  glue_pushout : GluePushoutSpec inc
+
+def ChainComplexPushoutIncidence.glue_creates_pushout
+    {I R T : Type u} [DecidableEq I]
+    (coherent : ChainComplexPushoutIncidence I R T) {i j k : I}
+    (hglue : coherent.inc.glue i j = some k) :
+    { pushout : PushoutWitness (coherent.glue_pushout.diagram i j) //
+      pushout.apex = k } :=
+  IncidenceCore.glue_creates_pushout coherent.glue_pushout hglue
+
 /- Minimal category-theoretic data for the translation theorem (T5). -/
 structure IncCategory (Obj : Type u) where
   Hom : Obj → Obj → Type u
@@ -1307,6 +1325,15 @@ theorem boundary_operator_square_zero {I R T : Type u} [DecidableEq I]
   have hi' := List.all_eq_true.mp hcheck i hi
   have hk' := List.all_eq_true.mp hi' k hk
   exact of_decide_eq_true hk'
+
+/- The chain-complex part of `ChainComplexPushoutIncidence` is now exposed in
+   the same computational form as the ordinary boundary operator. -/
+theorem ChainComplexPushoutIncidence.boundary_composition_zero
+    {I R T : Type u} [DecidableEq I]
+    (coherent : ChainComplexPushoutIncidence I R T) (idx : List I) (i k : I)
+    (hi : i ∈ idx) (hk : k ∈ idx) :
+    boundary_composition coherent.inc idx i k = 0 :=
+  coherent.boundary_square_zero idx i k hi hk
 
 /- Research cycle 9 (see RESEARCH_LOG.md): cycle 8 found ∂² ≠ 0 for
    `natIncidence`'s chain and hypothesized the classical simplicial fix

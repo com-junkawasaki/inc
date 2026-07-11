@@ -1803,4 +1803,19 @@ def terminal_glue_creates_pushout :
       pushout.apex = () } :=
   glue_creates_pushout terminalIncidencePushoutSpec rfl
 
+/- The strengthened layer is inhabited: its trivial boundary has `∂² = 0`
+   over every finite observation, and its gluing has a genuine terminal
+   pushout witness. -/
+def terminalChainComplexPushoutIncidence :
+    ChainComplexPushoutIncidence Unit GraphRole GraphType where
+  inc := trivialIncidence
+  boundary_square_zero := by
+    intro idx
+    exact empty_boundaries_square_zero trivialIncidence idx (by intro i; rfl)
+  glue_pushout := terminalIncidencePushoutSpec
+
+example (idx : List Unit) (i k : Unit) (hi : i ∈ idx) (hk : k ∈ idx) :
+    boundary_composition terminalChainComplexPushoutIncidence.inc idx i k = 0 :=
+  terminalChainComplexPushoutIncidence.boundary_composition_zero idx i k hi hk
+
 end IncidenceCore
