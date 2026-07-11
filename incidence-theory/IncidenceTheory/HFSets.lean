@@ -2640,6 +2640,104 @@ theorem hfRecursiveNatMultiplicationGraph_eq_zero_iff
     apply congrArg hfRecursiveNat
     exact (Nat.mul_eq_zero.mpr zeroFactor).symm
 
+theorem hfRecursiveNatPowerGraph_add_exponents
+    (bound base firstExponent secondExponent : Nat)
+    (baseLess : base < bound) (firstLess : firstExponent < bound)
+    (secondLess : secondExponent < bound)
+    (sumLess : firstExponent + secondExponent < bound)
+    (firstPowerLess : base ^ firstExponent < bound)
+    (secondPowerLess : base ^ secondExponent < bound) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat firstExponent)
+            (hfRecursiveNat secondExponent))
+          (hfRecursiveNat (firstExponent + secondExponent)))
+        (hfRecursiveNatAdditionGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat base)
+            (hfRecursiveNat firstExponent))
+          (hfRecursiveNat (base ^ firstExponent)))
+        (hfRecursiveNatPowerGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat base)
+            (hfRecursiveNat secondExponent))
+          (hfRecursiveNat (base ^ secondExponent)))
+        (hfRecursiveNatPowerGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat (base ^ firstExponent))
+            (hfRecursiveNat (base ^ secondExponent)))
+          (hfRecursiveNat (base ^ firstExponent * base ^ secondExponent)))
+        (hfRecursiveNatMultiplicationGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat base)
+            (hfRecursiveNat (firstExponent + secondExponent)))
+          (hfRecursiveNat (base ^ (firstExponent + secondExponent))))
+        (hfRecursiveNatPowerGraph bound) ∧
+    hfRecursiveNat (base ^ (firstExponent + secondExponent)) =
+      hfRecursiveNat (base ^ firstExponent * base ^ secondExponent) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact (hfRecursiveNatAdditionGraph_on_nats_iff bound
+      firstExponent secondExponent firstLess secondLess _).mpr rfl
+  · exact (hfRecursiveNatPowerGraph_on_nats_iff bound
+      base firstExponent baseLess firstLess _).mpr rfl
+  · exact (hfRecursiveNatPowerGraph_on_nats_iff bound
+      base secondExponent baseLess secondLess _).mpr rfl
+  · exact (hfRecursiveNatMultiplicationGraph_on_nats_iff bound
+      (base ^ firstExponent) (base ^ secondExponent)
+      firstPowerLess secondPowerLess _).mpr rfl
+  · exact (hfRecursiveNatPowerGraph_on_nats_iff bound
+      base (firstExponent + secondExponent) baseLess sumLess _).mpr rfl
+  · exact congrArg hfRecursiveNat
+      (Nat.pow_add base firstExponent secondExponent)
+
+theorem hfRecursiveNatPowerGraph_mul_exponents
+    (bound base firstExponent secondExponent : Nat)
+    (baseLess : base < bound) (firstLess : firstExponent < bound)
+    (secondLess : secondExponent < bound)
+    (productLess : firstExponent * secondExponent < bound)
+    (firstPowerLess : base ^ firstExponent < bound) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat firstExponent)
+            (hfRecursiveNat secondExponent))
+          (hfRecursiveNat (firstExponent * secondExponent)))
+        (hfRecursiveNatMultiplicationGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat base)
+            (hfRecursiveNat firstExponent))
+          (hfRecursiveNat (base ^ firstExponent)))
+        (hfRecursiveNatPowerGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat (base ^ firstExponent))
+            (hfRecursiveNat secondExponent))
+          (hfRecursiveNat ((base ^ firstExponent) ^ secondExponent)))
+        (hfRecursiveNatPowerGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat base)
+            (hfRecursiveNat (firstExponent * secondExponent)))
+          (hfRecursiveNat (base ^ (firstExponent * secondExponent))))
+        (hfRecursiveNatPowerGraph bound) ∧
+    hfRecursiveNat (base ^ (firstExponent * secondExponent)) =
+      hfRecursiveNat ((base ^ firstExponent) ^ secondExponent) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩
+  · exact (hfRecursiveNatMultiplicationGraph_on_nats_iff bound
+      firstExponent secondExponent firstLess secondLess _).mpr rfl
+  · exact (hfRecursiveNatPowerGraph_on_nats_iff bound
+      base firstExponent baseLess firstLess _).mpr rfl
+  · exact (hfRecursiveNatPowerGraph_on_nats_iff bound
+      (base ^ firstExponent) secondExponent firstPowerLess secondLess _).mpr rfl
+  · exact (hfRecursiveNatPowerGraph_on_nats_iff bound
+      base (firstExponent * secondExponent) baseLess productLess _).mpr rfl
+  · exact congrArg hfRecursiveNat
+      (Nat.pow_mul base firstExponent secondExponent)
+
 theorem hfRecursiveNatShiftGraph_zero (n : Nat) :
     hfRecursiveNatShiftGraph 0 n = hfRecursiveNatIdentityGraph n := by
   induction n with

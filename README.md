@@ -177,7 +177,10 @@ It currently establishes:
   Bounded exponentiation is likewise represented by an internal graph with
   exact application law `⟨m,n⟩ ↦ m^n`, functionality, and totality. Its
   evaluation iff yields the internal laws `m^0=1`, `m^1=m`, `1^n=1`, and
-  `0^n=0` for positive `n`.
+  `0^n=0` for positive `n`.  Exponent addition and multiplication are linked
+  to the three internal arithmetic graphs by checked computation diagrams:
+  `a^(m+n)=a^m*a^n` and `a^(m*n)=(a^m)^n`, including every intermediate
+  addition, multiplication, and power application.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
