@@ -1253,6 +1253,13 @@ It currently establishes:
   fold recovers the earlier readiness API while simultaneously returning the
   exact output-formation readiness.  This is necessary because raw formation
   derivations live in `Type`, not proof-irrelevant `Prop`.
+  `formationReady` now recovers that exact coherent formation subtree from any
+  coherent typing tree.  Consequently the remaining total-dispatch obligation
+  is semantic rather than syntactic: canonical instantiated fiber results made
+  by application and second projection must be rebased to the independently
+  structural interpretation of the same output formation.  They need not be
+  definitionally equal, so the next theorem must construct an explicit fiber
+  equivalence and transport the typing result along it.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

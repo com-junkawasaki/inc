@@ -6105,6 +6105,22 @@ def IncDepRawCoherentTypingDispatchReady.formationDispatchReady
     IncDepRawFormationDispatchReady formation :=
   ready.toDispatchPair.2
 
+def IncDepRawCoherentTypingDispatchReady.formationReady
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation) :
+    IncDepRawCoherentFormationDispatchReady formation :=
+  match ready with
+  | .varRule typeReady => typeReady
+  | .unitRule => .unit
+  | .lambdaRule domainReady bodyReady => .pi domainReady bodyReady.formationReady
+  | .applyRule _ _ resultReady _ _ => resultReady
+  | .pairRule domainReady codomainReady _ _ _ => .sigma domainReady codomainReady
+  | .firstRule domainReady _ _ => domainReady
+  | .secondRule _ _ resultReady _ => resultReady
+  | .reflRule typeReady termReady => .identity typeReady termReady termReady
+
 mutual
   noncomputable def IncDepRawFormationDispatchReady.toSemanticReady
       {context : List IncDepRawType} {type : IncDepRawType}

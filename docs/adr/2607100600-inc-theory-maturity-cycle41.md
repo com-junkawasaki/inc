@@ -659,6 +659,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   同一のformation evidenceを使うことをconstruction時に強制する。mutual `toDispatchReady`/`toDispatchPair` foldは旧readinessと
   exact output-formation readinessを同時に復元する。raw formation derivationはproof-irrelevantな`Prop`ではなく`Type`にあるため、
   この強化は単なる実装都合ではなくtotal dispatcherのsoundness invariantである。
+- coherent typing treeからexact coherent formation subtreeを復元する`formationReady`を追加した。これにより残るtotal-dispatch
+  obligationはsyntax equalityではなくsemantic rebaseであることが確定した。application/second projectionが作るcanonical
+  instantiate fiber resultと、同一output formationのstructural interpretationはdefinitionally equalとは限らないため、両者の
+  explicit fiber equivalenceを構成しtyping resultをtransportする定理が次の中心補題となる。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
