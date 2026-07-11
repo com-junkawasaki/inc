@@ -698,6 +698,13 @@ It currently establishes:
   dependent Pi function, its application, the dependent Sigma pair, and both
   projections.  The recursive fold can now target a checked dependent sigma
   result rather than an informal existential specification.
+  The ready-result constructor algebra now directly implements variable, unit,
+  reflexivity, and lambda branches.  Variable consumes the context-tree lookup
+  fold; unit is context-polymorphic; reflexivity builds contextual identity from
+  its child certificate.  Lambda consumes an interpreted domain, extends the
+  context tree, and uses the body's inferred dependent semantic type as the Pi
+  codomain.  These are generic constructors over arbitrary telescopes, not only
+  packages of the closed examples.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

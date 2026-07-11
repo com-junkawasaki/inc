@@ -299,6 +299,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   結び、推論されたcontextual typeとtyping-indexed semantic resultをpackageする。dependent Pi
   function/application、Sigma pair、両projectionのcertificateを構成した。recursive foldは非形式的
   existentialではなくchecked dependent sigma resultをtargetにできる。
+- ready-result constructor algebraとしてvariable/unit/refl/lambda branchを汎用実装した。
+  variableはcontext-tree lookup fold、unitは任意context、reflはchild certificateからcontextual Id、
+  lambdaはinterpreted domainでcontext treeを延長しbodyのinferred dependent semantic typeをPi
+  codomainとして返す。closed例packageではなく任意telescope上のgeneric constructorである。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

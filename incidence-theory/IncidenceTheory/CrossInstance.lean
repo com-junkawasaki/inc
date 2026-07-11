@@ -3494,6 +3494,69 @@ structure IncDepRawReadyTypingSemanticResult
   semanticType : IncTypeInContext contextResult.semanticContext
   typingResult : IncDepRawTypingSemanticResult typing contextResult semanticType
 
+noncomputable def IncDepRawReadyTypingSemanticResult.variable
+    {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {typeFormation : IncDepRawWellFormed context type}
+    {typeReady : IncDepRawFormationSemanticReady typeFormation}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    (contextTree : IncDepRawContextSemanticTree contextResult) :
+    IncDepRawReadyTypingSemanticResult
+      (IncDepRawTypingSemanticReady.varRule (lookup := lookup) typeReady)
+      contextTree where
+  semanticType := (contextTree.interpretLookup lookup).semanticType
+  typingResult := contextTree.interpretVariable lookup
+
+def IncDepRawReadyTypingSemanticResult.unit
+    {context : List IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    (contextTree : IncDepRawContextSemanticTree contextResult) :
+    IncDepRawReadyTypingSemanticResult
+      (IncDepRawTypingSemanticReady.unitRule (context := context)) contextTree where
+  semanticType := fun _ => ULift Unit
+  typingResult := contextTree.interpretUnit
+
+noncomputable def IncDepRawReadyTypingSemanticResult.refl
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {term : IncDepRawTerm} {termTyping : IncDepRawHasType context term type}
+    {typeFormation : IncDepRawWellFormed context type}
+    {typeReady : IncDepRawFormationSemanticReady typeFormation}
+    {termReady : IncDepRawTypingSemanticReady termTyping}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    {contextTree : IncDepRawContextSemanticTree contextResult}
+    (termResult : IncDepRawReadyTypingSemanticResult termReady contextTree) :
+    IncDepRawReadyTypingSemanticResult
+      (IncDepRawTypingSemanticReady.reflRule typeReady termReady) contextTree where
+  semanticType := IncIdentityType termResult.semanticType
+    termResult.typingResult.semanticTerm termResult.typingResult.semanticTerm
+  typingResult := IncDepRawTypingSemanticResult.refl termResult.typingResult
+
+noncomputable def IncDepRawReadyTypingSemanticResult.lambda
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {body : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {bodyTyping : IncDepRawHasType (domain :: context) body codomain}
+    {domainReady : IncDepRawFormationSemanticReady domainFormation}
+    {codomainReady : IncDepRawFormationSemanticReady codomainFormation}
+    {bodyReady : IncDepRawTypingSemanticReady bodyTyping}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    {contextTree : IncDepRawContextSemanticTree contextResult}
+    (domainResult : IncDepRawFormationSemanticResult domainFormation contextResult)
+    {extendedTree : IncDepRawContextSemanticTree
+      (contextResult.extend (typeWellFormed := domainFormation)
+        domainResult.semanticType)}
+    (bodyResult : IncDepRawReadyTypingSemanticResult bodyReady extendedTree) :
+    IncDepRawReadyTypingSemanticResult
+      (IncDepRawTypingSemanticReady.lambdaRule domainReady codomainReady bodyReady)
+      contextTree where
+  semanticType := IncPiType domainResult.semanticType bodyResult.semanticType
+  typingResult := IncDepRawTypingSemanticResult.lambda bodyResult.typingResult
+
 noncomputable def incDepRawDependentRefl_readySemanticResult :
     IncDepRawReadyTypingSemanticResult incDepRawDependentRefl_semanticReady
       incDepRawEmptyContextSemanticTree where
