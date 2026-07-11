@@ -998,6 +998,14 @@ It currently establishes:
   extended variable evaluated under the lifted semantic substitution.  This
   completes the newest variable branch end-to-end; only the recursive older
   branch must now combine `lift_there_term` with `lift_older_transport`.
+  The recursive older equation is now closed as `lift_there_fiber`.  Given the
+  previous replacement/target-term coherence, it reindexes the family
+  equivalence along the source projection and proves that the lifted
+  environment's older replacement agrees with the target older term under the
+  lifted semantic substitution.  Together with `lift_here_fiber`, both final
+  variable-coherence branches are checked; the next task is assembling them
+  with lookup formation alignment into the variable branch of the total
+  substitution dispatcher.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

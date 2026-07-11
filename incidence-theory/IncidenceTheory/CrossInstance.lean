@@ -5067,6 +5067,49 @@ theorem IncDepRawSubstitutionReplacementSemanticResult.lift_here_fiber
   exact IncDepRawSubstitutionSemanticResult.lift_variable_fiber
     substitutionResult targetDomain sourceDomain coherence assignment value
 
+theorem IncDepRawSubstitutionReplacementSemanticResult.lift_there_fiber
+    {source target : List IncDepRawType} {domain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult)
+    {domainFormation : IncDepRawWellFormed target domain}
+    {substitutedDomainFormation : IncDepRawWellFormed source
+      (domain.substitute substitution.term)}
+    (targetDomain : IncDepRawFormationSemanticResult domainFormation targetResult)
+    (sourceDomain : IncDepRawFormationSemanticResult
+      substitutedDomainFormation sourceResult)
+    (domainCoherence : sourceDomain.semanticType =
+      targetDomain.semanticType.reindex substitutionResult.semanticSubstitution)
+    {position type} (lookup : IncDepRawLookup target position type)
+    {targetFamily : IncTypeInContext targetResult.semanticContext}
+    (familyEquivalence : IncTypeInContext.FiberEquiv
+      (replacements.semanticType lookup)
+      (targetFamily.reindex substitutionResult.semanticSubstitution))
+    (targetTerm : IncTerm targetFamily)
+    (termCoherence : familyEquivalence.transport
+        (replacements.typingResult lookup).semanticTerm =
+      targetTerm.substitute substitutionResult.semanticSubstitution) :
+    (familyEquivalence.reindex
+      (sourceResult.semanticContext.extendProjection sourceDomain.semanticType)).transport
+        (((IncDepRawSubstitutionReplacementSemanticResult.lift
+          substitutionResult replacements targetDomain sourceDomain
+            domainCoherence).typingResult
+              (IncDepRawLookup.there (head := domain) lookup)).semanticTerm) =
+      (targetTerm.substitute
+        (targetResult.semanticContext.extendProjection targetDomain.semanticType)).substitute
+          (IncDepRawSubstitutionSemanticResult.lift substitutionResult
+            targetDomain sourceDomain domainCoherence).semanticSubstitution := by
+  exact IncDepRawSubstitutionSemanticResult.lift_older_transport
+    substitutionResult targetDomain sourceDomain domainCoherence
+    familyEquivalence (replacements.typingResult lookup).semanticTerm
+    targetTerm termCoherence
+
 def IncDepRawContextSemanticTree.interpretUnit
     {context : List IncDepRawType}
     {contextWellFormed : IncDepRawContext.WellFormed context}

@@ -497,6 +497,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `here` termを評価し、domain equality由来のexplicit fiber forwardを適用すると、lifted semantic
   substitution下で評価したtarget extended variableと一致する。newest branchはend-to-endで完成し、残るのは
   `lift_there_term`と`lift_older_transport`を合成するrecursive older branchだけである。
+- recursive older equation `lift_there_fiber`を証明した。previous replacement/target-term coherenceをsource
+  projectionでreindexし、lifted environmentのolder replacementがlifted semantic substitution下のtarget
+  older termと一致する。`lift_here_fiber`と合わせて最終variable-coherence二分岐がcheckedとなり、次はlookup
+  formation alignmentと合成してtotal substitution dispatcherのvariable branchへ組み込む。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
