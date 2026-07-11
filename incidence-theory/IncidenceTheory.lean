@@ -6906,6 +6906,171 @@ def BoundaryShapeTranslation.incToSetEquivalence
       | cons targetHead targetTail =>
           exact IncTypeEquivalence.refl (ULift Unit)
 
+structure BoundaryShapeEmbedding
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂)
+    extends BoundaryShapeTranslation source target where
+  injective : ∀ {i j}, map i = map j → i = j
+
+def BoundaryShapeEmbedding.identity
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    BoundaryShapeEmbedding inc inc where
+  toBoundaryShapeTranslation := BoundaryShapeTranslation.identity inc
+  injective := by
+    intro i j equal
+    exact equal
+
+def BoundaryShapeEmbedding.comp
+    {I J K R₁ T₁ R₂ T₂ R₃ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (secondMap : BoundaryShapeEmbedding second third)
+    (firstMap : BoundaryShapeEmbedding first second) :
+    BoundaryShapeEmbedding first third where
+  toBoundaryShapeTranslation :=
+    secondMap.toBoundaryShapeTranslation.comp
+      firstMap.toBoundaryShapeTranslation
+  injective := by
+    intro i j equal
+    apply firstMap.injective
+    apply secondMap.injective
+    exact equal
+
+structure BoundaryShapeEquivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂) where
+  hom : BoundaryShapeTranslation source target
+  inv : BoundaryShapeTranslation target source
+  inv_hom : ∀ i, inv.map (hom.map i) = i
+  hom_inv : ∀ j, hom.map (inv.map j) = j
+
+theorem BoundaryShapeEquivalence.ext
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    {first second : BoundaryShapeEquivalence source target}
+    (homEq : first.hom = second.hom) (invEq : first.inv = second.inv) :
+    first = second := by
+  cases first
+  cases second
+  cases homEq
+  cases invEq
+  rfl
+
+def BoundaryShapeEquivalence.refl
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    BoundaryShapeEquivalence inc inc where
+  hom := BoundaryShapeTranslation.identity inc
+  inv := BoundaryShapeTranslation.identity inc
+  inv_hom := by intro i; rfl
+  hom_inv := by intro i; rfl
+
+def BoundaryShapeEquivalence.symm
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    BoundaryShapeEquivalence target source where
+  hom := equivalence.inv
+  inv := equivalence.hom
+  inv_hom := equivalence.hom_inv
+  hom_inv := equivalence.inv_hom
+
+def BoundaryShapeEquivalence.trans
+    {I J K R₁ T₁ R₂ T₂ R₃ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (secondEquivalence : BoundaryShapeEquivalence second third)
+    (firstEquivalence : BoundaryShapeEquivalence first second) :
+    BoundaryShapeEquivalence first third where
+  hom := secondEquivalence.hom.comp firstEquivalence.hom
+  inv := firstEquivalence.inv.comp secondEquivalence.inv
+  inv_hom := by
+    intro i
+    change firstEquivalence.inv.map
+      (secondEquivalence.inv.map
+        (secondEquivalence.hom.map (firstEquivalence.hom.map i))) = i
+    rw [secondEquivalence.inv_hom, firstEquivalence.inv_hom]
+  hom_inv := by
+    intro k
+    change secondEquivalence.hom.map
+      (firstEquivalence.hom.map
+        (firstEquivalence.inv.map (secondEquivalence.inv.map k))) = k
+    rw [firstEquivalence.hom_inv, secondEquivalence.hom_inv]
+
+theorem BoundaryShapeEquivalence.refl_trans
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    equivalence.trans (BoundaryShapeEquivalence.refl source) = equivalence := by
+  apply BoundaryShapeEquivalence.ext
+  · exact BoundaryShapeTranslation.comp_identity equivalence.hom
+  · exact BoundaryShapeTranslation.identity_comp equivalence.inv
+
+theorem BoundaryShapeEquivalence.trans_refl
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    (BoundaryShapeEquivalence.refl target).trans equivalence = equivalence := by
+  apply BoundaryShapeEquivalence.ext
+  · exact BoundaryShapeTranslation.identity_comp equivalence.hom
+  · exact BoundaryShapeTranslation.comp_identity equivalence.inv
+
+theorem BoundaryShapeEquivalence.trans_assoc
+    {I J K L R₁ T₁ R₂ T₂ R₃ T₃ R₄ T₄ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K] [DecidableEq L]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃} {fourth : Incidence L R₄ T₄}
+    (thirdEquivalence : BoundaryShapeEquivalence third fourth)
+    (secondEquivalence : BoundaryShapeEquivalence second third)
+    (firstEquivalence : BoundaryShapeEquivalence first second) :
+    (thirdEquivalence.trans secondEquivalence).trans firstEquivalence =
+      thirdEquivalence.trans (secondEquivalence.trans firstEquivalence) := by
+  apply BoundaryShapeEquivalence.ext
+  · exact BoundaryShapeTranslation.comp_assoc
+      thirdEquivalence.hom secondEquivalence.hom firstEquivalence.hom
+  · exact (BoundaryShapeTranslation.comp_assoc
+      firstEquivalence.inv secondEquivalence.inv thirdEquivalence.inv).symm
+
+theorem BoundaryShapeEquivalence.symm_symm
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    equivalence.symm.symm = equivalence := by
+  apply BoundaryShapeEquivalence.ext <;> rfl
+
+theorem BoundaryShapeEquivalence.symm_trans_self
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    equivalence.symm.trans equivalence = BoundaryShapeEquivalence.refl source := by
+  apply BoundaryShapeEquivalence.ext <;>
+    apply BoundaryShapeTranslation.ext <;> funext value
+  · exact equivalence.inv_hom value
+  · exact equivalence.inv_hom value
+
+theorem BoundaryShapeEquivalence.trans_symm_self
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    equivalence.trans equivalence.symm = BoundaryShapeEquivalence.refl target := by
+  apply BoundaryShapeEquivalence.ext <;>
+    apply BoundaryShapeTranslation.ext <;> funext value
+  · exact equivalence.hom_inv value
+  · exact equivalence.hom_inv value
+
+def BoundaryShapeEquivalence.toEmbedding
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    BoundaryShapeEmbedding source target where
+  toBoundaryShapeTranslation := equivalence.hom
+  injective := by
+    intro i j equal
+    have := congrArg equivalence.inv.map equal
+    rw [equivalence.inv_hom, equivalence.inv_hom] at this
+    exact this
+
 /- The Inc-to-Set assignment above is not yet packaged as an `IncFunctor`, so
    a theorem specifically about that assignment still requires a source
    category of incidences.  The general categorical preservation theorem is
