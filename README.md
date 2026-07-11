@@ -1415,6 +1415,13 @@ It currently establishes:
   resulting readiness index back to the parent's exact tree.  The remaining
   assembly task is an implementation of that dispatcher by recursion over all
   eight coherent typing constructors.
+  The opposite boundary is now explicit too:
+  `IncDepRawStrictFormationSubstitutionDispatcher` packages formation dispatch,
+  and `strictFormationDispatcher` turns the checked formation fold into that
+  interface.  `IncDepRawStrictMutualSubstitutionDispatcher` records the final
+  paired object.  Formation and typing recursion therefore now meet through
+  symmetric, proof-indexed interfaces; constructing the typing half and tying
+  this pair is the remaining mutual-recursion step.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

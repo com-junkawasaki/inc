@@ -10897,6 +10897,45 @@ structure IncDepRawStrictTypingSubstitutionDispatcher where
     IncDepRawStrictTypingSubstitutionDispatchResult
       (IncDepRawStrictTypingDispatchReady.ofCoherent ready) substitutionResult
 
+structure IncDepRawStrictFormationSubstitutionDispatcher where
+  dispatch : ∀
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult},
+    (ready : IncDepRawCoherentFormationDispatchReady targetFormation) →
+    (targetTree : IncDepRawContextSemanticTree targetResult) →
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult) →
+    IncDepRawStrictFormationSubstitutionDispatchResult ready substitutionResult
+
+noncomputable def IncDepRawStrictFormationSubstitutionDispatcher.run
+    (dispatcher : IncDepRawStrictFormationSubstitutionDispatcher)
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (ready : IncDepRawCoherentFormationDispatchReady targetFormation)
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult) :
+    IncDepRawStrictFormationSubstitutionDispatchResult ready substitutionResult :=
+  dispatcher.dispatch ready targetTree replacements
+
+structure IncDepRawStrictMutualSubstitutionDispatcher where
+  formation : IncDepRawStrictFormationSubstitutionDispatcher
+  typing : IncDepRawStrictTypingSubstitutionDispatcher
+
 noncomputable def IncDepRawStrictTypingSubstitutionDispatcher.run
     (dispatcher : IncDepRawStrictTypingSubstitutionDispatcher)
     {source target : List IncDepRawType} {term : IncDepRawTerm}
@@ -10981,6 +11020,16 @@ noncomputable def IncDepRawSubstitutionFiberModel.foldStrictFormation
         (rightStrict.castFormationReady rightEq)
         typeResult leftResult.typingResult rightResult.typingResult
       result.castReady (readinessAlignment.alignFormation _ _)
+
+noncomputable def IncDepRawSubstitutionFiberModel.strictFormationDispatcher
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (typingDispatcher : IncDepRawStrictTypingSubstitutionDispatcher)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider) :
+    IncDepRawStrictFormationSubstitutionDispatcher where
+  dispatch := fun ready targetTree replacements =>
+    model.foldStrictFormation typingDispatcher readinessAlignment rebaseProvider
+      ready targetTree replacements
 
 noncomputable def IncDepRawReadyTypingSemanticResult.variable
     {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}

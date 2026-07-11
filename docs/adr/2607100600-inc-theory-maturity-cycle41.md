@@ -751,6 +751,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   extendしてreplacementをliftしてからcodomainへ再帰する。Identityでは両endpoint typingをdispatcherで処理し、再帰的に選択された
   exact type resultへsemantic fiberをnormalizeし、parentのexact readiness indexへtransportする。残る組み立てはtyping全8 constructorsを
   再帰してこのdispatcher interfaceを実装する部分である。
+- 逆向きの境界も`IncDepRawStrictFormationSubstitutionDispatcher`として明示し、checked formation foldをこのinterfaceへ変換する
+  `strictFormationDispatcher`を追加した。最終的な対を`IncDepRawStrictMutualSubstitutionDispatcher`としてpackageしたため、formationと
+  typing recursionは対称なproof-indexed interfaceを介して接続できる。残件はtyping側の再帰実装と、このpairを同時再帰で構成する工程である。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
