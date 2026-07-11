@@ -752,6 +752,36 @@ theorem BisimulationQuotientIncidencePresentation.targetLeafSatisfies_iff
       IncidenceLeafSatisfies first.target formula :=
   (first.targetObservationEmbedding second).leafSatisfies_iff formula
 
+theorem BisimulationQuotientIncidencePresentation.targetEntails_iff
+    {I R T Q₁ QR₁ QT₁ Q₂ QR₂ QT₂ : Type u}
+    [DecidableEq I] [DecidableEq Q₁] [DecidableEq Q₂]
+    {source : Incidence I R T}
+    (first : BisimulationQuotientIncidencePresentation
+      (Q := Q₁) (QR := QR₁) (QT := QT₁) source)
+    (second : BisimulationQuotientIncidencePresentation
+      (Q := Q₂) (QR := QR₂) (QT := QT₂) source)
+    (context : List (Formula Q₁)) (formula : Formula Q₁) :
+    IncidenceBoundaryEntails second.target
+        (Formula.mapContext (first.targetObservationEmbedding second).map context)
+        (formula.map (first.targetObservationEmbedding second).map) ↔
+      IncidenceBoundaryEntails first.target context formula :=
+  (first.targetObservationEmbedding second).entails_iff context formula
+
+theorem BisimulationQuotientIncidencePresentation.targetLeafEntails_iff
+    {I R T Q₁ QR₁ QT₁ Q₂ QR₂ QT₂ : Type u}
+    [DecidableEq I] [DecidableEq Q₁] [DecidableEq Q₂]
+    {source : Incidence I R T}
+    (first : BisimulationQuotientIncidencePresentation
+      (Q := Q₁) (QR := QR₁) (QT := QT₁) source)
+    (second : BisimulationQuotientIncidencePresentation
+      (Q := Q₂) (QR := QR₂) (QT := QT₂) source)
+    (context : List (Formula Q₁)) (formula : Formula Q₁) :
+    IncidenceLeafEntails second.target
+        (Formula.mapContext (first.targetObservationEmbedding second).map context)
+        (formula.map (first.targetObservationEmbedding second).map) ↔
+      IncidenceLeafEntails first.target context formula :=
+  (first.targetObservationEmbedding second).leafEntails_iff context formula
+
 /- Unlike `cycleIncidence`'s `boundary`/`glue` (cycle 38), which failed
    the well-definedness check `Quotient.lift` needs, `simplexToShape`
    PASSES it -- this is exactly what `simplexToShape_distinguishes`

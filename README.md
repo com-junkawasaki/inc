@@ -387,7 +387,8 @@ It currently establishes:
   seven-element source and the three-class quotient presentation.  Moreover,
   any two quotient Incidence presentations of the same source are connected by
   the unique classification equivalence as a boundary-observation embedding;
-  boundary and leaf truth therefore agree across all such presentation targets.
+  boundary and leaf truth, context satisfaction, and finite-sequent semantic
+  consequence therefore agree across all such presentation targets.
 
 The minimal category/functor/pushout vocabulary is also formalized. A functor
 is proved to map a pushout cocone to a commuting cocone; preservation of the
