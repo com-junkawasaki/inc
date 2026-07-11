@@ -489,6 +489,11 @@ It currently establishes:
   position cannot yield two different weakened raw types.  This is proved by
   induction through arbitrary telescope depth and is the index-alignment fact
   used by the forthcoming typing-preservation proof.
+  Renaming after simultaneous substitution now satisfies a general fusion law
+  on every dependent raw type and term: it equals substitution by the pointwise
+  renamed replacements.  The binder proof establishes that renaming a lifted
+  replacement is the same as lifting the renamed replacement, so the theorem
+  covers nested Pi/Sigma types and lambdas without a closed-term restriction.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite

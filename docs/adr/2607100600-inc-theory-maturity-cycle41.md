@@ -161,6 +161,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   de Bruijn position から異なる weakened raw type は得られず、今後の typing preservation で
   derivation index を整列するための事実を確立した。rename injectivityを未証明のまま仮定する
   proof uniqueness の強い主張は導入していない。
+- simultaneous substitution 後の renaming が、各 replacement をpointwiseにrenameしてからの
+  substitution と一致する一般 fusion law をdependent raw type/termの相互再帰で証明した。
+  binder caseではlifted replacementのrenameとrename済みreplacementのliftが一致する補題を
+  rename compositionから導き、nested Pi/Sigma と lambda を含めて成立させた。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

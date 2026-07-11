@@ -1097,6 +1097,100 @@ theorem IncDepRawTerm.liftReplacement_identity :
   | succ next =>
       simp [IncDepRawTerm.liftReplacement, IncDepRawTerm.rename]
 
+theorem IncDepRawTerm.liftReplacement_rename
+    (replacement : Nat → IncDepRawTerm) (renameMap : Nat → Nat) :
+    (fun index =>
+      (IncDepRawTerm.liftReplacement replacement index).rename
+        (IncDepRawTerm.liftRename renameMap)) =
+    IncDepRawTerm.liftReplacement
+      (fun index => (replacement index).rename renameMap) := by
+  funext index
+  cases index with
+  | zero => rfl
+  | succ next =>
+      simp only [IncDepRawTerm.liftReplacement]
+      rw [IncDepRawTerm.rename_comp, IncDepRawTerm.rename_comp]
+      congr 1
+
+mutual
+  theorem IncDepRawType.substitute_rename (type : IncDepRawType)
+      (replacement : Nat → IncDepRawTerm) (renameMap : Nat → Nat) :
+      (type.substitute replacement).rename renameMap =
+        type.substitute (fun index => (replacement index).rename renameMap) := by
+    cases type with
+    | base index => rfl
+    | unit => rfl
+    | pi domain codomain =>
+        simp only [IncDepRawType.substitute, IncDepRawType.rename]
+        rw [IncDepRawType.substitute_rename domain]
+        rw [IncDepRawType.substitute_rename codomain]
+        have liftEq :
+            (fun index => match index with
+              | 0 => 0
+              | next + 1 => renameMap next + 1) =
+              IncDepRawTerm.liftRename renameMap := by
+          funext index
+          cases index <;> rfl
+        rw [liftEq]
+        rw [IncDepRawTerm.liftReplacement_rename]
+    | sigma domain codomain =>
+        simp only [IncDepRawType.substitute, IncDepRawType.rename]
+        rw [IncDepRawType.substitute_rename domain]
+        rw [IncDepRawType.substitute_rename codomain]
+        have liftEq :
+            (fun index => match index with
+              | 0 => 0
+              | next + 1 => renameMap next + 1) =
+              IncDepRawTerm.liftRename renameMap := by
+          funext index
+          cases index <;> rfl
+        rw [liftEq]
+        rw [IncDepRawTerm.liftReplacement_rename]
+    | identity type left right =>
+        simp only [IncDepRawType.substitute, IncDepRawType.rename]
+        rw [IncDepRawType.substitute_rename type,
+          IncDepRawTerm.substitute_rename left,
+          IncDepRawTerm.substitute_rename right]
+
+  theorem IncDepRawTerm.substitute_rename (term : IncDepRawTerm)
+      (replacement : Nat → IncDepRawTerm) (renameMap : Nat → Nat) :
+      (term.substitute replacement).rename renameMap =
+        term.substitute (fun index => (replacement index).rename renameMap) := by
+    cases term with
+    | var index => rfl
+    | unit => rfl
+    | lambda domain body =>
+        simp only [IncDepRawTerm.substitute, IncDepRawTerm.rename]
+        rw [IncDepRawType.substitute_rename domain]
+        rw [IncDepRawTerm.substitute_rename body]
+        have liftEq :
+            (fun index => match index with
+              | 0 => 0
+              | next + 1 => renameMap next + 1) =
+              IncDepRawTerm.liftRename renameMap := by
+          funext index
+          cases index <;> rfl
+        rw [liftEq]
+        rw [IncDepRawTerm.liftReplacement_rename]
+    | apply function argument =>
+        simp only [IncDepRawTerm.substitute, IncDepRawTerm.rename]
+        rw [IncDepRawTerm.substitute_rename function,
+          IncDepRawTerm.substitute_rename argument]
+    | pair first second =>
+        simp only [IncDepRawTerm.substitute, IncDepRawTerm.rename]
+        rw [IncDepRawTerm.substitute_rename first,
+          IncDepRawTerm.substitute_rename second]
+    | first pair =>
+        simp [IncDepRawTerm.substitute, IncDepRawTerm.rename,
+          IncDepRawTerm.substitute_rename pair]
+    | second pair =>
+        simp [IncDepRawTerm.substitute, IncDepRawTerm.rename,
+          IncDepRawTerm.substitute_rename pair]
+    | refl term =>
+        simp [IncDepRawTerm.substitute, IncDepRawTerm.rename,
+          IncDepRawTerm.substitute_rename term]
+end
+
 mutual
   theorem IncDepRawType.substitute_identity (type : IncDepRawType) :
       type.substitute IncDepRawTerm.var = type := by
