@@ -1837,7 +1837,7 @@ def terminalQuotientClassification :
 
 noncomputable def terminalCoherentQuotient :
     CoherentQuotient (Q := Unit) terminalCoherentIncidence where
-  target := trivialIncidence
+  target := terminalCoherentIncidence
   classification := terminalQuotientClassification
   boundary_preserves := by
     intro i

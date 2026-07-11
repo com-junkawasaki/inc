@@ -50,17 +50,17 @@ def mapEndpoint {I R Q : Type u} (classify : I → Q)
    `cycleIncidence` counterexample cannot be lifted to an incidence quotient. -/
 structure CoherentQuotient {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
     (source : CoherentIncidence I R T) where
-  target : Incidence Q R T
+  target : CoherentIncidence Q R T
   classification : BisimulationQuotientClassification (Q := Q) source.chainPushout.inc
   boundary_preserves : ∀ i,
     (source.chainPushout.inc.boundary i).map
       (@mapEndpoint I R Q classification.classify) =
-      target.boundary (classification.classify i)
+      target.chainPushout.inc.boundary (classification.classify i)
   type_preserves : ∀ i,
-    target.typeFunc (classification.classify i) =
+    target.chainPushout.inc.typeFunc (classification.classify i) =
       source.chainPushout.inc.typeFunc i
   glue_preserves : ∀ {i j k}, source.chainPushout.inc.glue i j = some k →
-    target.glue (classification.classify i) (classification.classify j) =
+    target.chainPushout.inc.glue (classification.classify i) (classification.classify j) =
       some (classification.classify k)
 
 theorem CoherentQuotient.classify_boundary
@@ -69,7 +69,7 @@ theorem CoherentQuotient.classify_boundary
     (i : I) :
     (source.chainPushout.inc.boundary i).map
       (@mapEndpoint I R Q quotient.classification.classify) =
-      quotient.target.boundary (quotient.classification.classify i) :=
+      quotient.target.chainPushout.inc.boundary (quotient.classification.classify i) :=
   quotient.boundary_preserves i
 
 theorem CoherentQuotient.classify_boundary_mem
@@ -78,7 +78,7 @@ theorem CoherentQuotient.classify_boundary_mem
     {i : I} {endpoint : Endpoint I R}
     (hendpoint : endpoint ∈ source.chainPushout.inc.boundary i) :
     mapEndpoint quotient.classification.classify endpoint ∈
-      quotient.target.boundary (quotient.classification.classify i) := by
+      quotient.target.chainPushout.inc.boundary (quotient.classification.classify i) := by
   rw [← quotient.classify_boundary i]
   exact List.mem_map.mpr ⟨endpoint, hendpoint, rfl⟩
 
@@ -86,7 +86,7 @@ theorem CoherentQuotient.classify_type
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
     {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
     (i : I) :
-    quotient.target.typeFunc (quotient.classification.classify i) =
+    quotient.target.chainPushout.inc.typeFunc (quotient.classification.classify i) =
       source.chainPushout.inc.typeFunc i :=
   quotient.type_preserves i
 
@@ -94,10 +94,24 @@ theorem CoherentQuotient.classify_glue
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
     {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
     {i j k : I} (hglue : source.chainPushout.inc.glue i j = some k) :
-    quotient.target.glue (quotient.classification.classify i)
+    quotient.target.chainPushout.inc.glue (quotient.classification.classify i)
       (quotient.classification.classify j) =
       some (quotient.classification.classify k) :=
   quotient.glue_preserves hglue
+
+theorem CoherentQuotient.target_boundary_composition_zero
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    (idx : List Q) (i k : Q) (hi : i ∈ idx) (hk : k ∈ idx) :
+    boundary_composition quotient.target.chainPushout.inc idx i k = 0 :=
+  quotient.target.boundary_composition_zero idx i k hi hk
+
+theorem CoherentQuotient.target_kripke_complete
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    (context : List (Formula Q)) (formula : Formula Q) :
+    KripkeEntails.{u, u} context formula ↔ Derives context formula :=
+  quotient.target.kripke_complete context formula
 
 theorem CoherentQuotient.quotient_lift_injective
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
