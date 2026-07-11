@@ -2624,6 +2624,21 @@ theorem coherentIncidence_has_model :
     Nonempty (CoherentIncidence Unit GraphRole GraphType) :=
   ⟨terminalCoherentIncidence⟩
 
+theorem coherent_incidence_axioms_do_not_semantically_entail_false :
+    ¬ (∀ _model : CoherentIncidence Unit GraphRole GraphType, False) := by
+  intro entailsFalse
+  exact entailsFalse terminalCoherentIncidence
+
+theorem chain_complex_pushout_axioms_satisfiable :
+    Nonempty (ChainComplexPushoutIncidence Unit GraphRole GraphType) :=
+  ⟨terminalChainComplexPushoutIncidence⟩
+
+theorem chain_complex_pushout_axioms_do_not_semantically_entail_false :
+    ¬ (∀ _model : ChainComplexPushoutIncidence Unit GraphRole GraphType,
+      False) := by
+  intro entailsFalse
+  exact entailsFalse terminalChainComplexPushoutIncidence
+
 theorem terminalCoherentIncidence_empty_logic_consistent :
     DerivationallyConsistent ([] : List (Formula Unit)) :=
   terminalCoherentIncidence.empty_logic_consistent
