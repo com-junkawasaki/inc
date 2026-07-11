@@ -287,6 +287,54 @@ theorem bisimulationQuotientMapDoesNotCollapse_iff_faithful
     exact (bisimulationQuotientMapCollapses_iff_not_faithful inc).mp collapse
       faithful
 
+def BisimulationInvariantMap
+    {I R T Q : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (map : I → Q) : Prop :=
+  ∀ ⦃x y⦄, approxBisim inc x y → map x = map y
+
+theorem factors_through_bisimulationQuotient_iff_invariant
+    {I R T Q : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (map : I → Q) :
+    (∃ lift : Quotient (approxBisimSetoid inc) → Q,
+      ∀ x, lift (Quotient.mk (approxBisimSetoid inc) x) = map x) ↔
+      BisimulationInvariantMap inc map := by
+  constructor
+  · rintro ⟨lift, factors⟩ x y bisimilar
+    rw [← factors x, ← factors y, Quotient.sound bisimilar]
+  · intro invariant
+    exact ⟨Quotient.lift map (fun _ _ bisimilar => invariant bisimilar),
+      fun _ => rfl⟩
+
+theorem bisimulationQuotient_factorization_unique
+    {I R T Q : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (map : I → Q)
+    (first second : Quotient (approxBisimSetoid inc) → Q)
+    (firstFactors : ∀ x,
+      first (Quotient.mk (approxBisimSetoid inc) x) = map x)
+    (secondFactors : ∀ x,
+      second (Quotient.mk (approxBisimSetoid inc) x) = map x) :
+    first = second := by
+  funext quotient
+  induction quotient using Quotient.ind with
+  | _ representative =>
+      exact (firstFactors representative).trans
+        (secondFactors representative).symm
+
+theorem bisimulationQuotient_universal_property
+    {I R T Q : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (map : I → Q)
+    (invariant : BisimulationInvariantMap inc map) :
+    ∃ lift : Quotient (approxBisimSetoid inc) → Q,
+      (∀ x, lift (Quotient.mk (approxBisimSetoid inc) x) = map x) ∧
+      ∀ candidate : Quotient (approxBisimSetoid inc) → Q,
+        (∀ x, candidate (Quotient.mk (approxBisimSetoid inc) x) = map x) →
+        candidate = lift := by
+  refine ⟨Quotient.lift map (fun _ _ bisimilar => invariant bisimilar),
+    fun _ => rfl, ?_⟩
+  intro candidate candidateFactors
+  exact bisimulationQuotient_factorization_unique inc map candidate _
+    candidateFactors (fun _ => rfl)
+
 /- Concrete confirmation against both faithful instances built so far
    in this project (`natIncidence`, cycle 4; `cycleIncidenceFixed`,
    cycle 27) -- not vacuous, two genuinely different faithful instances
