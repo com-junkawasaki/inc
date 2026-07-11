@@ -352,6 +352,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   fiberごとのforward/backward mapと両inverse law、refl/symm/trans/reindex、semantic termのtransport
   とround-trip equationを証明した。既存formation-substitution equalityもこの強いinterfaceへ
   埋め込めるため、Pi/Sigma coherenceは不正なdependent rewriteではなく明示的fiber mapを使える。
+- dependent function transportを`IncDependentFiberEquiv`として追加した。source codomainの各fiberと
+  forwarded domain value上のtarget fiberを対応させ、`piForward`/`piBackward`でdependent functionを
+  双方向にtransportする。forwardはtarget argumentをbackwardし、result fiberをtransportした後、
+  domain inverse lawで要求されたtarget fiberへ移す。両application equationをdefinitionally証明し、
+  Pi formationおよびlambda/application coherence branchのoperational coreを得た。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

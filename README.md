@@ -777,6 +777,14 @@ It currently establishes:
   Existing formation-substitution equalities embed into this stronger interface,
   so subsequent Pi/Sigma coherence can consume explicit fiber maps rather than
   attempting invalid dependent rewriting.
+  Dependent function transport is now explicit as well.
+  `IncDependentFiberEquiv` relates each source codomain fiber to the target fiber
+  over the forwarded domain value; `piForward` and `piBackward` transport
+  dependent functions in both directions.  Forward transport sends a target
+  argument backward, transports the result fiber, then uses the domain inverse
+  law to land in the requested target fiber.  Both application equations are
+  checked definitionally, establishing the operational core needed by the Pi
+  formation and lambda/application coherence branches.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
