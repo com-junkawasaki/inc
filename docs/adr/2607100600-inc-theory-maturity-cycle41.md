@@ -85,6 +85,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   証明した。任意 Incidence は consistency/model existence の同値を直接持つ。countable
   presentation が追加で与えるのは existential model existence ではなく、明示的な
   canonical prime-theory model 内の counterworld である。
+- 依存型内部層は `IncDependentFamily`、Σ/Π、reindex に加え、pair-carrier Incidence 上の
+  identity family、reflexivity/symmetry/transitivity、dependent transport、J eliminator、
+  transport の refl/合成則、J beta 則まで拡張した。`natIncidence × natIncidence` では
+  `(0,0)` identity fiber が inhabited、`(0,1)` fiber が empty であることを証明し、
+  単なる全要素同一視ではないことを確認済み。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」や carrier 可算性の除去ではなく、Incidence 固有の意味論とのさらに

@@ -394,8 +394,14 @@ It currently establishes:
   equivalences.  Boundary-observation embeddings now also pull such families
   back; the induced maps on total spaces and sections satisfy checked
   composition laws.  This is a concrete dependent-type fragment of the
-  internal language, not yet a completeness theorem for a full dependent
-  type theory.
+  internal language.  It now includes an identity family over any pair-carrier
+  Incidence, universe-correctly represented by a lifted equality witness, with
+  reflexivity, symmetry, transitivity, dependent transport, and the J
+  eliminator.  Transport has reflexivity and composition laws and J has its
+  beta law.  On `natIncidence × natIncidence`, the identity fiber at `(0,0)` is
+  inhabited while the fiber at `(0,1)` is proved empty, so the construction is
+  nontrivial.  This is not yet a completeness theorem for a full dependent
+  type theory or a complete context/substitution calculus.
 - the `inc_to_set` translation packaged as a functor from the discrete
   incidence carrier category to the category of types.  It is always faithful
   but never full or essentially surjective; explicit morphisms and objects

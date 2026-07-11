@@ -1,6 +1,7 @@
 import IncidenceTheory.Peano
 import IncidenceTheory.Pairs
 import IncidenceTheory.PathComplex
+import IncidenceTheory.Product
 
 /- Merkle-ID: implementation.graph_model.cross_instance
    story.jsonnet → implementation.nodes.cross_instance
@@ -26,6 +27,104 @@ import IncidenceTheory.PathComplex
    combinator -- but it's now proven rather than merely asserted. -/
 
 namespace IncidenceCore
+
+def IncIdentityFamily
+    {I R T : Type u} [DecidableEq (I × I)]
+    (pairIncidence : Incidence (I × I) R T) :
+    IncDependentFamily pairIncidence where
+  fiber := fun pair => ULift.{u} (PLift (pair.1 = pair.2))
+
+def IncIdentityFamily.refl
+    {I R T : Type u} [DecidableEq (I × I)]
+    {pairIncidence : Incidence (I × I) R T} (index : I) :
+    (IncIdentityFamily pairIncidence).fiber (index, index) :=
+  ⟨⟨rfl⟩⟩
+
+def IncIdentityFamily.symm
+    {I R T : Type u} [DecidableEq (I × I)]
+    {pairIncidence : Incidence (I × I) R T} {left right : I} :
+    (IncIdentityFamily pairIncidence).fiber (left, right) →
+      (IncIdentityFamily pairIncidence).fiber (right, left) :=
+  fun equal => ⟨⟨equal.down.down.symm⟩⟩
+
+def IncIdentityFamily.trans
+    {I R T : Type u} [DecidableEq (I × I)]
+    {pairIncidence : Incidence (I × I) R T} {left middle right : I} :
+    (IncIdentityFamily pairIncidence).fiber (left, middle) →
+      (IncIdentityFamily pairIncidence).fiber (middle, right) →
+        (IncIdentityFamily pairIncidence).fiber (left, right) :=
+  fun first second => ⟨⟨first.down.down.trans second.down.down⟩⟩
+
+def IncIdentityFamily.transport
+    {I R T : Type u} [DecidableEq (I × I)]
+    {pairIncidence : Incidence (I × I) R T}
+    (family : I → Type u) {left right : I} :
+    (IncIdentityFamily pairIncidence).fiber (left, right) →
+      family left → family right := by
+  intro equal value
+  have indicesEqual : left = right := equal.down.down
+  subst right
+  exact value
+
+def IncIdentityFamily.J
+    {I R T : Type u} [DecidableEq (I × I)]
+    {pairIncidence : Incidence (I × I) R T}
+    (motive : ∀ left right : I, left = right → Type u)
+    (reflCase : ∀ index, motive index index (Eq.refl index))
+    {left right : I}
+    (equal : (IncIdentityFamily pairIncidence).fiber (left, right)) :
+    motive left right equal.down.down := by
+  have proof := equal.down.down
+  cases proof
+  exact reflCase left
+
+theorem IncIdentityFamily.transport_refl
+    {I R T : Type u} [DecidableEq (I × I)]
+    {pairIncidence : Incidence (I × I) R T}
+    (family : I → Type u) (index : I) (value : family index) :
+    IncIdentityFamily.transport (pairIncidence := pairIncidence) family
+      (IncIdentityFamily.refl index) value = value := by
+  simp [IncIdentityFamily.transport]
+
+theorem IncIdentityFamily.transport_trans
+    {I R T : Type u} [DecidableEq (I × I)]
+    {pairIncidence : Incidence (I × I) R T}
+    (family : I → Type u) {left middle right : I}
+    (first : (IncIdentityFamily pairIncidence).fiber (left, middle))
+    (second : (IncIdentityFamily pairIncidence).fiber (middle, right))
+    (value : family left) :
+    IncIdentityFamily.transport (pairIncidence := pairIncidence) family
+        (IncIdentityFamily.trans first second) value =
+      IncIdentityFamily.transport (pairIncidence := pairIncidence) family second
+        (IncIdentityFamily.transport (pairIncidence := pairIncidence) family first value) := by
+  have firstEq : left = middle := first.down.down
+  have secondEq : middle = right := second.down.down
+  subst middle
+  subst right
+  simp [IncIdentityFamily.transport]
+
+theorem IncIdentityFamily.J_beta
+    {I R T : Type u} [DecidableEq (I × I)]
+    {pairIncidence : Incidence (I × I) R T}
+    (motive : ∀ left right : I, left = right → Type u)
+    (reflCase : ∀ index, motive index index (Eq.refl index))
+    (index : I) :
+    IncIdentityFamily.J (pairIncidence := pairIncidence) motive reflCase
+        (IncIdentityFamily.refl (pairIncidence := pairIncidence) index) =
+      reflCase index := by
+  simp [IncIdentityFamily.J]
+
+def natIncIdentityFamily :
+    IncDependentFamily (incidenceProd natIncidence natIncidence) :=
+  IncIdentityFamily (incidenceProd natIncidence natIncidence)
+
+def natIncIdentity_zero_refl : natIncIdentityFamily.fiber (0, 0) :=
+  IncIdentityFamily.refl (pairIncidence := incidenceProd natIncidence natIncidence) 0
+
+theorem natIncIdentity_zero_one_empty :
+    ¬ Nonempty (natIncIdentityFamily.fiber (0, 1)) := by
+  rintro ⟨witness⟩
+  exact Nat.zero_ne_one witness.down.down
 
 def IncDependentFamily.pullbackAlongBoundaryEmbedding
     {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
