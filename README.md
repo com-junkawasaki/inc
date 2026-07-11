@@ -442,6 +442,13 @@ It currently establishes:
   through lambda binders requires an explicit evaluator-congruence lemma rather
   than definitional reduction of proof-indexed recursors; that binder-aware
   coherence is the remaining part of the full semantic substitution theorem.
+  The evaluator now exposes checked computation equations for every typing
+  constructor (variable, unit, pair, projections, lambda, and application),
+  and lookup derivations are proof-unique.  These laws provide a stable rewrite
+  interface instead of relying on expansion of opaque proof-indexed recursors.
+  Full typing-derivation uniqueness requires a stronger theorem that also
+  identifies hidden intermediate types in projection/application rules; this
+  is intentionally not assumed.
 - the `inc_to_set` translation packaged as a functor from the discrete
   incidence carrier category to the category of types.  It is always faithful
   but never full or essentially surjective; explicit morphisms and objects

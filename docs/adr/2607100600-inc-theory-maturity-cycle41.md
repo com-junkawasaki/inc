@@ -119,6 +119,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   lookup evaluation が一致することを証明した。full semantic substitution の binder case
   は proof-indexed evaluator recursor の definitional equalityでは閉じないため、明示的な
   evaluator congruence/binder coherence が残る。
+- evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
+  公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
+  得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性
+  は projection/application の hidden intermediate type の一意性も同時に返す強化命題が
+  必要であり、未証明のまま仮定していない。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」や carrier 可算性の除去ではなく、Incidence 固有の意味論とのさらに

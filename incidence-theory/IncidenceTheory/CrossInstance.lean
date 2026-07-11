@@ -111,6 +111,18 @@ theorem IncRawLookup.deterministic
       cases secondLookup with
       | there secondPrevious => exact ih secondPrevious
 
+theorem IncRawLookup.proof_unique
+    {context : List IncRawType} {index : Nat} {type : IncRawType}
+    (first second : IncRawLookup context index type) : first = second := by
+  induction first with
+  | here =>
+      cases second
+      rfl
+  | there previous ih =>
+      cases second with
+      | there secondPrevious =>
+          rw [ih secondPrevious]
+
 def IncRawType.interpret (baseModel : Nat → Type u) : IncRawType → Type u
   | .base index => baseModel index
   | .unit => ULift.{u} Unit
@@ -159,6 +171,70 @@ noncomputable def IncRawHasType.evaluate
         bodyEval (IncRawEnvironment.extend argument environment)
   | applyRule _ _ functionEval argumentEval =>
       exact functionEval environment (argumentEval environment)
+
+@[simp] theorem IncRawHasType.evaluate_varRule
+    {baseModel : Nat → Type u} {context : List IncRawType}
+    {index : Nat} {type : IncRawType}
+    (lookup : IncRawLookup context index type)
+    (environment : IncRawEnvironment baseModel context) :
+    (IncRawHasType.varRule lookup).evaluate environment =
+      lookup.evaluate environment := by
+  rfl
+
+@[simp] theorem IncRawHasType.evaluate_unitRule
+    {baseModel : Nat → Type u} {context : List IncRawType}
+    (environment : IncRawEnvironment baseModel context) :
+    (IncRawHasType.unitRule : IncRawHasType context .unit .unit).evaluate environment =
+      (⟨()⟩ : ULift.{u} Unit) := by
+  rfl
+
+@[simp] theorem IncRawHasType.evaluate_pairRule
+    {baseModel : Nat → Type u} {context : List IncRawType}
+    {left right : IncRawTerm} {leftType rightType : IncRawType}
+    (leftTyping : IncRawHasType context left leftType)
+    (rightTyping : IncRawHasType context right rightType)
+    (environment : IncRawEnvironment baseModel context) :
+    (IncRawHasType.pairRule leftTyping rightTyping).evaluate environment =
+      (leftTyping.evaluate environment, rightTyping.evaluate environment) := by
+  rfl
+
+@[simp] theorem IncRawHasType.evaluate_firstRule
+    {baseModel : Nat → Type u} {context : List IncRawType}
+    {term : IncRawTerm} {leftType rightType : IncRawType}
+    (typing : IncRawHasType context term (.product leftType rightType))
+    (environment : IncRawEnvironment baseModel context) :
+    (IncRawHasType.firstRule typing).evaluate environment =
+      (typing.evaluate environment).1 := by
+  rfl
+
+@[simp] theorem IncRawHasType.evaluate_secondRule
+    {baseModel : Nat → Type u} {context : List IncRawType}
+    {term : IncRawTerm} {leftType rightType : IncRawType}
+    (typing : IncRawHasType context term (.product leftType rightType))
+    (environment : IncRawEnvironment baseModel context) :
+    (IncRawHasType.secondRule typing).evaluate environment =
+      (typing.evaluate environment).2 := by
+  rfl
+
+@[simp] theorem IncRawHasType.evaluate_lambdaRule
+    {baseModel : Nat → Type u} {context : List IncRawType}
+    {body : IncRawTerm} {domain codomain : IncRawType}
+    (typing : IncRawHasType (domain :: context) body codomain)
+    (environment : IncRawEnvironment baseModel context) :
+    (IncRawHasType.lambdaRule typing).evaluate environment =
+      fun argument => typing.evaluate
+        (IncRawEnvironment.extend argument environment) := by
+  rfl
+
+@[simp] theorem IncRawHasType.evaluate_applyRule
+    {baseModel : Nat → Type u} {context : List IncRawType}
+    {function argument : IncRawTerm} {domain codomain : IncRawType}
+    (functionTyping : IncRawHasType context function (.function domain codomain))
+    (argumentTyping : IncRawHasType context argument domain)
+    (environment : IncRawEnvironment baseModel context) :
+    (IncRawHasType.applyRule functionTyping argumentTyping).evaluate environment =
+      functionTyping.evaluate environment (argumentTyping.evaluate environment) := by
+  rfl
 
 theorem incRawIdentity_evaluate
     (baseModel : Nat → Type u) (type : IncRawType)
