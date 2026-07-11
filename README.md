@@ -1186,6 +1186,12 @@ It currently establishes:
   spine and combines the resulting type interpretation with recursively supplied
   left/right typing results through `model.identity`.  Mutual recursion only has
   to produce the two endpoint results at this boundary.
+  The full finite mutual spine is now represented by
+  `IncDepRawFormationDispatchReady` and `IncDepRawTypingDispatchReady`.  They
+  mirror all five formation and eight typing constructors, allow nested identity
+  formation, and retain instantiated output formations for apply, pair, and
+  second.  Mutual `toSemanticReady` functions embed the strengthened trees into
+  the existing readiness API while forgetting only that extra output evidence.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

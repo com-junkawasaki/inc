@@ -618,6 +618,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - `dispatchIdentitySubstitution`を追加した。非Identity type spineをstructural dispatchし、そのtype resultとmutual recursionが
   供給する左右endpoint typing resultsを`model.identity`へ合成する。Identity境界でmutual側が生成すべきデータが二endpoint
   resultsだけに固定された。
+- 全5 formation/全8 typing constructorsをmirrorするmutual strengthened readiness
+  `IncDepRawFormationDispatchReady`/`IncDepRawTypingDispatchReady`を追加した。nested Identityを許し、apply/pair/secondでは
+  instantiated output formation evidenceも保持する。mutual `toSemanticReady`が既存readiness APIへstructuralに埋め込み、
+  追加output evidenceだけを安全に忘却する。total mutual dispatcherの有限入力treeが確定した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
