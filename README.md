@@ -926,6 +926,14 @@ It currently establishes:
   formation-readiness constructors now have proof-index-independent rename
   combinators.  What remains is assembling these combinators into the total
   mutual recursive dispatcher and then connecting it to lookup substitution.
+  The total mutual dispatcher is now complete.  The two `renameResult`
+  functions use direct constructor pattern matching on formation and typing
+  readiness, allowing Lean's structural equation compiler to recognize every
+  recursive call across the mutual inductives.  They dispatch all 5 formation
+  and all 8 typing cases to the checked combinators above, with no partial
+  definition, custom termination axiom, or unchecked cast.  The remaining
+  bridge is now specifically lookup-substitution recursion and its semantic
+  alignment, rather than readiness renaming itself.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

@@ -453,6 +453,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   packageして`first`下のterm renameを簡約後、canonical instantiated result typeへbackward transportする。
   これでtyping readiness全8 constructorとformation readiness全5 constructorにproof-index-independent
   rename combinatorが揃った。残るのはtotal mutual recursive dispatcherへの組立てとlookup substitution接続である。
+- total mutual dispatcherを完成した。formation/typing readinessをconstructor patternで直接matchする二つの
+  `renameResult`により、Leanのstructural equation compilerがmutual inductive間の全recursive callを認識する。
+  formation 5種・typing 8種を上記checked combinatorへdispatchし、partial definition、custom termination axiom、
+  unchecked castは使わない。残るbridgeはreadiness renameではなくlookup-substitution recursionとsemantic
+  alignmentに限定された。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

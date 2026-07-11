@@ -2248,6 +2248,79 @@ noncomputable def IncDepRawTypingRenamedReadyResult.second
   rw [← instantiation] at packaged
   exact ⟨packaged.1, packaged.2⟩
 
+mutual
+  noncomputable def IncDepRawFormationSemanticReady.renameResult
+      {source target : List IncDepRawType} {type : IncDepRawType}
+      {formation : IncDepRawWellFormed source type}
+      (ready : IncDepRawFormationSemanticReady formation)
+      (renameMap : IncDepRawRenaming source target) :
+      IncDepRawFormationRenamedReadyResult ready renameMap :=
+    match ready with
+    | .base => IncDepRawFormationRenamedReadyResult.base renameMap
+    | .unit => IncDepRawFormationRenamedReadyResult.unit renameMap
+    | .pi domainReady codomainReady =>
+        IncDepRawFormationRenamedReadyResult.pi renameMap
+          (IncDepRawFormationSemanticReady.renameResult domainReady renameMap)
+          (IncDepRawFormationSemanticReady.renameResult codomainReady (renameMap.lift _))
+    | .sigma domainReady codomainReady =>
+        IncDepRawFormationRenamedReadyResult.sigma renameMap
+          (IncDepRawFormationSemanticReady.renameResult domainReady renameMap)
+          (IncDepRawFormationSemanticReady.renameResult codomainReady (renameMap.lift _))
+    | .identity typeReady leftReady rightReady =>
+        IncDepRawFormationRenamedReadyResult.identity renameMap
+          (IncDepRawFormationSemanticReady.renameResult typeReady renameMap)
+          (IncDepRawTypingSemanticReady.renameResult leftReady renameMap)
+          (IncDepRawTypingSemanticReady.renameResult rightReady renameMap)
+
+  noncomputable def IncDepRawTypingSemanticReady.renameResult
+      {source target : List IncDepRawType} {term : IncDepRawTerm}
+      {type : IncDepRawType} {typing : IncDepRawHasType source term type}
+      (ready : IncDepRawTypingSemanticReady typing)
+      (renameMap : IncDepRawRenaming source target) :
+      IncDepRawTypingRenamedReadyResult ready renameMap :=
+    match ready with
+    | .varRule typeReady =>
+        IncDepRawTypingRenamedReadyResult.variable renameMap
+          (IncDepRawFormationSemanticReady.renameResult typeReady renameMap)
+    | .unitRule => IncDepRawTypingRenamedReadyResult.unit renameMap
+    | .lambdaRule domainReady codomainReady bodyReady =>
+        IncDepRawTypingRenamedReadyResult.lambda renameMap
+          (IncDepRawFormationSemanticReady.renameResult domainReady renameMap)
+          (IncDepRawFormationSemanticReady.renameResult codomainReady
+            (renameMap.lift _))
+          (IncDepRawTypingSemanticReady.renameResult bodyReady (renameMap.lift _))
+    | .applyRule domainReady codomainReady functionReady argumentReady =>
+        IncDepRawTypingRenamedReadyResult.apply renameMap
+          (IncDepRawFormationSemanticReady.renameResult domainReady renameMap)
+          (IncDepRawFormationSemanticReady.renameResult codomainReady
+            (renameMap.lift _))
+          (IncDepRawTypingSemanticReady.renameResult functionReady renameMap)
+          (IncDepRawTypingSemanticReady.renameResult argumentReady renameMap)
+    | .pairRule domainReady codomainReady firstReady secondReady =>
+        IncDepRawTypingRenamedReadyResult.pair renameMap
+          (IncDepRawFormationSemanticReady.renameResult domainReady renameMap)
+          (IncDepRawFormationSemanticReady.renameResult codomainReady
+            (renameMap.lift _))
+          (IncDepRawTypingSemanticReady.renameResult firstReady renameMap)
+          (IncDepRawTypingSemanticReady.renameResult secondReady renameMap)
+    | .firstRule domainReady codomainReady pairReady =>
+        IncDepRawTypingRenamedReadyResult.first renameMap
+          (IncDepRawFormationSemanticReady.renameResult domainReady renameMap)
+          (IncDepRawFormationSemanticReady.renameResult codomainReady
+            (renameMap.lift _))
+          (IncDepRawTypingSemanticReady.renameResult pairReady renameMap)
+    | .secondRule domainReady codomainReady pairReady =>
+        IncDepRawTypingRenamedReadyResult.second renameMap
+          (IncDepRawFormationSemanticReady.renameResult domainReady renameMap)
+          (IncDepRawFormationSemanticReady.renameResult codomainReady
+            (renameMap.lift _))
+          (IncDepRawTypingSemanticReady.renameResult pairReady renameMap)
+    | .reflRule typeReady termReady =>
+        IncDepRawTypingRenamedReadyResult.refl renameMap
+          (IncDepRawFormationSemanticReady.renameResult typeReady renameMap)
+          (IncDepRawTypingSemanticReady.renameResult termReady renameMap)
+end
+
 noncomputable def IncDepRawTypingSemanticReady.toDeeplyWellFormed
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} {typing : IncDepRawHasType context term type}
