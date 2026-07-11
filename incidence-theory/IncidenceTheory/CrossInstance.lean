@@ -8155,6 +8155,65 @@ def IncDepRawTypingSubstitutionDispatchResult.typingResultAlignedAcross
   cases formationAlignment
   exact result.typingResult.castFormation (eq_of_heq alignment)
 
+structure IncDepRawTypingSubstitutionDispatchAlignment
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawTypingSubstitutionDispatchResult targetTyping
+      substitutionResult)
+    {expectedFormation : IncDepRawWellFormed target type}
+    (expectedResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := expectedFormation) substitutionResult) where
+  formationAlignment : result.typeFormation = expectedFormation
+  resultAlignment : HEq result.formationResult expectedResult
+
+def IncDepRawTypingSubstitutionDispatchAlignment.exact
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawTypingSubstitutionDispatchResult targetTyping
+      substitutionResult) :
+    IncDepRawTypingSubstitutionDispatchAlignment result result.formationResult where
+  formationAlignment := rfl
+  resultAlignment := HEq.rfl
+
+def IncDepRawTypingSubstitutionDispatchAlignment.typingResult
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {result : IncDepRawTypingSubstitutionDispatchResult targetTyping
+      substitutionResult}
+    {expectedFormation : IncDepRawWellFormed target type}
+    {expectedResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := expectedFormation) substitutionResult}
+    (alignment : IncDepRawTypingSubstitutionDispatchAlignment result
+      expectedResult) :
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := targetTyping) expectedResult :=
+  result.typingResultAlignedAcross alignment.formationAlignment expectedResult
+    alignment.resultAlignment
+
 noncomputable def IncDepRawVariableSubstitutionProvider.dispatch
     (provider : IncDepRawVariableSubstitutionProvider)
     {source target : List IncDepRawType} {position : Nat}

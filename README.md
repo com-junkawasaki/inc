@@ -1225,6 +1225,12 @@ It currently establishes:
   has to synthesize the explicit formation-proof and fiber-result alignment
   witnesses accepted by these combinators; those obligations are no longer
   hidden inside the semantic rules.
+  The two-part obligation is now packaged as
+  `IncDepRawTypingSubstitutionDispatchAlignment`: it records equality of the
+  formation derivations and heterogeneous equality of their complete fiber
+  results.  Its `typingResult` eliminator performs the checked transport, while
+  `exact` discharges reflexive recursive cases.  This is the alignment object the
+  mutual dispatcher must construct, instead of passing unrelated equalities.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

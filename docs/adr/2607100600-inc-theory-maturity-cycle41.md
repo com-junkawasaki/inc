@@ -641,6 +641,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `dispatchSecond`を実装した。各branchはchild packageをcanonical Pi/Sigma/instantiate resultへalignし、既証明のsemantic
   constructorを呼び、output formation/result packageを返す。残件はfull mutual dispatcher内でこれらのalignment witnessを
   structuralに生成することであり、semantic rule内部の暗黙仮定ではなく独立した明示的proof obligationになった。
+- 二つのalignment obligationを`IncDepRawTypingSubstitutionDispatchAlignment`へpackageした。formation derivation equalityと
+  complete fiber resultのheterogeneous equalityを一体で保持し、`typingResult` eliminatorがchecked transportを行う。
+  reflexive caseは`exact`で閉じる。これによりmutual dispatcherの次段は、無関係なequality引数群ではなく、この単一の
+  canonical alignment objectを各recursive edgeで構成すればよい。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
