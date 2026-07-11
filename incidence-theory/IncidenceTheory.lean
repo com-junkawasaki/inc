@@ -7280,6 +7280,38 @@ theorem behavioralQuotientCriterion_iff_quotientMap_bijective
     exact ⟨behavioralQuotientCriterionOfBijectiveMap translation
       injective surjective, rfl⟩
 
+theorem behavioralQuotientCriterion_iff_quotientEquivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : BehavioralBoundaryShapeTranslation source target) :
+    (∃ criterion : BehavioralQuotientEquivalenceCriterion source target,
+      criterion.embedding.toBehavioralBoundaryShapeTranslation = translation) ↔
+    (∃ equivalence : IncTypeEquivalence
+        (IncidenceQuotient source) (IncidenceQuotient target),
+      equivalence.forward = translation.mapBisimulationQuotient) := by
+  constructor
+  · rintro ⟨criterion, underlyingEq⟩
+    cases underlyingEq
+    exact ⟨criterion.quotientEquivalence, rfl⟩
+  · rintro ⟨equivalence, forwardEq⟩
+    have injective : ∀ {left right : IncidenceQuotient source},
+        translation.mapBisimulationQuotient left =
+          translation.mapBisimulationQuotient right → left = right := by
+      intro left right imagesEqual
+      have inverseImagesEqual := congrArg equivalence.inverse imagesEqual
+      rw [← forwardEq, equivalence.inverse_forward,
+        equivalence.inverse_forward] at inverseImagesEqual
+      exact inverseImagesEqual
+    have surjective : ∀ targetClass : IncidenceQuotient target,
+        ∃ sourceClass : IncidenceQuotient source,
+          translation.mapBisimulationQuotient sourceClass = targetClass := by
+      intro targetClass
+      refine ⟨equivalence.inverse targetClass, ?_⟩
+      rw [← forwardEq]
+      exact equivalence.forward_inverse targetClass
+    exact ⟨behavioralQuotientCriterionOfBijectiveMap translation
+      injective surjective, rfl⟩
+
 theorem BehavioralQuotientEquivalenceCriterion.quotientEquivalence_forward
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
     {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
