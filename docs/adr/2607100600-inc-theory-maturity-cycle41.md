@@ -629,6 +629,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   proof、strengthened readiness、formation result、typing resultを一体で保持し、source/target semantic family accessorも持つ。
   `dispatchTypingUnit`とvariable providerの`dispatchResult`で二leaf casesを実装し、異なるformation derivationの不正な
   同一視を避けた。
+- package再帰constructor `dispatchRefl`/`dispatchLambda`を追加した。前者はchild typing packageからIdentity formationと
+  refl resultを、後者はrecursive domain resultとそのlift下のbody packageからPi formationとlambda resultを一体構成する。
+  dependent return shapeがformation/typing境界とbinder境界の双方で成立することを確認した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

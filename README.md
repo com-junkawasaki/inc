@@ -1204,6 +1204,12 @@ It currently establishes:
   and target semantic families are exposed by accessors.  `dispatchTypingUnit`
   and the variable provider's `dispatchResult` implement the two actual leaf
   cases without identifying distinct formation derivations.
+  Recursive package combinators now cover refl and lambda.
+  `dispatchRefl` turns a child typing package into its identity formation and
+  reflexivity result.  `dispatchLambda` combines a recursive domain result with a
+  body package computed under its lifted substitution, returning the Pi formation
+  and lambda typing result together.  These validate the package shape across
+  both the formation/typing boundary and a binder boundary.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
