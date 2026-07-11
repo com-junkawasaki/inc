@@ -26,7 +26,11 @@ It currently establishes:
 - a propositional internal-logic fragment over incidence atoms, with natural
   deduction, semantic soundness, context weakening, and truth-preserving
   translation theorems; atom maps also transport formulas, contexts, and
-  derivations.  Its intuitionistic Kripke semantics, persistence theorem, and
+  derivations.  Arbitrary atom translations reflect consistency from the
+  translated theory back to the source; split-injective translations preserve
+  and reflect both consistency and avoidance of any designated formula
+  exactly, alongside derivability and semantic consequence.  Its intuitionistic
+  Kripke semantics, persistence theorem, and
   Kripke soundness theorem are checked; atom translations pull Kripke models
   back and preserve formula and context forcing exactly. Assumption substitution and cut are
   also proved syntactically.  A one-world Kripke model proves relative

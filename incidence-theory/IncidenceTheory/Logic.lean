@@ -478,6 +478,47 @@ theorem derives_map_iff_of_leftInverse {Atom Atom' : Type u}
   · exact derives_map_reflect_of_leftInverse f g hgf
   · exact derives_map f
 
+/- Consistency is contravariant under arbitrary atom translations: if the
+   translated theory is consistent, then the source theory was consistent.
+   A split injection upgrades this to an exact preservation-and-reflection
+   theorem, matching the corresponding results for derivability and semantic
+   entailment. -/
+theorem derivationallyConsistent_of_map {Atom Atom' : Type u}
+    (f : Atom → Atom') {context : List (Formula Atom)} :
+    DerivationallyConsistent (Formula.mapContext f context) →
+      DerivationallyConsistent context := by
+  intro mappedConsistent sourceInconsistent
+  exact mappedConsistent (derives_map f sourceInconsistent)
+
+theorem derivationallyConsistent_map_iff_of_leftInverse {Atom Atom' : Type u}
+    (f : Atom → Atom') (g : Atom' → Atom) (hgf : ∀ atom, g (f atom) = atom)
+    {context : List (Formula Atom)} :
+    DerivationallyConsistent (Formula.mapContext f context) ↔
+      DerivationallyConsistent context := by
+  unfold DerivationallyConsistent
+  constructor
+  · exact derivationallyConsistent_of_map f
+  · intro sourceConsistent mappedInconsistent
+    apply sourceConsistent
+    exact derives_map_reflect_of_leftInverse f g hgf
+      (formula := .bot) mappedInconsistent
+
+theorem derivationallyAvoids_of_map {Atom Atom' : Type u}
+    (f : Atom → Atom') {context : List (Formula Atom)}
+    {forbidden : Formula Atom} :
+    DerivationallyAvoids (Formula.mapContext f context) (forbidden.map f) →
+      DerivationallyAvoids context forbidden := by
+  intro mappedAvoids sourceDerives
+  exact mappedAvoids (derives_map f sourceDerives)
+
+theorem derivationallyAvoids_map_iff_of_leftInverse {Atom Atom' : Type u}
+    (f : Atom → Atom') (g : Atom' → Atom) (hgf : ∀ atom, g (f atom) = atom)
+    {context : List (Formula Atom)} {forbidden : Formula Atom} :
+    DerivationallyAvoids (Formula.mapContext f context) (forbidden.map f) ↔
+      DerivationallyAvoids context forbidden := by
+  unfold DerivationallyAvoids
+  rw [derives_map_iff_of_leftInverse f g hgf]
+
 /- Structural weakening is needed whenever an incidence translation introduces
    auxiliary assumptions. -/
 theorem derives_weaken {Atom : Type u} {source target : List (Formula Atom)}
