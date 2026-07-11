@@ -1094,6 +1094,36 @@ theorem logicalEntails_mk_iff_derives {Atom : Type u} (left right : Formula Atom
       Derives [] (.imp left right) :=
   logicalImp_class_eq_top_iff_derives left right
 
+theorem Formula.logicalMap_monotone {Atom Atom' : Type u} (f : Atom → Atom')
+    {left right : Formula.LogicalEquivalenceClass Atom} :
+    left ≤ right → Formula.logicalMap f left ≤ Formula.logicalMap f right := by
+  refine Quotient.inductionOn left ?_
+  intro left
+  refine Quotient.inductionOn right ?_
+  intro right leftRight
+  have derives : Derives [] (.imp left right) :=
+    (logicalEntails_mk_iff_derives left right).1 leftRight
+  apply (logicalEntails_mk_iff_derives (left.map f) (right.map f)).2
+  simpa [Formula.map, Formula.mapContext] using derives_map f derives
+
+theorem Formula.logicalMap_reflects_order_of_leftInverse {Atom Atom' : Type u}
+    (f : Atom → Atom') (g : Atom' → Atom)
+    (hgf : ∀ atom, g (f atom) = atom)
+    {left right : Formula.LogicalEquivalenceClass Atom} :
+    Formula.logicalMap f left ≤ Formula.logicalMap f right → left ≤ right := by
+  intro mappedOrder
+  have reflected := Formula.logicalMap_monotone g mappedOrder
+  simpa only [Formula.logicalMap_leftInverse f g hgf] using reflected
+
+theorem Formula.logicalMap_orderEmbedding_iff {Atom Atom' : Type u}
+    (f : Atom → Atom') (g : Atom' → Atom)
+    (hgf : ∀ atom, g (f atom) = atom)
+    (left right : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalMap f left ≤ Formula.logicalMap f right ↔ left ≤ right := by
+  constructor
+  · exact Formula.logicalMap_reflects_order_of_leftInverse f g hgf
+  · exact Formula.logicalMap_monotone f
+
 theorem Formula.logicalAnd_le_left {Atom : Type u}
     (left right : Formula.LogicalEquivalenceClass Atom) :
     Formula.logicalAnd left right ≤ left := by
