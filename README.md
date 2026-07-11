@@ -40,8 +40,11 @@ It currently establishes:
   this observation, and translations preserving boundary inhabitation preserve
   formula and context truth iff.  Such translations are packaged as
   `IncidenceBoundaryObservationEmbedding`, with identity, composition, and
-  functorial truth laws.  The existing `Nat → PathId.node` boundary-natural map
-  is a concrete embedding and preserves every translated formula's truth iff.
+  functorial truth laws.  Boundary-observation semantic consequence is defined
+  directly on an Incidence; derivations are sound for it, and observation
+  embeddings preserve and reflect translated entailment iff.  The existing
+  `Nat → PathId.node` boundary-natural map is a concrete embedding and preserves
+  every translated formula's truth and every finite sequent's entailment iff.
   For `natIncidence`, atom `n` is true exactly
   when `n≠0`, including a checked negation of the zero atom.  Its intuitionistic
   Kripke semantics, persistence theorem, and

@@ -5055,6 +5055,12 @@ def IncidenceBoundaryContextSatisfies {I R T : Type u} [DecidableEq I]
     (incidence : Incidence I R T) (context : List (Formula I)) : Prop :=
   ContextSatisfies (IncidenceBoundaryValuation incidence) context
 
+def IncidenceBoundaryEntails {I R T : Type u} [DecidableEq I]
+    (incidence : Incidence I R T) (context : List (Formula I))
+    (formula : Formula I) : Prop :=
+  IncidenceBoundaryContextSatisfies incidence context →
+    IncidenceBoundarySatisfies incidence formula
+
 theorem incidenceBoundarySatisfies_atom_iff
     {I R T : Type u} [DecidableEq I] (incidence : Incidence I R T) (atom : I) :
     IncidenceBoundarySatisfies incidence (.atom atom) ↔
@@ -5068,6 +5074,13 @@ theorem derives_incidenceBoundary_sound
     (holds : IncidenceBoundaryContextSatisfies incidence context) :
     IncidenceBoundarySatisfies incidence formula :=
   derives_sound derivation holds
+
+theorem derives_incidenceBoundary_entails
+    {I R T : Type u} [DecidableEq I] {incidence : Incidence I R T}
+    {context : List (Formula I)} {formula : Formula I}
+    (derivation : Derives context formula) :
+    IncidenceBoundaryEntails incidence context formula :=
+  fun holds => derives_incidenceBoundary_sound derivation holds
 
 theorem incidenceBoundarySatisfies_map_iff
     {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
@@ -5143,6 +5156,24 @@ theorem IncidenceBoundaryObservationEmbedding.contextSatisfies_iff
       IncidenceBoundaryContextSatisfies source context :=
   incidenceBoundaryContextSatisfies_map_iff source target embedding.map
     embedding.boundary_iff context
+
+theorem IncidenceBoundaryObservationEmbedding.entails_iff
+    {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
+    {source : Incidence I R T} {target : Incidence I' R' T'}
+    (embedding : IncidenceBoundaryObservationEmbedding source target)
+    (context : List (Formula I)) (formula : Formula I) :
+    IncidenceBoundaryEntails target (Formula.mapContext embedding.map context)
+        (formula.map embedding.map) ↔
+      IncidenceBoundaryEntails source context formula := by
+  constructor
+  · intro targetEntails sourceHolds
+    apply (embedding.satisfies_iff formula).mp
+    apply targetEntails
+    exact (embedding.contextSatisfies_iff context).mpr sourceHolds
+  · intro sourceEntails targetHolds
+    apply (embedding.satisfies_iff formula).mpr
+    apply sourceEntails
+    exact (embedding.contextSatisfies_iff context).mp targetHolds
 
 theorem IncidenceBoundaryObservationEmbedding.satisfies_comp
     {I I' I'' R T R' T' R'' T'' : Type u}
