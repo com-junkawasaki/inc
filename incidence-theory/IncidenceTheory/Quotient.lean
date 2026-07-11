@@ -492,6 +492,38 @@ theorem simplexQuotientToShape_surjective (s : SimplexShape) :
   | edgeShape => exact ⟨Quotient.mk _ SimplexId.e01, rfl⟩
   | faceShape => exact ⟨Quotient.mk _ SimplexId.face, rfl⟩
 
+noncomputable def simplexQuotientShapeEquivalence :
+    IncTypeEquivalence
+      (Quotient (approxBisimSetoid simplexIncidence)) SimplexShape :=
+  simplexBisimulationQuotientClassification.equivalence
+
+theorem simplexQuotientShapeEquivalence_forward :
+    simplexQuotientShapeEquivalence.forward = simplexQuotientToShape := by
+  change simplexBisimulationQuotientClassification.lift =
+    simplexQuotientToShape
+  exact simplexBisimulationQuotientClassification_exact
+
+theorem simplexQuotientShapeEquivalence_inverse_vertex :
+    simplexQuotientShapeEquivalence.inverse SimplexShape.vertex =
+      Quotient.mk (approxBisimSetoid simplexIncidence) SimplexId.v0 := by
+  have inverseForward := simplexQuotientShapeEquivalence.inverse_forward
+    (Quotient.mk (approxBisimSetoid simplexIncidence) SimplexId.v0)
+  simpa [simplexQuotientShapeEquivalence_forward] using inverseForward
+
+theorem simplexQuotientShapeEquivalence_inverse_edge :
+    simplexQuotientShapeEquivalence.inverse SimplexShape.edgeShape =
+      Quotient.mk (approxBisimSetoid simplexIncidence) SimplexId.e01 := by
+  have inverseForward := simplexQuotientShapeEquivalence.inverse_forward
+    (Quotient.mk (approxBisimSetoid simplexIncidence) SimplexId.e01)
+  simpa [simplexQuotientShapeEquivalence_forward] using inverseForward
+
+theorem simplexQuotientShapeEquivalence_inverse_face :
+    simplexQuotientShapeEquivalence.inverse SimplexShape.faceShape =
+      Quotient.mk (approxBisimSetoid simplexIncidence) SimplexId.face := by
+  have inverseForward := simplexQuotientShapeEquivalence.inverse_forward
+    (Quotient.mk (approxBisimSetoid simplexIncidence) SimplexId.face)
+  simpa [simplexQuotientShapeEquivalence_forward] using inverseForward
+
 /- The headline positive result: a genuine `Incidence SimplexShape
    SimplexRole GraphType` structure on the (isomorphic image of the)
    quotient carrier, hand-built by collapsing each shape's boundary
