@@ -3450,6 +3450,21 @@ theorem excluded_middle_not_derivable {Atom : Type u} (atom : Atom) :
   · exact Bool.noConfusion hatom.left
   · exact hneg true (Or.inl rfl) ⟨rfl, rfl⟩
 
+theorem double_neg_elimination_not_derivable {Atom : Type u} (atom : Atom) :
+    ¬ Derives ([] : List (Formula Atom))
+      (.imp (Formula.neg (Formula.neg (.atom atom))) (.atom atom)) := by
+  intro derivation
+  let model := delayedAtomKripkeModel Atom atom
+  have forces := derives_kripke_sound derivation model false (by
+    intro formula hmem
+    simp at hmem)
+  have doubleNeg : KripkeForces model false
+      (Formula.neg (Formula.neg (.atom atom))) := by
+    intro world hle negAtom
+    exact negAtom true (Or.inr rfl) ⟨rfl, rfl⟩
+  have atomAtFalse := forces false (model.le_refl false) doubleNeg
+  exact Bool.noConfusion atomAtFalse.left
+
 theorem Formula.logicalBottom_ne_top (Atom : Type u) :
     (Formula.logicalBottom : Formula.LogicalEquivalenceClass Atom) ≠
       Formula.logicalTop := by
@@ -3471,6 +3486,15 @@ theorem Formula.logicalExcludedMiddle_ne_top {Atom : Type u} (atom : Atom) :
     exact Quotient.exact equal
   exact excluded_middle_not_derivable atom
     (Derives.impE (derives_iffER equivalent) Derives.topI)
+
+theorem Formula.logicalDoubleNeg_not_le_atom {Atom : Type u} (atom : Atom) :
+    ¬ Formula.logicalNeg (Formula.logicalNeg
+        (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) (.atom atom))) ≤
+      Quotient.mk (Formula.derivablyEquivalentSetoid Atom) (.atom atom) := by
+  intro order
+  exact double_neg_elimination_not_derivable atom
+    ((logicalEntails_mk_iff_derives
+      (Formula.neg (Formula.neg (.atom atom))) (.atom atom)).1 order)
 
 /- The intuitionistically valid double-negated form is nevertheless derivable.
    Together with `excluded_middle_not_derivable`, this records the precise
