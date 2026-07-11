@@ -6999,6 +6999,27 @@ theorem incToSetFunctor_fullyFaithful_iff
     exact incToSetFunctor_fullyFaithful_of_subsingleton_all_nonNullary inc
       subsingleton allNonNullary
 
+theorem incidence_subsingleton_has_nullary_unit
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (subsingleton : ∀ i j : I, i = j) :
+    inc.boundary inc.unit = [] := by
+  cases boundaryEq : inc.boundary inc.unit with
+  | nil => rfl
+  | cons endpoint rest =>
+      exfalso
+      apply inc.well_founded inc.unit
+      exact ⟨endpoint, by rw [boundaryEq]; simp,
+        subsingleton endpoint.i inc.unit⟩
+
+theorem incToSetFunctor_never_fullyFaithful
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    ¬ IncFunctorFullyFaithful (incToSetFunctor inc) := by
+  intro fullyFaithful
+  obtain ⟨subsingleton, allNonNullary⟩ :=
+    (incToSetFunctor_fullyFaithful_iff inc).mp fullyFaithful
+  exact allNonNullary inc.unit
+    (incidence_subsingleton_has_nullary_unit inc subsingleton)
+
 theorem incToSetFunctor_not_essentiallySurjective
     {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
     ¬ IncFunctorEssentiallySurjective (incToSetFunctor inc) := by
