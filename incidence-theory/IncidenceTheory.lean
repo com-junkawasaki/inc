@@ -7922,6 +7922,74 @@ def BoundaryShapeEquivalence.toEmbedding
     rw [equivalence.inv_hom, equivalence.inv_hom] at this
     exact this
 
+theorem BoundaryShapeEmbedding.discreteFunctor_fullyFaithful
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (embedding : BoundaryShapeEmbedding source target) :
+    IncFunctorFullyFaithful
+      embedding.toBoundaryShapeTranslation.discreteFunctor where
+  faithful := by
+    intro first second left right _
+    cases left
+    cases right
+    rfl
+  full := by
+    intro first second morphism
+    rcases first with ⟨first⟩
+    rcases second with ⟨second⟩
+    have mappedEqual : embedding.map first = embedding.map second :=
+      congrArg IncLiftedObject.down morphism.equality
+    have sourceEqual : first = second := embedding.injective mappedEqual
+    cases sourceEqual
+    refine ⟨⟨rfl⟩, ?_⟩
+    cases morphism
+    rfl
+
+theorem BoundaryShapeEquivalence.discreteFunctor_essentiallySurjective
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    IncFunctorEssentiallySurjective equivalence.hom.discreteFunctor := by
+  intro targetObject
+  have objectEqual : equivalence.hom.discreteFunctor.obj
+      ⟨equivalence.inv.map targetObject.down⟩ = targetObject := by
+    cases targetObject with
+    | mk target =>
+        change IncLiftedObject.mk
+          (equivalence.hom.map (equivalence.inv.map target)) =
+            IncLiftedObject.mk target
+        rw [equivalence.hom_inv]
+  refine ⟨⟨equivalence.inv.map targetObject.down⟩,
+    ⟨objectEqual⟩, ⟨objectEqual.symm⟩, ?_, ?_⟩
+  · cases targetObject
+    simp only at *
+    rfl
+  · cases targetObject
+    simp only at *
+    rfl
+
+def BoundaryShapeEquivalence.discreteFunctorCriterion
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    IncFunctorEquivalenceCriterion equivalence.hom.discreteFunctor where
+  fullyFaithful := equivalence.toEmbedding.discreteFunctor_fullyFaithful
+  essentiallySurjective := equivalence.discreteFunctor_essentiallySurjective
+
+noncomputable def BoundaryShapeEquivalence.discreteCategoryEquivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    IncCategoryEquivalence (incDiscreteCategory I) (incDiscreteCategory J) :=
+  equivalence.discreteFunctorCriterion.toCategoryEquivalence
+
+theorem BoundaryShapeEquivalence.discreteCategoryEquivalence_forward
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    equivalence.discreteCategoryEquivalence.forward =
+      equivalence.hom.discreteFunctor := rfl
+
 def BoundaryShapeEquivalence.carrierEquivalence
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
     {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
