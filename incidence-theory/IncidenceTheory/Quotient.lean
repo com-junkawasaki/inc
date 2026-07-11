@@ -417,6 +417,41 @@ theorem BisimulationQuotientClassification.equivalence_forward
     (classification : BisimulationQuotientClassification (Q := Q) inc) :
     classification.equivalence.forward = classification.lift := rfl
 
+noncomputable def BisimulationQuotientClassification.targetEquivalence
+    {I R T Q₁ Q₂ : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (first : BisimulationQuotientClassification (Q := Q₁) inc)
+    (second : BisimulationQuotientClassification (Q := Q₂) inc) :
+    IncTypeEquivalence Q₁ Q₂ :=
+  second.equivalence.trans first.equivalence.symm
+
+theorem BisimulationQuotientClassification.targetEquivalence_classify
+    {I R T Q₁ Q₂ : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (first : BisimulationQuotientClassification (Q := Q₁) inc)
+    (second : BisimulationQuotientClassification (Q := Q₂) inc)
+    (x : I) :
+    (first.targetEquivalence second).forward (first.classify x) =
+      second.classify x := by
+  change second.lift (first.equivalence.inverse (first.classify x)) =
+    second.classify x
+  have inverseClassify := first.equivalence.inverse_forward
+    (Quotient.mk (approxBisimSetoid inc) x)
+  change first.equivalence.inverse (first.classify x) =
+    Quotient.mk (approxBisimSetoid inc) x at inverseClassify
+  rw [inverseClassify]
+  rfl
+
+theorem BisimulationQuotientClassification.targetEquivalence_unique
+    {I R T Q₁ Q₂ : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (first : BisimulationQuotientClassification (Q := Q₁) inc)
+    (second : BisimulationQuotientClassification (Q := Q₂) inc)
+    (candidate : Q₁ → Q₂)
+    (commutes : ∀ x, candidate (first.classify x) = second.classify x) :
+    candidate = (first.targetEquivalence second).forward := by
+  funext q
+  rcases first.surjective q with ⟨x, rfl⟩
+  rw [commutes,
+    BisimulationQuotientClassification.targetEquivalence_classify]
+
 /- Concrete confirmation against both faithful instances built so far
    in this project (`natIncidence`, cycle 4; `cycleIncidenceFixed`,
    cycle 27) -- not vacuous, two genuinely different faithful instances
