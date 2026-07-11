@@ -5445,13 +5445,16 @@ structure IncDepRawSigmaSubstitutionCoherence
     (codomainResult : IncDepRawFormationSubstitutionFiberResult
       (targetFormation := codomainFormation)
       domainResult.liftSubstitution) where
-  fiberEquiv : ∀ assignment,
-    IncDependentSigmaFiberEquiv
-      (domainResult.semanticFiberEquivalence.fiberEquiv assignment)
-      (fun value => codomainResult.sourceFormationResult.semanticType
-        ⟨assignment, value⟩)
-      (fun value => codomainResult.targetFormationResult.semanticType
-        ⟨substitutionResult.semanticSubstitution assignment, value⟩)
+  backward_forward : ∀ assignment value,
+    (IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
+      domainResult codomainResult assignment).sigmaBackward
+      ((IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
+        domainResult codomainResult assignment).sigmaForward value) = value
+  forward_backward : ∀ assignment value,
+    (IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
+      domainResult codomainResult assignment).sigmaForward
+      ((IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
+        domainResult codomainResult assignment).sigmaBackward value) = value
 
 noncomputable def IncDepRawSigmaFormationSubstitutionFiberResult.ofCoherence
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
@@ -5474,7 +5477,12 @@ noncomputable def IncDepRawSigmaFormationSubstitutionFiberResult.ofCoherence
       (domainFormation := domainFormation)
       (codomainFormation := codomainFormation) substitutionResult :=
   IncDepRawSigmaFormationSubstitutionFiberResult.ofCodomainResult
-    domainResult codomainResult coherence.fiberEquiv
+    domainResult codomainResult (fun assignment =>
+      { dependentEquiv :=
+          IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
+            domainResult codomainResult assignment
+        backward_forward := coherence.backward_forward assignment
+        forward_backward := coherence.forward_backward assignment })
 
 noncomputable def IncDepRawSigmaFormationSubstitutionFiberResult.ofCodomainCoherence
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
@@ -6729,16 +6737,7 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.pair
     (codomainResult : IncDepRawFormationSubstitutionFiberResult
       (targetFormation := codomainFormation)
       domainResult.liftSubstitution)
-    (backward_forward : ∀ assignment value,
-      (IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
-        domainResult codomainResult assignment).sigmaBackward
-        ((IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
-          domainResult codomainResult assignment).sigmaForward value) = value)
-    (forward_backward : ∀ assignment value,
-      (IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
-        domainResult codomainResult assignment).sigmaForward
-        ((IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
-          domainResult codomainResult assignment).sigmaBackward value) = value)
+    (coherence : IncDepRawSigmaSubstitutionCoherence domainResult codomainResult)
     (firstResult : IncDepRawTypingSubstitutionFiberResult
       (targetTyping := firstTyping) domainResult)
     (secondResult : IncDepRawTypingSubstitutionFiberResult
@@ -6750,12 +6749,11 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.pair
         firstResult.semanticTerm_coherence)) :
     IncDepRawTypingSubstitutionFiberResult
       (targetTyping := IncDepRawHasType.pairRule firstTyping secondTyping)
-      (IncDepRawSigmaFormationSubstitutionFiberResult.ofCodomainCoherence
-        domainResult codomainResult backward_forward
-        forward_backward).toFormationFiberResult := by
+      (IncDepRawSigmaFormationSubstitutionFiberResult.ofCoherence
+        domainResult codomainResult coherence).toFormationFiberResult := by
   let sigmaResult :=
-    IncDepRawSigmaFormationSubstitutionFiberResult.ofCodomainCoherence
-      domainResult codomainResult backward_forward forward_backward
+    IncDepRawSigmaFormationSubstitutionFiberResult.ofCoherence
+      domainResult codomainResult coherence
   refine
     { targetTermResult := IncDepRawTypingSemanticResult.pair
         firstResult.targetTermResult secondResult.targetTermResult
@@ -6804,20 +6802,11 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.first
     (codomainResult : IncDepRawFormationSubstitutionFiberResult
       (targetFormation := codomainFormation)
       domainResult.liftSubstitution)
-    (backward_forward : ∀ assignment value,
-      (IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
-        domainResult codomainResult assignment).sigmaBackward
-        ((IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
-          domainResult codomainResult assignment).sigmaForward value) = value)
-    (forward_backward : ∀ assignment value,
-      (IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
-        domainResult codomainResult assignment).sigmaForward
-        ((IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
-          domainResult codomainResult assignment).sigmaBackward value) = value)
+    (coherence : IncDepRawSigmaSubstitutionCoherence domainResult codomainResult)
     (pairResult : IncDepRawTypingSubstitutionFiberResult
       (targetTyping := pairTyping)
-      (IncDepRawSigmaFormationSubstitutionFiberResult.ofCodomainCoherence
-        domainResult codomainResult backward_forward forward_backward).toFormationFiberResult) :
+      (IncDepRawSigmaFormationSubstitutionFiberResult.ofCoherence
+        domainResult codomainResult coherence).toFormationFiberResult) :
     IncDepRawTypingSubstitutionFiberResult
       (targetTyping := IncDepRawHasType.firstRule pairTyping) domainResult where
   targetTermResult := IncDepRawTypingSemanticResult.first
@@ -6850,20 +6839,11 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.second
     (codomainResult : IncDepRawFormationSubstitutionFiberResult
       (targetFormation := codomainFormation)
       domainResult.liftSubstitution)
-    (backward_forward : ∀ assignment value,
-      (IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
-        domainResult codomainResult assignment).sigmaBackward
-        ((IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
-          domainResult codomainResult assignment).sigmaForward value) = value)
-    (forward_backward : ∀ assignment value,
-      (IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
-        domainResult codomainResult assignment).sigmaForward
-        ((IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
-          domainResult codomainResult assignment).sigmaBackward value) = value)
+    (coherence : IncDepRawSigmaSubstitutionCoherence domainResult codomainResult)
     (pairResult : IncDepRawTypingSubstitutionFiberResult
       (targetTyping := pairTyping)
-      (IncDepRawSigmaFormationSubstitutionFiberResult.ofCodomainCoherence
-        domainResult codomainResult backward_forward forward_backward).toFormationFiberResult) :
+      (IncDepRawSigmaFormationSubstitutionFiberResult.ofCoherence
+        domainResult codomainResult coherence).toFormationFiberResult) :
     let firstCoherence :
         domainResult.semanticFiberEquivalence.transport
             (IncSigmaTerm.first pairResult.sourceTermResult.semanticTerm) =
@@ -6883,8 +6863,8 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.second
       instantiatedResult := by
   dsimp
   let sigmaResult :=
-    IncDepRawSigmaFormationSubstitutionFiberResult.ofCodomainCoherence
-      domainResult codomainResult backward_forward forward_backward
+    IncDepRawSigmaFormationSubstitutionFiberResult.ofCoherence
+      domainResult codomainResult coherence
   let firstCoherence :
       domainResult.semanticFiberEquivalence.transport
           (IncSigmaTerm.first pairResult.sourceTermResult.semanticTerm) =

@@ -579,6 +579,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - Pi packageは任意equivalence本体でなく、recursive codomain resultから作るcanonical `dependentEquiv`に対する3 lawだけを
   保持するよう修正した。これにより別map混入を型で排除し、`.lambda`/`.apply`も単一coherence packageを直接消費する
   signatureへ統一した。
+- Sigma packageもcanonical `dependentEquiv`に対する両lawだけを保持する設計へ揃え、`.pair`/`.first`/`.second`が単一
+  coherence objectを直接消費するsignatureへ変更した。全dependent typing branchesがformationと同一binder coherenceを
+  uniform package境界で共有する。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

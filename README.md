@@ -1125,6 +1125,10 @@ It currently establishes:
   The package stores laws specifically for the canonical dependent map built from
   the recursive codomain result—it cannot substitute an unrelated equivalent map.
   Both `.lambda` and `.apply` now consume this single package directly.
+  Sigma follows the same canonical-law design: its package stores the two laws
+  for the recursive codomain map, and `.pair`, `.first`, and `.second` each
+  consume that one object.  All dependent typing branches now share their
+  binder coherence with formation through a uniform package boundary.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
