@@ -485,6 +485,10 @@ It currently establishes:
   at the renamed type.  Identity, target weakening, and binder lift are
   constructed, with the lift proof checking both the newest and older-variable
   cases against dependent type renaming composition.
+  Dependent lookup is type-deterministic: a fixed telescope and de Bruijn
+  position cannot yield two different weakened raw types.  This is proved by
+  induction through arbitrary telescope depth and is the index-alignment fact
+  used by the forthcoming typing-preservation proof.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite

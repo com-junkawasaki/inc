@@ -1153,6 +1153,25 @@ inductive IncDepRawLookup : List IncDepRawType → Nat → IncDepRawType → Typ
       IncDepRawLookup context index type →
         IncDepRawLookup (head :: context) (index + 1) (type.rename Nat.succ)
 
+theorem IncDepRawLookup.deterministic
+    {context : List IncDepRawType} {position : Nat}
+    {firstType secondType : IncDepRawType} :
+    IncDepRawLookup context position firstType →
+    IncDepRawLookup context position secondType →
+    firstType = secondType := by
+  intro firstLookup
+  induction firstLookup generalizing secondType with
+  | here =>
+      intro secondLookup
+      cases secondLookup
+      rfl
+  | there previous ih =>
+      intro secondLookup
+      cases secondLookup with
+      | there secondPrevious =>
+          exact _root_.congrArg (fun type => type.rename Nat.succ)
+            (ih secondPrevious)
+
 structure IncDepRawRenaming
     (source target : List IncDepRawType) where
   index : Nat → Nat

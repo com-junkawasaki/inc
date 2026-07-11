@@ -157,6 +157,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   これにより index map と「lookup を renamed type の lookup へ保存する証明」を束ねた
   type-aware telescope renaming を構成できた。identity、target weakening、binder lift を実装し、
   lift の newest/older variable 両 case を renaming composition と map extensionality で証明した。
+- dependent lookup の type determinism を telescope depth の帰納法で証明した。同一 context・
+  de Bruijn position から異なる weakened raw type は得られず、今後の typing preservation で
+  derivation index を整列するための事実を確立した。rename injectivityを未証明のまま仮定する
+  proof uniqueness の強い主張は導入していない。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性
