@@ -2403,6 +2403,46 @@ theorem IncFunctorEquivalenceCriterion.right_triangle
     _ = D.comp objectIso.inv objectIso.hom := by rw [D.comp_id]
     _ = D.id _ := objectIso.inv_hom
 
+structure IncCoherentCategoryEquivalence
+    {CObj DObj : Type u} (C : IncCategory CObj) (D : IncCategory DObj) where
+  equivalence : IncCategoryEquivalence C D
+  left_triangle : ∀ object : CObj,
+    D.comp (equivalence.counit.hom.app (equivalence.forward.obj object))
+        (equivalence.forward.map (equivalence.unit.hom.app object)) =
+      D.id (equivalence.forward.obj object)
+  right_triangle : ∀ object : DObj,
+    C.comp
+        (equivalence.inverse.map (equivalence.counit.hom.app object))
+        (equivalence.unit.hom.app (equivalence.inverse.obj object)) =
+      C.id (equivalence.inverse.obj object)
+
+noncomputable def IncFunctorEquivalenceCriterion.toCoherentCategoryEquivalence
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F) :
+    IncCoherentCategoryEquivalence C D where
+  equivalence := criterion.toCategoryEquivalence
+  left_triangle := criterion.left_triangle
+  right_triangle := criterion.right_triangle
+
+theorem IncCoherentCategoryEquivalence.forward_criterion
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCoherentCategoryEquivalence C D) :
+    IncFunctorEquivalenceCriterion equivalence.equivalence.forward :=
+  equivalence.equivalence.forward_criterion
+
+theorem incFunctor_equivalenceCriterion_iff_exists_coherentCategoryEquivalence
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) :
+    IncFunctorEquivalenceCriterion F ↔
+      ∃ equivalence : IncCoherentCategoryEquivalence C D,
+        equivalence.equivalence.forward = F := by
+  constructor
+  · intro criterion
+    exact ⟨criterion.toCoherentCategoryEquivalence, rfl⟩
+  · rintro ⟨equivalence, forwardEq⟩
+    subst F
+    exact equivalence.forward_criterion
+
 theorem incFunctor_equivalenceCriterion_iff_exists_categoryEquivalence
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (F : IncFunctor C D) :
