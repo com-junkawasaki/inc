@@ -265,6 +265,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   保持する。typing側は全term ruleとsubderivationをmirrorする。Pi/reflとSigma/pair例について
   formation/typing両readiness treeを構成した。Id endpoint termをinterpretするためのstructurally
   decreasing mutual recursion domainが成立した。
+- context-tree lookup foldを2変数Unit telescopeで非自明に検証した。general APIで二回context
+  extensionとformation resultを構成し、newest lookupのsemantic termがdefinitionally
+  `assignment.2`、older lookupが`assignment.1.2`へ評価されることを証明した。recursive
+  projection/reindexがde Bruijn depthを正しく追い、常にnewestを返す誤実装でないことを確認した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

@@ -3091,6 +3091,63 @@ noncomputable def IncDepRawContextSemanticTree.interpretLookup
           exact IncDepRawLookupSemanticResult.there (ih previous)
             head.semanticType
 
+def incDepRawOneUnitContextWellFormed :
+    IncDepRawContext.WellFormed [IncDepRawType.unit] :=
+  IncDepRawContext.WellFormed.extend IncDepRawContext.WellFormed.empty
+    IncDepRawWellFormed.unit
+
+def incDepRawEmptyUnitFormationSemantic :
+    IncDepRawFormationSemanticResult
+      (IncDepRawWellFormed.unit (context := []))
+      incDepRawEmptyContextSemantic :=
+  IncDepRawFormationSemanticResult.unit incDepRawEmptyContextSemantic
+
+def incDepRawOneUnitContextSemantic :=
+  incDepRawEmptyContextSemantic.extend
+    (typeWellFormed := IncDepRawWellFormed.unit)
+    incDepRawEmptyUnitFormationSemantic.semanticType
+
+def incDepRawOneUnitContextSemanticTree :
+    IncDepRawContextSemanticTree incDepRawOneUnitContextSemantic :=
+  IncDepRawContextSemanticTree.extend incDepRawEmptyContextSemanticTree
+    incDepRawEmptyUnitFormationSemantic
+
+def incDepRawOneUnitFormationSemantic :
+    IncDepRawFormationSemanticResult
+      (IncDepRawWellFormed.unit (context := [IncDepRawType.unit]))
+      incDepRawOneUnitContextSemantic :=
+  IncDepRawFormationSemanticResult.unit incDepRawOneUnitContextSemantic
+
+def incDepRawTwoUnitContextSemantic :=
+  incDepRawOneUnitContextSemantic.extend
+    (typeWellFormed := IncDepRawWellFormed.unit)
+    incDepRawOneUnitFormationSemantic.semanticType
+
+def incDepRawTwoUnitContextSemanticTree :
+    IncDepRawContextSemanticTree incDepRawTwoUnitContextSemantic :=
+  IncDepRawContextSemanticTree.extend incDepRawOneUnitContextSemanticTree
+    incDepRawOneUnitFormationSemantic
+
+noncomputable def incDepRawTwoUnitNewestLookupSemantic :=
+  incDepRawTwoUnitContextSemanticTree.interpretLookup
+    (IncDepRawLookup.here (context := [IncDepRawType.unit])
+      (type := IncDepRawType.unit))
+
+noncomputable def incDepRawTwoUnitOlderLookupSemantic :=
+  incDepRawTwoUnitContextSemanticTree.interpretLookup
+    (IncDepRawLookup.there (head := IncDepRawType.unit)
+      (IncDepRawLookup.here (context := []) (type := IncDepRawType.unit)))
+
+theorem incDepRawTwoUnitNewestLookupSemantic_value
+    (assignment : incDepRawTwoUnitContextSemantic.semanticContext.Assignment) :
+    incDepRawTwoUnitNewestLookupSemantic.semanticTerm assignment = assignment.2 := by
+  rfl
+
+theorem incDepRawTwoUnitOlderLookupSemantic_value
+    (assignment : incDepRawTwoUnitContextSemantic.semanticContext.Assignment) :
+    incDepRawTwoUnitOlderLookupSemantic.semanticTerm assignment = assignment.1.2 := by
+  rfl
+
 def IncDepRawTypingSemanticResult.unit
     {context : List IncDepRawType}
     {contextWellFormed : IncDepRawContext.WellFormed context}

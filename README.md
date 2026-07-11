@@ -643,6 +643,13 @@ It currently establishes:
   and typing readiness trees.  This supplies a structurally decreasing mutual
   recursion domain for identity formation, where the earlier one-directional
   deep-typing evidence alone could not interpret endpoint terms.
+  The context-tree lookup fold is validated beyond the newest-variable case by
+  a two-variable unit telescope.  Both context extensions and their formation
+  results are built through the general APIs.  Automatic interpretation of the
+  newest lookup evaluates definitionally to `assignment.2`; interpretation of
+  the older lookup evaluates to `assignment.1.2`.  This is a nontrivial check
+  that recursive projection/reindexing follows de Bruijn depth correctly rather
+  than accidentally returning the newest value at every level.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
