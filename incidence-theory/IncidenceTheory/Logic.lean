@@ -872,6 +872,29 @@ theorem Formula.logicalAnd_commutative {Atom : Type u}
         (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) left) := by
   exact Quotient.sound (derives_and_commutative_iff left right)
 
+theorem derives_or_commutative_iff {Atom : Type u}
+    (left right : Formula Atom) :
+    Derives [] (Formula.iff (.or left right) (.or right left)) := by
+  apply derives_iffI
+  · apply Derives.impI
+    refine Derives.orE (p := left) (q := right) (r := .or right left)
+      (Derives.ax (by simp)) ?_ ?_
+    · exact Derives.orIR (Derives.ax (by simp))
+    · exact Derives.orIL (Derives.ax (by simp))
+  · apply Derives.impI
+    refine Derives.orE (p := right) (q := left) (r := .or left right)
+      (Derives.ax (by simp)) ?_ ?_
+    · exact Derives.orIR (Derives.ax (by simp))
+    · exact Derives.orIL (Derives.ax (by simp))
+
+theorem Formula.logicalOr_commutative {Atom : Type u}
+    (left right : Formula Atom) :
+    Formula.logicalOr (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) left)
+      (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) right) =
+      Formula.logicalOr (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) right)
+        (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) left) := by
+  exact Quotient.sound (derives_or_commutative_iff left right)
+
 theorem satisfies_and_or_distributive {Atom : Type u} (valuation : Atom → Prop)
     (p q r : Formula Atom) :
     Satisfies valuation (.and p (.or q r)) ↔
