@@ -1493,6 +1493,14 @@ It currently establishes:
   definitionally equal codomain/instantiation indices.  The coherent alignment
   provider therefore remains an honest coherence hypothesis; treating it as
   automatic proof irrelevance would overstate what Lean has checked.
+  The remaining assumptions are collected in
+  `IncDepRawSubstitutionPreservationHypotheses`: variable replacement, coherent
+  readiness alignment, general formation-fiber rebase, and instantiate
+  coherence.  `model.preservation hypotheses` is the concise public constructor
+  for the complete mutual dispatcher.  Instantiate coherence is not derivable
+  from general rebase alone: its alignment component asks for literal semantic-
+  type equalities, whereas a rebase supplies fiber equivalences.  The package
+  makes this precise boundary visible at every use site.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

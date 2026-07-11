@@ -10994,6 +10994,12 @@ structure IncDepRawStrictMutualSubstitutionDispatcher where
   formation : IncDepRawStrictFormationSubstitutionDispatcher
   typing : IncDepRawStrictTypingSubstitutionDispatcher
 
+structure IncDepRawSubstitutionPreservationHypotheses where
+  variableProvider : IncDepRawVariableSubstitutionProvider
+  readinessProvider : IncDepRawCoherentReadinessAlignmentProvider
+  rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider
+  instantiateProvider : IncDepRawInstantiateFormationCoherenceProvider
+
 abbrev IncDepRawStrictFormationSubstitutionFoldMotive
     {target : List IncDepRawType} {type : IncDepRawType}
     {targetFormation : IncDepRawWellFormed target type}
@@ -11533,6 +11539,14 @@ noncomputable def IncDepRawSubstitutionFiberModel.preservationDispatcherAligned
     IncDepRawStrictMutualSubstitutionDispatcher :=
   model.preservationDispatcher variableProvider readinessAlignment
     readinessAlignment.toStrictTyping rebaseProvider instantiateProvider
+
+noncomputable def IncDepRawSubstitutionFiberModel.preservation
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawSubstitutionPreservationHypotheses) :
+    IncDepRawStrictMutualSubstitutionDispatcher :=
+  model.preservationDispatcherAligned hypotheses.variableProvider
+    hypotheses.readinessProvider hypotheses.rebaseProvider
+    hypotheses.instantiateProvider
 
 theorem IncDepRawSubstitutionFiberModel.preserveFormation_base
     (model : IncDepRawSubstitutionFiberModel.{u})

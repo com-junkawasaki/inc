@@ -787,6 +787,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   shapeは閉じるが、apply/pair/secondでは同じouter judgmentの内部に命題的には関連するがdefinitionally equalではないcodomain/instantiate indicesが隠れ、
   dependent eliminationが成立しない。したがってcoherent alignment providerは現時点でhonest coherence hypothesisとして残し、自動的proof irrelevanceとは
   主張しない。
+- 残る仮定4つ（variable replacement、coherent readiness alignment、general formation-fiber rebase、instantiate coherence）を
+  `IncDepRawSubstitutionPreservationHypotheses`へ集約し、`model.preservation hypotheses`を簡潔な公開constructorとした。instantiate coherenceはgeneral
+  rebaseだけからは導出できない。前者のalignment fieldはliteral semantic-type equalitiesを要求する一方、後者が与えるのはfiber equivalencesだからである。
+  このpackageにより保存定理の正確な仮定境界が利用箇所で明示される。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
