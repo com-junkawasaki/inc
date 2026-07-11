@@ -3185,6 +3185,43 @@ structure IncDepRawTypingSemanticResult
     (semanticType : IncTypeInContext contextResult.semanticContext) where
   semanticTerm : IncTerm semanticType
 
+def IncDepRawTypingSemanticResult.castType
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    {source target : IncTypeInContext contextResult.semanticContext}
+    (result : IncDepRawTypingSemanticResult typing contextResult source)
+    (coherence : source = target) :
+    IncDepRawTypingSemanticResult typing contextResult target := by
+  cases coherence
+  exact result
+
+structure IncDepRawTypingFormationSemanticResult
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {typeFormation : IncDepRawWellFormed context type}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    (contextResult : IncDepRawContextSemanticResult contextWellFormed) where
+  formationResult : IncDepRawFormationSemanticResult typeFormation contextResult
+  typingResult : IncDepRawTypingSemanticResult typing contextResult
+    formationResult.semanticType
+
+def IncDepRawTypingFormationSemanticResult.align
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {typeFormation : IncDepRawWellFormed context type}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    (formationResult : IncDepRawFormationSemanticResult typeFormation contextResult)
+    {semanticType : IncTypeInContext contextResult.semanticContext}
+    (typingResult : IncDepRawTypingSemanticResult typing contextResult semanticType)
+    (coherence : semanticType = formationResult.semanticType) :
+    IncDepRawTypingFormationSemanticResult
+      (typing := typing) (typeFormation := typeFormation) contextResult where
+  formationResult := formationResult
+  typingResult := typingResult.castType coherence
+
 structure IncDepRawLookupSemanticResult
     {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
     (lookup : IncDepRawLookup context position type)
@@ -3476,6 +3513,33 @@ def IncDepRawTypingSemanticResult.refl
       (IncIdentityType semanticType termResult.semanticTerm
         termResult.semanticTerm) where
   semanticTerm := IncIdentityTerm.refl termResult.semanticTerm
+
+def IncDepRawTypingFormationSemanticResult.unit
+    {context : List IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    (contextResult : IncDepRawContextSemanticResult contextWellFormed) :
+    IncDepRawTypingFormationSemanticResult
+      (typing := IncDepRawHasType.unitRule (context := context))
+      (typeFormation := IncDepRawWellFormed.unit) contextResult where
+  formationResult := IncDepRawFormationSemanticResult.unit contextResult
+  typingResult := IncDepRawTypingSemanticResult.unit contextResult
+
+def IncDepRawTypingFormationSemanticResult.refl
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {term : IncDepRawTerm} {termTyping : IncDepRawHasType context term type}
+    {typeFormation : IncDepRawWellFormed context type}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    (termResult : IncDepRawTypingFormationSemanticResult
+      (typing := termTyping) (typeFormation := typeFormation) contextResult) :
+    IncDepRawTypingFormationSemanticResult
+      (typing := IncDepRawHasType.reflRule termTyping)
+      (typeFormation := IncDepRawWellFormed.identity typeFormation
+        termTyping termTyping) contextResult where
+  formationResult := IncDepRawFormationSemanticResult.identity
+    termResult.formationResult termResult.typingResult.semanticTerm
+      termResult.typingResult.semanticTerm
+  typingResult := IncDepRawTypingSemanticResult.refl termResult.typingResult
 
 noncomputable def incDepRawOneUnitVariableTypingSemantic :=
   incDepRawOneUnitContextSemanticTree.interpretVariable

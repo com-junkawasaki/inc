@@ -324,6 +324,12 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   resultが両projectionのpairとdefinitionally equalであるeta、interpreted reflへのidentity Jが任意
   dependent motiveでbetaを満たすことを証明。Pi/Sigma/Idの主要beta/eta/elimination equationが
   任意interpreted contextのtyping-indexed semantic result上でuniformに揃った。
+- general recursive interpreterで失われていた不変条件を
+  `IncDepRawTypingFormationSemanticResult`として明示した。同じraw typeのformation解釈とtermの
+  typing解釈をliteralに同一のsemantic family上へpackageし、再帰境界で必要な型等式だけを
+  `align`へ隔離した。Unitとreflexivityはunchecked castなしでこの不変条件を保存する。
+  composite branchの残件はraw instantiate/renameとsemantic reindexの一致、すなわち
+  substitution-coherence theoremであり、total dispatcherの阻害条件を構造再帰から分離した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

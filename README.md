@@ -736,6 +736,15 @@ It currently establishes:
   its beta rule for arbitrary dependent motives.  Pi, Sigma, and identity thus
   expose their principal beta/eta/elimination equations uniformly on typing-
   indexed semantic results in arbitrary interpreted contexts.
+  The recursive interpreter's missing invariant is now represented explicitly by
+  `IncDepRawTypingFormationSemanticResult`: the formation interpretation of a raw
+  type and the typing interpretation of a term are packaged over literally the
+  same semantic family.  `align` isolates the exact semantic-type equality needed
+  at a recursive boundary, while certified Unit and reflexivity constructors
+  preserve the invariant without an unchecked cast.  The remaining composite
+  branches must prove that raw instantiation/renaming agrees with semantic
+  reindexing; that substitution-coherence theorem, rather than structural
+  recursion itself, is now the precise blocker for the total dispatcher.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
