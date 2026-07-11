@@ -123,6 +123,104 @@ theorem IncRawLookup.proof_unique
       | there secondPrevious =>
           rw [ih secondPrevious]
 
+theorem IncRawHasType.type_unique
+    {context : List IncRawType} {term : IncRawTerm}
+    {firstType secondType : IncRawType} :
+    IncRawHasType context term firstType →
+      IncRawHasType context term secondType → firstType = secondType := by
+  intro firstTyping
+  induction term generalizing context firstType secondType with
+  | var index =>
+      intro secondTyping
+      cases firstTyping with
+      | varRule firstLookup =>
+          cases secondTyping with
+          | varRule secondLookup =>
+              exact IncRawLookup.deterministic firstLookup secondLookup
+  | unit =>
+      intro secondTyping
+      cases firstTyping
+      cases secondTyping
+      rfl
+  | pair left right ihLeft ihRight =>
+      intro secondTyping
+      cases firstTyping with
+      | pairRule firstLeft firstRight =>
+          cases secondTyping with
+          | pairRule secondLeft secondRight =>
+              rw [ihLeft firstLeft secondLeft, ihRight firstRight secondRight]
+  | first term ih =>
+      intro secondTyping
+      cases firstTyping with
+      | firstRule firstInner =>
+          cases secondTyping with
+          | firstRule secondInner =>
+              have productsEqual := ih firstInner secondInner
+              injection productsEqual
+  | second term ih =>
+      intro secondTyping
+      cases firstTyping with
+      | secondRule firstInner =>
+          cases secondTyping with
+          | secondRule secondInner =>
+              have productsEqual := ih firstInner secondInner
+              injection productsEqual
+  | lambda domain body ih =>
+      intro secondTyping
+      cases firstTyping with
+      | lambdaRule firstBody =>
+          cases secondTyping with
+          | lambdaRule secondBody =>
+              exact _root_.congrArg (IncRawType.function domain)
+                (ih firstBody secondBody)
+  | apply function argument ihFunction ihArgument =>
+      intro secondTyping
+      cases firstTyping with
+      | applyRule firstFunction firstArgument =>
+          cases secondTyping with
+          | applyRule secondFunction secondArgument =>
+              have functionsEqual := ihFunction firstFunction secondFunction
+              injection functionsEqual
+
+theorem IncRawHasType.proof_unique
+    {context : List IncRawType} {term : IncRawTerm} {type : IncRawType}
+    (first second : IncRawHasType context term type) : first = second := by
+  induction first with
+  | varRule lookup =>
+      cases second with
+      | varRule secondLookup =>
+          rw [IncRawLookup.proof_unique lookup secondLookup]
+  | unitRule => cases second; rfl
+  | pairRule leftTyping rightTyping ihLeft ihRight =>
+      cases second with
+      | pairRule secondLeft secondRight =>
+          rw [ihLeft secondLeft, ihRight secondRight]
+  | firstRule typing ih =>
+      cases second with
+      | firstRule secondTyping =>
+          have productTypes := IncRawHasType.type_unique typing secondTyping
+          injection productTypes with _ rightTypeEqual
+          subst rightTypeEqual
+          rw [ih secondTyping]
+  | secondRule typing ih =>
+      cases second with
+      | secondRule secondTyping =>
+          have productTypes := IncRawHasType.type_unique typing secondTyping
+          injection productTypes with leftTypeEqual _
+          subst leftTypeEqual
+          rw [ih secondTyping]
+  | lambdaRule typing ih =>
+      cases second with
+      | lambdaRule secondTyping => rw [ih secondTyping]
+  | applyRule functionTyping argumentTyping ihFunction ihArgument =>
+      cases second with
+      | applyRule secondFunction secondArgument =>
+          have functionTypes :=
+            IncRawHasType.type_unique functionTyping secondFunction
+          injection functionTypes with domainEqual _
+          subst domainEqual
+          rw [ihFunction secondFunction, ihArgument secondArgument]
+
 def IncRawType.interpret (baseModel : Nat → Type u) : IncRawType → Type u
   | .base index => baseModel index
   | .unit => ULift.{u} Unit

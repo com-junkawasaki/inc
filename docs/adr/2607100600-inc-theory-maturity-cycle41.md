@@ -123,7 +123,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性
   は projection/application の hidden intermediate type の一意性も同時に返す強化命題が
-  必要であり、未証明のまま仮定していない。
+  必要であり、当初は未証明のまま仮定していなかった。
+- raw typing の type uniqueness を term 構造帰納で証明し、projection の hidden product
+  partner と application の hidden function domain も constructor injection で同一化した。
+  これを使って全 typing derivation の proof uniqueness まで証明済み。したがって evaluator
+  は derivation choice に依存せず、semantic substitution の proof-index ambiguity を除去した。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」や carrier 可算性の除去ではなく、Incidence 固有の意味論とのさらに

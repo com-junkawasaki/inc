@@ -448,7 +448,12 @@ It currently establishes:
   interface instead of relying on expansion of opaque proof-indexed recursors.
   Full typing-derivation uniqueness requires a stronger theorem that also
   identifies hidden intermediate types in projection/application rules; this
-  is intentionally not assumed.
+  was initially left unassumed.  It is now proved in two stages: raw typing is
+  type-unique for every context and term, including hidden product partners and
+  function domains; this type equality then aligns all rule indices and yields
+  proof uniqueness for complete typing derivations.  Evaluator results are
+  therefore independent of derivation choice, removing the principal
+  proof-index ambiguity encountered by semantic substitution.
 - the `inc_to_set` translation packaged as a functor from the discrete
   incidence carrier category to the category of types.  It is always faithful
   but never full or essentially surjective; explicit morphisms and objects
