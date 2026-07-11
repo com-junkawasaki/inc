@@ -413,6 +413,14 @@ It currently establishes:
   it to the full quotient-presentation interface.  The simplex-to-shape model
   is now instantiated through this theorem with grades 0, 1, and 2, replacing
   its former one-off well-foundedness proof.
+  At the raw-target level the obstruction is characterized exactly.
+  `IncidenceCandidateData` packages every Incidence law except
+  well-foundedness; it is realizable by an Incidence with the same boundary,
+  type, glue, unit, and guards if and only if its boundary has no self-loop.
+  The graded construction factors through this characterization by proving
+  that strict grade decrease excludes every self-loop.  What remains open is
+  not target realizability once raw data is given, but deriving canonical raw
+  boundary and glue data from an arbitrary bisimulation classification.
 
 The minimal category/functor/pushout vocabulary is also formalized. A functor
 is proved to map a pushout cocone to a commuting cocone; preservation of the

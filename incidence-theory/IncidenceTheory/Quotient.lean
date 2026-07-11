@@ -670,6 +670,94 @@ structure GradedIncidenceData (Q QR QT : Type u) [DecidableEq Q] where
   type_preserve : ∀ {i j k}, guards.allow i j →
     glue i j = some k → typeFunc k = typeFunc i
 
+/- Raw target data with every Incidence law except `well_founded`.  This
+   separates the exact obstruction to putting an Incidence on a quotient
+   carrier from the independent typing, sign, multiplicity, and gluing laws. -/
+structure IncidenceCandidateData (Q QR QT : Type u) [DecidableEq Q] where
+  boundary : Q → Boundary Q QR
+  typeFunc : Q → QT
+  glue : Q → Q → Option Q
+  unit : Q
+  guards : Guards Q
+  type_consistent : ∀ (q : Q) (e : Endpoint Q QR),
+    e ∈ boundary q → typeFunc e.i = typeFunc q
+  sign_rules : ∀ (q : Q) (e : Endpoint Q QR), e ∈ boundary q →
+    e.sign = Sign.neg ∨ e.sign = Sign.zero ∨ e.sign = Sign.pos
+  multiplicities : ∀ (q : Q) (e : Endpoint Q QR),
+    e ∈ boundary q → e.mult ≥ 1
+  unit_left : ∀ q, glue unit q = some q
+  unit_right : ∀ q, glue q unit = some q
+  type_preserve : ∀ {i j k}, guards.allow i j →
+    glue i j = some k → typeFunc k = typeFunc i
+
+def IncidenceCandidateData.HasNoBoundarySelfLoop
+    {Q QR QT : Type u} [DecidableEq Q]
+    (data : IncidenceCandidateData Q QR QT) : Prop :=
+  ∀ q, ¬ ∃ e ∈ data.boundary q, e.i = q
+
+def IncidenceCandidateData.toIncidence
+    {Q QR QT : Type u} [DecidableEq Q]
+    (data : IncidenceCandidateData Q QR QT)
+    (wellFounded : data.HasNoBoundarySelfLoop) : Incidence Q QR QT where
+  boundary := data.boundary
+  typeFunc := data.typeFunc
+  glue := data.glue
+  unit := data.unit
+  guards := data.guards
+  type_consistent := data.type_consistent
+  sign_rules := data.sign_rules
+  multiplicities := data.multiplicities
+  well_founded := wellFounded
+  unit_left := data.unit_left
+  unit_right := data.unit_right
+  type_preserve := data.type_preserve
+
+def IncidenceCandidateData.RealizedBy
+    {Q QR QT : Type u} [DecidableEq Q]
+    (data : IncidenceCandidateData Q QR QT) : Prop :=
+  ∃ target : Incidence Q QR QT,
+    target.boundary = data.boundary ∧
+    target.typeFunc = data.typeFunc ∧
+    target.glue = data.glue ∧
+    target.unit = data.unit ∧
+    target.guards = data.guards
+
+theorem IncidenceCandidateData.realizedBy_iff_noBoundarySelfLoop
+    {Q QR QT : Type u} [DecidableEq Q]
+    (data : IncidenceCandidateData Q QR QT) :
+    data.RealizedBy ↔ data.HasNoBoundarySelfLoop := by
+  constructor
+  · rintro ⟨target, boundaryEq, _, _, _, _⟩ q selfLoop
+    apply target.well_founded q
+    simpa [boundaryEq] using selfLoop
+  · intro noSelfLoop
+    exact ⟨data.toIncidence noSelfLoop, rfl, rfl, rfl, rfl, rfl⟩
+
+def GradedIncidenceData.candidate
+    {Q QR QT : Type u} [DecidableEq Q]
+    (data : GradedIncidenceData Q QR QT) :
+    IncidenceCandidateData Q QR QT where
+  boundary := data.boundary
+  typeFunc := data.typeFunc
+  glue := data.glue
+  unit := data.unit
+  guards := data.guards
+  type_consistent := data.type_consistent
+  sign_rules := data.sign_rules
+  multiplicities := data.multiplicities
+  unit_left := data.unit_left
+  unit_right := data.unit_right
+  type_preserve := data.type_preserve
+
+theorem GradedIncidenceData.hasNoBoundarySelfLoop
+    {Q QR QT : Type u} [DecidableEq Q]
+    (data : GradedIncidenceData Q QR QT) :
+    data.candidate.HasNoBoundarySelfLoop := by
+  rintro q ⟨e, member, self⟩
+  have decreases := data.boundary_decreases q e member
+  rw [self] at decreases
+  exact Nat.lt_irrefl _ decreases
+
 def GradedIncidenceData.toIncidence
     {Q QR QT : Type u} [DecidableEq Q]
     (data : GradedIncidenceData Q QR QT) : Incidence Q QR QT where
@@ -681,11 +769,7 @@ def GradedIncidenceData.toIncidence
   type_consistent := data.type_consistent
   sign_rules := data.sign_rules
   multiplicities := data.multiplicities
-  well_founded := by
-    rintro q ⟨e, member, self⟩
-    have decreases := data.boundary_decreases q e member
-    rw [self] at decreases
-    exact Nat.lt_irrefl _ decreases
+  well_founded := data.hasNoBoundarySelfLoop
   unit_left := data.unit_left
   unit_right := data.unit_right
   type_preserve := data.type_preserve

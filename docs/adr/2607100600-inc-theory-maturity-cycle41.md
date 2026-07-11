@@ -35,12 +35,18 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   減少する raw data から `Incidence` の well-foundedness を導出する構成を証明済み。
   完全な bisimulation 分類と組み合わせる graded quotient presentation を定義し、
   simplex-to-shape の成功例は grade 0/1/2 を用いてこの一般構成から得られる。
+- quotient target の raw data が他の Incidence 義務を満たす場合、その data を同じ
+  boundary/type/glue/unit/guards を持つ Incidence として実現できる必要十分条件は、
+  boundary self-loop が存在しないことである。graded 構成は strict decrease からこの
+  条件を導く。未解決なのは任意の bisimulation 分類から canonical な raw data 自体を
+  導出する問題である。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」ではなく、非可算 carrier への完全性条件の拡張、Incidence 固有の
 意味論とのさらに強い接続、依存型・圏論の内部再構成、より広い数学ライブラリ化、
-および quotient 成功条件の必要十分条件への強化である（grade-decreasing という一般
-十分条件までは現在証明済み）。
+および任意の bisimulation 分類から quotient の raw boundary/glue を canonical に
+導出する条件である（raw target data の Incidence 実現可能性は no-self-loop と必要
+十分であり、grade-decreasing 条件から従うことまで現在証明済み）。
 
 ## Context
 
