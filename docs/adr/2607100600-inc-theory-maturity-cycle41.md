@@ -705,6 +705,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - fiber rebaseをreflexive/transitiveに加えてsymmetricにした。`IncDepRawFormationSubstitutionFiberRebase.symm`は両endpoint
   equivalenceのinverse lawsからreverse naturality squareを導出し、`rebaseSymm`がtyping resultを逆向きtransportする。これにより
   coherent dependent branchはintermediate aligned equivalenceに留まらずproviderのexact structural formation resultへ戻せる。
+- `applyStructuralExact`/`secondStructuralExact`で、このreverse rebaseを実際のdependent eliminatorへ適用した。返り値型は
+  endpointが同じ別formationではなくproviderのoriginal structural formation resultそのものである。structurally recursive
+  typing foldへの直接利用を妨げていた最後のresult-type mismatchを除去した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

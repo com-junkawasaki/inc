@@ -1332,6 +1332,11 @@ It currently establishes:
   `rebaseSymm` transports a typing result back along it.  A coherent dependent
   branch can therefore return the provider's exact structural formation result,
   rather than remaining on the intermediate aligned equivalence.
+  `applyStructuralExact` and `secondStructuralExact` now perform that final
+  reverse rebase in the actual dependent eliminators.  Their result type is the
+  provider's original structural formation result exactly—not merely a formation
+  with the same endpoints.  This removes the last result-type mismatch that
+  prevented their direct use in a structurally recursive typing fold.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
