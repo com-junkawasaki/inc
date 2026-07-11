@@ -1122,6 +1122,9 @@ It currently establishes:
   formation result directly.  A dispatcher can therefore share one coherence
   object between formation and all associated typing branches without unpacking
   or duplicating laws.
+  The package stores laws specifically for the canonical dependent map built from
+  the recursive codomain result—it cannot substitute an unrelated equivalent map.
+  Both `.lambda` and `.apply` now consume this single package directly.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

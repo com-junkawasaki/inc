@@ -576,6 +576,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - Pi packageに両round-tripとforward-evaluationのnamed accessorを追加し、`.piCoherent`/`.sigmaCoherent`がpackageから
   parent uniform formation resultを直接返すようにした。dispatcherは同一coherence objectをformation branchと関連typing
   branchesで共有でき、lawの分解・重複引数が不要になった。
+- Pi packageは任意equivalence本体でなく、recursive codomain resultから作るcanonical `dependentEquiv`に対する3 lawだけを
+  保持するよう修正した。これにより別map混入を型で排除し、`.lambda`/`.apply`も単一coherence packageを直接消費する
+  signatureへ統一した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

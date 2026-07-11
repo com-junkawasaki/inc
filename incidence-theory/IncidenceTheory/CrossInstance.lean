@@ -5163,84 +5163,24 @@ structure IncDepRawPiSubstitutionCoherence
     (codomainResult : IncDepRawFormationSubstitutionFiberResult
       (targetFormation := codomainFormation)
       domainResult.liftSubstitution) where
-  fiberEquiv : ∀ assignment,
-    IncDependentPiApplicationFiberEquiv
-      (domainResult.semanticFiberEquivalence.fiberEquiv assignment)
-      (fun value => codomainResult.sourceFormationResult.semanticType
-        ⟨assignment, value⟩)
-      (fun value => codomainResult.targetFormationResult.semanticType
-        ⟨substitutionResult.semanticSubstitution assignment, value⟩)
-
-def IncDepRawPiSubstitutionCoherence.backward_forward
-    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
-    {substitution : IncDepRawSubstitution source target}
-    {domainFormation : IncDepRawWellFormed target domain}
-    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
-    {sourceWellFormed : IncDepRawContext.WellFormed source}
-    {targetWellFormed : IncDepRawContext.WellFormed target}
-    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
-    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
-    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
-      sourceResult targetResult}
-    {domainResult : IncDepRawFormationSubstitutionFiberResult
-      (targetFormation := domainFormation) substitutionResult}
-    {codomainResult : IncDepRawFormationSubstitutionFiberResult
-      (targetFormation := codomainFormation)
-      domainResult.liftSubstitution}
-    (coherence : IncDepRawPiSubstitutionCoherence domainResult codomainResult) :
-    ∀ assignment function,
-      (coherence.fiberEquiv assignment).dependentEquiv.piBackward
-        ((coherence.fiberEquiv assignment).dependentEquiv.piForward function) =
-      function := fun assignment =>
-  (coherence.fiberEquiv assignment).backward_forward
-
-def IncDepRawPiSubstitutionCoherence.forward_backward
-    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
-    {substitution : IncDepRawSubstitution source target}
-    {domainFormation : IncDepRawWellFormed target domain}
-    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
-    {sourceWellFormed : IncDepRawContext.WellFormed source}
-    {targetWellFormed : IncDepRawContext.WellFormed target}
-    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
-    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
-    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
-      sourceResult targetResult}
-    {domainResult : IncDepRawFormationSubstitutionFiberResult
-      (targetFormation := domainFormation) substitutionResult}
-    {codomainResult : IncDepRawFormationSubstitutionFiberResult
-      (targetFormation := codomainFormation)
-      domainResult.liftSubstitution}
-    (coherence : IncDepRawPiSubstitutionCoherence domainResult codomainResult) :
-    ∀ assignment function,
-      (coherence.fiberEquiv assignment).dependentEquiv.piForward
-        ((coherence.fiberEquiv assignment).dependentEquiv.piBackward function) =
-      function := fun assignment =>
-  (coherence.fiberEquiv assignment).forward_backward
-
-def IncDepRawPiSubstitutionCoherence.forward_apply
-    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
-    {substitution : IncDepRawSubstitution source target}
-    {domainFormation : IncDepRawWellFormed target domain}
-    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
-    {sourceWellFormed : IncDepRawContext.WellFormed source}
-    {targetWellFormed : IncDepRawContext.WellFormed target}
-    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
-    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
-    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
-      sourceResult targetResult}
-    {domainResult : IncDepRawFormationSubstitutionFiberResult
-      (targetFormation := domainFormation) substitutionResult}
-    {codomainResult : IncDepRawFormationSubstitutionFiberResult
-      (targetFormation := codomainFormation)
-      domainResult.liftSubstitution}
-    (coherence : IncDepRawPiSubstitutionCoherence domainResult codomainResult) :
-    ∀ assignment sourceFunction sourceArgument,
-      ((coherence.fiberEquiv assignment).dependentEquiv.codomainEquiv
+  backward_forward : ∀ assignment function,
+    (IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
+      domainResult codomainResult assignment).piBackward
+      ((IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
+        domainResult codomainResult assignment).piForward function) = function
+  forward_backward : ∀ assignment function,
+    (IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
+      domainResult codomainResult assignment).piForward
+      ((IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
+        domainResult codomainResult assignment).piBackward function) = function
+  forward_apply : ∀ assignment sourceFunction sourceArgument,
+    ((IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
+      domainResult codomainResult assignment).codomainEquiv
         sourceArgument).forward (sourceFunction sourceArgument) =
-      (coherence.fiberEquiv assignment).dependentEquiv.piForward sourceFunction
+    (IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
+      domainResult codomainResult assignment).piForward sourceFunction
         ((domainResult.semanticFiberEquivalence.fiberEquiv assignment).forward
-          sourceArgument) := fun assignment =>
-  (coherence.fiberEquiv assignment).forward_apply
+          sourceArgument)
 
 noncomputable def IncDepRawPiFormationSubstitutionFiberResult.ofApplicationCoherence
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
@@ -5264,7 +5204,11 @@ noncomputable def IncDepRawPiFormationSubstitutionFiberResult.ofApplicationCoher
       (codomainFormation := codomainFormation) substitutionResult :=
   IncDepRawPiFormationSubstitutionFiberResult.ofCodomainResult
     domainResult codomainResult (fun assignment =>
-      (coherence.fiberEquiv assignment).toPiFiberEquiv)
+      { dependentEquiv :=
+          IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
+            domainResult codomainResult assignment
+        backward_forward := coherence.backward_forward assignment
+        forward_backward := coherence.forward_backward assignment })
 
 noncomputable def IncDepRawPiFormationSubstitutionFiberResult.ofCodomainCoherence
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
@@ -6668,28 +6612,19 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.lambda
     (codomainResult : IncDepRawFormationSubstitutionFiberResult
       (targetFormation := codomainFormation)
       domainResult.liftSubstitution)
-    (backward_forward : ∀ assignment function,
-      (IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
-        domainResult codomainResult assignment).piBackward
-        ((IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
-          domainResult codomainResult assignment).piForward function) = function)
-    (forward_backward : ∀ assignment function,
-      (IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
-        domainResult codomainResult assignment).piForward
-        ((IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
-          domainResult codomainResult assignment).piBackward function) = function)
+    (coherence : IncDepRawPiSubstitutionCoherence domainResult codomainResult)
     (bodyResult : IncDepRawTypingSubstitutionFiberResult
       (targetTyping := bodyTyping) codomainResult) :
     let piResult :=
-      IncDepRawPiFormationSubstitutionFiberResult.ofCodomainCoherence
-        domainResult codomainResult backward_forward forward_backward
+      IncDepRawPiFormationSubstitutionFiberResult.ofApplicationCoherence
+        domainResult codomainResult coherence
     IncDepRawTypingSubstitutionFiberResult
       (targetTyping := IncDepRawHasType.lambdaRule domainFormation bodyTyping)
       piResult.toFormationFiberResult := by
   dsimp
   let piResult :=
-    IncDepRawPiFormationSubstitutionFiberResult.ofCodomainCoherence
-      domainResult codomainResult backward_forward forward_backward
+    IncDepRawPiFormationSubstitutionFiberResult.ofApplicationCoherence
+      domainResult codomainResult coherence
   refine
     { targetTermResult := IncDepRawTypingSemanticResult.lambda
         bodyResult.targetTermResult
@@ -6727,29 +6662,11 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.apply
     (codomainResult : IncDepRawFormationSubstitutionFiberResult
       (targetFormation := codomainFormation)
       domainResult.liftSubstitution)
-    (backward_forward : ∀ assignment function,
-      (IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
-        domainResult codomainResult assignment).piBackward
-        ((IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
-          domainResult codomainResult assignment).piForward function) = function)
-    (forward_backward : ∀ assignment function,
-      (IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
-        domainResult codomainResult assignment).piForward
-        ((IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
-          domainResult codomainResult assignment).piBackward function) = function)
-    (forwardApply : ∀ assignment sourceFunction sourceArgument,
-      ((IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
-        domainResult codomainResult assignment).codomainEquiv
-          sourceArgument).forward (sourceFunction sourceArgument) =
-      (IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
-        domainResult codomainResult assignment).piForward sourceFunction
-          ((domainResult.semanticFiberEquivalence.fiberEquiv assignment).forward
-            sourceArgument))
+    (coherence : IncDepRawPiSubstitutionCoherence domainResult codomainResult)
     (functionResult : IncDepRawTypingSubstitutionFiberResult
       (targetTyping := functionTyping)
-      (IncDepRawPiFormationSubstitutionFiberResult.ofCodomainCoherence
-        domainResult codomainResult backward_forward
-        forward_backward).toFormationFiberResult)
+      (IncDepRawPiFormationSubstitutionFiberResult.ofApplicationCoherence
+        domainResult codomainResult coherence).toFormationFiberResult)
     (argumentResult : IncDepRawTypingSubstitutionFiberResult
       (targetTyping := argumentTyping) domainResult) :
     IncDepRawTypingSubstitutionFiberResult
@@ -6787,7 +6704,7 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.apply
     (argumentResult.sourceTermResult.semanticTerm assignment)
     (argumentResult.targetTermResult.semanticTerm
       (substitutionResult.semanticSubstitution assignment))
-    (forwardApply assignment _ _)
+    (coherence.forward_apply assignment _ _)
     (congrFun functionResult.semanticTerm_coherence assignment)
     (congrFun argumentResult.semanticTerm_coherence assignment)
 
