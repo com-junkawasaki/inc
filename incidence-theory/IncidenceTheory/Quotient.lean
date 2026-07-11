@@ -515,6 +515,15 @@ noncomputable def BisimulationQuotientClassification.transportTarget
     change equivalence.forward (classification.classify x) = q'
     rw [hx, equivalence.forward_inverse]
 
+theorem BisimulationQuotientClassification.ext
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {first second : BisimulationQuotientClassification (Q := Q) inc}
+    (classifyEq : first.classify = second.classify) : first = second := by
+  cases first
+  cases second
+  cases classifyEq
+  rfl
+
 theorem BisimulationQuotientClassification.transportTarget_classify
     {I R T Q Q' : Type u} [DecidableEq I] {inc : Incidence I R T}
     (classification : BisimulationQuotientClassification (Q := Q) inc)
@@ -532,6 +541,37 @@ theorem BisimulationQuotientClassification.targetEquivalence_transportTarget
   exact (classification.targetEquivalence_unique
     (classification.transportTarget equivalence) equivalence.forward
     (fun _ => rfl)).symm
+
+theorem BisimulationQuotientClassification.transportTarget_refl
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc) :
+    classification.transportTarget (IncTypeEquivalence.refl Q) =
+      classification := by
+  apply BisimulationQuotientClassification.ext
+  funext x
+  rfl
+
+theorem BisimulationQuotientClassification.transportTarget_comp
+    {I R T Q₁ Q₂ Q₃ : Type u} [DecidableEq I]
+    {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q₁) inc)
+    (first : IncTypeEquivalence Q₁ Q₂)
+    (second : IncTypeEquivalence Q₂ Q₃) :
+    (classification.transportTarget first).transportTarget second =
+      classification.transportTarget (second.trans first) := by
+  apply BisimulationQuotientClassification.ext
+  funext x
+  rfl
+
+theorem BisimulationQuotientClassification.transportTarget_symm
+    {I R T Q Q' : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (equivalence : IncTypeEquivalence Q Q') :
+    (classification.transportTarget equivalence).transportTarget
+        equivalence.symm = classification := by
+  rw [classification.transportTarget_comp equivalence equivalence.symm,
+    IncTypeEquivalence.symm_trans_self,
+    classification.transportTarget_refl]
 
 /- Concrete confirmation against both faithful instances built so far
    in this project (`natIncidence`, cycle 4; `cycleIncidenceFixed`,
