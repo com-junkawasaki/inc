@@ -569,6 +569,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   必要なevaluation coherenceを`piForward_apply_transport`へ分離した。uniform typing-substitution `.apply` constructorはこのlaw、
   recursive function/argument results、canonical instantiated formation resultを合成してapplication term coherenceを証明する。
   exact substituted source derivationもcanonical application termで内部解釈され、alignment入力は不要になった。
+- dispatcher向けにbinder coherenceをpackageした。`IncDependentPiApplicationFiberEquiv`はPi両round-tripとapplicationに必要な
+  evaluation lawを統合し、`IncDepRawPiSubstitutionCoherence`が全context assignmentで保持する。Sigma側も
+  `IncDepRawSigmaSubstitutionCoherence`へ両round-tripをまとめ、`ofApplicationCoherence`/`ofCoherence`が各single objectから
+  uniform formation resultを構成する。binder branch handlerの入力shapeが単一invariantへ整理された。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

@@ -1111,6 +1111,12 @@ It currently establishes:
   that law with recursive function and argument results and the canonical
   instantiated formation result.  Its exact substituted source derivation is
   interpreted by the canonical application term internally.
+  Binder coherence is now packaged for recursive dispatch.  The stronger
+  `IncDependentPiApplicationFiberEquiv` combines Pi round trips with its
+  evaluation law.  `IncDepRawPiSubstitutionCoherence` and
+  `IncDepRawSigmaSubstitutionCoherence` collect the corresponding invariant at
+  every context assignment; `ofApplicationCoherence` and `ofCoherence` turn each
+  single package into the uniform formation result.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
