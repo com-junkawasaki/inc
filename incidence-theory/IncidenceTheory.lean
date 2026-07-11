@@ -7071,6 +7071,67 @@ def BoundaryShapeEquivalence.toEmbedding
     rw [equivalence.inv_hom, equivalence.inv_hom] at this
     exact this
 
+def BoundaryShapeEquivalence.carrierEquivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    IncTypeEquivalence I J where
+  forward := equivalence.hom.map
+  inverse := equivalence.inv.map
+  inverse_forward := equivalence.inv_hom
+  forward_inverse := equivalence.hom_inv
+
+abbrev NullaryIncidences
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :=
+  { i : I // inc.boundary i = [] }
+
+abbrev NonNullaryIncidences
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :=
+  { i : I // inc.boundary i ≠ [] }
+
+def BoundaryShapeEquivalence.nullaryEquivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    IncTypeEquivalence (NullaryIncidences source) (NullaryIncidences target) where
+  forward := fun value =>
+    ⟨equivalence.hom.map value.val,
+      (equivalence.hom.preservesReflectsNullary value.val).mp value.property⟩
+  inverse := fun value =>
+    ⟨equivalence.inv.map value.val,
+      (equivalence.inv.preservesReflectsNullary value.val).mp value.property⟩
+  inverse_forward := by
+    intro value
+    apply Subtype.eq
+    exact equivalence.inv_hom value.val
+  forward_inverse := by
+    intro value
+    apply Subtype.eq
+    exact equivalence.hom_inv value.val
+
+def BoundaryShapeEquivalence.nonNullaryEquivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    IncTypeEquivalence (NonNullaryIncidences source)
+      (NonNullaryIncidences target) where
+  forward := fun value =>
+    ⟨equivalence.hom.map value.val, fun targetNullary =>
+      value.property
+        ((equivalence.hom.preservesReflectsNullary value.val).mpr targetNullary)⟩
+  inverse := fun value =>
+    ⟨equivalence.inv.map value.val, fun sourceNullary =>
+      value.property
+        ((equivalence.inv.preservesReflectsNullary value.val).mpr sourceNullary)⟩
+  inverse_forward := by
+    intro value
+    apply Subtype.eq
+    exact equivalence.inv_hom value.val
+  forward_inverse := by
+    intro value
+    apply Subtype.eq
+    exact equivalence.hom_inv value.val
+
 /- The Inc-to-Set assignment above is not yet packaged as an `IncFunctor`, so
    a theorem specifically about that assignment still requires a source
    category of incidences.  The general categorical preservation theorem is
