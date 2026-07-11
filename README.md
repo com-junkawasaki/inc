@@ -1141,6 +1141,10 @@ It currently establishes:
   `.typingUnit` and `.refl` expose the two non-binder leaf constructors through
   the same model API.  This is the constructor algebra consumed by the pending
   mutual structural dispatcher.
+  Pi typing is model-dispatched as well.  `model.lambda` and `model.apply` obtain
+  the canonical Pi package internally and consume only recursive child results
+  (plus the raw instantiated formation required by application).  The dispatcher
+  no longer carries Pi laws through either typing branch.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

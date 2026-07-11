@@ -590,6 +590,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - model `.identity`がrecursive type resultと左右endpoint typing resultsから5番目のformation resultを返すようにし、
   全5 formation shapesをmodel APIへ統一した。typing側も`.typingUnit`/`.refl`で二つのnon-binder leaf constructorsを
   model methods化し、pending mutual structural dispatcherが消費するconstructor algebraを具体化した。
+- `model.lambda`/`model.apply`を追加した。canonical Pi coherence packageはmodel内部で取得され、recursive child results
+  （applyでは加えてraw instantiated formation）だけからtyping resultを返す。dispatcherがPi lawsをtyping branchへ
+  明示搬送する必要を除去した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

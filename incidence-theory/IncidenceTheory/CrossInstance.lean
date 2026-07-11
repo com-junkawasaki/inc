@@ -6828,6 +6828,37 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.lambda
       (fun sourceValue => congrFun bodyResult.semanticTerm_coherence
         ⟨assignment, sourceValue⟩)
 
+noncomputable def IncDepRawSubstitutionFiberModel.lambda
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {body : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {bodyTyping : IncDepRawHasType (domain :: target) body codomain}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (codomainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := codomainFormation)
+      domainResult.liftSubstitution)
+    (bodyResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := bodyTyping) codomainResult) :
+    let coherence := model.piCoherence domainResult codomainResult
+    let piResult :=
+      IncDepRawPiFormationSubstitutionFiberResult.ofApplicationCoherence
+        domainResult codomainResult coherence
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := IncDepRawHasType.lambdaRule domainFormation bodyTyping)
+      piResult.toFormationFiberResult :=
+  IncDepRawTypingSubstitutionFiberResult.lambda domainResult codomainResult
+    (model.piCoherence domainResult codomainResult) bodyResult
+
 noncomputable def IncDepRawTypingSubstitutionFiberResult.apply
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
     {function argument : IncDepRawTerm}
@@ -6894,6 +6925,46 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.apply
     (coherence.forward_apply assignment _ _)
     (congrFun functionResult.semanticTerm_coherence assignment)
     (congrFun argumentResult.semanticTerm_coherence assignment)
+
+noncomputable def IncDepRawSubstitutionFiberModel.apply
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {function argument : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {functionTyping : IncDepRawHasType target function (.pi domain codomain)}
+    {argumentTyping : IncDepRawHasType target argument domain}
+    (instantiatedFormation : IncDepRawWellFormed target
+      (codomain.instantiate argument))
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (codomainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := codomainFormation)
+      domainResult.liftSubstitution)
+    (functionResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := functionTyping)
+      (IncDepRawPiFormationSubstitutionFiberResult.ofApplicationCoherence
+        domainResult codomainResult
+        (model.piCoherence domainResult codomainResult)).toFormationFiberResult)
+    (argumentResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := argumentTyping) domainResult) :
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := IncDepRawHasType.applyRule functionTyping argumentTyping)
+      (IncDepRawFormationSubstitutionFiberResult.instantiateCanonical
+        instantiatedFormation domainResult codomainResult
+        argumentResult.sourceTermResult.semanticTerm
+        argumentResult.targetTermResult.semanticTerm
+        argumentResult.semanticTerm_coherence) :=
+  IncDepRawTypingSubstitutionFiberResult.apply instantiatedFormation
+    domainResult codomainResult (model.piCoherence domainResult codomainResult)
+    functionResult argumentResult
 
 noncomputable def IncDepRawTypingSubstitutionFiberResult.pair
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
