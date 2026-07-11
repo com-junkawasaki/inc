@@ -904,6 +904,26 @@ structure IncFunctor {CObj DObj : Type u}
   map_comp : ∀ {a b c} (g : C.Hom b c) (f : C.Hom a b),
     map (C.comp g f) = D.comp (map g) (map f)
 
+def IncCategory.op {Obj : Type u} (C : IncCategory Obj) : IncCategory Obj where
+  Hom := fun source target => C.Hom target source
+  id := C.id
+  comp := fun first second => C.comp second first
+  id_comp := C.comp_id
+  comp_id := C.id_comp
+  assoc := by
+    intro a b c d first second third
+    exact (C.assoc third second first).symm
+
+def IncFunctor.op
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) : IncFunctor C.op D.op where
+  obj := F.obj
+  map := F.map
+  map_id := F.map_id
+  map_comp := by
+    intro a b c first second
+    exact F.map_comp second first
+
 def IncFunctor.identity {Obj : Type u} (C : IncCategory Obj) : IncFunctor C C where
   obj := id
   map := fun f => f
@@ -1635,6 +1655,17 @@ theorem IncFunctorFullyFaithful.comp
     change G.map (F.map preimage) = morphism
     rw [preimageEq, middleEq]
 
+theorem IncFunctorFullyFaithful.op
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (fullyFaithful : IncFunctorFullyFaithful F) :
+    IncFunctorFullyFaithful F.op where
+  faithful := by
+    intro source target left right equality
+    exact fullyFaithful.faithful left right equality
+  full := by
+    intro source target morphism
+    exact fullyFaithful.full morphism
+
 def IncFunctorEssentiallySurjective
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (F : IncFunctor C D) : Prop :=
@@ -1694,6 +1725,14 @@ theorem IncFunctorEssentiallySurjective.iff_of_naturallyIsomorphic
     exact hF.transport iso
   · intro hG
     exact hG.transport iso.symm
+
+theorem IncFunctorEssentiallySurjective.op
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (essentiallySurjective : IncFunctorEssentiallySurjective F) :
+    IncFunctorEssentiallySurjective F.op := by
+  intro target
+  obtain ⟨source, hom, inv, inv_hom, hom_inv⟩ := essentiallySurjective target
+  exact ⟨source, inv, hom, inv_hom, hom_inv⟩
 
 structure IncCategoryEquivalence
     {CObj DObj : Type u} (C : IncCategory CObj) (D : IncCategory DObj) where
@@ -2027,6 +2066,13 @@ structure IncFunctorEquivalenceCriterion
     (F : IncFunctor C D) : Prop where
   fullyFaithful : IncFunctorFullyFaithful F
   essentiallySurjective : IncFunctorEssentiallySurjective F
+
+theorem IncFunctorEquivalenceCriterion.op
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F) :
+    IncFunctorEquivalenceCriterion F.op where
+  fullyFaithful := criterion.fullyFaithful.op
+  essentiallySurjective := criterion.essentiallySurjective.op
 
 structure IncEssentialPreimage
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
