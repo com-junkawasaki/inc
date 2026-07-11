@@ -792,6 +792,9 @@ It currently establishes:
   definitionally, supplying the constructive core for dependent pair and
   projection coherence without collapsing indices.
   First projection commutes definitionally with this transport.
+  The dependent second projection likewise computes to the corresponding
+  codomain-fiber forward map, so both Sigma eliminators now have checked
+  transport equations.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
