@@ -8042,6 +8042,54 @@ structure IncDepRawVariableSubstitutionProvider where
     IncDepRawTypingSubstitutionFiberResult
       (targetTyping := IncDepRawHasType.varRule lookup) typeResult
 
+structure IncDepRawTypingSubstitutionDispatchResult
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    (targetTyping : IncDepRawHasType target term type)
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) where
+  typeFormation : IncDepRawWellFormed target type
+  typeReady : IncDepRawFormationDispatchReady typeFormation
+  formationResult : IncDepRawFormationSubstitutionFiberResult
+    (targetFormation := typeFormation) substitutionResult
+  typingResult : IncDepRawTypingSubstitutionFiberResult
+    (targetTyping := targetTyping) formationResult
+
+def IncDepRawTypingSubstitutionDispatchResult.semanticTargetType
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawTypingSubstitutionDispatchResult targetTyping
+      substitutionResult) : IncTypeInContext targetResult.semanticContext :=
+  result.formationResult.targetFormationResult.semanticType
+
+def IncDepRawTypingSubstitutionDispatchResult.semanticSourceType
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawTypingSubstitutionDispatchResult targetTyping
+      substitutionResult) : IncTypeInContext sourceResult.semanticContext :=
+  result.formationResult.sourceFormationResult.semanticType
+
 noncomputable def IncDepRawVariableSubstitutionProvider.dispatch
     (provider : IncDepRawVariableSubstitutionProvider)
     {source target : List IncDepRawType} {position : Nat}
@@ -8064,6 +8112,49 @@ noncomputable def IncDepRawVariableSubstitutionProvider.dispatch
     IncDepRawTypingSubstitutionFiberResult
       (targetTyping := IncDepRawHasType.varRule lookup) typeResult :=
   provider.dispatchVariable typeReady targetTree typeResult replacements
+
+def IncDepRawSubstitutionFiberModel.dispatchTypingUnit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) :
+    IncDepRawTypingSubstitutionDispatchResult
+      (IncDepRawHasType.unitRule (context := target)) substitutionResult where
+  typeFormation := IncDepRawWellFormed.unit
+  typeReady := IncDepRawFormationDispatchReady.unit
+  formationResult := model.unit substitutionResult
+  typingResult := model.typingUnit substitutionResult
+
+noncomputable def IncDepRawVariableSubstitutionProvider.dispatchResult
+    (provider : IncDepRawVariableSubstitutionProvider)
+    {source target : List IncDepRawType} {position : Nat}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {lookup : IncDepRawLookup target position type}
+    {typeFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (typeReady : IncDepRawFormationDispatchReady typeFormation)
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (typeResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := typeFormation) substitutionResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult) :
+    IncDepRawTypingSubstitutionDispatchResult
+      (IncDepRawHasType.varRule lookup) substitutionResult where
+  typeFormation := typeFormation
+  typeReady := typeReady
+  formationResult := typeResult
+  typingResult := provider.dispatch typeReady targetTree typeResult replacements
 
 noncomputable def IncDepRawReadyTypingSemanticResult.variable
     {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}

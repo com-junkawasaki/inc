@@ -1198,6 +1198,12 @@ It currently establishes:
   recursive type result, and replacement environment, and returns the uniform
   variable result.  The mutual dispatcher now has exactly two external inputs:
   the substitution fiber model and this lookup provider.
+  Typing recursion now has a proof-index-safe dependent return package:
+  `IncDepRawTypingSubstitutionDispatchResult` carries its own output formation
+  proof, strengthened readiness, formation result, and typing result.  Its source
+  and target semantic families are exposed by accessors.  `dispatchTypingUnit`
+  and the variable provider's `dispatchResult` implement the two actual leaf
+  cases without identifying distinct formation derivations.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
