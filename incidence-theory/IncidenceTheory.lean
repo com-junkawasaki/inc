@@ -1265,6 +1265,54 @@ theorem IncCategoryEquivalence.inverse_essentiallySurjective
     IncFunctorEssentiallySurjective equivalence.inverse :=
   equivalence.symm.forward_essentiallySurjective
 
+theorem IncCategoryEquivalence.forward_faithful
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D)
+    {source target : CObj} (left right : C.Hom source target) :
+    equivalence.forward.map left = equivalence.forward.map right → left = right := by
+  intro mappedEqual
+  have inverseMappedEqual := congrArg equivalence.inverse.map mappedEqual
+  have naturalLeft := equivalence.unit.hom.naturality left
+  have naturalRight := equivalence.unit.hom.naturality right
+  have conjugateEqual :
+      C.comp (equivalence.unit.hom.app target) left =
+        C.comp (equivalence.unit.hom.app target) right := by
+    calc
+      C.comp (equivalence.unit.hom.app target) left =
+          C.comp ((equivalence.inverse.comp equivalence.forward).map left)
+            (equivalence.unit.hom.app source) := naturalLeft.symm
+      _ = C.comp ((equivalence.inverse.comp equivalence.forward).map right)
+            (equivalence.unit.hom.app source) := by
+              change C.comp (equivalence.inverse.map (equivalence.forward.map left)) _ =
+                C.comp (equivalence.inverse.map (equivalence.forward.map right)) _
+              rw [inverseMappedEqual]
+      _ = C.comp (equivalence.unit.hom.app target) right := naturalRight
+  have unitCancel :
+      C.comp (equivalence.unit.inv.app target) (equivalence.unit.hom.app target) =
+        C.id target := by
+    simpa [IncFunctor.identity] using equivalence.unit.hom_app_inv_app target
+  calc
+    left = C.comp (C.id target) left := (C.id_comp left).symm
+    _ = C.comp
+        (C.comp (equivalence.unit.inv.app target) (equivalence.unit.hom.app target))
+        left := by rw [unitCancel]
+    _ = C.comp (equivalence.unit.inv.app target)
+        (C.comp (equivalence.unit.hom.app target) left) := (C.assoc _ _ _).symm
+    _ = C.comp (equivalence.unit.inv.app target)
+        (C.comp (equivalence.unit.hom.app target) right) := by rw [conjugateEqual]
+    _ = C.comp
+        (C.comp (equivalence.unit.inv.app target) (equivalence.unit.hom.app target))
+        right := C.assoc _ _ _
+    _ = C.comp (C.id target) right := by rw [unitCancel]
+    _ = right := C.id_comp right
+
+theorem IncCategoryEquivalence.inverse_faithful
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D)
+    {source target : DObj} (left right : D.Hom source target) :
+    equivalence.inverse.map left = equivalence.inverse.map right → left = right :=
+  equivalence.symm.forward_faithful left right
+
 theorem IncFunctor.identity_fullyFaithful
     {Obj : Type u} (C : IncCategory Obj) :
     IncFunctorFullyFaithful (IncFunctor.identity C) where
