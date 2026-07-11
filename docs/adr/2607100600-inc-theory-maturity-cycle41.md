@@ -224,6 +224,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   multi-stepで値が不変な一般evaluatorであり、Pi/Sigma具体例でもsoundnessをinstantiationした。
   これは全termのsyntactic quotient semanticsで、未完のexternal contextual Pi/Sigma/Id model
   へのinterpretationを置き換えるものではない。
+- general contextual interpreterのdomainを監査し、bare typing derivationだけではcontext/type
+  well-formednessが得られないことを明示した。context WF、type formation、term typingを束ねる
+  `IncDepRawCertifiedTyping`を追加し、dependent Pi/reflとSigma/pairのclosed例をcertifyした。
+  certified judgmentがtype-aware renamingとtyped dependent substitutionで保存されることも
+  証明。general semantic interpreter signatureを妨げていた暗黙premiseを除去した。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

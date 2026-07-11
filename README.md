@@ -578,6 +578,15 @@ It currently establishes:
   examples instantiate this soundness result.  This is an all-term syntactic
   quotient semantics; it does not replace the still-pending interpretation into
   the external contextual Pi/Sigma/identity model.
+  The domain of the forthcoming contextual interpreter is now made explicit.
+  A bare typing derivation does not itself certify that its telescope and result
+  type are well formed, so `IncDepRawCertifiedTyping` packages all three pieces:
+  context well-formedness, type formation, and term typing.  Closed certification
+  is constructed for the dependent Pi/reflexivity and Sigma/pair examples.
+  Certified judgments are preserved by type-aware renaming and typed dependent
+  substitution whenever the destination/source telescope is certified.  This
+  removes an implicit premise that previously prevented a well-typed general
+  semantic interpreter signature.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite

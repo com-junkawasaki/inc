@@ -1777,6 +1777,46 @@ inductive IncDepRawContext.WellFormed : List IncDepRawType → Type
       WellFormed context → IncDepRawWellFormed context type →
       WellFormed (type :: context)
 
+structure IncDepRawCertifiedTyping
+    (context : List IncDepRawType) (term : IncDepRawTerm)
+    (type : IncDepRawType) where
+  contextWellFormed : IncDepRawContext.WellFormed context
+  typeWellFormed : IncDepRawWellFormed context type
+  typing : IncDepRawHasType context term type
+
+def IncDepRawCertifiedTyping.ofClosed
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    (typeWellFormed : IncDepRawWellFormed [] type)
+    (typing : IncDepRawHasType [] term type) :
+    IncDepRawCertifiedTyping [] term type where
+  contextWellFormed := IncDepRawContext.WellFormed.empty
+  typeWellFormed := typeWellFormed
+  typing := typing
+
+noncomputable def IncDepRawCertifiedTyping.rename
+    {source target : List IncDepRawType}
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    (certified : IncDepRawCertifiedTyping source term type)
+    (renameMap : IncDepRawRenaming source target)
+    (targetWellFormed : IncDepRawContext.WellFormed target) :
+    IncDepRawCertifiedTyping target (term.rename renameMap.index)
+      (type.rename renameMap.index) where
+  contextWellFormed := targetWellFormed
+  typeWellFormed := certified.typeWellFormed.rename renameMap
+  typing := certified.typing.rename renameMap
+
+noncomputable def IncDepRawCertifiedTyping.substitute
+    {source target : List IncDepRawType}
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    (certified : IncDepRawCertifiedTyping target term type)
+    (substitution : IncDepRawSubstitution source target)
+    (sourceWellFormed : IncDepRawContext.WellFormed source) :
+    IncDepRawCertifiedTyping source (term.substitute substitution.term)
+      (type.substitute substitution.term) where
+  contextWellFormed := sourceWellFormed
+  typeWellFormed := certified.typeWellFormed.substitute substitution
+  typing := certified.typing.substitute substitution
+
 def incDepRawIdentity (type : IncDepRawType) : IncDepRawTerm :=
   .lambda type (.var 0)
 
@@ -1803,6 +1843,20 @@ def incDepRawDependentRefl_hasType :
     (IncDepRawHasType.reflRule
       (IncDepRawHasType.varRule IncDepRawLookup.here))
 
+def incDepRawDependentRefl_typeWellFormed :
+    IncDepRawWellFormed []
+      (.pi .unit (.identity .unit (.var 0) (.var 0))) := by
+  exact IncDepRawWellFormed.pi IncDepRawWellFormed.unit
+    (IncDepRawWellFormed.identity IncDepRawWellFormed.unit
+      (IncDepRawHasType.varRule IncDepRawLookup.here)
+      (IncDepRawHasType.varRule IncDepRawLookup.here))
+
+def incDepRawDependentRefl_certified :
+    IncDepRawCertifiedTyping [] incDepRawDependentRefl
+      (.pi .unit (.identity .unit (.var 0) (.var 0))) :=
+  IncDepRawCertifiedTyping.ofClosed
+    incDepRawDependentRefl_typeWellFormed incDepRawDependentRefl_hasType
+
 theorem incDepRawDependentRefl_application_type :
     (IncDepRawType.identity .unit (.var 0) (.var 0)).instantiate .unit =
       .identity .unit .unit .unit := by
@@ -1816,6 +1870,20 @@ def incDepRawDependentPair_hasType :
       (.sigma .unit (.identity .unit (.var 0) (.var 0))) := by
   exact IncDepRawHasType.pairRule IncDepRawHasType.unitRule
     (IncDepRawHasType.reflRule IncDepRawHasType.unitRule)
+
+def incDepRawDependentPair_typeWellFormed :
+    IncDepRawWellFormed []
+      (.sigma .unit (.identity .unit (.var 0) (.var 0))) := by
+  exact IncDepRawWellFormed.sigma IncDepRawWellFormed.unit
+    (IncDepRawWellFormed.identity IncDepRawWellFormed.unit
+      (IncDepRawHasType.varRule IncDepRawLookup.here)
+      (IncDepRawHasType.varRule IncDepRawLookup.here))
+
+def incDepRawDependentPair_certified :
+    IncDepRawCertifiedTyping [] incDepRawDependentPair
+      (.sigma .unit (.identity .unit (.var 0) (.var 0))) :=
+  IncDepRawCertifiedTyping.ofClosed
+    incDepRawDependentPair_typeWellFormed incDepRawDependentPair_hasType
 
 def incDepRawDependentPair_first_hasType :
     IncDepRawHasType [] (.first incDepRawDependentPair) .unit :=
