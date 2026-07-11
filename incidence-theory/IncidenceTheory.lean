@@ -922,6 +922,120 @@ def IncFunctor.comp {CObj DObj EObj : Type u}
     intro a b c g f
     rw [F.map_comp, G.map_comp]
 
+structure IncNaturalTransformation {CObj DObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj}
+    (F G : IncFunctor C D) where
+  app : ∀ object, D.Hom (F.obj object) (G.obj object)
+  naturality : ∀ {source target} (morphism : C.Hom source target),
+    D.comp (G.map morphism) (app source) =
+      D.comp (app target) (F.map morphism)
+
+def IncNaturalTransformation.identity {CObj DObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) : IncNaturalTransformation F F where
+  app := fun object => D.id (F.obj object)
+  naturality := by
+    intro source target morphism
+    rw [D.comp_id, D.id_comp]
+
+def IncNaturalTransformation.vcomp {CObj DObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G H : IncFunctor C D}
+    (beta : IncNaturalTransformation G H)
+    (alpha : IncNaturalTransformation F G) : IncNaturalTransformation F H where
+  app := fun object => D.comp (beta.app object) (alpha.app object)
+  naturality := by
+    intro source target morphism
+    calc
+      D.comp (H.map morphism) (D.comp (beta.app source) (alpha.app source)) =
+          D.comp (D.comp (H.map morphism) (beta.app source))
+            (alpha.app source) := D.assoc _ _ _
+      _ = D.comp (D.comp (beta.app target) (G.map morphism))
+            (alpha.app source) := by rw [beta.naturality]
+      _ = D.comp (beta.app target)
+            (D.comp (G.map morphism) (alpha.app source)) := (D.assoc _ _ _).symm
+      _ = D.comp (beta.app target)
+            (D.comp (alpha.app target) (F.map morphism)) := by rw [alpha.naturality]
+      _ = D.comp (D.comp (beta.app target) (alpha.app target))
+            (F.map morphism) := D.assoc _ _ _
+
+theorem IncNaturalTransformation.vcomp_app {CObj DObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G H : IncFunctor C D}
+    (beta : IncNaturalTransformation G H)
+    (alpha : IncNaturalTransformation F G) (object : CObj) :
+    (beta.vcomp alpha).app object = D.comp (beta.app object) (alpha.app object) := rfl
+
+theorem IncNaturalTransformation.identity_vcomp_app {CObj DObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (alpha : IncNaturalTransformation F G) (object : CObj) :
+    ((IncNaturalTransformation.identity G).vcomp alpha).app object = alpha.app object := by
+  exact D.id_comp (alpha.app object)
+
+theorem IncNaturalTransformation.vcomp_identity_app {CObj DObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (alpha : IncNaturalTransformation F G) (object : CObj) :
+    (alpha.vcomp (IncNaturalTransformation.identity F)).app object = alpha.app object := by
+  exact D.comp_id (alpha.app object)
+
+theorem IncNaturalTransformation.vcomp_assoc_app {CObj DObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G H K : IncFunctor C D}
+    (gamma : IncNaturalTransformation H K)
+    (beta : IncNaturalTransformation G H)
+    (alpha : IncNaturalTransformation F G) (object : CObj) :
+    ((gamma.vcomp beta).vcomp alpha).app object =
+      (gamma.vcomp (beta.vcomp alpha)).app object := by
+  exact (D.assoc (gamma.app object) (beta.app object) (alpha.app object)).symm
+
+theorem IncNaturalTransformation.ext {CObj DObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} {alpha beta : IncNaturalTransformation F G}
+    (componentEq : ∀ object, alpha.app object = beta.app object) : alpha = beta := by
+  cases alpha with
+  | mk alphaApp alphaNatural =>
+      cases beta with
+      | mk betaApp betaNatural =>
+          have appEq : alphaApp = betaApp := funext componentEq
+          subst betaApp
+          rfl
+
+theorem IncNaturalTransformation.identity_vcomp {CObj DObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (alpha : IncNaturalTransformation F G) :
+    (IncNaturalTransformation.identity G).vcomp alpha = alpha := by
+  apply IncNaturalTransformation.ext
+  exact alpha.identity_vcomp_app
+
+theorem IncNaturalTransformation.vcomp_identity {CObj DObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (alpha : IncNaturalTransformation F G) :
+    alpha.vcomp (IncNaturalTransformation.identity F) = alpha := by
+  apply IncNaturalTransformation.ext
+  exact alpha.vcomp_identity_app
+
+theorem IncNaturalTransformation.vcomp_assoc {CObj DObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G H K : IncFunctor C D}
+    (gamma : IncNaturalTransformation H K)
+    (beta : IncNaturalTransformation G H)
+    (alpha : IncNaturalTransformation F G) :
+    (gamma.vcomp beta).vcomp alpha = gamma.vcomp (beta.vcomp alpha) := by
+  apply IncNaturalTransformation.ext
+  exact gamma.vcomp_assoc_app beta alpha
+
+def incFunctorCategory {CObj DObj : Type u}
+    (C : IncCategory CObj) (D : IncCategory DObj) :
+    IncCategory (IncFunctor C D) where
+  Hom := IncNaturalTransformation
+  id := IncNaturalTransformation.identity
+  comp := IncNaturalTransformation.vcomp
+  id_comp := IncNaturalTransformation.identity_vcomp
+  comp_id := IncNaturalTransformation.vcomp_identity
+  assoc := by
+    intro F G H K gamma beta alpha
+    exact (IncNaturalTransformation.vcomp_assoc gamma beta alpha).symm
+
 structure MorphismCospan {Obj : Type u} (C : IncCategory Obj) where
   a : Obj
   b : Obj
