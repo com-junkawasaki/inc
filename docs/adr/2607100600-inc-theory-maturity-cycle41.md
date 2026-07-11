@@ -688,6 +688,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - `dispatchPairStructural`を追加してrecursive package levelへliftした。独立にdispatchされたfirst/secondを受け取り、secondを
   structural instantiated resultへalignし、明示的structural-to-aligned rebaseを適用して、`model.sigma`へalignment済みのSigma
   packageを返す。instantiate境界を横断するdependent 3 rules（apply/pair/second）はすべてstructural package APIを持つ。
+- complete instantiate obligationを`IncDepRawInstantiateFormationCoherence`へbundleした。two endpoint equationsと
+  structural-to-aligned substitution rebaseを一体で保持し、canonical constructorでは3componentすべてdefinitionally reflexiveに
+  構成できる。`pairCoherent`はこの単一objectを消費するため、recursive callerはendpoint alignmentとequivalence-square proofを
+  別々に管理する必要がなくなった。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

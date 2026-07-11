@@ -1304,6 +1304,12 @@ It currently establishes:
   structural-to-aligned rebase, and returns a Sigma package already aligned with
   `model.sigma`.  All three dependent rules that cross an instantiate boundary
   (apply, pair, second) now have structural package APIs.
+  The complete instantiate obligation is now bundled as
+  `IncDepRawInstantiateFormationCoherence`, combining the two endpoint equations
+  with the structural-to-aligned substitution rebase.  Its canonical constructor
+  is definitionally reflexive for all three components.  `pairCoherent` consumes
+  this one object, so recursive callers no longer manage the endpoint alignment
+  and equivalence-square proof separately.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
