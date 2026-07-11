@@ -524,6 +524,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   formation-substitution fiber interfaceまでsorry-freeで閉じた。
 - base/unit leafにも`IncDepRawFormationSubstitutionFiberResult.base`/`.unit`を追加し、全5 formation shapeが
   uniform fiber-result constructorを持つ状態に揃えた。次の残件はこれらを再帰的に選ぶtotal dispatcherである。
+- binder下のsemantic substitutionを一般fiber equivalenceから構成する
+  `IncDepRawSubstitutionSemanticResult.liftFiber`を追加した。projectionとnewest-variableの計算則はdefinitionally成立し、
+  `liftFiber_ofEq`で従来のequality-based `lift`との一致も証明した。これによりdomain interpretationが等式でなく
+  fiber equivalenceとして得られるPi/Sigma formation substitutionでもcodomainへ再帰できる。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

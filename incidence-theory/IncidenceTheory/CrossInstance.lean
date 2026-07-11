@@ -4284,6 +4284,116 @@ noncomputable def IncDepRawSubstitutionSemanticResult.lift
     ⟨substitutionResult.semanticSubstitution extended.1,
       Eq.mp (congrFun coherence extended.1) extended.2⟩
 
+noncomputable def IncDepRawSubstitutionSemanticResult.liftFiber
+    {source target : List IncDepRawType} {domain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    {domainFormation : IncDepRawWellFormed target domain}
+    {substitutedDomainFormation : IncDepRawWellFormed source
+      (domain.substitute substitution.term)}
+    (targetDomain : IncDepRawFormationSemanticResult domainFormation targetResult)
+    (sourceDomain : IncDepRawFormationSemanticResult
+      substitutedDomainFormation sourceResult)
+    (domainEquivalence : IncTypeInContext.FiberEquiv
+      sourceDomain.semanticType
+      (targetDomain.semanticType.reindex
+        substitutionResult.semanticSubstitution)) :
+    IncDepRawSubstitutionSemanticResult (substitution.lift domain)
+      (sourceResult.extend (typeWellFormed := substitutedDomainFormation)
+        sourceDomain.semanticType)
+      (targetResult.extend (typeWellFormed := domainFormation)
+        targetDomain.semanticType) where
+  semanticSubstitution := fun extended =>
+    ⟨substitutionResult.semanticSubstitution extended.1,
+      (domainEquivalence.fiberEquiv extended.1).forward extended.2⟩
+
+theorem IncDepRawSubstitutionSemanticResult.liftFiber_projection
+    {source target : List IncDepRawType} {domain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    {domainFormation : IncDepRawWellFormed target domain}
+    {substitutedDomainFormation : IncDepRawWellFormed source
+      (domain.substitute substitution.term)}
+    (targetDomain : IncDepRawFormationSemanticResult domainFormation targetResult)
+    (sourceDomain : IncDepRawFormationSemanticResult
+      substitutedDomainFormation sourceResult)
+    (domainEquivalence : IncTypeInContext.FiberEquiv
+      sourceDomain.semanticType
+      (targetDomain.semanticType.reindex
+        substitutionResult.semanticSubstitution)) :
+    (targetResult.semanticContext.extendProjection targetDomain.semanticType).comp
+        (IncDepRawSubstitutionSemanticResult.liftFiber substitutionResult
+          targetDomain sourceDomain domainEquivalence).semanticSubstitution =
+      substitutionResult.semanticSubstitution.comp
+        (sourceResult.semanticContext.extendProjection sourceDomain.semanticType) := by
+  rfl
+
+theorem IncDepRawSubstitutionSemanticResult.liftFiber_variable
+    {source target : List IncDepRawType} {domain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    {domainFormation : IncDepRawWellFormed target domain}
+    {substitutedDomainFormation : IncDepRawWellFormed source
+      (domain.substitute substitution.term)}
+    (targetDomain : IncDepRawFormationSemanticResult domainFormation targetResult)
+    (sourceDomain : IncDepRawFormationSemanticResult
+      substitutedDomainFormation sourceResult)
+    (domainEquivalence : IncTypeInContext.FiberEquiv
+      sourceDomain.semanticType
+      (targetDomain.semanticType.reindex
+        substitutionResult.semanticSubstitution))
+    (assignment : sourceResult.semanticContext.Assignment)
+    (value : sourceDomain.semanticType assignment) :
+    (targetResult.semanticContext.extendVariable targetDomain.semanticType)
+      ((IncDepRawSubstitutionSemanticResult.liftFiber substitutionResult
+        targetDomain sourceDomain domainEquivalence).semanticSubstitution
+          ⟨assignment, value⟩) =
+      (domainEquivalence.fiberEquiv assignment).forward value := by
+  rfl
+
+theorem IncDepRawSubstitutionSemanticResult.liftFiber_ofEq
+    {source target : List IncDepRawType} {domain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    {domainFormation : IncDepRawWellFormed target domain}
+    {substitutedDomainFormation : IncDepRawWellFormed source
+      (domain.substitute substitution.term)}
+    (targetDomain : IncDepRawFormationSemanticResult domainFormation targetResult)
+    (sourceDomain : IncDepRawFormationSemanticResult
+      substitutedDomainFormation sourceResult)
+    (coherence : sourceDomain.semanticType =
+      targetDomain.semanticType.reindex substitutionResult.semanticSubstitution) :
+    (IncDepRawSubstitutionSemanticResult.liftFiber substitutionResult
+      targetDomain sourceDomain
+      (IncTypeInContext.FiberEquiv.ofEq coherence)).semanticSubstitution =
+    (IncDepRawSubstitutionSemanticResult.lift substitutionResult
+      targetDomain sourceDomain coherence).semanticSubstitution := by
+  funext extended
+  apply Sigma.ext
+  · rfl
+  · exact heq_of_eq (IncTypeInContext.FiberEquiv.ofEq_forward coherence
+      extended.1 extended.2)
+
 theorem IncDepRawSubstitutionSemanticResult.identity_apply
     {context : List IncDepRawType}
     {contextWellFormed : IncDepRawContext.WellFormed context}

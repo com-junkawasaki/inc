@@ -1042,6 +1042,12 @@ It currently establishes:
   Direct `IncDepRawFormationSubstitutionFiberResult.base` and `.unit`
   constructors now put the two leaf cases on that interface as well, so all five
   formation shapes have a checked uniform-result constructor.
+  Binder recursion is no longer restricted to definitionally equal domain
+  interpretations.  `IncDepRawSubstitutionSemanticResult.liftFiber` lifts a raw
+  substitution using an arbitrary domain `FiberEquiv`; its projection and newest-
+  variable equations are definitional.  `liftFiber_ofEq` proves that this is a
+  conservative extension of the previous equality-based lift.  This supplies the
+  semantic substitution needed to recurse into Pi/Sigma codomains.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
