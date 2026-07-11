@@ -734,6 +734,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - strict branchをさらに3本end-to-end実装した。`dispatchStrictVariable`はlookup providerをexact type resultへ接続し、
   `dispatchStrictRefl`は一つのchildからIdentity formation/reflexivityを構成し、`dispatchStrictLambda`はexact domain resultとlifted
   substitution下のbody resultを合成する。strict foldは両leaf、Identity recursion edge、binder recursion edgeを覆盖した。
+- 残る4 rulesにもstrict semantic constructor `dispatchStrictApply`/`dispatchStrictPair`/`dispatchStrictFirst`/
+  `dispatchStrictSecond`を追加した。apply/secondはcoherence providerのexact structural resultを返し、pairは独立dispatchされたsecondを
+  rebaseして`model.sigma`を返し、firstはそのexact Sigma resultを直接消費する。typing全8 constructorsがchecked strict-result
+  combinatorを持ち、残件は単一recursive foldへの組み立てになった。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

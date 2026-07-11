@@ -1384,6 +1384,13 @@ It currently establishes:
   and `dispatchStrictLambda` combines an exact domain result with a body result
   under the lifted substitution.  The strict fold now covers both leaves, the
   Identity recursion edge, and the binder recursion edge.
+  Strict semantic constructors now cover the remaining four rules too:
+  `dispatchStrictApply`, `dispatchStrictPair`, `dispatchStrictFirst`, and
+  `dispatchStrictSecond`.  Apply and second return the coherence provider's exact
+  structural result; pair rebases its independently dispatched second component
+  before returning `model.sigma`; first consumes that exact Sigma result directly.
+  Every one of the eight typing constructors now has a checked strict-result
+  combinator.  What remains is assembling them into the single recursive fold.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
