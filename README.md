@@ -635,6 +635,14 @@ It currently establishes:
   Arbitrary-depth variables therefore no longer require a manually supplied
   semantic term; the remaining fold work is coordinating formation and typing
   recursion around this context tree.
+  Formation and typing are now also equipped with mutually recursive semantic-
+  readiness evidence.  Formation readiness descends through base/unit/Pi/Sigma
+  and, for identity types, recursively carries readiness of both endpoint typing
+  derivations.  Typing readiness mirrors every term rule and its subderivations.
+  The dependent Pi/reflexivity and Sigma/pair examples have complete formation
+  and typing readiness trees.  This supplies a structurally decreasing mutual
+  recursion domain for identity formation, where the earlier one-directional
+  deep-typing evidence alone could not interpret endpoint terms.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

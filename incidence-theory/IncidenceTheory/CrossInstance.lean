@@ -1845,6 +1845,85 @@ structure IncDepRawDeepCertifiedTyping
     (type : IncDepRawType) extends IncDepRawCertifiedTyping context term type where
   deeplyWellFormed : IncDepRawTypingDeeplyWellFormed toIncDepRawCertifiedTyping.typing
 
+mutual
+  inductive IncDepRawFormationSemanticReady :
+      {context : List IncDepRawType} → {type : IncDepRawType} →
+      IncDepRawWellFormed context type → Type
+    | base {context index} :
+        IncDepRawFormationSemanticReady
+          (IncDepRawWellFormed.base (context := context) (index := index))
+    | unit {context} :
+        IncDepRawFormationSemanticReady
+          (IncDepRawWellFormed.unit (context := context))
+    | pi {context domain codomain}
+        {domainFormation : IncDepRawWellFormed context domain}
+        {codomainFormation : IncDepRawWellFormed (domain :: context) codomain} :
+        IncDepRawFormationSemanticReady domainFormation →
+        IncDepRawFormationSemanticReady codomainFormation →
+        IncDepRawFormationSemanticReady
+          (IncDepRawWellFormed.pi domainFormation codomainFormation)
+    | sigma {context domain codomain}
+        {domainFormation : IncDepRawWellFormed context domain}
+        {codomainFormation : IncDepRawWellFormed (domain :: context) codomain} :
+        IncDepRawFormationSemanticReady domainFormation →
+        IncDepRawFormationSemanticReady codomainFormation →
+        IncDepRawFormationSemanticReady
+          (IncDepRawWellFormed.sigma domainFormation codomainFormation)
+    | identity {context type left right}
+        {typeFormation : IncDepRawWellFormed context type}
+        {leftTyping : IncDepRawHasType context left type}
+        {rightTyping : IncDepRawHasType context right type} :
+        IncDepRawFormationSemanticReady typeFormation →
+        IncDepRawTypingSemanticReady leftTyping →
+        IncDepRawTypingSemanticReady rightTyping →
+        IncDepRawFormationSemanticReady
+          (IncDepRawWellFormed.identity typeFormation leftTyping rightTyping)
+
+  inductive IncDepRawTypingSemanticReady :
+      {context : List IncDepRawType} → {term : IncDepRawTerm} →
+      {type : IncDepRawType} → IncDepRawHasType context term type → Type
+    | varRule {context position type}
+        {lookup : IncDepRawLookup context position type} :
+        IncDepRawTypingSemanticReady (IncDepRawHasType.varRule lookup)
+    | unitRule {context} :
+        IncDepRawTypingSemanticReady
+          (IncDepRawHasType.unitRule (context := context))
+    | lambdaRule {context domain codomain body}
+        {domainFormation : IncDepRawWellFormed context domain}
+        {bodyTyping : IncDepRawHasType (domain :: context) body codomain} :
+        IncDepRawFormationSemanticReady domainFormation →
+        IncDepRawTypingSemanticReady bodyTyping →
+        IncDepRawTypingSemanticReady
+          (IncDepRawHasType.lambdaRule domainFormation bodyTyping)
+    | applyRule {context domain codomain function argument}
+        {functionTyping : IncDepRawHasType context function (.pi domain codomain)}
+        {argumentTyping : IncDepRawHasType context argument domain} :
+        IncDepRawTypingSemanticReady functionTyping →
+        IncDepRawTypingSemanticReady argumentTyping →
+        IncDepRawTypingSemanticReady
+          (IncDepRawHasType.applyRule functionTyping argumentTyping)
+    | pairRule {context : List IncDepRawType}
+        {domain codomain : IncDepRawType} {first second : IncDepRawTerm}
+        {firstTyping : IncDepRawHasType context first domain}
+        {secondTyping : IncDepRawHasType context second (codomain.instantiate first)} :
+        IncDepRawTypingSemanticReady firstTyping →
+        IncDepRawTypingSemanticReady secondTyping →
+        IncDepRawTypingSemanticReady
+          (IncDepRawHasType.pairRule firstTyping secondTyping)
+    | firstRule {context domain codomain pair}
+        {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)} :
+        IncDepRawTypingSemanticReady pairTyping →
+        IncDepRawTypingSemanticReady (IncDepRawHasType.firstRule pairTyping)
+    | secondRule {context domain codomain pair}
+        {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)} :
+        IncDepRawTypingSemanticReady pairTyping →
+        IncDepRawTypingSemanticReady (IncDepRawHasType.secondRule pairTyping)
+    | reflRule {context type term}
+        {termTyping : IncDepRawHasType context term type} :
+        IncDepRawTypingSemanticReady termTyping →
+        IncDepRawTypingSemanticReady (IncDepRawHasType.reflRule termTyping)
+end
+
 def IncDepRawCertifiedTyping.ofClosed
     {term : IncDepRawTerm} {type : IncDepRawType}
     (typeWellFormed : IncDepRawWellFormed [] type)
@@ -1933,6 +2012,23 @@ def incDepRawDependentRefl_deepCertified :
   toIncDepRawCertifiedTyping := incDepRawDependentRefl_certified
   deeplyWellFormed := incDepRawDependentRefl_deeplyWellFormed
 
+def incDepRawDependentRefl_semanticReady :
+    IncDepRawTypingSemanticReady incDepRawDependentRefl_hasType := by
+  exact IncDepRawTypingSemanticReady.lambdaRule
+    IncDepRawFormationSemanticReady.unit
+    (IncDepRawTypingSemanticReady.reflRule
+      IncDepRawTypingSemanticReady.varRule)
+
+def incDepRawDependentRefl_typeSemanticReady :
+    IncDepRawFormationSemanticReady
+      incDepRawDependentRefl_typeWellFormed := by
+  exact IncDepRawFormationSemanticReady.pi
+    IncDepRawFormationSemanticReady.unit
+    (IncDepRawFormationSemanticReady.identity
+      IncDepRawFormationSemanticReady.unit
+      IncDepRawTypingSemanticReady.varRule
+      IncDepRawTypingSemanticReady.varRule)
+
 theorem incDepRawDependentRefl_application_type :
     (IncDepRawType.identity .unit (.var 0) (.var 0)).instantiate .unit =
       .identity .unit .unit .unit := by
@@ -1977,6 +2073,23 @@ def incDepRawDependentPair_deepCertified :
       (.sigma .unit (.identity .unit (.var 0) (.var 0))) where
   toIncDepRawCertifiedTyping := incDepRawDependentPair_certified
   deeplyWellFormed := incDepRawDependentPair_deeplyWellFormed
+
+def incDepRawDependentPair_semanticReady :
+    IncDepRawTypingSemanticReady incDepRawDependentPair_hasType := by
+  exact IncDepRawTypingSemanticReady.pairRule
+    IncDepRawTypingSemanticReady.unitRule
+    (IncDepRawTypingSemanticReady.reflRule
+      IncDepRawTypingSemanticReady.unitRule)
+
+def incDepRawDependentPair_typeSemanticReady :
+    IncDepRawFormationSemanticReady
+      incDepRawDependentPair_typeWellFormed := by
+  exact IncDepRawFormationSemanticReady.sigma
+    IncDepRawFormationSemanticReady.unit
+    (IncDepRawFormationSemanticReady.identity
+      IncDepRawFormationSemanticReady.unit
+      IncDepRawTypingSemanticReady.varRule
+      IncDepRawTypingSemanticReady.varRule)
 
 def incDepRawDependentPair_first_hasType :
     IncDepRawHasType [] (.first incDepRawDependentPair) .unit :=

@@ -260,6 +260,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   構造再帰でlookup interpreterを実装し、emptyはimpossible、newestはextension variable、olderは
   tail lookupを再帰interpret後projectionでreindexする。任意depth variableのsemantic termが
   自動生成され、残るfold作業はformation/typing recursionをこのcontext treeと調整すること。
+- formation/typingのmutually recursive semantic-readiness evidenceを追加した。formation側は
+  base/unit/Pi/Sigmaを再帰し、identityではtype formationに加えて両endpoint typing readinessを
+  保持する。typing側は全term ruleとsubderivationをmirrorする。Pi/reflとSigma/pair例について
+  formation/typing両readiness treeを構成した。Id endpoint termをinterpretするためのstructurally
+  decreasing mutual recursion domainが成立した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
