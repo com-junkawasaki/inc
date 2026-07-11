@@ -638,6 +638,23 @@ It currently establishes:
   `ofHeadProvider` then combines this with readiness synthesis.  The remaining
   local construction problem is therefore reduced to head-formation semantics
   plus coherent-readiness generation, rather than whole-context assembly.
+  The readiness boundary now records exactly which certification level can
+  support structural synthesis.  `IncDepRawDeepCoherentReadinessProvider`
+  receives the recursive `IncDepRawTypingDeeplyWellFormed` certificate, and
+  `synthesizeCertified` produces readiness for a `DeepCertifiedTyping`.
+  `synthesizeDeep` connects that result, with either a context-tree synthesizer
+  or a head provider, directly to the existing canonical semantic witness.
+  Ordinary `CertifiedTyping` deliberately cannot use this bridge: its fields
+  certify only the outer context, result type, and typing derivation and do not
+  contain recursively formed premises.  The remaining readiness theorem is
+  thus precisely construction from deep syntax certificates, not an unjustified
+  extraction from the weaker certificate.  One former gap in that construction
+  is now closed: `IncDepRawSubstitution.instantiate` is the checked one-variable
+  substitution determined by a typed argument, and
+  `IncDepRawWellFormed.instantiate` proves that substituting it into a
+  well-formed binder codomain produces a well-formed instantiated result.  The
+  result formations needed by apply, pair, and second are therefore derivable
+  from their codomain formation and argument typing rather than new assumptions.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

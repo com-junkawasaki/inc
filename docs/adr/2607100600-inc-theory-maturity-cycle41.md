@@ -250,6 +250,13 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `IncDepRawCertifiedCoherentReadinessSynthesizer`がproof-indexed syntax treeを担当し、`ofComponents`が結合する。context側は
   `IncDepRawContextHeadSemanticProvider`がinterpreted tail上の一head typeだけを解釈すれば、`synthesizeContext`がsemantic context/tree全体を構造再帰で生成する。
   `ofHeadProvider`でreadiness synthesisと結合でき、残るlocal課題をhead-formation semanticsとcoherent-readiness生成まで縮小した。
+- readiness生成が必要とするcertification levelをAPIで明示した。`IncDepRawDeepCoherentReadinessProvider`は再帰的な
+  `IncDepRawTypingDeeplyWellFormed`証拠を受け取り、`synthesizeCertified`が`DeepCertifiedTyping`のcoherent readinessを返す。
+  context synthesizerまたはhead providerからの`synthesizeDeep`がこれを既存canonical semantic witnessへ直接接続する。通常の
+  `CertifiedTyping`には再帰premiseのformation証拠が含まれないため、このbridgeを無条件には適用しない。残るreadiness theoremは弱いcertificateからの
+  不当な抽出ではなく、deep certificateからの構造生成である。さらに`IncDepRawSubstitution.instantiate`をtyped argumentが定めるcheckedな一変数
+  substitutionとして構成し、`IncDepRawWellFormed.instantiate`でwell-formed binder codomainのinstantiate結果がwell-formedであることを証明した。
+  apply/pair/secondのresult formationはcodomain formationとargument typingから導出でき、独立仮定ではなくなった。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

@@ -1813,6 +1813,40 @@ noncomputable def IncDepRawSubstitution.identity
     rw [IncDepRawType.substitute_identity]
     exact IncDepRawHasType.varRule lookup
 
+noncomputable def IncDepRawSubstitution.instantiate
+    {context : List IncDepRawType} {domain : IncDepRawType}
+    {argument : IncDepRawTerm}
+    (argumentTyping : IncDepRawHasType context argument domain) :
+    IncDepRawSubstitution context (domain :: context) where
+  term := fun index => match index with
+    | 0 => argument
+    | next + 1 => .var next
+  preserves := by
+    intro position type lookup
+    cases lookup with
+    | here =>
+        rw [IncDepRawType.rename_substitute]
+        have mapEq :
+            (fun index => match index with
+              | 0 => argument
+              | next + 1 => IncDepRawTerm.var next) ∘ Nat.succ =
+              IncDepRawTerm.var := by
+          funext index
+          rfl
+        rw [mapEq, IncDepRawType.substitute_identity]
+        exact argumentTyping
+    | there previous =>
+        rw [IncDepRawType.rename_substitute]
+        have mapEq :
+            (fun index => match index with
+              | 0 => argument
+              | next + 1 => IncDepRawTerm.var next) ∘ Nat.succ =
+              IncDepRawTerm.var := by
+          funext index
+          rfl
+        rw [mapEq, IncDepRawType.substitute_identity]
+        exact IncDepRawHasType.varRule previous
+
 noncomputable def IncDepRawSubstitution.lift
     {source target : List IncDepRawType}
     (substitution : IncDepRawSubstitution source target)
@@ -1921,6 +1955,15 @@ mutual
         exact IncDepRawHasType.reflRule
           (termTyping.substitute substitution)
 end
+
+noncomputable def IncDepRawWellFormed.instantiate
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {argument : IncDepRawTerm}
+    (codomainFormation : IncDepRawWellFormed (domain :: context) codomain)
+    (argumentTyping : IncDepRawHasType context argument domain) :
+    IncDepRawWellFormed context (codomain.instantiate argument) := by
+  exact codomainFormation.substitute
+    (IncDepRawSubstitution.instantiate argumentTyping)
 
 inductive IncDepRawContext.WellFormed : List IncDepRawType → Type
   | empty : WellFormed []
@@ -11321,6 +11364,55 @@ noncomputable def
     (readiness : IncDepRawCertifiedCoherentReadinessSynthesizer) :
     IncDepRawCertifiedCanonicalSemanticWitnessSynthesizer :=
   .ofComponents heads.toTreeSynthesizer readiness
+
+/-- The remaining readiness obligation restricted to deeply certified syntax.
+Unlike `IncDepRawCertifiedCoherentReadinessSynthesizer`, the provider receives
+the recursive well-formedness certificate carried by the derivation. -/
+structure IncDepRawDeepCoherentReadinessProvider where
+  synthesizeDeep : ∀
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    (formation : IncDepRawWellFormed context type),
+    IncDepRawTypingDeeplyWellFormed typing →
+      IncDepRawCoherentTypingDispatchReady typing formation
+
+def IncDepRawDeepCoherentReadinessProvider.synthesizeCertified
+    (provider : IncDepRawDeepCoherentReadinessProvider)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawDeepCertifiedTyping context term type) :
+    IncDepRawCoherentTypingDispatchReady
+      certified.toIncDepRawCertifiedTyping.typing
+      certified.toIncDepRawCertifiedTyping.typeWellFormed :=
+  provider.synthesizeDeep certified.toIncDepRawCertifiedTyping.typeWellFormed
+    certified.deeplyWellFormed
+
+noncomputable def
+    IncDepRawCertifiedCanonicalSemanticWitnessSynthesizer.synthesizeDeep
+    (contexts : IncDepRawContextSemanticTreeSynthesizer)
+    (readiness : IncDepRawDeepCoherentReadinessProvider)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawDeepCertifiedTyping context term type) :
+    IncDepRawCertifiedCanonicalSemanticWitness
+      certified.toIncDepRawCertifiedTyping :=
+  let context := contexts.synthesizeContext
+    certified.toIncDepRawCertifiedTyping.contextWellFormed
+  { contextResult := context.1
+    contextTree := context.2
+    readiness := readiness.synthesizeCertified certified }
+
+noncomputable def
+    IncDepRawContextHeadSemanticProvider.synthesizeDeep
+    (heads : IncDepRawContextHeadSemanticProvider)
+    (readiness : IncDepRawDeepCoherentReadinessProvider)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawDeepCertifiedTyping context term type) :
+    IncDepRawCertifiedCanonicalSemanticWitness
+      certified.toIncDepRawCertifiedTyping :=
+  IncDepRawCertifiedCanonicalSemanticWitnessSynthesizer.synthesizeDeep
+    heads.toTreeSynthesizer readiness certified
 
 def IncDepRawCertifiedCanonicalSemanticWitness.withHypotheses
     {context : List IncDepRawType} {term : IncDepRawTerm}
