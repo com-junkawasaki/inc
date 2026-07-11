@@ -551,6 +551,13 @@ It currently establishes:
   A conversion-aware typing judgment admits both term and type conversion.
   Every one-step reduction preserves typing in this judgment, and the Pi beta
   and both Sigma beta examples instantiate the theorem without assumptions.
+  For the three closed dependent beta programs, reduction soundness is now
+  bundled rather than reported as parallel facts: each checked certificate
+  contains the raw definitional equality and the corresponding equality of
+  semantic contextual terms.  These certificates cover Pi application and both
+  Sigma projections.  They are concrete instances of the intended general
+  semantic reduction theorem; generality still depends on the derivation
+  interpreter rather than being claimed from the examples alone.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite

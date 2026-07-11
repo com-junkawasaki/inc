@@ -207,6 +207,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   identity endpoint equalityで閉じた。term/type conversionを持つtyping judgmentを定義し、
   任意one-step reductionがtypingを保存する定理を証明。Pi betaとSigma両betaの具体例でも
   仮定なしにinstantiationした。
+- 三つのclosed dependent beta programについて、raw definitional equalityと対応するsemantic
+  contextual term equalityを同一theoremで返すreduction soundness certificateを追加した。
+  Pi applicationとSigma両projectionを含む。これらは一般semantic reduction theoremの具体的
+  instanceであり、一般性はderivation interpreter完成後に主張する境界を維持している。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

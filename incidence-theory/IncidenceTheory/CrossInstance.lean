@@ -2428,6 +2428,26 @@ theorem incDepRawDependentPairSemantic_second_beta :
       IncIdentityTerm.refl incDepUnitTerm := by
   rfl
 
+theorem incDepRawDependentRefl_reductionSound :
+    IncDepRawDefEq (.apply incDepRawDependentRefl .unit) (.refl .unit) ∧
+    IncPiTerm.apply incDepRawDependentReflSemantic incDepUnitTerm =
+      IncIdentityTerm.refl incDepUnitTerm := by
+  exact ⟨IncDepRawDefEq.ofStep incDepRawDependentRefl_betaStep,
+    incDepRawDependentReflSemantic_beta⟩
+
+theorem incDepRawDependentPair_first_reductionSound :
+    IncDepRawDefEq (.first incDepRawDependentPair) .unit ∧
+    IncSigmaTerm.first incDepRawDependentPairSemantic = incDepUnitTerm := by
+  exact ⟨IncDepRawDefEq.ofStep incDepRawDependentPair_first_betaStep,
+    incDepRawDependentPairSemantic_first_beta⟩
+
+theorem incDepRawDependentPair_second_reductionSound :
+    IncDepRawDefEq (.second incDepRawDependentPair) (.refl .unit) ∧
+    IncSigmaTerm.second incDepRawDependentPairSemantic =
+      IncIdentityTerm.refl incDepUnitTerm := by
+  exact ⟨IncDepRawDefEq.ofStep incDepRawDependentPair_second_betaStep,
+    incDepRawDependentPairSemantic_second_beta⟩
+
 def IncIdentityFamily
     {I R T : Type u} [DecidableEq (I × I)]
     (pairIncidence : Incidence (I × I) R T) :
