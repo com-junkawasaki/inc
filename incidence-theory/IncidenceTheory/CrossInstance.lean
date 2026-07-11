@@ -9683,8 +9683,12 @@ noncomputable def IncDepRawSubstitutionFiberModel.dispatchSecondCoherent
       structuralResult) :
     IncDepRawTypingSubstitutionDispatchResult
       (IncDepRawHasType.secondRule pairTyping) substitutionResult :=
-  model.dispatchSecondStructural instantiatedFormation resultReady domainResult
-    codomainResult pairResult pairAlignment structuralResult coherence.alignment
+  let alignedPair := pairAlignment.typingResult
+  { typeFormation := instantiatedFormation
+    typeReady := resultReady
+    formationResult := structuralResult
+    typingResult := model.secondStructuralExact instantiatedFormation domainResult
+      codomainResult alignedPair structuralResult coherence }
 
 noncomputable def IncDepRawSubstitutionFiberModel.dispatchApply
     (model : IncDepRawSubstitutionFiberModel.{u})
@@ -9873,9 +9877,13 @@ noncomputable def IncDepRawSubstitutionFiberModel.dispatchApplyCoherent
     IncDepRawTypingSubstitutionDispatchResult
       (IncDepRawHasType.applyRule functionTyping argumentTyping)
       substitutionResult :=
-  model.dispatchApplyStructural instantiatedFormation resultReady domainResult
-    codomainResult functionResult argumentResult functionAlignment
-    argumentAlignment structuralResult coherence.alignment
+  let alignedFunction := functionAlignment.typingResult
+  let alignedArgument := argumentAlignment.typingResult
+  { typeFormation := instantiatedFormation
+    typeReady := resultReady
+    formationResult := structuralResult
+    typingResult := model.applyStructuralExact instantiatedFormation domainResult
+      codomainResult alignedFunction alignedArgument structuralResult coherence }
 
 noncomputable def IncDepRawSubstitutionFiberModel.dispatchPair
     (model : IncDepRawSubstitutionFiberModel.{u})

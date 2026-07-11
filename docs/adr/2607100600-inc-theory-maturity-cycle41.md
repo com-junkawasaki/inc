@@ -708,6 +708,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - `applyStructuralExact`/`secondStructuralExact`で、このreverse rebaseを実際のdependent eliminatorへ適用した。返り値型は
   endpointが同じ別formationではなくproviderのoriginal structural formation resultそのものである。structurally recursive
   typing foldへの直接利用を妨げていた最後のresult-type mismatchを除去した。
+- package-level coherent eliminatorもexactnessを保持するよう強化した。`dispatchApplyCoherent`/`dispatchSecondCoherent`は供給された
+  structural resultを`formationResult`へ直接格納し、exact low-level typing resultを使う。親recursive ruleは同じstructural resultへ
+  両packageをreflexivityだけでalignできる。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

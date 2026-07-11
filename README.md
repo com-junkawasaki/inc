@@ -1337,6 +1337,11 @@ It currently establishes:
   provider's original structural formation result exactly—not merely a formation
   with the same endpoints.  This removes the last result-type mismatch that
   prevented their direct use in a structurally recursive typing fold.
+  The package-level coherent eliminators now preserve that exactness too:
+  `dispatchApplyCoherent` and `dispatchSecondCoherent` store the supplied
+  structural result directly in `formationResult` and use the exact low-level
+  typing result.  A parent recursive rule can therefore align either package to
+  the same structural result by reflexivity.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
