@@ -2947,6 +2947,21 @@ theorem hfRecursiveProduct_eq_reflect_right
       ⟨a', ha', b', hb', hpair⟩
     exact (hfRecursiveOrderedPair_injective hpair).right ▸ hb'
 
+theorem hfRecursiveProduct_eq_iff_factors_eq
+    {left left' right right' : HFRecursiveSet}
+    (hleft : ∃ a, HFRecursiveMember a left)
+    (hleft' : ∃ a, HFRecursiveMember a left')
+    (hright : ∃ b, HFRecursiveMember b right)
+    (hright' : ∃ b, HFRecursiveMember b right') :
+    hfRecursiveProduct left right = hfRecursiveProduct left' right' ↔
+      left = left' ∧ right = right' := by
+  constructor
+  · intro productEq
+    exact ⟨hfRecursiveProduct_eq_reflect_left productEq hright hright',
+      hfRecursiveProduct_eq_reflect_right productEq hleft hleft'⟩
+  · rintro ⟨rfl, rfl⟩
+    rfl
+
 /- The union of two finite powersets has the expected universal property:
    it is below a third powerset exactly when both source sets are below that
    third base set.  In particular this records the join operation on the
@@ -3378,6 +3393,18 @@ structure HFRecursiveSetFragmentModel where
   product_mono : ∀ {left left' right right'},
     HFRecursiveSubset left left' → HFRecursiveSubset right right' →
       HFRecursiveSubset (product left right) (product left' right')
+  product_subset_iff : ∀ {left left' right right'},
+    (∃ a, HFRecursiveMember a left) →
+    (∃ b, HFRecursiveMember b right) →
+    (HFRecursiveSubset (product left right) (product left' right') ↔
+      HFRecursiveSubset left left' ∧ HFRecursiveSubset right right')
+  product_eq_iff_factors_eq : ∀ {left left' right right'},
+    (∃ a, HFRecursiveMember a left) →
+    (∃ a, HFRecursiveMember a left') →
+    (∃ b, HFRecursiveMember b right) →
+    (∃ b, HFRecursiveMember b right') →
+    (product left right = product left' right' ↔
+      left = left' ∧ right = right')
   product_union_left : ∀ left right third,
     product (union left right) third =
       union (product left third) (product right third)
@@ -3437,6 +3464,8 @@ def hfRecursiveSetFragmentModel : HFRecursiveSetFragmentModel where
   product_empty_left := hfRecursiveProduct_empty_left
   product_empty_right := hfRecursiveProduct_empty_right
   product_mono := hfRecursiveProduct_mono
+  product_subset_iff := hfRecursiveProduct_subset_iff
+  product_eq_iff_factors_eq := hfRecursiveProduct_eq_iff_factors_eq
   product_union_left := hfRecursiveProduct_union_left
   product_union_right := hfRecursiveProduct_union_right
   power_spec := hfRecursiveMember_power_iff_subset
