@@ -7079,6 +7079,79 @@ theorem BehavioralBoundaryShapeTranslation.mapBisimulationQuotient_comp
   intro representative
   rfl
 
+structure BehavioralBoundaryShapeEquivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂) where
+  hom : BehavioralBoundaryShapeTranslation source target
+  inv : BehavioralBoundaryShapeTranslation target source
+  inv_hom : ∀ i, inv.map (hom.map i) = i
+  hom_inv : ∀ j, hom.map (inv.map j) = j
+
+def BehavioralBoundaryShapeEquivalence.refl
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    BehavioralBoundaryShapeEquivalence inc inc where
+  hom := BehavioralBoundaryShapeTranslation.identity inc
+  inv := BehavioralBoundaryShapeTranslation.identity inc
+  inv_hom := by intro i; rfl
+  hom_inv := by intro i; rfl
+
+def BehavioralBoundaryShapeEquivalence.symm
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BehavioralBoundaryShapeEquivalence source target) :
+    BehavioralBoundaryShapeEquivalence target source where
+  hom := equivalence.inv
+  inv := equivalence.hom
+  inv_hom := equivalence.hom_inv
+  hom_inv := equivalence.inv_hom
+
+def BehavioralBoundaryShapeEquivalence.trans
+    {I J K R₁ T₁ R₂ T₂ R₃ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (secondEquivalence : BehavioralBoundaryShapeEquivalence second third)
+    (firstEquivalence : BehavioralBoundaryShapeEquivalence first second) :
+    BehavioralBoundaryShapeEquivalence first third where
+  hom := secondEquivalence.hom.comp firstEquivalence.hom
+  inv := firstEquivalence.inv.comp secondEquivalence.inv
+  inv_hom := by
+    intro i
+    change firstEquivalence.inv.map
+      (secondEquivalence.inv.map
+        (secondEquivalence.hom.map (firstEquivalence.hom.map i))) = i
+    rw [secondEquivalence.inv_hom, firstEquivalence.inv_hom]
+  hom_inv := by
+    intro k
+    change secondEquivalence.hom.map
+      (firstEquivalence.hom.map
+        (firstEquivalence.inv.map (secondEquivalence.inv.map k))) = k
+    rw [firstEquivalence.hom_inv, secondEquivalence.hom_inv]
+
+def BehavioralBoundaryShapeEquivalence.quotientEquivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BehavioralBoundaryShapeEquivalence source target) :
+    IncTypeEquivalence (IncidenceQuotient source) (IncidenceQuotient target) where
+  forward := equivalence.hom.mapBisimulationQuotient
+  inverse := equivalence.inv.mapBisimulationQuotient
+  inverse_forward := by
+    intro value
+    refine Quotient.inductionOn value ?_
+    intro representative
+    change Quotient.mk (approxBisimSetoid source)
+      (equivalence.inv.map (equivalence.hom.map representative)) =
+        Quotient.mk (approxBisimSetoid source) representative
+    rw [equivalence.inv_hom]
+  forward_inverse := by
+    intro value
+    refine Quotient.inductionOn value ?_
+    intro representative
+    change Quotient.mk (approxBisimSetoid target)
+      (equivalence.hom.map (equivalence.inv.map representative)) =
+        Quotient.mk (approxBisimSetoid target) representative
+    rw [equivalence.hom_inv]
+
 def BoundaryShapeEmbedding.identity
     {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
     BoundaryShapeEmbedding inc inc where
@@ -7259,6 +7332,16 @@ theorem BoundaryShapeEquivalence.trans_symm_self
     apply BoundaryShapeTranslation.ext <;> funext value
   · exact equivalence.hom_inv value
   · exact equivalence.hom_inv value
+
+def BehavioralBoundaryShapeEquivalence.toBoundaryShapeEquivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BehavioralBoundaryShapeEquivalence source target) :
+    BoundaryShapeEquivalence source target where
+  hom := equivalence.hom.toBoundaryShapeTranslation
+  inv := equivalence.inv.toBoundaryShapeTranslation
+  inv_hom := equivalence.inv_hom
+  hom_inv := equivalence.hom_inv
 
 def BoundaryShapeEquivalence.toEmbedding
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
