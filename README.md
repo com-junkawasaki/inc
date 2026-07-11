@@ -86,6 +86,9 @@ It currently establishes:
   this coding, exposing completeness, model existence, and countermodels directly
   from the incidence object.  `natIncidence` is the first concrete instance of
   this bridge, with checked completeness and consistency/model equivalence.
+  The generic `incidenceProd` and `incidenceSum` constructors lift to this packaged
+  level, so composing presented incidence structures simultaneously composes their
+  carrier, countable internal language, and checked Kripke completeness theorem.
   In the converse direction, every nonderivable finite sequent has a checked
   canonical prime-theory counterworld for the supplied coding.
   For every supplied formula enumeration, a finite context is

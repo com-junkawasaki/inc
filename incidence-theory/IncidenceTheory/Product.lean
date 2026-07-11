@@ -119,6 +119,22 @@ def incidenceProd {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
     simp [inc1.type_preserve (i:=i1) (j:=j1) (k:=k1') hallow.1 hk1,
       inc2.type_preserve (i:=i2) (j:=j2) (k:=k2') hallow.2 hk2]
 
+noncomputable def countablyPresentedIncidenceProd
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (left : CountablyPresentedIncidence I1 R1 T1)
+    (right : CountablyPresentedIncidence I2 R2 T2) :
+    CountablyPresentedIncidence (I1 × I2) (R1 ⊕ R2) (T1 × T2) where
+  incidence := incidenceProd left.incidence right.incidence
+  atoms := left.atoms.prod right.atoms
+
+theorem countablyPresentedIncidenceProd_internalLogic_complete
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (left : CountablyPresentedIncidence I1 R1 T1)
+    (right : CountablyPresentedIncidence I2 R2 T2)
+    (context : List (Formula (I1 × I2))) (formula : Formula (I1 × I2)) :
+    KripkeEntails.{u, u} context formula ↔ Derives context formula :=
+  (countablyPresentedIncidenceProd left right).internalLogic_complete context formula
+
 theorem prodBoundary_mem_left {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
   (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (i1 : I1) (i2 : I2)
   (e1 : Endpoint I1 R1) (he1 : e1 ∈ inc1.boundary i1) :

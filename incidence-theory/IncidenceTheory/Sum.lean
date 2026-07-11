@@ -138,6 +138,22 @@ def incidenceSum {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
     simp
   type_preserve := fun _ _ => rfl
 
+noncomputable def countablyPresentedIncidenceSum
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (left : CountablyPresentedIncidence I1 R1 T1)
+    (right : CountablyPresentedIncidence I2 R2 T2) :
+    CountablyPresentedIncidence (I1 ⊕ I2) (R1 ⊕ R2) GraphType where
+  incidence := incidenceSum left.incidence right.incidence
+  atoms := left.atoms.sum right.atoms
+
+theorem countablyPresentedIncidenceSum_internalLogic_complete
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (left : CountablyPresentedIncidence I1 R1 T1)
+    (right : CountablyPresentedIncidence I2 R2 T2)
+    (context : List (Formula (I1 ⊕ I2))) (formula : Formula (I1 ⊕ I2)) :
+    KripkeEntails.{u, u} context formula ↔ Derives context formula :=
+  (countablyPresentedIncidenceSum left right).internalLogic_complete context formula
+
 /- Is `x` a leaf (empty boundary), regardless of which side it's on? -/
 def sumIsLeaf {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
   (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) : (I1 ⊕ I2) → Prop
