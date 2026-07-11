@@ -3712,6 +3712,46 @@ noncomputable def IncCategoryEquivalence.pullbackPreservingFamily
     PullbackPreservingFamily equivalence.forward :=
   equivalence.forward_criterion.pullbackPreservingFamily
 
+structure StrongBicartesianPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) where
+  pushouts : StrongPushoutPreservingFamily F
+  pullbacks : StrongPullbackPreservingFamily F
+
+structure BicartesianPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) where
+  pushouts : PushoutPreservingFamily F
+  pullbacks : PullbackPreservingFamily F
+
+def StrongBicartesianPreservingFamily.toBicartesianPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (strong : StrongBicartesianPreservingFamily F) :
+    BicartesianPreservingFamily F where
+  pushouts := strong.pushouts.toPushoutPreservingFamily
+  pullbacks := strong.pullbacks.toPushoutPreservingFamily
+
+noncomputable def IncFunctorEquivalenceCriterion.strongBicartesianPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F) :
+    StrongBicartesianPreservingFamily F where
+  pushouts := IncCoherentCategoryEquivalence.strongPushoutPreservingFamily
+    criterion.toCoherentCategoryEquivalence
+  pullbacks := criterion.strongPullbackPreservingFamily
+
+noncomputable def IncCategoryEquivalence.strongBicartesianPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    StrongBicartesianPreservingFamily equivalence.forward :=
+  equivalence.forward_criterion.strongBicartesianPreservingFamily
+
+noncomputable def IncCategoryEquivalence.bicartesianPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    BicartesianPreservingFamily equivalence.forward :=
+  StrongBicartesianPreservingFamily.toBicartesianPreservingFamily
+    equivalence.strongBicartesianPreservingFamily
+
 /- Uniform preservation is closed under translation composition.  The second
    family is applied to the actual mapped universal cocone selected by the
    first one, exactly as in the pointwise composition theorem above. -/
@@ -4567,6 +4607,18 @@ noncomputable def category_equivalence_preserves_pullbacks
     (equivalence : IncCategoryEquivalence C D) :
     PullbackPreservingFamily equivalence.forward :=
   equivalence.pullbackPreservingFamily
+
+noncomputable def category_equivalence_strongly_preserves_bicartesian_shapes
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    StrongBicartesianPreservingFamily equivalence.forward :=
+  equivalence.strongBicartesianPreservingFamily
+
+noncomputable def category_equivalence_preserves_bicartesian_shapes
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    BicartesianPreservingFamily equivalence.forward :=
+  equivalence.bicartesianPreservingFamily
 
 /- Merkle-ID: foundation.axiomatization.limit_preservation
    Placeholder only for the unbundled `inc_to_set` assignment above. -/
