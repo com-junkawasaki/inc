@@ -60,6 +60,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   guard の beta・一意性を証明済み。この条件を coherence certificate に加えることで、
   permissive guards への緩和なしに source guards と正確に一致する完全な quotient
   Incidence を構成できる。
+- 一般 coherence 条件の非自明な成功例として、`natIncidence × trivialIncidence Bool`
+  を `Prod.fst : Nat × Bool → Nat` で分類した。`(n,false)` と `(n,true)` は異なるが同じ
+  class へ collapse し、boundary/glue/guard invariance、no-self-loop、glue type
+  preservation をすべて満たす。certificate から Nat carrier 上の canonical quotient
+  Incidence を構成し、その glue が正確に加法、guard が常に true であることを証明済み。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」ではなく、非可算 carrier への完全性条件の拡張、Incidence 固有の

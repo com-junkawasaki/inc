@@ -1,5 +1,6 @@
 import IncidenceTheory.Cycle
 import IncidenceTheory.Peano
+import IncidenceTheory.Product
 import IncidenceTheory.Simplex
 
 /- Merkle-ID: implementation.graph_model.quotient
@@ -1438,6 +1439,124 @@ theorem cycleIncidence_no_bisimulationQuotientIncidencePresentation
   rcases targetHasBoundary with ⟨endpoint, member⟩
   rw [incidence_subsingleton_boundary_empty presentation.target] at member
   simp at member
+
+abbrev NatBoolProductIncidence :
+    Incidence (Nat × Bool) (PeanoRole ⊕ GraphRole) (GraphType × GraphType) :=
+  incidenceProd natIncidence
+    (trivialIncidence : Incidence Bool GraphRole GraphType)
+
+def natBoolProductClassification :
+    BisimulationQuotientClassification (Q := Nat) NatBoolProductIncidence :=
+  bisimulationQuotientClassificationOfKernel NatBoolProductIncidence Prod.fst
+    (by
+      intro x y
+      rw [incidenceProd_approxBisim_iff, natIncidence_approxBisim_iff]
+      constructor
+      · intro equal
+        exact ⟨equal, trivial_approxBisim_total x.2 y.2⟩
+      · exact fun related => related.left)
+    (by intro n; exact ⟨(n, false), rfl⟩)
+
+theorem natBoolProductClassification_nonfaithful :
+    natBoolProductClassification.classify (0, false) =
+      natBoolProductClassification.classify (0, true) ∧
+      (0, false) ≠ (0, true) := by
+  exact ⟨rfl, by decide⟩
+
+theorem natBoolProductClassification_boundaryInvariant :
+    natBoolProductClassification.BoundaryInvariant := by
+  intro x y bisimilar
+  have firstEqual : x.1 = y.1 :=
+    (incidenceProd_approxBisim_iff natIncidence
+      (trivialIncidence : Incidence Bool GraphRole GraphType)
+      x.1 y.1 x.2 y.2).mp bisimilar |>.left |>
+      (natIncidence_approxBisim_iff x.1 y.1).mp
+  rcases x with ⟨x, xb⟩
+  rcases y with ⟨y, yb⟩
+  simp only at firstEqual
+  subst y
+  cases x <;>
+    simp [BisimulationQuotientClassification.mappedSourceBoundary,
+      natBoolProductClassification, NatBoolProductIncidence, incidenceProd,
+      prodBoundary, natIncidence, peanoBoundary, trivialIncidence,
+      bisimulationQuotientClassificationOfKernel]
+
+theorem natBoolProductClassification_glueInvariant :
+    natBoolProductClassification.GlueInvariant := by
+  intro x x' y y' hx hy
+  have firstX : x.1 = x'.1 :=
+    (incidenceProd_approxBisim_iff natIncidence
+      (trivialIncidence : Incidence Bool GraphRole GraphType)
+      x.1 x'.1 x.2 x'.2).mp hx |>.left |>
+      (natIncidence_approxBisim_iff x.1 x'.1).mp
+  have firstY : y.1 = y'.1 :=
+    (incidenceProd_approxBisim_iff natIncidence
+      (trivialIncidence : Incidence Bool GraphRole GraphType)
+      y.1 y'.1 y.2 y'.2).mp hy |>.left |>
+      (natIncidence_approxBisim_iff y.1 y'.1).mp
+  rcases x with ⟨x, xb⟩
+  rcases x' with ⟨x', xb'⟩
+  rcases y with ⟨y, yb⟩
+  rcases y' with ⟨y', yb'⟩
+  simp only at firstX firstY
+  subst x'
+  subst y'
+  cases xb <;> cases xb' <;> cases yb <;> cases yb' <;>
+  simp [BisimulationQuotientClassification.mappedSourceGlue,
+    natBoolProductClassification, NatBoolProductIncidence, incidenceProd,
+    prodGlue, natIncidence, trivialIncidence,
+    bisimulationQuotientClassificationOfKernel]
+
+theorem natBoolProductClassification_guardInvariant :
+    natBoolProductClassification.GuardInvariant := by
+  intro x x' y y' hx hy
+  simp [NatBoolProductIncidence, incidenceProd, prodGuards, trivialIncidence,
+    natIncidence, Guards.permissive]
+
+noncomputable def natBoolProductCanonicalCoherence :
+    CanonicalGuardedQuotientIncidenceCoherence natBoolProductClassification where
+  boundaryInvariant := natBoolProductClassification_boundaryInvariant
+  glueInvariant := natBoolProductClassification_glueInvariant
+  guardInvariant := natBoolProductClassification_guardInvariant
+  boundary_no_self := by
+    intro q selfLoop
+    rcases natBoolProductClassification.surjective q with ⟨x, rfl⟩
+    rw [natBoolProductClassification.canonicalBoundary_classify] at selfLoop
+    rcases x with ⟨n, bit⟩
+    cases n <;>
+      simp [BisimulationQuotientClassification.mappedSourceBoundary,
+        natBoolProductClassification, NatBoolProductIncidence, incidenceProd,
+        prodBoundary, natIncidence, peanoBoundary, trivialIncidence,
+        bisimulationQuotientClassificationOfKernel] at selfLoop
+  glue_type_preserve := by
+    intro x y q mapped
+    rcases natBoolProductClassification.surjective q with ⟨z, rfl⟩
+    rw [natBoolProductClassification.canonicalType_classify]
+    rcases x with ⟨xn, xb⟩
+    rcases z with ⟨zn, zb⟩
+    rfl
+
+noncomputable def natBoolProductCanonicalQuotientIncidence :
+    Incidence Nat (PeanoRole ⊕ GraphRole) (GraphType × GraphType) :=
+  natBoolProductCanonicalCoherence.toIncidence
+
+theorem natBoolProductCanonicalQuotient_glue (m n : Nat) :
+    natBoolProductCanonicalQuotientIncidence.glue m n = some (m + n) := by
+  have beta := natBoolProductCanonicalCoherence.toIncidence_glue_classify
+    (m, false) (n, false)
+  simpa [natBoolProductCanonicalQuotientIncidence,
+    natBoolProductClassification, BisimulationQuotientClassification.mappedSourceGlue,
+    NatBoolProductIncidence, incidenceProd, prodGlue, natIncidence,
+    trivialIncidence, bisimulationQuotientClassificationOfKernel] using beta
+
+theorem natBoolProductCanonicalQuotient_guard (m n : Nat) :
+    natBoolProductCanonicalQuotientIncidence.guards.allow m n = true := by
+  have beta := natBoolProductCanonicalCoherence.toIncidence_guard_classify
+    (m, false) (n, false)
+  simpa [natBoolProductCanonicalQuotientIncidence, natBoolProductClassification,
+    NatBoolProductIncidence, incidenceProd, prodGuards, natIncidence,
+    trivialIncidence, Guards.permissive,
+    bisimulationQuotientClassificationOfKernel] using beta
 
 /- Unlike `cycleIncidence`'s `boundary`/`glue` (cycle 38), which failed
    the well-definedness check `Quotient.lift` needs, `simplexToShape`

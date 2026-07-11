@@ -450,6 +450,17 @@ It currently establishes:
   exactly with the source on classified inputs.  Thus the general quotient
   construction conditions are now explicit; the remaining work for a concrete
   nonfaithful incidence is to prove—or refute—those coherence conditions.
+  This is now validated by a genuinely nonfaithful positive example, not only
+  by interfaces: `natIncidence × trivialIncidence Bool` identifies `(n,false)`
+  with `(n,true)` and has quotient classifier `Prod.fst : Nat × Bool → Nat`.
+  Its boundary, glue, and guards satisfy all invariance conditions, the
+  no-self-loop and glue-type obligations hold, and the guarded coherence
+  certificate constructs a canonical quotient Incidence on `Nat`.  The
+  descended glue is proved exactly `m+n` and its guard is always true.  Thus
+  the construction performs a real collapse while retaining nontrivial Peano
+  boundary structure and algebra, unlike faithful quotients (no collapse),
+  `cycleIncidence` (boundary obstruction), or simplex-to-shape (glue
+  obstruction).
 
 The minimal category/functor/pushout vocabulary is also formalized. A functor
 is proved to map a pushout cocone to a commuting cocone; preservation of the
