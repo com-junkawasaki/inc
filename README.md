@@ -1353,6 +1353,13 @@ It currently establishes:
   index.  A direct mutual induction is insufficient because apply/projection
   constructors hide domain and codomain indices; those hidden-index equalities
   must be established before readiness proof uniqueness can be implemented.
+  A constructive alternative is now available as
+  `IncDepRawStrictTypingDispatchReady`.  It indexes a coherent typing tree by the
+  exact coherent formation-readiness evidence chosen by its parent and stores the
+  equality to the tree's derived `formationReady`.  `ofCoherent`, `toCoherent`,
+  `toDispatchReady`, and `formationDispatchReady` connect it to all earlier APIs.
+  A total dispatcher can therefore consume a strict tree and avoid assuming
+  global readiness proof uniqueness.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

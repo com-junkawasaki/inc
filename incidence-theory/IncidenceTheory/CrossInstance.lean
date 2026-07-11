@@ -6151,6 +6151,50 @@ def IncDepRawCoherentTypingDispatchReady.formationReady
   | .secondRule _ _ resultReady _ => resultReady
   | .reflRule typeReady termReady => .identity typeReady termReady termReady
 
+structure IncDepRawStrictTypingDispatchReady
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} (typing : IncDepRawHasType context term type)
+    {formation : IncDepRawWellFormed context type}
+    (formationReady : IncDepRawCoherentFormationDispatchReady formation) where
+  ready : IncDepRawCoherentTypingDispatchReady typing formation
+  formationReady_eq : ready.formationReady = formationReady
+
+def IncDepRawStrictTypingDispatchReady.ofCoherent
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation) :
+    IncDepRawStrictTypingDispatchReady typing ready.formationReady where
+  ready := ready
+  formationReady_eq := rfl
+
+def IncDepRawStrictTypingDispatchReady.toCoherent
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    {formationReady : IncDepRawCoherentFormationDispatchReady formation}
+    (ready : IncDepRawStrictTypingDispatchReady typing formationReady) :
+    IncDepRawCoherentTypingDispatchReady typing formation :=
+  ready.ready
+
+def IncDepRawStrictTypingDispatchReady.toDispatchReady
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    {formationReady : IncDepRawCoherentFormationDispatchReady formation}
+    (ready : IncDepRawStrictTypingDispatchReady typing formationReady) :
+    IncDepRawTypingDispatchReady typing :=
+  ready.ready.toDispatchReady
+
+def IncDepRawStrictTypingDispatchReady.formationDispatchReady
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    {formationReady : IncDepRawCoherentFormationDispatchReady formation}
+    (_ready : IncDepRawStrictTypingDispatchReady typing formationReady) :
+    IncDepRawFormationDispatchReady formation :=
+  formationReady.toDispatchReady
+
 mutual
   noncomputable def IncDepRawFormationDispatchReady.toSemanticReady
       {context : List IncDepRawType} {type : IncDepRawType}

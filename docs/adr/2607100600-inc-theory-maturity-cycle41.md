@@ -718,6 +718,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   derivation indexを持つcoherent formation/typing readiness tree二つを同定する。apply/projection constructorはhidden domain/
   codomain indicesを持つため単純mutual inductionでは不足し、readiness proof uniquenessの実装前にそれらhidden-index equalityを
   証明する必要がある。
+- global uniquenessを仮定しないconstructive alternativeとして`IncDepRawStrictTypingDispatchReady`を追加した。coherent typing
+  treeを親が選んだexact coherent formation-readiness evidenceでindexし、treeから導出される`formationReady`とのequalityを保持する。
+  `ofCoherent`/`toCoherent`/`toDispatchReady`/`formationDispatchReady`で既存APIへ接続済み。total dispatcherはstrict treeを入力に
+  すればglobal readiness proof uniquenessを要求しない。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
