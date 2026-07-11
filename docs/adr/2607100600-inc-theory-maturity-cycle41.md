@@ -372,6 +372,7 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   eliminationに必要なpath-composition lawを追加した。
 - forward equality transportがpath reversalも保存することを証明し、refl/trans/symmのidentity
   groupoid基礎則を揃えた。
+- backward equality transportについてもtrans/symm保存を証明し、identity groupoid則を双方向で揃えた。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

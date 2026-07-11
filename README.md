@@ -805,6 +805,8 @@ It currently establishes:
   path-composition law needed by iterated identity elimination.
   It also preserves path reversal, so reflexivity, composition, and symmetry are
   all respected by identity transport.
+  Backward transport now preserves composition and reversal too, making the
+  identity groupoid laws symmetric in both directions.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

@@ -2687,6 +2687,25 @@ theorem IncFiberEquiv.mapEqualityBackward_refl
       Eq.refl (equivalence.backward value) := by
   rfl
 
+theorem IncFiberEquiv.mapEqualityBackward_trans
+    {source target : Type u} (equivalence : IncFiberEquiv source target)
+    {first second third : target}
+    (firstEquality : first = second) (secondEquality : second = third) :
+    equivalence.mapEqualityBackward (firstEquality.trans secondEquality) =
+      (equivalence.mapEqualityBackward firstEquality).trans
+        (equivalence.mapEqualityBackward secondEquality) := by
+  cases firstEquality
+  cases secondEquality
+  rfl
+
+theorem IncFiberEquiv.mapEqualityBackward_symm
+    {source target : Type u} (equivalence : IncFiberEquiv source target)
+    {left right : target} (equality : left = right) :
+    equivalence.mapEqualityBackward equality.symm =
+      (equivalence.mapEqualityBackward equality).symm := by
+  cases equality
+  rfl
+
 structure IncTypeInContext.FiberEquiv
     {context : IncContext.{u}}
     (source target : IncTypeInContext context) where
