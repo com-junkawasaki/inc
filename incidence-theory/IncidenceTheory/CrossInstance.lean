@@ -6703,6 +6703,45 @@ def IncDepRawFormationSubstitutionFiberRebase.trans
         (firstRebase.sourceEquivalence.transport term),
       firstRebase.naturality term]
 
+def IncDepRawFormationSubstitutionFiberRebase.symm
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {left right : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult}
+    (rebase : IncDepRawFormationSubstitutionFiberRebase left right) :
+    IncDepRawFormationSubstitutionFiberRebase right left where
+  sourceEquivalence := rebase.sourceEquivalence.symm
+  targetEquivalence := rebase.targetEquivalence.symm
+  naturality := by
+    intro term
+    have forward := rebase.naturality
+      (rebase.sourceEquivalence.symm.transport term)
+    rw [rebase.sourceEquivalence.symm_transport] at forward
+    have backward := congrArg
+      (fun transported =>
+        (rebase.targetEquivalence.reindex
+          substitutionResult.semanticSubstitution).symm.transport transported)
+      forward
+    change (rebase.targetEquivalence.reindex
+        substitutionResult.semanticSubstitution).symm.transport
+          (right.semanticFiberEquivalence.transport term) =
+      (rebase.targetEquivalence.reindex
+        substitutionResult.semanticSubstitution).symm.transport
+          ((rebase.targetEquivalence.reindex
+            substitutionResult.semanticSubstitution).transport
+            (left.semanticFiberEquivalence.transport
+              (rebase.sourceEquivalence.symm.transport term))) at backward
+    rw [(rebase.targetEquivalence.reindex
+      substitutionResult.semanticSubstitution).transport_symm] at backward
+    exact backward.symm
+
 noncomputable def IncDepRawTypingSubstitutionFiberResult.rebase
     {source target : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType}
@@ -6732,6 +6771,27 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.rebase
     rw [rebase.naturality result.sourceTermResult.semanticTerm,
       result.semanticTerm_coherence,
       IncTypeInContext.FiberEquiv.reindex_transport]
+
+noncomputable def IncDepRawTypingSubstitutionFiberResult.rebaseSymm
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {left right : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult}
+    (result : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := targetTyping) right)
+    (rebase : IncDepRawFormationSubstitutionFiberRebase left right) :
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := targetTyping) left :=
+  result.rebase rebase.symm
 
 noncomputable def IncDepRawTypingSubstitutionFiberResult.rebaseToCanonical
     {source target : List IncDepRawType} {term : IncDepRawTerm}

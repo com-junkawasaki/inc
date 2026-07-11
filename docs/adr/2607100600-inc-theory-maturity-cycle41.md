@@ -702,6 +702,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   interpreted instantiated formation、domain/codomain results、argument substitution equationからcomplete coherence bundleを返し、
   `dispatch`がuniform call boundaryとなる。providerの存在を仮定済みとはしておらず、arbitrary structural output上のtotal mutual
   foldを閉じるため構成すべき定理を正確に隔離したinterfaceである。
+- fiber rebaseをreflexive/transitiveに加えてsymmetricにした。`IncDepRawFormationSubstitutionFiberRebase.symm`は両endpoint
+  equivalenceのinverse lawsからreverse naturality squareを導出し、`rebaseSymm`がtyping resultを逆向きtransportする。これにより
+  coherent dependent branchはintermediate aligned equivalenceに留まらずproviderのexact structural formation resultへ戻せる。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

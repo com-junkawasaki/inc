@@ -1326,6 +1326,12 @@ It currently establishes:
   bundle.  `dispatch` is the uniform call boundary.  This does not assume the
   provider exists; it isolates exactly the theorem that must be constructed to
   close the total mutual fold for arbitrary structural outputs.
+  Fiber rebases are now symmetric as well as reflexive and transitive.
+  `IncDepRawFormationSubstitutionFiberRebase.symm` derives the reverse naturality
+  square using the inverse laws of both endpoint equivalences, and
+  `rebaseSymm` transports a typing result back along it.  A coherent dependent
+  branch can therefore return the provider's exact structural formation result,
+  rather than remaining on the intermediate aligned equivalence.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
