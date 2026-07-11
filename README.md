@@ -1471,6 +1471,13 @@ It currently establishes:
   relative to its explicitly listed semantic providers (variable replacement,
   readiness alignment, fiber rebase, and instantiate coherence); none of those
   obligations is hidden as proof irrelevance or an axiom.
+  The preservation projections now expose definitional computation theorems for
+  base and unit formation, unit typing, Pi formation, and variable typing.
+  All five proofs are `rfl`: the Pi equation visibly calls the two recursive
+  formation projections (lifting occurs inside its checked handler), and the
+  variable equation visibly consumes the recursive type-formation result before
+  invoking the replacement provider.  These equations make the theorem usable
+  by rewriting without unfolding the large generated mutual recursor.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

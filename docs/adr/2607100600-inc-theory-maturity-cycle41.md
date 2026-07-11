@@ -777,6 +777,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   semanticsを返す。`preservationDispatcher`が両projectionを単一`IncDepRawStrictMutualSubstitutionDispatcher`へbundleする。これによりdependent raw calculusの
   structural substitution-preservation foldは、明示されたsemantic providers（variable replacement、readiness alignment、fiber rebase、instantiate coherence）
   に相対して閉じた。これらのobligationをproof irrelevanceやaxiomとして隠してはいない。
+- 保存projectionの公開computation theoremsをbase/unit formation、unit typing、Pi formation、variable typingについて追加した。5本すべて`rfl`であり、Pi式は
+  二つのrecursive formation projectionsを、variable式はrecursive type-formation resultをreplacement providerへ渡す流れを明示する。巨大な生成mutual
+  recursorをunfoldせずrewriteで保存定理を利用できる最初の安定APIになった。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

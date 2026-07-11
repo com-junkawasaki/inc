@@ -11509,6 +11509,146 @@ noncomputable def IncDepRawSubstitutionFiberModel.preservationDispatcher
         model.preserveTyping variableProvider readinessAlignment strictAlignment
           rebaseProvider instantiateProvider ready targetTree replacements }
 
+theorem IncDepRawSubstitutionFiberModel.preserveFormation_base
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (strictAlignment : IncDepRawStrictTypingReadinessAlignmentProvider)
+    (rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider)
+    (instantiateProvider : IncDepRawInstantiateFormationCoherenceProvider)
+    {source target : List IncDepRawType} {index : Nat}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult) :
+    model.preserveFormation variableProvider readinessAlignment strictAlignment
+        rebaseProvider instantiateProvider
+        (IncDepRawCoherentFormationDispatchReady.base
+          (context := target) (index := index)) targetTree replacements =
+      model.dispatchStrictBaseFormation substitutionResult :=
+  rfl
+
+theorem IncDepRawSubstitutionFiberModel.preserveFormation_unit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (strictAlignment : IncDepRawStrictTypingReadinessAlignmentProvider)
+    (rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider)
+    (instantiateProvider : IncDepRawInstantiateFormationCoherenceProvider)
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult) :
+    model.preserveFormation variableProvider readinessAlignment strictAlignment
+        rebaseProvider instantiateProvider
+        (IncDepRawCoherentFormationDispatchReady.unit (context := target))
+        targetTree replacements =
+      model.dispatchStrictUnitFormation substitutionResult :=
+  rfl
+
+theorem IncDepRawSubstitutionFiberModel.preserveTyping_unit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (strictAlignment : IncDepRawStrictTypingReadinessAlignmentProvider)
+    (rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider)
+    (instantiateProvider : IncDepRawInstantiateFormationCoherenceProvider)
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult) :
+    model.preserveTyping variableProvider readinessAlignment strictAlignment
+        rebaseProvider instantiateProvider
+        (IncDepRawCoherentTypingDispatchReady.unitRule (context := target))
+        targetTree replacements =
+      model.dispatchStrictUnit substitutionResult :=
+  rfl
+
+theorem IncDepRawSubstitutionFiberModel.preserveFormation_pi
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (strictAlignment : IncDepRawStrictTypingReadinessAlignmentProvider)
+    (rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider)
+    (instantiateProvider : IncDepRawInstantiateFormationCoherenceProvider)
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult) :
+    model.preserveFormation variableProvider readinessAlignment strictAlignment
+        rebaseProvider instantiateProvider
+        (IncDepRawCoherentFormationDispatchReady.pi domainReady codomainReady)
+        targetTree replacements =
+      model.mutualFoldPi domainReady codomainReady
+        (model.preserveFormation variableProvider readinessAlignment
+          strictAlignment rebaseProvider instantiateProvider domainReady)
+        (model.preserveFormation variableProvider readinessAlignment
+          strictAlignment rebaseProvider instantiateProvider codomainReady)
+        targetTree replacements :=
+  rfl
+
+theorem IncDepRawSubstitutionFiberModel.preserveTyping_variable
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (strictAlignment : IncDepRawStrictTypingReadinessAlignmentProvider)
+    (rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider)
+    (instantiateProvider : IncDepRawInstantiateFormationCoherenceProvider)
+    {source target : List IncDepRawType} {position : Nat}
+    {type : IncDepRawType} {lookup : IncDepRawLookup target position type}
+    {typeFormation : IncDepRawWellFormed target type}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult) :
+    model.preserveTyping variableProvider readinessAlignment strictAlignment
+        rebaseProvider instantiateProvider
+        (IncDepRawCoherentTypingDispatchReady.varRule (lookup := lookup)
+          typeReady) targetTree replacements =
+      variableProvider.mutualFoldVariable typeReady
+        (model.preserveFormation variableProvider readinessAlignment
+          strictAlignment rebaseProvider instantiateProvider typeReady)
+        targetTree replacements :=
+  rfl
+
 noncomputable def IncDepRawStrictTypingSubstitutionDispatcher.run
     (dispatcher : IncDepRawStrictTypingSubstitutionDispatcher)
     {source target : List IncDepRawType} {term : IncDepRawTerm}
