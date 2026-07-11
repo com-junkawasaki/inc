@@ -6870,6 +6870,44 @@ theorem incToSetFunctor_not_fullyFaithful_of_distinct
   exact incToSetFunctor_not_full_of_distinct inc different
     fullyFaithful.full
 
+theorem incToSet_nonNullary_subsingleton
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (i : I) (nonNullary : inc.boundary i ≠ []) :
+    ∀ left right : inc_to_set inc i, left = right := by
+  unfold inc_to_set
+  cases boundaryEq : inc.boundary i with
+  | nil => exact False.elim (nonNullary boundaryEq)
+  | cons head tail =>
+      intro left right
+      rcases left with ⟨left⟩
+      rcases right with ⟨right⟩
+      cases left
+      cases right
+      rfl
+
+theorem incToSetFunctor_fullyFaithful_of_subsingleton_all_nonNullary
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T)
+    (subsingleton : ∀ i j : I, i = j)
+    (allNonNullary : ∀ i, inc.boundary i ≠ []) :
+    IncFunctorFullyFaithful (incToSetFunctor inc) where
+  faithful := incToSetFunctor_faithful inc
+  full := by
+    intro source target morphism
+    have objectEqual : source = target := by
+      cases source with
+      | mk source =>
+          cases target with
+          | mk target =>
+              cases subsingleton source target
+              rfl
+    cases objectEqual
+    refine ⟨⟨rfl⟩, ?_⟩
+    apply IncLiftedFunction.ext
+    funext value
+    exact incToSet_nonNullary_subsingleton inc source.down
+      (allNonNullary source.down) _ _
+
 def inc_to_set_preserves_boundary_shape
     {I R₁ T₁ R₂ T₂ : Type u} [DecidableEq I]
     (source : Incidence I R₁ T₁) (target : Incidence I R₂ T₂)
