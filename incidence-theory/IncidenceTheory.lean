@@ -1092,6 +1092,103 @@ theorem IncNaturalTransformation.hcomp_app
     (beta.hcomp alpha).app object =
       E.comp (beta.app (G.obj object)) (H.map (alpha.app object)) := rfl
 
+structure IncNaturalIsomorphism
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F G : IncFunctor C D) where
+  hom : IncNaturalTransformation F G
+  inv : IncNaturalTransformation G F
+  hom_inv_id : inv.vcomp hom = IncNaturalTransformation.identity F
+  inv_hom_id : hom.vcomp inv = IncNaturalTransformation.identity G
+
+def IncNaturalIsomorphism.refl
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) : IncNaturalIsomorphism F F where
+  hom := IncNaturalTransformation.identity F
+  inv := IncNaturalTransformation.identity F
+  hom_inv_id := IncNaturalTransformation.identity_vcomp _
+  inv_hom_id := IncNaturalTransformation.identity_vcomp _
+
+def IncNaturalIsomorphism.symm
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (iso : IncNaturalIsomorphism F G) :
+    IncNaturalIsomorphism G F where
+  hom := iso.inv
+  inv := iso.hom
+  hom_inv_id := iso.inv_hom_id
+  inv_hom_id := iso.hom_inv_id
+
+theorem IncNaturalIsomorphism.hom_app_inv_app
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (iso : IncNaturalIsomorphism F G) (object : CObj) :
+    D.comp (iso.inv.app object) (iso.hom.app object) = D.id (F.obj object) := by
+  have component := congrArg (fun transformation => transformation.app object)
+    iso.hom_inv_id
+  exact component
+
+theorem IncNaturalIsomorphism.inv_app_hom_app
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (iso : IncNaturalIsomorphism F G) (object : CObj) :
+    D.comp (iso.hom.app object) (iso.inv.app object) = D.id (G.obj object) := by
+  have component := congrArg (fun transformation => transformation.app object)
+    iso.inv_hom_id
+  exact component
+
+def IncNaturalIsomorphism.trans
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G H : IncFunctor C D}
+    (beta : IncNaturalIsomorphism G H)
+    (alpha : IncNaturalIsomorphism F G) : IncNaturalIsomorphism F H where
+  hom := beta.hom.vcomp alpha.hom
+  inv := alpha.inv.vcomp beta.inv
+  hom_inv_id := by
+    apply IncNaturalTransformation.ext
+    intro object
+    change D.comp (D.comp (alpha.inv.app object) (beta.inv.app object))
+        (D.comp (beta.hom.app object) (alpha.hom.app object)) = D.id (F.obj object)
+    calc
+      D.comp (D.comp (alpha.inv.app object) (beta.inv.app object))
+          (D.comp (beta.hom.app object) (alpha.hom.app object)) =
+        D.comp (alpha.inv.app object)
+          (D.comp (beta.inv.app object)
+            (D.comp (beta.hom.app object) (alpha.hom.app object))) :=
+              (D.assoc _ _ _).symm
+      _ = D.comp (alpha.inv.app object)
+          (D.comp (D.comp (beta.inv.app object) (beta.hom.app object))
+            (alpha.hom.app object)) :=
+              congrArg (D.comp (alpha.inv.app object))
+                (D.assoc (beta.inv.app object) (beta.hom.app object)
+                  (alpha.hom.app object))
+      _ = D.comp (alpha.inv.app object)
+          (D.comp (D.id (G.obj object)) (alpha.hom.app object)) := by
+            rw [beta.hom_app_inv_app]
+      _ = D.comp (alpha.inv.app object) (alpha.hom.app object) := by
+            rw [D.id_comp]
+      _ = D.id (F.obj object) := alpha.hom_app_inv_app object
+  inv_hom_id := by
+    apply IncNaturalTransformation.ext
+    intro object
+    change D.comp (D.comp (beta.hom.app object) (alpha.hom.app object))
+        (D.comp (alpha.inv.app object) (beta.inv.app object)) = D.id (H.obj object)
+    calc
+      D.comp (D.comp (beta.hom.app object) (alpha.hom.app object))
+          (D.comp (alpha.inv.app object) (beta.inv.app object)) =
+        D.comp (beta.hom.app object)
+          (D.comp (alpha.hom.app object)
+            (D.comp (alpha.inv.app object) (beta.inv.app object))) :=
+              (D.assoc _ _ _).symm
+      _ = D.comp (beta.hom.app object)
+          (D.comp (D.comp (alpha.hom.app object) (alpha.inv.app object))
+            (beta.inv.app object)) :=
+              congrArg (D.comp (beta.hom.app object))
+                (D.assoc (alpha.hom.app object) (alpha.inv.app object)
+                  (beta.inv.app object))
+      _ = D.comp (beta.hom.app object)
+          (D.comp (D.id (G.obj object)) (beta.inv.app object)) := by
+            rw [alpha.inv_app_hom_app]
+      _ = D.comp (beta.hom.app object) (beta.inv.app object) := by
+            rw [D.id_comp]
+      _ = D.id (H.obj object) := beta.inv_app_hom_app object
+
 structure MorphismCospan {Obj : Type u} (C : IncCategory Obj) where
   a : Obj
   b : Obj
