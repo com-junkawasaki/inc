@@ -78,4 +78,20 @@ theorem CoherentQuotient.classify_glue
       some (quotient.classification.classify k) :=
   quotient.glue_preserves hglue
 
+theorem CoherentQuotient.quotient_lift_injective
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    {left right : IncidenceQuotient source.chainPushout.inc}
+    (h : quotient.classification.lift left = quotient.classification.lift right) :
+    left = right :=
+  quotient.classification.lift_injective h
+
+theorem CoherentQuotient.quotient_lift_surjective
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    (target : Q) :
+    ∃ sourceClass : IncidenceQuotient source.chainPushout.inc,
+      quotient.classification.lift sourceClass = target :=
+  quotient.classification.lift_surjective target
+
 end IncidenceCore

@@ -1823,6 +1823,33 @@ noncomputable def terminalCoherentIncidence :
   chainPushout := terminalChainComplexPushoutIncidence
   completeLogic := terminalCompleteLogic
 
+def terminalQuotientClassification :
+    BisimulationQuotientClassification (Q := Unit)
+      terminalCoherentIncidence.chainPushout.inc where
+  classify := id
+  respects := by intro x y _; cases x; cases y; rfl
+  reflects := by
+    intro x y _
+    cases x
+    cases y
+    exact approxBisim_refl _ _
+  surjective := fun target => ⟨target, rfl⟩
+
+noncomputable def terminalCoherentQuotient :
+    CoherentQuotient (Q := Unit) terminalCoherentIncidence where
+  target := trivialIncidence
+  classification := terminalQuotientClassification
+  boundary_preserves := by
+    intro i
+    cases i
+    rfl
+  glue_preserves := by
+    intro i j k hglue
+    cases i
+    cases j
+    cases k
+    rfl
+
 example (idx : List Unit) (i k : Unit) (hi : i ∈ idx) (hk : k ∈ idx) :
     boundary_composition terminalChainComplexPushoutIncidence.inc idx i k = 0 :=
   terminalChainComplexPushoutIncidence.boundary_composition_zero idx i k hi hk
