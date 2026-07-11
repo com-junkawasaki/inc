@@ -1189,6 +1189,27 @@ def IncNaturalIsomorphism.trans
             rw [D.id_comp]
       _ = D.id (H.obj object) := beta.inv_app_hom_app object
 
+def IncNaturallyIsomorphic
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F G : IncFunctor C D) : Prop :=
+  Nonempty (IncNaturalIsomorphism F G)
+
+theorem incNaturallyIsomorphic_equivalence
+    {CObj DObj : Type u} (C : IncCategory CObj) (D : IncCategory DObj) :
+    Equivalence (@IncNaturallyIsomorphic CObj DObj C D) where
+  refl := by
+    intro F
+    exact ⟨IncNaturalIsomorphism.refl F⟩
+  symm := by
+    intro F G h
+    rcases h with ⟨iso⟩
+    exact ⟨iso.symm⟩
+  trans := by
+    intro F G H hFG hGH
+    rcases hFG with ⟨alpha⟩
+    rcases hGH with ⟨beta⟩
+    exact ⟨beta.trans alpha⟩
+
 structure IncFunctorFullyFaithful
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (F : IncFunctor C D) : Prop where
@@ -1237,6 +1258,12 @@ theorem IncCategoryEquivalence.forward_essentiallySurjective
     equivalence.counit.inv.app target,
     equivalence.counit.hom_app_inv_app target,
     equivalence.counit.inv_app_hom_app target⟩
+
+theorem IncCategoryEquivalence.inverse_essentiallySurjective
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    IncFunctorEssentiallySurjective equivalence.inverse :=
+  equivalence.symm.forward_essentiallySurjective
 
 theorem IncFunctor.identity_fullyFaithful
     {Obj : Type u} (C : IncCategory Obj) :
