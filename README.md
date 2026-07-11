@@ -165,7 +165,10 @@ It currently establishes:
   With explicit bounds covering intermediate results, both operations are
   associative and multiplication distributes over addition from both sides;
   these theorems certify every intermediate graph application as well as
-  equality of the two final internal ordinals.
+  equality of the two final internal ordinals.  Addition has left and right
+  cancellation; multiplication has both cancellation laws for a positive
+  common factor, and an internal product evaluates to zero exactly when one
+  encoded factor is zero.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.

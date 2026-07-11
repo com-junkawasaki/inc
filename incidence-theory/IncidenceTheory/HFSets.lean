@@ -2353,6 +2353,111 @@ theorem hfRecursiveNatMultiplicationGraph_right_distributes_over_addition
       bound (a * c) (b * c) acLess bcLess _).mpr rfl
   · exact congrArg hfRecursiveNat (Nat.add_mul a b c)
 
+theorem hfRecursiveNatAdditionGraph_right_cancel
+    (bound left₁ left₂ right : Nat)
+    (left₁Less : left₁ < bound) (left₂Less : left₂ < bound)
+    (rightLess : right < bound) (output : HFRecursiveSet)
+    (first : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveNat left₁) (hfRecursiveNat right)) output)
+      (hfRecursiveNatAdditionGraph bound))
+    (second : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveNat left₂) (hfRecursiveNat right)) output)
+      (hfRecursiveNatAdditionGraph bound)) :
+    left₁ = left₂ := by
+  have firstValue := (hfRecursiveNatAdditionGraph_on_nats_iff
+    bound left₁ right left₁Less rightLess output).mp first
+  have secondValue := (hfRecursiveNatAdditionGraph_on_nats_iff
+    bound left₂ right left₂Less rightLess output).mp second
+  have sumEq : left₁ + right = left₂ + right :=
+    hfRecursiveNat_injective (firstValue.symm.trans secondValue)
+  exact Nat.add_right_cancel sumEq
+
+theorem hfRecursiveNatAdditionGraph_left_cancel
+    (bound left right₁ right₂ : Nat)
+    (leftLess : left < bound) (right₁Less : right₁ < bound)
+    (right₂Less : right₂ < bound) (output : HFRecursiveSet)
+    (first : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveNat left) (hfRecursiveNat right₁)) output)
+      (hfRecursiveNatAdditionGraph bound))
+    (second : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveNat left) (hfRecursiveNat right₂)) output)
+      (hfRecursiveNatAdditionGraph bound)) :
+    right₁ = right₂ := by
+  have firstValue := (hfRecursiveNatAdditionGraph_on_nats_iff
+    bound left right₁ leftLess right₁Less output).mp first
+  have secondValue := (hfRecursiveNatAdditionGraph_on_nats_iff
+    bound left right₂ leftLess right₂Less output).mp second
+  have sumEq : left + right₁ = left + right₂ :=
+    hfRecursiveNat_injective (firstValue.symm.trans secondValue)
+  exact Nat.add_left_cancel sumEq
+
+theorem hfRecursiveNatMultiplicationGraph_right_cancel
+    (bound left₁ left₂ right : Nat)
+    (left₁Less : left₁ < bound) (left₂Less : left₂ < bound)
+    (rightLess : right < bound) (rightPositive : 0 < right)
+    (output : HFRecursiveSet)
+    (first : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveNat left₁) (hfRecursiveNat right)) output)
+      (hfRecursiveNatMultiplicationGraph bound))
+    (second : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveNat left₂) (hfRecursiveNat right)) output)
+      (hfRecursiveNatMultiplicationGraph bound)) :
+    left₁ = left₂ := by
+  have firstValue := (hfRecursiveNatMultiplicationGraph_on_nats_iff
+    bound left₁ right left₁Less rightLess output).mp first
+  have secondValue := (hfRecursiveNatMultiplicationGraph_on_nats_iff
+    bound left₂ right left₂Less rightLess output).mp second
+  have productEq : left₁ * right = left₂ * right :=
+    hfRecursiveNat_injective (firstValue.symm.trans secondValue)
+  exact Nat.mul_right_cancel rightPositive productEq
+
+theorem hfRecursiveNatMultiplicationGraph_left_cancel
+    (bound left right₁ right₂ : Nat)
+    (leftLess : left < bound) (leftPositive : 0 < left)
+    (right₁Less : right₁ < bound) (right₂Less : right₂ < bound)
+    (output : HFRecursiveSet)
+    (first : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveNat left) (hfRecursiveNat right₁)) output)
+      (hfRecursiveNatMultiplicationGraph bound))
+    (second : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveNat left) (hfRecursiveNat right₂)) output)
+      (hfRecursiveNatMultiplicationGraph bound)) :
+    right₁ = right₂ := by
+  have firstValue := (hfRecursiveNatMultiplicationGraph_on_nats_iff
+    bound left right₁ leftLess right₁Less output).mp first
+  have secondValue := (hfRecursiveNatMultiplicationGraph_on_nats_iff
+    bound left right₂ leftLess right₂Less output).mp second
+  have productEq : left * right₁ = left * right₂ :=
+    hfRecursiveNat_injective (firstValue.symm.trans secondValue)
+  exact Nat.mul_left_cancel leftPositive productEq
+
+theorem hfRecursiveNatMultiplicationGraph_eq_zero_iff
+    (bound left right : Nat) (leftLess : left < bound)
+    (rightLess : right < bound) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat left) (hfRecursiveNat right))
+          (hfRecursiveNat 0))
+        (hfRecursiveNatMultiplicationGraph bound) ↔
+      left = 0 ∨ right = 0 := by
+  rw [hfRecursiveNatMultiplicationGraph_on_nats_iff
+    bound left right leftLess rightLess]
+  constructor
+  · intro valueEq
+    have indexEq : 0 = left * right := hfRecursiveNat_injective valueEq
+    exact (Nat.mul_eq_zero.mp indexEq.symm)
+  · intro zeroFactor
+    apply congrArg hfRecursiveNat
+    exact (Nat.mul_eq_zero.mpr zeroFactor).symm
+
 theorem hfRecursiveNatShiftGraph_zero (n : Nat) :
     hfRecursiveNatShiftGraph 0 n = hfRecursiveNatIdentityGraph n := by
   induction n with
