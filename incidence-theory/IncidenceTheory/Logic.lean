@@ -999,6 +999,8 @@ structure Formula.LogicalHeytingIsomorphism (Atom Atom' : Type u) where
   map_imp : ∀ left right,
     forward (Formula.logicalImp left right) =
       Formula.logicalImp (forward left) (forward right)
+  map_neg : ∀ formula,
+    forward (Formula.logicalNeg formula) = Formula.logicalNeg (forward formula)
 
 def Formula.logicalMap_isomorphism {Atom Atom' : Type u}
     (f : Atom → Atom') (g : Atom' → Atom)
@@ -1014,6 +1016,29 @@ def Formula.logicalMap_isomorphism {Atom Atom' : Type u}
   map_and := Formula.logicalMap_and f
   map_or := Formula.logicalMap_or f
   map_imp := Formula.logicalMap_imp f
+  map_neg := Formula.logicalMap_neg f
+
+theorem Formula.LogicalHeytingIsomorphism.injective {Atom Atom' : Type u}
+    (iso : Formula.LogicalHeytingIsomorphism Atom Atom') :
+    ∀ ⦃left right⦄, iso.forward left = iso.forward right → left = right := by
+  intro left right equal
+  have mappedEqual := congrArg iso.inverse equal
+  simpa only [iso.left_inverse] using mappedEqual
+
+theorem Formula.LogicalHeytingIsomorphism.surjective {Atom Atom' : Type u}
+    (iso : Formula.LogicalHeytingIsomorphism Atom Atom') :
+    ∀ target, ∃ source, iso.forward source = target := by
+  intro target
+  exact ⟨iso.inverse target, iso.right_inverse target⟩
+
+theorem Formula.LogicalHeytingIsomorphism.eq_iff {Atom Atom' : Type u}
+    (iso : Formula.LogicalHeytingIsomorphism Atom Atom')
+    (left right : Formula.LogicalEquivalenceClass Atom) :
+    iso.forward left = iso.forward right ↔ left = right := by
+  constructor
+  · exact iso.injective (left := left) (right := right)
+  · intro equal
+    rw [equal]
 
 theorem Formula.logicalMap_injective_of_leftInverse {Atom Atom' : Type u}
     (f : Atom → Atom') (g : Atom' → Atom)
