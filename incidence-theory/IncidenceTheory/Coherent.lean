@@ -82,6 +82,30 @@ theorem CoherentQuotient.classify_boundary_mem
   rw [← quotient.classify_boundary i]
   exact List.mem_map.mpr ⟨endpoint, hendpoint, rfl⟩
 
+theorem CoherentQuotient.classify_boundary_preimage
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    {i : I} {endpoint : Endpoint Q R}
+    (hendpoint : endpoint ∈
+      quotient.target.chainPushout.inc.boundary (quotient.classification.classify i)) :
+    ∃ sourceEndpoint, sourceEndpoint ∈ source.chainPushout.inc.boundary i ∧
+      mapEndpoint quotient.classification.classify sourceEndpoint = endpoint := by
+  rw [← quotient.classify_boundary i] at hendpoint
+  exact List.mem_map.mp hendpoint
+
+theorem CoherentQuotient.classify_boundary_iff
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    (i : I) (endpoint : Endpoint Q R) :
+    endpoint ∈ quotient.target.chainPushout.inc.boundary (quotient.classification.classify i) ↔
+      ∃ sourceEndpoint, sourceEndpoint ∈ source.chainPushout.inc.boundary i ∧
+        mapEndpoint quotient.classification.classify sourceEndpoint = endpoint := by
+  constructor
+  · exact quotient.classify_boundary_preimage
+  · rintro ⟨sourceEndpoint, hsource, hmap⟩
+    rw [← hmap]
+    exact quotient.classify_boundary_mem hsource
+
 theorem CoherentQuotient.classify_type
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
     {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
