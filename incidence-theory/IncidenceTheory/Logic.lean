@@ -163,6 +163,16 @@ def ContextSatisfies {Atom : Type u} (valuation : Atom → Prop)
     (context : List (Formula Atom)) : Prop :=
   ∀ formula, formula ∈ context → Satisfies valuation formula
 
+theorem satisfies_iff {Atom : Type u} (valuation : Atom → Prop)
+    (left right : Formula Atom) :
+    Satisfies valuation (Formula.iff left right) ↔
+      (Satisfies valuation left ↔ Satisfies valuation right) := by
+  constructor
+  · rintro ⟨hforward, hbackward⟩
+    exact ⟨hforward, hbackward⟩
+  · rintro ⟨hforward, hbackward⟩
+    exact ⟨hforward, hbackward⟩
+
 def ContextSubset {Atom : Type u} (source target : List (Formula Atom)) : Prop :=
   ∀ formula, formula ∈ source → formula ∈ target
 
@@ -665,6 +675,12 @@ theorem derives_and_or_distributive_iff {Atom : Type u}
       (.or (.and p q) (.and p r))) :=
   derives_iffI (derives_and_or_distributive p q r).left
     (derives_and_or_distributive p q r).right
+
+theorem satisfies_and_or_distributive_iff {Atom : Type u}
+    (valuation : Atom → Prop) (p q r : Formula Atom) :
+    Satisfies valuation (Formula.iff (.and p (.or q r))
+      (.or (.and p q) (.and p r))) :=
+  (satisfies_iff valuation _ _).mpr (satisfies_and_or_distributive valuation p q r)
 
 /- The one-step Lindenbaum lemma.  It gives a consistency-preserving choice at
    every formula; a full extension theorem still needs an enumeration and the
