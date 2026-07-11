@@ -149,6 +149,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   substitution の中立則を証明した。binder 下で lift された identity replacement が variable
   replacement と extensionally equal であることも証明し、Pi/Sigma codomain と lambda body
   を含む capture-avoiding syntax algebra を preservation proof の前提として確立した。
+- dependent raw type/term の renaming composition law も相互再帰で証明した。index map の
+  composition を binder 下へ lift した結果が lift 済み map の composition と一致することを
+  function extensionality で示し、telescope renaming に必要な functorial syntax law を得た。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

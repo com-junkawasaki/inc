@@ -474,6 +474,10 @@ It currently establishes:
   term by mutual structural recursion.  The lifted identity replacement under a
   binder is proved extensionally equal to the variable replacement, so these
   laws cover Pi/Sigma codomains and lambda bodies rather than only closed syntax.
+  Renaming composition is also proved mutually for all dependent types and terms.
+  The proof includes the nontrivial binder equation saying that lifting a
+  composite index map equals composing the lifted maps, establishing the
+  functorial syntax law needed by telescope renamings.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite

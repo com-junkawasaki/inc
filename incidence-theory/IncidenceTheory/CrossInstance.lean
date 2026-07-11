@@ -1019,6 +1019,76 @@ mutual
     | refl term => simp [IncDepRawTerm.rename, IncDepRawTerm.rename_identity term]
 end
 
+def IncDepRawTerm.liftRename (renameMap : Nat → Nat) : Nat → Nat
+  | 0 => 0
+  | index + 1 => renameMap index + 1
+
+theorem IncDepRawTerm.liftRename_comp
+    (first second : Nat → Nat) :
+    IncDepRawTerm.liftRename (second ∘ first) =
+      IncDepRawTerm.liftRename second ∘ IncDepRawTerm.liftRename first := by
+  funext index
+  cases index <;> rfl
+
+mutual
+  theorem IncDepRawType.rename_comp (type : IncDepRawType)
+      (first second : Nat → Nat) :
+      (type.rename first).rename second = type.rename (second ∘ first) := by
+    cases type with
+    | base index => rfl
+    | unit => rfl
+    | pi domain codomain =>
+        simp only [IncDepRawType.rename]
+        rw [IncDepRawType.rename_comp domain first second]
+        congr 1
+        rw [IncDepRawType.rename_comp]
+        congr 1
+        funext index
+        cases index <;> rfl
+    | sigma domain codomain =>
+        simp only [IncDepRawType.rename]
+        rw [IncDepRawType.rename_comp domain first second]
+        congr 1
+        rw [IncDepRawType.rename_comp]
+        congr 1
+        funext index
+        cases index <;> rfl
+    | identity type left right =>
+        simp only [IncDepRawType.rename]
+        rw [IncDepRawType.rename_comp type first second,
+          IncDepRawTerm.rename_comp left first second,
+          IncDepRawTerm.rename_comp right first second]
+
+  theorem IncDepRawTerm.rename_comp (term : IncDepRawTerm)
+      (first second : Nat → Nat) :
+      (term.rename first).rename second = term.rename (second ∘ first) := by
+    cases term with
+    | var index => rfl
+    | unit => rfl
+    | lambda domain body =>
+        simp only [IncDepRawTerm.rename]
+        rw [IncDepRawType.rename_comp domain first second]
+        congr 1
+        rw [IncDepRawTerm.rename_comp]
+        congr 1
+        funext index
+        cases index <;> rfl
+    | apply function argument =>
+        simp only [IncDepRawTerm.rename]
+        rw [IncDepRawTerm.rename_comp function first second,
+          IncDepRawTerm.rename_comp argument first second]
+    | pair firstTerm secondTerm =>
+        simp only [IncDepRawTerm.rename]
+        rw [IncDepRawTerm.rename_comp firstTerm first second,
+          IncDepRawTerm.rename_comp secondTerm first second]
+    | first pair =>
+        simp [IncDepRawTerm.rename, IncDepRawTerm.rename_comp pair first second]
+    | second pair =>
+        simp [IncDepRawTerm.rename, IncDepRawTerm.rename_comp pair first second]
+    | refl term =>
+        simp [IncDepRawTerm.rename, IncDepRawTerm.rename_comp term first second]
+end
+
 theorem IncDepRawTerm.liftReplacement_identity :
     IncDepRawTerm.liftReplacement IncDepRawTerm.var = IncDepRawTerm.var := by
   funext index
