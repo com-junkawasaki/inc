@@ -878,6 +878,14 @@ It currently establishes:
   the existing readiness API.  The remaining automation task is recursively
   constructing this alignment for the context tree's newest/older cases, then
   feeding it to the variable-substitution result already established above.
+  Binder weakening is now available uniformly for both semantic formations and
+  typings.  `IncDepRawFormationSemanticResult.weaken` interprets raw weakening
+  by identity-renaming into an extended context as semantic reindexing along
+  the context projection.  `IncDepRawTypingSemanticResult.weaken` performs the
+  corresponding operation on terms, with both computation equations checked
+  definitionally.  This is the shared missing constructor for the older lookup
+  alignment and for subsequent Pi/Sigma binder recursion; readiness preservation
+  under this rename is the next proof-index layer to connect.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

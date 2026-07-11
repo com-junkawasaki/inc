@@ -3748,6 +3748,36 @@ def IncDepRawFormationSemanticResult.identity
   semanticType := IncIdentityType typeResult.semanticType
     leftSemantic rightSemantic
 
+noncomputable def IncDepRawFormationSemanticResult.weaken
+    {context : List IncDepRawType} {type head : IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {headWellFormed : IncDepRawWellFormed context head}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    (typeFormation : IncDepRawWellFormed context type)
+    (typeResult : IncDepRawFormationSemanticResult typeFormation contextResult)
+    (headResult : IncDepRawFormationSemanticResult headWellFormed contextResult) :
+    IncDepRawFormationSemanticResult
+      (typeFormation.rename
+        ((IncDepRawRenaming.identity context).weakenTarget head))
+      (contextResult.extend (typeWellFormed := headWellFormed)
+        headResult.semanticType) where
+  semanticType := typeResult.semanticType.reindex
+    (contextResult.semanticContext.extendProjection headResult.semanticType)
+
+theorem IncDepRawFormationSemanticResult.weaken_semanticType
+    {context : List IncDepRawType} {type head : IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {headWellFormed : IncDepRawWellFormed context head}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    (typeFormation : IncDepRawWellFormed context type)
+    (typeResult : IncDepRawFormationSemanticResult typeFormation contextResult)
+    (headResult : IncDepRawFormationSemanticResult headWellFormed contextResult) :
+    (IncDepRawFormationSemanticResult.weaken typeFormation typeResult
+      headResult).semanticType =
+      typeResult.semanticType.reindex
+        (contextResult.semanticContext.extendProjection headResult.semanticType) := by
+  rfl
+
 structure IncDepRawSubstitutionSemanticResult
     {source target : List IncDepRawType}
     (substitution : IncDepRawSubstitution source target)
@@ -4220,6 +4250,40 @@ def IncDepRawTypingSemanticResult.castType
     IncDepRawTypingSemanticResult typing contextResult target := by
   cases coherence
   exact result
+
+noncomputable def IncDepRawTypingSemanticResult.weaken
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type head : IncDepRawType}
+    {typing : IncDepRawHasType context term type}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {headWellFormed : IncDepRawWellFormed context head}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    {semanticType : IncTypeInContext contextResult.semanticContext}
+    (typingResult : IncDepRawTypingSemanticResult typing contextResult semanticType)
+    (headResult : IncDepRawFormationSemanticResult headWellFormed contextResult) :
+    IncDepRawTypingSemanticResult
+      (typing.rename ((IncDepRawRenaming.identity context).weakenTarget head))
+      (contextResult.extend (typeWellFormed := headWellFormed)
+        headResult.semanticType)
+      (semanticType.reindex
+        (contextResult.semanticContext.extendProjection headResult.semanticType)) where
+  semanticTerm := typingResult.semanticTerm.substitute
+    (contextResult.semanticContext.extendProjection headResult.semanticType)
+
+theorem IncDepRawTypingSemanticResult.weaken_semanticTerm
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type head : IncDepRawType}
+    {typing : IncDepRawHasType context term type}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {headWellFormed : IncDepRawWellFormed context head}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    {semanticType : IncTypeInContext contextResult.semanticContext}
+    (typingResult : IncDepRawTypingSemanticResult typing contextResult semanticType)
+    (headResult : IncDepRawFormationSemanticResult headWellFormed contextResult) :
+    (IncDepRawTypingSemanticResult.weaken typingResult headResult).semanticTerm =
+      typingResult.semanticTerm.substitute
+        (contextResult.semanticContext.extendProjection headResult.semanticType) := by
+  rfl
 
 structure IncDepRawTypingFormationSemanticResult
     {context : List IncDepRawType} {term : IncDepRawTerm}

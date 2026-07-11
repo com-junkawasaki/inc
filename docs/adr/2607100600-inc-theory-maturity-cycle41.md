@@ -424,6 +424,12 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   同時に保持し、`toTypingFormation`でformation/variable typingを文字通り同じsemantic type上に揃える。
   `variableAligned`はこの強化結果を既存readiness APIへ返す。残る自動化はcontext treeのnewest/older
   recursionからalignmentを構成し、既に証明済みのvariable-substitution resultへ渡すことである。
+- binder weakeningをformation/typing semantic resultの両方へ追加した。
+  `IncDepRawFormationSemanticResult.weaken`はidentity renamingによるraw target-context extensionをsemantic
+  context projectionに沿うreindexとして解釈し、`IncDepRawTypingSemanticResult.weaken`は対応するterm
+  substitutionを構成する。両計算則はdefinitionally checkedである。これはolder lookup alignmentと後続の
+  Pi/Sigma binder recursionが共有する不足constructorであり、次はこのrenameに対するreadiness proof index
+  preservationを接続する。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
