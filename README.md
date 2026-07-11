@@ -1181,6 +1181,11 @@ It currently establishes:
   substitution for codomains, and calls the model algebra.  `toSemanticReady`
   embeds this evidence into the existing readiness API.  Identity remains the
   point where formation and typing recursion must become mutual.
+  That boundary now has an explicit composition operation.
+  `dispatchIdentitySubstitution` structurally dispatches the non-identity type
+  spine and combines the resulting type interpretation with recursively supplied
+  left/right typing results through `model.identity`.  Mutual recursion only has
+  to produce the two endpoint results at this boundary.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

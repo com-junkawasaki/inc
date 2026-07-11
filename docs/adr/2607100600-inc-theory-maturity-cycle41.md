@@ -615,6 +615,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   treeをstructural recursionし、Pi/Sigmaではrecursive domain resultからsubstitutionをfiber-liftしてcodomainを再帰処理し、
   model algebraへ接続する。`toSemanticReady`で既存readiness APIにも埋め込んだ。Identityがformation/typing mutual recursionへ
   移行する残りの接点である。
+- `dispatchIdentitySubstitution`を追加した。非Identity type spineをstructural dispatchし、そのtype resultとmutual recursionが
+  供給する左右endpoint typing resultsを`model.identity`へ合成する。Identity境界でmutual側が生成すべきデータが二endpoint
+  resultsだけに固定された。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

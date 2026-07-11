@@ -6127,6 +6127,33 @@ noncomputable def IncDepRawSubstitutionFiberModel.identity
   IncDepRawFormationSubstitutionFiberResult.identity
     typeResult leftResult rightResult
 
+noncomputable def IncDepRawNonIdentityFormationReady.dispatchIdentitySubstitution
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {typeFormation : IncDepRawWellFormed target type}
+    {leftTyping : IncDepRawHasType target left type}
+    {rightTyping : IncDepRawHasType target right type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    (typeReady : IncDepRawNonIdentityFormationReady typeFormation)
+    (leftResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := leftTyping)
+      (typeReady.dispatchSubstitution model substitutionResult))
+    (rightResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := rightTyping)
+      (typeReady.dispatchSubstitution model substitutionResult)) :
+    IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := IncDepRawWellFormed.identity
+        typeFormation leftTyping rightTyping) substitutionResult :=
+  model.identity (typeReady.dispatchSubstitution model substitutionResult)
+    leftResult rightResult
+
 def IncDepRawTypingSemanticResult.castType
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} {typing : IncDepRawHasType context term type}
