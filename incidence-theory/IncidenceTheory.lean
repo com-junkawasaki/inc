@@ -7272,6 +7272,37 @@ theorem boundaryShapeCode_eq_true_iff
   | nil => simp [boundaryShapeCode, boundaryEq]
   | cons head tail => simp [boundaryShapeCode, boundaryEq]
 
+theorem boundaryShapeCode_eq_iff_nullary_iff
+    {I R₁ T₁ R₂ T₂ : Type u} [DecidableEq I]
+    (source : Incidence I R₁ T₁) (target : Incidence I R₂ T₂) (i : I) :
+    boundaryShapeCode source i = boundaryShapeCode target i ↔
+      (source.boundary i = [] ↔ target.boundary i = []) := by
+  cases sourceBoundary : source.boundary i with
+  | nil =>
+      cases targetBoundary : target.boundary i with
+      | nil => simp [boundaryShapeCode, sourceBoundary, targetBoundary]
+      | cons head tail => simp [boundaryShapeCode, sourceBoundary, targetBoundary]
+  | cons sourceHead sourceTail =>
+      cases targetBoundary : target.boundary i with
+      | nil => simp [boundaryShapeCode, sourceBoundary, targetBoundary]
+      | cons targetHead targetTail =>
+          simp [boundaryShapeCode, sourceBoundary, targetBoundary]
+
+theorem inc_to_set_pointwise_equivalent_iff_boundaryShapeCode_eq
+    {I R₁ T₁ R₂ T₂ : Type u} [DecidableEq I]
+    (source : Incidence I R₁ T₁) (target : Incidence I R₂ T₂) :
+    (∀ i, Nonempty (IncTypeEquivalence (inc_to_set source i)
+      (inc_to_set target i))) ↔
+      ∀ i, boundaryShapeCode source i = boundaryShapeCode target i := by
+  rw [inc_to_set_equivalent_iff_boundary_shape source target]
+  constructor
+  · intro sameShape i
+    exact (boundaryShapeCode_eq_iff_nullary_iff source target i).mpr
+      (sameShape i)
+  · intro sameCode i
+    exact (boundaryShapeCode_eq_iff_nullary_iff source target i).mp
+      (sameCode i)
+
 theorem BoundaryShapeTranslation.preservesCode
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
     {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
