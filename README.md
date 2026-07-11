@@ -38,7 +38,11 @@ It currently establishes:
   Incidence-boundary semantics now interprets an atom as true exactly when its
   boundary is inhabited; natural-deduction soundness specializes directly to
   this observation, and translations preserving boundary inhabitation preserve
-  formula and context truth iff.  For `natIncidence`, atom `n` is true exactly
+  formula and context truth iff.  Such translations are packaged as
+  `IncidenceBoundaryObservationEmbedding`, with identity, composition, and
+  functorial truth laws.  The existing `Nat → PathId.node` boundary-natural map
+  is a concrete embedding and preserves every translated formula's truth iff.
+  For `natIncidence`, atom `n` is true exactly
   when `n≠0`, including a checked negation of the zero atom.  Its intuitionistic
   Kripke semantics, persistence theorem, and
   Kripke soundness theorem are checked; atom translations pull Kripke models

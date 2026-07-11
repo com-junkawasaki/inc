@@ -129,6 +129,25 @@ theorem node_boundary_natural (n : Nat) :
   | zero => simp [natIncidence, peanoBoundary, pathIncidenceChained, pathBoundaryChained]
   | succ k => simp [natIncidence, peanoBoundary, pathIncidenceChained, pathBoundaryChained]
 
+def natToPathBoundaryObservationEmbedding :
+    IncidenceBoundaryObservationEmbedding natIncidence pathIncidenceChained where
+  map := PathId.node
+  boundary_iff := by
+    intro n
+    cases n with
+    | zero =>
+      simp [IncidenceBoundaryValuation, natIncidence, peanoBoundary,
+        pathIncidenceChained, pathBoundaryChained]
+    | succ n =>
+      simp [IncidenceBoundaryValuation, natIncidence, peanoBoundary,
+        pathIncidenceChained, pathBoundaryChained]
+
+theorem natToPath_boundaryLogic_satisfies_iff (formula : Formula Nat) :
+    IncidenceBoundarySatisfies pathIncidenceChained
+        (formula.map PathId.node) ↔
+      IncidenceBoundarySatisfies natIncidence formula :=
+  natToPathBoundaryObservationEmbedding.satisfies_iff formula
+
 theorem node_unit_natural :
   PathId.node natIncidence.unit = pathIncidenceChained.unit := by
   simp [natIncidence, pathIncidenceChained]

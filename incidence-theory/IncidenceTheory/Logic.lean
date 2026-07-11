@@ -5097,6 +5097,66 @@ theorem incidenceBoundaryContextSatisfies_map_iff
   rw [context_satisfies_map_iff]
   exact contextSatisfies_congr preservesBoundaryObservation context
 
+structure IncidenceBoundaryObservationEmbedding
+    {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
+    (source : Incidence I R T) (target : Incidence I' R' T') where
+  map : I → I'
+  boundary_iff : ∀ atom,
+    IncidenceBoundaryValuation target (map atom) ↔
+      IncidenceBoundaryValuation source atom
+
+def IncidenceBoundaryObservationEmbedding.identity
+    {I R T : Type u} [DecidableEq I] (incidence : Incidence I R T) :
+    IncidenceBoundaryObservationEmbedding incidence incidence where
+  map := id
+  boundary_iff := fun _ => Iff.rfl
+
+def IncidenceBoundaryObservationEmbedding.comp
+    {I I' I'' R T R' T' R'' T'' : Type u}
+    [DecidableEq I] [DecidableEq I'] [DecidableEq I'']
+    {source : Incidence I R T} {middle : Incidence I' R' T'}
+    {target : Incidence I'' R'' T''}
+    (second : IncidenceBoundaryObservationEmbedding middle target)
+    (first : IncidenceBoundaryObservationEmbedding source middle) :
+    IncidenceBoundaryObservationEmbedding source target where
+  map := second.map ∘ first.map
+  boundary_iff := fun atom => (second.boundary_iff (first.map atom)).trans
+    (first.boundary_iff atom)
+
+theorem IncidenceBoundaryObservationEmbedding.satisfies_iff
+    {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
+    {source : Incidence I R T} {target : Incidence I' R' T'}
+    (embedding : IncidenceBoundaryObservationEmbedding source target)
+    (formula : Formula I) :
+    IncidenceBoundarySatisfies target (formula.map embedding.map) ↔
+      IncidenceBoundarySatisfies source formula :=
+  incidenceBoundarySatisfies_map_iff source target embedding.map
+    embedding.boundary_iff formula
+
+theorem IncidenceBoundaryObservationEmbedding.contextSatisfies_iff
+    {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
+    {source : Incidence I R T} {target : Incidence I' R' T'}
+    (embedding : IncidenceBoundaryObservationEmbedding source target)
+    (context : List (Formula I)) :
+    IncidenceBoundaryContextSatisfies target
+        (Formula.mapContext embedding.map context) ↔
+      IncidenceBoundaryContextSatisfies source context :=
+  incidenceBoundaryContextSatisfies_map_iff source target embedding.map
+    embedding.boundary_iff context
+
+theorem IncidenceBoundaryObservationEmbedding.satisfies_comp
+    {I I' I'' R T R' T' R'' T'' : Type u}
+    [DecidableEq I] [DecidableEq I'] [DecidableEq I'']
+    {source : Incidence I R T} {middle : Incidence I' R' T'}
+    {target : Incidence I'' R'' T''}
+    (second : IncidenceBoundaryObservationEmbedding middle target)
+    (first : IncidenceBoundaryObservationEmbedding source middle)
+    (formula : Formula I) :
+    IncidenceBoundarySatisfies target
+        (formula.map (second.map ∘ first.map)) ↔
+      IncidenceBoundarySatisfies source formula :=
+  (second.comp first).satisfies_iff formula
+
 abbrev CountablyPresentedIncidence.InternalFormula {I R T : Type u}
     [DecidableEq I] (_presentation : CountablyPresentedIncidence I R T) := Formula I
 
