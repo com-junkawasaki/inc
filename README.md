@@ -910,6 +910,13 @@ It currently establishes:
   three genuinely index-transporting cases—application, dependent pairing, and
   second projection—remain; the other five now rename without any derivation
   equality assumption.
+  Application readiness now handles its non-definitional result index.  The
+  renamed application derivation and its readiness witness are first packed as
+  a dependent `Sigma`, then transported together along
+  `IncDepRawType.instantiate_rename`.  This preserves their dependency while
+  producing the canonical renamed application judgment.  Six of eight typing
+  branches are now closed; dependent pairing and second projection remain and
+  use the same dependent-package technique in the opposite rewrite directions.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

@@ -444,6 +444,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   reflexivityへ拡張した。renamed child derivationとreadiness evidenceを直接合成する。typing readinessの
   8 constructor中、残るのは実際にindex transportを行うapplication、dependent pair、second projectionの
   3 branchだけであり、他の5 branchはderivation equality仮定なしでrename可能になった。
+- application readinessのnon-definitional result indexを閉じた。renamed application derivationとreadiness
+  witnessをdependent `Sigma`にpackageし、`IncDepRawType.instantiate_rename` equalityに沿って同時に
+  transportすることで依存関係を保ったままcanonical renamed judgmentを得る。typing 8 branch中6 branchが
+  完成し、残るdependent pair/second projectionも逆向きrewriteを含む同じdependent-package手法を使う。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

@@ -2149,6 +2149,40 @@ def IncDepRawTypingRenamedReadyResult.refl
   renamedReady := IncDepRawTypingSemanticReady.reflRule typeResult.renamedReady
     termResult.renamedReady
 
+noncomputable def IncDepRawTypingRenamedReadyResult.apply
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {function argument : IncDepRawTerm}
+    {functionTyping : IncDepRawHasType source function (.pi domain codomain)}
+    {argumentTyping : IncDepRawHasType source argument domain}
+    {domainFormation : IncDepRawWellFormed source domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: source) codomain}
+    {domainReady : IncDepRawFormationSemanticReady domainFormation}
+    {codomainReady : IncDepRawFormationSemanticReady codomainFormation}
+    {functionReady : IncDepRawTypingSemanticReady functionTyping}
+    {argumentReady : IncDepRawTypingSemanticReady argumentTyping}
+    (renameMap : IncDepRawRenaming source target)
+    (domainResult : IncDepRawFormationRenamedReadyResult domainReady renameMap)
+    (codomainResult : IncDepRawFormationRenamedReadyResult codomainReady
+      (renameMap.lift domain))
+    (functionResult : IncDepRawTypingRenamedReadyResult functionReady renameMap)
+    (argumentResult : IncDepRawTypingRenamedReadyResult argumentReady renameMap) :
+    IncDepRawTypingRenamedReadyResult
+      (IncDepRawTypingSemanticReady.applyRule domainReady codomainReady
+        functionReady argumentReady) renameMap := by
+  let renamedTyping := IncDepRawHasType.applyRule functionResult.renamedTyping
+    argumentResult.renamedTyping
+  let packaged : Sigma fun typing : IncDepRawHasType target
+      ((function.rename renameMap.index).apply
+        (argument.rename renameMap.index))
+      ((codomain.rename (IncDepRawTerm.liftRename renameMap.index)).instantiate
+        (argument.rename renameMap.index)) =>
+      IncDepRawTypingSemanticReady typing :=
+    ⟨renamedTyping, IncDepRawTypingSemanticReady.applyRule
+      domainResult.renamedReady codomainResult.renamedReady
+      functionResult.renamedReady argumentResult.renamedReady⟩
+  rw [← IncDepRawType.instantiate_rename] at packaged
+  exact ⟨packaged.1, packaged.2⟩
+
 noncomputable def IncDepRawTypingSemanticReady.toDeeplyWellFormed
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} {typing : IncDepRawHasType context term type}
