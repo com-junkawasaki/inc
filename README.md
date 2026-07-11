@@ -1342,6 +1342,11 @@ It currently establishes:
   structural result directly in `formationResult` and use the exact low-level
   typing result.  A parent recursive rule can therefore align either package to
   the same structural result by reflexivity.
+  `IncDepRawTypingSubstitutionAlignedDispatchResult.exact` now performs that
+  reflexive lift for any package, and `exact_typingResult` proves its transported
+  typing result computes definitionally to the original one.  Exact structural
+  recursive outputs can therefore be promoted to the aligned return type with no
+  semantic work or proof term normalization.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

@@ -9275,6 +9275,41 @@ def IncDepRawTypingSubstitutionDispatchAlignment.exact
   formationAlignment := rfl
   resultAlignment := HEq.rfl
 
+def IncDepRawTypingSubstitutionAlignedDispatchResult.exact
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawTypingSubstitutionDispatchResult targetTyping
+      substitutionResult) :
+    IncDepRawTypingSubstitutionAlignedDispatchResult targetTyping
+      substitutionResult result.formationResult where
+  dispatchResult := result
+  alignment := IncDepRawTypingSubstitutionDispatchAlignment.exact result
+
+theorem IncDepRawTypingSubstitutionAlignedDispatchResult.exact_typingResult
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawTypingSubstitutionDispatchResult targetTyping
+      substitutionResult) :
+    (IncDepRawTypingSubstitutionAlignedDispatchResult.exact result).typingResult =
+      result.typingResult := by
+  rfl
+
 def IncDepRawTypingSubstitutionDispatchAlignment.typingResult
     {source target : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType}
