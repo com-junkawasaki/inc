@@ -6626,6 +6626,37 @@ theorem observationMapDoesNotCollapse_iff_faithful
     exact (observationMapCollapses_implies_not_faithful inc idx collapses)
       faithful
 
+theorem nonfaithful_has_bisimilar_observational_counterexample
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx)
+    (complete : ContainsLinearIndicators inc idx language)
+    (notFaithful : ¬ BisimulationFaithful inc) :
+    ∃ i j : I, approxBisim inc i j ∧
+      ∃ observation, language observation ∧
+        (observation.boundary_matrix i ≠ observation.boundary_matrix j ∨
+         observation.laplacian i ≠ observation.laplacian j) := by
+  have collapses : ObservationMapCollapses inc idx :=
+    (observationMapCollapses_iff_not_faithful inc idx).mpr notFaithful
+  obtain ⟨i, j, different, bisimilar⟩ :=
+    (observationMapCollapses_iff_exists_distinct_bisimilar inc idx).mp collapses
+  obtain ⟨observation, allowed, distinguishes⟩ :=
+    indicator_complete_language_separates_points inc idx language complete
+      different
+  exact ⟨i, j, bisimilar, observation, allowed, distinguishes⟩
+
+theorem complete_language_unsound_of_nonfaithful
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx)
+    (complete : ContainsLinearIndicators inc idx language)
+    (notFaithful : ¬ BisimulationFaithful inc) :
+    ¬ CompleteLanguageBisimulationSound inc idx language := by
+  intro sound
+  exact notFaithful
+    ((complete_language_bisimulation_sound_iff_faithful
+      inc idx language complete).mp sound)
+
 def observationBisimulationQuotientEquivalence_of_wellFounded_extensional
     {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I) (measure : I → Nat)
