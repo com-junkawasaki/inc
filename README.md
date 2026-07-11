@@ -418,9 +418,8 @@ It currently establishes:
   well-foundedness; it is realizable by an Incidence with the same boundary,
   type, glue, unit, and guards if and only if its boundary has no self-loop.
   The graded construction factors through this characterization by proving
-  that strict grade decrease excludes every self-loop.  What remains open is
-  not target realizability once raw data is given, but deriving canonical raw
-  boundary and glue data from an arbitrary bisimulation classification.
+  that strict grade decrease excludes every self-loop.  Canonical descent of
+  raw boundary, glue, type, and guards is characterized below.
   The boundary half is now characterized exactly: mapping each source
   endpoint through the classifier descends to a unique target boundary if and
   only if that mapped boundary is bisimulation-invariant.  The canonical
@@ -443,7 +442,14 @@ It currently establishes:
   certificate the library constructs a complete quotient Incidence with
   permissive guards and proves exact boundary/glue beta laws.  Transport of a
   non-permissive source guard policy, rather than construction of an Incidence
-  itself, remains a separate refinement.
+  itself, was initially a separate refinement.  It is now closed as well:
+  source guards descend exactly when their Boolean allow relation is invariant
+  under bisimilarity in both inputs.  The descended guard is canonical, unique,
+  and satisfies an exact beta law.  Extending the coherence certificate with
+  this condition constructs a complete quotient Incidence whose guards agree
+  exactly with the source on classified inputs.  Thus the general quotient
+  construction conditions are now explicit; the remaining work for a concrete
+  nonfaithful incidence is to prove—or refute—those coherence conditions.
 
 The minimal category/functor/pushout vocabulary is also formalized. A functor
 is proved to map a pushout cocone to a commuting cocone; preservation of the

@@ -55,11 +55,19 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   invariance、no-self-loop、glue type preservation を束ねる coherence certificate から
   permissive guards を持つ完全な quotient Incidence を構成し、boundary/glue beta 則を
   証明済み。
+- source guards の Boolean allow relation も、両入力について bisimulation-invariant
+  であることと quotient target へ descent できることが必要十分であり、canonical
+  guard の beta・一意性を証明済み。この条件を coherence certificate に加えることで、
+  permissive guards への緩和なしに source guards と正確に一致する完全な quotient
+  Incidence を構成できる。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」ではなく、非可算 carrier への完全性条件の拡張、Incidence 固有の
-意味論とのさらに強い接続、依存型・圏論の内部再構成、より広い数学ライブラリ化、
-および non-permissive な source guard policy 自体を quotient へ transport する条件である
+意味論とのさらに強い接続、依存型・圏論の内部再構成、およびより広い数学ライブラリ化
+である。一般 quotient 構成の条件は boundary/glue/guard invariance、no-self-loop、
+glue type preservation として明示された。今後の quotient 課題は、個々の非忠実
+Incidence でこれらの coherence 条件を証明または反証し、成功例の範囲を拡大すること
+である
 （boundary と binary glue の descent は各 invariance 条件と必要十分かつ一意、raw
 target data の実現可能性は no-self-loop と必要十分であり、さらに grade-decreasing
 条件から従うことまで現在証明済み）。
