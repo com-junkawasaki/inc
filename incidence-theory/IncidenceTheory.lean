@@ -6587,6 +6587,42 @@ def observationBisimulationQuotientEquivalence_of_wellFounded_extensional
     (bisimulationFaithful_of_wellFounded_extensional inc measure
       decreases extensional)
 
+def carrierBisimulationQuotientEquivalence
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (faithful : BisimulationFaithful inc) :
+    IncTypeEquivalence I (IncidenceQuotient inc) :=
+  (observationBisimulationQuotientEquivalence inc idx faithful).trans
+    (linearObservationQuotientEquivalence inc idx)
+
+def completeLanguageBisimulationQuotientEquivalence
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx)
+    (complete : ContainsLinearIndicators inc idx language)
+    (faithful : BisimulationFaithful inc) :
+    IncTypeEquivalence
+      (LanguageObservationQuotient inc idx language complete)
+      (IncidenceQuotient inc) :=
+  (carrierBisimulationQuotientEquivalence inc idx faithful).trans
+    (indicatorCompleteLanguageQuotientEquivalence inc idx language complete).symm
+
+def completeLanguageBisimulationQuotientEquivalence_of_wellFounded_extensional
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx)
+    (complete : ContainsLinearIndicators inc idx language)
+    (measure : I → Nat)
+    (decreases : ∀ i e, e ∈ inc.boundary i → measure e.i < measure i)
+    (extensional : ∀ x y, inc.typeFunc x = inc.typeFunc y →
+      boundaryMatched inc (· = ·) x y → x = y) :
+    IncTypeEquivalence
+      (LanguageObservationQuotient inc idx language complete)
+      (IncidenceQuotient inc) :=
+  completeLanguageBisimulationQuotientEquivalence inc idx language complete
+    (bisimulationFaithful_of_wellFounded_extensional inc measure
+      decreases extensional)
+
 /- Completeness theorem: with an observation language rich enough to admit
    an "indicator of i" observation, agreement of *all* observations forces
    literal equality (hence bisimilarity, via reflexivity). -/
