@@ -377,6 +377,12 @@ It currently establishes:
   coherence laws.  The seven-element simplex model instantiates this result
   as an explicit equivalence with its three shape classes, including computed
   inverse representatives for vertex, edge, and face.
+  `BisimulationQuotientIncidencePresentation` strengthens a classification
+  target with an actual target Incidence and exact boundary-observation law;
+  it supplies both the quotient type equivalence and a boundary-logic
+  embedding.  The simplex-to-shape quotient now instantiates this general
+  interface, so every translated formula has the same boundary truth on the
+  seven-element source and the three-class quotient presentation.
 
 The minimal category/functor/pushout vocabulary is also formalized. A functor
 is proved to map a pushout cocone to a commuting cocone; preservation of the

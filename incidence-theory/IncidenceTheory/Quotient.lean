@@ -636,6 +636,43 @@ example : ∀ x y : CycleId, Quotient.mk (approxBisimSetoid cycleIncidenceFixed)
    cycles 38-40 built, rather than reproving anything about
    `simplexIncidence` itself. -/
 
+structure BisimulationQuotientIncidencePresentation
+    {I R T Q QR QT : Type u} [DecidableEq I] [DecidableEq Q]
+    (source : Incidence I R T) where
+  classification : BisimulationQuotientClassification (Q := Q) source
+  target : Incidence Q QR QT
+  boundary_iff : ∀ atom,
+    IncidenceBoundaryValuation target (classification.classify atom) ↔
+      IncidenceBoundaryValuation source atom
+
+noncomputable def BisimulationQuotientIncidencePresentation.quotientEquivalence
+    {I R T Q QR QT : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : Incidence I R T}
+    (presentation : BisimulationQuotientIncidencePresentation
+      (Q := Q) (QR := QR) (QT := QT) source) :
+    IncTypeEquivalence (IncidenceQuotient source) Q :=
+  presentation.classification.equivalence
+
+def BisimulationQuotientIncidencePresentation.observationEmbedding
+    {I R T Q QR QT : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : Incidence I R T}
+    (presentation : BisimulationQuotientIncidencePresentation
+      (Q := Q) (QR := QR) (QT := QT) source) :
+    IncidenceBoundaryObservationEmbedding source presentation.target where
+  map := presentation.classification.classify
+  boundary_iff := presentation.boundary_iff
+
+theorem BisimulationQuotientIncidencePresentation.satisfies_iff
+    {I R T Q QR QT : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : Incidence I R T}
+    (presentation : BisimulationQuotientIncidencePresentation
+      (Q := Q) (QR := QR) (QT := QT) source)
+    (formula : Formula I) :
+    IncidenceBoundarySatisfies presentation.target
+        (formula.map presentation.classification.classify) ↔
+      IncidenceBoundarySatisfies source formula :=
+  presentation.observationEmbedding.satisfies_iff formula
+
 /- Unlike `cycleIncidence`'s `boundary`/`glue` (cycle 38), which failed
    the well-definedness check `Quotient.lift` needs, `simplexToShape`
    PASSES it -- this is exactly what `simplexToShape_distinguishes`
@@ -768,6 +805,29 @@ def shapeIncidence : Incidence SimplexShape SimplexRole GraphType where
   unit_left := by intro i; simp
   unit_right := by intro i; by_cases h : i = SimplexShape.vertex <;> simp [h]
   type_preserve := fun _ _ => rfl
+
+def simplexQuotientIncidencePresentation :
+    BisimulationQuotientIncidencePresentation
+      (Q := SimplexShape) (QR := SimplexRole) (QT := GraphType)
+      simplexIncidence where
+  classification := simplexBisimulationQuotientClassification
+  target := shapeIncidence
+  boundary_iff := by
+    intro atom
+    cases atom <;>
+      simp [IncidenceBoundaryValuation, simplexBisimulationQuotientClassification,
+        simplexToShape, simplexIncidence, simplexBoundary, shapeIncidence, shapeBoundary]
+
+theorem simplexToShape_boundaryLogic_satisfies_iff
+    (formula : Formula SimplexId) :
+    IncidenceBoundarySatisfies shapeIncidence (formula.map simplexToShape) ↔
+      IncidenceBoundarySatisfies simplexIncidence formula :=
+  simplexQuotientIncidencePresentation.satisfies_iff formula
+
+theorem simplexQuotientPresentation_equivalence :
+    Nonempty (IncTypeEquivalence
+      (IncidenceQuotient simplexIncidence) SimplexShape) :=
+  ⟨simplexQuotientIncidencePresentation.quotientEquivalence⟩
 
 /- An honest limitation, checked rather than assumed: `simplexToShape`
    is NOT a `glue`-homomorphism between `simplexIncidence` and
