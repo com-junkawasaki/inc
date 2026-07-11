@@ -785,6 +785,12 @@ It currently establishes:
   law to land in the requested target fiber.  Both application equations are
   checked definitionally, establishing the operational core needed by the Pi
   formation and lambda/application coherence branches.
+  The same dependent equivalence now transports Sigma pairs.  `sigmaForward`
+  maps the first component and then its dependent second fiber;
+  `sigmaBackward` reverses the first component and uses the domain inverse law
+  before reversing the second fiber.  The forward pair equation is checked
+  definitionally, supplying the constructive core for dependent pair and
+  projection coherence without collapsing indices.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

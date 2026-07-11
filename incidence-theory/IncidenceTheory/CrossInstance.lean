@@ -2795,6 +2795,44 @@ theorem IncDependentFiberEquiv.piBackward_apply
         (targetFunction (domainEquiv.forward sourceValue)) := by
   rfl
 
+def IncDependentFiberEquiv.sigmaForward
+    {sourceDomain targetDomain : Type u}
+    {domainEquiv : IncFiberEquiv sourceDomain targetDomain}
+    {sourceCodomain : sourceDomain → Type u}
+    {targetCodomain : targetDomain → Type u}
+    (dependentEquiv : IncDependentFiberEquiv domainEquiv
+      sourceCodomain targetCodomain) :
+    (Sigma sourceCodomain) → Sigma targetCodomain :=
+  fun value => ⟨domainEquiv.forward value.1,
+    (dependentEquiv.codomainEquiv value.1).forward value.2⟩
+
+def IncDependentFiberEquiv.sigmaBackward
+    {sourceDomain targetDomain : Type u}
+    {domainEquiv : IncFiberEquiv sourceDomain targetDomain}
+    {sourceCodomain : sourceDomain → Type u}
+    {targetCodomain : targetDomain → Type u}
+    (dependentEquiv : IncDependentFiberEquiv domainEquiv
+      sourceCodomain targetCodomain) :
+    (Sigma targetCodomain) → Sigma sourceCodomain :=
+  fun value =>
+    let sourceValue := domainEquiv.backward value.1
+    ⟨sourceValue, (dependentEquiv.codomainEquiv sourceValue).backward
+      (Eq.mp (congrArg targetCodomain
+        (domainEquiv.forward_backward value.1).symm) value.2)⟩
+
+theorem IncDependentFiberEquiv.sigmaForward_pair
+    {sourceDomain targetDomain : Type u}
+    {domainEquiv : IncFiberEquiv sourceDomain targetDomain}
+    {sourceCodomain : sourceDomain → Type u}
+    {targetCodomain : targetDomain → Type u}
+    (dependentEquiv : IncDependentFiberEquiv domainEquiv
+      sourceCodomain targetCodomain)
+    (first : sourceDomain) (second : sourceCodomain first) :
+    dependentEquiv.sigmaForward ⟨first, second⟩ =
+      ⟨domainEquiv.forward first,
+        (dependentEquiv.codomainEquiv first).forward second⟩ := by
+  rfl
+
 theorem IncTerm.substitute_identity
     {context : IncContext.{u}} {type : IncTypeInContext context}
     (term : IncTerm type) :

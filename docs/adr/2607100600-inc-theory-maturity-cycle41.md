@@ -357,6 +357,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   双方向にtransportする。forwardはtarget argumentをbackwardし、result fiberをtransportした後、
   domain inverse lawで要求されたtarget fiberへ移す。両application equationをdefinitionally証明し、
   Pi formationおよびlambda/application coherence branchのoperational coreを得た。
+- 同じdependent equivalenceをSigma pairへ拡張した。`sigmaForward`はfirst componentと対応する
+  dependent second fiberを順に写し、`sigmaBackward`はfirstを戻した後domain inverse lawに沿って
+  second fiberを戻す。forward pair equationをdefinitionally証明し、indexをcollapseせずdependent
+  pair/projection coherenceを構成するcoreを得た。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
