@@ -39,6 +39,12 @@ theorem Formula.map_comp {Atom Atom' Atom'' : Type u} (g : Atom' → Atom'')
 def Formula.neg {Atom : Type u} (formula : Formula Atom) : Formula Atom :=
   .imp formula .bot
 
+/- Internal logical equivalence is represented by its two implication
+   directions.  It is syntax, rather than Lean equality, so it can be proved,
+   translated, and later placed under binders. -/
+def Formula.iff {Atom : Type u} (left right : Formula Atom) : Formula Atom :=
+  .and (.imp left right) (.imp right left)
+
 def formulaSubformulas {Atom : Type u} : Formula Atom → List (Formula Atom)
   | .atom atom => [.atom atom]
   | .top => [.top]
@@ -585,6 +591,22 @@ theorem derives_imp_iff {Atom : Type u} {context : List (Formula Atom)}
       (Derives.ax (by simp))
   · exact Derives.impI
 
+theorem derives_iffI {Atom : Type u} {context : List (Formula Atom)}
+    {left right : Formula Atom} :
+    Derives context (.imp left right) → Derives context (.imp right left) →
+      Derives context (Formula.iff left right) :=
+  Derives.andI
+
+theorem derives_iffEL {Atom : Type u} {context : List (Formula Atom)}
+    {left right : Formula Atom} :
+    Derives context (Formula.iff left right) → Derives context (.imp left right) :=
+  Derives.andEL
+
+theorem derives_iffER {Atom : Type u} {context : List (Formula Atom)}
+    {left right : Formula Atom} :
+    Derives context (Formula.iff left right) → Derives context (.imp right left) :=
+  Derives.andER
+
 theorem inconsistent_extension_iff_derives_neg {Atom : Type u}
     {context : List (Formula Atom)} {formula : Formula Atom} :
     Derives (formula :: context) .bot ↔ Derives context formula.neg :=
@@ -636,6 +658,13 @@ theorem satisfies_and_or_distributive {Atom : Type u} (valuation : Atom → Prop
   · rintro (⟨hp, hq⟩ | ⟨hp, hr⟩)
     · exact ⟨hp, Or.inl hq⟩
     · exact ⟨hp, Or.inr hr⟩
+
+theorem derives_and_or_distributive_iff {Atom : Type u}
+    (p q r : Formula Atom) :
+    Derives [] (Formula.iff (.and p (.or q r))
+      (.or (.and p q) (.and p r))) :=
+  derives_iffI (derives_and_or_distributive p q r).left
+    (derives_and_or_distributive p q r).right
 
 /- The one-step Lindenbaum lemma.  It gives a consistency-preserving choice at
    every formula; a full extension theorem still needs an enumeration and the
