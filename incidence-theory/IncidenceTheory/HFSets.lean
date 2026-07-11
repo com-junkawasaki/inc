@@ -2526,6 +2526,18 @@ theorem hfRecursiveNat_succ_eq (n : Nat) :
     · rw [hxn]
       exact hfRecursiveNat_succ_member n
 
+theorem hfRecursiveNat_zero_ne_succ (n : Nat) :
+    hfRecursiveNat 0 ≠ hfRecursiveNat (n + 1) := by
+  intro equal
+  have indexEqual : 0 = n + 1 := hfRecursiveNat_injective equal
+  cases indexEqual
+
+theorem hfRecursiveNat_succ_injective {m n : Nat} :
+    hfRecursiveNat (m + 1) = hfRecursiveNat (n + 1) → m = n := by
+  intro equal
+  have indexEqual : m + 1 = n + 1 := hfRecursiveNat_injective equal
+  exact Nat.add_right_cancel indexEqual
+
 /- Binary union of finite von Neumann ordinals is their ordinal maximum.
    This is an internal, extensional reconstruction of the usual ordinal
    operation, rather than merely an equality of their natural indices. -/
@@ -3352,6 +3364,30 @@ theorem hfRecursiveFilter_difference_intersection (p q : HFRecursivePredicate)
     exact ⟨⟨hxs, hnp⟩, hq⟩
   · rintro ⟨⟨hxs, hnp⟩, hq⟩
     exact ⟨⟨hxs, hq⟩, hnp⟩
+
+structure HFRecursiveNatEmbedding where
+  encode : Nat → HFRecursiveSet
+  injective : ∀ {m n}, encode m = encode n → m = n
+  zero_ne_succ : ∀ n, encode 0 ≠ encode (n + 1)
+  succ_injective : ∀ {m n}, encode (m + 1) = encode (n + 1) → m = n
+  member_iff_lt : ∀ m n, HFRecursiveMember (encode m) (encode n) ↔ m < n
+  subset_iff_le : ∀ m n, HFRecursiveSubset (encode m) (encode n) ↔ m ≤ n
+  successor_as_union : ∀ n,
+    encode (n + 1) =
+      hfRecursiveUnion (encode n) (hfRecursivePair (encode n) (encode n))
+  trichotomy : ∀ m n,
+    HFRecursiveMember (encode m) (encode n) ∨ m = n ∨
+      HFRecursiveMember (encode n) (encode m)
+
+def hfRecursiveNatEmbedding : HFRecursiveNatEmbedding where
+  encode := hfRecursiveNat
+  injective := hfRecursiveNat_injective
+  zero_ne_succ := hfRecursiveNat_zero_ne_succ
+  succ_injective := hfRecursiveNat_succ_injective
+  member_iff_lt := hfRecursiveNat_member_iff
+  subset_iff_le := hfRecursiveNat_subset_iff
+  successor_as_union := hfRecursiveNat_succ_eq
+  trichotomy := hfRecursiveNat_trichotomy
 
 /- A bundled witness for the finite set-theoretic fragment actually proved in
    this file.  It deliberately records only the operations and laws checked
