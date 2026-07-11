@@ -1117,6 +1117,11 @@ It currently establishes:
   `IncDepRawSigmaSubstitutionCoherence` collect the corresponding invariant at
   every context assignment; `ofApplicationCoherence` and `ofCoherence` turn each
   single package into the uniform formation result.
+  The Pi package exposes named accessors for both round trips and forward
+  evaluation, while `.piCoherent` and `.sigmaCoherent` return the parent uniform
+  formation result directly.  A dispatcher can therefore share one coherence
+  object between formation and all associated typing branches without unpacking
+  or duplicating laws.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
