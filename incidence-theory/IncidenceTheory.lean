@@ -7096,6 +7096,24 @@ def BoundaryShapeTranslation.incToSetNaturalTransformation
     cases equal
     rfl
 
+theorem BoundaryShapeTranslation.discreteFunctor_obj
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : BoundaryShapeTranslation source target)
+    (i : IncLiftedObject I) :
+    translation.discreteFunctor.obj i = ⟨translation.map i.down⟩ := rfl
+
+theorem BoundaryShapeTranslation.discreteFunctor_comp_obj
+    {I J K R₁ T₁ R₂ T₂ R₃ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (secondMap : BoundaryShapeTranslation second third)
+    (firstMap : BoundaryShapeTranslation first second)
+    (i : IncLiftedObject I) :
+    (secondMap.comp firstMap).discreteFunctor.obj i =
+      secondMap.discreteFunctor.obj (firstMap.discreteFunctor.obj i) := rfl
+
 structure BoundaryShapeEmbedding
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
     (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂)
