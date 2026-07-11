@@ -7520,6 +7520,33 @@ def BoundaryShapeTranslation.incToSetNaturalTransformation
     cases equal
     rfl
 
+def BoundaryShapeTranslation.incToSetNaturalIsomorphism
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : BoundaryShapeTranslation source target) :
+    IncNaturalIsomorphism (incToSetFunctor source)
+      ((incToSetFunctor target).comp translation.discreteFunctor) where
+  hom := translation.incToSetNaturalTransformation
+  inv := {
+    app := fun i => ⟨(translation.incToSetEquivalence i.down).inverse⟩
+    naturality := by
+      intro first second morphism
+      rcases morphism with ⟨equal⟩
+      cases equal
+      rfl }
+  hom_inv_id := by
+    apply IncNaturalTransformation.ext
+    intro i
+    apply IncLiftedFunction.ext
+    funext value
+    exact (translation.incToSetEquivalence i.down).inverse_forward value
+  inv_hom_id := by
+    apply IncNaturalTransformation.ext
+    intro i
+    apply IncLiftedFunction.ext
+    funext value
+    exact (translation.incToSetEquivalence i.down).forward_inverse value
+
 theorem BoundaryShapeTranslation.discreteFunctor_obj
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
     {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
@@ -8312,27 +8339,8 @@ def BoundaryShapeEquivalence.incToSetNaturalIsomorphism
     {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
     (equivalence : BoundaryShapeEquivalence source target) :
     IncNaturalIsomorphism (incToSetFunctor source)
-      ((incToSetFunctor target).comp equivalence.hom.discreteFunctor) where
-  hom := equivalence.hom.incToSetNaturalTransformation
-  inv := {
-    app := fun i => ⟨(equivalence.hom.incToSetEquivalence i.down).inverse⟩
-    naturality := by
-      intro first second morphism
-      rcases morphism with ⟨equal⟩
-      cases equal
-      rfl }
-  hom_inv_id := by
-    apply IncNaturalTransformation.ext
-    intro i
-    apply IncLiftedFunction.ext
-    funext value
-    exact (equivalence.hom.incToSetEquivalence i.down).inverse_forward value
-  inv_hom_id := by
-    apply IncNaturalTransformation.ext
-    intro i
-    apply IncLiftedFunction.ext
-    funext value
-    exact (equivalence.hom.incToSetEquivalence i.down).forward_inverse value
+      ((incToSetFunctor target).comp equivalence.hom.discreteFunctor) :=
+  equivalence.hom.incToSetNaturalIsomorphism
 
 def BoundaryShapeEquivalence.toEmbedding
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
