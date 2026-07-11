@@ -243,7 +243,10 @@ It currently establishes:
   finite-window hypotheses for the resulting values.  The comparison graph is
   a linear order: every encoded pair is comparable, comparison in both
   directions is equivalent to equality of the represented integers, and adding
-  a common offset both preserves and reflects comparison.
+  a common offset both preserves and reflects comparison.  Strict order is
+  reconstructed solely from graph evidence (`x≤y` succeeds while `y≤x` does
+  not), with exact equivalence to `x<y`; irreflexivity, transitivity,
+  asymmetry, and additive preservation/reflection are all checked.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
