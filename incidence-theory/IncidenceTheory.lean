@@ -3836,6 +3836,46 @@ noncomputable def IncCategoryEquivalence.strongFiniteBicartesianPreservingFamily
     StrongFiniteBicartesianPreservingFamily equivalence.forward :=
   equivalence.forward_criterion.strongFiniteBicartesianPreservingFamily
 
+def binaryProductSpan {Obj : Type u} {C : IncCategory Obj}
+    (terminal : IncTerminalObject C) (left right : Obj) : MorphismSpan C where
+  a := terminal.object
+  b := left
+  c := right
+  left := terminal.to left
+  right := terminal.to right
+
+abbrev IncBinaryProduct {Obj : Type u} {C : IncCategory Obj}
+    (terminal : IncTerminalObject C) (left right : Obj) :=
+  MorphismPullback (binaryProductSpan terminal left right)
+
+def binaryCoproductCospan {Obj : Type u} {C : IncCategory Obj}
+    (initial : IncInitialObject C) (left right : Obj) : MorphismCospan C where
+  a := initial.object
+  b := left
+  c := right
+  left := initial.to left
+  right := initial.to right
+
+abbrev IncBinaryCoproduct {Obj : Type u} {C : IncCategory Obj}
+    (initial : IncInitialObject C) (left right : Obj) :=
+  MorphismPushout (binaryCoproductCospan initial left right)
+
+noncomputable def IncCategoryEquivalence.stronglyPreservesBinaryProduct
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D)
+    (terminal : IncTerminalObject C) (left right : CObj)
+    (product : IncBinaryProduct terminal left right) :
+    StrongPullbackPreserving equivalence.forward product :=
+  equivalence.strongPullbackPreservingFamily.preserves product
+
+noncomputable def IncCategoryEquivalence.stronglyPreservesBinaryCoproduct
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D)
+    (initial : IncInitialObject C) (left right : CObj)
+    (coproduct : IncBinaryCoproduct initial left right) :
+    StrongPushoutPreserving equivalence.forward coproduct :=
+  equivalence.strongPushoutPreservingFamily.preserves coproduct
+
 def StrongBicartesianPreservingFamily.toBicartesianPreservingFamily
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     {F : IncFunctor C D} (strong : StrongBicartesianPreservingFamily F) :
