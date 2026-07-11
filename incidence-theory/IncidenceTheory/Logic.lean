@@ -1798,6 +1798,86 @@ theorem Formula.logicalNeg_bottom {Atom : Type u} :
       Formula.logicalTop := by
   exact Formula.logicalBottom_imp Formula.logicalBottom
 
+theorem Formula.logicalImp_mono {Atom : Type u}
+    {left left' right right' : Formula.LogicalEquivalenceClass Atom} :
+    left' ≤ left → right ≤ right' →
+      Formula.logicalImp left right ≤ Formula.logicalImp left' right' := by
+  refine Quotient.inductionOn left ?_
+  intro left
+  refine Quotient.inductionOn left' ?_
+  intro left'
+  refine Quotient.inductionOn right ?_
+  intro right
+  refine Quotient.inductionOn right' ?_
+  intro right' hleft hright
+  have derivesLeft : Derives [] (.imp left' left) :=
+    (logicalEntails_mk_iff_derives left' left).1 hleft
+  have derivesRight : Derives [] (.imp right right') :=
+    (logicalEntails_mk_iff_derives right right').1 hright
+  apply (logicalEntails_mk_iff_derives (.imp left right) (.imp left' right')).2
+  apply Derives.impI
+  apply Derives.impI
+  apply Derives.impE
+  · exact derives_weaken (source := [])
+      (target := left' :: [.imp left right])
+      (by intro formula hmem; simp at hmem) derivesRight
+  · apply Derives.impE
+    · exact Derives.ax (p := .imp left right) (by simp)
+    · apply Derives.impE
+      · exact derives_weaken (source := [])
+          (target := left' :: [.imp left right])
+          (by intro formula hmem; simp at hmem) derivesLeft
+      · exact Derives.ax (p := left') (by simp)
+
+theorem Formula.logicalImp_antitone_left {Atom : Type u}
+    {left left' right : Formula.LogicalEquivalenceClass Atom}
+    (hleft : left' ≤ left) :
+    Formula.logicalImp left right ≤ Formula.logicalImp left' right :=
+  Formula.logicalImp_mono hleft (Formula.logicalEntails_refl right)
+
+theorem Formula.logicalImp_monotone_right {Atom : Type u}
+    {left right right' : Formula.LogicalEquivalenceClass Atom}
+    (hright : right ≤ right') :
+    Formula.logicalImp left right ≤ Formula.logicalImp left right' :=
+  Formula.logicalImp_mono (Formula.logicalEntails_refl left) hright
+
+theorem derives_imp_and_distributive_iff {Atom : Type u}
+    (p q r : Formula Atom) :
+    Derives [] (Formula.iff (.imp p (.and q r))
+      (.and (.imp p q) (.imp p r))) := by
+  apply derives_iffI
+  · apply Derives.impI
+    apply Derives.andI
+    · apply Derives.impI
+      exact Derives.andEL (p := q) (q := r)
+        (Derives.impE (Derives.ax (p := .imp p (.and q r)) (by simp))
+          (Derives.ax (p := p) (by simp)))
+    · apply Derives.impI
+      exact Derives.andER (p := q) (q := r)
+        (Derives.impE (Derives.ax (p := .imp p (.and q r)) (by simp))
+          (Derives.ax (p := p) (by simp)))
+  · apply Derives.impI
+    apply Derives.impI
+    apply Derives.andI
+    · exact Derives.impE
+        (Derives.andEL (p := .imp p q) (q := .imp p r) (Derives.ax (by simp)))
+        (Derives.ax (p := p) (by simp))
+    · exact Derives.impE
+        (Derives.andER (p := .imp p q) (q := .imp p r) (Derives.ax (by simp)))
+        (Derives.ax (p := p) (by simp))
+
+theorem Formula.logicalImp_and {Atom : Type u}
+    (p q r : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalImp p (Formula.logicalAnd q r) =
+      Formula.logicalAnd (Formula.logicalImp p q) (Formula.logicalImp p r) := by
+  refine Quotient.inductionOn p ?_
+  intro p
+  refine Quotient.inductionOn q ?_
+  intro q
+  refine Quotient.inductionOn r ?_
+  intro r
+  exact Quotient.sound (derives_imp_and_distributive_iff p q r)
+
 theorem satisfies_or_and_distributive_iff {Atom : Type u}
     (valuation : Atom → Prop) (p q r : Formula Atom) :
     Satisfies valuation (Formula.iff (.or p (.and q r))
