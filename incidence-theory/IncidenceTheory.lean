@@ -2269,6 +2269,110 @@ noncomputable def IncFunctorFullyFaithful.reflectIso
         apply fullyFaithful.faithful
         rw [F.map_comp, homMap, invMap, iso.hom_inv, F.map_id] }
 
+theorem IncFunctorFullyFaithful.map_reflectIso_hom
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (fullyFaithful : IncFunctorFullyFaithful F)
+    {source target : CObj}
+    (iso : MorphismIso D (F.obj source) (F.obj target)) :
+    F.map (fullyFaithful.reflectIso iso).hom = iso.hom := by
+  change F.map (Classical.choose (fullyFaithful.full iso.hom)) = iso.hom
+  exact Classical.choose_spec (fullyFaithful.full iso.hom)
+
+theorem IncFunctorFullyFaithful.map_reflectIso_inv
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (fullyFaithful : IncFunctorFullyFaithful F)
+    {source target : CObj}
+    (iso : MorphismIso D (F.obj source) (F.obj target)) :
+    F.map (fullyFaithful.reflectIso iso).inv = iso.inv := by
+  change F.map (Classical.choose (fullyFaithful.full iso.inv)) = iso.inv
+  exact Classical.choose_spec (fullyFaithful.full iso.inv)
+
+noncomputable def IncFunctorEquivalenceCriterion.unitComponent
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F)
+    (object : CObj) :
+    MorphismIso C object (criterion.inverseObj (F.obj object)) :=
+  criterion.fullyFaithful.reflectIso
+    (criterion.inverseObj_iso (F.obj object)).symm
+
+theorem IncFunctorEquivalenceCriterion.map_unitComponent_hom
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F)
+    (object : CObj) :
+    F.map (criterion.unitComponent object).hom =
+      (criterion.inverseObj_iso (F.obj object)).inv :=
+  criterion.fullyFaithful.map_reflectIso_hom _
+
+theorem IncFunctorEquivalenceCriterion.map_unitComponent_inv
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F)
+    (object : CObj) :
+    F.map (criterion.unitComponent object).inv =
+      (criterion.inverseObj_iso (F.obj object)).hom :=
+  criterion.fullyFaithful.map_reflectIso_inv _
+
+noncomputable def IncFunctorEquivalenceCriterion.unit
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F) :
+    IncNaturalIsomorphism (IncFunctor.identity C)
+      (criterion.inverseFunctor.comp F) where
+  hom :=
+    { app := fun object => (criterion.unitComponent object).hom
+      naturality := by
+        intro source target morphism
+        apply criterion.fullyFaithful.faithful
+        rw [F.map_comp, F.map_comp]
+        change D.comp
+            (F.map (criterion.inverseMap (F.map morphism)))
+            (F.map (criterion.unitComponent source).hom) =
+          D.comp (F.map (criterion.unitComponent target).hom) (F.map morphism)
+        rw [criterion.map_unitComponent_hom,
+          criterion.map_unitComponent_hom]
+        exact criterion.counit.inv.naturality (F.map morphism) }
+  inv :=
+    { app := fun object => (criterion.unitComponent object).inv
+      naturality := by
+        intro source target morphism
+        apply criterion.fullyFaithful.faithful
+        rw [F.map_comp, F.map_comp]
+        change D.comp (F.map morphism)
+            (F.map (criterion.unitComponent source).inv) =
+          D.comp (F.map (criterion.unitComponent target).inv)
+            (F.map (criterion.inverseMap (F.map morphism)))
+        rw [criterion.map_unitComponent_inv,
+          criterion.map_unitComponent_inv]
+        exact criterion.counit.hom.naturality (F.map morphism) }
+  hom_inv_id := by
+    apply IncNaturalTransformation.ext
+    intro object
+    exact (criterion.unitComponent object).inv_hom
+  inv_hom_id := by
+    apply IncNaturalTransformation.ext
+    intro object
+    exact (criterion.unitComponent object).hom_inv
+
+noncomputable def IncFunctorEquivalenceCriterion.toCategoryEquivalence
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F) :
+    IncCategoryEquivalence C D where
+  forward := F
+  inverse := criterion.inverseFunctor
+  unit := criterion.unit
+  counit := criterion.counit
+
+theorem incFunctor_equivalenceCriterion_iff_exists_categoryEquivalence
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) :
+    IncFunctorEquivalenceCriterion F ↔
+      ∃ equivalence : IncCategoryEquivalence C D,
+        equivalence.forward = F := by
+  constructor
+  · intro criterion
+    exact ⟨criterion.toCategoryEquivalence, rfl⟩
+  · rintro ⟨equivalence, forwardEq⟩
+    subst F
+    exact equivalence.forward_criterion
+
 noncomputable def IncCategoryEquivalence.forward_reflectIso
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (equivalence : IncCategoryEquivalence C D) {source target : CObj}
