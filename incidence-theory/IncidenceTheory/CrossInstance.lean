@@ -2142,6 +2142,22 @@ def incDepRawDependentPair_second_hasType :
         (.first incDepRawDependentPair)) :=
   IncDepRawHasType.secondRule incDepRawDependentPair_hasType
 
+def incDepRawDependentPair_first_semanticReady :
+    IncDepRawTypingSemanticReady
+      incDepRawDependentPair_first_hasType := by
+  exact IncDepRawTypingSemanticReady.firstRule
+    IncDepRawFormationSemanticReady.unit
+    incDepRawUnitIdentitySemanticReady
+    incDepRawDependentPair_semanticReady
+
+def incDepRawDependentPair_second_semanticReady :
+    IncDepRawTypingSemanticReady
+      incDepRawDependentPair_second_hasType := by
+  exact IncDepRawTypingSemanticReady.secondRule
+    IncDepRawFormationSemanticReady.unit
+    incDepRawUnitIdentitySemanticReady
+    incDepRawDependentPair_semanticReady
+
 def IncDepRawTerm.instantiate (body argument : IncDepRawTerm) : IncDepRawTerm :=
   body.substitute fun index => match index with
     | 0 => argument
@@ -2408,6 +2424,15 @@ def incDepRawDependentRefl_application_hasType :
       (.identity .unit .unit .unit) :=
   IncDepRawHasType.applyRule incDepRawDependentRefl_hasType
     IncDepRawHasType.unitRule
+
+def incDepRawDependentRefl_application_semanticReady :
+    IncDepRawTypingSemanticReady
+      incDepRawDependentRefl_application_hasType := by
+  exact IncDepRawTypingSemanticReady.applyRule
+    IncDepRawFormationSemanticReady.unit
+    incDepRawUnitIdentitySemanticReady
+    incDepRawDependentRefl_semanticReady
+    IncDepRawTypingSemanticReady.unitRule
 
 theorem incDepRawDependentRefl_subjectReduction :
     IncDepRawHasTypeConversion [] (.refl .unit)

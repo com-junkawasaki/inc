@@ -664,6 +664,11 @@ It currently establishes:
   identity codomain keep proof indices identical across the Pi and Sigma example
   trees.  Every typing branch can now locally reconstruct the semantic Pi/Sigma
   formation it consumes instead of relying on an unrelated external result.
+  The strengthened branches are instantiated on actual dependent redexes:
+  readiness trees are checked for applying the dependent reflexivity function
+  and for both projections of the dependent Sigma pair.  These examples exercise
+  the hidden domain/codomain readiness carried by application, first projection,
+  and second projection, rather than validating only lambda and pair formation.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

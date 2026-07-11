@@ -277,6 +277,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   dependent pair、両projectionはhidden domain/codomain formation readinessを保持する。Unit
   variableとそのidentity codomainのreadiness proofを名前付きで共有し、Pi/Sigma例のproof indexを
   同一化した。各typing branchが消費するsemantic Pi/Sigma formationを局所再構成できる。
+- 強化branchを実際のdependent redexでinstantiationした。dependent refl functionのapplicationと
+  dependent Sigma pairのfirst/second両projectionについてsemantic-readiness treeを構成し、
+  application/両projectionが保持するhidden domain/codomain readinessをnontrivially検証した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
