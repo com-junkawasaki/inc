@@ -518,6 +518,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   resultとsource/target codomain interpretationに加え、各source assignment上の`IncDependentPiFiberEquiv`を保持し、
   `piFiberEquivalence`と`toFormationFiberResult`でuniform formation-substitution fiber resultまで構成する。raw liftは
   domain equalityによるtransportを含むため、contextを誤ってdefinitionally同一視せずfiberwise coherenceで表現した。
+- Sigmaについても`IncDependentSigmaFiberEquiv`にdependent pairの両round-trip lawを保持し、
+  `IncDepRawSigmaFormationSubstitutionFiberResult`へrecursive domain/codomain interpretationとfiberwise coherenceを
+  統合した。`sigmaFiberEquivalence`と`toFormationFiberResult`によりSigma formation constructorもuniform
+  formation-substitution fiber interfaceまでsorry-freeで閉じた。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

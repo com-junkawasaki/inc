@@ -1034,6 +1034,11 @@ It currently establishes:
   `toFormationFiberResult` produces the uniform formation-substitution fiber
   result.  The fiberwise boundary correctly accommodates the equality transport
   in the raw lifted substitution.
+  Dependent Sigma formation now has the parallel checked path.
+  `IncDependentSigmaFiberEquiv` records the two dependent-pair round trips, and
+  `IncDepRawSigmaFormationSubstitutionFiberResult` combines it with recursive
+  domain and codomain interpretations.  Its `toFormationFiberResult` closes the
+  Sigma formation constructor under the same uniform substitution interface.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
