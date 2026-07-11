@@ -835,6 +835,16 @@ It currently establishes:
   This removes the Id composite branch's former dependence on literal family
   equality.  The remaining recursive step is producing the two endpoint
   equations from typing-substitution coherence automatically.
+  Formation substitution now also has a uniform explicit interface,
+  `IncDepRawFormationSubstitutionFiberResult`; equality-based results embed into
+  it, while the Id branch constructs it directly.  The parallel
+  `IncDepRawTypingSubstitutionFiberResult` carries target/source term
+  interpretations and their transport equation.  Two such typing results build
+  the Id-formation endpoint package automatically.  Unit closes the first
+  typing branch definitionally, and the refl branch now recursively derives its
+  Id formation and proves transported-reflexivity coherence (using proof
+  irrelevance only for equality witnesses).  Variable, Pi/Sigma introduction
+  and elimination branches remain to complete the typing-substitution fold.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

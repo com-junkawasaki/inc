@@ -393,6 +393,14 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   endpoint interpretation、二つのendpoint substitution equationをpackageし、substituted Id familyの
   equivalenceを導出する。これでId composite branchはliteral family equalityを要求しなくなり、残件は
   typing-substitution recursionから二つのendpoint equationを自動生成することに絞られた。
+- formation substitutionの共通explicit interfaceとして
+  `IncDepRawFormationSubstitutionFiberResult`を導入した。従来のequality-based resultはこれへ埋め込み、
+  Id branchは直接fiber equivalenceを構成できる。対応する
+  `IncDepRawTypingSubstitutionFiberResult`はtarget/source term interpretationとtransport equationを保持し、
+  左右二つのtyping resultからId endpoint packageを自動構成する。Unit typing branchはdefinitionally閉じ、
+  refl branchはunderlying term coherenceからId formationとtransported reflexivity coherenceを再帰的に
+  導出した（equality witnessの同一視にはproof irrelevanceのみを使用）。残るfold branchはvariableと
+  Pi/Sigmaのintroduction/eliminationである。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

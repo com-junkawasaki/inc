@@ -3,6 +3,8 @@ import IncidenceTheory.Pairs
 import IncidenceTheory.PathComplex
 import IncidenceTheory.Product
 
+universe u v
+
 /- Merkle-ID: implementation.graph_model.cross_instance
    story.jsonnet → implementation.nodes.cross_instance
    Research cycle 6 (see RESEARCH_LOG.md): cycles 1-5 each worked within
@@ -3255,6 +3257,19 @@ def IncIdentityType
   fun assignment =>
     ULift.{u} (PLift (left assignment = right assignment))
 
+theorem IncIdentityType.witness_irrel
+    {carrier : Sort v} {left right : carrier}
+    (first second : ULift.{u} (PLift (left = right))) :
+    first = second := by
+  cases first with
+  | up firstLifted =>
+      cases firstLifted with
+      | up firstPath =>
+          cases second with
+          | up secondLifted =>
+              cases secondLifted with
+              | up secondPath => congr
+
 def IncFiberEquiv.mapIdentityWitness
     {source target : Type u} (equivalence : IncFiberEquiv source target)
     {left right : source}
@@ -3842,6 +3857,43 @@ def IncDepRawFormationSubstitutionSemanticResult.fiberEquivalence
         substitutionResult.semanticSubstitution) :=
   IncTypeInContext.FiberEquiv.ofEq result.semanticType_coherence
 
+structure IncDepRawFormationSubstitutionFiberResult
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) where
+  targetFormationResult : IncDepRawFormationSemanticResult targetFormation
+    targetResult
+  sourceFormationResult : IncDepRawFormationSemanticResult
+    (targetFormation.substitute substitution) sourceResult
+  semanticFiberEquivalence : IncTypeInContext.FiberEquiv
+    sourceFormationResult.semanticType
+    (targetFormationResult.semanticType.reindex
+      substitutionResult.semanticSubstitution)
+
+def IncDepRawFormationSubstitutionSemanticResult.toFiberResult
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawFormationSubstitutionSemanticResult
+      (targetFormation := targetFormation) substitutionResult) :
+    IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult where
+  targetFormationResult := result.targetFormationResult
+  sourceFormationResult := result.sourceFormationResult
+  semanticFiberEquivalence := result.fiberEquivalence
+
 def IncDepRawFormationSubstitutionSemanticResult.base
     {source target : List IncDepRawType} {index : Nat}
     {substitution : IncDepRawSubstitution source target}
@@ -3916,7 +3968,7 @@ structure IncDepRawIdentityFormationSubstitutionFiberResult
     {targetResult : IncDepRawContextSemanticResult targetWellFormed}
     (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
       sourceResult targetResult) where
-  typeResult : IncDepRawFormationSubstitutionSemanticResult
+  typeResult : IncDepRawFormationSubstitutionFiberResult
     (targetFormation := typeFormation) substitutionResult
   targetLeft : IncDepRawTypingSemanticResult leftTyping targetResult
     typeResult.targetFormationResult.semanticType
@@ -3928,9 +3980,9 @@ structure IncDepRawIdentityFormationSubstitutionFiberResult
   sourceRight : IncDepRawTypingSemanticResult
     (rightTyping.substitute substitution) sourceResult
     typeResult.sourceFormationResult.semanticType
-  leftCoherence : typeResult.fiberEquivalence.transport sourceLeft.semanticTerm =
+  leftCoherence : typeResult.semanticFiberEquivalence.transport sourceLeft.semanticTerm =
     targetLeft.semanticTerm.substitute substitutionResult.semanticSubstitution
-  rightCoherence : typeResult.fiberEquivalence.transport sourceRight.semanticTerm =
+  rightCoherence : typeResult.semanticFiberEquivalence.transport sourceRight.semanticTerm =
     targetRight.semanticTerm.substitute substitutionResult.semanticSubstitution
 
 def IncDepRawIdentityFormationSubstitutionFiberResult.identityFiberEquivalence
@@ -3956,8 +4008,89 @@ def IncDepRawIdentityFormationSubstitutionFiberResult.identityFiberEquivalence
         result.targetLeft.semanticTerm result.targetRight.semanticTerm).reindex
           substitutionResult.semanticSubstitution) := by
   rw [IncIdentityType.reindex]
-  exact IncIdentityType.fiberEquivalence result.typeResult.fiberEquivalence
+  exact IncIdentityType.fiberEquivalence result.typeResult.semanticFiberEquivalence
     result.leftCoherence result.rightCoherence
+
+noncomputable def IncDepRawIdentityFormationSubstitutionFiberResult.toFormationFiberResult
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {typeFormation : IncDepRawWellFormed target type}
+    {leftTyping : IncDepRawHasType target left type}
+    {rightTyping : IncDepRawHasType target right type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawIdentityFormationSubstitutionFiberResult
+      (typeFormation := typeFormation) (leftTyping := leftTyping)
+      (rightTyping := rightTyping) substitutionResult) :
+    IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := IncDepRawWellFormed.identity
+        typeFormation leftTyping rightTyping) substitutionResult where
+  targetFormationResult := IncDepRawFormationSemanticResult.identity
+    result.typeResult.targetFormationResult
+    result.targetLeft.semanticTerm result.targetRight.semanticTerm
+  sourceFormationResult := IncDepRawFormationSemanticResult.identity
+    result.typeResult.sourceFormationResult
+    result.sourceLeft.semanticTerm result.sourceRight.semanticTerm
+  semanticFiberEquivalence := result.identityFiberEquivalence
+
+structure IncDepRawTypingSubstitutionFiberResult
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {typeFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (typeResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := typeFormation) substitutionResult) where
+  targetTermResult : IncDepRawTypingSemanticResult targetTyping targetResult
+    typeResult.targetFormationResult.semanticType
+  sourceTermResult : IncDepRawTypingSemanticResult
+    (targetTyping.substitute substitution) sourceResult
+    typeResult.sourceFormationResult.semanticType
+  semanticTerm_coherence :
+    typeResult.semanticFiberEquivalence.transport sourceTermResult.semanticTerm =
+      targetTermResult.semanticTerm.substitute
+        substitutionResult.semanticSubstitution
+
+def IncDepRawTypingSubstitutionFiberResult.identityFormation
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {typeFormation : IncDepRawWellFormed target type}
+    {leftTyping : IncDepRawHasType target left type}
+    {rightTyping : IncDepRawHasType target right type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (typeResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := typeFormation) substitutionResult)
+    (leftResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := leftTyping) typeResult)
+    (rightResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := rightTyping) typeResult) :
+    IncDepRawIdentityFormationSubstitutionFiberResult
+      (typeFormation := typeFormation) (leftTyping := leftTyping)
+      (rightTyping := rightTyping) substitutionResult where
+  typeResult := typeResult
+  targetLeft := leftResult.targetTermResult
+  targetRight := rightResult.targetTermResult
+  sourceLeft := leftResult.sourceTermResult
+  sourceRight := rightResult.sourceTermResult
+  leftCoherence := leftResult.semanticTerm_coherence
+  rightCoherence := rightResult.semanticTerm_coherence
 
 def IncDepRawTypingSemanticResult.castType
     {context : List IncDepRawType} {term : IncDepRawTerm}
@@ -4182,6 +4315,39 @@ def IncDepRawTypingSemanticResult.unit
       (fun _ => ULift Unit) where
   semanticTerm := fun _ => ⟨()⟩
 
+def IncDepRawTypingSubstitutionFiberResult.unit
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) :
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := IncDepRawHasType.unitRule)
+      (IncDepRawFormationSubstitutionSemanticResult.toFiberResult
+        (IncDepRawFormationSubstitutionSemanticResult.unit substitutionResult)) where
+  targetTermResult := IncDepRawTypingSemanticResult.unit targetResult
+  sourceTermResult := IncDepRawTypingSemanticResult.unit sourceResult
+  semanticTerm_coherence := rfl
+
+theorem IncDepRawTypingSubstitutionFiberResult.unit_apply
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    (assignment : sourceResult.semanticContext.Assignment) :
+    (IncDepRawTypingSubstitutionFiberResult.unit substitutionResult).targetTermResult.semanticTerm
+        (substitutionResult.semanticSubstitution assignment) =
+      (IncDepRawTypingSubstitutionFiberResult.unit substitutionResult).sourceTermResult.semanticTerm
+        assignment := by
+  rfl
+
 def IncDepRawTypingSemanticResult.lambda
     {context : List IncDepRawType} {domain codomain : IncDepRawType}
     {body : IncDepRawTerm}
@@ -4287,6 +4453,41 @@ def IncDepRawTypingSemanticResult.refl
       (IncIdentityType semanticType termResult.semanticTerm
         termResult.semanticTerm) where
   semanticTerm := IncIdentityTerm.refl termResult.semanticTerm
+
+noncomputable def IncDepRawTypingSubstitutionFiberResult.refl
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {termTyping : IncDepRawHasType target term type}
+    {typeFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (typeResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := typeFormation) substitutionResult)
+    (termResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := termTyping) typeResult) :
+    let identityResult :=
+      IncDepRawTypingSubstitutionFiberResult.identityFormation
+        typeResult termResult termResult
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := IncDepRawHasType.reflRule termTyping)
+      identityResult.toFormationFiberResult := by
+  dsimp
+  let identityResult :=
+    IncDepRawTypingSubstitutionFiberResult.identityFormation
+      typeResult termResult termResult
+  refine
+    { targetTermResult := IncDepRawTypingSemanticResult.refl
+        termResult.targetTermResult
+      sourceTermResult := IncDepRawTypingSemanticResult.refl
+        termResult.sourceTermResult
+      semanticTerm_coherence := ?_ }
+  funext assignment
+  apply IncIdentityType.witness_irrel
 
 def IncDepRawTypingFormationSemanticResult.unit
     {context : List IncDepRawType}
