@@ -653,6 +653,12 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   すべてを覆盖した。第二射影のdependent formation計算は`secondCanonical`として命名し、dispatcher本体とalignment
   certificateが文字通り同じresultを共有する。各branch outputはpost-hoc semantic castなしにcanonical formation resultへ
   align済みとなった。
+- global alignment問題をsyntax境界で除去するmutually indexed coherent readiness
+  `IncDepRawCoherentFormationDispatchReady`/`IncDepRawCoherentTypingDispatchReady`を追加した。typing readinessをexact output
+  formation derivationでindexし、applicationのfunction/argument、pair/projection、Identity endpoint、binder bodyが親ruleと
+  同一のformation evidenceを使うことをconstruction時に強制する。mutual `toDispatchReady`/`toDispatchPair` foldは旧readinessと
+  exact output-formation readinessを同時に復元する。raw formation derivationはproof-irrelevantな`Prop`ではなく`Type`にあるため、
+  この強化は単なる実装都合ではなくtotal dispatcherのsoundness invariantである。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

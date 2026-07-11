@@ -1243,6 +1243,16 @@ It currently establishes:
   calculation so the dispatcher and its alignment certificate share literally
   the same result.  All four branch outputs therefore expose their canonical
   formation result without a post-hoc semantic cast.
+  The remaining global alignment issue is now removed at the syntax boundary by
+  mutually indexed coherent readiness trees:
+  `IncDepRawCoherentFormationDispatchReady` and
+  `IncDepRawCoherentTypingDispatchReady`.  A typing readiness is indexed by its
+  exact output formation derivation, so application functions, arguments, pairs,
+  projections, identity endpoints, and binder bodies must use the parent rule's
+  very same formation evidence.  A mutual `toDispatchReady`/`toDispatchPair`
+  fold recovers the earlier readiness API while simultaneously returning the
+  exact output-formation readiness.  This is necessary because raw formation
+  derivations live in `Type`, not proof-irrelevant `Prop`.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
