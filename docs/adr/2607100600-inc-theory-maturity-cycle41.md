@@ -105,7 +105,12 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   derivation data として構成した。lookup determinism を証明し、任意の base-type model、
   heterogeneous typed environment に対する derivation evaluator を実装した。closed identity
   と product swap は型付けされ、それぞれ恒等関数と成分交換に評価される。残る raw
-  calculus 課題は dependent constructors、weakening/substitution と一般 substitution lemma。
+  calculus 課題は dependent constructors、substitution と一般 substitution lemma。
+- raw renaming calculus を追加した。de Bruijn index map と lookup preservation を束ね、
+  binder 下の lift、term への構造的作用、全 typing derivation の preservation を証明。
+  context head への weakening は `Nat.succ` renaming の特殊化として得られ、identity
+  renaming が全 term 上で中立であることも証明済み。次段は simultaneous typed
+  substitution と semantic substitution lemma。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」や carrier 可算性の除去ではなく、Incidence 固有の意味論とのさらに

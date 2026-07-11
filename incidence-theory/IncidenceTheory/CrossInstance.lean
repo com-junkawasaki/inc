@@ -36,7 +36,7 @@ inductive IncRawType where
   deriving DecidableEq, Repr
 
 inductive IncRawTerm where
-  | variable : Nat → IncRawTerm
+  | var : Nat → IncRawTerm
   | unit : IncRawTerm
   | pair : IncRawTerm → IncRawTerm → IncRawTerm
   | first : IncRawTerm → IncRawTerm
@@ -54,7 +54,7 @@ inductive IncRawLookup : List IncRawType → Nat → IncRawType → Type
 inductive IncRawHasType : List IncRawType → IncRawTerm → IncRawType → Type
   | varRule {context index type} :
       IncRawLookup context index type →
-        IncRawHasType context (.variable index) type
+        IncRawHasType context (.var index) type
   | unitRule {context} : IncRawHasType context .unit .unit
   | pairRule {context left right leftType rightType} :
       IncRawHasType context left leftType →
@@ -75,7 +75,7 @@ inductive IncRawHasType : List IncRawType → IncRawTerm → IncRawType → Type
         IncRawHasType context (.apply function argument) codomain
 
 def incRawIdentity (type : IncRawType) : IncRawTerm :=
-  .lambda type (.variable 0)
+  .lambda type (.var 0)
 
 def incRawIdentity_hasType (type : IncRawType) :
     IncRawHasType [] (incRawIdentity type) (.function type type) := by
@@ -84,7 +84,7 @@ def incRawIdentity_hasType (type : IncRawType) :
 
 def incRawSwap (left right : IncRawType) : IncRawTerm :=
   .lambda (.product left right)
-    (.pair (.second (.variable 0)) (.first (.variable 0)))
+    (.pair (.second (.var 0)) (.first (.var 0)))
 
 def incRawSwap_hasType (left right : IncRawType) :
     IncRawHasType [] (incRawSwap left right)
@@ -174,6 +174,98 @@ theorem incRawSwap_evaluate
       (value.2, value.1) := by
   simp [incRawSwap_hasType, IncRawHasType.evaluate,
     IncRawLookup.evaluate]
+
+def IncRawTerm.rename (renameMap : Nat → Nat) : IncRawTerm → IncRawTerm
+  | .var index => .var (renameMap index)
+  | .unit => .unit
+  | .pair left right => .pair (left.rename renameMap) (right.rename renameMap)
+  | .first term => .first (term.rename renameMap)
+  | .second term => .second (term.rename renameMap)
+  | .lambda domain body =>
+      .lambda domain (body.rename fun index =>
+        match index with
+        | 0 => 0
+        | next + 1 => renameMap next + 1)
+  | .apply function argument =>
+      .apply (function.rename renameMap) (argument.rename renameMap)
+
+structure IncRawRenaming (source target : List IncRawType) where
+  index : Nat → Nat
+  preserves : ∀ {position type}, IncRawLookup source position type →
+    IncRawLookup target (index position) type
+
+def IncRawRenaming.identity (context : List IncRawType) :
+    IncRawRenaming context context where
+  index := id
+  preserves := fun lookup => lookup
+
+def IncRawRenaming.weaken (context : List IncRawType) (head : IncRawType) :
+    IncRawRenaming context (head :: context) where
+  index := Nat.succ
+  preserves := IncRawLookup.there
+
+def IncRawRenaming.lift
+    {source target : List IncRawType}
+    (renameMap : IncRawRenaming source target) (head : IncRawType) :
+    IncRawRenaming (head :: source) (head :: target) where
+  index
+    | 0 => 0
+    | next + 1 => renameMap.index next + 1
+  preserves := by
+    intro position type lookup
+    cases lookup with
+    | here => exact IncRawLookup.here
+    | there previous => exact IncRawLookup.there (renameMap.preserves previous)
+
+noncomputable def IncRawHasType.rename
+    {source target : List IncRawType}
+    {term : IncRawTerm} {type : IncRawType}
+    (typing : IncRawHasType source term type)
+    (renameMap : IncRawRenaming source target) :
+    IncRawHasType target (term.rename renameMap.index) type := by
+  induction typing generalizing target with
+  | varRule lookup =>
+      exact IncRawHasType.varRule (renameMap.preserves lookup)
+  | unitRule => exact IncRawHasType.unitRule
+  | pairRule _ _ leftRename rightRename =>
+      exact IncRawHasType.pairRule (leftRename renameMap) (rightRename renameMap)
+  | firstRule _ termRename =>
+      exact IncRawHasType.firstRule (termRename renameMap)
+  | secondRule _ termRename =>
+      exact IncRawHasType.secondRule (termRename renameMap)
+  | lambdaRule bodyTyping bodyRename =>
+      exact IncRawHasType.lambdaRule (bodyRename (renameMap.lift _))
+  | applyRule _ _ functionRename argumentRename =>
+      exact IncRawHasType.applyRule
+        (functionRename renameMap) (argumentRename renameMap)
+
+noncomputable def IncRawHasType.weaken
+    {context : List IncRawType} {term : IncRawTerm} {type : IncRawType}
+    (typing : IncRawHasType context term type) (head : IncRawType) :
+    IncRawHasType (head :: context)
+      (term.rename Nat.succ) type :=
+  typing.rename (IncRawRenaming.weaken context head)
+
+theorem IncRawTerm.rename_identity (term : IncRawTerm) :
+    term.rename id = term := by
+  induction term with
+  | var index => rfl
+  | unit => rfl
+  | pair left right ihLeft ihRight => simp [IncRawTerm.rename, ihLeft, ihRight]
+  | first term ih => simp [IncRawTerm.rename, ih]
+  | second term ih => simp [IncRawTerm.rename, ih]
+  | lambda domain body ih =>
+      simp only [IncRawTerm.rename]
+      congr 1
+      have liftIdentity :
+          (fun index => match index with
+            | 0 => 0
+            | next + 1 => id next + 1) = id := by
+        funext index
+        cases index <;> rfl
+      rw [liftIdentity, ih]
+  | apply function argument ihFunction ihArgument =>
+      simp [IncRawTerm.rename, ihFunction, ihArgument]
 
 structure IncContext where
   Assignment : Type u

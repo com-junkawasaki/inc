@@ -423,7 +423,14 @@ It currently establishes:
   its interpreted type.  Closed identity and product-swap programs have
   checked typing derivations and evaluate respectively to the identity
   function and component exchange.  Dependent raw constructors, weakening,
-  substitution, and the general interpretation/substitution lemma remain.
+  substitution, and the general interpretation/substitution lemma remained.
+  Weakening is now established through a reusable general renaming calculus:
+  a renaming carries a de Bruijn index map plus lookup preservation, lifts
+  correctly under binders, acts structurally on terms, and preserves every
+  typing derivation.  Insertion at the context head is the `Nat.succ`
+  specialization, and identity renaming is proved neutral on all terms.
+  Simultaneous typed substitution and its semantic substitution lemma are the
+  next raw-calculus steps.
 - the `inc_to_set` translation packaged as a functor from the discrete
   incidence carrier category to the category of types.  It is always faithful
   but never full or essentially surjective; explicit morphisms and objects
