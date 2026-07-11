@@ -7074,6 +7074,35 @@ theorem incToSetFunctor_not_essentiallySurjective
     hom.function (incToSetDefault inc source.down)
   exact Empty.elim impossible.down
 
+theorem incToSetFunctor_empty_not_in_essential_image
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    ∀ source : IncLiftedObject I,
+      ¬ (∃ hom : incTypeCategory.Hom
+          ((incToSetFunctor inc).obj source) (ULift Empty),
+        ∃ inv : incTypeCategory.Hom
+          (ULift Empty) ((incToSetFunctor inc).obj source),
+          incTypeCategory.comp inv hom =
+              incTypeCategory.id ((incToSetFunctor inc).obj source) ∧
+            incTypeCategory.comp hom inv =
+              incTypeCategory.id (ULift Empty)) := by
+  intro source essentialImageWitness
+  obtain ⟨hom, inv, inverseHom, homInverse⟩ := essentialImageWitness
+  have impossible : ULift Empty :=
+    hom.function (incToSetDefault inc source.down)
+  exact Empty.elim impossible.down
+
+theorem incToSetFunctor_has_object_outside_essential_image
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    ∃ target : Type u, ∀ source : IncLiftedObject I,
+      ¬ (∃ hom : incTypeCategory.Hom
+          ((incToSetFunctor inc).obj source) target,
+        ∃ inv : incTypeCategory.Hom
+          target ((incToSetFunctor inc).obj source),
+          incTypeCategory.comp inv hom =
+              incTypeCategory.id ((incToSetFunctor inc).obj source) ∧
+            incTypeCategory.comp hom inv = incTypeCategory.id target) :=
+  ⟨ULift Empty, incToSetFunctor_empty_not_in_essential_image inc⟩
+
 theorem incToSetFunctor_has_no_equivalenceCriterion
     {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
     ¬ IncFunctorEquivalenceCriterion (incToSetFunctor inc) := by
