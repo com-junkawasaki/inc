@@ -1843,6 +1843,10 @@ noncomputable def terminalCoherentQuotient :
     intro i
     cases i
     rfl
+  type_preserves := by
+    intro i
+    cases i
+    rfl
   glue_preserves := by
     intro i j k hglue
     cases i

@@ -56,6 +56,9 @@ structure CoherentQuotient {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
     (source.chainPushout.inc.boundary i).map
       (@mapEndpoint I R Q classification.classify) =
       target.boundary (classification.classify i)
+  type_preserves : ∀ i,
+    target.typeFunc (classification.classify i) =
+      source.chainPushout.inc.typeFunc i
   glue_preserves : ∀ {i j k}, source.chainPushout.inc.glue i j = some k →
     target.glue (classification.classify i) (classification.classify j) =
       some (classification.classify k)
@@ -68,6 +71,24 @@ theorem CoherentQuotient.classify_boundary
       (@mapEndpoint I R Q quotient.classification.classify) =
       quotient.target.boundary (quotient.classification.classify i) :=
   quotient.boundary_preserves i
+
+theorem CoherentQuotient.classify_boundary_mem
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    {i : I} {endpoint : Endpoint I R}
+    (hendpoint : endpoint ∈ source.chainPushout.inc.boundary i) :
+    mapEndpoint quotient.classification.classify endpoint ∈
+      quotient.target.boundary (quotient.classification.classify i) := by
+  rw [← quotient.classify_boundary i]
+  exact List.mem_map.mpr ⟨endpoint, hendpoint, rfl⟩
+
+theorem CoherentQuotient.classify_type
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    (i : I) :
+    quotient.target.typeFunc (quotient.classification.classify i) =
+      source.chainPushout.inc.typeFunc i :=
+  quotient.type_preserves i
 
 theorem CoherentQuotient.classify_glue
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
