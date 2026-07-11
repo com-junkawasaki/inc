@@ -1217,6 +1217,14 @@ It currently establishes:
   The remaining apply/pair/projection branches can therefore state precisely
   which recursively computed formation result must agree with their canonical
   Pi, Sigma, or instantiated result.
+  The four remaining non-leaf package combinators are now implemented:
+  `dispatchApply`, `dispatchPair`, `dispatchFirst`, and `dispatchSecond` align
+  their child packages with the canonical Pi/Sigma/instantiated fiber results,
+  invoke the already checked semantic constructor, and return the corresponding
+  output formation and typing result together.  The full mutual dispatcher still
+  has to synthesize the explicit formation-proof and fiber-result alignment
+  witnesses accepted by these combinators; those obligations are no longer
+  hidden inside the semantic rules.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

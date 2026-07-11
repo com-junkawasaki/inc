@@ -636,6 +636,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   fiber resultのequalityに沿う場合だけtyping-substitution resultをtransportし、`typingResultAligned`がrecursive package
   境界でこれを公開する。残るapply/pair/projection分岐が要求するcanonical Pi/Sigma/instantiate resultとの一致条件を
   Leanの型として明記できるようになった。
+- 異なるformation proofにindexedされたresultを安全に接続する`typingResultAlignedAcross`を追加し、formation proof equalityと
+  完全なfiber-result `HEq`の双方を要求する境界にした。この境界を使う`dispatchApply`/`dispatchPair`/`dispatchFirst`/
+  `dispatchSecond`を実装した。各branchはchild packageをcanonical Pi/Sigma/instantiate resultへalignし、既証明のsemantic
+  constructorを呼び、output formation/result packageを返す。残件はfull mutual dispatcher内でこれらのalignment witnessを
+  structuralに生成することであり、semantic rule内部の暗黙仮定ではなく独立した明示的proof obligationになった。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
