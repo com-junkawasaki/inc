@@ -2681,6 +2681,52 @@ structure IncDepRawClosedSemanticResult
   semanticType : IncTypeInContext IncContext.empty
   semanticTerm : IncTerm semanticType
 
+structure IncDepRawContextSemanticResult
+    {context : List IncDepRawType}
+    (wellFormed : IncDepRawContext.WellFormed context) where
+  semanticContext : IncContext
+
+def incDepRawEmptyContextSemantic :
+    IncDepRawContextSemanticResult IncDepRawContext.WellFormed.empty where
+  semanticContext := IncContext.empty
+
+def IncDepRawContextSemanticResult.extend
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    (contextResult : IncDepRawContextSemanticResult contextWellFormed)
+    {typeWellFormed : IncDepRawWellFormed context type}
+    (semanticType : IncTypeInContext contextResult.semanticContext) :
+    IncDepRawContextSemanticResult
+      (IncDepRawContext.WellFormed.extend contextWellFormed typeWellFormed) where
+  semanticContext := contextResult.semanticContext.extend semanticType
+
+structure IncDepRawSemanticResult
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawCertifiedTyping context term type)
+    (contextResult : IncDepRawContextSemanticResult
+      certified.contextWellFormed) where
+  semanticType : IncTypeInContext contextResult.semanticContext
+  semanticTerm : IncTerm semanticType
+
+def incDepRawClosedContextSemantic
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    (certified : IncDepRawCertifiedTyping [] term type) :
+    IncDepRawContextSemanticResult certified.contextWellFormed := by
+  cases certified.contextWellFormed
+  exact incDepRawEmptyContextSemantic
+
+def IncDepRawClosedSemanticResult.toGeneral
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    {certified : IncDepRawCertifiedTyping [] term type}
+    (closed : IncDepRawClosedSemanticResult certified) :
+    IncDepRawSemanticResult certified
+      (incDepRawClosedContextSemantic certified) := by
+  cases certified with
+  | mk contextWellFormed typeWellFormed typing =>
+      cases contextWellFormed
+      exact ⟨closed.semanticType, closed.semanticTerm⟩
+
 def incDepRawDependentRefl_interpretation :
     IncDepRawClosedSemanticResult incDepRawDependentRefl_certified where
   semanticType := IncPiType incDepUnitType
@@ -2692,6 +2738,16 @@ def incDepRawDependentPair_interpretation :
   semanticType := IncSigmaType incDepUnitType
     incDepRawDependentReflSemanticCodomain
   semanticTerm := incDepRawDependentPairSemantic
+
+def incDepRawDependentRefl_generalInterpretation :
+    IncDepRawSemanticResult incDepRawDependentRefl_certified
+      (incDepRawClosedContextSemantic incDepRawDependentRefl_certified) :=
+  incDepRawDependentRefl_interpretation.toGeneral
+
+def incDepRawDependentPair_generalInterpretation :
+    IncDepRawSemanticResult incDepRawDependentPair_certified
+      (incDepRawClosedContextSemantic incDepRawDependentPair_certified) :=
+  incDepRawDependentPair_interpretation.toGeneral
 
 structure IncDepRawClosedReductionResult
     {first second : IncDepRawTerm} (steps : IncDepRawSteps first second) where
