@@ -3385,6 +3385,70 @@ theorem IncIdentityTerm.J_beta
   funext assignment
   simp [IncIdentityTerm.J]
 
+structure IncIdentityJMap
+    {context : IncContext.{u}}
+    {source target : IncTypeInContext context}
+    (equivalence : IncTypeInContext.FiberEquiv source target)
+    (sourceMotive : ∀ assignment (_left _right : source assignment), Type u)
+    (targetMotive : ∀ assignment (_left _right : target assignment), Type u)
+    (sourceRefl : ∀ assignment value,
+      sourceMotive assignment value value)
+    (targetRefl : ∀ assignment value,
+      targetMotive assignment value value) where
+  mapMotive : ∀ assignment left right,
+    sourceMotive assignment left right →
+      targetMotive assignment
+        ((equivalence.fiberEquiv assignment).forward left)
+        ((equivalence.fiberEquiv assignment).forward right)
+  mapRefl : ∀ assignment value,
+    mapMotive assignment value value (sourceRefl assignment value) =
+      targetRefl assignment
+        ((equivalence.fiberEquiv assignment).forward value)
+
+theorem IncIdentityJMap.eliminate
+    {context : IncContext.{u}}
+    {source target : IncTypeInContext context}
+    {equivalence : IncTypeInContext.FiberEquiv source target}
+    {sourceMotive : ∀ assignment (_left _right : source assignment), Type u}
+    {targetMotive : ∀ assignment (_left _right : target assignment), Type u}
+    {sourceRefl : ∀ assignment value,
+      sourceMotive assignment value value}
+    {targetRefl : ∀ assignment value,
+      targetMotive assignment value value}
+    (motiveMap : IncIdentityJMap equivalence sourceMotive targetMotive
+      sourceRefl targetRefl)
+    (assignment) {left right : source assignment}
+    (path : left = right) :
+    (equivalence.fiberEquiv assignment).mapEquality path ▸
+        targetRefl assignment
+          ((equivalence.fiberEquiv assignment).forward left) =
+      motiveMap.mapMotive assignment left right
+        (path ▸ sourceRefl assignment left) := by
+  cases path
+  exact (motiveMap.mapRefl assignment left).symm
+
+theorem IncIdentityTerm.J_map
+    {context : IncContext.{u}}
+    {source target : IncTypeInContext context}
+    (equivalence : IncTypeInContext.FiberEquiv source target)
+    (sourceMotive : ∀ assignment (_left _right : source assignment), Type u)
+    (targetMotive : ∀ assignment (_left _right : target assignment), Type u)
+    (sourceRefl : ∀ assignment value,
+      sourceMotive assignment value value)
+    (targetRefl : ∀ assignment value,
+      targetMotive assignment value value)
+    (motiveMap : IncIdentityJMap equivalence sourceMotive targetMotive
+      sourceRefl targetRefl)
+    {left right : IncTerm source}
+    (equal : IncTerm (IncIdentityType source left right)) :
+    IncIdentityTerm.J targetMotive targetRefl
+        (IncIdentityTerm.map equivalence equal) =
+      fun assignment => motiveMap.mapMotive assignment
+        (left assignment) (right assignment)
+        (IncIdentityTerm.J sourceMotive sourceRefl equal assignment) := by
+  funext assignment
+  exact motiveMap.eliminate assignment (equal assignment).down.down
+
 theorem IncIdentityTerm.J_map_refl
     {context : IncContext.{u}}
     {source target : IncTypeInContext context}

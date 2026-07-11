@@ -818,6 +818,13 @@ It currently establishes:
   fiber-equivalence layer is connected to the semantic Id introduction and J
   computation rules; general motive transport for arbitrary witnesses remains
   part of the composite Id substitution-coherence branch.
+  That arbitrary-witness step is now explicit as `IncIdentityJMap`: it packages
+  a map between source and target motives together with preservation of the
+  reflexivity case.  `IncIdentityJMap.eliminate` proves the pointwise path-
+  induction law, and `IncIdentityTerm.J_map` lifts it to contextual terms,
+  showing that J commutes with transported identity witnesses.  The remaining
+  Id bridge is to construct this motive map recursively in the raw formation/
+  substitution interpreter, rather than postulate it as branch input.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

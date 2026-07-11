@@ -381,6 +381,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   reflexivity witnessに対するJ eliminationがtarget側のrefl caseへ計算されることを証明した。これで
   fiber equivalenceとsemantic Id introduction/J computationが接続され、任意witnessに対するmotive
   transportはcomposite Id substitution-coherence branchの明示的残件となった。
+- 任意identity witnessに対するmotive transportを`IncIdentityJMap`として形式化した。source/target
+  motive間のmapとrefl-case保存を同時に保持し、`eliminate`でpointwise path induction、
+  `IncIdentityTerm.J_map`でcontextual term上の可換性をsorry-free証明した。したがってsemantic Jと
+  identity witness transportの一般可換性は閉じた。Id branchに残るのは、このmotive mapをraw
+  formation/substitution interpreterの再帰から構成するcoherence証明である。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
