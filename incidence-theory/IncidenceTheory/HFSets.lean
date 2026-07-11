@@ -3314,6 +3314,52 @@ theorem hfRecursiveNat_subset_iff (m n : Nat) :
     rcases (hfRecursiveMember_nat_iff_exists x m).mp hx with ⟨k, hk, rfl⟩
     exact (hfRecursiveNat_member_iff k n).mpr (Nat.lt_of_lt_of_le hk hmn)
 
+theorem hfRecursiveNat_add_right_subset_iff (a b c : Nat) :
+    HFRecursiveSubset (hfRecursiveNat (a + c)) (hfRecursiveNat (b + c)) ↔
+      HFRecursiveSubset (hfRecursiveNat a) (hfRecursiveNat b) := by
+  rw [hfRecursiveNat_subset_iff, hfRecursiveNat_subset_iff,
+    Nat.add_le_add_iff_right]
+
+theorem hfRecursiveNat_add_left_subset_iff (a b c : Nat) :
+    HFRecursiveSubset (hfRecursiveNat (c + a)) (hfRecursiveNat (c + b)) ↔
+      HFRecursiveSubset (hfRecursiveNat a) (hfRecursiveNat b) := by
+  rw [hfRecursiveNat_subset_iff, hfRecursiveNat_subset_iff,
+    Nat.add_le_add_iff_left]
+
+theorem hfRecursiveNat_mul_right_subset_iff
+    (a b c : Nat) (positive : 0 < c) :
+    HFRecursiveSubset (hfRecursiveNat (a * c)) (hfRecursiveNat (b * c)) ↔
+      HFRecursiveSubset (hfRecursiveNat a) (hfRecursiveNat b) := by
+  rw [hfRecursiveNat_subset_iff, hfRecursiveNat_subset_iff,
+    Nat.mul_le_mul_right_iff positive]
+
+theorem hfRecursiveNat_mul_left_subset_iff
+    (a b c : Nat) (positive : 0 < c) :
+    HFRecursiveSubset (hfRecursiveNat (c * a)) (hfRecursiveNat (c * b)) ↔
+      HFRecursiveSubset (hfRecursiveNat a) (hfRecursiveNat b) := by
+  rw [hfRecursiveNat_subset_iff, hfRecursiveNat_subset_iff,
+    Nat.mul_le_mul_left_iff positive]
+
+theorem hfRecursiveNat_add_monotone
+    {a b c d : Nat}
+    (first : HFRecursiveSubset (hfRecursiveNat a) (hfRecursiveNat b))
+    (second : HFRecursiveSubset (hfRecursiveNat c) (hfRecursiveNat d)) :
+    HFRecursiveSubset (hfRecursiveNat (a + c)) (hfRecursiveNat (b + d)) := by
+  apply (hfRecursiveNat_subset_iff (a + c) (b + d)).mpr
+  exact Nat.add_le_add
+    ((hfRecursiveNat_subset_iff a b).mp first)
+    ((hfRecursiveNat_subset_iff c d).mp second)
+
+theorem hfRecursiveNat_mul_monotone
+    {a b c d : Nat}
+    (first : HFRecursiveSubset (hfRecursiveNat a) (hfRecursiveNat b))
+    (second : HFRecursiveSubset (hfRecursiveNat c) (hfRecursiveNat d)) :
+    HFRecursiveSubset (hfRecursiveNat (a * c)) (hfRecursiveNat (b * d)) := by
+  apply (hfRecursiveNat_subset_iff (a * c) (b * d)).mpr
+  exact Nat.mul_le_mul
+    ((hfRecursiveNat_subset_iff a b).mp first)
+    ((hfRecursiveNat_subset_iff c d).mp second)
+
 /- Strict inclusion is therefore not an external convention: it is exactly
    the strict natural-number order on the internally reconstructed ordinals. -/
 def HFRecursiveProperSubset (s t : HFRecursiveSet) : Prop :=

@@ -168,7 +168,10 @@ It currently establishes:
   equality of the two final internal ordinals.  Addition has left and right
   cancellation; multiplication has both cancellation laws for a positive
   common factor, and an internal product evaluates to zero exactly when one
-  encoded factor is zero.
+  encoded factor is zero.  Internal ordinal inclusion is preserved and
+  reflected by adding a common summand and by multiplying with a positive
+  common factor; addition and multiplication are monotone jointly in both
+  arguments.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
