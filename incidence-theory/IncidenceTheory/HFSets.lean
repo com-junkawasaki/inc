@@ -2792,6 +2792,62 @@ theorem hfRecursiveNatPowerGraph_mul_bases
   · exact congrArg hfRecursiveNat
       (Nat.mul_pow firstBase secondBase exponent)
 
+theorem hfRecursiveNatPowerGraph_cancel_bases
+    (bound firstBase secondBase exponent : Nat)
+    (firstBaseLess : firstBase < bound) (secondBaseLess : secondBase < bound)
+    (exponentLess : exponent < bound) (exponentPositive : 0 < exponent)
+    (output : HFRecursiveSet)
+    (first : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveNat firstBase)
+          (hfRecursiveNat exponent)) output)
+      (hfRecursiveNatPowerGraph bound))
+    (second : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveNat secondBase)
+          (hfRecursiveNat exponent)) output)
+      (hfRecursiveNatPowerGraph bound)) :
+    firstBase = secondBase := by
+  have firstValue := (hfRecursiveNatPowerGraph_on_nats_iff bound
+    firstBase exponent firstBaseLess exponentLess output).mp first
+  have secondValue := (hfRecursiveNatPowerGraph_on_nats_iff bound
+    secondBase exponent secondBaseLess exponentLess output).mp second
+  have powerEq : firstBase ^ exponent = secondBase ^ exponent :=
+    hfRecursiveNat_injective (firstValue.symm.trans secondValue)
+  apply Nat.le_antisymm
+  · exact (Nat.pow_le_pow_iff_left (Nat.ne_of_gt exponentPositive)).mp
+      (Nat.le_of_eq powerEq)
+  · exact (Nat.pow_le_pow_iff_left (Nat.ne_of_gt exponentPositive)).mp
+      (Nat.le_of_eq powerEq.symm)
+
+theorem hfRecursiveNatPowerGraph_cancel_exponents
+    (bound base firstExponent secondExponent : Nat)
+    (baseLess : base < bound) (baseGreaterOne : 1 < base)
+    (firstLess : firstExponent < bound) (secondLess : secondExponent < bound)
+    (output : HFRecursiveSet)
+    (first : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveNat base)
+          (hfRecursiveNat firstExponent)) output)
+      (hfRecursiveNatPowerGraph bound))
+    (second : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveNat base)
+          (hfRecursiveNat secondExponent)) output)
+      (hfRecursiveNatPowerGraph bound)) :
+    firstExponent = secondExponent := by
+  have firstValue := (hfRecursiveNatPowerGraph_on_nats_iff bound
+    base firstExponent baseLess firstLess output).mp first
+  have secondValue := (hfRecursiveNatPowerGraph_on_nats_iff bound
+    base secondExponent baseLess secondLess output).mp second
+  have powerEq : base ^ firstExponent = base ^ secondExponent :=
+    hfRecursiveNat_injective (firstValue.symm.trans secondValue)
+  apply Nat.le_antisymm
+  · exact (Nat.pow_le_pow_iff_right baseGreaterOne).mp
+      (Nat.le_of_eq powerEq)
+  · exact (Nat.pow_le_pow_iff_right baseGreaterOne).mp
+      (Nat.le_of_eq powerEq.symm)
+
 theorem hfRecursiveNatShiftGraph_zero (n : Nat) :
     hfRecursiveNatShiftGraph 0 n = hfRecursiveNatIdentityGraph n := by
   induction n with
@@ -3772,6 +3828,22 @@ theorem hfRecursiveNat_mul_left_properSubset_iff
       HFRecursiveProperSubset (hfRecursiveNat a) (hfRecursiveNat b) := by
   rw [hfRecursiveNat_properSubset_iff, hfRecursiveNat_properSubset_iff,
     Nat.mul_lt_mul_left positive]
+
+theorem hfRecursiveNat_pow_base_properSubset_iff
+    (a b exponent : Nat) (positive : 0 < exponent) :
+    HFRecursiveProperSubset (hfRecursiveNat (a ^ exponent))
+        (hfRecursiveNat (b ^ exponent)) ↔
+      HFRecursiveProperSubset (hfRecursiveNat a) (hfRecursiveNat b) := by
+  rw [hfRecursiveNat_properSubset_iff, hfRecursiveNat_properSubset_iff,
+    Nat.pow_lt_pow_iff_left (Nat.ne_of_gt positive)]
+
+theorem hfRecursiveNat_pow_exponent_properSubset_iff
+    (base m n : Nat) (baseGreaterOne : 1 < base) :
+    HFRecursiveProperSubset (hfRecursiveNat (base ^ m))
+        (hfRecursiveNat (base ^ n)) ↔
+      HFRecursiveProperSubset (hfRecursiveNat m) (hfRecursiveNat n) := by
+  rw [hfRecursiveNat_properSubset_iff, hfRecursiveNat_properSubset_iff,
+    Nat.pow_lt_pow_iff_right baseGreaterOne]
 
 /- Equality of internal finite ordinals is exactly equality of their external
    indices; this is the order-reflecting half of the ordinal embedding. -/

@@ -183,7 +183,10 @@ It currently establishes:
   addition, multiplication, and power application.  The product law
   `(a*b)^n=a^n*b^n` is checked in the same form.  Powers are monotone in the
   base and, for positive bases, in the exponent; positive exponents and bases
-  greater than one give the corresponding inclusion-reflection equivalences.
+  greater than one give the corresponding inclusion-reflection equivalences
+  for both ordinary and strict inclusion.  Under those same hypotheses, equal
+  outputs of the internal power graph cancel respectively to equal bases or
+  equal exponents.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
