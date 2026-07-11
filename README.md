@@ -1422,6 +1422,13 @@ It currently establishes:
   paired object.  Formation and typing recursion therefore now meet through
   symmetric, proof-indexed interfaces; constructing the typing half and tying
   this pair is the remaining mutual-recursion step.
+  The typing half now has checked fold branches for variable, unit,
+  reflexivity, and lambda.  Variable recursively obtains its exact type result
+  before consulting the replacement provider; reflexivity aligns its recursive
+  term with the selected type result; lambda performs the full binder protocol
+  (domain dispatch, semantic-context extension, replacement lifting, codomain
+  dispatch, and body normalization).  Apply, pair, first, and second remain to
+  be connected to complete the eight-way typing dispatcher.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

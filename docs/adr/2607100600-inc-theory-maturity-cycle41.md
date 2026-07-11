@@ -754,6 +754,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - 逆向きの境界も`IncDepRawStrictFormationSubstitutionDispatcher`として明示し、checked formation foldをこのinterfaceへ変換する
   `strictFormationDispatcher`を追加した。最終的な対を`IncDepRawStrictMutualSubstitutionDispatcher`としてpackageしたため、formationと
   typing recursionは対称なproof-indexed interfaceを介して接続できる。残件はtyping側の再帰実装と、このpairを同時再帰で構成する工程である。
+- typing側のchecked fold branchesとしてvariable/unit/refl/lambdaを実装した。variableはexact type resultをformation dispatcherから取得して
+  replacement providerへ渡し、reflはrecursive term resultを選択されたtype resultへalignする。lambdaはdomain dispatch、semantic context extend、
+  replacement lift、codomain dispatch、body normalizeというbinder protocol全体を実行する。残るapply/pair/first/secondの接続でtyping全8枝が揃う。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
