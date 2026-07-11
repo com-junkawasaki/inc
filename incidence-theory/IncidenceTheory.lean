@@ -4328,6 +4328,84 @@ theorem IncCoherentCategoryEquivalence.mapEqualizer_inclusion
     (coherent.mapEqualizer equalizer).inclusion =
       coherent.equivalence.forward.map equalizer.inclusion := rfl
 
+structure StrongEqualizerPreserving
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) {source target : CObj}
+    {first second : C.Hom source target} (equalizer : IncEqualizer first second) where
+  mapped : IncEqualizer (F.map first) (F.map second)
+  object_is_image : mapped.object = F.obj equalizer.object
+  inclusion_is_map : HEq mapped.inclusion (F.map equalizer.inclusion)
+
+structure StrongEqualizerPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) where
+  preserves : ∀ {source target : CObj} {first second : C.Hom source target}
+    (equalizer : IncEqualizer first second), StrongEqualizerPreserving F equalizer
+
+abbrev StrongCoequalizerPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) :=
+  StrongEqualizerPreservingFamily F.op
+
+noncomputable def IncFunctorEquivalenceCriterion.strongEqualizerPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F) :
+    StrongEqualizerPreservingFamily F where
+  preserves := by
+    intro source target first second equalizer
+    let coherent := criterion.toCoherentCategoryEquivalence
+    have forwardEq : coherent.equivalence.forward = F := rfl
+    cases forwardEq
+    exact
+      { mapped := coherent.mapEqualizer equalizer
+        object_is_image := rfl
+        inclusion_is_map := by
+          exact HEq.refl _ }
+
+noncomputable def IncFunctorEquivalenceCriterion.strongCoequalizerPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F) :
+    StrongCoequalizerPreservingFamily F :=
+  criterion.op.strongEqualizerPreservingFamily
+
+noncomputable def IncCategoryEquivalence.strongEqualizerPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    StrongEqualizerPreservingFamily equivalence.forward :=
+  equivalence.forward_criterion.strongEqualizerPreservingFamily
+
+noncomputable def IncCategoryEquivalence.strongCoequalizerPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    StrongCoequalizerPreservingFamily equivalence.forward :=
+  equivalence.forward_criterion.strongCoequalizerPreservingFamily
+
+structure StrongFiniteLimitColimitPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) extends StrongFiniteBicartesianPreservingFamily F where
+  equalizers : StrongEqualizerPreservingFamily F
+  coequalizers : StrongCoequalizerPreservingFamily F
+
+noncomputable def IncFunctorEquivalenceCriterion.strongFiniteLimitColimitPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F) :
+    StrongFiniteLimitColimitPreservingFamily F where
+  pushouts := IncCoherentCategoryEquivalence.strongPushoutPreservingFamily
+    criterion.toCoherentCategoryEquivalence
+  pullbacks := criterion.strongPullbackPreservingFamily
+  initial := criterion.mapInitialObject
+  terminal := criterion.mapTerminalObject
+  initial_object_is_map := by intro object; rfl
+  terminal_object_is_map := by intro object; rfl
+  equalizers := criterion.strongEqualizerPreservingFamily
+  coequalizers := criterion.strongCoequalizerPreservingFamily
+
+noncomputable def IncCategoryEquivalence.strongFiniteLimitColimitPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    StrongFiniteLimitColimitPreservingFamily equivalence.forward :=
+  equivalence.forward_criterion.strongFiniteLimitColimitPreservingFamily
+
 noncomputable def IncCategoryEquivalence.stronglyPreservesBinaryProduct
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (equivalence : IncCategoryEquivalence C D)
