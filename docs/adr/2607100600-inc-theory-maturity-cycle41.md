@@ -364,6 +364,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - transported Sigma pairのfirst projectionがdomain forward transportとdefinitionally可換であることを証明した。
 - dependent second projectionも対応するcodomain-fiber forward mapへdefinitionally計算されることを
   証明し、Sigmaの両eliminatorについてtransport equationを閉じた。
+- identity coherenceをfiber levelで開始した。equivalenceのforward mapのcongruenceによりequality
+  witnessを写す`mapEquality`と、mapped reflexivityがreflexivityへdefinitionally計算される則を
+  証明し、Id formation/J coherence branchのintroduction/computation coreを得た。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

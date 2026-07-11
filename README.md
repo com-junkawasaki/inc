@@ -795,6 +795,10 @@ It currently establishes:
   The dependent second projection likewise computes to the corresponding
   codomain-fiber forward map, so both Sigma eliminators now have checked
   transport equations.
+  Identity coherence has started at the fiber level: an equivalence maps equality
+  witnesses by congruence of its forward map, and mapped reflexivity computes to
+  reflexivity definitionally.  This is the introduction/computation core for the
+  forthcoming Id formation and J coherence branch.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

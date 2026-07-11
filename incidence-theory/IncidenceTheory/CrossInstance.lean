@@ -2643,6 +2643,18 @@ structure IncFiberEquiv (source target : Type u) where
   backward_forward : ∀ value, backward (forward value) = value
   forward_backward : ∀ value, forward (backward value) = value
 
+def IncFiberEquiv.mapEquality
+    {source target : Type u} (equivalence : IncFiberEquiv source target)
+    {left right : source} (equality : left = right) :
+    equivalence.forward left = equivalence.forward right :=
+  congrArg equivalence.forward equality
+
+theorem IncFiberEquiv.mapEquality_refl
+    {source target : Type u} (equivalence : IncFiberEquiv source target)
+    (value : source) :
+    equivalence.mapEquality (Eq.refl value) = Eq.refl (equivalence.forward value) := by
+  rfl
+
 structure IncTypeInContext.FiberEquiv
     {context : IncContext.{u}}
     (source target : IncTypeInContext context) where
