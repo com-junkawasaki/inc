@@ -5833,17 +5833,27 @@ def glue_boundary_matrix {I R T : Type u} [DecidableEq I]
     else
       boundaryMatrix inc idx x y
 
-/- Glue preserves the boundary operator's ∂²=0 property: NOT formalized.
-   `Incidence.glue` is, by design, an opaque `I → I → Option I` with no
-   axiom in `Incidence` connecting it to `boundary`/`boundaryMatrix`, so a
-   real proof would need a new structural axiom tying glue to boundaries.
-   Left as an explicitly-unformalized placeholder rather than a fake proof. -/
+/- The exact compatibility condition needed to make glue preserve the chain
+   condition.  It is deliberately separate from `Incidence`: the minimal
+   incidence signature permits models whose opaque glue operation has no
+   relation to boundary data, while chain-compatible models can supply this
+   additional law. -/
+def GlueBoundaryCompatible {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) : Prop :=
+  ∀ (idx : List I) {i j k : I}, inc.glue i j = some k →
+    (∀ x, boundary_composition inc idx i x = 0) →
+    (∀ x, boundary_composition inc idx j x = 0) →
+    ∀ x, boundary_composition inc idx k x = 0
+
 /- Merkle-ID: foundation.axiomatization.glue_boundary_preservation
-   T1-adjacent: placeholder, not yet formalized. -/
+   T1-adjacent: compatible glue preserves the chain condition. -/
 theorem glue_preserves_boundary_operator {I R T : Type u} [DecidableEq I]
-  (inc : Incidence I R T) (_idx : List I) {i j k : I}
-  (_hglue : inc.glue i j = some k) :
-  True := trivial
+    (inc : Incidence I R T) (compatible : GlueBoundaryCompatible inc)
+    (idx : List I) {i j k : I} (hglue : inc.glue i j = some k)
+    (leftSquareZero : ∀ x, boundary_composition inc idx i x = 0)
+    (rightSquareZero : ∀ x, boundary_composition inc idx j x = 0) :
+    ∀ x, boundary_composition inc idx k x = 0 :=
+  compatible idx hglue leftSquareZero rightSquareZero
 
 
 /- Merkle-ID: foundation.axiomatization.pushout_universality
@@ -5955,14 +5965,38 @@ theorem boundary_functor_soundness {I R T : Type u} [DecidableEq I]
   ∀ i k : I, i ∈ idx → k ∈ idx → boundary_composition inc idx i k = 0 :=
   boundary_operator_square_zero inc idx hcheck
 
-/- Linear invariants are preserved: NOT formalized (would need a genuine
-   notion of "invariant" -- ranks, spectra -- and a proof they're
-   translation-invariant; left as an explicit placeholder, not a fake proof). -/
+/- A linear invariant is any observation computed solely from a boundary
+   matrix.  This abstraction includes rank, determinant, homology summaries,
+   and spectral data once their algorithms are supplied; preservation does
+   not depend on the particular codomain of the observation. -/
+abbrev LinearInvariant (I : Type u) (A : Type v) := Matrix I I Int → A
+
 /- Merkle-ID: foundation.axiomatization.linear_invariants_preserved
-   Placeholder: linear-algebraic invariant preservation, not yet formalized. -/
-theorem linear_invariants_preserved {I R T : Type u} [DecidableEq I]
-  (_inc : Incidence I R T) (_idx : List I) :
-  True := trivial
+   Every matrix-derived invariant is preserved by a translation that
+   preserves the boundary matrix pointwise. -/
+theorem linear_invariants_preserved
+    {I R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] {A : Type v}
+    (source : Incidence I R₁ T₁) (target : Incidence I R₂ T₂)
+    (idx : List I) (invariant : LinearInvariant I A)
+    (preservesBoundary : ∀ i j,
+      boundaryMatrix source idx i j = boundaryMatrix target idx i j) :
+    invariant (boundaryMatrix source idx) =
+      invariant (boundaryMatrix target idx) := by
+  apply congrArg invariant
+  funext i j
+  exact preservesBoundary i j
+
+theorem all_linear_invariants_preserved
+    {I R₁ T₁ R₂ T₂ : Type u} [DecidableEq I]
+    (source : Incidence I R₁ T₁) (target : Incidence I R₂ T₂)
+    (idx : List I)
+    (preservesBoundary : ∀ i j,
+      boundaryMatrix source idx i j = boundaryMatrix target idx i j) :
+    ∀ {A : Type v} (invariant : LinearInvariant I A),
+      invariant (boundaryMatrix source idx) =
+        invariant (boundaryMatrix target idx) := by
+  intro A invariant
+  exact linear_invariants_preserved source target idx invariant preservesBoundary
 
 end LinearSemanticsSoundness
 
