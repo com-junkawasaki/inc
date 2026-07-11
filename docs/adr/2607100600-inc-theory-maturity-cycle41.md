@@ -180,6 +180,13 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   binder liftを実装。liftはnewest variableを固定し、older replacementをrenamed source
   telescopeへweakeningし、両caseのdependent lookup型を二方向のfusion lawで整列する。
   dependent formation/typing substitution preservationの入力構造が成立した。
+- simultaneous substitution compositionをdependent type/termの相互再帰で証明し、binder
+  下のlifted composition equationも確立した。そこからcodomain instantiateのsubstitution
+  naturalityを導出し、任意typed dependent substitutionがtype formationとterm typingを保存
+  することを相互再帰で証明した。Pi/Sigma formation/binder、application、dependent pairと
+  両projection、identity formation、reflの全ruleを含む。raw dependent calculusのrenaming/
+  substitution judgment preservationは完成し、主要な残件はcontextual Pi/Sigma/Id modelへの
+  semantic interpretation/soundnessとなった。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

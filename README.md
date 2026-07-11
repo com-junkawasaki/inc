@@ -514,6 +514,15 @@ It currently establishes:
   replacement through the renamed source telescope, and uses both fusion laws
   to align the weakened lookup types.  This provides the substitution object
   required for full dependent formation/typing preservation.
+  Simultaneous substitution composition is proved mutually for every dependent
+  type and term, including the lifted-composition equation under binders.  It
+  yields substitution naturality of codomain instantiation.  Using these laws,
+  type formation and term typing are preserved by every typed dependent
+  substitution.  The mutual proof covers Pi/Sigma formation and binders,
+  application, dependent pairing and both projections, identity formation, and
+  reflexivity.  Thus the raw dependent calculus now has full renaming and
+  substitution judgment preservation; its remaining major bridge is semantic
+  interpretation and soundness in the contextual Pi/Sigma/Id model.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite

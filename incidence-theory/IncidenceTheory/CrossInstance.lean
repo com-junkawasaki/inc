@@ -1278,6 +1278,74 @@ mutual
           IncDepRawTerm.rename_substitute term]
 end
 
+theorem IncDepRawTerm.liftReplacement_comp
+    (first second : Nat → IncDepRawTerm) :
+    (fun index =>
+      (IncDepRawTerm.liftReplacement first index).substitute
+        (IncDepRawTerm.liftReplacement second)) =
+    IncDepRawTerm.liftReplacement
+      (fun index => (first index).substitute second) := by
+  funext index
+  cases index with
+  | zero => rfl
+  | succ next =>
+      simp only [IncDepRawTerm.liftReplacement]
+      rw [IncDepRawTerm.rename_substitute,
+        IncDepRawTerm.substitute_rename]
+      congr 1
+
+mutual
+  theorem IncDepRawType.substitute_comp (type : IncDepRawType)
+      (first second : Nat → IncDepRawTerm) :
+      (type.substitute first).substitute second =
+        type.substitute (fun index => (first index).substitute second) := by
+    cases type with
+    | base index => rfl
+    | unit => rfl
+    | pi domain codomain =>
+        simp only [IncDepRawType.substitute]
+        rw [IncDepRawType.substitute_comp domain]
+        rw [IncDepRawType.substitute_comp codomain]
+        rw [IncDepRawTerm.liftReplacement_comp]
+    | sigma domain codomain =>
+        simp only [IncDepRawType.substitute]
+        rw [IncDepRawType.substitute_comp domain]
+        rw [IncDepRawType.substitute_comp codomain]
+        rw [IncDepRawTerm.liftReplacement_comp]
+    | identity type left right =>
+        simp only [IncDepRawType.substitute]
+        rw [IncDepRawType.substitute_comp type,
+          IncDepRawTerm.substitute_comp left,
+          IncDepRawTerm.substitute_comp right]
+
+  theorem IncDepRawTerm.substitute_comp (term : IncDepRawTerm)
+      (first second : Nat → IncDepRawTerm) :
+      (term.substitute first).substitute second =
+        term.substitute (fun index => (first index).substitute second) := by
+    cases term with
+    | var index => rfl
+    | unit => rfl
+    | lambda domain body =>
+        simp only [IncDepRawTerm.substitute]
+        rw [IncDepRawType.substitute_comp domain]
+        rw [IncDepRawTerm.substitute_comp body]
+        rw [IncDepRawTerm.liftReplacement_comp]
+    | apply function argument =>
+        simp only [IncDepRawTerm.substitute]
+        rw [IncDepRawTerm.substitute_comp function,
+          IncDepRawTerm.substitute_comp argument]
+    | pair firstTerm secondTerm =>
+        simp only [IncDepRawTerm.substitute]
+        rw [IncDepRawTerm.substitute_comp firstTerm,
+          IncDepRawTerm.substitute_comp secondTerm]
+    | first pair =>
+        simp [IncDepRawTerm.substitute, IncDepRawTerm.substitute_comp pair]
+    | second pair =>
+        simp [IncDepRawTerm.substitute, IncDepRawTerm.substitute_comp pair]
+    | refl term =>
+        simp [IncDepRawTerm.substitute, IncDepRawTerm.substitute_comp term]
+end
+
 mutual
   theorem IncDepRawType.substitute_identity (type : IncDepRawType) :
       type.substitute IncDepRawTerm.var = type := by
@@ -1339,6 +1407,29 @@ theorem IncDepRawType.instantiate_rename
   congr 1
   funext index
   cases index <;> rfl
+
+theorem IncDepRawType.instantiate_substitute
+    (codomain : IncDepRawType) (argument : IncDepRawTerm)
+    (replacement : Nat → IncDepRawTerm) :
+    (codomain.instantiate argument).substitute replacement =
+      (codomain.substitute (IncDepRawTerm.liftReplacement replacement)).instantiate
+        (argument.substitute replacement) := by
+  simp only [IncDepRawType.instantiate]
+  rw [IncDepRawType.substitute_comp, IncDepRawType.substitute_comp]
+  congr 1
+  funext index
+  cases index with
+  | zero => rfl
+  | succ next =>
+      simp only [IncDepRawTerm.liftReplacement, IncDepRawTerm.substitute]
+      rw [IncDepRawTerm.rename_substitute]
+      have mapIdentity :
+          ((fun index => match index with
+            | 0 => argument.substitute replacement
+            | next + 1 => .var next) ∘ Nat.succ) = IncDepRawTerm.var := by
+        funext index
+        rfl
+      rw [mapIdentity, IncDepRawTerm.substitute_identity]
 
 inductive IncDepRawLookup : List IncDepRawType → Nat → IncDepRawType → Type
   | here {context type} :
@@ -1616,6 +1707,69 @@ noncomputable def IncDepRawSubstitution.lift
         rw [mapEq] at weakened
         rw [← IncDepRawType.rename_substitute] at weakened
         exact weakened
+
+mutual
+  noncomputable def IncDepRawWellFormed.substitute
+      {source target : List IncDepRawType} {type : IncDepRawType}
+      (formation : IncDepRawWellFormed target type)
+      (substitution : IncDepRawSubstitution source target) :
+      IncDepRawWellFormed source (type.substitute substitution.term) := by
+    cases formation with
+    | base => exact IncDepRawWellFormed.base
+    | unit => exact IncDepRawWellFormed.unit
+    | pi domainFormation codomainFormation =>
+        exact IncDepRawWellFormed.pi
+          (domainFormation.substitute substitution)
+          (codomainFormation.substitute (substitution.lift _))
+    | sigma domainFormation codomainFormation =>
+        exact IncDepRawWellFormed.sigma
+          (domainFormation.substitute substitution)
+          (codomainFormation.substitute (substitution.lift _))
+    | identity typeFormation leftTyping rightTyping =>
+        exact IncDepRawWellFormed.identity
+          (typeFormation.substitute substitution)
+          (leftTyping.substitute substitution)
+          (rightTyping.substitute substitution)
+
+  noncomputable def IncDepRawHasType.substitute
+      {source target : List IncDepRawType}
+      {term : IncDepRawTerm} {type : IncDepRawType}
+      (typing : IncDepRawHasType target term type)
+      (substitution : IncDepRawSubstitution source target) :
+      IncDepRawHasType source (term.substitute substitution.term)
+        (type.substitute substitution.term) := by
+    cases typing with
+    | varRule lookup => exact substitution.preserves lookup
+    | unitRule => exact IncDepRawHasType.unitRule
+    | lambdaRule domainFormation bodyTyping =>
+        exact IncDepRawHasType.lambdaRule
+          (domainFormation.substitute substitution)
+          (bodyTyping.substitute (substitution.lift _))
+    | applyRule functionTyping argumentTyping =>
+        have substituted := IncDepRawHasType.applyRule
+          (functionTyping.substitute substitution)
+          (argumentTyping.substitute substitution)
+        rw [← IncDepRawType.instantiate_substitute] at substituted
+        exact substituted
+    | pairRule firstTyping secondTyping =>
+        have substitutedSecond := secondTyping.substitute substitution
+        rw [IncDepRawType.instantiate_substitute] at substitutedSecond
+        exact IncDepRawHasType.pairRule
+          (firstTyping.substitute substitution) substitutedSecond
+    | firstRule pairTyping =>
+        exact IncDepRawHasType.firstRule (pairTyping.substitute substitution)
+    | @secondRule _ domain codomain pair pairTyping =>
+        have substituted := IncDepRawHasType.secondRule
+          (pairTyping.substitute substitution)
+        have instantiation := IncDepRawType.instantiate_substitute
+          codomain (IncDepRawTerm.first pair) substitution.term
+        simp only [IncDepRawTerm.substitute] at instantiation
+        rw [← instantiation] at substituted
+        exact substituted
+    | reflRule termTyping =>
+        exact IncDepRawHasType.reflRule
+          (termTyping.substitute substitution)
+end
 
 inductive IncDepRawContext.WellFormed : List IncDepRawType → Type
   | empty : WellFormed []
