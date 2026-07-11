@@ -3053,6 +3053,52 @@ structure PushoutPreserving {CObj DObj : Type u} {C : IncCategory CObj}
   mapped_pushout : MorphismPushout (F.mapCospan span)
   apex_is_image : mapped_pushout.apex = F.obj po.apex
 
+structure StrongPushoutPreserving {CObj DObj : Type u} {C : IncCategory CObj}
+    {D : IncCategory DObj} (F : IncFunctor C D) {span : MorphismCospan C}
+    (po : MorphismPushout span) where
+  mapped_pushout : MorphismPushout (F.mapCospan span)
+  apex_is_image : mapped_pushout.apex = F.obj po.apex
+  inl_is_map :
+    Eq.ndrec mapped_pushout.inl apex_is_image = F.map po.inl
+  inr_is_map :
+    Eq.ndrec mapped_pushout.inr apex_is_image = F.map po.inr
+
+def StrongPushoutPreserving.toPushoutPreserving
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} {span : MorphismCospan C} {po : MorphismPushout span}
+    (strong : StrongPushoutPreserving F po) : PushoutPreserving F po where
+  mapped_pushout := strong.mapped_pushout
+  apex_is_image := strong.apex_is_image
+
+theorem StrongPushoutPreserving.mapped_inl_is_functor_map
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} {span : MorphismCospan C} {po : MorphismPushout span}
+    (strong : StrongPushoutPreserving F po) :
+    Eq.ndrec strong.mapped_pushout.inl strong.apex_is_image = F.map po.inl :=
+  strong.inl_is_map
+
+theorem StrongPushoutPreserving.mapped_inr_is_functor_map
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} {span : MorphismCospan C} {po : MorphismPushout span}
+    (strong : StrongPushoutPreserving F po) :
+    Eq.ndrec strong.mapped_pushout.inr strong.apex_is_image = F.map po.inr :=
+  strong.inr_is_map
+
+def StrongPushoutPreserving.identity
+    {Obj : Type u} {C : IncCategory Obj} {span : MorphismCospan C}
+    (po : MorphismPushout span) :
+    StrongPushoutPreserving (IncFunctor.identity C) po where
+  mapped_pushout := po
+  apex_is_image := rfl
+  inl_is_map := rfl
+  inr_is_map := rfl
+
+structure StrongPushoutPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) where
+  preserves : ∀ {span : MorphismCospan C} (po : MorphismPushout span),
+    StrongPushoutPreserving F po
+
 def translation_preserves_pushout {CObj DObj : Type u}
     {C : IncCategory CObj} {D : IncCategory DObj} {F : IncFunctor C D}
     {span : MorphismCospan C} (po : MorphismPushout span)
@@ -3096,6 +3142,17 @@ def PushoutPreservingFamily.identity {Obj : Type u} (C : IncCategory Obj) :
   preserves := by
     intro span po
     exact { mapped_pushout := po, apex_is_image := rfl }
+
+def StrongPushoutPreservingFamily.toPushoutPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (strong : StrongPushoutPreservingFamily F) :
+    PushoutPreservingFamily F where
+  preserves := fun po => (strong.preserves po).toPushoutPreserving
+
+def StrongPushoutPreservingFamily.identity
+    {Obj : Type u} (C : IncCategory Obj) :
+    StrongPushoutPreservingFamily (IncFunctor.identity C) where
+  preserves := StrongPushoutPreserving.identity
 
 /- Uniform preservation is closed under translation composition.  The second
    family is applied to the actual mapped universal cocone selected by the
