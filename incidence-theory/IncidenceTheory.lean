@@ -4016,6 +4016,61 @@ def equalizer_unique_up_to_iso
   hom_inv := by
     rw [← equalizerComparison_comp, equalizerComparison_self]
 
+theorem IncCoherentCategoryEquivalence.pulledEqualizerArrow_equalizes
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D)
+    {source target : CObj} (first second : C.Hom source target)
+    {candidate : DObj}
+    (arrow : D.Hom candidate (coherent.equivalence.forward.obj source))
+    (equalizes :
+      D.comp (coherent.equivalence.forward.map first) arrow =
+        D.comp (coherent.equivalence.forward.map second) arrow) :
+    C.comp first
+        (C.comp (coherent.equivalence.unit.inv.app source)
+          (coherent.equivalence.inverse.map arrow)) =
+      C.comp second
+        (C.comp (coherent.equivalence.unit.inv.app source)
+          (coherent.equivalence.inverse.map arrow)) := by
+  let F := coherent.equivalence.forward
+  let G := coherent.equivalence.inverse
+  let unit := coherent.equivalence.unit
+  have firstNaturality :
+      C.comp first (unit.inv.app source) =
+        C.comp (unit.inv.app target) ((G.comp F).map first) := by
+    simpa [IncFunctor.identity] using unit.inv.naturality first
+  have secondNaturality :
+      C.comp second (unit.inv.app source) =
+        C.comp (unit.inv.app target) ((G.comp F).map second) := by
+    simpa [IncFunctor.identity] using unit.inv.naturality second
+  calc
+    C.comp first (C.comp (unit.inv.app source) (G.map arrow)) =
+      C.comp (C.comp first (unit.inv.app source)) (G.map arrow) :=
+        C.assoc _ _ _
+    _ = C.comp
+        (C.comp (unit.inv.app target) ((G.comp F).map first))
+        (G.map arrow) := by rw [firstNaturality]
+    _ = C.comp (unit.inv.app target)
+        (C.comp ((G.comp F).map first) (G.map arrow)) :=
+          (C.assoc _ _ _).symm
+    _ = C.comp (unit.inv.app target)
+        (G.map (D.comp (F.map first) arrow)) := by
+          simp only [IncFunctor.comp]
+          rw [G.map_comp]
+    _ = C.comp (unit.inv.app target)
+        (G.map (D.comp (F.map second) arrow)) := by rw [equalizes]
+    _ = C.comp (unit.inv.app target)
+        (C.comp ((G.comp F).map second) (G.map arrow)) := by
+          simp only [IncFunctor.comp]
+          rw [G.map_comp]
+    _ = C.comp
+        (C.comp (unit.inv.app target) ((G.comp F).map second))
+        (G.map arrow) := C.assoc _ _ _
+    _ = C.comp (C.comp second (unit.inv.app source)) (G.map arrow) := by
+          rw [secondNaturality]
+    _ = C.comp second
+        (C.comp (unit.inv.app source) (G.map arrow)) :=
+          (C.assoc _ _ _).symm
+
 noncomputable def IncCategoryEquivalence.stronglyPreservesBinaryProduct
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (equivalence : IncCategoryEquivalence C D)
