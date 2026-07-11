@@ -1616,6 +1616,25 @@ theorem IncFunctorFullyFaithful.iff_of_naturallyIsomorphic
   · intro hG
     exact hG.transport iso.symm
 
+theorem IncFunctorFullyFaithful.comp
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F : IncFunctor C D} {G : IncFunctor D E}
+    (hG : IncFunctorFullyFaithful G) (hF : IncFunctorFullyFaithful F) :
+    IncFunctorFullyFaithful (G.comp F) where
+  faithful := by
+    intro source target left right equality
+    apply hF.faithful left right
+    apply hG.faithful (F.map left) (F.map right)
+    exact equality
+  full := by
+    intro source target morphism
+    obtain ⟨middle, middleEq⟩ := hG.full morphism
+    obtain ⟨preimage, preimageEq⟩ := hF.full middle
+    refine ⟨preimage, ?_⟩
+    change G.map (F.map preimage) = morphism
+    rw [preimageEq, middleEq]
+
 def IncFunctorEssentiallySurjective
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (F : IncFunctor C D) : Prop :=
@@ -1978,6 +1997,30 @@ def IncFunctor.mapIso
     rw [← F.map_comp, iso.inv_hom, F.map_id]
   hom_inv := by
     rw [← F.map_comp, iso.hom_inv, F.map_id]
+
+theorem IncFunctorEssentiallySurjective.comp
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F : IncFunctor C D} {G : IncFunctor D E}
+    (hG : IncFunctorEssentiallySurjective G)
+    (hF : IncFunctorEssentiallySurjective F) :
+    IncFunctorEssentiallySurjective (G.comp F) := by
+  intro target
+  obtain ⟨middle, outerHom, outerInv, outerInvHom, outerHomInv⟩ := hG target
+  obtain ⟨source, innerHom, innerInv, innerInvHom, innerHomInv⟩ := hF middle
+  let innerIso : MorphismIso D (F.obj source) middle :=
+    { hom := innerHom
+      inv := innerInv
+      inv_hom := innerInvHom
+      hom_inv := innerHomInv }
+  let outerIso : MorphismIso E (G.obj middle) target :=
+    { hom := outerHom
+      inv := outerInv
+      inv_hom := outerInvHom
+      hom_inv := outerHomInv }
+  let composite := (G.mapIso innerIso).trans outerIso
+  exact ⟨source, composite.hom, composite.inv,
+    composite.inv_hom, composite.hom_inv⟩
 
 noncomputable def IncFunctorFullyFaithful.reflectIso
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
