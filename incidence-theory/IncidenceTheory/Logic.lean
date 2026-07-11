@@ -4971,6 +4971,64 @@ theorem CountableAtomCoding.prod_kripke_complete {Left Right : Type u}
     KripkeEntails.{u, u} context formula ↔ Derives context formula :=
   (left.prod right).kripke_complete context formula
 
+theorem CountableAtomCoding.consistent_iff_kripkeSatisfiable {Atom : Type u}
+    (coding : CountableAtomCoding Atom) (context : List (Formula Atom)) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context :=
+  derivationallyConsistent_iff_kripkeSatisfiable_of_enumeration
+    coding.formulaEnumeration context
+
+theorem CountableAtomCoding.consistent_iff_has_canonical_world {Atom : Type u}
+    (coding : CountableAtomCoding Atom) (context : List (Formula Atom)) :
+    DerivationallyConsistent context ↔
+      ∃ theory : PrimeTheory Atom,
+        KripkeContextForces (canonicalKripkeModel Atom) theory context :=
+  derivationallyConsistent_iff_has_canonical_world_of_enumeration
+    coding.formulaEnumeration context
+
+theorem CountableAtomCoding.canonical_countermodel_of_not_derives
+    {Atom : Type u} (coding : CountableAtomCoding Atom)
+    {context : List (Formula Atom)} {formula : Formula Atom}
+    (hnot : ¬ Derives context formula) :
+    ∃ theory : PrimeTheory Atom,
+      KripkeContextForces (canonicalKripkeModel Atom) theory context ∧
+        ¬ KripkeForces (canonicalKripkeModel Atom) theory formula :=
+  canonical_countermodel_of_not_derives_of_enumeration
+    coding.formulaEnumeration hnot
+
+theorem CountableAtomCoding.sum_consistent_iff_kripkeSatisfiable
+    {Left Right : Type u}
+    (left : CountableAtomCoding Left) (right : CountableAtomCoding Right)
+    (context : List (Formula (Sum Left Right))) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context :=
+  (left.sum right).consistent_iff_kripkeSatisfiable context
+
+theorem CountableAtomCoding.prod_consistent_iff_kripkeSatisfiable
+    {Left Right : Type u}
+    (left : CountableAtomCoding Left) (right : CountableAtomCoding Right)
+    (context : List (Formula (Left × Right))) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context :=
+  (left.prod right).consistent_iff_kripkeSatisfiable context
+
+theorem CountableAtomCoding.sum_canonical_countermodel_of_not_derives
+    {Left Right : Type u}
+    (left : CountableAtomCoding Left) (right : CountableAtomCoding Right)
+    {context : List (Formula (Sum Left Right))}
+    {formula : Formula (Sum Left Right)} (hnot : ¬ Derives context formula) :
+    ∃ theory : PrimeTheory (Sum Left Right),
+      KripkeContextForces (canonicalKripkeModel (Sum Left Right)) theory context ∧
+        ¬ KripkeForces (canonicalKripkeModel (Sum Left Right)) theory formula :=
+  (left.sum right).canonical_countermodel_of_not_derives hnot
+
+theorem CountableAtomCoding.prod_canonical_countermodel_of_not_derives
+    {Left Right : Type u}
+    (left : CountableAtomCoding Left) (right : CountableAtomCoding Right)
+    {context : List (Formula (Left × Right))}
+    {formula : Formula (Left × Right)} (hnot : ¬ Derives context formula) :
+    ∃ theory : PrimeTheory (Left × Right),
+      KripkeContextForces (canonicalKripkeModel (Left × Right)) theory context ∧
+        ¬ KripkeForces (canonicalKripkeModel (Left × Right)) theory formula :=
+  (left.prod right).canonical_countermodel_of_not_derives hnot
+
 /-! The coding retraction is precisely the data needed to apply the generic
    enumeration-based completeness construction.  Keeping this theorem at the
    coding interface makes every countably retracted atom language an immediate

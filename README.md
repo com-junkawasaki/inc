@@ -80,6 +80,8 @@ It currently establishes:
   Cartesian products by explicit parity and diagonal codings.  Consequently,
   the internal languages carried by countably presented `incidenceSum` and
   `incidenceProd` constructions inherit full Kripke completeness compositionally.
+  Their consistent finite contexts have Kripke models and canonical prime-theory
+  worlds, and every underivable sequent has an explicit canonical counterworld.
   In the converse direction, every nonderivable finite sequent has a checked
   canonical prime-theory counterworld for the supplied coding.
   For every supplied formula enumeration, a finite context is
