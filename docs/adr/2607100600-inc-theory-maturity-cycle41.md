@@ -514,6 +514,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   domain fiber equivalenceと二codomain familyからcoherent dependent Pi equivalenceを保持し、
   `piFiberEquivalence`が対応する`IncPiType`間の`IncTypeInContext.FiberEquiv`を構成する。Pi
   formation-substitution resultは一つのexplicit contextual coherence objectを受け取り標準fiber interfaceを返せる。
+- raw Pi formation substitutionを`IncDepRawPiFormationSubstitutionFiberResult`として実装した。recursive domain
+  resultとsource/target codomain interpretationに加え、各source assignment上の`IncDependentPiFiberEquiv`を保持し、
+  `piFiberEquivalence`と`toFormationFiberResult`でuniform formation-substitution fiber resultまで構成する。raw liftは
+  domain equalityによるtransportを含むため、contextを誤ってdefinitionally同一視せずfiberwise coherenceで表現した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

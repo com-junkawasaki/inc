@@ -4488,6 +4488,79 @@ def IncDepRawFormationSubstitutionSemanticResult.unit
   sourceFormationResult := IncDepRawFormationSemanticResult.unit sourceResult
   semanticType_coherence := rfl
 
+structure IncDepRawPiFormationSubstitutionFiberResult
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) where
+  domainResult : IncDepRawFormationSubstitutionFiberResult
+    (targetFormation := domainFormation) substitutionResult
+  targetCodomainResult : IncDepRawFormationSemanticResult codomainFormation
+    (targetResult.extend (typeWellFormed := domainFormation)
+      domainResult.targetFormationResult.semanticType)
+  sourceCodomainResult : IncDepRawFormationSemanticResult
+    (codomainFormation.substitute (substitution.lift domain))
+    (sourceResult.extend
+      (typeWellFormed := domainFormation.substitute substitution)
+      domainResult.sourceFormationResult.semanticType)
+  fiberEquiv : ∀ assignment,
+    IncDependentPiFiberEquiv
+      (domainResult.semanticFiberEquivalence.fiberEquiv assignment)
+      (fun value => sourceCodomainResult.semanticType ⟨assignment, value⟩)
+      (fun value => targetCodomainResult.semanticType
+        ⟨substitutionResult.semanticSubstitution assignment, value⟩)
+
+noncomputable def IncDepRawPiFormationSubstitutionFiberResult.piFiberEquivalence
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawPiFormationSubstitutionFiberResult
+      (domainFormation := domainFormation)
+      (codomainFormation := codomainFormation) substitutionResult) :
+    IncTypeInContext.FiberEquiv
+      (IncPiType result.domainResult.sourceFormationResult.semanticType
+        result.sourceCodomainResult.semanticType)
+      ((IncPiType result.domainResult.targetFormationResult.semanticType
+        result.targetCodomainResult.semanticType).reindex
+          substitutionResult.semanticSubstitution) where
+  fiberEquiv := fun assignment => (result.fiberEquiv assignment).toFiberEquiv
+
+noncomputable def IncDepRawPiFormationSubstitutionFiberResult.toFormationFiberResult
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawPiFormationSubstitutionFiberResult
+      (domainFormation := domainFormation)
+      (codomainFormation := codomainFormation) substitutionResult) :
+    IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := IncDepRawWellFormed.pi domainFormation codomainFormation)
+      substitutionResult where
+  targetFormationResult := IncDepRawFormationSemanticResult.pi
+    result.domainResult.targetFormationResult result.targetCodomainResult
+  sourceFormationResult := IncDepRawFormationSemanticResult.pi
+    result.domainResult.sourceFormationResult result.sourceCodomainResult
+  semanticFiberEquivalence := result.piFiberEquivalence
+
 inductive IncDepRawContextSemanticTree :
     {context : List IncDepRawType} →
     {wellFormed : IncDepRawContext.WellFormed context} →

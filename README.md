@@ -1027,8 +1027,13 @@ It currently establishes:
   equivalence at every context assignment, using the pointwise domain fiber
   equivalence and the two codomain families.  `piFiberEquivalence` converts it
   into an `IncTypeInContext.FiberEquiv` between the corresponding `IncPiType`
-  families.  The Pi formation-substitution result can now consume one explicit
-  contextual coherence object and expose the standard fiber interface.
+  families.  Raw Pi formation substitution now consumes the recursive domain
+  result, both codomain interpretations, and a coherent
+  `IncDependentPiFiberEquiv` at every source assignment.
+  `IncDepRawPiFormationSubstitutionFiberResult` packages these data and
+  `toFormationFiberResult` produces the uniform formation-substitution fiber
+  result.  The fiberwise boundary correctly accommodates the equality transport
+  in the raw lifted substitution.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
