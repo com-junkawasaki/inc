@@ -1878,6 +1878,57 @@ theorem Formula.logicalImp_and {Atom : Type u}
   intro r
   exact Quotient.sound (derives_imp_and_distributive_iff p q r)
 
+theorem derives_or_imp_distributive_iff {Atom : Type u}
+    (p q r : Formula Atom) :
+    Derives [] (Formula.iff (.imp (.or p q) r)
+      (.and (.imp p r) (.imp q r))) := by
+  apply derives_iffI
+  · apply Derives.impI
+    apply Derives.andI
+    · apply Derives.impI
+      exact Derives.impE (Derives.ax (p := .imp (.or p q) r) (by simp))
+        (Derives.orIL (Derives.ax (p := p) (by simp)))
+    · apply Derives.impI
+      exact Derives.impE (Derives.ax (p := .imp (.or p q) r) (by simp))
+        (Derives.orIR (Derives.ax (p := q) (by simp)))
+  · apply Derives.impI
+    apply Derives.impI
+    refine Derives.orE (p := p) (q := q) (r := r)
+      (Derives.ax (by simp)) ?_ ?_
+    · exact Derives.impE
+        (Derives.andEL (p := .imp p r) (q := .imp q r) (Derives.ax (by simp)))
+        (Derives.ax (p := p) (by simp))
+    · exact Derives.impE
+        (Derives.andER (p := .imp p r) (q := .imp q r) (Derives.ax (by simp)))
+        (Derives.ax (p := q) (by simp))
+
+theorem Formula.logicalOr_imp {Atom : Type u}
+    (p q r : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalImp (Formula.logicalOr p q) r =
+      Formula.logicalAnd (Formula.logicalImp p r) (Formula.logicalImp q r) := by
+  refine Quotient.inductionOn p ?_
+  intro p
+  refine Quotient.inductionOn q ?_
+  intro q
+  refine Quotient.inductionOn r ?_
+  intro r
+  exact Quotient.sound (derives_or_imp_distributive_iff p q r)
+
+theorem Formula.logicalAnd_imp_le {Atom : Type u}
+    (p q : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalAnd p (Formula.logicalImp p q) ≤ q := by
+  rw [Formula.logicalAnd_comm]
+  apply (Formula.logicalAnd_le_iff_le_logicalImp
+    (Formula.logicalImp p q) p q).2
+  exact Formula.logicalEntails_refl _
+
+theorem Formula.le_logicalImp_and {Atom : Type u}
+    (p q : Formula.LogicalEquivalenceClass Atom) :
+    p ≤ Formula.logicalImp q (Formula.logicalAnd p q) := by
+  apply (Formula.logicalAnd_le_iff_le_logicalImp p q
+    (Formula.logicalAnd p q)).1
+  exact Formula.logicalEntails_refl _
+
 theorem satisfies_or_and_distributive_iff {Atom : Type u}
     (valuation : Atom → Prop) (p q r : Formula Atom) :
     Satisfies valuation (Formula.iff (.or p (.and q r))
