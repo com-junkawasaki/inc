@@ -617,6 +617,50 @@ theorem derives_iffER {Atom : Type u} {context : List (Formula Atom)}
     Derives context (Formula.iff left right) → Derives context (.imp right left) :=
   Derives.andER
 
+def Formula.DerivablyEquivalent {Atom : Type u}
+    (left right : Formula Atom) : Prop :=
+  Derives [] (Formula.iff left right)
+
+theorem derivablyEquivalent_refl {Atom : Type u} (formula : Formula Atom) :
+    Formula.DerivablyEquivalent formula formula := by
+  apply derives_iffI <;> apply Derives.impI
+  all_goals exact Derives.ax (by simp)
+
+theorem derivablyEquivalent_symm {Atom : Type u} {left right : Formula Atom} :
+    Formula.DerivablyEquivalent left right →
+      Formula.DerivablyEquivalent right left := by
+  intro equivalent
+  exact derives_iffI (derives_iffER equivalent) (derives_iffEL equivalent)
+
+theorem derivablyEquivalent_trans {Atom : Type u} {left middle right : Formula Atom} :
+    Formula.DerivablyEquivalent left middle →
+      Formula.DerivablyEquivalent middle right →
+        Formula.DerivablyEquivalent left right := by
+  intro leftMiddle middleRight
+  apply derives_iffI
+  · apply Derives.impI
+    apply Derives.impE
+    · exact derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem)
+        (derives_iffEL middleRight)
+    · apply Derives.impE
+      · exact derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem)
+          (derives_iffEL leftMiddle)
+      · exact Derives.ax (by simp)
+  · apply Derives.impI
+    apply Derives.impE
+    · exact derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem)
+        (derives_iffER leftMiddle)
+    · apply Derives.impE
+      · exact derives_weaken (fun formula hmem => List.mem_cons_of_mem _ hmem)
+          (derives_iffER middleRight)
+      · exact Derives.ax (by simp)
+
+theorem derivablyEquivalent_equivalence {Atom : Type u} :
+    Equivalence (@Formula.DerivablyEquivalent Atom) where
+  refl := derivablyEquivalent_refl
+  symm := derivablyEquivalent_symm
+  trans := derivablyEquivalent_trans
+
 theorem inconsistent_extension_iff_derives_neg {Atom : Type u}
     {context : List (Formula Atom)} {formula : Formula Atom} :
     Derives (formula :: context) .bot ↔ Derives context formula.neg :=
