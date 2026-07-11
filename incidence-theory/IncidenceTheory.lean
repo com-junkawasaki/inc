@@ -1036,6 +1036,62 @@ def incFunctorCategory {CObj DObj : Type u}
     intro F G H K gamma beta alpha
     exact (IncNaturalTransformation.vcomp_assoc gamma beta alpha).symm
 
+def IncNaturalTransformation.whiskerLeft
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F G : IncFunctor C D} (K : IncFunctor D E)
+    (alpha : IncNaturalTransformation F G) :
+    IncNaturalTransformation (K.comp F) (K.comp G) where
+  app := fun object => K.map (alpha.app object)
+  naturality := by
+    intro source target morphism
+    change E.comp (K.map (G.map morphism)) (K.map (alpha.app source)) =
+      E.comp (K.map (alpha.app target)) (K.map (F.map morphism))
+    rw [← K.map_comp, alpha.naturality, K.map_comp]
+
+def IncNaturalTransformation.whiskerRight
+    {BObj CObj DObj : Type u}
+    {B : IncCategory BObj} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (alpha : IncNaturalTransformation F G)
+    (H : IncFunctor B C) :
+    IncNaturalTransformation (F.comp H) (G.comp H) where
+  app := fun object => alpha.app (H.obj object)
+  naturality := by
+    intro source target morphism
+    exact alpha.naturality (H.map morphism)
+
+def IncNaturalTransformation.hcomp
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F G : IncFunctor C D} {H K : IncFunctor D E}
+    (beta : IncNaturalTransformation H K)
+    (alpha : IncNaturalTransformation F G) :
+    IncNaturalTransformation (H.comp F) (K.comp G) :=
+  (beta.whiskerRight G).vcomp (alpha.whiskerLeft H)
+
+theorem IncNaturalTransformation.whiskerLeft_app
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F G : IncFunctor C D} (K : IncFunctor D E)
+    (alpha : IncNaturalTransformation F G) (object : CObj) :
+    (alpha.whiskerLeft K).app object = K.map (alpha.app object) := rfl
+
+theorem IncNaturalTransformation.whiskerRight_app
+    {BObj CObj DObj : Type u}
+    {B : IncCategory BObj} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (alpha : IncNaturalTransformation F G)
+    (H : IncFunctor B C) (object : BObj) :
+    (alpha.whiskerRight H).app object = alpha.app (H.obj object) := rfl
+
+theorem IncNaturalTransformation.hcomp_app
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F G : IncFunctor C D} {H K : IncFunctor D E}
+    (beta : IncNaturalTransformation H K)
+    (alpha : IncNaturalTransformation F G) (object : CObj) :
+    (beta.hcomp alpha).app object =
+      E.comp (beta.app (G.obj object)) (H.map (alpha.app object)) := rfl
+
 structure MorphismCospan {Obj : Type u} (C : IncCategory Obj) where
   a : Obj
   b : Obj
