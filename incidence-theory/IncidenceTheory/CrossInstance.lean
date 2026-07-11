@@ -3206,6 +3206,27 @@ noncomputable def IncDepRawContextSemanticTree.interpretLookup
           exact IncDepRawLookupSemanticResult.there (ih previous)
             head.semanticType
 
+noncomputable def IncDepRawContextSemanticTree.interpretVariable
+    {context : List IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    (tree : IncDepRawContextSemanticTree contextResult)
+    {position : Nat} {type : IncDepRawType}
+    (lookup : IncDepRawLookup context position type) :
+    IncDepRawTypingSemanticResult (IncDepRawHasType.varRule lookup)
+      contextResult (tree.interpretLookup lookup).semanticType :=
+  (tree.interpretLookup lookup).toTyping
+
+def IncDepRawContextSemanticTree.interpretUnit
+    {context : List IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    (_tree : IncDepRawContextSemanticTree contextResult) :
+    IncDepRawTypingSemanticResult
+      (IncDepRawHasType.unitRule (context := context)) contextResult
+      (fun _ => ULift Unit) :=
+  ⟨fun _ => ⟨()⟩⟩
+
 def incDepRawOneUnitContextWellFormed :
     IncDepRawContext.WellFormed [IncDepRawType.unit] :=
   IncDepRawContext.WellFormed.extend IncDepRawContext.WellFormed.empty
@@ -3253,6 +3274,19 @@ noncomputable def incDepRawTwoUnitOlderLookupSemantic :=
     (IncDepRawLookup.there (head := IncDepRawType.unit)
       (IncDepRawLookup.here (context := []) (type := IncDepRawType.unit)))
 
+noncomputable def incDepRawTwoUnitNewestTypingSemantic :=
+  incDepRawTwoUnitContextSemanticTree.interpretVariable
+    (IncDepRawLookup.here (context := [IncDepRawType.unit])
+      (type := IncDepRawType.unit))
+
+noncomputable def incDepRawTwoUnitOlderTypingSemantic :=
+  incDepRawTwoUnitContextSemanticTree.interpretVariable
+    (IncDepRawLookup.there (head := IncDepRawType.unit)
+      (IncDepRawLookup.here (context := []) (type := IncDepRawType.unit)))
+
+def incDepRawTwoUnitUnitTypingSemantic :=
+  incDepRawTwoUnitContextSemanticTree.interpretUnit
+
 theorem incDepRawTwoUnitNewestLookupSemantic_value
     (assignment : incDepRawTwoUnitContextSemantic.semanticContext.Assignment) :
     incDepRawTwoUnitNewestLookupSemantic.semanticTerm assignment = assignment.2 := by
@@ -3261,6 +3295,16 @@ theorem incDepRawTwoUnitNewestLookupSemantic_value
 theorem incDepRawTwoUnitOlderLookupSemantic_value
     (assignment : incDepRawTwoUnitContextSemantic.semanticContext.Assignment) :
     incDepRawTwoUnitOlderLookupSemantic.semanticTerm assignment = assignment.1.2 := by
+  rfl
+
+theorem incDepRawTwoUnitNewestTypingSemantic_value
+    (assignment : incDepRawTwoUnitContextSemantic.semanticContext.Assignment) :
+    incDepRawTwoUnitNewestTypingSemantic.semanticTerm assignment = assignment.2 := by
+  rfl
+
+theorem incDepRawTwoUnitOlderTypingSemantic_value
+    (assignment : incDepRawTwoUnitContextSemantic.semanticContext.Assignment) :
+    incDepRawTwoUnitOlderTypingSemantic.semanticTerm assignment = assignment.1.2 := by
   rfl
 
 def IncDepRawTypingSemanticResult.unit

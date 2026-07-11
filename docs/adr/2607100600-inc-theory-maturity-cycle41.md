@@ -284,6 +284,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   structural foldを証明した。variable、binder、hidden domain/codomain、pair/projection、reflの
   formation evidenceを回収し、任意certified judgmentとreadiness treeからdeep-certified judgmentを
   作る汎用constructorも追加。強いsemantic indexが既存intermediate WF dataとcoherentである。
+- semantic typing foldの最初の実行可能branchをcontext tree上に追加した。`interpretVariable`は
+  任意lookupをrecursive lookup interpretation経由でtyping-indexed semantic resultへ変換し、
+  `interpretUnit`は任意interpreted contextでunit resultを返す。2変数telescopeでnewest/older
+  variable typing resultが自動生成され`assignment.2`/`assignment.1.2`へ評価され、同じopen
+  contextでunit resultも生成できることをchecked。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

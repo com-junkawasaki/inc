@@ -676,6 +676,13 @@ It currently establishes:
   readiness tree into a deep-certified judgment.  This proves inside Lean that
   the stronger semantic index is coherent with, and strictly supplies, the
   previously required intermediate well-formedness data.
+  The first executable branches of the semantic typing fold are now exposed on
+  context trees.  `interpretVariable` turns any lookup directly into a typing-
+  indexed semantic result via recursive lookup interpretation, and
+  `interpretUnit` produces the unit typing result in any interpreted context.
+  On the two-variable telescope, both newest and older variable typing results
+  are generated automatically and evaluate to `assignment.2` and
+  `assignment.1.2`; a unit result is generated in the same open context.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
