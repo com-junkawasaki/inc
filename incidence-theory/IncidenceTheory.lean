@@ -2589,6 +2589,48 @@ theorem IncCategoryEquivalence.forward_objectsIsomorphic_iff
         (equivalence.forward.obj target) :=
   equivalence.forward_fullyFaithful.objectsIsomorphic_iff
 
+theorem incFunctorEssentiallySurjective_iff_isoClassSurjective
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) :
+    IncFunctorEssentiallySurjective F ↔
+      ∀ target : DObj, ∃ source : CObj,
+        IncObjectsIsomorphic D (F.obj source) target := by
+  constructor
+  · intro hF target
+    obtain ⟨source, hom, inv, inv_hom, hom_inv⟩ := hF target
+    exact ⟨source, ⟨
+      { hom := hom
+        inv := inv
+        inv_hom := inv_hom
+        hom_inv := hom_inv }⟩⟩
+  · intro hF target
+    obtain ⟨source, ⟨iso⟩⟩ := hF target
+    exact ⟨source, iso.hom, iso.inv, iso.inv_hom, iso.hom_inv⟩
+
+structure IncFunctorIsoClassBijection
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) : Prop where
+  reflects : ∀ {source target : CObj},
+    IncObjectsIsomorphic D (F.obj source) (F.obj target) →
+      IncObjectsIsomorphic C source target
+  essentiallySurjective : ∀ target : DObj, ∃ source : CObj,
+    IncObjectsIsomorphic D (F.obj source) target
+
+theorem IncFunctorEquivalenceCriterion.isoClassBijection
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F) :
+    IncFunctorIsoClassBijection F where
+  reflects := criterion.fullyFaithful.reflectsObjectsIsomorphic
+  essentiallySurjective :=
+    (incFunctorEssentiallySurjective_iff_isoClassSurjective F).mp
+      criterion.essentiallySurjective
+
+theorem IncCategoryEquivalence.forward_isoClassBijection
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    IncFunctorIsoClassBijection equivalence.forward :=
+  equivalence.forward_criterion.isoClassBijection
+
 theorem MorphismIso.trans_hom {Obj : Type u} {C : IncCategory Obj}
     {source middle target : Obj} (first : MorphismIso C source middle)
     (second : MorphismIso C middle target) :
