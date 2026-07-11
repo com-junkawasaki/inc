@@ -233,7 +233,10 @@ It currently establishes:
   subtracted argument whenever the intermediate difference lies in the window.
   It also computes `0-x=-x`, has left and right cancellation, and a checked
   three-stage graph diagram identifies subtraction internally with negation
-  followed by addition: `x-y = x+(-y)`.
+  followed by addition: `x-y = x+(-y)`.  Integer order is represented by a
+  bounded characteristic graph `⟨x,y⟩ ↦ 1/0`; application evaluates to `1`
+  exactly when `x≤y`.  The graph is functional and total on its window, and
+  reflexivity, transitivity, and antisymmetry are proved from graph applications.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
