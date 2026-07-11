@@ -3230,6 +3230,34 @@ def IncTypeEquivalence.trans {A B C : Type u}
     intro value
     rw [first.forward_inverse, second.forward_inverse]
 
+def IncDependentFamilyIsomorphism.sumEquivalence
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target) :
+    IncTypeEquivalence (IncDependentSum source) (IncDependentSum target) where
+  forward := iso.hom.mapSum
+  inverse := iso.inv.mapSum
+  inverse_forward := by
+    intro value
+    exact congrFun iso.mapSum_inv_hom value
+  forward_inverse := by
+    intro value
+    exact congrFun iso.mapSum_hom_inv value
+
+def IncDependentFamilyIsomorphism.productEquivalence
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target) :
+    IncTypeEquivalence (IncDependentProduct source) (IncDependentProduct target) where
+  forward := iso.hom.mapProduct
+  inverse := iso.inv.mapProduct
+  inverse_forward := by
+    intro value
+    exact congrFun iso.mapProduct_inv_hom value
+  forward_inverse := by
+    intro value
+    exact congrFun iso.mapProduct_hom_inv value
+
 def IncCategoryEquivalence.objectIsoClassEquivalence
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (equivalence : IncCategoryEquivalence C D) :
