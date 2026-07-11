@@ -201,6 +201,12 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   congruence ruleを定義。closed dependent refl applicationは`refl unit`へ、dependent pairの
   両projectionは`unit`/`refl unit`へstepすることを証明した。これらはsemantic beta equality
   と対応し、一般reduction soundness theoremの対象relationとなる。
+- dependent result type内にreduced termが現れるため、誤ったliteral syntax equalityではなく
+  明示的conversion付きsubject reductionを構成した。term definitional equalityはstepの
+  reflexive/symmetric/transitive closure、type definitional equalityはPi/Sigma/identity形成と
+  identity endpoint equalityで閉じた。term/type conversionを持つtyping judgmentを定義し、
+  任意one-step reductionがtypingを保存する定理を証明。Pi betaとSigma両betaの具体例でも
+  仮定なしにinstantiationした。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

@@ -543,6 +543,14 @@ It currently establishes:
   projections of the dependent pair reduce to `unit` and `refl unit`.
   These checked raw reduction witnesses match the semantic beta equalities and
   provide the relation for the forthcoming general reduction-soundness theorem.
+  Because reduced terms can occur inside dependent result types, subject
+  reduction is stated with explicit conversion rather than false literal syntax
+  equality.  Term definitional equality is the reflexive, symmetric, transitive
+  closure of one-step reduction; type definitional equality is closed under
+  Pi, Sigma, and identity formation, including equality of identity endpoints.
+  A conversion-aware typing judgment admits both term and type conversion.
+  Every one-step reduction preserves typing in this judgment, and the Pi beta
+  and both Sigma beta examples instantiate the theorem without assumptions.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite

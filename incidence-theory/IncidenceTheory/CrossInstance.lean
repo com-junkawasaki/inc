@@ -1859,6 +1859,64 @@ inductive IncDepRawStep : IncDepRawTerm → IncDepRawTerm → Prop
       IncDepRawStep pair pair' →
       IncDepRawStep (.second pair) (.second pair')
 
+inductive IncDepRawDefEq : IncDepRawTerm → IncDepRawTerm → Prop
+  | refl (term) : IncDepRawDefEq term term
+  | ofStep {first second} :
+      IncDepRawStep first second → IncDepRawDefEq first second
+  | symm {first second} :
+      IncDepRawDefEq first second → IncDepRawDefEq second first
+  | trans {first second third} :
+      IncDepRawDefEq first second → IncDepRawDefEq second third →
+      IncDepRawDefEq first third
+
+inductive IncDepRawTypeDefEq : IncDepRawType → IncDepRawType → Prop
+  | refl (type) : IncDepRawTypeDefEq type type
+  | symm {first second} :
+      IncDepRawTypeDefEq first second → IncDepRawTypeDefEq second first
+  | trans {first second third} :
+      IncDepRawTypeDefEq first second →
+      IncDepRawTypeDefEq second third →
+      IncDepRawTypeDefEq first third
+  | pi {firstDomain secondDomain firstCodomain secondCodomain} :
+      IncDepRawTypeDefEq firstDomain secondDomain →
+      IncDepRawTypeDefEq firstCodomain secondCodomain →
+      IncDepRawTypeDefEq (.pi firstDomain firstCodomain)
+        (.pi secondDomain secondCodomain)
+  | sigma {firstDomain secondDomain firstCodomain secondCodomain} :
+      IncDepRawTypeDefEq firstDomain secondDomain →
+      IncDepRawTypeDefEq firstCodomain secondCodomain →
+      IncDepRawTypeDefEq (.sigma firstDomain firstCodomain)
+        (.sigma secondDomain secondCodomain)
+  | identity {firstType secondType firstLeft secondLeft firstRight secondRight} :
+      IncDepRawTypeDefEq firstType secondType →
+      IncDepRawDefEq firstLeft secondLeft →
+      IncDepRawDefEq firstRight secondRight →
+      IncDepRawTypeDefEq (.identity firstType firstLeft firstRight)
+        (.identity secondType secondLeft secondRight)
+
+inductive IncDepRawHasTypeConversion
+    (context : List IncDepRawType) : IncDepRawTerm → IncDepRawType → Prop
+  | typed {term type} :
+      IncDepRawHasType context term type →
+      IncDepRawHasTypeConversion context term type
+  | termConversion {first second type} :
+      IncDepRawHasTypeConversion context first type →
+      IncDepRawDefEq first second →
+      IncDepRawHasTypeConversion context second type
+  | typeConversion {term firstType secondType} :
+      IncDepRawHasTypeConversion context term firstType →
+      IncDepRawTypeDefEq firstType secondType →
+      IncDepRawHasTypeConversion context term secondType
+
+theorem IncDepRawStep.subject_reduction
+    {context : List IncDepRawType} {first second : IncDepRawTerm}
+    {type : IncDepRawType} (typing : IncDepRawHasType context first type)
+    (step : IncDepRawStep first second) :
+    IncDepRawHasTypeConversion context second type :=
+  IncDepRawHasTypeConversion.termConversion
+    (IncDepRawHasTypeConversion.typed typing)
+    (IncDepRawDefEq.ofStep step)
+
 theorem incDepRawDependentRefl_betaStep :
     IncDepRawStep (.apply incDepRawDependentRefl .unit) (.refl .unit) := by
   exact IncDepRawStep.piBeta
@@ -1870,6 +1928,30 @@ theorem incDepRawDependentPair_first_betaStep :
 theorem incDepRawDependentPair_second_betaStep :
     IncDepRawStep (.second incDepRawDependentPair) (.refl .unit) := by
   exact IncDepRawStep.sigmaSecondBeta
+
+def incDepRawDependentRefl_application_hasType :
+    IncDepRawHasType [] (.apply incDepRawDependentRefl .unit)
+      (.identity .unit .unit .unit) :=
+  IncDepRawHasType.applyRule incDepRawDependentRefl_hasType
+    IncDepRawHasType.unitRule
+
+theorem incDepRawDependentRefl_subjectReduction :
+    IncDepRawHasTypeConversion [] (.refl .unit)
+      (.identity .unit .unit .unit) :=
+  incDepRawDependentRefl_betaStep.subject_reduction
+    incDepRawDependentRefl_application_hasType
+
+theorem incDepRawDependentPair_first_subjectReduction :
+    IncDepRawHasTypeConversion [] .unit .unit :=
+  incDepRawDependentPair_first_betaStep.subject_reduction
+    incDepRawDependentPair_first_hasType
+
+theorem incDepRawDependentPair_second_subjectReduction :
+    IncDepRawHasTypeConversion [] (.refl .unit)
+      (.identity .unit (.first incDepRawDependentPair)
+        (.first incDepRawDependentPair)) :=
+  incDepRawDependentPair_second_betaStep.subject_reduction
+    incDepRawDependentPair_second_hasType
 
 structure IncContext where
   Assignment : Type u
