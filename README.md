@@ -565,6 +565,12 @@ It currently establishes:
   valid one-step reduction.  The proof covers Pi beta's substituted body and all
   congruence rules, connecting computation to the previously checked judgment
   preservation infrastructure.
+  A reflexive-transitive multi-step reduction is now defined with checked
+  transitivity.  Multi-step reduction remains stable under arbitrary renaming
+  and simultaneous substitution, embeds into term definitional equality, and
+  satisfies conversion-aware subject reduction.  This fixes the operational
+  side of the eventual semantic soundness statement at normalization-sequence
+  scope rather than only at one isolated beta step.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite

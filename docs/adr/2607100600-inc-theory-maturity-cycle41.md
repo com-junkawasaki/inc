@@ -215,6 +215,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   任意one-step reductionがrename/substitute後にもone-step reductionとなる安定性を証明した。
   Pi betaのsubstituted bodyと全congruence ruleを含み、operational computationを既存の
   judgment renaming/substitution preservation infrastructureへ接続した。
+- one-step relationのreflexive-transitive closureとしてmulti-step reductionを定義し、transitivity、
+  arbitrary renaming/substitution下の安定性、term definitional equalityへの包含、conversion-aware
+  multi-step subject reductionを証明した。将来のsemantic soundness statementのoperational側を
+  単一beta stepではなくnormalization sequenceのscopeまで固定した。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

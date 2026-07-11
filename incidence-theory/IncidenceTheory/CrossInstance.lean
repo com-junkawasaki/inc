@@ -1929,6 +1929,40 @@ theorem IncDepRawStep.rename
   | underFirst _ ih => exact IncDepRawStep.underFirst ih
   | underSecond _ ih => exact IncDepRawStep.underSecond ih
 
+inductive IncDepRawSteps : IncDepRawTerm → IncDepRawTerm → Prop
+  | refl (term) : IncDepRawSteps term term
+  | tail {first second third} :
+      IncDepRawStep first second → IncDepRawSteps second third →
+      IncDepRawSteps first third
+
+theorem IncDepRawSteps.trans
+    {first second third : IncDepRawTerm} :
+    IncDepRawSteps first second → IncDepRawSteps second third →
+      IncDepRawSteps first third := by
+  intro firstSteps secondSteps
+  induction firstSteps with
+  | refl => exact secondSteps
+  | tail step _ ih => exact IncDepRawSteps.tail step (ih secondSteps)
+
+theorem IncDepRawSteps.rename
+    {first second : IncDepRawTerm} (steps : IncDepRawSteps first second)
+    (renameMap : Nat → Nat) :
+    IncDepRawSteps (first.rename renameMap) (second.rename renameMap) := by
+  induction steps with
+  | refl => exact IncDepRawSteps.refl _
+  | tail step _ ih =>
+      exact IncDepRawSteps.tail (step.rename renameMap) ih
+
+theorem IncDepRawSteps.substitute
+    {first second : IncDepRawTerm} (steps : IncDepRawSteps first second)
+    (replacement : Nat → IncDepRawTerm) :
+    IncDepRawSteps (first.substitute replacement)
+      (second.substitute replacement) := by
+  induction steps with
+  | refl => exact IncDepRawSteps.refl _
+  | tail step _ ih =>
+      exact IncDepRawSteps.tail (step.substitute replacement) ih
+
 inductive IncDepRawDefEq : IncDepRawTerm → IncDepRawTerm → Prop
   | refl (term) : IncDepRawDefEq term term
   | ofStep {first second} :
@@ -1986,6 +2020,23 @@ theorem IncDepRawStep.subject_reduction
   IncDepRawHasTypeConversion.termConversion
     (IncDepRawHasTypeConversion.typed typing)
     (IncDepRawDefEq.ofStep step)
+
+theorem IncDepRawSteps.toDefEq
+    {first second : IncDepRawTerm} :
+    IncDepRawSteps first second → IncDepRawDefEq first second := by
+  intro steps
+  induction steps with
+  | refl => exact IncDepRawDefEq.refl _
+  | tail step _ ih =>
+      exact IncDepRawDefEq.trans (IncDepRawDefEq.ofStep step) ih
+
+theorem IncDepRawSteps.subject_reduction
+    {context : List IncDepRawType} {first second : IncDepRawTerm}
+    {type : IncDepRawType} (typing : IncDepRawHasType context first type)
+    (steps : IncDepRawSteps first second) :
+    IncDepRawHasTypeConversion context second type :=
+  IncDepRawHasTypeConversion.termConversion
+    (IncDepRawHasTypeConversion.typed typing) steps.toDefEq
 
 theorem incDepRawDependentRefl_betaStep :
     IncDepRawStep (.apply incDepRawDependentRefl .unit) (.refl .unit) := by
