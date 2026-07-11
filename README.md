@@ -1086,6 +1086,12 @@ It currently establishes:
   families, and the canonical middle equivalence.  `toFormationFiberResult`
   composes the two endpoint transports with that equivalence, producing the
   uniform raw formation-substitution result needed by eliminator result types.
+  `IncDepRawFormationSubstitutionFiberResult.instantiate` now performs this whole
+  construction directly from recursive domain/codomain results, argument
+  coherence, actual instantiated formation interpretations, and their endpoint
+  alignments.  On terms, `sigmaForward_second_eq_of_eq` extracts the correctly
+  transported second-component equality from equality of dependent pairs.  These
+  are the two proof components required by the second Sigma projection branch.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

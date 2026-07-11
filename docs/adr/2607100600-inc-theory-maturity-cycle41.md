@@ -553,6 +553,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   canonical semantic familiesの両endpoint alignment、および中央のcanonical fiber equivalenceを保持し、
   `toFormationFiberResult`が三者を合成してuniform raw formation-substitution resultへ戻す。instantiate bridgeを
   eliminatorのproof-indexed result typeへ接続する境界が確定した。
+- uniform `.instantiate` constructorを追加し、recursive domain/codomain results、argument coherence、actual instantiated
+  formation interpretationsと両alignmentから直接formation-substitution resultを返すようにした。term側には
+  `sigmaForward_second_eq_of_eq`を証明し、dependent pair全体のequalityから第一成分equalityに沿ってtransport済みの
+  第二成分equalityを抽出する。Sigma第二射影branchに必要なformation/termの二要素が揃った。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
