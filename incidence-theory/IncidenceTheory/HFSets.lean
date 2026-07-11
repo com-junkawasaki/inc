@@ -3423,6 +3423,53 @@ theorem hfRecursiveIntegerDivides_add_mul
   rw [leftValue, rightValue, Int.mul_add]
   simp only [Int.mul_assoc]
 
+structure HFRecursiveIntegerBezoutCertificate
+    (bound : Nat) (left right : Int) where
+  leftCoefficient : Int
+  rightCoefficient : Int
+  leftCoefficientWithin : HFRecursiveIntegerWithin bound leftCoefficient
+  rightCoefficientWithin : HFRecursiveIntegerWithin bound rightCoefficient
+  combination :
+    left * leftCoefficient + right * rightCoefficient = 1
+
+theorem hfRecursiveIntegerBezout_common_divisor_divides_one
+    (bound : Nat) (left right divisor : Int)
+    (divisorWithin : HFRecursiveIntegerWithin bound divisor)
+    (certificate : HFRecursiveIntegerBezoutCertificate bound left right)
+    (dividesLeft : HFRecursiveIntegerDivides bound divisor left)
+    (dividesRight : HFRecursiveIntegerDivides bound divisor right)
+    (combinedFactorWithin : ∀ leftFactor rightFactor,
+      HFRecursiveIntegerWithin bound leftFactor →
+      HFRecursiveIntegerWithin bound rightFactor →
+      left = divisor * leftFactor → right = divisor * rightFactor →
+      HFRecursiveIntegerWithin bound
+        (leftFactor * certificate.leftCoefficient +
+          rightFactor * certificate.rightCoefficient)) :
+    HFRecursiveIntegerDivides bound divisor 1 := by
+  have dividesCombination := hfRecursiveIntegerDivides_add_mul bound
+    divisor left right certificate.leftCoefficient certificate.rightCoefficient
+    divisorWithin dividesLeft dividesRight combinedFactorWithin
+  rw [certificate.combination] at dividesCombination
+  exact dividesCombination
+
+theorem hfRecursiveIntegerBezout_no_nonunit_common_divisor
+    (bound : Nat) (left right divisor : Int)
+    (divisorWithin : HFRecursiveIntegerWithin bound divisor)
+    (certificate : HFRecursiveIntegerBezoutCertificate bound left right)
+    (dividesLeft : HFRecursiveIntegerDivides bound divisor left)
+    (dividesRight : HFRecursiveIntegerDivides bound divisor right)
+    (combinedFactorWithin : ∀ leftFactor rightFactor,
+      HFRecursiveIntegerWithin bound leftFactor →
+      HFRecursiveIntegerWithin bound rightFactor →
+      left = divisor * leftFactor → right = divisor * rightFactor →
+      HFRecursiveIntegerWithin bound
+        (leftFactor * certificate.leftCoefficient +
+          rightFactor * certificate.rightCoefficient))
+    (nonunit : ¬ HFRecursiveIntegerDivides bound divisor 1) : False := by
+  exact nonunit (hfRecursiveIntegerBezout_common_divisor_divides_one bound
+    left right divisor divisorWithin certificate dividesLeft dividesRight
+    combinedFactorWithin)
+
 /- The graph of the identity function on the internally represented finite
    ordinal `n`. -/
 def hfRecursiveNatIdentityGraph : Nat → HFRecursiveSet

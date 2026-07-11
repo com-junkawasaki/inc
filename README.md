@@ -260,7 +260,10 @@ It currently establishes:
   negation, with precisely the factor-sum/product/negation window obligations
   exposed by the finite presentation.  Common divisors are also closed under
   subtraction and, more generally, under two-term integer linear combinations
-  `a*x + b*y` whenever the combined witness factor remains represented.
+  `a*x + b*y` whenever the combined witness factor remains represented.  A
+  bounded Bézout certificate packages internal coefficients witnessing
+  `a*x+b*y=1`; every common internal divisor then divides `1`, ruling out any
+  common divisor explicitly certified as non-unit.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
