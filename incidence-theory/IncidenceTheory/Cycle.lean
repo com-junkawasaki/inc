@@ -298,6 +298,29 @@ def cycleIncidenceFixed_completeLanguageQuotientEquivalence
     cycleIncidenceFixed cycleIdxFixed language complete
       cycleIncidenceFixed_bisimulationFaithful
 
+def cycleToFixedBoundaryShapeEquivalence :
+    TranslationPreservation.BoundaryShapeEquivalence
+      cycleIncidence cycleIncidenceFixed :=
+  TranslationPreservation.boundaryShapeEquivalenceOfCodeEquivalence
+    (IncTypeEquivalence.refl CycleId) (by
+      intro i
+      cases i <;> rfl)
+
+theorem boundaryShapeEquivalence_does_not_preserve_bisimulation :
+    ¬ (∀ {I J R₁ T₁ R₂ T₂ : Type}
+      [DecidableEq I] [DecidableEq J]
+      (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂)
+      (equivalence : TranslationPreservation.BoundaryShapeEquivalence
+        source target) {i j : I},
+      approxBisim source i j →
+        approxBisim target (equivalence.hom.map i) (equivalence.hom.map j)) := by
+  intro universallyPreserves
+  have fixedBisimilar := universallyPreserves cycleIncidence cycleIncidenceFixed
+    cycleToFixedBoundaryShapeEquivalence
+    (cycleIncidence_all_collapse CycleId.c0 CycleId.c1)
+  exact cycleIncidenceFixed_not_bisim_of_ne CycleId.c0 CycleId.c1
+    cycleIncidence_c0_ne_c1 fixedBisimilar
+
 theorem cycleIncidenceFixed_not_boundary_square_zero :
   verify_boundary_composition cycleIncidenceFixed cycleIdxFixed = false := by decide
 
