@@ -2472,6 +2472,35 @@ theorem incCoherentlyEquivalent_trans
   rintro ⟨first⟩ ⟨second⟩
   exact ⟨second.trans first⟩
 
+theorem incCoherentlyEquivalent_iff_categoryEquivalent
+    {CObj DObj : Type u} (C : IncCategory CObj) (D : IncCategory DObj) :
+    IncCoherentlyEquivalent C D ↔ Nonempty (IncCategoryEquivalence C D) := by
+  constructor
+  · rintro ⟨coherent⟩
+    exact ⟨coherent.equivalence⟩
+  · rintro ⟨equivalence⟩
+    exact ⟨equivalence.forward_criterion.toCoherentCategoryEquivalence⟩
+
+noncomputable def IncCategoryEquivalence.coherentReplacement
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    IncCoherentCategoryEquivalence C D :=
+  equivalence.forward_criterion.toCoherentCategoryEquivalence
+
+theorem IncCategoryEquivalence.coherentReplacement_forward
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    equivalence.coherentReplacement.equivalence.forward =
+      equivalence.forward := rfl
+
+theorem IncCategoryEquivalence.has_triangle_coherent_replacement
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    ∃ replacement : IncCoherentCategoryEquivalence C D,
+      replacement.equivalence.forward = equivalence.forward :=
+  ⟨equivalence.coherentReplacement,
+    equivalence.coherentReplacement_forward⟩
+
 theorem incFunctor_equivalenceCriterion_iff_exists_coherentCategoryEquivalence
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (F : IncFunctor C D) :
