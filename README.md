@@ -231,6 +231,9 @@ It currently establishes:
   an exact `⟨x,y⟩ ↦ x-y` evaluation law, is functional and total on its window,
   computes `x-x=0` and `x-0=x`, and is certified as inverse to adding the
   subtracted argument whenever the intermediate difference lies in the window.
+  It also computes `0-x=-x`, has left and right cancellation, and a checked
+  three-stage graph diagram identifies subtraction internally with negation
+  followed by addition: `x-y = x+(-y)`.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.

@@ -2126,6 +2126,100 @@ theorem hfRecursiveIntegerSubtractionGraph_add_cancel
     apply congrArg hfRecursiveInteger
     omega
 
+theorem hfRecursiveIntegerSubtractionGraph_zero_left
+    (bound : Nat) (integer : Int)
+    (zeroWithin : HFRecursiveIntegerWithin bound 0)
+    (within : HFRecursiveIntegerWithin bound integer) (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger 0)
+            (hfRecursiveInteger integer)) output)
+        (hfRecursiveIntegerSubtractionGraph bound) ↔
+      output = hfRecursiveInteger (-integer) := by
+  simpa using (hfRecursiveIntegerSubtractionGraph_on_integers_iff
+    bound 0 integer zeroWithin within output)
+
+theorem hfRecursiveIntegerSubtractionGraph_eq_add_neg
+    (bound : Nat) (left right : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (rightWithin : HFRecursiveIntegerWithin bound right)
+    (negRightWithin : HFRecursiveIntegerWithin bound (-right)) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair (hfRecursiveInteger right)
+          (hfRecursiveInteger (-right)))
+        (hfRecursiveIntegerNegationGraph bound) ∧
+      HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger left)
+            (hfRecursiveInteger (-right)))
+          (hfRecursiveInteger (left - right)))
+        (hfRecursiveIntegerAdditionGraph bound) ∧
+      HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger left)
+            (hfRecursiveInteger right))
+          (hfRecursiveInteger (left - right)))
+        (hfRecursiveIntegerSubtractionGraph bound) := by
+  refine ⟨?_, ?_, ?_⟩
+  · exact (hfRecursiveIntegerNegationGraph_apply_iff bound _ _).mpr
+      ⟨right, rightWithin, rfl, rfl⟩
+  · apply (hfRecursiveIntegerAdditionGraph_on_integers_iff
+      bound left (-right) leftWithin negRightWithin _).mpr
+    apply congrArg hfRecursiveInteger
+    omega
+  · exact (hfRecursiveIntegerSubtractionGraph_on_integers_iff
+      bound left right leftWithin rightWithin _).mpr rfl
+
+theorem hfRecursiveIntegerSubtractionGraph_right_cancel
+    (bound : Nat) (left₁ left₂ right : Int)
+    (left₁Within : HFRecursiveIntegerWithin bound left₁)
+    (left₂Within : HFRecursiveIntegerWithin bound left₂)
+    (rightWithin : HFRecursiveIntegerWithin bound right)
+    (output : HFRecursiveSet)
+    (first : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger left₁)
+          (hfRecursiveInteger right)) output)
+      (hfRecursiveIntegerSubtractionGraph bound))
+    (second : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger left₂)
+          (hfRecursiveInteger right)) output)
+      (hfRecursiveIntegerSubtractionGraph bound)) :
+    left₁ = left₂ := by
+  have firstValue := (hfRecursiveIntegerSubtractionGraph_on_integers_iff
+    bound left₁ right left₁Within rightWithin output).mp first
+  have secondValue := (hfRecursiveIntegerSubtractionGraph_on_integers_iff
+    bound left₂ right left₂Within rightWithin output).mp second
+  have differenceEq : left₁ - right = left₂ - right :=
+    hfRecursiveInteger_injective (firstValue.symm.trans secondValue)
+  omega
+
+theorem hfRecursiveIntegerSubtractionGraph_left_cancel
+    (bound : Nat) (left right₁ right₂ : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (right₁Within : HFRecursiveIntegerWithin bound right₁)
+    (right₂Within : HFRecursiveIntegerWithin bound right₂)
+    (output : HFRecursiveSet)
+    (first : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger left)
+          (hfRecursiveInteger right₁)) output)
+      (hfRecursiveIntegerSubtractionGraph bound))
+    (second : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger left)
+          (hfRecursiveInteger right₂)) output)
+      (hfRecursiveIntegerSubtractionGraph bound)) :
+    right₁ = right₂ := by
+  have firstValue := (hfRecursiveIntegerSubtractionGraph_on_integers_iff
+    bound left right₁ leftWithin right₁Within output).mp first
+  have secondValue := (hfRecursiveIntegerSubtractionGraph_on_integers_iff
+    bound left right₂ leftWithin right₂Within output).mp second
+  have differenceEq : left - right₁ = left - right₂ :=
+    hfRecursiveInteger_injective (firstValue.symm.trans secondValue)
+  omega
+
 def hfRecursiveIntegerMultiplicationGraph (bound : Nat) : HFRecursiveSet :=
   hfRecursiveIntegerBinaryRows (fun left right => left * right)
     (hfRecursiveIntegerWindow bound) (hfRecursiveIntegerWindow bound)
