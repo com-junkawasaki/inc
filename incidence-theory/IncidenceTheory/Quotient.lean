@@ -573,6 +573,43 @@ theorem BisimulationQuotientClassification.transportTarget_symm
     IncTypeEquivalence.symm_trans_self,
     classification.transportTarget_refl]
 
+def bisimulationQuotientClassificationOfKernel
+    {I R T Q : Type u} [DecidableEq I] (inc : Incidence I R T)
+    (classify : I → Q)
+    (kernel : ∀ x y, classify x = classify y ↔ approxBisim inc x y)
+    (surjective : ∀ q : Q, ∃ x, classify x = q) :
+    BisimulationQuotientClassification (Q := Q) inc where
+  classify := classify
+  respects := by
+    intro x y bisimilar
+    exact (kernel x y).mpr bisimilar
+  reflects := by
+    intro x y equal
+    exact (kernel x y).mp equal
+  surjective := surjective
+
+theorem BisimulationQuotientClassification.kernel_iff
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (x y : I) :
+    classification.classify x = classification.classify y ↔
+      approxBisim inc x y :=
+  ⟨classification.reflects, classification.respects⟩
+
+theorem bisimulationQuotientClassification_exists_with_map_iff
+    {I R T Q : Type u} [DecidableEq I] (inc : Incidence I R T)
+    (classify : I → Q) :
+    (∃ classification : BisimulationQuotientClassification (Q := Q) inc,
+      classification.classify = classify) ↔
+      (∀ x y, classify x = classify y ↔ approxBisim inc x y) ∧
+      ∀ q : Q, ∃ x, classify x = q := by
+  constructor
+  · rintro ⟨classification, rfl⟩
+    exact ⟨classification.kernel_iff, classification.surjective⟩
+  · rintro ⟨kernel, surjective⟩
+    exact ⟨bisimulationQuotientClassificationOfKernel inc classify
+      kernel surjective, rfl⟩
+
 /- Concrete confirmation against both faithful instances built so far
    in this project (`natIncidence`, cycle 4; `cycleIncidenceFixed`,
    cycle 27) -- not vacuous, two genuinely different faithful instances

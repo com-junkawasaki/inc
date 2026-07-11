@@ -204,6 +204,8 @@ It currently establishes:
   identity, and composition laws for the canonical lift.
   `BisimulationQuotientClassification` now produces an explicit type
   equivalence between the quotient and any complete classification target.
+  A proposed classifier extends to such a complete classification exactly
+  when its equality kernel is bisimilarity and it is surjective.
   Any two such targets are connected by a unique classification-preserving
   equivalence, with identity, composition, symmetry, and target-transport
   coherence laws.  The seven-element simplex model instantiates this result
