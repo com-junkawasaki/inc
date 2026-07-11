@@ -1298,6 +1298,12 @@ It currently establishes:
   checked pair rule.  This branch also exposes an important final obligation:
   endpoint family equalities alone do not identify two substitution fiber
   equivalences, so a structural-to-aligned rebase witness is required explicitly.
+  `dispatchPairStructural` lifts this construction to the recursive package
+  level.  It accepts independently dispatched first and second components,
+  aligns the second with the structural instantiated result, applies the explicit
+  structural-to-aligned rebase, and returns a Sigma package already aligned with
+  `model.sigma`.  All three dependent rules that cross an instantiate boundary
+  (apply, pair, second) now have structural package APIs.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

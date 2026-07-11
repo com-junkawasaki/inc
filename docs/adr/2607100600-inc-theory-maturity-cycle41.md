@@ -685,6 +685,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   formationへ、次にcanonical familyへtransportしてchecked pair ruleへ渡す。このbranchにより最後のobligationも明確になった。
   endpoint family equalityだけでは二つのsubstitution fiber equivalenceは同定されないため、structural-to-aligned rebase witnessを
   明示的に要求する必要がある。
+- `dispatchPairStructural`を追加してrecursive package levelへliftした。独立にdispatchされたfirst/secondを受け取り、secondを
+  structural instantiated resultへalignし、明示的structural-to-aligned rebaseを適用して、`model.sigma`へalignment済みのSigma
+  packageを返す。instantiate境界を横断するdependent 3 rules（apply/pair/second）はすべてstructural package APIを持つ。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
