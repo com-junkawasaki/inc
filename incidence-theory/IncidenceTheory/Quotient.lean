@@ -252,6 +252,41 @@ theorem quotient_mk_bijective_iff_bisimulationFaithful
     exact ⟨(quotient_mk_injective_iff_bisimulationFaithful inc).mpr faithful,
       quotient_mk_surjective inc⟩
 
+def BisimulationQuotientMapCollapses
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) : Prop :=
+  ∃ x y : I, x ≠ y ∧
+    Quotient.mk (approxBisimSetoid inc) x =
+      Quotient.mk (approxBisimSetoid inc) y
+
+theorem bisimulationQuotientMapCollapses_iff_not_faithful
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    BisimulationQuotientMapCollapses inc ↔
+      ¬ CompletenessTheory.BisimulationFaithful inc := by
+  constructor
+  · rintro ⟨x, y, different, classesEqual⟩ faithful
+    exact different (faithful (Quotient.exact classesEqual))
+  · intro notFaithful
+    classical
+    exact Classical.byContradiction (fun noWitness => by
+      apply notFaithful
+      intro x y bisimilar
+      exact Classical.byContradiction (fun different =>
+        noWitness ⟨x, y, different, Quotient.sound bisimilar⟩))
+
+theorem bisimulationQuotientMapDoesNotCollapse_iff_faithful
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    (¬ BisimulationQuotientMapCollapses inc) ↔
+      CompletenessTheory.BisimulationFaithful inc := by
+  classical
+  constructor
+  · intro noCollapse
+    intro x y bisimilar
+    exact Classical.byContradiction (fun different =>
+      noCollapse ⟨x, y, different, Quotient.sound bisimilar⟩)
+  · intro faithful collapse
+    exact (bisimulationQuotientMapCollapses_iff_not_faithful inc).mp collapse
+      faithful
+
 /- Concrete confirmation against both faithful instances built so far
    in this project (`natIncidence`, cycle 4; `cycleIncidenceFixed`,
    cycle 27) -- not vacuous, two genuinely different faithful instances
