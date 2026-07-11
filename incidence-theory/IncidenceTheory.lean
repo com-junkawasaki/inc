@@ -6044,6 +6044,30 @@ theorem indicatorObservationLanguage_containsIndicators
   intro pivot
   exact ⟨pivot, rfl⟩
 
+theorem containsLinearIndicators_iff_indicatorLanguage_included
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx) :
+    ContainsLinearIndicators inc idx language ↔
+      ∀ observation, indicatorObservationLanguage inc idx observation →
+        language observation := by
+  constructor
+  · intro contains observation indicatorGenerated
+    rcases indicatorGenerated with ⟨pivot, rfl⟩
+    exact contains pivot
+  · intro included pivot
+    exact included (indicatorLinearObservation inc idx pivot) ⟨pivot, rfl⟩
+
+theorem indicatorObservationLanguage_least
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (language : LinearObservationLanguage inc idx)
+    (contains : ContainsLinearIndicators inc idx language) :
+    ∀ observation, indicatorObservationLanguage inc idx observation →
+      language observation :=
+  (containsLinearIndicators_iff_indicatorLanguage_included inc idx language).mp
+    contains
+
 theorem containsLinearIndicators_mono
     {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I)
@@ -6061,6 +6085,17 @@ def AgreeOnLinearObservationLanguage
   ∀ obs, language obs →
     obs.boundary_matrix i = obs.boundary_matrix j ∧
     obs.laplacian i = obs.laplacian j
+
+theorem language_agreement_antitone
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    {smaller larger : LinearObservationLanguage inc idx}
+    (included : ∀ observation, smaller observation → larger observation)
+    {i j : I}
+    (agreesOnLarger : AgreeOnLinearObservationLanguage inc idx larger i j) :
+    AgreeOnLinearObservationLanguage inc idx smaller i j := by
+  intro observation allowed
+  exact agreesOnLarger observation (included observation allowed)
 
 theorem indicator_complete_language_agreement_iff_eq
     {I R T : Type u} [DecidableEq I]
