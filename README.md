@@ -1080,6 +1080,12 @@ It currently establishes:
   term coherence, and composes the two fiber equivalences.  This is the semantic
   formation result required by application, dependent pairing, and the second
   Sigma projection.
+  The semantic bridge can now be returned to an arbitrary raw formation proof
+  index.  `IncDepRawAlignedFormationSubstitutionFiberResult` records source and
+  target formation interpretations, their equalities with canonical semantic
+  families, and the canonical middle equivalence.  `toFormationFiberResult`
+  composes the two endpoint transports with that equivalence, producing the
+  uniform raw formation-substitution result needed by eliminator result types.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

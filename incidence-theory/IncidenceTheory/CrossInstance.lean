@@ -4762,6 +4762,52 @@ noncomputable def IncDepRawFormationSubstitutionFiberResult.instantiateFiberEqui
           ⟨substitutionResult.semanticSubstitution assignment, value⟩)
         endpointCoherence))
 
+structure IncDepRawAlignedFormationSubstitutionFiberResult
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) where
+  targetFormationResult : IncDepRawFormationSemanticResult targetFormation
+    targetResult
+  sourceFormationResult : IncDepRawFormationSemanticResult
+    (targetFormation.substitute substitution) sourceResult
+  sourceCanonical : IncTypeInContext sourceResult.semanticContext
+  targetCanonical : IncTypeInContext targetResult.semanticContext
+  sourceAlignment : sourceFormationResult.semanticType = sourceCanonical
+  targetAlignment : targetFormationResult.semanticType = targetCanonical
+  canonicalEquivalence : IncTypeInContext.FiberEquiv sourceCanonical
+    (targetCanonical.reindex substitutionResult.semanticSubstitution)
+
+noncomputable def IncDepRawAlignedFormationSubstitutionFiberResult.toFormationFiberResult
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawAlignedFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult) :
+    IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult where
+  targetFormationResult := result.targetFormationResult
+  sourceFormationResult := result.sourceFormationResult
+  semanticFiberEquivalence :=
+    (IncTypeInContext.FiberEquiv.ofEq result.sourceAlignment).trans
+      (result.canonicalEquivalence.trans
+        (IncTypeInContext.FiberEquiv.ofEq
+          (congrArg
+            (fun family => family.reindex
+              substitutionResult.semanticSubstitution)
+            result.targetAlignment.symm)))
+
 structure IncDepRawPiFormationSubstitutionFiberResult
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
     {substitution : IncDepRawSubstitution source target}

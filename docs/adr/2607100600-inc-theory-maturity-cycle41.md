@@ -549,6 +549,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   source argumentで評価し、そのtarget endpointをrecursive domain term coherenceに沿ってtransportして合成することで、
   source/target instantiated semantic family間のfiber equivalenceを構成する。application、dependent pair、Sigma第二射影に
   共通するsemantic formation bridgeが成立した。
+- `IncDepRawAlignedFormationSubstitutionFiberResult`を追加した。actual source/target raw formation interpretationsと
+  canonical semantic familiesの両endpoint alignment、および中央のcanonical fiber equivalenceを保持し、
+  `toFormationFiberResult`が三者を合成してuniform raw formation-substitution resultへ戻す。instantiate bridgeを
+  eliminatorのproof-indexed result typeへ接続する境界が確定した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
