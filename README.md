@@ -1406,6 +1406,15 @@ It currently establishes:
   recurse over the same formation; the future preservation fold will take this
   semantic coherence as an explicit hypothesis instead of assuming proof-result
   uniqueness silently.
+  `IncDepRawStrictTypingSubstitutionDispatcher` now fixes the recursive typing
+  interface, and `foldStrictFormation` is the first complete recursive half of
+  the preservation construction.  It covers all five formation constructors:
+  Pi and Sigma extend the target semantic context and lift replacements before
+  recursing into the codomain, while Identity dispatches both endpoint typings,
+  normalizes them onto the recursively selected type result, and transports the
+  resulting readiness index back to the parent's exact tree.  The remaining
+  assembly task is an implementation of that dispatcher by recursion over all
+  eight coherent typing constructors.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

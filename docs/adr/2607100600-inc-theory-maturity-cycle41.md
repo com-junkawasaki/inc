@@ -746,6 +746,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   natural fiber rebaseを供給する仮定であり、`rebaseFormation`/`normalizeFormation`がchecked strict typing resultを選択した
   exact formation resultへtransportする。Identity endpointやsibling typing branchの合流で必要なcoherenceを暗黙のproof uniqueness
   として扱わず、保存foldの明示的仮定にできる。
+- recursive typing側の境界を`IncDepRawStrictTypingSubstitutionDispatcher`として固定し、formation側の完全な再帰関数
+  `foldStrictFormation`を実装した。base/unit/Pi/Sigma/Identityの全5 constructorsをcoverし、Pi/Sigmaではtarget semantic contextを
+  extendしてreplacementをliftしてからcodomainへ再帰する。Identityでは両endpoint typingをdispatcherで処理し、再帰的に選択された
+  exact type resultへsemantic fiberをnormalizeし、parentのexact readiness indexへtransportする。残る組み立てはtyping全8 constructorsを
+  再帰してこのdispatcher interfaceを実装する部分である。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
