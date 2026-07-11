@@ -1652,6 +1652,78 @@ theorem Formula.le_doubleNeg {Atom : Type u}
   rw [Formula.logicalAnd_neg]
   exact Formula.logicalEntails_refl _
 
+theorem Formula.logicalNeg_antitone {Atom : Type u}
+    {left right : Formula.LogicalEquivalenceClass Atom} :
+    left ≤ right → Formula.logicalNeg right ≤ Formula.logicalNeg left := by
+  refine Quotient.inductionOn left ?_
+  intro left
+  refine Quotient.inductionOn right ?_
+  intro right leftRight
+  have hleftRight : Derives [] (.imp left right) :=
+    (logicalEntails_mk_iff_derives left right).1 leftRight
+  apply (logicalEntails_mk_iff_derives right.neg left.neg).2
+  apply Derives.impI
+  apply Derives.impI
+  apply Derives.impE
+  · exact Derives.ax (p := right.neg) (by simp)
+  · apply Derives.impE
+    · exact derives_weaken (source := []) (target := left :: [right.neg])
+        (by intro formula hmem; simp at hmem) hleftRight
+    · exact Derives.ax (p := left) (by simp)
+
+theorem Formula.tripleNeg_le_neg {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalNeg (Formula.logicalNeg (Formula.logicalNeg formula)) ≤
+      Formula.logicalNeg formula :=
+  Formula.logicalNeg_antitone (Formula.le_doubleNeg formula)
+
+theorem Formula.neg_le_tripleNeg {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalNeg formula ≤
+      Formula.logicalNeg (Formula.logicalNeg (Formula.logicalNeg formula)) :=
+  Formula.le_doubleNeg (Formula.logicalNeg formula)
+
+theorem Formula.logicalTripleNeg {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalNeg (Formula.logicalNeg (Formula.logicalNeg formula)) =
+      Formula.logicalNeg formula :=
+  Formula.logicalEntails_antisymm
+    (Formula.tripleNeg_le_neg formula) (Formula.neg_le_tripleNeg formula)
+
+theorem derives_neg_or_deMorgan_iff {Atom : Type u} (p q : Formula Atom) :
+    Derives [] (Formula.iff (Formula.neg (.or p q)) (.and p.neg q.neg)) := by
+  apply derives_iffI
+  · apply Derives.impI
+    apply Derives.andI
+    · apply Derives.impI
+      apply Derives.impE
+      · exact Derives.ax (p := Formula.neg (.or p q)) (by simp)
+      · exact Derives.orIL (Derives.ax (p := p) (by simp))
+    · apply Derives.impI
+      apply Derives.impE
+      · exact Derives.ax (p := Formula.neg (.or p q)) (by simp)
+      · exact Derives.orIR (Derives.ax (p := q) (by simp))
+  · apply Derives.impI
+    apply Derives.impI
+    refine Derives.orE (p := p) (q := q) (r := .bot)
+      (Derives.ax (by simp)) ?_ ?_
+    · exact Derives.impE
+        (Derives.andEL (p := p.neg) (q := q.neg) (Derives.ax (by simp)))
+        (Derives.ax (p := p) (by simp))
+    · exact Derives.impE
+        (Derives.andER (p := p.neg) (q := q.neg) (Derives.ax (by simp)))
+        (Derives.ax (p := q) (by simp))
+
+theorem Formula.logicalNeg_or {Atom : Type u}
+    (p q : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalNeg (Formula.logicalOr p q) =
+      Formula.logicalAnd (Formula.logicalNeg p) (Formula.logicalNeg q) := by
+  refine Quotient.inductionOn p ?_
+  intro p
+  refine Quotient.inductionOn q ?_
+  intro q
+  exact Quotient.sound (derives_neg_or_deMorgan_iff p q)
+
 theorem satisfies_or_and_distributive_iff {Atom : Type u}
     (valuation : Atom → Prop) (p q r : Formula Atom) :
     Satisfies valuation (Formula.iff (.or p (.and q r))
