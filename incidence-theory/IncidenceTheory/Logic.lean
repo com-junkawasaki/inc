@@ -682,6 +682,63 @@ theorem satisfies_and_or_distributive_iff {Atom : Type u}
       (.or (.and p q) (.and p r))) :=
   (satisfies_iff valuation _ _).mpr (satisfies_and_or_distributive valuation p q r)
 
+theorem derives_or_and_distributive {Atom : Type u}
+    (p q r : Formula Atom) :
+    Derives [] (.imp (.or p (.and q r))
+      (.and (.or p q) (.or p r))) ∧
+    Derives [] (.imp (.and (.or p q) (.or p r))
+      (.or p (.and q r))) := by
+  constructor
+  · apply Derives.impI
+    refine Derives.orE (p := p) (q := .and q r)
+      (r := .and (.or p q) (.or p r)) (Derives.ax (by simp)) ?_ ?_
+    · apply Derives.andI <;> apply Derives.orIL <;> exact Derives.ax (by simp)
+    · apply Derives.andI
+      · apply Derives.orIR
+        exact Derives.andEL (p := q) (q := r) (Derives.ax (by simp))
+      · apply Derives.orIR
+        exact Derives.andER (p := q) (q := r) (Derives.ax (by simp))
+  · apply Derives.impI
+    refine Derives.orE (p := p) (q := q) (r := .or p (.and q r))
+      (Derives.andEL (p := .or p q) (q := .or p r) (Derives.ax (by simp))) ?_ ?_
+    · apply Derives.orIL
+      exact Derives.ax (by simp)
+    · refine Derives.orE (p := p) (q := r) (r := .or p (.and q r))
+        (Derives.andER (p := .or p q) (q := .or p r) (Derives.ax (by simp))) ?_ ?_
+      · apply Derives.orIL
+        exact Derives.ax (by simp)
+      · apply Derives.orIR
+        apply Derives.andI
+        · exact Derives.ax (by simp)
+        · exact Derives.ax (by simp)
+
+theorem satisfies_or_and_distributive {Atom : Type u} (valuation : Atom → Prop)
+    (p q r : Formula Atom) :
+    Satisfies valuation (.or p (.and q r)) ↔
+      Satisfies valuation (.and (.or p q) (.or p r)) := by
+  constructor
+  · rintro (hp | ⟨hq, hr⟩)
+    · exact ⟨Or.inl hp, Or.inl hp⟩
+    · exact ⟨Or.inr hq, Or.inr hr⟩
+  · rintro ⟨hp | hq, hp' | hr⟩
+    · exact Or.inl hp
+    · exact Or.inl hp
+    · exact Or.inl hp'
+    · exact Or.inr ⟨hq, hr⟩
+
+theorem derives_or_and_distributive_iff {Atom : Type u}
+    (p q r : Formula Atom) :
+    Derives [] (Formula.iff (.or p (.and q r))
+      (.and (.or p q) (.or p r))) :=
+  derives_iffI (derives_or_and_distributive p q r).left
+    (derives_or_and_distributive p q r).right
+
+theorem satisfies_or_and_distributive_iff {Atom : Type u}
+    (valuation : Atom → Prop) (p q r : Formula Atom) :
+    Satisfies valuation (Formula.iff (.or p (.and q r))
+      (.and (.or p q) (.or p r))) :=
+  (satisfies_iff valuation _ _).mpr (satisfies_or_and_distributive valuation p q r)
+
 /- The one-step Lindenbaum lemma.  It gives a consistency-preserving choice at
    every formula; a full extension theorem still needs an enumeration and the
    limit-stage closure argument. -/
