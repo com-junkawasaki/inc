@@ -6052,6 +6052,30 @@ def inc_to_set {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) : I → 
     | [] => ULift Bool
     | _ :: _ => ULift Unit
 
+def inc_to_set_preserves_boundary_shape
+    {I R₁ T₁ R₂ T₂ : Type u} [DecidableEq I]
+    (source : Incidence I R₁ T₁) (target : Incidence I R₂ T₂)
+    (preservesNullary : ∀ i,
+      source.boundary i = [] ↔ target.boundary i = []) :
+    ∀ i, IncTypeEquivalence (inc_to_set source i) (inc_to_set target i) := by
+  intro i
+  unfold inc_to_set
+  cases sourceBoundary : source.boundary i with
+  | nil =>
+      have targetNullary : target.boundary i = [] :=
+        (preservesNullary i).mp sourceBoundary
+      rw [targetNullary]
+      exact IncTypeEquivalence.refl (ULift Bool)
+  | cons sourceHead sourceTail =>
+      cases targetBoundary : target.boundary i with
+      | nil =>
+          have sourceNullary : source.boundary i = [] :=
+            (preservesNullary i).mpr targetBoundary
+          rw [sourceBoundary] at sourceNullary
+          contradiction
+      | cons targetHead targetTail =>
+          exact IncTypeEquivalence.refl (ULift Unit)
+
 /- The Inc-to-Set assignment above is not yet packaged as an `IncFunctor`, so
    a theorem specifically about that assignment still requires a source
    category of incidences.  The general categorical preservation theorem is
@@ -6106,10 +6130,15 @@ noncomputable def category_equivalence_strongly_preserves_finite_limits_colimits
   equivalence.strongFiniteLimitColimitPreservingFamily
 
 /- Merkle-ID: foundation.axiomatization.limit_preservation
-   Placeholder only for the unbundled `inc_to_set` assignment above. -/
-theorem preserves_limits {I R T : Type u} [DecidableEq I]
-  (_inc : Incidence I R T) :
-  True := trivial
+   A translation presented as a category equivalence preserves the complete
+   finite-limit/colimit fragment formalized here: terminal/initial objects,
+   binary products/coproducts, pullbacks/pushouts, and
+   equalizers/coequalizers. -/
+noncomputable def preserves_limits
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    StrongFiniteLimitColimitPreservingFamily equivalence.forward :=
+  equivalence.strongFiniteLimitColimitPreservingFamily
 
 end TranslationPreservation
 
