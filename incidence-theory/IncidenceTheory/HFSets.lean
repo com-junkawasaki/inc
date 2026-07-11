@@ -2458,6 +2458,21 @@ theorem hfRecursiveBigUnion_power (s : HFRecursiveSet) :
       (hfRecursiveMember_singleton_power_iff x s).mpr hxs, ?_⟩
     exact (hfRecursiveMember_singleton_iff x x).mpr rfl
 
+structure HFRecursivePowerOrderEmbedding where
+  power : HFRecursiveSet → HFRecursiveSet
+  retraction : HFRecursiveSet → HFRecursiveSet
+  left_inverse : ∀ s, retraction (power s) = s
+  order_iff : ∀ {s t},
+    HFRecursiveSubset (power s) (power t) ↔ HFRecursiveSubset s t
+  injective : ∀ ⦃s t⦄, power s = power t → s = t
+
+def hfRecursivePowerOrderEmbedding : HFRecursivePowerOrderEmbedding where
+  power := hfRecursivePower
+  retraction := hfRecursiveBigUnion
+  left_inverse := hfRecursiveBigUnion_power
+  order_iff := hfRecursivePower_subset_iff
+  injective := hfRecursivePower_injective
+
 theorem hfRecursiveSubset_refl (s : HFRecursiveSet) : HFRecursiveSubset s s :=
   fun _ h => h
 
@@ -3370,6 +3385,9 @@ structure HFRecursiveSetFragmentModel where
     product left (union right third) =
       union (product left right) (product left third)
   power_spec : ∀ x s, HFRecursiveMember x (power s) ↔ HFRecursiveSubset x s
+  power_order_iff : ∀ {s t},
+    HFRecursiveSubset (power s) (power t) ↔ HFRecursiveSubset s t
+  power_injective : ∀ ⦃s t⦄, power s = power t → s = t
   product_power_singletons : ∀ a b left right,
     HFRecursiveMember
       (hfRecursiveOrderedPair (hfRecursiveSingleton a) (hfRecursiveSingleton b))
@@ -3422,6 +3440,8 @@ def hfRecursiveSetFragmentModel : HFRecursiveSetFragmentModel where
   product_union_left := hfRecursiveProduct_union_left
   product_union_right := hfRecursiveProduct_union_right
   power_spec := hfRecursiveMember_power_iff_subset
+  power_order_iff := hfRecursivePower_subset_iff
+  power_injective := hfRecursivePower_injective
   product_power_singletons := hfRecursiveMember_product_power_singletons_iff
   union_powers_least := hfRecursiveUnion_power_subset_power_iff
   union_powers_subset_power_union := hfRecursiveUnion_power_subset_power_union
