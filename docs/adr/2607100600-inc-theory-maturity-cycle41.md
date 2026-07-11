@@ -235,6 +235,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   するclosed-to-general embeddingを構成し、Pi/Sigma例を一般APIへ載せた。certified judgmentだけから
   semantic context tree・substitution semantics・replacement・providersを自動生成する無条件interpreterは未完である。一方、それらを明示入力とする
   provider-relative mutual substitution-preservation interpreterは現在完成済みであり、両者を区別する。
+- この境界をLean APIとして固定した。`IncDepRawCertifiedCanonicalSemanticInput`は一つのcertified judgmentについてsemantic context result/tree、coherent
+  readiness、canonical preservation hypothesesを束ね、`interpretCertifiedCanonical`がstrict semantic resultとcoherenceを返す。
+  `IncDepRawCertifiedCanonicalSemanticSynthesizer`はこの構成を全certified judgmentsへ量化し、与えられれば`interpretCertified`と
+  `interpretCertified_coherent`が一般interpreterを生成する。したがって残件はrecursive interpretationではなく、このsynthesizerのinhabitationそのものである。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

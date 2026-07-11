@@ -600,6 +600,17 @@ It currently establishes:
   interpretation, and the documented provider hypotheses.  It proves the
   recursive semantic step once those inputs exist; it does not synthesize them
   from bare certification.
+  This boundary is now a checked API rather than prose.
+  `IncDepRawCertifiedCanonicalSemanticInput` packages, for one certified
+  judgment, its semantic context result/tree, coherent readiness, and canonical
+  preservation hypotheses.  `interpretCertifiedCanonical` consumes exactly this
+  package and returns the strict semantic result with its coherence theorem.
+  `IncDepRawCertifiedCanonicalSemanticSynthesizer` quantifies that construction
+  over every certified judgment; given such a synthesizer,
+  `interpretCertified` is the unconditional-looking general interpreter and
+  `interpretCertified_coherent` proves its semantic substitution law.  Thus the
+  remaining synthesis problem has an exact Lean type and no longer includes the
+  already-complete recursive interpretation itself.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

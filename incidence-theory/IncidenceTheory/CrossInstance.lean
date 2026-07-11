@@ -11227,6 +11227,24 @@ structure IncDepRawCanonicalSubstitutionPreservationEqualityHypotheses where
   readinessProvider : IncDepRawCoherentReadinessAlignmentProvider
   equalityProvider : IncDepRawFormationSubstitutionFiberEqualityProvider
 
+structure IncDepRawCertifiedCanonicalSemanticInput
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawCertifiedTyping context term type) where
+  contextResult : IncDepRawContextSemanticResult certified.contextWellFormed
+  contextTree : IncDepRawContextSemanticTree contextResult
+  readiness : IncDepRawCoherentTypingDispatchReady certified.typing
+    certified.typeWellFormed
+  preservationHypotheses :
+    IncDepRawCanonicalSubstitutionPreservationHypotheses
+
+structure IncDepRawCertifiedCanonicalSemanticSynthesizer where
+  synthesize : ∀
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawCertifiedTyping context term type),
+    IncDepRawCertifiedCanonicalSemanticInput certified
+
 abbrev IncDepRawStrictFormationSubstitutionFoldMotive
     {target : List IncDepRawType} {type : IncDepRawType}
     {targetFormation : IncDepRawWellFormed target type}
@@ -11989,6 +12007,58 @@ noncomputable def IncDepRawSubstitutionFiberModel.preservationCanonicalOfEqualit
     { variableProvider := hypotheses.variableProvider
       readinessProvider := hypotheses.readinessProvider
       rebaseProvider := hypotheses.equalityProvider.toRebase }
+
+noncomputable def IncDepRawSubstitutionFiberModel.interpretCertifiedCanonical
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {certified : IncDepRawCertifiedTyping context term type}
+    (input : IncDepRawCertifiedCanonicalSemanticInput certified) :
+    IncDepRawStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.ofCoherent input.readiness)
+      (IncDepRawSubstitutionSemanticResult.identity input.contextResult) :=
+  (model.preservationCanonical input.preservationHypotheses).typing.dispatch
+    input.readiness input.contextTree
+    (IncDepRawSubstitutionReplacementSemanticResult.identity input.contextTree)
+
+theorem IncDepRawSubstitutionFiberModel.interpretCertifiedCanonical_coherent
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {certified : IncDepRawCertifiedTyping context term type}
+    (input : IncDepRawCertifiedCanonicalSemanticInput certified) :
+    let result := model.interpretCertifiedCanonical input
+    result.formationResult.semanticFiberEquivalence.transport
+        result.typingResult.sourceTermResult.semanticTerm =
+      result.typingResult.targetTermResult.semanticTerm.substitute
+        (IncDepRawSubstitutionSemanticResult.identity
+          input.contextResult).semanticSubstitution := by
+  exact (model.interpretCertifiedCanonical input).typingResult
+    |>.semanticTerm_coherence
+
+noncomputable def IncDepRawSubstitutionFiberModel.interpretCertified
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (synthesizer : IncDepRawCertifiedCanonicalSemanticSynthesizer)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawCertifiedTyping context term type) :=
+  model.interpretCertifiedCanonical (synthesizer.synthesize certified)
+
+theorem IncDepRawSubstitutionFiberModel.interpretCertified_coherent
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (synthesizer : IncDepRawCertifiedCanonicalSemanticSynthesizer)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawCertifiedTyping context term type) :
+    let input := synthesizer.synthesize certified
+    let result := model.interpretCertified synthesizer certified
+    result.formationResult.semanticFiberEquivalence.transport
+        result.typingResult.sourceTermResult.semanticTerm =
+      result.typingResult.targetTermResult.semanticTerm.substitute
+        (IncDepRawSubstitutionSemanticResult.identity
+          input.contextResult).semanticSubstitution := by
+  exact model.interpretCertifiedCanonical_coherent
+    (synthesizer.synthesize certified)
 
 theorem IncDepRawSubstitutionFiberModel.preservationCanonical_formation
     (model : IncDepRawSubstitutionFiberModel.{u})
