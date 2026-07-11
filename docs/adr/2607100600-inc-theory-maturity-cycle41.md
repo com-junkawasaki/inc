@@ -608,6 +608,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - generalized replacement liftに`liftResult_here_term`/`liftResult_there_term`計算則と`liftResult_here_fiber`を証明した。
   newest/older replacement termの正規形が公開され、newest termをdomain forwardでtransportした結果がfiber-lifted
   substitution下のtarget extended variableと一致する。binder variable recursionのhere branchが一般fiber版で閉じた。
+- 任意family/term coherenceのbinder自然性`liftFiber_older_transport`と、それをolder replacementへ適用する
+  `liftResult_there_fiber`を証明した。here/there両replacement coherenceがequality-based liftなしで揃い、binder下
+  lookup recursionの一般fiber版が完成した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
