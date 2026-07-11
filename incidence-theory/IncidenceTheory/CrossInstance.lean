@@ -11261,6 +11261,67 @@ structure IncDepRawCertifiedCanonicalSemanticWitnessSynthesizer where
     (certified : IncDepRawCertifiedTyping context term type),
     IncDepRawCertifiedCanonicalSemanticWitness certified
 
+structure IncDepRawContextSemanticTreeSynthesizer where
+  synthesizeContext : ∀
+    {context : List IncDepRawType}
+    (wellFormed : IncDepRawContext.WellFormed context),
+    Sigma fun result : IncDepRawContextSemanticResult wellFormed =>
+      IncDepRawContextSemanticTree result
+
+structure IncDepRawContextHeadSemanticProvider where
+  interpretHead : ∀
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    (typeWellFormed : IncDepRawWellFormed context type)
+    (contextResult : IncDepRawContextSemanticResult contextWellFormed)
+    (_contextTree : IncDepRawContextSemanticTree contextResult),
+    IncDepRawFormationSemanticResult typeWellFormed contextResult
+
+noncomputable def IncDepRawContextHeadSemanticProvider.synthesizeContext
+    (provider : IncDepRawContextHeadSemanticProvider)
+    {context : List IncDepRawType}
+    (wellFormed : IncDepRawContext.WellFormed context) :
+    Sigma fun result : IncDepRawContextSemanticResult wellFormed =>
+      IncDepRawContextSemanticTree result :=
+  match wellFormed with
+  | .empty => ⟨incDepRawEmptyContextSemantic,
+      incDepRawEmptyContextSemanticTree⟩
+  | .extend tailWellFormed headWellFormed =>
+      let tail := provider.synthesizeContext tailWellFormed
+      let head := provider.interpretHead headWellFormed tail.1 tail.2
+      let result := tail.1.extend head.semanticType
+      ⟨result, IncDepRawContextSemanticTree.extend tail.2 head⟩
+
+noncomputable def IncDepRawContextHeadSemanticProvider.toTreeSynthesizer
+    (provider : IncDepRawContextHeadSemanticProvider) :
+    IncDepRawContextSemanticTreeSynthesizer where
+  synthesizeContext := provider.synthesizeContext
+
+structure IncDepRawCertifiedCoherentReadinessSynthesizer where
+  synthesizeReadiness : ∀
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawCertifiedTyping context term type),
+    IncDepRawCoherentTypingDispatchReady certified.typing
+      certified.typeWellFormed
+
+def IncDepRawCertifiedCanonicalSemanticWitnessSynthesizer.ofComponents
+    (contexts : IncDepRawContextSemanticTreeSynthesizer)
+    (readiness : IncDepRawCertifiedCoherentReadinessSynthesizer) :
+    IncDepRawCertifiedCanonicalSemanticWitnessSynthesizer where
+  synthesizeWitness := fun certified =>
+    let context := contexts.synthesizeContext certified.contextWellFormed
+    { contextResult := context.1
+      contextTree := context.2
+      readiness := readiness.synthesizeReadiness certified }
+
+noncomputable def
+    IncDepRawCertifiedCanonicalSemanticWitnessSynthesizer.ofHeadProvider
+    (heads : IncDepRawContextHeadSemanticProvider)
+    (readiness : IncDepRawCertifiedCoherentReadinessSynthesizer) :
+    IncDepRawCertifiedCanonicalSemanticWitnessSynthesizer :=
+  .ofComponents heads.toTreeSynthesizer readiness
+
 def IncDepRawCertifiedCanonicalSemanticWitness.withHypotheses
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType}

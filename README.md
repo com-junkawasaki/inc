@@ -628,6 +628,16 @@ It currently establishes:
   interface directly.  Consequently provider construction is no longer repeated
   per judgment, and the remaining syntax-directed task is isolated to producing
   context trees and coherent readiness witnesses.
+  Those local obligations are now split once more.  A
+  `IncDepRawContextSemanticTreeSynthesizer` handles telescope semantics, while a
+  `IncDepRawCertifiedCoherentReadinessSynthesizer` handles the proof-indexed
+  syntax tree; `ofComponents` combines them.  Context synthesis itself is
+  structural: `IncDepRawContextHeadSemanticProvider` only interprets one
+  well-formed head type over an already interpreted tail, and
+  `synthesizeContext` recursively builds the complete semantic context and tree.
+  `ofHeadProvider` then combines this with readiness synthesis.  The remaining
+  local construction problem is therefore reduced to head-formation semantics
+  plus coherent-readiness generation, rather than whole-context assembly.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

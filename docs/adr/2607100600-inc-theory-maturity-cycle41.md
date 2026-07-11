@@ -246,6 +246,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   readinessだけを持ち、witness synthesizerが全certified judgmentsへ量化する。`withHypotheses`は一つのshared canonical preservation environmentを全witnessへ
   接続し、`interpretCertifiedWithWitness`とcoherence theoremがsplit interfaceを直接消費する。provider構成をjudgmentごとに重複せず、残るsyntax-directed課題を
   context tree/readiness witness生成へ隔離した。
+- local obligationsをさらに分解した。`IncDepRawContextSemanticTreeSynthesizer`がtelescope semanticsを、
+  `IncDepRawCertifiedCoherentReadinessSynthesizer`がproof-indexed syntax treeを担当し、`ofComponents`が結合する。context側は
+  `IncDepRawContextHeadSemanticProvider`がinterpreted tail上の一head typeだけを解釈すれば、`synthesizeContext`がsemantic context/tree全体を構造再帰で生成する。
+  `ofHeadProvider`でreadiness synthesisと結合でき、残るlocal課題をhead-formation semanticsとcoherent-readiness生成まで縮小した。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
