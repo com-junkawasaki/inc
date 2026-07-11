@@ -657,6 +657,13 @@ It currently establishes:
   were reconstructed with these stronger constructors.  The fold can therefore
   recover the semantic type of variables and reflexivity without guessing it
   from an independently produced term result.
+  The remaining typing-readiness branches now carry the same coherence data.
+  Lambda stores codomain formation readiness; application, dependent pairing,
+  and both projections store readiness for their hidden domain and codomain
+  formations.  Named, shared readiness proofs for the unit variable and its
+  identity codomain keep proof indices identical across the Pi and Sigma example
+  trees.  Every typing branch can now locally reconstruct the semantic Pi/Sigma
+  formation it consumes instead of relying on an unrelated external result.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

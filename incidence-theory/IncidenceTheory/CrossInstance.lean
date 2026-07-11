@@ -1892,14 +1892,20 @@ mutual
           (IncDepRawHasType.unitRule (context := context))
     | lambdaRule {context domain codomain body}
         {domainFormation : IncDepRawWellFormed context domain}
-        {bodyTyping : IncDepRawHasType (domain :: context) body codomain} :
+        {bodyTyping : IncDepRawHasType (domain :: context) body codomain}
+        {codomainFormation : IncDepRawWellFormed (domain :: context) codomain} :
         IncDepRawFormationSemanticReady domainFormation →
+        IncDepRawFormationSemanticReady codomainFormation →
         IncDepRawTypingSemanticReady bodyTyping →
         IncDepRawTypingSemanticReady
           (IncDepRawHasType.lambdaRule domainFormation bodyTyping)
     | applyRule {context domain codomain function argument}
         {functionTyping : IncDepRawHasType context function (.pi domain codomain)}
-        {argumentTyping : IncDepRawHasType context argument domain} :
+        {argumentTyping : IncDepRawHasType context argument domain}
+        {domainFormation : IncDepRawWellFormed context domain}
+        {codomainFormation : IncDepRawWellFormed (domain :: context) codomain} :
+        IncDepRawFormationSemanticReady domainFormation →
+        IncDepRawFormationSemanticReady codomainFormation →
         IncDepRawTypingSemanticReady functionTyping →
         IncDepRawTypingSemanticReady argumentTyping →
         IncDepRawTypingSemanticReady
@@ -1907,17 +1913,29 @@ mutual
     | pairRule {context : List IncDepRawType}
         {domain codomain : IncDepRawType} {first second : IncDepRawTerm}
         {firstTyping : IncDepRawHasType context first domain}
-        {secondTyping : IncDepRawHasType context second (codomain.instantiate first)} :
+        {secondTyping : IncDepRawHasType context second (codomain.instantiate first)}
+        {domainFormation : IncDepRawWellFormed context domain}
+        {codomainFormation : IncDepRawWellFormed (domain :: context) codomain} :
+        IncDepRawFormationSemanticReady domainFormation →
+        IncDepRawFormationSemanticReady codomainFormation →
         IncDepRawTypingSemanticReady firstTyping →
         IncDepRawTypingSemanticReady secondTyping →
         IncDepRawTypingSemanticReady
           (IncDepRawHasType.pairRule firstTyping secondTyping)
     | firstRule {context domain codomain pair}
-        {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)} :
+        {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)}
+        {domainFormation : IncDepRawWellFormed context domain}
+        {codomainFormation : IncDepRawWellFormed (domain :: context) codomain} :
+        IncDepRawFormationSemanticReady domainFormation →
+        IncDepRawFormationSemanticReady codomainFormation →
         IncDepRawTypingSemanticReady pairTyping →
         IncDepRawTypingSemanticReady (IncDepRawHasType.firstRule pairTyping)
     | secondRule {context domain codomain pair}
-        {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)} :
+        {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)}
+        {domainFormation : IncDepRawWellFormed context domain}
+        {codomainFormation : IncDepRawWellFormed (domain :: context) codomain} :
+        IncDepRawFormationSemanticReady domainFormation →
+        IncDepRawFormationSemanticReady codomainFormation →
         IncDepRawTypingSemanticReady pairTyping →
         IncDepRawTypingSemanticReady (IncDepRawHasType.secondRule pairTyping)
     | reflRule {context type term}
@@ -2016,26 +2034,41 @@ def incDepRawDependentRefl_deepCertified :
   toIncDepRawCertifiedTyping := incDepRawDependentRefl_certified
   deeplyWellFormed := incDepRawDependentRefl_deeplyWellFormed
 
+def incDepRawUnitVariableTyping :
+    IncDepRawHasType [IncDepRawType.unit] (.var 0) .unit :=
+  IncDepRawHasType.varRule IncDepRawLookup.here
+
+def incDepRawUnitVariableSemanticReady :
+    IncDepRawTypingSemanticReady incDepRawUnitVariableTyping :=
+  IncDepRawTypingSemanticReady.varRule IncDepRawFormationSemanticReady.unit
+
+def incDepRawUnitIdentityFormation :
+    IncDepRawWellFormed [IncDepRawType.unit]
+      (.identity .unit (.var 0) (.var 0)) :=
+  IncDepRawWellFormed.identity IncDepRawWellFormed.unit
+    incDepRawUnitVariableTyping incDepRawUnitVariableTyping
+
+def incDepRawUnitIdentitySemanticReady :
+    IncDepRawFormationSemanticReady incDepRawUnitIdentityFormation :=
+  IncDepRawFormationSemanticReady.identity
+    IncDepRawFormationSemanticReady.unit
+    incDepRawUnitVariableSemanticReady incDepRawUnitVariableSemanticReady
+
 def incDepRawDependentRefl_semanticReady :
     IncDepRawTypingSemanticReady incDepRawDependentRefl_hasType := by
   exact IncDepRawTypingSemanticReady.lambdaRule
     IncDepRawFormationSemanticReady.unit
+    incDepRawUnitIdentitySemanticReady
     (IncDepRawTypingSemanticReady.reflRule
       IncDepRawFormationSemanticReady.unit
-      (IncDepRawTypingSemanticReady.varRule
-        IncDepRawFormationSemanticReady.unit))
+      incDepRawUnitVariableSemanticReady)
 
 def incDepRawDependentRefl_typeSemanticReady :
     IncDepRawFormationSemanticReady
       incDepRawDependentRefl_typeWellFormed := by
   exact IncDepRawFormationSemanticReady.pi
     IncDepRawFormationSemanticReady.unit
-    (IncDepRawFormationSemanticReady.identity
-      IncDepRawFormationSemanticReady.unit
-      (IncDepRawTypingSemanticReady.varRule
-        IncDepRawFormationSemanticReady.unit)
-      (IncDepRawTypingSemanticReady.varRule
-        IncDepRawFormationSemanticReady.unit))
+    incDepRawUnitIdentitySemanticReady
 
 theorem incDepRawDependentRefl_application_type :
     (IncDepRawType.identity .unit (.var 0) (.var 0)).instantiate .unit =
@@ -2085,6 +2118,8 @@ def incDepRawDependentPair_deepCertified :
 def incDepRawDependentPair_semanticReady :
     IncDepRawTypingSemanticReady incDepRawDependentPair_hasType := by
   exact IncDepRawTypingSemanticReady.pairRule
+    IncDepRawFormationSemanticReady.unit
+    incDepRawUnitIdentitySemanticReady
     IncDepRawTypingSemanticReady.unitRule
     (IncDepRawTypingSemanticReady.reflRule
       IncDepRawFormationSemanticReady.unit
@@ -2095,12 +2130,7 @@ def incDepRawDependentPair_typeSemanticReady :
       incDepRawDependentPair_typeWellFormed := by
   exact IncDepRawFormationSemanticReady.sigma
     IncDepRawFormationSemanticReady.unit
-    (IncDepRawFormationSemanticReady.identity
-      IncDepRawFormationSemanticReady.unit
-      (IncDepRawTypingSemanticReady.varRule
-        IncDepRawFormationSemanticReady.unit)
-      (IncDepRawTypingSemanticReady.varRule
-        IncDepRawFormationSemanticReady.unit))
+    incDepRawUnitIdentitySemanticReady
 
 def incDepRawDependentPair_first_hasType :
     IncDepRawHasType [] (.first incDepRawDependentPair) .unit :=

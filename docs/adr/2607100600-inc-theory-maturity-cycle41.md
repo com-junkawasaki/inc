@@ -273,6 +273,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   variable nodeはlookup型formation readiness、refl nodeはendpoint termに加えてunderlying type
   formation readinessを保持する。既存Pi/Sigma treeを強いconstructorで再構成し、foldがvariable/
   reflのsemantic typeを独立term resultから推測せず再構成できるようにした。
+- 残るtyping readiness branchもcoherentに強化した。lambdaはcodomain formation、application、
+  dependent pair、両projectionはhidden domain/codomain formation readinessを保持する。Unit
+  variableとそのidentity codomainのreadiness proofを名前付きで共有し、Pi/Sigma例のproof indexを
+  同一化した。各typing branchが消費するsemantic Pi/Sigma formationを局所再構成できる。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
