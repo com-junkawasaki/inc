@@ -257,6 +257,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   不当な抽出ではなく、deep certificateからの構造生成である。さらに`IncDepRawSubstitution.instantiate`をtyped argumentが定めるcheckedな一変数
   substitutionとして構成し、`IncDepRawWellFormed.instantiate`でwell-formed binder codomainのinstantiate結果がwell-formedであることを証明した。
   apply/pair/secondのresult formationはcodomain formationとargument typingから導出でき、独立仮定ではなくなった。
+- 最終certification境界を`IncDepRawCoherentlyCertifiedTyping`として型にした。ordinary certificateに、そのtyping/result formationと厳密にindexされた
+  coherent readinessを追加する。`toWitness`はcontext synthesisだけからjudgment-local semantic witness全体を生成し、
+  `interpretCoherentlyCertified`と`interpretCoherentlyCertified_coherent`がcanonical interpretationとsemantic-term equationを与える。
+  coherent certification後はreadiness synthesizerを別途仮定せず、local残件はtelescope/head semanticsだけになる。deep well-formednessや旧semantic-readyは
+  identity endpointすべてを同一formation proofへindexしないため、それらからの無条件coercionは行わない。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

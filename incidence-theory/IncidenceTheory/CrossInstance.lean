@@ -11348,6 +11348,39 @@ structure IncDepRawCertifiedCoherentReadinessSynthesizer where
     IncDepRawCoherentTypingDispatchReady certified.typing
       certified.typeWellFormed
 
+/-- A certified judgment whose recursive formation/typing evidence is coherent
+by construction.  This is the certification level consumed by the canonical
+semantic interpreter without a separate readiness synthesis assumption. -/
+structure IncDepRawCoherentlyCertifiedTyping
+    (context : List IncDepRawType) (term : IncDepRawTerm)
+    (type : IncDepRawType)
+    extends IncDepRawCertifiedTyping context term type where
+  readiness : IncDepRawCoherentTypingDispatchReady
+    toIncDepRawCertifiedTyping.typing
+    toIncDepRawCertifiedTyping.typeWellFormed
+
+def IncDepRawCoherentlyCertifiedTyping.toWitness
+    (contexts : IncDepRawContextSemanticTreeSynthesizer)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawCoherentlyCertifiedTyping context term type) :
+    IncDepRawCertifiedCanonicalSemanticWitness
+      certified.toIncDepRawCertifiedTyping :=
+  let context := contexts.synthesizeContext
+    certified.toIncDepRawCertifiedTyping.contextWellFormed
+  { contextResult := context.1
+    contextTree := context.2
+    readiness := certified.readiness }
+
+noncomputable def IncDepRawCoherentlyCertifiedTyping.toWitnessOfHeads
+    (heads : IncDepRawContextHeadSemanticProvider)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawCoherentlyCertifiedTyping context term type) :
+    IncDepRawCertifiedCanonicalSemanticWitness
+      certified.toIncDepRawCertifiedTyping :=
+  certified.toWitness heads.toTreeSynthesizer
+
 def IncDepRawCertifiedCanonicalSemanticWitnessSynthesizer.ofComponents
     (contexts : IncDepRawContextSemanticTreeSynthesizer)
     (readiness : IncDepRawCertifiedCoherentReadinessSynthesizer) :
@@ -12274,6 +12307,35 @@ theorem IncDepRawSubstitutionFiberModel.interpretCertifiedWithWitness_coherent
           witness.contextResult).semanticSubstitution := by
   exact model.interpretCertified_coherent
     (synthesizer.withHypotheses hypotheses) certified
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.interpretCoherentlyCertified
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (contexts : IncDepRawContextSemanticTreeSynthesizer)
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawCoherentlyCertifiedTyping context term type) :=
+  let witness := certified.toWitness contexts
+  model.interpretCertifiedCanonical (witness.withHypotheses hypotheses)
+
+theorem
+    IncDepRawSubstitutionFiberModel.interpretCoherentlyCertified_coherent
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (contexts : IncDepRawContextSemanticTreeSynthesizer)
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawCoherentlyCertifiedTyping context term type) :
+    let witness := certified.toWitness contexts
+    let result := model.interpretCoherentlyCertified contexts hypotheses certified
+    result.formationResult.semanticFiberEquivalence.transport
+        result.typingResult.sourceTermResult.semanticTerm =
+      result.typingResult.targetTermResult.semanticTerm.substitute
+        (IncDepRawSubstitutionSemanticResult.identity
+          witness.contextResult).semanticSubstitution := by
+  exact model.interpretCertifiedCanonical_coherent
+    ((certified.toWitness contexts).withHypotheses hypotheses)
 
 theorem IncDepRawSubstitutionFiberModel.preservationCanonical_formation
     (model : IncDepRawSubstitutionFiberModel.{u})

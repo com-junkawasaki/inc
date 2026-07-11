@@ -655,6 +655,19 @@ It currently establishes:
   well-formed binder codomain produces a well-formed instantiated result.  The
   result formations needed by apply, pair, and second are therefore derivable
   from their codomain formation and argument typing rather than new assumptions.
+  The final certification boundary is now represented directly by
+  `IncDepRawCoherentlyCertifiedTyping`.  It extends the ordinary certificate
+  with readiness indexed by exactly the certificate's typing and result
+  formation.  `toWitness` obtains the entire judgment-local semantic witness
+  from context synthesis alone, and `interpretCoherentlyCertified` plus
+  `interpretCoherentlyCertified_coherent` give the canonical interpretation and
+  its semantic-term equation.  Thus readiness is no longer a separate uniform
+  synthesizer assumption for coherently certified syntax; after certification,
+  only telescope/head semantics and the shared preservation environment remain.
+  This also records an important negative boundary: neither deep
+  well-formedness nor the older semantic-readiness tree alone indexes every
+  identity endpoint by the same formation proof, so silently coercing either to
+  coherent certification would assert coherence that its type does not contain.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
