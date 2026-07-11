@@ -7020,6 +7020,32 @@ theorem incToSetFunctor_never_fullyFaithful
   exact allNonNullary inc.unit
     (incidence_subsingleton_has_nullary_unit inc subsingleton)
 
+theorem incToSetFunctor_never_full
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    ¬ (∀ {source target}
+      (morphism : incTypeCategory.Hom
+        ((incToSetFunctor inc).obj source) ((incToSetFunctor inc).obj target)),
+      ∃ preimage : (incDiscreteCategory I).Hom source target,
+        (incToSetFunctor inc).map preimage = morphism) := by
+  intro full
+  apply incToSetFunctor_never_fullyFaithful inc
+  exact {
+    faithful := incToSetFunctor_faithful inc
+    full := full }
+
+theorem incToSetFunctor_faithful_but_not_full
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    (∀ {source target} (left right :
+      (incDiscreteCategory I).Hom source target),
+      (incToSetFunctor inc).map left = (incToSetFunctor inc).map right →
+        left = right) ∧
+    ¬ (∀ {source target}
+      (morphism : incTypeCategory.Hom
+        ((incToSetFunctor inc).obj source) ((incToSetFunctor inc).obj target)),
+      ∃ preimage : (incDiscreteCategory I).Hom source target,
+        (incToSetFunctor inc).map preimage = morphism) :=
+  ⟨incToSetFunctor_faithful inc, incToSetFunctor_never_full inc⟩
+
 theorem incToSetFunctor_not_essentiallySurjective
     {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
     ¬ IncFunctorEssentiallySurjective (incToSetFunctor inc) := by
