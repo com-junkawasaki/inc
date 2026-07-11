@@ -782,6 +782,27 @@ theorem BisimulationQuotientIncidencePresentation.targetLeafEntails_iff
       IncidenceLeafEntails first.target context formula :=
   (first.targetObservationEmbedding second).leafEntails_iff context formula
 
+theorem cycleIncidence_no_bisimulationQuotientIncidencePresentation
+    {Q QR QT : Type} [DecidableEq Q] :
+    ¬ Nonempty (BisimulationQuotientIncidencePresentation
+      (I := CycleId) (R := CycleRole) (T := GraphType)
+      (Q := Q) (QR := QR) (QT := QT) cycleIncidence) := by
+  rintro ⟨presentation⟩
+  letI : Subsingleton Q := ⟨by
+    intro left right
+    rcases presentation.classification.surjective left with ⟨leftSource, rfl⟩
+    rcases presentation.classification.surjective right with ⟨rightSource, rfl⟩
+    exact presentation.classification.respects
+      (cycleIncidence_all_collapse leftSource rightSource)⟩
+  have sourceHasBoundary :
+      IncidenceBoundaryValuation cycleIncidence CycleId.c0 := by
+    simp [IncidenceBoundaryValuation, cycleIncidence, cycleBoundary, cyclePred]
+  have targetHasBoundary :=
+    (presentation.boundary_iff CycleId.c0).mpr sourceHasBoundary
+  rcases targetHasBoundary with ⟨endpoint, member⟩
+  rw [incidence_subsingleton_boundary_empty presentation.target] at member
+  simp at member
+
 /- Unlike `cycleIncidence`'s `boundary`/`glue` (cycle 38), which failed
    the well-definedness check `Quotient.lift` needs, `simplexToShape`
    PASSES it -- this is exactly what `simplexToShape_distinguishes`

@@ -388,7 +388,12 @@ It currently establishes:
   any two quotient Incidence presentations of the same source are connected by
   the unique classification equivalence as a boundary-observation embedding;
   boundary and leaf truth, context satisfaction, and finite-sequent semantic
-  consequence therefore agree across all such presentation targets.
+  consequence therefore agree across all such presentation targets.  The
+  interface also rules out the known bad case uniformly: because
+  `cycleIncidence` has one bisimulation class but a nonempty boundary, no target
+  type and no target Incidence can form a boundary-preserving quotient
+  presentation for it; subsingleton well-foundedness forces the target boundary
+  empty and yields a checked contradiction.
 
 The minimal category/functor/pushout vocabulary is also formalized. A functor
 is proved to map a pushout cocone to a commuting cocone; preservation of the
