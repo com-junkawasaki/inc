@@ -154,6 +154,19 @@ theorem incidence_axioms_have_nontrivial_model :
   have equal := (natIncidence_approxBisim_iff 0 1).mp bisimilar
   exact Nat.zero_ne_add_one 0 equal
 
+theorem incidence_axioms_do_not_semantically_entail_false :
+    ¬ (∀ _inc : Incidence Nat PeanoRole GraphType, False) := by
+  intro entailsFalse
+  exact entailsFalse natIncidence
+
+theorem incidence_axioms_do_not_force_bisimulation_collapse :
+    ¬ (∀ inc : Incidence Nat PeanoRole GraphType,
+      ∀ first second : Nat, approxBisim inc first second) := by
+  intro forcesCollapse
+  have collapsed := forcesCollapse natIncidence 0 1
+  have equal := (natIncidence_approxBisim_iff 0 1).mp collapsed
+  exact Nat.zero_ne_add_one 0 equal
+
 /- Research cycle 1 (co-scientist step): does the same GluingSpec
    abstraction used for triIncidence (left-biased, non-commutative glue)
    also fit a genuinely commutative-monoid instance? Hypothesis: yes --
