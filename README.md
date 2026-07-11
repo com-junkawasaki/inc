@@ -226,7 +226,11 @@ It currently establishes:
   the proofs certify the complete internal computation diagrams.  Addition
   has left and right cancellation, multiplication cancels a common nonzero
   factor from either side, and an internal product evaluates to zero exactly
-  when one of its encoded integer factors is zero.
+  when one of its encoded integer factors is zero.  A bounded subtraction graph
+  is also defined from the same reusable binary-operation construction; it has
+  an exact `⟨x,y⟩ ↦ x-y` evaluation law, is functional and total on its window,
+  computes `x-x=0` and `x-0=x`, and is certified as inverse to adding the
+  subtracted argument whenever the intermediate difference lies in the window.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.

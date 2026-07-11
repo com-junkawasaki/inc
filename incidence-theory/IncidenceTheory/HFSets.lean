@@ -1997,6 +1997,135 @@ theorem hfRecursiveIntegerAdditionGraph_total
   exact (hfRecursiveIntegerAdditionGraph_apply_iff bound _ _).mpr
     ⟨left, right, leftWithin, rightWithin, rfl, rfl⟩
 
+def hfRecursiveIntegerSubtractionGraph (bound : Nat) : HFRecursiveSet :=
+  hfRecursiveIntegerBinaryRows (fun left right => left - right)
+    (hfRecursiveIntegerWindow bound) (hfRecursiveIntegerWindow bound)
+
+theorem hfRecursiveIntegerSubtractionGraph_apply_iff
+    (bound : Nat) (input output : HFRecursiveSet) :
+    HFRecursiveMember (hfRecursiveOrderedPair input output)
+      (hfRecursiveIntegerSubtractionGraph bound) ↔
+      ∃ left right,
+        HFRecursiveIntegerWithin bound left ∧
+        HFRecursiveIntegerWithin bound right ∧
+        input = hfRecursiveOrderedPair (hfRecursiveInteger left) (hfRecursiveInteger right) ∧
+        output = hfRecursiveInteger (left - right) := by
+  rw [hfRecursiveIntegerSubtractionGraph,
+    hfRecursiveIntegerBinaryRows_apply_iff]
+  constructor
+  · rintro ⟨left, right, leftMember, rightMember, inputEq, outputEq⟩
+    exact ⟨left, right,
+      (hfRecursiveInteger_mem_window_iff bound left).mp leftMember,
+      (hfRecursiveInteger_mem_window_iff bound right).mp rightMember,
+      inputEq, outputEq⟩
+  · rintro ⟨left, right, leftWithin, rightWithin, inputEq, outputEq⟩
+    exact ⟨left, right,
+      (hfRecursiveInteger_mem_window_iff bound left).mpr leftWithin,
+      (hfRecursiveInteger_mem_window_iff bound right).mpr rightWithin,
+      inputEq, outputEq⟩
+
+theorem hfRecursiveIntegerSubtractionGraph_on_integers_iff
+    (bound : Nat) (left right : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (rightWithin : HFRecursiveIntegerWithin bound right)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger left)
+            (hfRecursiveInteger right)) output)
+        (hfRecursiveIntegerSubtractionGraph bound) ↔
+      output = hfRecursiveInteger (left - right) := by
+  constructor
+  · intro applies
+    rcases (hfRecursiveIntegerSubtractionGraph_apply_iff bound _ _).mp applies with
+      ⟨actualLeft, actualRight, _, _, inputEq, outputEq⟩
+    rcases hfRecursiveOrderedPair_injective inputEq with ⟨leftEq, rightEq⟩
+    have actualLeftEq : left = actualLeft := hfRecursiveInteger_injective leftEq
+    have actualRightEq : right = actualRight := hfRecursiveInteger_injective rightEq
+    subst actualLeft
+    subst actualRight
+    exact outputEq
+  · intro outputEq
+    exact (hfRecursiveIntegerSubtractionGraph_apply_iff bound _ _).mpr
+      ⟨left, right, leftWithin, rightWithin, rfl, outputEq⟩
+
+theorem hfRecursiveIntegerSubtractionGraph_functional (bound : Nat) :
+    HFRecursiveFunctional (hfRecursiveIntegerSubtractionGraph bound) := by
+  intro input output₁ output₂ first second
+  rcases (hfRecursiveIntegerSubtractionGraph_apply_iff bound input output₁).mp first with
+    ⟨left₁, right₁, _, _, inputEq₁, outputEq₁⟩
+  rcases (hfRecursiveIntegerSubtractionGraph_apply_iff bound input output₂).mp second with
+    ⟨left₂, right₂, _, _, inputEq₂, outputEq₂⟩
+  have pairEq := inputEq₁.symm.trans inputEq₂
+  rcases hfRecursiveOrderedPair_injective pairEq with ⟨leftEq, rightEq⟩
+  have leftIndexEq : left₁ = left₂ := hfRecursiveInteger_injective leftEq
+  have rightIndexEq : right₁ = right₂ := hfRecursiveInteger_injective rightEq
+  subst left₂
+  subst right₂
+  exact outputEq₁.trans outputEq₂.symm
+
+theorem hfRecursiveIntegerSubtractionGraph_total
+    (bound : Nat) (left right : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (rightWithin : HFRecursiveIntegerWithin bound right) :
+    ∃ output,
+      HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger left) (hfRecursiveInteger right)) output)
+        (hfRecursiveIntegerSubtractionGraph bound) := by
+  refine ⟨hfRecursiveInteger (left - right), ?_⟩
+  exact (hfRecursiveIntegerSubtractionGraph_on_integers_iff
+    bound left right leftWithin rightWithin _).mpr rfl
+
+theorem hfRecursiveIntegerSubtractionGraph_self
+    (bound : Nat) (integer : Int)
+    (within : HFRecursiveIntegerWithin bound integer) (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger integer)
+            (hfRecursiveInteger integer)) output)
+        (hfRecursiveIntegerSubtractionGraph bound) ↔
+      output = hfRecursiveInteger 0 := by
+  simpa using (hfRecursiveIntegerSubtractionGraph_on_integers_iff
+    bound integer integer within within output)
+
+theorem hfRecursiveIntegerSubtractionGraph_zero_right
+    (bound : Nat) (integer : Int)
+    (within : HFRecursiveIntegerWithin bound integer)
+    (zeroWithin : HFRecursiveIntegerWithin bound 0) (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger integer)
+            (hfRecursiveInteger 0)) output)
+        (hfRecursiveIntegerSubtractionGraph bound) ↔
+      output = hfRecursiveInteger integer := by
+  simpa using (hfRecursiveIntegerSubtractionGraph_on_integers_iff
+    bound integer 0 within zeroWithin output)
+
+theorem hfRecursiveIntegerSubtractionGraph_add_cancel
+    (bound : Nat) (left right : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (rightWithin : HFRecursiveIntegerWithin bound right)
+    (differenceWithin : HFRecursiveIntegerWithin bound (left - right)) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger left) (hfRecursiveInteger right))
+          (hfRecursiveInteger (left - right)))
+        (hfRecursiveIntegerSubtractionGraph bound) ∧
+      HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger (left - right))
+            (hfRecursiveInteger right))
+          (hfRecursiveInteger left))
+        (hfRecursiveIntegerAdditionGraph bound) := by
+  constructor
+  · exact (hfRecursiveIntegerSubtractionGraph_on_integers_iff
+      bound left right leftWithin rightWithin _).mpr rfl
+  · apply (hfRecursiveIntegerAdditionGraph_on_integers_iff
+      bound (left - right) right differenceWithin rightWithin _).mpr
+    apply congrArg hfRecursiveInteger
+    omega
+
 def hfRecursiveIntegerMultiplicationGraph (bound : Nat) : HFRecursiveSet :=
   hfRecursiveIntegerBinaryRows (fun left right => left * right)
     (hfRecursiveIntegerWindow bound) (hfRecursiveIntegerWindow bound)
