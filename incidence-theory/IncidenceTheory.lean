@@ -7177,6 +7177,38 @@ theorem uliftBool_equivalent_uliftUnit_false
   rw [equivalence.inverse_forward, equivalence.inverse_forward] at inverseEqual
   contradiction
 
+theorem inc_to_set_equivalent_bool_iff_nullary
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) (i : I) :
+    Nonempty (IncTypeEquivalence (inc_to_set inc i) (ULift Bool)) ↔
+      inc.boundary i = [] := by
+  constructor
+  · rintro ⟨equivalence⟩
+    cases boundaryEq : inc.boundary i with
+    | nil => rfl
+    | cons head tail =>
+        exfalso
+        apply uliftBool_equivalent_uliftUnit_false
+        have reversed := equivalence.symm
+        simpa [inc_to_set, boundaryEq] using reversed
+  · intro nullary
+    exact ⟨by simpa [inc_to_set, nullary] using
+      IncTypeEquivalence.refl (ULift Bool)⟩
+
+theorem inc_to_set_equivalent_unit_iff_nonNullary
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) (i : I) :
+    Nonempty (IncTypeEquivalence (inc_to_set inc i) (ULift Unit)) ↔
+      inc.boundary i ≠ [] := by
+  constructor
+  · rintro ⟨equivalence⟩ nullary
+    apply uliftBool_equivalent_uliftUnit_false
+    simpa [inc_to_set, nullary] using equivalence
+  · intro nonNullary
+    cases boundaryEq : inc.boundary i with
+    | nil => exact False.elim (nonNullary boundaryEq)
+    | cons head tail =>
+        exact ⟨by simpa [inc_to_set, boundaryEq] using
+          IncTypeEquivalence.refl (ULift Unit)⟩
+
 theorem inc_to_set_equivalent_reflects_boundary_shape
     {I R₁ T₁ R₂ T₂ : Type u} [DecidableEq I]
     (source : Incidence I R₁ T₁) (target : Incidence I R₂ T₂)
