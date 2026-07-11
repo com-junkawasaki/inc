@@ -590,6 +590,53 @@ theorem inconsistent_extension_iff_derives_neg {Atom : Type u}
     Derives (formula :: context) .bot ↔ Derives context formula.neg :=
   derives_imp_iff.symm
 
+/- The first nontrivial connective law needed to read incidence products and
+   sums as logical structure.  Both directions are natural-deduction
+   derivations, rather than an appeal to a Boolean meta-semantics, so the law
+   remains valid for the intuitionistic/Kripke internal logic. -/
+theorem derives_and_or_distributive {Atom : Type u}
+    (p q r : Formula Atom) :
+    Derives [] (.imp (.and p (.or q r))
+      (.or (.and p q) (.and p r))) ∧
+    Derives [] (.imp (.or (.and p q) (.and p r))
+      (.and p (.or q r))) := by
+  constructor
+  · apply Derives.impI
+    refine Derives.orE (p := q) (q := r)
+      (r := .or (.and p q) (.and p r))
+      (Derives.andER (p := p) (q := .or q r) (Derives.ax (by simp))) ?_ ?_
+    · apply Derives.orIL
+      apply Derives.andI
+      · exact Derives.andEL (p := p) (q := .or q r) (Derives.ax (by simp))
+      · exact Derives.ax (by simp)
+    · apply Derives.orIR
+      apply Derives.andI
+      · exact Derives.andEL (p := p) (q := .or q r) (Derives.ax (by simp))
+      · exact Derives.ax (by simp)
+  · apply Derives.impI
+    refine Derives.orE (p := .and p q) (q := .and p r)
+      (r := .and p (.or q r)) (Derives.ax (by simp)) ?_ ?_
+    · apply Derives.andI
+      · exact Derives.andEL (p := p) (q := q) (Derives.ax (by simp))
+      · apply Derives.orIL
+        exact Derives.andER (p := p) (q := q) (Derives.ax (by simp))
+    · apply Derives.andI
+      · exact Derives.andEL (p := p) (q := r) (Derives.ax (by simp))
+      · apply Derives.orIR
+        exact Derives.andER (p := p) (q := r) (Derives.ax (by simp))
+
+theorem satisfies_and_or_distributive {Atom : Type u} (valuation : Atom → Prop)
+    (p q r : Formula Atom) :
+    Satisfies valuation (.and p (.or q r)) ↔
+      Satisfies valuation (.or (.and p q) (.and p r)) := by
+  constructor
+  · rintro ⟨hp, hq | hr⟩
+    · exact Or.inl ⟨hp, hq⟩
+    · exact Or.inr ⟨hp, hr⟩
+  · rintro (⟨hp, hq⟩ | ⟨hp, hr⟩)
+    · exact ⟨hp, Or.inl hq⟩
+    · exact ⟨hp, Or.inr hr⟩
+
 /- The one-step Lindenbaum lemma.  It gives a consistency-preserving choice at
    every formula; a full extension theorem still needs an enumeration and the
    limit-stage closure argument. -/
