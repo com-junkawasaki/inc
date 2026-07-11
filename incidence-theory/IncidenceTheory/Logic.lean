@@ -845,6 +845,47 @@ theorem Formula.logicalNeg_mk {Atom : Type u} (formula : Formula Atom) :
       (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) formula) =
       Quotient.mk (Formula.derivablyEquivalentSetoid Atom) formula.neg := rfl
 
+def Formula.LogicalEntails {Atom : Type u}
+    (left right : Formula.LogicalEquivalenceClass Atom) : Prop :=
+  Formula.logicalImp left right = Formula.logicalTop
+
+theorem derives_imp_and_curry_iff {Atom : Type u} (p q r : Formula Atom) :
+    Derives [] (Formula.iff (.imp (.and p q) r) (.imp p (.imp q r))) := by
+  apply derives_iffI
+  · apply Derives.impI
+    apply Derives.impI
+    apply Derives.impI
+    apply Derives.impE
+    · exact Derives.ax (p := .imp (.and p q) r) (by simp)
+    · exact Derives.andI (Derives.ax (p := p) (by simp))
+        (Derives.ax (p := q) (by simp))
+  · apply Derives.impI
+    apply Derives.impI
+    apply Derives.impE
+    · apply Derives.impE
+      · exact Derives.ax (p := .imp p (.imp q r)) (by simp)
+      · exact Derives.andEL (p := p) (q := q) (Derives.ax (by simp))
+    · exact Derives.andER (p := p) (q := q) (Derives.ax (by simp))
+
+theorem Formula.logicalImp_and_curry {Atom : Type u}
+    (p q r : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalImp (Formula.logicalAnd p q) r =
+      Formula.logicalImp p (Formula.logicalImp q r) := by
+  refine Quotient.inductionOn p ?_
+  intro p
+  refine Quotient.inductionOn q ?_
+  intro q
+  refine Quotient.inductionOn r ?_
+  intro r
+  exact Quotient.sound (derives_imp_and_curry_iff p q r)
+
+theorem Formula.logicalEntails_and_iff {Atom : Type u}
+    (p q r : Formula.LogicalEquivalenceClass Atom) :
+    Formula.LogicalEntails (Formula.logicalAnd p q) r ↔
+      Formula.LogicalEntails p (Formula.logicalImp q r) := by
+  unfold Formula.LogicalEntails
+  rw [Formula.logicalImp_and_curry]
+
 theorem inconsistent_extension_iff_derives_neg {Atom : Type u}
     {context : List (Formula Atom)} {formula : Formula Atom} :
     Derives (formula :: context) .bot ↔ Derives context formula.neg :=
