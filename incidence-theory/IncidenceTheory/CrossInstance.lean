@@ -11990,6 +11990,54 @@ noncomputable def IncDepRawSubstitutionFiberModel.preservationCanonicalOfEqualit
       readinessProvider := hypotheses.readinessProvider
       rebaseProvider := hypotheses.equalityProvider.toRebase }
 
+theorem IncDepRawSubstitutionFiberModel.preservationCanonical_formation
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses)
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (ready : IncDepRawCoherentFormationDispatchReady targetFormation)
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult) :
+    (model.preservationCanonical hypotheses).formation.run ready targetTree
+        replacements =
+      model.preserveFormationCanonical hypotheses.variableProvider
+        hypotheses.readinessProvider hypotheses.readinessProvider.toStrictTyping
+        hypotheses.rebaseProvider ready targetTree replacements :=
+  rfl
+
+theorem IncDepRawSubstitutionFiberModel.preservationCanonical_typing
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses)
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (ready : IncDepRawCoherentTypingDispatchReady targetTyping targetFormation)
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult) :
+    (model.preservationCanonical hypotheses).typing.dispatch ready targetTree
+        replacements =
+      model.preserveTypingCanonical hypotheses.variableProvider
+        hypotheses.readinessProvider hypotheses.readinessProvider.toStrictTyping
+        hypotheses.rebaseProvider ready targetTree replacements :=
+  rfl
+
 noncomputable def IncDepRawSubstitutionFiberModel.preservationDispatcher
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)

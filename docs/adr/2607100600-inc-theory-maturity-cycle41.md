@@ -805,6 +805,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - fiber rebaseを具体化する別経路として`IncDepRawFormationSubstitutionFiberEqualityProvider.toRebase`を追加した。semantic formation resultsのliteral
   uniquenessがあれば二resultsをrewriteした後、source/target fiber equivalencesとnaturality squareをすべてreflexiveに構成できる。
   `preservationCanonicalOfEquality`はこのstrongerだが具体モデルでは証明しやすいinterfaceを受け取り、各rebase componentの手動構成を不要にする。
+- canonical bundleのgeneric projection equations `preservationCanonical_formation`/`preservationCanonical_typing`を追加した。任意readiness tree、context
+  semantics、replacement interpretationについてbundle projectionが対応するmutual-recursion projectionへdefinitionally (`rfl`)一致する。downstream proofは
+  dispatcher recordsや生成recursorをunfoldせずcompact bundle APIをrewriteできる。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

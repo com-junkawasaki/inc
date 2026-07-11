@@ -1532,6 +1532,12 @@ It currently establishes:
   but often easier-to-prove uniqueness interface.  Concrete semantic models can
   therefore establish result proof-uniqueness instead of constructing every
   rebase component manually.
+  The canonical bundle also has generic projection equations,
+  `preservationCanonical_formation` and `preservationCanonical_typing`.  Both are
+  definitional (`rfl`) and expose the corresponding mutual-recursion projection
+  for any readiness tree, context semantics, and replacement interpretation.
+  Downstream proofs can now rewrite through the compact bundle API without
+  unfolding either the dispatcher records or the generated recursors.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
