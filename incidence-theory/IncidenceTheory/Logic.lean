@@ -1077,6 +1077,46 @@ theorem Formula.logicalOr_le_iff {Atom : Type u}
           (by intro formula hmem; simp at hmem) hright)
         (Derives.ax (by simp))
 
+theorem Formula.logicalBottom_le {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalBottom ≤ formula := by
+  refine Quotient.inductionOn formula ?_
+  intro formula
+  apply (logicalEntails_mk_iff_derives .bot formula).2
+  apply Derives.impI
+  exact Derives.botE (Derives.ax (by simp))
+
+theorem Formula.le_logicalTop {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    formula ≤ Formula.logicalTop := by
+  refine Quotient.inductionOn formula ?_
+  intro formula
+  apply (logicalEntails_mk_iff_derives formula .top).2
+  apply Derives.impI
+  exact Derives.topI
+
+theorem Formula.le_logicalOr_left {Atom : Type u}
+    (left right : Formula.LogicalEquivalenceClass Atom) :
+    left ≤ Formula.logicalOr left right := by
+  refine Quotient.inductionOn left ?_
+  intro left
+  refine Quotient.inductionOn right ?_
+  intro right
+  apply (logicalEntails_mk_iff_derives left (.or left right)).2
+  apply Derives.impI
+  exact Derives.orIL (Derives.ax (by simp))
+
+theorem Formula.le_logicalOr_right {Atom : Type u}
+    (left right : Formula.LogicalEquivalenceClass Atom) :
+    right ≤ Formula.logicalOr left right := by
+  refine Quotient.inductionOn left ?_
+  intro left
+  refine Quotient.inductionOn right ?_
+  intro right
+  apply (logicalEntails_mk_iff_derives right (.or left right)).2
+  apply Derives.impI
+  exact Derives.orIR (Derives.ax (by simp))
+
 theorem inconsistent_extension_iff_derives_neg {Atom : Type u}
     {context : List (Formula Atom)} {formula : Formula Atom} :
     Derives (formula :: context) .bot ↔ Derives context formula.neg :=
@@ -1555,6 +1595,32 @@ theorem Formula.logicalOr_distrib_and {Atom : Type u}
   refine Quotient.inductionOn r ?_
   intro r
   exact Formula.logicalOr_distributes_over_and p q r
+
+structure Formula.LogicalHeytingAlgebraLaws (Atom : Type u) : Prop where
+  order : Formula.LogicalPartialOrderLaws Atom
+  bottom_le : ∀ formula : Formula.LogicalEquivalenceClass Atom,
+    Formula.logicalBottom ≤ formula
+  le_top : ∀ formula : Formula.LogicalEquivalenceClass Atom,
+    formula ≤ Formula.logicalTop
+  meet : ∀ lower left right : Formula.LogicalEquivalenceClass Atom,
+    lower ≤ Formula.logicalAnd left right ↔ lower ≤ left ∧ lower ≤ right
+  join : ∀ left right upper : Formula.LogicalEquivalenceClass Atom,
+    Formula.logicalOr left right ≤ upper ↔ left ≤ upper ∧ right ≤ upper
+  distributive : ∀ p q r : Formula.LogicalEquivalenceClass Atom,
+    Formula.logicalAnd p (Formula.logicalOr q r) =
+      Formula.logicalOr (Formula.logicalAnd p q) (Formula.logicalAnd p r)
+  implication : ∀ p q r : Formula.LogicalEquivalenceClass Atom,
+    Formula.logicalAnd p q ≤ r ↔ p ≤ Formula.logicalImp q r
+
+theorem Formula.logicalHeytingAlgebraLaws (Atom : Type u) :
+    Formula.LogicalHeytingAlgebraLaws Atom where
+  order := Formula.logicalEntailsOrderLaws Atom
+  bottom_le := Formula.logicalBottom_le
+  le_top := Formula.le_logicalTop
+  meet := Formula.le_logicalAnd_iff
+  join := Formula.logicalOr_le_iff
+  distributive := Formula.logicalAnd_distrib_or
+  implication := Formula.logicalAnd_le_iff_le_logicalImp
 
 theorem satisfies_or_and_distributive_iff {Atom : Type u}
     (valuation : Atom → Prop) (p q r : Formula Atom) :
