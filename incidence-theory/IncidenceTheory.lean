@@ -3292,6 +3292,15 @@ theorem IncTypeEquivalence.ext {A B : Type u}
   cases inverseEq
   rfl
 
+theorem IncTypeEquivalence.ext_forward {A B : Type u}
+    {first second : IncTypeEquivalence A B}
+    (forwardEq : first.forward = second.forward) : first = second := by
+  apply IncTypeEquivalence.ext forwardEq
+  funext value
+  have firstAtSecondInverse := first.inverse_forward (second.inverse value)
+  rw [forwardEq, second.forward_inverse] at firstAtSecondInverse
+  exact firstAtSecondInverse
+
 def IncTypeEquivalence.refl (A : Type u) : IncTypeEquivalence A A where
   forward := id
   inverse := id
@@ -7169,6 +7178,41 @@ theorem BehavioralQuotientEquivalenceCriterion.quotientMap_bijective
     BehavioralBoundaryShapeTranslation.mapBisimulationQuotient_surjective
       criterion.embedding.toBehavioralBoundaryShapeTranslation
         criterion.essentiallySurjective⟩
+
+noncomputable def BehavioralQuotientEquivalenceCriterion.quotientEquivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (criterion : BehavioralQuotientEquivalenceCriterion source target) :
+    IncTypeEquivalence (IncidenceQuotient source) (IncidenceQuotient target) := by
+  let forward :=
+    BehavioralBoundaryShapeTranslation.mapBisimulationQuotient
+      criterion.embedding.toBehavioralBoundaryShapeTranslation
+  have surjective : ∀ targetClass : IncidenceQuotient target,
+      ∃ sourceClass : IncidenceQuotient source, forward sourceClass = targetClass :=
+    BehavioralBoundaryShapeTranslation.mapBisimulationQuotient_surjective
+      criterion.embedding.toBehavioralBoundaryShapeTranslation
+        criterion.essentiallySurjective
+  let inverse : IncidenceQuotient target → IncidenceQuotient source :=
+    fun targetClass => Classical.choose (surjective targetClass)
+  exact {
+    forward := forward
+    inverse := inverse
+    inverse_forward := by
+      intro sourceClass
+      apply criterion.embedding.mapBisimulationQuotient_injective
+      change forward (inverse (forward sourceClass)) = forward sourceClass
+      exact Classical.choose_spec (surjective (forward sourceClass))
+    forward_inverse := by
+      intro targetClass
+      exact Classical.choose_spec (surjective targetClass) }
+
+theorem BehavioralQuotientEquivalenceCriterion.quotientEquivalence_forward
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (criterion : BehavioralQuotientEquivalenceCriterion source target) :
+    criterion.quotientEquivalence.forward =
+      BehavioralBoundaryShapeTranslation.mapBisimulationQuotient
+        criterion.embedding.toBehavioralBoundaryShapeTranslation := rfl
 
 structure BehavioralBoundaryShapeEquivalence
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
