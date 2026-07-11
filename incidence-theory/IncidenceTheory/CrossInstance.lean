@@ -4727,6 +4727,35 @@ structure IncDepRawReadyTypingSemanticResult
   semanticType : IncTypeInContext contextResult.semanticContext
   typingResult : IncDepRawTypingSemanticResult typing contextResult semanticType
 
+structure IncDepRawReadyVariableFormationSemanticResult
+    {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {typeFormation : IncDepRawWellFormed context type}
+    (typeReady : IncDepRawFormationSemanticReady typeFormation)
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    (contextTree : IncDepRawContextSemanticTree contextResult) where
+  formationResult : IncDepRawFormationSemanticResult typeFormation contextResult
+  lookupType_coherence :
+    (contextTree.interpretLookup lookup).semanticType =
+      formationResult.semanticType
+
+noncomputable def IncDepRawReadyVariableFormationSemanticResult.toTypingFormation
+    {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {typeFormation : IncDepRawWellFormed context type}
+    {typeReady : IncDepRawFormationSemanticReady typeFormation}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    {contextTree : IncDepRawContextSemanticTree contextResult}
+    (result : IncDepRawReadyVariableFormationSemanticResult
+      (lookup := lookup) typeReady contextTree) :
+    IncDepRawTypingFormationSemanticResult
+      (typing := IncDepRawHasType.varRule lookup)
+      (typeFormation := typeFormation) contextResult :=
+  IncDepRawTypingFormationSemanticResult.align result.formationResult
+    (contextTree.interpretVariable lookup) result.lookupType_coherence
+
 noncomputable def IncDepRawReadyTypingSemanticResult.variable
     {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
     {lookup : IncDepRawLookup context position type}
@@ -4740,6 +4769,22 @@ noncomputable def IncDepRawReadyTypingSemanticResult.variable
       contextTree where
   semanticType := (contextTree.interpretLookup lookup).semanticType
   typingResult := contextTree.interpretVariable lookup
+
+noncomputable def IncDepRawReadyTypingSemanticResult.variableAligned
+    {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {typeFormation : IncDepRawWellFormed context type}
+    {typeReady : IncDepRawFormationSemanticReady typeFormation}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    {contextTree : IncDepRawContextSemanticTree contextResult}
+    (formation : IncDepRawReadyVariableFormationSemanticResult
+      (lookup := lookup) typeReady contextTree) :
+    IncDepRawReadyTypingSemanticResult
+      (IncDepRawTypingSemanticReady.varRule (lookup := lookup) typeReady)
+      contextTree where
+  semanticType := formation.formationResult.semanticType
+  typingResult := formation.toTypingFormation.typingResult
 
 def IncDepRawReadyTypingSemanticResult.unit
     {context : List IncDepRawType}

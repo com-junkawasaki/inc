@@ -419,6 +419,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   weakenされたsource older termのtransportがlifted substitution後のtarget older termと一致することを
   証明する。これでnewest/older両lookup caseのterm-level transport lawがcheckedとなり、自動foldへvariable
   branchを挿入する前の残件はraw lookup-formation resultのpackage化だけになった。
+- 欠けていたlookup-formation packageを`IncDepRawReadyVariableFormationSemanticResult`として追加した。
+  variableのraw type formationのsemantic interpretationとcontext tree lookup familyとのalignment equalityを
+  同時に保持し、`toTypingFormation`でformation/variable typingを文字通り同じsemantic type上に揃える。
+  `variableAligned`はこの強化結果を既存readiness APIへ返す。残る自動化はcontext treeのnewest/older
+  recursionからalignmentを構成し、既に証明済みのvariable-substitution resultへ渡すことである。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

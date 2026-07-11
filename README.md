@@ -869,6 +869,15 @@ It currently establishes:
   equation.  Thus both newest and older lookup cases now have checked term-level
   transport laws; only their raw lookup-formation result packaging remains
   before the variable branch can be inserted into the automatic fold.
+  The missing lookup-formation package is now explicit as
+  `IncDepRawReadyVariableFormationSemanticResult`.  It retains the semantic
+  interpretation of the variable's raw type and an equality aligning that
+  family with the context tree's lookup family.  Its `toTypingFormation`
+  conversion produces a formation and variable typing over literally the same
+  semantic type, while `variableAligned` exposes that aligned result through
+  the existing readiness API.  The remaining automation task is recursively
+  constructing this alignment for the context tree's newest/older cases, then
+  feeding it to the variable-substitution result already established above.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
