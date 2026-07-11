@@ -772,6 +772,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - mutual recursorの13 handlers中9つをmotives上で実装した。formationのbase/unit/Pi/Sigma/Identityは全5枝が完成し、Identityは二つのtyping IHを
   exact type resultへnormalizeする。typingはvariable/unit/lambda/reflの4枝が完成し、lambdaはlifted semantic context下でdomain/body IHを消費し、
   reflはexact type normalizationを実行する。残るrecursor handlersはdependent typingのapply/pair/first/second 4枝である。
+- dependent typingのapply/pair/first/second handlersも実装し、mutual recursorの13/13 handlersが完成した。
+  `preserveFormation`/`preserveTyping`はLean生成の相互recursorへ全handlersを適用し、任意のcoherent formation/typing treeについてexact substitution-fiber
+  semanticsを返す。`preservationDispatcher`が両projectionを単一`IncDepRawStrictMutualSubstitutionDispatcher`へbundleする。これによりdependent raw calculusの
+  structural substitution-preservation foldは、明示されたsemantic providers（variable replacement、readiness alignment、fiber rebase、instantiate coherence）
+  に相対して閉じた。これらのobligationをproof irrelevanceやaxiomとして隠してはいない。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

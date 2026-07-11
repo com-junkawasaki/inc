@@ -1462,6 +1462,15 @@ It currently establishes:
   lambda consumes domain and body induction hypotheses under the lifted semantic
   context, and reflexivity performs exact type normalization.  The remaining
   recursor work is the four dependent typing handlers: apply, pair, first, second.
+  Those final four handlers are now checked, completing all thirteen mutual
+  handlers.  `preserveFormation` and `preserveTyping` apply Lean's generated
+  mutual recursor to them and return exact substitution-fiber semantics for every
+  coherent formation or typing tree.  `preservationDispatcher` bundles both
+  projections as one `IncDepRawStrictMutualSubstitutionDispatcher`.  This closes
+  the structural substitution-preservation fold for the dependent raw calculus,
+  relative to its explicitly listed semantic providers (variable replacement,
+  readiness alignment, fiber rebase, and instantiate coherence); none of those
+  obligations is hidden as proof irrelevance or an axiom.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
