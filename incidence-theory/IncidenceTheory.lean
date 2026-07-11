@@ -2430,6 +2430,48 @@ theorem IncCoherentCategoryEquivalence.forward_criterion
     IncFunctorEquivalenceCriterion equivalence.equivalence.forward :=
   equivalence.equivalence.forward_criterion
 
+noncomputable def IncCoherentCategoryEquivalence.refl
+    {Obj : Type u} (C : IncCategory Obj) :
+    IncCoherentCategoryEquivalence C C :=
+  (IncFunctorEquivalenceCriterion.identity C).toCoherentCategoryEquivalence
+
+noncomputable def IncCoherentCategoryEquivalence.symm
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCoherentCategoryEquivalence C D) :
+    IncCoherentCategoryEquivalence D C :=
+  equivalence.equivalence.inverse_criterion.toCoherentCategoryEquivalence
+
+noncomputable def IncCoherentCategoryEquivalence.trans
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    (second : IncCoherentCategoryEquivalence D E)
+    (first : IncCoherentCategoryEquivalence C D) :
+    IncCoherentCategoryEquivalence C E :=
+  IncFunctorEquivalenceCriterion.toCoherentCategoryEquivalence
+    (second.forward_criterion.comp first.forward_criterion)
+
+def IncCoherentlyEquivalent
+    {CObj DObj : Type u} (C : IncCategory CObj) (D : IncCategory DObj) : Prop :=
+  Nonempty (IncCoherentCategoryEquivalence C D)
+
+theorem incCoherentlyEquivalent_refl
+    {Obj : Type u} (C : IncCategory Obj) : IncCoherentlyEquivalent C C :=
+  ⟨IncCoherentCategoryEquivalence.refl C⟩
+
+theorem incCoherentlyEquivalent_symm
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj} :
+    IncCoherentlyEquivalent C D → IncCoherentlyEquivalent D C := by
+  rintro ⟨equivalence⟩
+  exact ⟨equivalence.symm⟩
+
+theorem incCoherentlyEquivalent_trans
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj} :
+    IncCoherentlyEquivalent C D → IncCoherentlyEquivalent D E →
+      IncCoherentlyEquivalent C E := by
+  rintro ⟨first⟩ ⟨second⟩
+  exact ⟨second.trans first⟩
+
 theorem incFunctor_equivalenceCriterion_iff_exists_coherentCategoryEquivalence
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (F : IncFunctor C D) :
