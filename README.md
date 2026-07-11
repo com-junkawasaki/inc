@@ -252,6 +252,10 @@ It currently establishes:
   both products.  As a nontrivial arithmetic application, every internally
   represented square is nonnegative, and a fully checked graph computation
   proves that `x*x + y*y = 0` forces both encoded integers `x` and `y` to be zero.
+  Bounded integer divisibility is reconstructed from the multiplication graph,
+  with an exact factor-existence law.  It is reflexive and transitive when the
+  composed factor remains in the finite window; `1` divides every represented
+  integer, while `0` divides exactly `0`.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.

@@ -3233,6 +3233,85 @@ theorem hfRecursiveInteger_sum_of_squares_eq_zero
   exact ⟨(Int.mul_eq_zero.mp leftSquareZero).elim id id,
     (Int.mul_eq_zero.mp rightSquareZero).elim id id⟩
 
+def HFRecursiveIntegerDivides
+    (bound : Nat) (divisor dividend : Int) : Prop :=
+  ∃ factor, HFRecursiveIntegerWithin bound factor ∧
+    HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger divisor)
+          (hfRecursiveInteger factor))
+        (hfRecursiveInteger dividend))
+      (hfRecursiveIntegerMultiplicationGraph bound)
+
+theorem hfRecursiveIntegerDivides_iff
+    (bound : Nat) (divisor dividend : Int)
+    (divisorWithin : HFRecursiveIntegerWithin bound divisor) :
+    HFRecursiveIntegerDivides bound divisor dividend ↔
+      ∃ factor, HFRecursiveIntegerWithin bound factor ∧
+        dividend = divisor * factor := by
+  constructor
+  · rintro ⟨factor, factorWithin, applies⟩
+    have value := (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+      bound divisor factor divisorWithin factorWithin _).mp applies
+    exact ⟨factor, factorWithin, hfRecursiveInteger_injective value⟩
+  · rintro ⟨factor, factorWithin, value⟩
+    refine ⟨factor, factorWithin, ?_⟩
+    apply (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+      bound divisor factor divisorWithin factorWithin _).mpr
+    exact congrArg hfRecursiveInteger value
+
+theorem hfRecursiveIntegerDivides_refl
+    (bound : Nat) (integer : Int)
+    (within : HFRecursiveIntegerWithin bound integer)
+    (oneWithin : HFRecursiveIntegerWithin bound 1) :
+    HFRecursiveIntegerDivides bound integer integer := by
+  apply (hfRecursiveIntegerDivides_iff bound integer integer within).mpr
+  exact ⟨1, oneWithin, by simp⟩
+
+theorem hfRecursiveInteger_one_divides
+    (bound : Nat) (integer : Int)
+    (oneWithin : HFRecursiveIntegerWithin bound 1)
+    (integerWithin : HFRecursiveIntegerWithin bound integer) :
+    HFRecursiveIntegerDivides bound 1 integer := by
+  apply (hfRecursiveIntegerDivides_iff bound 1 integer oneWithin).mpr
+  exact ⟨integer, integerWithin, by simp⟩
+
+theorem hfRecursiveInteger_zero_divides_iff
+    (bound : Nat) (integer : Int)
+    (zeroWithin : HFRecursiveIntegerWithin bound 0)
+    (oneWithin : HFRecursiveIntegerWithin bound 1) :
+    HFRecursiveIntegerDivides bound 0 integer ↔ integer = 0 := by
+  rw [hfRecursiveIntegerDivides_iff bound 0 integer zeroWithin]
+  constructor
+  · rintro ⟨factor, _, value⟩
+    simpa using value
+  · intro value
+    exact ⟨1, oneWithin, by simp [value]⟩
+
+theorem hfRecursiveIntegerDivides_trans
+    (bound : Nat) (first second third : Int)
+    (firstWithin : HFRecursiveIntegerWithin bound first)
+    (secondWithin : HFRecursiveIntegerWithin bound second)
+    (firstSecond : HFRecursiveIntegerDivides bound first second)
+    (secondThird : HFRecursiveIntegerDivides bound second third)
+    (factorProductWithin : ∀ firstFactor secondFactor,
+      HFRecursiveIntegerWithin bound firstFactor →
+      HFRecursiveIntegerWithin bound secondFactor →
+      second = first * firstFactor → third = second * secondFactor →
+      HFRecursiveIntegerWithin bound (firstFactor * secondFactor)) :
+    HFRecursiveIntegerDivides bound first third := by
+  rcases (hfRecursiveIntegerDivides_iff
+    bound first second firstWithin).mp firstSecond with
+    ⟨firstFactor, firstFactorWithin, secondValue⟩
+  rcases (hfRecursiveIntegerDivides_iff
+    bound second third secondWithin).mp secondThird with
+    ⟨secondFactor, secondFactorWithin, thirdValue⟩
+  have productWithin := factorProductWithin firstFactor secondFactor
+    firstFactorWithin secondFactorWithin secondValue thirdValue
+  apply (hfRecursiveIntegerDivides_iff bound first third firstWithin).mpr
+  refine ⟨firstFactor * secondFactor, productWithin, ?_⟩
+  rw [thirdValue, secondValue, Int.mul_assoc]
+
 /- The graph of the identity function on the internally represented finite
    ordinal `n`. -/
 def hfRecursiveNatIdentityGraph : Nat → HFRecursiveSet
