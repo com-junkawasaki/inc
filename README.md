@@ -1545,6 +1545,13 @@ It currently establishes:
   `model.unit` and its typing result is `model.typingUnit`.  This confirms the
   public bundle, identity substitution semantics, replacement semantics, mutual
   recursor, and strict return type compose without an adapter or hidden cast.
+  The source and target terms of this preserved unit are now proved by `rfl` to
+  equal `incDepRawEmptyContextSemanticTree.interpretUnit`; this is the first
+  direct bridge from the substitution-preservation API back to the pre-existing
+  context-tree interpreter.  Such literal equality is intentionally claimed only
+  for the provider-independent leaf.  For terms whose variable or rebase branches
+  consult supplied providers, the stable general statement remains the exported
+  transport/substitution coherence unless stronger provider canonicity is given.
   `preserveUnitIdentityLambda` is the first binder-level example.  It constructs
   coherent readiness for `λ (x : Unit), x`, preserves it under the empty
   identity substitution, extends the semantic context for the body, lifts the

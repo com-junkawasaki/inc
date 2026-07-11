@@ -12067,6 +12067,20 @@ theorem IncDepRawSubstitutionFiberModel.preserveEmptyUnitIdentity_typing
         incDepRawEmptyContextSemantic) :=
   rfl
 
+theorem IncDepRawSubstitutionFiberModel.preserveEmptyUnitIdentity_targetTerm
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses) :
+    (model.preserveEmptyUnitIdentity hypotheses).typingResult.targetTermResult.semanticTerm =
+      (incDepRawEmptyContextSemanticTree.interpretUnit).semanticTerm :=
+  rfl
+
+theorem IncDepRawSubstitutionFiberModel.preserveEmptyUnitIdentity_sourceTerm
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses) :
+    (model.preserveEmptyUnitIdentity hypotheses).typingResult.sourceTermResult.semanticTerm =
+      (incDepRawEmptyContextSemanticTree.interpretUnit).semanticTerm :=
+  rfl
+
 def incDepRawUnitFunctionFormation :
     IncDepRawWellFormed [] (.pi .unit .unit) :=
   IncDepRawWellFormed.pi IncDepRawWellFormed.unit IncDepRawWellFormed.unit

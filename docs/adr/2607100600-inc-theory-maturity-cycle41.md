@@ -811,6 +811,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - `preserveEmptyUnitIdentity`でcanonical bundleの最初のconcrete end-to-end利用例を追加した。empty semantic-context treeとidentity replacement
   interpretationをunit judgmentのcanonical typing preservationへ渡し、formation resultが`model.unit`、typing resultが`model.typingUnit`に`rfl`で一致する。
   public bundle、identity substitution semantics、replacement semantics、mutual recursor、strict return typeがhidden castなしに合成できることを確認した。
+- preserved unitのsource/target termsが既存context-tree interpreterの`interpretUnit`と`rfl`で一致することも証明し、substitution-preservation APIから
+  直接interpreterへの最初のbridgeを得た。literal equalityはprovider-independent leafに限定して主張する。variable/rebase branchesがproviderを参照する
+  一般項では、追加canonicityなしにはexport済みtransport/substitution coherenceが正確な安定statementである。
 - binder-level例`preserveUnitIdentityLambda`を追加した。`λ (x : Unit), x`のcoherent readinessを構成し、empty identity substitution下で保存する過程は
   semantic context extend、replacement lift、variable-provider branchを実際に通る。`preserveUnitIdentityLambda_coherent`はsource lambdaのfiber transportと
   target lambdaのsubstitutionが等しいことをchecked resultから取り出し、leafだけでなくbinder recursion全体がend-to-endで動くことを確認した。
