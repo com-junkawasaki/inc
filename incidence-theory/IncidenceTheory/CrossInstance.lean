@@ -28,6 +28,153 @@ import IncidenceTheory.Product
 
 namespace IncidenceCore
 
+inductive IncRawType where
+  | base : Nat → IncRawType
+  | unit : IncRawType
+  | product : IncRawType → IncRawType → IncRawType
+  | function : IncRawType → IncRawType → IncRawType
+  deriving DecidableEq, Repr
+
+inductive IncRawTerm where
+  | variable : Nat → IncRawTerm
+  | unit : IncRawTerm
+  | pair : IncRawTerm → IncRawTerm → IncRawTerm
+  | first : IncRawTerm → IncRawTerm
+  | second : IncRawTerm → IncRawTerm
+  | lambda : IncRawType → IncRawTerm → IncRawTerm
+  | apply : IncRawTerm → IncRawTerm → IncRawTerm
+  deriving DecidableEq, Repr
+
+inductive IncRawLookup : List IncRawType → Nat → IncRawType → Type
+  | here {context type} : IncRawLookup (type :: context) 0 type
+  | there {context index type head} :
+      IncRawLookup context index type →
+        IncRawLookup (head :: context) (index + 1) type
+
+inductive IncRawHasType : List IncRawType → IncRawTerm → IncRawType → Type
+  | varRule {context index type} :
+      IncRawLookup context index type →
+        IncRawHasType context (.variable index) type
+  | unitRule {context} : IncRawHasType context .unit .unit
+  | pairRule {context left right leftType rightType} :
+      IncRawHasType context left leftType →
+      IncRawHasType context right rightType →
+      IncRawHasType context (.pair left right) (.product leftType rightType)
+  | firstRule {context term leftType rightType} :
+      IncRawHasType context term (.product leftType rightType) →
+        IncRawHasType context (.first term) leftType
+  | secondRule {context term leftType rightType} :
+      IncRawHasType context term (.product leftType rightType) →
+        IncRawHasType context (.second term) rightType
+  | lambdaRule {context body domain codomain} :
+      IncRawHasType (domain :: context) body codomain →
+        IncRawHasType context (.lambda domain body) (.function domain codomain)
+  | applyRule {context function argument domain codomain} :
+      IncRawHasType context function (.function domain codomain) →
+      IncRawHasType context argument domain →
+        IncRawHasType context (.apply function argument) codomain
+
+def incRawIdentity (type : IncRawType) : IncRawTerm :=
+  .lambda type (.variable 0)
+
+def incRawIdentity_hasType (type : IncRawType) :
+    IncRawHasType [] (incRawIdentity type) (.function type type) := by
+  exact IncRawHasType.lambdaRule
+    (IncRawHasType.varRule IncRawLookup.here)
+
+def incRawSwap (left right : IncRawType) : IncRawTerm :=
+  .lambda (.product left right)
+    (.pair (.second (.variable 0)) (.first (.variable 0)))
+
+def incRawSwap_hasType (left right : IncRawType) :
+    IncRawHasType [] (incRawSwap left right)
+      (.function (.product left right) (.product right left)) := by
+  apply IncRawHasType.lambdaRule
+  apply IncRawHasType.pairRule
+  · apply IncRawHasType.secondRule
+    exact IncRawHasType.varRule IncRawLookup.here
+  · apply IncRawHasType.firstRule
+    exact IncRawHasType.varRule IncRawLookup.here
+
+theorem IncRawLookup.deterministic
+    {context : List IncRawType} {index : Nat} {first second : IncRawType} :
+    IncRawLookup context index first → IncRawLookup context index second →
+      first = second := by
+  intro firstLookup
+  induction firstLookup generalizing second with
+  | here =>
+      intro secondLookup
+      cases secondLookup
+      rfl
+  | there previous ih =>
+      intro secondLookup
+      cases secondLookup with
+      | there secondPrevious => exact ih secondPrevious
+
+def IncRawType.interpret (baseModel : Nat → Type u) : IncRawType → Type u
+  | .base index => baseModel index
+  | .unit => ULift.{u} Unit
+  | .product left right => left.interpret baseModel × right.interpret baseModel
+  | .function domain codomain =>
+      domain.interpret baseModel → codomain.interpret baseModel
+
+inductive IncRawEnvironment (baseModel : Nat → Type u) :
+    List IncRawType → Type (u + 1)
+  | empty : IncRawEnvironment baseModel []
+  | extend {context type} :
+      type.interpret baseModel → IncRawEnvironment baseModel context →
+        IncRawEnvironment baseModel (type :: context)
+
+noncomputable def IncRawLookup.evaluate
+    {baseModel : Nat → Type u} {context : List IncRawType}
+    {index : Nat} {type : IncRawType}
+    (lookup : IncRawLookup context index type)
+    (environment : IncRawEnvironment baseModel context) :
+    type.interpret baseModel := by
+  induction lookup with
+  | here =>
+      cases environment with
+      | extend value _ => exact value
+  | there previous ih =>
+      cases environment with
+      | extend _ tail => exact ih tail
+
+noncomputable def IncRawHasType.evaluate
+    {baseModel : Nat → Type u} {context : List IncRawType}
+    {term : IncRawTerm} {type : IncRawType}
+    (typing : IncRawHasType context term type)
+    (environment : IncRawEnvironment baseModel context) :
+    type.interpret baseModel := by
+  induction typing with
+  | varRule lookup => exact lookup.evaluate environment
+  | unitRule => exact ⟨()⟩
+  | pairRule _ _ leftEval rightEval =>
+      exact ⟨leftEval environment, rightEval environment⟩
+  | firstRule _ termEval =>
+      exact (termEval environment).1
+  | secondRule _ termEval =>
+      exact (termEval environment).2
+  | lambdaRule bodyTyping bodyEval =>
+      exact fun argument =>
+        bodyEval (IncRawEnvironment.extend argument environment)
+  | applyRule _ _ functionEval argumentEval =>
+      exact functionEval environment (argumentEval environment)
+
+theorem incRawIdentity_evaluate
+    (baseModel : Nat → Type u) (type : IncRawType)
+    (value : type.interpret baseModel) :
+      (incRawIdentity_hasType type).evaluate IncRawEnvironment.empty value = value := by
+  simp [incRawIdentity_hasType, IncRawHasType.evaluate,
+    IncRawLookup.evaluate]
+
+theorem incRawSwap_evaluate
+    (baseModel : Nat → Type u) (left right : IncRawType)
+    (value : (IncRawType.product left right).interpret baseModel) :
+    (incRawSwap_hasType left right).evaluate IncRawEnvironment.empty value =
+      (value.2, value.1) := by
+  simp [incRawSwap_hasType, IncRawHasType.evaluate,
+    IncRawLookup.evaluate]
+
 structure IncContext where
   Assignment : Type u
 

@@ -414,7 +414,16 @@ It currently establishes:
   expose their projection and variable, while substitution extension satisfies
   both projection and variable beta laws.  What remains is an independent raw
   telescope/term syntax and inductive typing judgment whose interpretation is
-  this checked semantic calculus.
+  this checked semantic calculus.  The first independent raw layer is now
+  implemented: de Bruijn variables, unit, products, functions, pairing,
+  projections, lambda, and application; context lookup and typing are
+  inductive derivation data, with deterministic lookup.  A universe-polymorphic
+  interpretation maps base types to arbitrary semantic types, typed contexts
+  to heterogeneous environments, and every typing derivation to a value of
+  its interpreted type.  Closed identity and product-swap programs have
+  checked typing derivations and evaluate respectively to the identity
+  function and component exchange.  Dependent raw constructors, weakening,
+  substitution, and the general interpretation/substitution lemma remain.
 - the `inc_to_set` translation packaged as a functor from the discrete
   incidence carrier category to the category of types.  It is always faithful
   but never full or essentially surjective; explicit morphisms and objects

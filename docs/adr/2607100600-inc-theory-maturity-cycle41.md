@@ -100,6 +100,12 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   projection/variable と substitution extension を構成し、projection/variable beta 則も
   checked。残るのはこの意味論とは独立した raw telescope/term syntax と inductive
   typing derivation、および interpretation の soundness である。
+- independent raw core syntax として de Bruijn variable、unit、product、function、pair、
+  projections、lambda、application を定義し、context lookup と typing judgment を inductive
+  derivation data として構成した。lookup determinism を証明し、任意の base-type model、
+  heterogeneous typed environment に対する derivation evaluator を実装した。closed identity
+  と product swap は型付けされ、それぞれ恒等関数と成分交換に評価される。残る raw
+  calculus 課題は dependent constructors、weakening/substitution と一般 substitution lemma。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」や carrier 可算性の除去ではなく、Incidence 固有の意味論とのさらに
