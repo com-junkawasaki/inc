@@ -7485,12 +7485,10 @@ theorem boundaryShapeTranslation_exists_iff_inc_to_set_equivalent_along_map
           source target map i equivalent }
     exact ⟨translation, rfl⟩
 
-def BoundaryShapeTranslation.discreteFunctor
-    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
-    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
-    (translation : BoundaryShapeTranslation source target) :
+def incDiscreteMapFunctor
+    {I J : Type u} (map : I → J) :
     IncFunctor (incDiscreteCategory I) (incDiscreteCategory J) where
-  obj := fun i => ⟨translation.map i.down⟩
+  obj := fun i => ⟨map i.down⟩
   map := by
     intro first second morphism
     exact ⟨by
@@ -7506,6 +7504,13 @@ def BoundaryShapeTranslation.discreteFunctor
     cases firstEqual
     cases secondEqual
     rfl
+
+def BoundaryShapeTranslation.discreteFunctor
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : BoundaryShapeTranslation source target) :
+    IncFunctor (incDiscreteCategory I) (incDiscreteCategory J) :=
+  incDiscreteMapFunctor translation.map
 
 def BoundaryShapeTranslation.incToSetNaturalTransformation
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
@@ -7546,6 +7551,33 @@ def BoundaryShapeTranslation.incToSetNaturalIsomorphism
     apply IncLiftedFunction.ext
     funext value
     exact (translation.incToSetEquivalence i.down).forward_inverse value
+
+theorem boundaryShapeTranslation_exists_iff_incToSet_naturallyIsomorphic
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂)
+    (map : I → J) :
+    (∃ translation : BoundaryShapeTranslation source target,
+      translation.map = map) ↔
+      IncNaturallyIsomorphic (incToSetFunctor source)
+        ((incToSetFunctor target).comp (incDiscreteMapFunctor map)) := by
+  constructor
+  · rintro ⟨translation, rfl⟩
+    exact ⟨translation.incToSetNaturalIsomorphism⟩
+  · rintro ⟨iso⟩
+    apply (boundaryShapeTranslation_exists_iff_inc_to_set_equivalent_along_map
+      source target map).mpr
+    intro i
+    refine ⟨{
+      forward := (iso.hom.app ⟨i⟩).function
+      inverse := (iso.inv.app ⟨i⟩).function
+      inverse_forward := ?_
+      forward_inverse := ?_ }⟩
+    · intro value
+      have component := iso.hom_app_inv_app (⟨i⟩ : IncLiftedObject I)
+      exact congrFun (congrArg IncLiftedFunction.function component) value
+    · intro value
+      have component := iso.inv_app_hom_app (⟨i⟩ : IncLiftedObject I)
+      exact congrFun (congrArg IncLiftedFunction.function component) value
 
 theorem BoundaryShapeTranslation.discreteFunctor_obj
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
