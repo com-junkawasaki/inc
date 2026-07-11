@@ -731,6 +731,21 @@ theorem derivablyEquivalent_or_congr {Atom : Type u}
           (derives_iffER (context := []) (left := right) (right := right') rightEquivalent)
       · exact Derives.ax (by simp)
 
+def Formula.derivablyEquivalentSetoid (Atom : Type u) : Setoid (Formula Atom) where
+  r := Formula.DerivablyEquivalent
+  iseqv := derivablyEquivalent_equivalence
+
+abbrev Formula.LogicalEquivalenceClass (Atom : Type u) : Type u :=
+  Quotient (Formula.derivablyEquivalentSetoid Atom)
+
+theorem Formula.logicalClass_eq_of_derivablyEquivalent {Atom : Type u}
+    {left right : Formula Atom}
+    (equivalent : Formula.DerivablyEquivalent left right) :
+    (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) left :
+      Formula.LogicalEquivalenceClass Atom) =
+      Quotient.mk (Formula.derivablyEquivalentSetoid Atom) right :=
+  Quotient.sound equivalent
+
 theorem inconsistent_extension_iff_derives_neg {Atom : Type u}
     {context : List (Formula Atom)} {formula : Formula Atom} :
     Derives (formula :: context) .bot ↔ Derives context formula.neg :=
