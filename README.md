@@ -427,7 +427,13 @@ It currently establishes:
   quotient lift has a checked beta law and uniqueness theorem.  For the
   simplex classification the invariant condition holds, and this canonical
   boundary is proved equal to `shapeBoundary`.  The corresponding binary
-  descent and coherence problem for glue remains open.
+  descent is now characterized in the same exact form: mapped source glue
+  descends to a unique target operation if and only if it is invariant under
+  bisimilarity in both inputs.  Its canonical construction satisfies beta,
+  left-unit, and right-unit laws.  The simplex classification fails this
+  condition (two bisimilar vertices produce different mapped glue results
+  against the face), formally explaining why `shapeIncidence.glue` must be an
+  independently chosen operation rather than descended source glue.
 
 The minimal category/functor/pushout vocabulary is also formalized. A functor
 is proved to map a pushout cocone to a commuting cocone; preservation of the

@@ -482,6 +482,105 @@ theorem BisimulationQuotientClassification.canonicalBoundary_unique
   rcases classification.surjective q with ⟨x, rfl⟩
   rw [realizes, classification.canonicalBoundary_classify]
 
+def BisimulationQuotientClassification.mappedSourceGlue
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (x y : I) : Option Q :=
+  (inc.glue x y).map classification.classify
+
+def BisimulationQuotientClassification.GlueInvariant
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc) : Prop :=
+  ∀ ⦃x x' y y'⦄, approxBisim inc x x' → approxBisim inc y y' →
+    classification.mappedSourceGlue x y =
+      classification.mappedSourceGlue x' y'
+
+def BisimulationQuotientClassification.GlueRealization
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc) : Prop :=
+  ∃ glue : Q → Q → Option Q,
+    ∀ x y, glue (classification.classify x) (classification.classify y) =
+      classification.mappedSourceGlue x y
+
+noncomputable def BisimulationQuotientClassification.representative
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (q : Q) : I :=
+  Classical.choose (classification.surjective q)
+
+theorem BisimulationQuotientClassification.classify_representative
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (q : Q) :
+    classification.classify (classification.representative q) = q :=
+  Classical.choose_spec (classification.surjective q)
+
+noncomputable def BisimulationQuotientClassification.canonicalGlue
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (_invariant : classification.GlueInvariant) : Q → Q → Option Q :=
+  fun q r => classification.mappedSourceGlue
+    (classification.representative q) (classification.representative r)
+
+theorem BisimulationQuotientClassification.canonicalGlue_classify
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (invariant : classification.GlueInvariant) (x y : I) :
+    classification.canonicalGlue invariant
+        (classification.classify x) (classification.classify y) =
+      classification.mappedSourceGlue x y := by
+  apply invariant
+  · apply classification.reflects
+    exact classification.classify_representative (classification.classify x)
+  · apply classification.reflects
+    exact classification.classify_representative (classification.classify y)
+
+theorem BisimulationQuotientClassification.glueRealization_iff_invariant
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc) :
+    classification.GlueRealization ↔ classification.GlueInvariant := by
+  constructor
+  · rintro ⟨glue, realizes⟩ x x' y y' hx hy
+    rw [← realizes x y, ← realizes x' y', classification.respects hx,
+      classification.respects hy]
+  · intro invariant
+    exact ⟨classification.canonicalGlue invariant,
+      classification.canonicalGlue_classify invariant⟩
+
+theorem BisimulationQuotientClassification.canonicalGlue_unique
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (invariant : classification.GlueInvariant)
+    (candidate : Q → Q → Option Q)
+    (realizes : ∀ x y,
+      candidate (classification.classify x) (classification.classify y) =
+        classification.mappedSourceGlue x y) :
+    candidate = classification.canonicalGlue invariant := by
+  funext q r
+  rcases classification.surjective q with ⟨x, rfl⟩
+  rcases classification.surjective r with ⟨y, rfl⟩
+  rw [realizes, classification.canonicalGlue_classify]
+
+theorem BisimulationQuotientClassification.canonicalGlue_unit_left
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (invariant : classification.GlueInvariant) (q : Q) :
+    classification.canonicalGlue invariant
+        (classification.classify inc.unit) q = some q := by
+  rcases classification.surjective q with ⟨x, rfl⟩
+  rw [classification.canonicalGlue_classify]
+  simp [BisimulationQuotientClassification.mappedSourceGlue, inc.unit_left]
+
+theorem BisimulationQuotientClassification.canonicalGlue_unit_right
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (invariant : classification.GlueInvariant) (q : Q) :
+    classification.canonicalGlue invariant
+        q (classification.classify inc.unit) = some q := by
+  rcases classification.surjective q with ⟨x, rfl⟩
+  rw [classification.canonicalGlue_classify]
+  simp [BisimulationQuotientClassification.mappedSourceGlue, inc.unit_right]
+
 noncomputable def BisimulationQuotientClassification.targetEquivalence
     {I R T Q₁ Q₂ : Type u} [DecidableEq I] {inc : Incidence I R T}
     (first : BisimulationQuotientClassification (Q := Q₁) inc)
@@ -1284,5 +1383,17 @@ theorem simplexToShape_not_glue_hom :
   (simplexIncidence.glue SimplexId.v1 SimplexId.face).map simplexToShape ≠
     shapeIncidence.glue (simplexToShape SimplexId.v1) (simplexToShape SimplexId.face) := by
   decide
+
+theorem simplexClassification_glue_not_invariant :
+    ¬ simplexBisimulationQuotientClassification.GlueInvariant := by
+  intro invariant
+  have verticesBisimilar :
+      approxBisim simplexIncidence SimplexId.v0 SimplexId.v1 :=
+    (simplexToShape_iff_approxBisim SimplexId.v0 SimplexId.v1).mp rfl
+  have equalMappedGlue := invariant verticesBisimilar
+    (approxBisim_refl simplexIncidence SimplexId.face)
+  simp [BisimulationQuotientClassification.mappedSourceGlue,
+    simplexBisimulationQuotientClassification, simplexToShape,
+    simplexIncidence] at equalMappedGlue
 
 end IncidenceCore

@@ -44,14 +44,20 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   で写した関数が bisimulation-invariant であることと、分類 target 上へ descent
   できることが必要十分であり、descent は一意である。simplex 分類ではこの条件を
   検証し、canonical descent が既存の `shapeBoundary` と等しいことも証明済み。
+- canonical glue についても、両入力を bisimulation で置換して mapped result が不変
+  であることと、分類 target 上の二変数演算へ descent できることが必要十分であり、
+  descent の一意性、beta、左右 unit law を証明済み。simplex 分類ではこの不変性が
+  実際に偽であり、`shapeIncidence.glue` が source glue の descent ではない理由を
+  一般条件の失敗として示した。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」ではなく、非可算 carrier への完全性条件の拡張、Incidence 固有の
 意味論とのさらに強い接続、依存型・圏論の内部再構成、より広い数学ライブラリ化、
-および任意の bisimulation 分類から quotient の raw glue を canonical に導出する
-二変数 descent 条件である（boundary descent は invariance と必要十分かつ一意、raw
-target data の Incidence 実現可能性は no-self-loop と必要十分であり、さらに
-grade-decreasing 条件から従うことまで現在証明済み）。
+および boundary/glue が descent した後に type/guard/type-preservation を含む全
+Incidence 構造が source からいつ transport できるかという coherence 条件である
+（boundary と binary glue の descent は各 invariance 条件と必要十分かつ一意、raw
+target data の実現可能性は no-self-loop と必要十分であり、さらに grade-decreasing
+条件から従うことまで現在証明済み）。
 
 ## Context
 
