@@ -435,8 +435,7 @@ It currently establishes:
   to heterogeneous environments, and every typing derivation to a value of
   its interpreted type.  Closed identity and product-swap programs have
   checked typing derivations and evaluate respectively to the identity
-  function and component exchange.  Dependent raw constructors, weakening,
-  substitution, and the general interpretation/substitution lemma remained.
+  function and component exchange.  Dependent raw constructors remain.
   Weakening is now established through a reusable general renaming calculus:
   a renaming carries a de Bruijn index map plus lookup preservation, lifts
   correctly under binders, acts structurally on terms, and preserves every
@@ -446,15 +445,17 @@ It currently establishes:
   every target variable to a source term together with its typing derivation;
   lifting under a binder fixes the newest variable and weakens every replaced
   older term.  Structural substitution preserves typing for every rule, and
-  identity substitution is neutral on all raw terms.  The remaining immediate
-  step is the semantic substitution lemma relating this syntactic operation to
-  evaluation under the induced typed environment.  Its environment layer is
-  now constructed: a typed substitution recursively evaluates to a target
+  identity substitution is neutral on all raw terms.  Its environment layer
+  recursively evaluates a typed substitution to a target
   heterogeneous environment, and every variable lookup is proved to agree
-  with evaluation of its replacement term.  Extending this lookup theorem
-  through lambda binders requires an explicit evaluator-congruence lemma rather
-  than definitional reduction of proof-indexed recursors; that binder-aware
-  coherence is the remaining part of the full semantic substitution theorem.
+  with evaluation of its replacement term.  Renamings now pull semantic
+  environments back, lookup and term evaluation are natural under that
+  pullback, and lifting a renaming commutes with environment extension.
+  Consequently weakening preserves evaluation.  The analogous lifted typed
+  substitution/environment law is proved as well, including the lambda binder,
+  and the full semantic substitution theorem holds for every typing rule:
+  evaluating a substituted derivation equals evaluating the original
+  derivation in the induced target environment.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite

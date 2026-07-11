@@ -118,7 +118,7 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   derivation data として構成した。lookup determinism を証明し、任意の base-type model、
   heterogeneous typed environment に対する derivation evaluator を実装した。closed identity
   と product swap は型付けされ、それぞれ恒等関数と成分交換に評価される。残る raw
-  calculus 課題は dependent constructors、substitution と一般 substitution lemma。
+  calculus 課題は dependent constructors。
 - raw renaming calculus を追加した。de Bruijn index map と lookup preservation を束ね、
   binder 下の lift、term への構造的作用、全 typing derivation の preservation を証明。
   context head への weakening は `Nat.succ` renaming の特殊化として得られ、identity
@@ -126,12 +126,16 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - simultaneous typed substitution を追加した。各 target variable を typing proof 付き
   source term に写し、binder lift は newest variable を固定し既存 replacement を weakening
   する。全 typing rule に対する substitution preservation と identity substitution の
-  term-level中立則を証明済み。残る直近課題は evaluator の full semantic substitution lemma。
+  term-level中立則を証明済み。
 - typed substitution から target heterogeneous environment を再帰構成し、任意 variable
   lookup について replacement term の source evaluation と induced target environment の
-  lookup evaluation が一致することを証明した。full semantic substitution の binder case
-  は proof-indexed evaluator recursor の definitional equalityでは閉じないため、明示的な
-  evaluator congruence/binder coherence が残る。
+  lookup evaluation が一致することを証明した。
+- renaming に target environment から source environment を抽出する意味論を与え、lookup
+  evaluation と全 typing derivation の evaluator naturality を証明した。renaming lift は
+  environment extension と可換で、weakening が評価を保存する。typed substitution lift
+  についても drop/full environment coherence を証明し、lambda binder を含む全 typing
+  rule に対して「substitute 後の評価 = induced environment での元項の評価」という full
+  semantic substitution theorem を得た。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

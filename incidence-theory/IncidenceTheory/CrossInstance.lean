@@ -417,6 +417,105 @@ def IncRawRenaming.lift
     | here => exact IncRawLookup.here
     | there previous => exact IncRawLookup.there (renameMap.preserves previous)
 
+def IncRawRenaming.tail
+    {source target : List IncRawType} {head : IncRawType}
+    (renameMap : IncRawRenaming (head :: source) target) :
+    IncRawRenaming source target where
+  index := fun position => renameMap.index (position + 1)
+  preserves := fun lookup => renameMap.preserves (IncRawLookup.there lookup)
+
+def IncRawRenaming.skipTarget
+    {source target : List IncRawType}
+    (renameMap : IncRawRenaming source target) (head : IncRawType) :
+    IncRawRenaming source (head :: target) where
+  index := fun position => renameMap.index position + 1
+  preserves := fun lookup => IncRawLookup.there (renameMap.preserves lookup)
+
+noncomputable def IncRawRenaming.evaluate
+    {baseModel : Nat → Type u} {target : List IncRawType} :
+    {source : List IncRawType} →
+      IncRawRenaming source target →
+      IncRawEnvironment baseModel target →
+      IncRawEnvironment baseModel source
+  | [], _, _ => IncRawEnvironment.empty
+  | _ :: _, renameMap, environment =>
+      IncRawEnvironment.extend
+        ((renameMap.preserves IncRawLookup.here).evaluate environment)
+        (renameMap.tail.evaluate environment)
+
+theorem IncRawRenaming.evaluate_lookup
+    {baseModel : Nat → Type u} {source target : List IncRawType}
+    (renameMap : IncRawRenaming source target)
+    (environment : IncRawEnvironment baseModel target)
+    {index : Nat} {type : IncRawType}
+    (lookup : IncRawLookup source index type) :
+    lookup.evaluate (renameMap.evaluate environment) =
+      (renameMap.preserves lookup).evaluate environment := by
+  induction lookup with
+  | here => rfl
+  | there previous ih =>
+      change previous.evaluate (renameMap.tail.evaluate environment) = _
+      exact ih renameMap.tail
+
+theorem IncRawRenaming.skipTarget_evaluate
+    {baseModel : Nat → Type u} {source target : List IncRawType}
+    (renameMap : IncRawRenaming source target)
+    (head : IncRawType) (value : head.interpret baseModel)
+    (environment : IncRawEnvironment baseModel target) :
+    (renameMap.skipTarget head).evaluate
+        (IncRawEnvironment.extend value environment) =
+      renameMap.evaluate environment := by
+  induction source with
+  | nil => rfl
+  | cons sourceHead sourceTail ih =>
+      simp only [IncRawRenaming.evaluate]
+      have tails : (renameMap.skipTarget head).tail =
+          renameMap.tail.skipTarget head := by
+        cases renameMap
+        congr
+      rw [tails, ih renameMap.tail]
+      rw [IncRawLookup.proof_unique
+        ((renameMap.skipTarget head).preserves IncRawLookup.here)
+        (IncRawLookup.there (renameMap.preserves IncRawLookup.here))]
+      rfl
+
+theorem IncRawRenaming.identity_evaluate
+    {baseModel : Nat → Type u} {context : List IncRawType}
+    (environment : IncRawEnvironment baseModel context) :
+    (IncRawRenaming.identity context).evaluate environment = environment := by
+  induction context with
+  | nil => cases environment; rfl
+  | cons head tail ih =>
+      cases environment with
+      | extend value tailEnvironment =>
+          simp only [IncRawRenaming.evaluate]
+          have tails : (IncRawRenaming.identity (head :: tail)).tail =
+              (IncRawRenaming.identity tail).skipTarget head := by
+            congr
+          rw [tails, IncRawRenaming.skipTarget_evaluate,
+            ih tailEnvironment]
+          rfl
+
+theorem IncRawRenaming.lift_evaluate
+    {baseModel : Nat → Type u} {source target : List IncRawType}
+    (renameMap : IncRawRenaming source target)
+    (head : IncRawType)
+    (value : head.interpret baseModel)
+    (environment : IncRawEnvironment baseModel target) :
+    (renameMap.lift head).evaluate
+        (IncRawEnvironment.extend value environment) =
+      IncRawEnvironment.extend value (renameMap.evaluate environment) := by
+  simp only [IncRawRenaming.evaluate]
+  have tailLift : (renameMap.lift head).tail =
+      renameMap.skipTarget head := by
+    cases renameMap
+    congr
+  rw [tailLift, renameMap.skipTarget_evaluate]
+  rw [IncRawLookup.proof_unique
+    ((renameMap.lift head).preserves IncRawLookup.here)
+    IncRawLookup.here]
+  rfl
+
 noncomputable def IncRawHasType.rename
     {source target : List IncRawType}
     {term : IncRawTerm} {type : IncRawType}
@@ -439,12 +538,79 @@ noncomputable def IncRawHasType.rename
       exact IncRawHasType.applyRule
         (functionRename renameMap) (argumentRename renameMap)
 
+theorem IncRawHasType.evaluate_rename
+    {baseModel : Nat → Type u} {source target : List IncRawType}
+    {term : IncRawTerm} {type : IncRawType}
+    (typing : IncRawHasType source term type)
+    (renameMap : IncRawRenaming source target)
+    (environment : IncRawEnvironment baseModel target) :
+    (typing.rename renameMap).evaluate environment =
+      typing.evaluate (renameMap.evaluate environment) := by
+  induction typing generalizing target with
+  | varRule lookup =>
+      exact (renameMap.evaluate_lookup environment lookup).symm
+  | unitRule => rfl
+  | pairRule leftTyping rightTyping leftIH rightIH =>
+      rw [IncRawHasType.evaluate_congr (IncRawHasType.rename
+        (IncRawHasType.pairRule leftTyping rightTyping) renameMap)
+        (IncRawHasType.pairRule (leftTyping.rename renameMap)
+          (rightTyping.rename renameMap)) environment]
+      simp only [IncRawHasType.evaluate_pairRule]
+      rw [leftIH renameMap environment, rightIH renameMap environment]
+  | firstRule typing ih =>
+      rw [IncRawHasType.evaluate_congr
+        ((IncRawHasType.firstRule typing).rename renameMap)
+        (IncRawHasType.firstRule (typing.rename renameMap)) environment]
+      simp only [IncRawHasType.evaluate_firstRule]
+      rw [ih renameMap environment]
+  | secondRule typing ih =>
+      rw [IncRawHasType.evaluate_congr
+        ((IncRawHasType.secondRule typing).rename renameMap)
+        (IncRawHasType.secondRule (typing.rename renameMap)) environment]
+      simp only [IncRawHasType.evaluate_secondRule]
+      rw [ih renameMap environment]
+  | lambdaRule bodyTyping bodyIH =>
+      rw [IncRawHasType.evaluate_congr
+        ((IncRawHasType.lambdaRule bodyTyping).rename renameMap)
+        (IncRawHasType.lambdaRule (bodyTyping.rename (renameMap.lift _)))
+        environment]
+      simp only [IncRawHasType.evaluate_lambdaRule]
+      funext argument
+      rw [bodyIH (renameMap.lift _)
+        (IncRawEnvironment.extend argument environment)]
+      rw [renameMap.lift_evaluate]
+  | applyRule functionTyping argumentTyping functionIH argumentIH =>
+      rw [IncRawHasType.evaluate_congr
+        ((IncRawHasType.applyRule functionTyping argumentTyping).rename renameMap)
+        (IncRawHasType.applyRule (functionTyping.rename renameMap)
+          (argumentTyping.rename renameMap)) environment]
+      simp only [IncRawHasType.evaluate_applyRule]
+      rw [functionIH renameMap environment, argumentIH renameMap environment]
+
 noncomputable def IncRawHasType.weaken
     {context : List IncRawType} {term : IncRawTerm} {type : IncRawType}
     (typing : IncRawHasType context term type) (head : IncRawType) :
     IncRawHasType (head :: context)
       (term.rename Nat.succ) type :=
   typing.rename (IncRawRenaming.weaken context head)
+
+theorem IncRawHasType.weaken_evaluate
+    {baseModel : Nat → Type u} {context : List IncRawType}
+    {term : IncRawTerm} {type head : IncRawType}
+    (typing : IncRawHasType context term type)
+    (value : head.interpret baseModel)
+    (environment : IncRawEnvironment baseModel context) :
+    (typing.weaken head).evaluate
+        (IncRawEnvironment.extend value environment) =
+      typing.evaluate environment := by
+  change (typing.rename (IncRawRenaming.weaken context head)).evaluate
+      (IncRawEnvironment.extend value environment) = _
+  rw [IncRawHasType.evaluate_rename]
+  have weakenAsSkip : IncRawRenaming.weaken context head =
+      (IncRawRenaming.identity context).skipTarget head := by
+    congr
+  rw [weakenAsSkip, IncRawRenaming.skipTarget_evaluate,
+    IncRawRenaming.identity_evaluate]
 
 theorem IncRawTerm.rename_identity (term : IncRawTerm) :
     term.rename id = term := by
@@ -617,6 +783,93 @@ theorem IncRawSubstitution.evaluate_lookup
       change
         ((substitution.drop.preserves previous).evaluate environment) = _
       exact ih substitution.drop
+
+theorem IncRawSubstitution.lift_drop_evaluate
+    {baseModel : Nat → Type u} {source target : List IncRawType}
+    (substitution : IncRawSubstitution source target)
+    (head : IncRawType) (value : head.interpret baseModel)
+    (environment : IncRawEnvironment baseModel source) :
+    (substitution.lift head).drop.evaluate
+        (IncRawEnvironment.extend value environment) =
+      substitution.evaluate environment := by
+  induction target with
+  | nil => rfl
+  | cons targetHead targetTail ih =>
+      simp only [IncRawSubstitution.evaluate]
+      congr 1
+      · rw [IncRawHasType.evaluate_congr
+          (((substitution.lift head).drop).preserves IncRawLookup.here)
+          ((substitution.preserves IncRawLookup.here).weaken head)
+          (IncRawEnvironment.extend value environment)]
+        exact (substitution.preserves IncRawLookup.here).weaken_evaluate
+          value environment
+      · exact ih substitution.drop
+
+theorem IncRawSubstitution.lift_evaluate
+    {baseModel : Nat → Type u} {source target : List IncRawType}
+    (substitution : IncRawSubstitution source target)
+    (head : IncRawType) (value : head.interpret baseModel)
+    (environment : IncRawEnvironment baseModel source) :
+    (substitution.lift head).evaluate
+        (IncRawEnvironment.extend value environment) =
+      IncRawEnvironment.extend value (substitution.evaluate environment) := by
+  simp only [IncRawSubstitution.evaluate]
+  rw [substitution.lift_drop_evaluate]
+  rw [IncRawHasType.evaluate_congr
+    ((substitution.lift head).preserves IncRawLookup.here)
+    (IncRawHasType.varRule IncRawLookup.here)
+    (IncRawEnvironment.extend value environment)]
+  rfl
+
+theorem IncRawHasType.evaluate_substitute
+    {baseModel : Nat → Type u} {source target : List IncRawType}
+    {term : IncRawTerm} {type : IncRawType}
+    (typing : IncRawHasType target term type)
+    (substitution : IncRawSubstitution source target)
+    (environment : IncRawEnvironment baseModel source) :
+    (typing.substitute substitution).evaluate environment =
+      typing.evaluate (substitution.evaluate environment) := by
+  induction typing generalizing source with
+  | varRule lookup =>
+      exact substitution.evaluate_lookup environment lookup
+  | unitRule => rfl
+  | pairRule leftTyping rightTyping leftIH rightIH =>
+      rw [IncRawHasType.evaluate_congr
+        ((IncRawHasType.pairRule leftTyping rightTyping).substitute substitution)
+        (IncRawHasType.pairRule (leftTyping.substitute substitution)
+          (rightTyping.substitute substitution)) environment]
+      simp only [IncRawHasType.evaluate_pairRule]
+      rw [leftIH substitution environment, rightIH substitution environment]
+  | firstRule typing ih =>
+      rw [IncRawHasType.evaluate_congr
+        ((IncRawHasType.firstRule typing).substitute substitution)
+        (IncRawHasType.firstRule (typing.substitute substitution)) environment]
+      simp only [IncRawHasType.evaluate_firstRule]
+      rw [ih substitution environment]
+  | secondRule typing ih =>
+      rw [IncRawHasType.evaluate_congr
+        ((IncRawHasType.secondRule typing).substitute substitution)
+        (IncRawHasType.secondRule (typing.substitute substitution)) environment]
+      simp only [IncRawHasType.evaluate_secondRule]
+      rw [ih substitution environment]
+  | lambdaRule bodyTyping bodyIH =>
+      rw [IncRawHasType.evaluate_congr
+        ((IncRawHasType.lambdaRule bodyTyping).substitute substitution)
+        (IncRawHasType.lambdaRule
+          (bodyTyping.substitute (substitution.lift _))) environment]
+      simp only [IncRawHasType.evaluate_lambdaRule]
+      funext argument
+      rw [bodyIH (substitution.lift _)
+        (IncRawEnvironment.extend argument environment)]
+      rw [substitution.lift_evaluate]
+  | applyRule functionTyping argumentTyping functionIH argumentIH =>
+      rw [IncRawHasType.evaluate_congr
+        ((IncRawHasType.applyRule functionTyping argumentTyping).substitute substitution)
+        (IncRawHasType.applyRule (functionTyping.substitute substitution)
+          (argumentTyping.substitute substitution)) environment]
+      simp only [IncRawHasType.evaluate_applyRule]
+      rw [functionIH substitution environment,
+        argumentIH substitution environment]
 
 structure IncContext where
   Assignment : Type u
