@@ -3808,6 +3808,26 @@ noncomputable def IncCategoryEquivalence.mapTerminalObject
     (terminal : IncTerminalObject C) : IncTerminalObject D :=
   equivalence.forward_criterion.mapTerminalObject terminal
 
+theorem IncCategoryEquivalence.mapInitialObject_to_image
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D)
+    (initial : IncInitialObject C) (target : CObj) :
+    (equivalence.mapInitialObject initial).to
+        (equivalence.forward.obj target) =
+      equivalence.forward.map (initial.to target) := by
+  symm
+  exact (equivalence.mapInitialObject initial).unique _ _
+
+theorem IncCategoryEquivalence.mapTerminalObject_to_image
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D)
+    (terminal : IncTerminalObject C) (source : CObj) :
+    (equivalence.mapTerminalObject terminal).to
+        (equivalence.forward.obj source) =
+      equivalence.forward.map (terminal.to source) := by
+  symm
+  exact (equivalence.mapTerminalObject terminal).unique _ _
+
 structure StrongFiniteBicartesianPreservingFamily
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (F : IncFunctor C D) extends StrongBicartesianPreservingFamily F where
