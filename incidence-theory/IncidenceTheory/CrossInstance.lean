@@ -3484,6 +3484,49 @@ theorem incDepRawDependentPairSecondTypingSemantic_beta :
       IncIdentityTerm.refl incDepUnitTerm := by
   rfl
 
+structure IncDepRawReadyTypingSemanticResult
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    (ready : IncDepRawTypingSemanticReady typing)
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    (contextTree : IncDepRawContextSemanticTree contextResult) where
+  semanticType : IncTypeInContext contextResult.semanticContext
+  typingResult : IncDepRawTypingSemanticResult typing contextResult semanticType
+
+noncomputable def incDepRawDependentRefl_readySemanticResult :
+    IncDepRawReadyTypingSemanticResult incDepRawDependentRefl_semanticReady
+      incDepRawEmptyContextSemanticTree where
+  semanticType := _
+  typingResult := incDepRawDependentReflTypingSemantic
+
+noncomputable def incDepRawDependentReflApplication_readySemanticResult :
+    IncDepRawReadyTypingSemanticResult
+      incDepRawDependentRefl_application_semanticReady
+      incDepRawEmptyContextSemanticTree where
+  semanticType := _
+  typingResult := incDepRawDependentReflApplicationTypingSemantic
+
+noncomputable def incDepRawDependentPair_readySemanticResult :
+    IncDepRawReadyTypingSemanticResult incDepRawDependentPair_semanticReady
+      incDepRawEmptyContextSemanticTree where
+  semanticType := _
+  typingResult := incDepRawDependentPairTypingSemantic
+
+noncomputable def incDepRawDependentPairFirst_readySemanticResult :
+    IncDepRawReadyTypingSemanticResult
+      incDepRawDependentPair_first_semanticReady
+      incDepRawEmptyContextSemanticTree where
+  semanticType := _
+  typingResult := incDepRawDependentPairFirstTypingSemantic
+
+noncomputable def incDepRawDependentPairSecond_readySemanticResult :
+    IncDepRawReadyTypingSemanticResult
+      incDepRawDependentPair_second_semanticReady
+      incDepRawEmptyContextSemanticTree where
+  semanticType := _
+  typingResult := incDepRawDependentPairSecondTypingSemantic
+
 def incDepRawClosedContextSemantic
     {term : IncDepRawTerm} {type : IncDepRawType}
     (certified : IncDepRawCertifiedTyping [] term type) :

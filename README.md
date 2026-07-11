@@ -691,6 +691,13 @@ It currently establishes:
   definitionally unit and reflexivity.  Thus every non-atomic term builder is
   exercised in an end-to-end typed semantic construction, including dependent
   fiber index alignment.
+  A general return type for the readiness-driven typing fold is now fixed.
+  `IncDepRawReadyTypingSemanticResult` binds one semantic-readiness derivation to
+  one semantic context tree and packages the inferred contextual type with the
+  typing-indexed semantic result.  Certificates are constructed for the
+  dependent Pi function, its application, the dependent Sigma pair, and both
+  projections.  The recursive fold can now target a checked dependent sigma
+  result rather than an informal existential specification.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

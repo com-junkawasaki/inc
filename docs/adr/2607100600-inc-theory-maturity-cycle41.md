@@ -294,6 +294,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   dependent Sigmaではunitと正しいfiber index上のreflをpair builderへ渡し、両projection builderの
   結果がdefinitionally unit/reflとなる。dependent fiber index alignmentを含む全non-atomic term
   builderをend-to-end typed semantic constructionで検証した。
+- readiness-driven typing foldの一般return typeを固定した。
+  `IncDepRawReadyTypingSemanticResult`はsemantic-readiness derivationとsemantic context treeを
+  結び、推論されたcontextual typeとtyping-indexed semantic resultをpackageする。dependent Pi
+  function/application、Sigma pair、両projectionのcertificateを構成した。recursive foldは非形式的
+  existentialではなくchecked dependent sigma resultをtargetにできる。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
