@@ -1153,6 +1153,44 @@ def IncFunctor.comp_identity_iso
     IncNaturalIsomorphism (F.comp (IncFunctor.identity C)) F :=
   IncNaturalIsomorphism.refl F
 
+def IncNaturalIsomorphism.whiskerLeft
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F G : IncFunctor C D} (K : IncFunctor D E)
+    (iso : IncNaturalIsomorphism F G) :
+    IncNaturalIsomorphism (K.comp F) (K.comp G) where
+  hom := iso.hom.whiskerLeft K
+  inv := iso.inv.whiskerLeft K
+  hom_inv_id := by
+    apply IncNaturalTransformation.ext
+    intro object
+    change E.comp (K.map (iso.inv.app object)) (K.map (iso.hom.app object)) =
+      E.id (K.obj (F.obj object))
+    rw [← K.map_comp, iso.hom_app_inv_app, K.map_id]
+  inv_hom_id := by
+    apply IncNaturalTransformation.ext
+    intro object
+    change E.comp (K.map (iso.hom.app object)) (K.map (iso.inv.app object)) =
+      E.id (K.obj (G.obj object))
+    rw [← K.map_comp, iso.inv_app_hom_app, K.map_id]
+
+def IncNaturalIsomorphism.whiskerRight
+    {BObj CObj DObj : Type u}
+    {B : IncCategory BObj} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (iso : IncNaturalIsomorphism F G)
+    (H : IncFunctor B C) :
+    IncNaturalIsomorphism (F.comp H) (G.comp H) where
+  hom := iso.hom.whiskerRight H
+  inv := iso.inv.whiskerRight H
+  hom_inv_id := by
+    apply IncNaturalTransformation.ext
+    intro object
+    exact iso.hom_app_inv_app (H.obj object)
+  inv_hom_id := by
+    apply IncNaturalTransformation.ext
+    intro object
+    exact iso.inv_app_hom_app (H.obj object)
+
 def IncNaturalIsomorphism.trans
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     {F G H : IncFunctor C D}
@@ -1267,6 +1305,20 @@ def IncCategoryEquivalence.symm
   inverse := equivalence.forward
   unit := equivalence.counit.symm
   counit := equivalence.unit.symm
+
+def IncCategoryEquivalence.trans
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    (second : IncCategoryEquivalence D E)
+    (first : IncCategoryEquivalence C D) : IncCategoryEquivalence C E where
+  forward := second.forward.comp first.forward
+  inverse := first.inverse.comp second.inverse
+  unit :=
+    ((second.unit.whiskerRight first.forward).whiskerLeft first.inverse).trans
+      first.unit
+  counit :=
+    second.counit.trans
+      ((first.counit.whiskerRight second.inverse).whiskerLeft second.forward)
 
 theorem IncCategoryEquivalence.forward_essentiallySurjective
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
