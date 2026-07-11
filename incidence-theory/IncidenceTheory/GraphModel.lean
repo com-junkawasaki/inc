@@ -1149,6 +1149,42 @@ theorem hfGlue_associative (i j k : HFSet) :
   by_cases hi : i = HFSet.empty <;> by_cases hj : j = HFSet.empty <;>
     by_cases hk : k = HFSet.empty <;> simp [hfGlue, hi, hj, hk]
 
+def hfNatPredecessorBoundary (n : Nat) : Boundary HFSet GraphRole :=
+  [ { i := HFSet.vonNeumann n, role := .src, sign := .pos,
+      mult := 1, mult_pos := by omega }
+  , { i := HFSet.vonNeumann n, role := .dst, sign := .pos,
+      mult := 1, mult_pos := by omega } ]
+
+theorem hfIncidence_vonNeumann_zero_boundary :
+    hfIncidence.boundary (HFSet.vonNeumann 0) = [] := rfl
+
+theorem hfIncidence_vonNeumann_succ_boundary (n : Nat) :
+    hfIncidence.boundary (HFSet.vonNeumann (n + 1)) =
+      hfNatPredecessorBoundary n := by
+  rfl
+
+theorem hfIncidence_vonNeumann_succ_boundary_nonempty (n : Nat) :
+    hfIncidence.boundary (HFSet.vonNeumann (n + 1)) ≠ [] := by
+  rw [hfIncidence_vonNeumann_succ_boundary]
+  simp [hfNatPredecessorBoundary]
+
+structure HFNatIncidenceEmbedding where
+  encode : Nat → HFSet
+  injective : ∀ {m n}, encode m = encode n → m = n
+  zero_is_unit : encode 0 = hfIncidence.unit
+  zero_boundary : hfIncidence.boundary (encode 0) = []
+  successor_boundary : ∀ n,
+    hfIncidence.boundary (encode (n + 1)) = hfNatPredecessorBoundary n
+  successor_nonempty : ∀ n, hfIncidence.boundary (encode (n + 1)) ≠ []
+
+def hfNatIncidenceEmbedding : HFNatIncidenceEmbedding where
+  encode := HFSet.vonNeumann
+  injective := hf_vonNeumann_injective
+  zero_is_unit := rfl
+  zero_boundary := hfIncidence_vonNeumann_zero_boundary
+  successor_boundary := hfIncidence_vonNeumann_succ_boundary
+  successor_nonempty := hfIncidence_vonNeumann_succ_boundary_nonempty
+
 /- Graph with nodes and edges as incidences. We take I as a sum of Node | Edge. -/
 inductive GId where | node (n : Nat) | edge (e : Nat)
 deriving DecidableEq, Repr
