@@ -6295,6 +6295,40 @@ theorem observationMapCollapses_implies_not_faithful
     (observationMapCollapses_iff_exists_distinct_bisimilar inc idx).mp collapses
   exact different (faithful bisimilar)
 
+theorem observationMapCollapses_iff_not_faithful
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) :
+    ObservationMapCollapses inc idx ↔ ¬ BisimulationFaithful inc := by
+  constructor
+  · exact observationMapCollapses_implies_not_faithful inc idx
+  · intro notFaithful
+    classical
+    exact Classical.byContradiction (fun noCollapse => by
+      apply notFaithful
+      apply (observationQuotientToBisimulationQuotient_injective_iff_faithful
+        inc idx).mp
+      intro left right imagesEqual
+      exact Classical.byContradiction (fun classesDifferent =>
+        noCollapse ⟨left, right, classesDifferent, imagesEqual⟩))
+
+theorem observationMapDoesNotCollapse_iff_faithful
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) :
+    (¬ ObservationMapCollapses inc idx) ↔ BisimulationFaithful inc := by
+  classical
+  constructor
+  · intro noCollapse
+    apply (observationQuotientToBisimulationQuotient_injective_iff_faithful
+      inc idx).mp
+    intro left right imagesEqual
+    by_cases equal : left = right
+    · exact equal
+    · exact False.elim (noCollapse ⟨left, right, equal, imagesEqual⟩)
+  · intro faithful
+    intro collapses
+    exact (observationMapCollapses_implies_not_faithful inc idx collapses)
+      faithful
+
 def observationBisimulationQuotientEquivalence_of_wellFounded_extensional
     {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I) (measure : I → Nat)
