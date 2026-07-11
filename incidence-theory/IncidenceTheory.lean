@@ -7159,6 +7159,30 @@ structure BehavioralQuotientEquivalenceCriterion
   essentiallySurjective : BehaviorallyEssentiallySurjective
     embedding.toBehavioralBoundaryShapeTranslation
 
+def BehavioralQuotientEquivalenceCriterion.identity
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    BehavioralQuotientEquivalenceCriterion inc inc where
+  embedding := BehavioralBoundaryShapeEmbedding.identity inc
+  essentiallySurjective := by
+    intro i
+    exact ⟨i, approxBisim_refl inc i⟩
+
+def BehavioralQuotientEquivalenceCriterion.comp
+    {I J K R₁ T₁ R₂ T₂ R₃ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (secondCriterion : BehavioralQuotientEquivalenceCriterion second third)
+    (firstCriterion : BehavioralQuotientEquivalenceCriterion first second) :
+    BehavioralQuotientEquivalenceCriterion first third where
+  embedding := secondCriterion.embedding.comp firstCriterion.embedding
+  essentiallySurjective := by
+    intro k
+    obtain ⟨j, secondBisimilar⟩ := secondCriterion.essentiallySurjective k
+    obtain ⟨i, firstBisimilar⟩ := firstCriterion.essentiallySurjective j
+    refine ⟨i, approxBisim_trans ?_ secondBisimilar⟩
+    exact secondCriterion.embedding.preservesBisimulation firstBisimilar
+
 theorem BehavioralQuotientEquivalenceCriterion.quotientMap_bijective
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
     {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
@@ -7213,6 +7237,28 @@ theorem BehavioralQuotientEquivalenceCriterion.quotientEquivalence_forward
     criterion.quotientEquivalence.forward =
       BehavioralBoundaryShapeTranslation.mapBisimulationQuotient
         criterion.embedding.toBehavioralBoundaryShapeTranslation := rfl
+
+theorem BehavioralQuotientEquivalenceCriterion.quotientEquivalence_identity
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    (BehavioralQuotientEquivalenceCriterion.identity inc).quotientEquivalence =
+      IncTypeEquivalence.refl (IncidenceQuotient inc) := by
+  apply IncTypeEquivalence.ext_forward
+  exact BehavioralBoundaryShapeTranslation.mapBisimulationQuotient_identity inc
+
+theorem BehavioralQuotientEquivalenceCriterion.quotientEquivalence_comp
+    {I J K R₁ T₁ R₂ T₂ R₃ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (secondCriterion : BehavioralQuotientEquivalenceCriterion second third)
+    (firstCriterion : BehavioralQuotientEquivalenceCriterion first second) :
+    (secondCriterion.comp firstCriterion).quotientEquivalence =
+      secondCriterion.quotientEquivalence.trans
+        firstCriterion.quotientEquivalence := by
+  apply IncTypeEquivalence.ext_forward
+  exact BehavioralBoundaryShapeTranslation.mapBisimulationQuotient_comp
+    secondCriterion.embedding.toBehavioralBoundaryShapeTranslation
+    firstCriterion.embedding.toBehavioralBoundaryShapeTranslation
 
 structure BehavioralBoundaryShapeEquivalence
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
