@@ -820,6 +820,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - dependent Sigma例も接続した。`preserveDependentPair`はclosed pair `⟨unit, refl unit⟩ : Σ (_ : Unit), Id Unit x x`を保存し、second componentを
   canonical instantiated Identity fiberへnormalizeしてからpair introductionする。`preserveDependentPairFirst`は再帰的に保存されたSigma resultへfirst
   projection eliminatorを適用する。両者のsemantic coherence theoremによりSigma introduction/eliminationがisolated constructorではなくend-to-endで動く。
+- 残るdependent eliminatorsもend-to-end化した。`preserveDependentPairSecond`は`Id Unit (first pair) (first pair)`のresult formationを構成して
+  preserved Sigma termへcanonical second projectionを適用する。`preserveDependentReflApplication`は`(λ (x : Unit), refl x) unit`を保存し、canonical
+  Pi-application branchがdependent Identity codomainをinstantiateする。各coherence theoremによりPi/Sigma/Identityの主要introduction/elimination経路を網羅した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

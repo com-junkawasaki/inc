@@ -1568,6 +1568,14 @@ It currently establishes:
   eliminator over the recursively preserved Sigma result.  Both export semantic
   coherence theorems, so canonical Sigma introduction and elimination are now
   exercised end to end rather than only through isolated constructors.
+  The remaining dependent eliminators are now exercised as well.
+  `preserveDependentPairSecond` constructs the result formation
+  `Id Unit (first pair) (first pair)` and runs canonical second projection over
+  the preserved Sigma term.  `preserveDependentReflApplication` preserves the
+  application `(λ (x : Unit), refl x) unit`, forcing the canonical Pi-application
+  branch to instantiate its dependent Identity codomain.  Their coherence
+  theorems complete end-to-end coverage of Pi, Sigma, and Identity introduction
+  and elimination paths in the preservation fold.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
