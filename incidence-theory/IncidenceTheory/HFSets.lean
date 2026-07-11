@@ -3524,6 +3524,48 @@ theorem hfRecursiveIntegerCoprime_common_divisor_is_unit
     left right divisor divisorWithin oneWithin negOneWithin certificate
     dividesLeft dividesRight (combinedFactorWithin certificate)
 
+theorem hfRecursiveIntegerCoprime_euclid
+    (bound : Nat) (left right multiplier : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (coprime : HFRecursiveIntegerCoprime bound left right)
+    (dividesProduct : HFRecursiveIntegerDivides bound left (right * multiplier))
+    (witnessWithin : ∀
+      (certificate : HFRecursiveIntegerBezoutCertificate bound left right)
+      productFactor,
+      HFRecursiveIntegerWithin bound productFactor →
+      right * multiplier = left * productFactor →
+      HFRecursiveIntegerWithin bound
+        (certificate.leftCoefficient * multiplier +
+          productFactor * certificate.rightCoefficient)) :
+    HFRecursiveIntegerDivides bound left multiplier := by
+  rcases coprime with ⟨certificate⟩
+  rcases (hfRecursiveIntegerDivides_iff bound left
+    (right * multiplier) leftWithin).mp dividesProduct with
+    ⟨productFactor, productFactorWithin, productValue⟩
+  have factorWithin := witnessWithin certificate productFactor
+    productFactorWithin productValue
+  apply (hfRecursiveIntegerDivides_iff
+    bound left multiplier leftWithin).mpr
+  refine ⟨certificate.leftCoefficient * multiplier +
+    productFactor * certificate.rightCoefficient, factorWithin, ?_⟩
+  calc
+    multiplier = 1 * multiplier := by simp
+    _ = (left * certificate.leftCoefficient +
+        right * certificate.rightCoefficient) * multiplier := by
+      rw [certificate.combination]
+    _ = left * (certificate.leftCoefficient * multiplier) +
+        (right * multiplier) * certificate.rightCoefficient := by
+      rw [Int.add_mul]
+      simp only [Int.mul_assoc]
+      rw [Int.mul_comm certificate.rightCoefficient multiplier]
+    _ = left * (certificate.leftCoefficient * multiplier) +
+        (left * productFactor) * certificate.rightCoefficient := by
+      rw [productValue]
+    _ = left * (certificate.leftCoefficient * multiplier +
+        productFactor * certificate.rightCoefficient) := by
+      rw [Int.mul_add]
+      simp only [Int.mul_assoc]
+
 theorem hfRecursiveIntegerBezout_no_nonunit_common_divisor
     (bound : Nat) (left right divisor : Int)
     (divisorWithin : HFRecursiveIntegerWithin bound divisor)

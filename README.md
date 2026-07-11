@@ -269,7 +269,10 @@ It currently establishes:
   of `2` and `3` divides `1` whenever its combined witness remains in the window.
   The certificate is exposed as bounded internal coprimality; a general coprime
   pair has only `±1` as common represented divisors, and `2` and `3` are proved
-  coprime with that explicit unit-divisor conclusion.
+  coprime with that explicit unit-divisor conclusion.  A bounded internal form
+  of Euclid's lemma is also proved: if `a,b` have a Bézout coprimality witness
+  and `a` divides `b*c`, then `a` divides `c`, with the resulting factor witness
+  constructed explicitly inside the finite window.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
