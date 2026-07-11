@@ -209,6 +209,57 @@ theorem IncDependentFamily.reindex_comp
   funext index
   rfl
 
+def IncDependentFamily.reindexProduct
+    {I R T J : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (family : IncDependentFamily inc) (map : J → I)
+    (term : IncDependentProduct family) :
+    ∀ index, family.reindex map index :=
+  fun index => term (map index)
+
+theorem IncDependentFamily.reindexProduct_id
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (family : IncDependentFamily inc)
+    (term : IncDependentProduct family) :
+    family.reindexProduct id term = term := by
+  funext index
+  rfl
+
+theorem IncDependentFamily.reindexProduct_comp
+    {I R T J K : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (family : IncDependentFamily inc) (first : J → I) (second : K → J)
+    (term : IncDependentProduct family) :
+    family.reindexProduct (first ∘ second) term =
+      fun index => family.reindexProduct first term (second index) := by
+  funext index
+  rfl
+
+def IncDependentFamily.reindexSum
+    {I R T J : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (family : IncDependentFamily inc) (map : J → I) :
+    Sigma (family.reindex map) → IncDependentSum family
+  | ⟨index, value⟩ => ⟨map index, value⟩
+
+theorem IncDependentFamily.reindexSum_id
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (family : IncDependentFamily inc) :
+    family.reindexSum id = id := by
+  funext total
+  rcases total with ⟨index, value⟩
+  rfl
+
+theorem IncDependentFamily.reindexSum_comp
+    {I R T J K : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (family : IncDependentFamily inc) (first : J → I) (second : K → J) :
+    family.reindexSum (first ∘ second) =
+      family.reindexSum first ∘
+        (fun total : Sigma (family.reindex (first ∘ second)) =>
+          match total with
+          | ⟨index, value⟩ =>
+              (⟨second index, value⟩ : Sigma (family.reindex first))) := by
+  funext total
+  rcases total with ⟨index, value⟩
+  rfl
+
 def IncDependentFamily.mapSum {I R T : Type u} [DecidableEq I]
     {inc : Incidence I R T} {family target : IncDependentFamily inc}
     (map : ∀ i, family.fiber i → target.fiber i) :
