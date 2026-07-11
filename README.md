@@ -1129,6 +1129,11 @@ It currently establishes:
   for the recursive codomain map, and `.pair`, `.first`, and `.second` each
   consume that one object.  All dependent typing branches now share their
   binder coherence with formation through a uniform package boundary.
+  The remaining external data for total recursion now has one model interface.
+  `IncDepRawSubstitutionFiberModel` contains the base-type interpretation and
+  canonical Pi/Sigma coherence providers for arbitrary recursive domain and
+  codomain results.  Its `.base` and `.unit` methods already dispatch both leaf
+  formation cases; binder recursion obtains its package from the same model.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

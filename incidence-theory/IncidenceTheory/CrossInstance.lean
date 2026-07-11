@@ -5484,6 +5484,72 @@ noncomputable def IncDepRawSigmaFormationSubstitutionFiberResult.ofCoherence
         backward_forward := coherence.backward_forward assignment
         forward_backward := coherence.forward_backward assignment })
 
+structure IncDepRawSubstitutionFiberModel where
+  baseModel : Nat → Type u
+  piCoherence : ∀
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (codomainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := codomainFormation)
+      domainResult.liftSubstitution),
+    IncDepRawPiSubstitutionCoherence domainResult codomainResult
+  sigmaCoherence : ∀
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (codomainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := codomainFormation)
+      domainResult.liftSubstitution),
+    IncDepRawSigmaSubstitutionCoherence domainResult codomainResult
+
+def IncDepRawSubstitutionFiberModel.base
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType} {index : Nat}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) :
+    IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := IncDepRawWellFormed.base (index := index))
+      substitutionResult :=
+  IncDepRawFormationSubstitutionFiberResult.base substitutionResult model.baseModel
+
+def IncDepRawSubstitutionFiberModel.unit
+    (_model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) :
+    IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := IncDepRawWellFormed.unit) substitutionResult :=
+  IncDepRawFormationSubstitutionFiberResult.unit substitutionResult
+
 noncomputable def IncDepRawSigmaFormationSubstitutionFiberResult.ofCodomainCoherence
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
     {substitution : IncDepRawSubstitution source target}

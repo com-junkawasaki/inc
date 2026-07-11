@@ -582,6 +582,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - Sigma packageもcanonical `dependentEquiv`に対する両lawだけを保持する設計へ揃え、`.pair`/`.first`/`.second`が単一
   coherence objectを直接消費するsignatureへ変更した。全dependent typing branchesがformationと同一binder coherenceを
   uniform package境界で共有する。
+- total recursionの外部データを`IncDepRawSubstitutionFiberModel`へ統合した。base-type interpretationと、任意のrecursive
+  domain/codomain resultsに対するcanonical Pi/Sigma coherence providerを保持する。`.base`/`.unit` model methodsがleaf
+  formation casesを既にdispatchし、binder branchも同じmodelからcoherence packageを取得できる。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
