@@ -63,6 +63,25 @@ def natIncidence : Incidence Nat PeanoRole GraphType where
   unit_right := by intro i; simp
   type_preserve := fun _ _ => rfl
 
+noncomputable def natCountablyPresentedIncidence :
+    CountablyPresentedIncidence Nat PeanoRole GraphType where
+  incidence := natIncidence
+  atoms := {
+    decode := id
+    code := id
+    decode_code := fun _ => rfl
+  }
+
+theorem natIncidence_internalLogic_complete
+    (context : List (Formula Nat)) (formula : Formula Nat) :
+    KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
+  natCountablyPresentedIncidence.internalLogic_complete context formula
+
+theorem natIncidence_internalLogic_consistent_iff_model
+    (context : List (Formula Nat)) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context :=
+  natCountablyPresentedIncidence.internalLogic_consistent_iff_model context
+
 /- glue-with-1 realizes the successor function. -/
 theorem natIncidence_succ (n : Nat) : natIncidence.glue n 1 = some (n + 1) := rfl
 

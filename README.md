@@ -82,6 +82,10 @@ It currently establishes:
   `incidenceProd` constructions inherit full Kripke completeness compositionally.
   Their consistent finite contexts have Kripke models and canonical prime-theory
   worlds, and every underivable sequent has an explicit canonical counterworld.
+  `CountablyPresentedIncidence` now packages an actual `Incidence` together with
+  this coding, exposing completeness, model existence, and countermodels directly
+  from the incidence object.  `natIncidence` is the first concrete instance of
+  this bridge, with checked completeness and consistency/model equivalence.
   In the converse direction, every nonderivable finite sequent has a checked
   canonical prime-theory counterworld for the supplied coding.
   For every supplied formula enumeration, a finite context is

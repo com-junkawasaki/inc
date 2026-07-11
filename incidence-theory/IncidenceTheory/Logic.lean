@@ -1,3 +1,5 @@
+import IncidenceTheory.Axioms
+
 /-!
   A propositional internal-logic fragment whose atoms may be incidences.
   The soundness theorem is independent of a particular incidence model; clients
@@ -5028,6 +5030,50 @@ theorem CountableAtomCoding.prod_canonical_countermodel_of_not_derives
       KripkeContextForces (canonicalKripkeModel (Left × Right)) theory context ∧
         ¬ KripkeForces (canonicalKripkeModel (Left × Right)) theory formula :=
   (left.prod right).canonical_countermodel_of_not_derives hnot
+
+/- A countably presented incidence is an incidence structure together with
+   exactly the coding data needed by its propositional internal language.
+   This is the direct bridge between the geometric carrier and the generic
+   soundness/completeness development above. -/
+structure CountablyPresentedIncidence (I R T : Type u) [DecidableEq I] where
+  incidence : Incidence I R T
+  atoms : CountableAtomCoding I
+
+abbrev CountablyPresentedIncidence.InternalFormula {I R T : Type u}
+    [DecidableEq I] (_presentation : CountablyPresentedIncidence I R T) := Formula I
+
+theorem CountablyPresentedIncidence.internalLogic_complete
+    {I R T : Type u} [DecidableEq I]
+    (presentation : CountablyPresentedIncidence I R T)
+    (context : List (Formula I)) (formula : Formula I) :
+    KripkeEntails.{u, u} context formula ↔ Derives context formula :=
+  presentation.atoms.kripke_complete context formula
+
+theorem CountablyPresentedIncidence.internalLogic_consistent_iff_model
+    {I R T : Type u} [DecidableEq I]
+    (presentation : CountablyPresentedIncidence I R T)
+    (context : List (Formula I)) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context :=
+  presentation.atoms.consistent_iff_kripkeSatisfiable context
+
+theorem CountablyPresentedIncidence.internalLogic_consistent_iff_canonical_world
+    {I R T : Type u} [DecidableEq I]
+    (presentation : CountablyPresentedIncidence I R T)
+    (context : List (Formula I)) :
+    DerivationallyConsistent context ↔
+      ∃ theory : PrimeTheory I,
+        KripkeContextForces (canonicalKripkeModel I) theory context :=
+  presentation.atoms.consistent_iff_has_canonical_world context
+
+theorem CountablyPresentedIncidence.internalLogic_countermodel
+    {I R T : Type u} [DecidableEq I]
+    (presentation : CountablyPresentedIncidence I R T)
+    {context : List (Formula I)} {formula : Formula I}
+    (hnot : ¬ Derives context formula) :
+    ∃ theory : PrimeTheory I,
+      KripkeContextForces (canonicalKripkeModel I) theory context ∧
+        ¬ KripkeForces (canonicalKripkeModel I) theory formula :=
+  presentation.atoms.canonical_countermodel_of_not_derives hnot
 
 /-! The coding retraction is precisely the data needed to apply the generic
    enumeration-based completeness construction.  Keeping this theorem at the
