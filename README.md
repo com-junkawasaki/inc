@@ -1455,6 +1455,13 @@ It currently establishes:
   generated recursor supplies formation handlers with typing induction hypotheses
   and typing handlers with formation induction hypotheses, so the final knot can
   be structural rather than relying on an opaque recursive dispatcher value.
+  Nine of the mutual recursor's thirteen handlers are now implemented directly
+  against those motives.  All five formation handlers (base, unit, Pi, Sigma,
+  Identity) are checked, including Identity's two typing induction hypotheses.
+  Four typing handlers (variable, unit, lambda, reflexivity) are also checked;
+  lambda consumes domain and body induction hypotheses under the lifted semantic
+  context, and reflexivity performs exact type normalization.  The remaining
+  recursor work is the four dependent typing handlers: apply, pair, first, second.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

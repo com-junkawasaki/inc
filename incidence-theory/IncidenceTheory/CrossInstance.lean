@@ -11015,6 +11015,179 @@ abbrev IncDepRawStrictTypingSubstitutionFoldMotive
     IncDepRawStrictTypingSubstitutionDispatchResult
       (IncDepRawStrictTypingDispatchReady.ofCoherent ready) substitutionResult
 
+def IncDepRawSubstitutionFiberModel.mutualFoldBase
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {index : Nat} :
+    IncDepRawStrictFormationSubstitutionFoldMotive
+      (IncDepRawCoherentFormationDispatchReady.base
+        (context := context) (index := index)) :=
+  fun _ _ => model.dispatchStrictBaseFormation _
+
+def IncDepRawSubstitutionFiberModel.mutualFoldUnitFormation
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} :
+    IncDepRawStrictFormationSubstitutionFoldMotive
+      (IncDepRawCoherentFormationDispatchReady.unit (context := context)) :=
+  fun _ _ => model.dispatchStrictUnitFormation _
+
+noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldPi
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (domainIH : IncDepRawStrictFormationSubstitutionFoldMotive domainReady)
+    (codomainIH : IncDepRawStrictFormationSubstitutionFoldMotive codomainReady) :
+    IncDepRawStrictFormationSubstitutionFoldMotive
+      (IncDepRawCoherentFormationDispatchReady.pi domainReady codomainReady) :=
+  fun targetTree replacements =>
+    let domainResult := domainIH targetTree replacements
+    let extendedTree := IncDepRawContextSemanticTree.extend targetTree
+      domainResult.formationResult.targetFormationResult
+    let liftedReplacements := replacements.liftResult domainResult.formationResult
+    let codomainResult := codomainIH extendedTree liftedReplacements
+    model.dispatchStrictPiFormation domainResult codomainResult
+
+noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldSigma
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (domainIH : IncDepRawStrictFormationSubstitutionFoldMotive domainReady)
+    (codomainIH : IncDepRawStrictFormationSubstitutionFoldMotive codomainReady) :
+    IncDepRawStrictFormationSubstitutionFoldMotive
+      (IncDepRawCoherentFormationDispatchReady.sigma domainReady codomainReady) :=
+  fun targetTree replacements =>
+    let domainResult := domainIH targetTree replacements
+    let extendedTree := IncDepRawContextSemanticTree.extend targetTree
+      domainResult.formationResult.targetFormationResult
+    let liftedReplacements := replacements.liftResult domainResult.formationResult
+    let codomainResult := codomainIH extendedTree liftedReplacements
+    model.dispatchStrictSigmaFormation domainResult codomainResult
+
+noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldIdentity
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {leftTyping : IncDepRawHasType context left type}
+    {rightTyping : IncDepRawHasType context right type}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (leftReady : IncDepRawCoherentTypingDispatchReady leftTyping typeFormation)
+    (rightReady : IncDepRawCoherentTypingDispatchReady rightTyping typeFormation)
+    (typeIH : IncDepRawStrictFormationSubstitutionFoldMotive typeReady)
+    (leftIH : IncDepRawStrictTypingSubstitutionFoldMotive leftReady)
+    (rightIH : IncDepRawStrictTypingSubstitutionFoldMotive rightReady) :
+    IncDepRawStrictFormationSubstitutionFoldMotive
+      (IncDepRawCoherentFormationDispatchReady.identity typeReady leftReady
+        rightReady) :=
+  fun targetTree replacements =>
+    let typeResult := typeIH targetTree replacements
+    let leftEq := readinessAlignment.alignFormation leftReady.formationReady
+      typeReady
+    let rightEq := readinessAlignment.alignFormation rightReady.formationReady
+      typeReady
+    let leftStrict := IncDepRawStrictTypingDispatchReady.ofCoherent leftReady
+    let rightStrict := IncDepRawStrictTypingDispatchReady.ofCoherent rightReady
+    let leftResult := ((leftIH targetTree replacements)
+      |>.castFormationReady leftEq)
+      |>.normalizeFormation rebaseProvider typeResult.formationResult
+    let rightResult := ((rightIH targetTree replacements)
+      |>.castFormationReady rightEq)
+      |>.normalizeFormation rebaseProvider typeResult.formationResult
+    let result := model.dispatchStrictIdentityFormation
+      (leftStrict.castFormationReady leftEq)
+      (rightStrict.castFormationReady rightEq)
+      typeResult leftResult.typingResult rightResult.typingResult
+    result.castReady (readinessAlignment.alignFormation _ _)
+
+noncomputable def IncDepRawVariableSubstitutionProvider.mutualFoldVariable
+    (provider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {typeFormation : IncDepRawWellFormed context type}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (typeIH : IncDepRawStrictFormationSubstitutionFoldMotive typeReady) :
+    IncDepRawStrictTypingSubstitutionFoldMotive
+      (IncDepRawCoherentTypingDispatchReady.varRule (lookup := lookup)
+        typeReady) :=
+  fun targetTree replacements =>
+    let typeResult := typeIH targetTree replacements
+    provider.dispatchStrictVariable typeReady targetTree
+      typeResult.formationResult replacements
+
+def IncDepRawSubstitutionFiberModel.mutualFoldTypingUnit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} :
+    IncDepRawStrictTypingSubstitutionFoldMotive
+      (IncDepRawCoherentTypingDispatchReady.unitRule (context := context)) :=
+  fun _ _ => model.dispatchStrictUnit _
+
+noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldLambda
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (strictAlignment : IncDepRawStrictTypingReadinessAlignmentProvider)
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {body : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {bodyTyping : IncDepRawHasType (domain :: context) body codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (bodyReady : IncDepRawCoherentTypingDispatchReady bodyTyping
+      codomainFormation)
+    (domainIH : IncDepRawStrictFormationSubstitutionFoldMotive domainReady)
+    (bodyIH : IncDepRawStrictTypingSubstitutionFoldMotive bodyReady) :
+    IncDepRawStrictTypingSubstitutionFoldMotive
+      (IncDepRawCoherentTypingDispatchReady.lambdaRule domainReady bodyReady) :=
+  fun targetTree replacements =>
+    let domainResult := domainIH targetTree replacements
+    let extendedTree := IncDepRawContextSemanticTree.extend targetTree
+      domainResult.formationResult.targetFormationResult
+    let liftedReplacements := replacements.liftResult domainResult.formationResult
+    let bodyResult := bodyIH extendedTree liftedReplacements
+    let codomainReady := bodyReady.formationReady
+    let strictBody := IncDepRawStrictTypingDispatchReady.ofCoherent bodyReady
+    let result := model.dispatchStrictLambda domainReady codomainReady strictBody
+      domainResult.formationResult bodyResult
+    result.castReady (strictAlignment.alignment _ _)
+
+noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldRefl
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (strictAlignment : IncDepRawStrictTypingReadinessAlignmentProvider)
+    (rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {term : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {termTyping : IncDepRawHasType context term type}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (termReady : IncDepRawCoherentTypingDispatchReady termTyping typeFormation)
+    (typeIH : IncDepRawStrictFormationSubstitutionFoldMotive typeReady)
+    (termIH : IncDepRawStrictTypingSubstitutionFoldMotive termReady) :
+    IncDepRawStrictTypingSubstitutionFoldMotive
+      (IncDepRawCoherentTypingDispatchReady.reflRule typeReady termReady) :=
+  fun targetTree replacements =>
+    let typeResult := typeIH targetTree replacements
+    let termEq := readinessAlignment.alignFormation termReady.formationReady
+      typeReady
+    let strictTerm := IncDepRawStrictTypingDispatchReady.ofCoherent termReady
+    let termResult := ((termIH targetTree replacements)
+      |>.castFormationReady termEq)
+      |>.normalizeFormation rebaseProvider typeResult.formationResult
+    let result := model.dispatchStrictRefl typeReady
+      (strictTerm.castFormationReady termEq) termResult
+    let targetReady := IncDepRawStrictTypingDispatchReady.ofCoherent
+      (IncDepRawCoherentTypingDispatchReady.reflRule typeReady termReady)
+    let formationEq := readinessAlignment.alignFormation _
+      (IncDepRawCoherentTypingDispatchReady.reflRule typeReady
+        termReady).formationReady
+    let shifted := result.castFormationReady formationEq
+    shifted.castReady (strictAlignment.alignment _ targetReady)
+
 noncomputable def IncDepRawStrictTypingSubstitutionDispatcher.run
     (dispatcher : IncDepRawStrictTypingSubstitutionDispatcher)
     {source target : List IncDepRawType} {term : IncDepRawTerm}

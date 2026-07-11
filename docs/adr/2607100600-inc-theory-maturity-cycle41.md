@@ -769,6 +769,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `IncDepRawStrictFormationSubstitutionFoldMotive`/`IncDepRawStrictTypingSubstitutionFoldMotive`として定義した。各motiveはsource substitution semantics、
   target context tree、replacement interpretationを量化してexact strict resultを返す。生成recursorはformation handlerへtyping IHを、typing handlerへ
   formation IHを直接渡すため、opaqueなrecursive dispatcher valueや手製Nat measureではなく構造再帰としてfinal knotを構成できる。
+- mutual recursorの13 handlers中9つをmotives上で実装した。formationのbase/unit/Pi/Sigma/Identityは全5枝が完成し、Identityは二つのtyping IHを
+  exact type resultへnormalizeする。typingはvariable/unit/lambda/reflの4枝が完成し、lambdaはlifted semantic context下でdomain/body IHを消費し、
+  reflはexact type normalizationを実行する。残るrecursor handlersはdependent typingのapply/pair/first/second 4枝である。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
