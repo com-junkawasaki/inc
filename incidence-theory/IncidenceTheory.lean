@@ -6050,6 +6050,59 @@ theorem linear_observations_separate_points
   have atColumn := congrFun rowsEqual i
   simp [indicator, Ne.symm different] at atColumn
 
+def LinearObservationallyEquivalent
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (i j : I) : Prop :=
+  ∀ obs : LinearObservation inc idx,
+    obs.boundary_matrix i = obs.boundary_matrix j ∧
+    obs.laplacian i = obs.laplacian j
+
+theorem linearObservationallyEquivalent_iff_eq
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (i j : I) :
+    LinearObservationallyEquivalent inc idx i j ↔ i = j :=
+  all_linear_observations_agree_iff_eq inc idx i j
+
+def linearObservationalSetoid
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) : Setoid I where
+  r := LinearObservationallyEquivalent inc idx
+  iseqv := {
+    refl := fun i =>
+      (linearObservationallyEquivalent_iff_eq inc idx i i).mpr rfl
+    symm := fun {i j} related =>
+      (linearObservationallyEquivalent_iff_eq inc idx j i).mpr
+        ((linearObservationallyEquivalent_iff_eq inc idx i j).mp related).symm
+    trans := fun {i j k} first second => by
+      have firstEq : i = j :=
+        (linearObservationallyEquivalent_iff_eq inc idx i j).mp first
+      have secondEq : j = k :=
+        (linearObservationallyEquivalent_iff_eq inc idx j k).mp second
+      exact (linearObservationallyEquivalent_iff_eq inc idx i k).mpr
+        (firstEq.trans secondEq) }
+
+abbrev LinearObservationQuotient
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) :=
+  Quotient (linearObservationalSetoid inc idx)
+
+def linearObservationQuotientEquivalence
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) :
+    IncTypeEquivalence I (LinearObservationQuotient inc idx) where
+  forward := Quotient.mk (linearObservationalSetoid inc idx)
+  inverse := Quotient.lift id (by
+    intro i j related
+    exact (linearObservationallyEquivalent_iff_eq inc idx i j).mp related)
+  inverse_forward := by
+    intro value
+    rfl
+  forward_inverse := by
+    intro value
+    refine Quotient.inductionOn value ?_
+    intro representative
+    rfl
+
 /- Completeness theorem: with an observation language rich enough to admit
    an "indicator of i" observation, agreement of *all* observations forces
    literal equality (hence bisimilarity, via reflexivity). -/
