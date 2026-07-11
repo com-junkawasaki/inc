@@ -2538,6 +2538,31 @@ theorem hfRecursiveNat_succ_injective {m n : Nat} :
   have indexEqual : m + 1 = n + 1 := hfRecursiveNat_injective equal
   exact Nat.add_right_cancel indexEqual
 
+theorem hfRecursiveNat_induction (predicate : HFRecursiveSet → Prop)
+    (zero : predicate (hfRecursiveNat 0))
+    (successor : ∀ n, predicate (hfRecursiveNat n) →
+      predicate (hfRecursiveNat (n + 1))) :
+    ∀ n, predicate (hfRecursiveNat n) := by
+  intro n
+  induction n with
+  | zero => exact zero
+  | succ n ih => exact successor n ih
+
+theorem hfRecursiveNat_recursion_unique {A : Type}
+    (f g : HFRecursiveSet → A) (step : A → A)
+    (zero : f (hfRecursiveNat 0) = g (hfRecursiveNat 0))
+    (fSucc : ∀ n, f (hfRecursiveNat (n + 1)) = step (f (hfRecursiveNat n)))
+    (gSucc : ∀ n, g (hfRecursiveNat (n + 1)) = step (g (hfRecursiveNat n))) :
+    ∀ n, f (hfRecursiveNat n) = g (hfRecursiveNat n) := by
+  intro n
+  induction n with
+  | zero => exact zero
+  | succ n ih =>
+      calc
+        f (hfRecursiveNat (n + 1)) = step (f (hfRecursiveNat n)) := fSucc n
+        _ = step (g (hfRecursiveNat n)) := congrArg step ih
+        _ = g (hfRecursiveNat (n + 1)) := (gSucc n).symm
+
 /- Binary union of finite von Neumann ordinals is their ordinal maximum.
    This is an internal, extensional reconstruction of the usual ordinal
    operation, rather than merely an equality of their natural indices. -/
@@ -3378,6 +3403,15 @@ structure HFRecursiveNatEmbedding where
   trichotomy : ∀ m n,
     HFRecursiveMember (encode m) (encode n) ∨ m = n ∨
       HFRecursiveMember (encode n) (encode m)
+  induction : ∀ predicate : HFRecursiveSet → Prop,
+    predicate (encode 0) →
+    (∀ n, predicate (encode n) → predicate (encode (n + 1))) →
+    ∀ n, predicate (encode n)
+  recursion_unique : ∀ (A : Type) (f g : HFRecursiveSet → A) (step : A → A),
+    f (encode 0) = g (encode 0) →
+    (∀ n, f (encode (n + 1)) = step (f (encode n))) →
+    (∀ n, g (encode (n + 1)) = step (g (encode n))) →
+    ∀ n, f (encode n) = g (encode n)
 
 def hfRecursiveNatEmbedding : HFRecursiveNatEmbedding where
   encode := hfRecursiveNat
@@ -3388,6 +3422,10 @@ def hfRecursiveNatEmbedding : HFRecursiveNatEmbedding where
   subset_iff_le := hfRecursiveNat_subset_iff
   successor_as_union := hfRecursiveNat_succ_eq
   trichotomy := hfRecursiveNat_trichotomy
+  induction := hfRecursiveNat_induction
+  recursion_unique := by
+    intro A f g step zero fSucc gSucc
+    exact hfRecursiveNat_recursion_unique f g step zero fSucc gSucc
 
 /- A bundled witness for the finite set-theoretic fragment actually proved in
    this file.  It deliberately records only the operations and laws checked
