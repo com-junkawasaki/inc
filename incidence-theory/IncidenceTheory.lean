@@ -7123,6 +7123,53 @@ theorem BehavioralBoundaryShapeEmbedding.mapBisimulationQuotient_injective
   apply embedding.reflectsBisimulation
   exact Quotient.exact representativesEqual
 
+def BehaviorallyEssentiallySurjective
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : BehavioralBoundaryShapeTranslation source target) : Prop :=
+  ∀ j, ∃ i, approxBisim target (translation.map i) j
+
+theorem BehavioralBoundaryShapeTranslation.mapBisimulationQuotient_surjective
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : BehavioralBoundaryShapeTranslation source target)
+    (essentiallySurjective : BehaviorallyEssentiallySurjective translation) :
+    ∀ targetClass : IncidenceQuotient target,
+      ∃ sourceClass : IncidenceQuotient source,
+        translation.mapBisimulationQuotient sourceClass = targetClass := by
+  intro targetClass
+  refine Quotient.inductionOn targetClass ?_
+  intro j
+  obtain ⟨i, bisimilar⟩ := essentiallySurjective j
+  exact ⟨Quotient.mk (approxBisimSetoid source) i, Quotient.sound bisimilar⟩
+
+structure BehavioralQuotientEquivalenceCriterion
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂) where
+  embedding : BehavioralBoundaryShapeEmbedding source target
+  essentiallySurjective : BehaviorallyEssentiallySurjective
+    embedding.toBehavioralBoundaryShapeTranslation
+
+theorem BehavioralQuotientEquivalenceCriterion.quotientMap_bijective
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (criterion : BehavioralQuotientEquivalenceCriterion source target) :
+    (∀ {left right : IncidenceQuotient source},
+      BehavioralBoundaryShapeTranslation.mapBisimulationQuotient
+          criterion.embedding.toBehavioralBoundaryShapeTranslation left =
+        BehavioralBoundaryShapeTranslation.mapBisimulationQuotient
+          criterion.embedding.toBehavioralBoundaryShapeTranslation right →
+      left = right) ∧
+    (∀ targetClass : IncidenceQuotient target,
+      ∃ sourceClass : IncidenceQuotient source,
+        BehavioralBoundaryShapeTranslation.mapBisimulationQuotient
+          criterion.embedding.toBehavioralBoundaryShapeTranslation sourceClass =
+            targetClass) :=
+  ⟨criterion.embedding.mapBisimulationQuotient_injective,
+    BehavioralBoundaryShapeTranslation.mapBisimulationQuotient_surjective
+      criterion.embedding.toBehavioralBoundaryShapeTranslation
+        criterion.essentiallySurjective⟩
+
 structure BehavioralBoundaryShapeEquivalence
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
     (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂) where
@@ -7283,6 +7330,24 @@ def BehavioralBoundaryShapeEquivalence.toEmbedding
     intro i j bisimilar
     have reflected := equivalence.inv.preservesBisimulation bisimilar
     simpa [equivalence.inv_hom] using reflected
+
+theorem BehavioralBoundaryShapeEquivalence.essentiallySurjective
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BehavioralBoundaryShapeEquivalence source target) :
+    BehaviorallyEssentiallySurjective equivalence.hom := by
+  intro j
+  refine ⟨equivalence.inv.map j, ?_⟩
+  rw [equivalence.hom_inv]
+  exact approxBisim_refl target j
+
+def BehavioralBoundaryShapeEquivalence.toQuotientCriterion
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BehavioralBoundaryShapeEquivalence source target) :
+    BehavioralQuotientEquivalenceCriterion source target where
+  embedding := equivalence.toEmbedding
+  essentiallySurjective := equivalence.essentiallySurjective
 
 theorem BehavioralBoundaryShapeEquivalence.quotient_forward_injective
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
