@@ -1372,6 +1372,12 @@ It currently establishes:
   along an explicit equality of readiness evidence.  Nested Identity nodes and
   the occasional equality exposed by binder decomposition can therefore remain
   inside the strict discipline.
+  The semantic return type for this tree is now formalized as
+  `IncDepRawStrictTypingSubstitutionDispatchResult`.  It fixes the formation proof
+  through the strict readiness index and stores only its exact formation result
+  and typing result; `toDispatchResult` forgets that extra precision.  The unit
+  leaf is implemented end to end by `dispatchStrictUnit`, establishing the first
+  branch of the strict total fold.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

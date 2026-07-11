@@ -9333,6 +9333,51 @@ structure IncDepRawTypingSubstitutionDispatchResult
   typingResult : IncDepRawTypingSubstitutionFiberResult
     (targetTyping := targetTyping) formationResult
 
+structure IncDepRawStrictTypingSubstitutionDispatchResult
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {targetFormationReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    (targetReady : IncDepRawStrictTypingDispatchReady targetTyping
+      targetFormationReady)
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) where
+  formationResult : IncDepRawFormationSubstitutionFiberResult
+    (targetFormation := targetFormation) substitutionResult
+  typingResult : IncDepRawTypingSubstitutionFiberResult
+    (targetTyping := targetTyping) formationResult
+
+def IncDepRawStrictTypingSubstitutionDispatchResult.toDispatchResult
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {targetFormationReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    {targetReady : IncDepRawStrictTypingDispatchReady targetTyping
+      targetFormationReady}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawStrictTypingSubstitutionDispatchResult targetReady
+      substitutionResult) :
+    IncDepRawTypingSubstitutionDispatchResult targetTyping substitutionResult where
+  typeFormation := targetFormation
+  typeReady := targetReady.formationDispatchReady
+  formationResult := result.formationResult
+  typingResult := result.typingResult
+
 def IncDepRawTypingSubstitutionDispatchResult.semanticTargetType
     {source target : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType}
@@ -9600,6 +9645,22 @@ def IncDepRawSubstitutionFiberModel.dispatchTypingUnit
       (IncDepRawHasType.unitRule (context := target)) substitutionResult where
   typeFormation := IncDepRawWellFormed.unit
   typeReady := IncDepRawFormationDispatchReady.unit
+  formationResult := model.unit substitutionResult
+  typingResult := model.typingUnit substitutionResult
+
+def IncDepRawSubstitutionFiberModel.dispatchStrictUnit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) :
+    IncDepRawStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.unitRule (context := target))
+      substitutionResult where
   formationResult := model.unit substitutionResult
   typingResult := model.typingUnit substitutionResult
 
