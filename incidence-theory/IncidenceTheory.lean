@@ -2631,6 +2631,71 @@ theorem IncCategoryEquivalence.forward_isoClassBijection
     IncFunctorIsoClassBijection equivalence.forward :=
   equivalence.forward_criterion.isoClassBijection
 
+def incObjectIsoSetoid {Obj : Type u} (C : IncCategory Obj) : Setoid Obj where
+  r := IncObjectsIsomorphic C
+  iseqv := incObjectsIsomorphic_equivalence C
+
+def IncObjectIsoClass {Obj : Type u} (C : IncCategory Obj) : Type u :=
+  Quotient (incObjectIsoSetoid C)
+
+def IncFunctor.mapObjectIsoClass
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) : IncObjectIsoClass C → IncObjectIsoClass D :=
+  Quotient.lift (fun object => Quotient.mk _ (F.obj object)) (by
+    intro source target h
+    exact Quotient.sound (F.preservesObjectsIsomorphic h))
+
+theorem IncFunctor.mapObjectIsoClass_mk
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) (object : CObj) :
+    F.mapObjectIsoClass (Quotient.mk _ object) = Quotient.mk _ (F.obj object) :=
+  rfl
+
+theorem IncFunctorFullyFaithful.mapObjectIsoClass_injective
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (fullyFaithful : IncFunctorFullyFaithful F) :
+    ∀ left right : IncObjectIsoClass C,
+      F.mapObjectIsoClass left = F.mapObjectIsoClass right → left = right := by
+  intro left right
+  refine Quotient.inductionOn left ?_
+  intro source
+  refine Quotient.inductionOn right ?_
+  intro target equality
+  apply Quotient.sound
+  apply fullyFaithful.reflectsObjectsIsomorphic
+  change Quotient.mk _ (F.obj source) = Quotient.mk _ (F.obj target) at equality
+  exact Quotient.exact equality
+
+theorem IncFunctorEssentiallySurjective.mapObjectIsoClass_surjective
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (essentiallySurjective : IncFunctorEssentiallySurjective F) :
+    ∀ target : IncObjectIsoClass D,
+      ∃ source : IncObjectIsoClass C, F.mapObjectIsoClass source = target := by
+  intro target
+  refine Quotient.inductionOn target ?_
+  intro object
+  obtain ⟨source, hom, inv, inv_hom, hom_inv⟩ := essentiallySurjective object
+  refine ⟨Quotient.mk _ source, ?_⟩
+  change Quotient.mk _ (F.obj source) = Quotient.mk _ object
+  apply Quotient.sound
+  exact ⟨
+    { hom := hom
+      inv := inv
+      inv_hom := inv_hom
+      hom_inv := hom_inv }⟩
+
+theorem IncCategoryEquivalence.forward_mapObjectIsoClass_bijective
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    (∀ left right : IncObjectIsoClass C,
+      equivalence.forward.mapObjectIsoClass left =
+        equivalence.forward.mapObjectIsoClass right → left = right) ∧
+    (∀ target : IncObjectIsoClass D,
+      ∃ source : IncObjectIsoClass C,
+        equivalence.forward.mapObjectIsoClass source = target) :=
+  ⟨equivalence.forward_fullyFaithful.mapObjectIsoClass_injective,
+    equivalence.forward_essentiallySurjective.mapObjectIsoClass_surjective⟩
+
 theorem MorphismIso.trans_hom {Obj : Type u} {C : IncCategory Obj}
     {source middle target : Obj} (first : MorphismIso C source middle)
     (second : MorphismIso C middle target) :
