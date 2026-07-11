@@ -966,6 +966,110 @@ mutual
     | .refl term => .refl (term.substitute replacement)
 end
 
+mutual
+  theorem IncDepRawType.rename_identity (type : IncDepRawType) :
+      type.rename id = type := by
+    cases type with
+    | base index => rfl
+    | unit => rfl
+    | pi domain codomain =>
+        simp only [IncDepRawType.rename, IncDepRawType.rename_identity domain]
+        have liftedIdentity :
+            (fun index => match index with
+              | 0 => 0
+              | next + 1 => id next + 1) = id := by
+          funext index
+          cases index <;> rfl
+        rw [liftedIdentity, IncDepRawType.rename_identity codomain]
+    | sigma domain codomain =>
+        simp only [IncDepRawType.rename, IncDepRawType.rename_identity domain]
+        have liftedIdentity :
+            (fun index => match index with
+              | 0 => 0
+              | next + 1 => id next + 1) = id := by
+          funext index
+          cases index <;> rfl
+        rw [liftedIdentity, IncDepRawType.rename_identity codomain]
+    | identity type left right =>
+        simp [IncDepRawType.rename, IncDepRawType.rename_identity type,
+          IncDepRawTerm.rename_identity left, IncDepRawTerm.rename_identity right]
+
+  theorem IncDepRawTerm.rename_identity (term : IncDepRawTerm) :
+      term.rename id = term := by
+    cases term with
+    | var index => rfl
+    | unit => rfl
+    | lambda domain body =>
+        simp only [IncDepRawTerm.rename, IncDepRawType.rename_identity domain]
+        have liftedIdentity :
+            (fun index => match index with
+              | 0 => 0
+              | next + 1 => id next + 1) = id := by
+          funext index
+          cases index <;> rfl
+        rw [liftedIdentity, IncDepRawTerm.rename_identity body]
+    | apply function argument =>
+        simp [IncDepRawTerm.rename, IncDepRawTerm.rename_identity function,
+          IncDepRawTerm.rename_identity argument]
+    | pair first second =>
+        simp [IncDepRawTerm.rename, IncDepRawTerm.rename_identity first,
+          IncDepRawTerm.rename_identity second]
+    | first pair => simp [IncDepRawTerm.rename, IncDepRawTerm.rename_identity pair]
+    | second pair => simp [IncDepRawTerm.rename, IncDepRawTerm.rename_identity pair]
+    | refl term => simp [IncDepRawTerm.rename, IncDepRawTerm.rename_identity term]
+end
+
+theorem IncDepRawTerm.liftReplacement_identity :
+    IncDepRawTerm.liftReplacement IncDepRawTerm.var = IncDepRawTerm.var := by
+  funext index
+  cases index with
+  | zero => rfl
+  | succ next =>
+      simp [IncDepRawTerm.liftReplacement, IncDepRawTerm.rename]
+
+mutual
+  theorem IncDepRawType.substitute_identity (type : IncDepRawType) :
+      type.substitute IncDepRawTerm.var = type := by
+    cases type with
+    | base index => rfl
+    | unit => rfl
+    | pi domain codomain =>
+        simp only [IncDepRawType.substitute, IncDepRawType.substitute_identity domain]
+        rw [IncDepRawTerm.liftReplacement_identity,
+          IncDepRawType.substitute_identity codomain]
+    | sigma domain codomain =>
+        simp only [IncDepRawType.substitute, IncDepRawType.substitute_identity domain]
+        rw [IncDepRawTerm.liftReplacement_identity,
+          IncDepRawType.substitute_identity codomain]
+    | identity type left right =>
+        simp [IncDepRawType.substitute, IncDepRawType.substitute_identity type,
+          IncDepRawTerm.substitute_identity left,
+          IncDepRawTerm.substitute_identity right]
+
+  theorem IncDepRawTerm.substitute_identity (term : IncDepRawTerm) :
+      term.substitute IncDepRawTerm.var = term := by
+    cases term with
+    | var index => rfl
+    | unit => rfl
+    | lambda domain body =>
+        simp only [IncDepRawTerm.substitute,
+          IncDepRawType.substitute_identity domain]
+        rw [IncDepRawTerm.liftReplacement_identity,
+          IncDepRawTerm.substitute_identity body]
+    | apply function argument =>
+        simp [IncDepRawTerm.substitute, IncDepRawTerm.substitute_identity function,
+          IncDepRawTerm.substitute_identity argument]
+    | pair first second =>
+        simp [IncDepRawTerm.substitute, IncDepRawTerm.substitute_identity first,
+          IncDepRawTerm.substitute_identity second]
+    | first pair =>
+        simp [IncDepRawTerm.substitute, IncDepRawTerm.substitute_identity pair]
+    | second pair =>
+        simp [IncDepRawTerm.substitute, IncDepRawTerm.substitute_identity pair]
+    | refl term =>
+        simp [IncDepRawTerm.substitute, IncDepRawTerm.substitute_identity term]
+end
+
 def IncDepRawType.instantiate (codomain : IncDepRawType)
     (argument : IncDepRawTerm) : IncDepRawType :=
   codomain.substitute fun index => match index with

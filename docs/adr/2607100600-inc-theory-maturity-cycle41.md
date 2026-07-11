@@ -145,6 +145,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `Pi (x : Unit), Id Unit x x` の closed inhabitant と unit 適用時の identity codomain 計算を
   checked。残る bridge は dependent judgment の renaming/substitution preservation と、既存
   semantic Pi/Sigma/Id context calculus への interpretation/soundness である。
+- dependent raw type/term の相互構造再帰により identity renaming と identity simultaneous
+  substitution の中立則を証明した。binder 下で lift された identity replacement が variable
+  replacement と extensionally equal であることも証明し、Pi/Sigma codomain と lambda body
+  を含む capture-avoiding syntax algebra を preservation proof の前提として確立した。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

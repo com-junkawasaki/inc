@@ -469,6 +469,11 @@ It currently establishes:
   to `Id Unit unit unit`.  The remaining bridge is preservation of these
   dependent judgments under renaming/substitution and their interpretation into
   the checked semantic Pi/Sigma/identity context calculus.
+  As the first preservation prerequisite, identity renaming and identity
+  simultaneous substitution are proved neutral on every dependent raw type and
+  term by mutual structural recursion.  The lifted identity replacement under a
+  binder is proved extensionally equal to the variable replacement, so these
+  laws cover Pi/Sigma codomains and lambda bodies rather than only closed syntax.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite
