@@ -1281,6 +1281,12 @@ It currently establishes:
   canonical substitution equivalence.  The canonical result itself has a
   definitionally reflexive `canonical` witness, confirming that this interface
   adds no assumption in the normal constructor path.
+  The application and second-projection semantic constructors now have rebased
+  variants, `applyRebased` and `secondRebased`.  Each first constructs the checked
+  canonical typing result, then transports it through an instantiate alignment
+  to the selected structural output formation.  Thus both eliminators can return
+  a result usable by structural mutual recursion rather than stopping at an
+  isolated canonical family.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

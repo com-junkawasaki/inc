@@ -7940,6 +7940,46 @@ noncomputable def IncDepRawSubstitutionFiberModel.apply
     domainResult codomainResult (model.piCoherence domainResult codomainResult)
     functionResult argumentResult
 
+noncomputable def IncDepRawSubstitutionFiberModel.applyRebased
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {function argument : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {functionTyping : IncDepRawHasType target function (.pi domain codomain)}
+    {argumentTyping : IncDepRawHasType target argument domain}
+    (instantiatedFormation : IncDepRawWellFormed target
+      (codomain.instantiate argument))
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (codomainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := codomainFormation) domainResult.liftSubstitution)
+    (functionResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := functionTyping) (model.pi domainResult codomainResult))
+    (argumentResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := argumentTyping) domainResult)
+    (structuralResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := instantiatedFormation) substitutionResult)
+    (alignment : IncDepRawInstantiateFormationAlignment domainResult
+      codomainResult argumentResult.sourceTermResult.semanticTerm
+      argumentResult.targetTermResult.semanticTerm structuralResult) :
+    let aligned := alignment.toAlignedResult argumentResult.semanticTerm_coherence
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := IncDepRawHasType.applyRule functionTyping argumentTyping)
+      aligned.toFormationFiberResult := by
+  dsimp
+  let aligned := alignment.toAlignedResult argumentResult.semanticTerm_coherence
+  let canonical := model.apply instantiatedFormation domainResult codomainResult
+    functionResult argumentResult
+  exact canonical.rebaseFromCanonical (aligned := aligned)
+
 noncomputable def IncDepRawTypingSubstitutionFiberResult.pair
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
     {first second : IncDepRawTerm}
@@ -8241,6 +8281,61 @@ noncomputable def IncDepRawSubstitutionFiberModel.second
   IncDepRawTypingSubstitutionFiberResult.second instantiatedFormation
     domainResult codomainResult (model.sigmaCoherence domainResult codomainResult)
     pairResult
+
+noncomputable def IncDepRawSubstitutionFiberModel.secondRebased
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {pairTyping : IncDepRawHasType target pair (.sigma domain codomain)}
+    (instantiatedFormation : IncDepRawWellFormed target
+      (codomain.instantiate (.first pair)))
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (codomainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := codomainFormation) domainResult.liftSubstitution)
+    (pairResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := pairTyping) (model.sigma domainResult codomainResult))
+    (structuralResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := instantiatedFormation) substitutionResult)
+    (alignment : IncDepRawInstantiateFormationAlignment domainResult
+      codomainResult
+      (IncSigmaTerm.first pairResult.sourceTermResult.semanticTerm)
+      (IncSigmaTerm.first pairResult.targetTermResult.semanticTerm)
+      structuralResult) :
+    let firstCoherence :
+        domainResult.semanticFiberEquivalence.transport
+            (IncSigmaTerm.first pairResult.sourceTermResult.semanticTerm) =
+          (IncSigmaTerm.first pairResult.targetTermResult.semanticTerm).substitute
+            substitutionResult.semanticSubstitution := by
+      funext assignment
+      exact congrArg Sigma.fst
+        (congrFun pairResult.semanticTerm_coherence assignment)
+    let aligned := alignment.toAlignedResult firstCoherence
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := IncDepRawHasType.secondRule pairTyping)
+      aligned.toFormationFiberResult := by
+  dsimp
+  let firstCoherence :
+      domainResult.semanticFiberEquivalence.transport
+          (IncSigmaTerm.first pairResult.sourceTermResult.semanticTerm) =
+        (IncSigmaTerm.first pairResult.targetTermResult.semanticTerm).substitute
+          substitutionResult.semanticSubstitution := by
+    funext assignment
+    exact congrArg Sigma.fst
+      (congrFun pairResult.semanticTerm_coherence assignment)
+  let aligned := alignment.toAlignedResult firstCoherence
+  let canonical := model.second instantiatedFormation domainResult codomainResult
+    pairResult
+  exact canonical.rebaseFromCanonical (aligned := aligned)
 
 def IncDepRawTypingFormationSemanticResult.unit
     {context : List IncDepRawType}
