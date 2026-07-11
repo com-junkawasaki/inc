@@ -1054,6 +1054,11 @@ It currently establishes:
   direct uniform `.pi` and `.sigma` constructors then return the parent result,
   leaving only the genuinely necessary dependent round-trip coherence as branch
   input.
+  Identity is direct as well: `.identity` consumes the recursive type result and
+  the two endpoint typing-substitution results, derives endpoint transport
+  equations from them, and returns the uniform parent formation result.  Thus
+  base, unit, Pi, Sigma, and identity now all expose dispatcher-ready direct
+  constructors.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

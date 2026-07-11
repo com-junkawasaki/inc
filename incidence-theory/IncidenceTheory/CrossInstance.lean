@@ -5172,6 +5172,31 @@ def IncDepRawTypingSubstitutionFiberResult.identityFormation
   leftCoherence := leftResult.semanticTerm_coherence
   rightCoherence := rightResult.semanticTerm_coherence
 
+noncomputable def IncDepRawFormationSubstitutionFiberResult.identity
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {typeFormation : IncDepRawWellFormed target type}
+    {leftTyping : IncDepRawHasType target left type}
+    {rightTyping : IncDepRawHasType target right type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (typeResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := typeFormation) substitutionResult)
+    (leftResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := leftTyping) typeResult)
+    (rightResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := rightTyping) typeResult) :
+    IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := IncDepRawWellFormed.identity
+        typeFormation leftTyping rightTyping) substitutionResult :=
+  (IncDepRawTypingSubstitutionFiberResult.identityFormation
+    typeResult leftResult rightResult).toFormationFiberResult
+
 def IncDepRawTypingSemanticResult.castType
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} {typing : IncDepRawHasType context term type}

@@ -532,6 +532,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   codomain formation-substitution resultを直接消費するよう接続した。さらにuniform `.pi`/`.sigma` constructorが
   parent formation resultを返す。binder branchの入力はrecursive domain/codomain resultsと不可欠なdependent
   round-trip coherenceだけになり、total dispatcherの実際の再帰形が確定した。
+- Identityにもuniform `.identity` constructorを追加した。recursive type formation resultと左右endpointの
+  typing-substitution resultsからendpoint transport equationを再利用し、直接parent formation fiber resultを返す。
+  これでbase/unit/Pi/Sigma/Identityの全5 shapeにdispatcher-readyなdirect constructorが揃った。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
