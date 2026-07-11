@@ -602,6 +602,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - dispatcher監査でapply/pair/second readinessがinstantiated output typeのformation readinessを保持しない不足を特定した。
   modelへ全typing readinessに対する`typingFormation` providerと`formationForTyping` accessorを追加し、eliminator result
   formationを仮定せず取得・再帰解釈できるようにした。
+- replacement environmentにも一般fiber equivalence版`liftFiber`と、recursive domain formation resultへspecializeした
+  `liftResult`を追加した。binder下でsemantic substitutionとreplacement interpretationを同一domain fiber equivalenceに
+  沿って同時にliftでき、従来のtype equality限定へ戻らずmutual recursionを継続できる。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

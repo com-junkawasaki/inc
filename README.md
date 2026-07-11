@@ -1160,6 +1160,11 @@ It currently establishes:
   now supplies `typingFormation`, with `formationForTyping` as its accessor, for
   every typing readiness witness.  The dispatcher can therefore obtain and
   recursively interpret eliminator result formations instead of assuming them.
+  Replacement environments now lift along general fiber equivalences too.
+  `IncDepRawSubstitutionReplacementSemanticResult.liftFiber` mirrors semantic
+  `liftFiber`, and `liftResult` specializes it to a recursive domain formation
+  result.  Binder recursion can therefore lift the semantic substitution and its
+  replacement interpretation together, without falling back to type equality.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

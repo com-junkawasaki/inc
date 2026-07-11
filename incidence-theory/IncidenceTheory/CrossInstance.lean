@@ -6355,6 +6355,64 @@ noncomputable def IncDepRawSubstitutionReplacementSemanticResult.lift
           { semanticTerm := previousResult.2.semanticTerm.substitute
               (sourceResult.semanticContext.extendProjection sourceDomain.semanticType) }⟩
 
+noncomputable def IncDepRawSubstitutionReplacementSemanticResult.liftFiber
+    {source target : List IncDepRawType} {domain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult)
+    {domainFormation : IncDepRawWellFormed target domain}
+    {substitutedDomainFormation : IncDepRawWellFormed source
+      (domain.substitute substitution.term)}
+    (targetDomain : IncDepRawFormationSemanticResult domainFormation targetResult)
+    (sourceDomain : IncDepRawFormationSemanticResult
+      substitutedDomainFormation sourceResult)
+    (domainEquivalence : IncTypeInContext.FiberEquiv
+      sourceDomain.semanticType
+      (targetDomain.semanticType.reindex
+        substitutionResult.semanticSubstitution)) :
+    IncDepRawSubstitutionReplacementSemanticResult
+      (IncDepRawSubstitutionSemanticResult.liftFiber substitutionResult
+        targetDomain sourceDomain domainEquivalence) where
+  replacement := by
+    intro position type lookup
+    cases lookup with
+    | here =>
+        exact ⟨sourceDomain.semanticType.reindex
+            (sourceResult.semanticContext.extendProjection sourceDomain.semanticType),
+          { semanticTerm :=
+              sourceResult.semanticContext.extendVariable sourceDomain.semanticType }⟩
+    | there previous =>
+        let previousResult := replacements.replacement previous
+        exact ⟨previousResult.1.reindex
+            (sourceResult.semanticContext.extendProjection sourceDomain.semanticType),
+          { semanticTerm := previousResult.2.semanticTerm.substitute
+              (sourceResult.semanticContext.extendProjection sourceDomain.semanticType) }⟩
+
+noncomputable def IncDepRawSubstitutionReplacementSemanticResult.liftResult
+    {source target : List IncDepRawType} {domain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult)
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult) :
+    IncDepRawSubstitutionReplacementSemanticResult domainResult.liftSubstitution :=
+  IncDepRawSubstitutionReplacementSemanticResult.liftFiber substitutionResult
+    replacements domainResult.targetFormationResult
+    domainResult.sourceFormationResult domainResult.semanticFiberEquivalence
+
 theorem IncDepRawSubstitutionReplacementSemanticResult.lift_here_term
     {source target : List IncDepRawType} {domain : IncDepRawType}
     {substitution : IncDepRawSubstitution source target}
