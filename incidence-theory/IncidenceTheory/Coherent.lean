@@ -194,6 +194,22 @@ theorem CoherentQuotient.translate_derivation_iff
   · exact quotient.reflect_derivation retract
   · exact quotient.translate_derivation
 
+theorem CoherentQuotient.reflect_satisfies
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    (retract : CoherentQuotientLogicalRetract quotient)
+    (valuation : I → Prop) (formula : Formula I) :
+    Satisfies (fun target => valuation (retract.retraction target))
+      (formula.map quotient.classification.classify) ↔
+      Satisfies valuation formula := by
+  rw [satisfies_map]
+  have hvaluation :
+      (fun incidence => valuation (retract.retraction
+        (quotient.classification.classify incidence))) = valuation := by
+    funext incidence
+    rw [retract.left_inverse]
+  rw [hvaluation]
+
 def CoherentQuotient.target_glue_creates_pushout
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
     {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
