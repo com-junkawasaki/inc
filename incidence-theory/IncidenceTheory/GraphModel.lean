@@ -1433,6 +1433,159 @@ theorem hfNatIncidenceImage_induction (predicate : HFNatIncidenceImage → Prop)
   rw [← HFNatIncidenceImage.encode_index value]
   exact encoded value.index
 
+def hfNatIncidenceImageOne : HFNatIncidenceImage :=
+  hfNatIncidenceImageEncode 1
+
+noncomputable def HFNatIncidenceImage.add
+    (left right : HFNatIncidenceImage) : HFNatIncidenceImage :=
+  hfNatIncidenceImageEncode (left.index + right.index)
+
+noncomputable def HFNatIncidenceImage.mul
+    (left right : HFNatIncidenceImage) : HFNatIncidenceImage :=
+  hfNatIncidenceImageEncode (left.index * right.index)
+
+theorem HFNatIncidenceImage.index_add (left right : HFNatIncidenceImage) :
+    (left.add right).index = left.index + right.index :=
+  HFNatIncidenceImage.index_encode _
+
+theorem HFNatIncidenceImage.index_mul (left right : HFNatIncidenceImage) :
+    (left.mul right).index = left.index * right.index :=
+  HFNatIncidenceImage.index_encode _
+
+theorem HFNatIncidenceImage.eq_of_index_eq {left right : HFNatIncidenceImage}
+    (equal : left.index = right.index) : left = right := by
+  rw [← HFNatIncidenceImage.encode_index left,
+    ← HFNatIncidenceImage.encode_index right, equal]
+
+theorem HFNatIncidenceImage.add_zero (value : HFNatIncidenceImage) :
+    value.add hfNatIncidenceImageZero = value := by
+  apply HFNatIncidenceImage.eq_of_index_eq
+  rw [HFNatIncidenceImage.index_add]
+  unfold hfNatIncidenceImageZero
+  rw [HFNatIncidenceImage.index_encode, Nat.add_zero]
+
+theorem HFNatIncidenceImage.zero_add (value : HFNatIncidenceImage) :
+    HFNatIncidenceImage.add hfNatIncidenceImageZero value = value := by
+  apply HFNatIncidenceImage.eq_of_index_eq
+  rw [HFNatIncidenceImage.index_add]
+  unfold hfNatIncidenceImageZero
+  rw [HFNatIncidenceImage.index_encode, Nat.zero_add]
+
+theorem HFNatIncidenceImage.add_comm (left right : HFNatIncidenceImage) :
+    left.add right = right.add left := by
+  apply HFNatIncidenceImage.eq_of_index_eq
+  rw [HFNatIncidenceImage.index_add, HFNatIncidenceImage.index_add, Nat.add_comm]
+
+theorem HFNatIncidenceImage.add_assoc
+    (first second third : HFNatIncidenceImage) :
+    (first.add second).add third = first.add (second.add third) := by
+  apply HFNatIncidenceImage.eq_of_index_eq
+  rw [HFNatIncidenceImage.index_add, HFNatIncidenceImage.index_add,
+    HFNatIncidenceImage.index_add, HFNatIncidenceImage.index_add, Nat.add_assoc]
+
+theorem HFNatIncidenceImage.mul_one (value : HFNatIncidenceImage) :
+    value.mul hfNatIncidenceImageOne = value := by
+  apply HFNatIncidenceImage.eq_of_index_eq
+  rw [HFNatIncidenceImage.index_mul]
+  unfold hfNatIncidenceImageOne
+  rw [HFNatIncidenceImage.index_encode, Nat.mul_one]
+
+theorem HFNatIncidenceImage.one_mul (value : HFNatIncidenceImage) :
+    HFNatIncidenceImage.mul hfNatIncidenceImageOne value = value := by
+  apply HFNatIncidenceImage.eq_of_index_eq
+  rw [HFNatIncidenceImage.index_mul]
+  unfold hfNatIncidenceImageOne
+  rw [HFNatIncidenceImage.index_encode, Nat.one_mul]
+
+theorem HFNatIncidenceImage.mul_zero (value : HFNatIncidenceImage) :
+    value.mul hfNatIncidenceImageZero = hfNatIncidenceImageZero := by
+  apply HFNatIncidenceImage.eq_of_index_eq
+  rw [HFNatIncidenceImage.index_mul]
+  unfold hfNatIncidenceImageZero
+  rw [HFNatIncidenceImage.index_encode, Nat.mul_zero]
+
+theorem HFNatIncidenceImage.zero_mul (value : HFNatIncidenceImage) :
+    HFNatIncidenceImage.mul hfNatIncidenceImageZero value = hfNatIncidenceImageZero := by
+  apply HFNatIncidenceImage.eq_of_index_eq
+  rw [HFNatIncidenceImage.index_mul]
+  unfold hfNatIncidenceImageZero
+  rw [HFNatIncidenceImage.index_encode, Nat.zero_mul]
+
+theorem HFNatIncidenceImage.mul_comm (left right : HFNatIncidenceImage) :
+    left.mul right = right.mul left := by
+  apply HFNatIncidenceImage.eq_of_index_eq
+  rw [HFNatIncidenceImage.index_mul, HFNatIncidenceImage.index_mul, Nat.mul_comm]
+
+theorem HFNatIncidenceImage.mul_assoc
+    (first second third : HFNatIncidenceImage) :
+    (first.mul second).mul third = first.mul (second.mul third) := by
+  apply HFNatIncidenceImage.eq_of_index_eq
+  rw [HFNatIncidenceImage.index_mul, HFNatIncidenceImage.index_mul,
+    HFNatIncidenceImage.index_mul, HFNatIncidenceImage.index_mul, Nat.mul_assoc]
+
+theorem HFNatIncidenceImage.mul_add
+    (left right third : HFNatIncidenceImage) :
+    left.mul (right.add third) = (left.mul right).add (left.mul third) := by
+  apply HFNatIncidenceImage.eq_of_index_eq
+  rw [HFNatIncidenceImage.index_mul, HFNatIncidenceImage.index_add,
+    HFNatIncidenceImage.index_add, HFNatIncidenceImage.index_mul,
+    HFNatIncidenceImage.index_mul, Nat.mul_add]
+
+theorem HFNatIncidenceImage.add_mul
+    (left right third : HFNatIncidenceImage) :
+    (left.add right).mul third = (left.mul third).add (right.mul third) := by
+  rw [HFNatIncidenceImage.mul_comm (left.add right) third,
+    HFNatIncidenceImage.mul_add, HFNatIncidenceImage.mul_comm third left,
+    HFNatIncidenceImage.mul_comm third right]
+
+theorem HFNatIncidenceImage.succ_eq_add_one (value : HFNatIncidenceImage) :
+    value.succ = value.add hfNatIncidenceImageOne := by
+  apply HFNatIncidenceImage.eq_of_index_eq
+  rw [HFNatIncidenceImage.index_succ, HFNatIncidenceImage.index_add]
+  unfold hfNatIncidenceImageOne
+  rw [HFNatIncidenceImage.index_encode]
+
+structure HFNatIncidenceImageSemiringLaws where
+  zero : HFNatIncidenceImage
+  one : HFNatIncidenceImage
+  add : HFNatIncidenceImage → HFNatIncidenceImage → HFNatIncidenceImage
+  mul : HFNatIncidenceImage → HFNatIncidenceImage → HFNatIncidenceImage
+  add_zero : ∀ value, add value zero = value
+  zero_add : ∀ value, add zero value = value
+  add_comm : ∀ left right, add left right = add right left
+  add_assoc : ∀ first second third,
+    add (add first second) third = add first (add second third)
+  mul_zero : ∀ value, mul value zero = zero
+  zero_mul : ∀ value, mul zero value = zero
+  mul_one : ∀ value, mul value one = value
+  one_mul : ∀ value, mul one value = value
+  mul_comm : ∀ left right, mul left right = mul right left
+  mul_assoc : ∀ first second third,
+    mul (mul first second) third = mul first (mul second third)
+  mul_add : ∀ left right third,
+    mul left (add right third) = add (mul left right) (mul left third)
+  add_mul : ∀ left right third,
+    mul (add left right) third = add (mul left third) (mul right third)
+
+noncomputable def hfNatIncidenceImageSemiringLaws :
+    HFNatIncidenceImageSemiringLaws where
+  zero := hfNatIncidenceImageZero
+  one := hfNatIncidenceImageOne
+  add := HFNatIncidenceImage.add
+  mul := HFNatIncidenceImage.mul
+  add_zero := HFNatIncidenceImage.add_zero
+  zero_add := HFNatIncidenceImage.zero_add
+  add_comm := HFNatIncidenceImage.add_comm
+  add_assoc := HFNatIncidenceImage.add_assoc
+  mul_zero := HFNatIncidenceImage.mul_zero
+  zero_mul := HFNatIncidenceImage.zero_mul
+  mul_one := HFNatIncidenceImage.mul_one
+  one_mul := HFNatIncidenceImage.one_mul
+  mul_comm := HFNatIncidenceImage.mul_comm
+  mul_assoc := HFNatIncidenceImage.mul_assoc
+  mul_add := HFNatIncidenceImage.mul_add
+  add_mul := HFNatIncidenceImage.add_mul
+
 /- Graph with nodes and edges as incidences. We take I as a sum of Node | Edge. -/
 inductive GId where | node (n : Nat) | edge (e : Nat)
 deriving DecidableEq, Repr
