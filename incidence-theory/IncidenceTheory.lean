@@ -7435,6 +7435,56 @@ def BoundaryShapeTranslation.incToSetEquivalence
       | cons targetHead targetTail =>
           exact IncTypeEquivalence.refl (ULift Unit)
 
+theorem inc_to_set_equivalent_along_map_reflects_boundary_shape
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂)
+    (map : I → J) (i : I)
+    (equivalent : IncTypeEquivalence (inc_to_set source i)
+      (inc_to_set target (map i))) :
+    source.boundary i = [] ↔ target.boundary (map i) = [] := by
+  cases sourceBoundary : source.boundary i with
+  | nil =>
+      constructor
+      · intro _
+        cases targetBoundary : target.boundary (map i) with
+        | nil => rfl
+        | cons head tail =>
+            exfalso
+            apply uliftBool_equivalent_uliftUnit_false
+            simpa [inc_to_set, sourceBoundary, targetBoundary] using equivalent
+      · intro _
+        rfl
+  | cons sourceHead sourceTail =>
+      constructor
+      · intro impossible
+        contradiction
+      · intro targetNullary
+        exfalso
+        apply uliftBool_equivalent_uliftUnit_false
+        have reversed := equivalent.symm
+        simpa [inc_to_set, sourceBoundary, targetNullary] using reversed
+
+theorem boundaryShapeTranslation_exists_iff_inc_to_set_equivalent_along_map
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂)
+    (map : I → J) :
+    (∃ translation : BoundaryShapeTranslation source target,
+      translation.map = map) ↔
+      ∀ i, Nonempty (IncTypeEquivalence (inc_to_set source i)
+        (inc_to_set target (map i))) := by
+  constructor
+  · rintro ⟨translation, rfl⟩ i
+    exact ⟨translation.incToSetEquivalence i⟩
+  · intro equivalences
+    let translation : BoundaryShapeTranslation source target := {
+      map := map
+      preservesReflectsNullary := by
+        intro i
+        rcases equivalences i with ⟨equivalent⟩
+        exact inc_to_set_equivalent_along_map_reflects_boundary_shape
+          source target map i equivalent }
+    exact ⟨translation, rfl⟩
+
 def BoundaryShapeTranslation.discreteFunctor
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
     {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
