@@ -454,6 +454,12 @@ It currently establishes:
   proof uniqueness for complete typing derivations.  Evaluator results are
   therefore independent of derivation choice, removing the principal
   proof-index ambiguity encountered by semantic substitution.
+  Evaluator congruence is now explicit both for equal-typed derivations and
+  across an identified type equality.  As a computation-level validation, a
+  closed identity function can be renamed into any context, applied to any
+  well-typed argument, and its evaluation is proved equal to evaluation of the
+  argument itself.  This beta-soundness proof uses lookup proof uniqueness to
+  normalize the otherwise opaque binder derivation.
 - the `inc_to_set` translation packaged as a functor from the discrete
   incidence carrier category to the category of types.  It is always faithful
   but never full or essentially surjective; explicit morphisms and objects

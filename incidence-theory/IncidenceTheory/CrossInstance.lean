@@ -334,6 +334,25 @@ noncomputable def IncRawHasType.evaluate
       functionTyping.evaluate environment (argumentTyping.evaluate environment) := by
   rfl
 
+theorem IncRawHasType.evaluate_congr
+    {baseModel : Nat → Type u} {context : List IncRawType}
+    {term : IncRawTerm} {type : IncRawType}
+    (first second : IncRawHasType context term type)
+    (environment : IncRawEnvironment baseModel context) :
+    first.evaluate environment = second.evaluate environment := by
+  rw [IncRawHasType.proof_unique first second]
+
+theorem IncRawHasType.evaluate_irrelevant
+    {baseModel : Nat → Type u} {context : List IncRawType}
+    {term : IncRawTerm} {firstType secondType : IncRawType}
+    (first : IncRawHasType context term firstType)
+    (second : IncRawHasType context term secondType)
+    (typesEqual : firstType = secondType)
+    (environment : IncRawEnvironment baseModel context) :
+    typesEqual ▸ first.evaluate environment = second.evaluate environment := by
+  subst secondType
+  exact IncRawHasType.evaluate_congr first second environment
+
 theorem incRawIdentity_evaluate
     (baseModel : Nat → Type u) (type : IncRawType)
     (value : type.interpret baseModel) :
@@ -372,6 +391,13 @@ def IncRawRenaming.identity (context : List IncRawType) :
     IncRawRenaming context context where
   index := id
   preserves := fun lookup => lookup
+
+def IncRawRenaming.fromEmpty (target : List IncRawType) :
+    IncRawRenaming [] target where
+  index := id
+  preserves := by
+    intro position type lookup
+    cases lookup
 
 def IncRawRenaming.weaken (context : List IncRawType) (head : IncRawType) :
     IncRawRenaming context (head :: context) where
@@ -440,6 +466,35 @@ theorem IncRawTerm.rename_identity (term : IncRawTerm) :
       rw [liftIdentity, ih]
   | apply function argument ihFunction ihArgument =>
       simp [IncRawTerm.rename, ihFunction, ihArgument]
+
+def incRawApplyIdentity (type : IncRawType) (argument : IncRawTerm) : IncRawTerm :=
+  .apply (incRawIdentity type) argument
+
+noncomputable def incRawApplyIdentity_hasType
+    {context : List IncRawType} {type : IncRawType} {argument : IncRawTerm}
+    (argumentTyping : IncRawHasType context argument type) :
+    IncRawHasType context (incRawApplyIdentity type argument) type :=
+  IncRawHasType.applyRule
+    ((incRawIdentity_hasType type).rename
+      (IncRawRenaming.fromEmpty context))
+    argumentTyping
+
+theorem incRawApplyIdentity_evaluate
+    {baseModel : Nat → Type u} {context : List IncRawType}
+    {type : IncRawType} {argument : IncRawTerm}
+    (argumentTyping : IncRawHasType context argument type)
+    (environment : IncRawEnvironment baseModel context) :
+    (incRawApplyIdentity_hasType argumentTyping).evaluate environment =
+      argumentTyping.evaluate environment := by
+  simp only [incRawApplyIdentity_hasType,
+    IncRawHasType.evaluate_applyRule]
+  change (((IncRawRenaming.fromEmpty context).lift type).preserves
+      IncRawLookup.here).evaluate
+        (IncRawEnvironment.extend (argumentTyping.evaluate environment) environment) = _
+  rw [IncRawLookup.proof_unique
+    (((IncRawRenaming.fromEmpty context).lift type).preserves IncRawLookup.here)
+    IncRawLookup.here]
+  rfl
 
 def IncRawTerm.substitute (replacement : Nat → IncRawTerm) :
     IncRawTerm → IncRawTerm

@@ -128,6 +128,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   partner と application の hidden function domain も constructor injection で同一化した。
   これを使って全 typing derivation の proof uniqueness まで証明済み。したがって evaluator
   は derivation choice に依存せず、semantic substitution の proof-index ambiguity を除去した。
+- 同一 judgment の任意 derivation 間、および type equality で transport した derivation
+  間の evaluator congruence を証明した。closed identity を任意 context へ rename し任意の
+  typed argument に apply した program が、その argument 自身と同じ値へ評価される
+  beta-soundness も証明し、lookup proof uniqueness が binder 計算の正規化に実際に使える
+  ことを確認した。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」や carrier 可算性の除去ではなく、Incidence 固有の意味論とのさらに
