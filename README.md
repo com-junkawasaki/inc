@@ -619,6 +619,15 @@ It currently establishes:
   `preserveDependentPair` result.  Hence the synthesis package is executable and
   composes definitionally with the preservation implementation; the remaining
   universal task is producing such packages uniformly, not repairing their API.
+  Synthesis is now factored into global and local obligations.
+  `IncDepRawCertifiedCanonicalSemanticWitness` contains only the judgment-local
+  semantic context result/tree and coherent readiness.  Its synthesizer quantifies
+  those witnesses over certified judgments, while `withHypotheses` attaches one
+  shared canonical preservation environment to all of them.
+  `interpretCertifiedWithWitness` and its coherence theorem consume this split
+  interface directly.  Consequently provider construction is no longer repeated
+  per judgment, and the remaining syntax-directed task is isolated to producing
+  context trees and coherent readiness witnesses.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

@@ -11245,6 +11245,41 @@ structure IncDepRawCertifiedCanonicalSemanticSynthesizer where
     (certified : IncDepRawCertifiedTyping context term type),
     IncDepRawCertifiedCanonicalSemanticInput certified
 
+structure IncDepRawCertifiedCanonicalSemanticWitness
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawCertifiedTyping context term type) where
+  contextResult : IncDepRawContextSemanticResult certified.contextWellFormed
+  contextTree : IncDepRawContextSemanticTree contextResult
+  readiness : IncDepRawCoherentTypingDispatchReady certified.typing
+    certified.typeWellFormed
+
+structure IncDepRawCertifiedCanonicalSemanticWitnessSynthesizer where
+  synthesizeWitness : ∀
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawCertifiedTyping context term type),
+    IncDepRawCertifiedCanonicalSemanticWitness certified
+
+def IncDepRawCertifiedCanonicalSemanticWitness.withHypotheses
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {certified : IncDepRawCertifiedTyping context term type}
+    (witness : IncDepRawCertifiedCanonicalSemanticWitness certified)
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses) :
+    IncDepRawCertifiedCanonicalSemanticInput certified where
+  contextResult := witness.contextResult
+  contextTree := witness.contextTree
+  readiness := witness.readiness
+  preservationHypotheses := hypotheses
+
+def IncDepRawCertifiedCanonicalSemanticWitnessSynthesizer.withHypotheses
+    (synthesizer : IncDepRawCertifiedCanonicalSemanticWitnessSynthesizer)
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses) :
+    IncDepRawCertifiedCanonicalSemanticSynthesizer where
+  synthesize := fun certified =>
+    (synthesizer.synthesizeWitness certified).withHypotheses hypotheses
+
 abbrev IncDepRawStrictFormationSubstitutionFoldMotive
     {target : List IncDepRawType} {type : IncDepRawType}
     {targetFormation : IncDepRawWellFormed target type}
@@ -12059,6 +12094,33 @@ theorem IncDepRawSubstitutionFiberModel.interpretCertified_coherent
           input.contextResult).semanticSubstitution := by
   exact model.interpretCertifiedCanonical_coherent
     (synthesizer.synthesize certified)
+
+noncomputable def IncDepRawSubstitutionFiberModel.interpretCertifiedWithWitness
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (synthesizer : IncDepRawCertifiedCanonicalSemanticWitnessSynthesizer)
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawCertifiedTyping context term type) :=
+  model.interpretCertified (synthesizer.withHypotheses hypotheses) certified
+
+theorem IncDepRawSubstitutionFiberModel.interpretCertifiedWithWitness_coherent
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (synthesizer : IncDepRawCertifiedCanonicalSemanticWitnessSynthesizer)
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawCertifiedTyping context term type) :
+    let witness := synthesizer.synthesizeWitness certified
+    let result := model.interpretCertifiedWithWitness synthesizer hypotheses
+      certified
+    result.formationResult.semanticFiberEquivalence.transport
+        result.typingResult.sourceTermResult.semanticTerm =
+      result.typingResult.targetTermResult.semanticTerm.substitute
+        (IncDepRawSubstitutionSemanticResult.identity
+          witness.contextResult).semanticSubstitution := by
+  exact model.interpretCertified_coherent
+    (synthesizer.withHypotheses hypotheses) certified
 
 theorem IncDepRawSubstitutionFiberModel.preservationCanonical_formation
     (model : IncDepRawSubstitutionFiberModel.{u})
