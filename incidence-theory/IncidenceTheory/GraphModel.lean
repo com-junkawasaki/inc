@@ -652,6 +652,28 @@ theorem finiteIncidence_not_kripke_entails_of_not_derives
   not_kripke_entails_of_not_derives_of_enumeration
     finiteIncidenceFormulaEnumeration hnot
 
+theorem finiteIncidence_not_derives_iff_has_kripke_countermodel
+    (context : List (Formula FiniteIncidence))
+    (formula : Formula FiniteIncidence) :
+    ¬ Derives context formula ↔
+      ∃ model : KripkeModel.{0, 0} FiniteIncidence,
+        ∃ world : model.World,
+          KripkeContextForces model world context ∧
+            ¬ KripkeForces model world formula :=
+  not_derives_iff_has_kripke_countermodel_of_enumeration
+    finiteIncidenceFormulaEnumeration context formula
+
+theorem finiteIncidence_derives_iff_no_kripke_countermodel
+    (context : List (Formula FiniteIncidence))
+    (formula : Formula FiniteIncidence) :
+    Derives context formula ↔
+      ¬ (∃ model : KripkeModel.{0, 0} FiniteIncidence,
+        ∃ world : model.World,
+          KripkeContextForces model world context ∧
+            ¬ KripkeForces model world formula) :=
+  derives_iff_no_kripke_countermodel_of_enumeration
+    finiteIncidenceFormulaEnumeration context formula
+
 /-! ### A concrete constructive boundary
 
 The preceding completeness result is not merely an abstract transport result:
