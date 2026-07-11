@@ -128,6 +128,25 @@ theorem cycleIncidence_all_collapse (x y : CycleId) : approxBisim cycleIncidence
 
 theorem cycleIncidence_c0_ne_c1 : (CycleId.c0 : CycleId) ≠ CycleId.c1 := by simp
 
+theorem cycleIncidence_not_bisimulationFaithful :
+    ¬ CompletenessTheory.BisimulationFaithful cycleIncidence := by
+  intro faithful
+  exact cycleIncidence_c0_ne_c1
+    (faithful (cycleIncidence_all_collapse CycleId.c0 CycleId.c1))
+
+theorem cycleIncidence_complete_language_has_unsoundness_witness
+    (language : CompletenessTheory.LinearObservationLanguage
+      cycleIncidence cycleIdx)
+    (complete : CompletenessTheory.ContainsLinearIndicators
+      cycleIncidence cycleIdx language) :
+    ∃ i j : CycleId, approxBisim cycleIncidence i j ∧
+      ∃ observation, language observation ∧
+        (observation.boundary_matrix i ≠ observation.boundary_matrix j ∨
+         observation.laplacian i ≠ observation.laplacian j) :=
+  CompletenessTheory.nonfaithful_has_bisimilar_observational_counterexample
+    cycleIncidence cycleIdx language complete
+      cycleIncidence_not_bisimulationFaithful
+
 theorem incidence_axioms_do_not_force_bisimulation_extensionality :
     ¬ (∀ inc : Incidence CycleId CycleRole GraphType,
       ∀ first second : CycleId,
