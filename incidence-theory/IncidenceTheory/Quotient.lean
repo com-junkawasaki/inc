@@ -226,6 +226,32 @@ theorem quotient_mk_bijective_of_faithful {I R T : Type u} [DecidableEq I]
   (∀ q : Quotient (approxBisimSetoid inc), ∃ x, Quotient.mk (approxBisimSetoid inc) x = q) :=
   ⟨fun _ _ => quotient_mk_injective_of_faithful inc hfaithful, quotient_mk_surjective inc⟩
 
+theorem quotient_mk_injective_iff_bisimulationFaithful
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    (∀ x y : I, Quotient.mk (approxBisimSetoid inc) x =
+      Quotient.mk (approxBisimSetoid inc) y → x = y) ↔
+      CompletenessTheory.BisimulationFaithful inc := by
+  constructor
+  · intro injective i j bisimilar
+    exact injective i j (Quotient.sound bisimilar)
+  · intro faithful x y classesEqual
+    exact faithful (Quotient.exact classesEqual)
+
+theorem quotient_mk_bijective_iff_bisimulationFaithful
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    ((∀ x y : I, Quotient.mk (approxBisimSetoid inc) x =
+        Quotient.mk (approxBisimSetoid inc) y → x = y) ∧
+      (∀ q : Quotient (approxBisimSetoid inc),
+        ∃ x, Quotient.mk (approxBisimSetoid inc) x = q)) ↔
+      CompletenessTheory.BisimulationFaithful inc := by
+  constructor
+  · intro bijective
+    exact (quotient_mk_injective_iff_bisimulationFaithful inc).mp
+      bijective.left
+  · intro faithful
+    exact ⟨(quotient_mk_injective_iff_bisimulationFaithful inc).mpr faithful,
+      quotient_mk_surjective inc⟩
+
 /- Concrete confirmation against both faithful instances built so far
    in this project (`natIncidence`, cycle 4; `cycleIncidenceFixed`,
    cycle 27) -- not vacuous, two genuinely different faithful instances
