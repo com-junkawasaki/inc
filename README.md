@@ -1347,6 +1347,12 @@ It currently establishes:
   typing result computes definitionally to the original one.  Exact structural
   recursive outputs can therefore be promoted to the aligned return type with no
   semantic work or proof term normalization.
+  A second, purely syntactic obligation exposed by the mutual-fold audit is now
+  isolated as `IncDepRawCoherentReadinessAlignmentProvider`.  It identifies two
+  coherent formation or typing readiness trees with the same exact derivation
+  index.  A direct mutual induction is insufficient because apply/projection
+  constructors hide domain and codomain indices; those hidden-index equalities
+  must be established before readiness proof uniqueness can be implemented.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

@@ -1689,6 +1689,36 @@ mutual
           (IncDepRawWellFormed.identity typeFormation termTyping termTyping)
 end
 
+structure IncDepRawCoherentReadinessAlignmentProvider where
+  formationAlignment : ∀
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (first second : IncDepRawCoherentFormationDispatchReady formation),
+    first = second
+  typingAlignment : ∀
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (first second : IncDepRawCoherentTypingDispatchReady typing formation),
+    first = second
+
+def IncDepRawCoherentReadinessAlignmentProvider.alignFormation
+    (provider : IncDepRawCoherentReadinessAlignmentProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (first second : IncDepRawCoherentFormationDispatchReady formation) :
+    first = second :=
+  provider.formationAlignment first second
+
+def IncDepRawCoherentReadinessAlignmentProvider.alignTyping
+    (provider : IncDepRawCoherentReadinessAlignmentProvider)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (first second : IncDepRawCoherentTypingDispatchReady typing formation) :
+    first = second :=
+  provider.typingAlignment first second
+
 mutual
   noncomputable def IncDepRawWellFormed.rename
       {source target : List IncDepRawType} {type : IncDepRawType}

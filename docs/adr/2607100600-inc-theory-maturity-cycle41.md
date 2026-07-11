@@ -714,6 +714,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - 任意packageを自身のformation resultへreflexively liftする`IncDepRawTypingSubstitutionAlignedDispatchResult.exact`を追加し、
   `exact_typingResult`でtransport済みtyping resultが元のresultへdefinitionally computeすることを証明した。exact structural
   recursive outputはsemantic workやproof-term normalizationなしでaligned return typeへ昇格できる。
+- mutual-fold監査で現れた第二のpurely syntactic obligationを`IncDepRawCoherentReadinessAlignmentProvider`として隔離した。同じexact
+  derivation indexを持つcoherent formation/typing readiness tree二つを同定する。apply/projection constructorはhidden domain/
+  codomain indicesを持つため単純mutual inductionでは不足し、readiness proof uniquenessの実装前にそれらhidden-index equalityを
+  証明する必要がある。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
