@@ -3470,6 +3470,35 @@ theorem hfRecursiveIntegerBezout_no_nonunit_common_divisor
     left right divisor divisorWithin certificate dividesLeft dividesRight
     combinedFactorWithin)
 
+def hfRecursiveIntegerTwoThreeBezoutCertificate
+    (bound : Nat)
+    (negOneWithin : HFRecursiveIntegerWithin bound (-1))
+    (oneWithin : HFRecursiveIntegerWithin bound 1) :
+    HFRecursiveIntegerBezoutCertificate bound 2 3 where
+  leftCoefficient := -1
+  rightCoefficient := 1
+  leftCoefficientWithin := negOneWithin
+  rightCoefficientWithin := oneWithin
+  combination := by decide
+
+theorem hfRecursiveInteger_two_three_common_divisor_divides_one
+    (bound : Nat) (divisor : Int)
+    (divisorWithin : HFRecursiveIntegerWithin bound divisor)
+    (negOneWithin : HFRecursiveIntegerWithin bound (-1))
+    (oneWithin : HFRecursiveIntegerWithin bound 1)
+    (dividesTwo : HFRecursiveIntegerDivides bound divisor 2)
+    (dividesThree : HFRecursiveIntegerDivides bound divisor 3)
+    (combinedFactorWithin : ∀ twoFactor threeFactor,
+      HFRecursiveIntegerWithin bound twoFactor →
+      HFRecursiveIntegerWithin bound threeFactor →
+      2 = divisor * twoFactor → 3 = divisor * threeFactor →
+      HFRecursiveIntegerWithin bound (twoFactor * (-1) + threeFactor * 1)) :
+    HFRecursiveIntegerDivides bound divisor 1 := by
+  exact hfRecursiveIntegerBezout_common_divisor_divides_one bound 2 3 divisor
+    divisorWithin
+    (hfRecursiveIntegerTwoThreeBezoutCertificate bound negOneWithin oneWithin)
+    dividesTwo dividesThree combinedFactorWithin
+
 /- The graph of the identity function on the internally represented finite
    ordinal `n`. -/
 def hfRecursiveNatIdentityGraph : Nat → HFRecursiveSet
