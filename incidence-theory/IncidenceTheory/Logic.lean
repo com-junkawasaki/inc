@@ -974,6 +974,13 @@ theorem Formula.logicalMap_leftInverse {Atom Atom' : Type u}
     exact Formula.map_leftInverse f g hgf formula
   rw [hmap]
 
+theorem Formula.logicalMap_rightInverse {Atom Atom' : Type u}
+    (f : Atom → Atom') (g : Atom' → Atom)
+    (hfg : ∀ atom', f (g atom') = atom')
+    (formula : Formula.LogicalEquivalenceClass Atom') :
+    Formula.logicalMap f (Formula.logicalMap g formula) = formula :=
+  Formula.logicalMap_leftInverse g f hfg formula
+
 theorem Formula.logicalMap_injective_of_leftInverse {Atom Atom' : Type u}
     (f : Atom → Atom') (g : Atom' → Atom)
     (hgf : ∀ atom, g (f atom) = atom) :

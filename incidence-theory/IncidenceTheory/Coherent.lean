@@ -256,6 +256,16 @@ theorem CoherentQuotientLogicalRetract.classifier_injective
   have h := congrArg retract.retraction hclassify
   simpa only [retract.left_inverse] using h
 
+theorem CoherentQuotientLogicalRetract.right_inverse
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} {quotient : CoherentQuotient (Q := Q) source}
+    (retract : CoherentQuotientLogicalRetract quotient) :
+    ∀ target,
+      quotient.classification.classify (retract.retraction target) = target := by
+  intro target
+  obtain ⟨incidence, hclassify⟩ := quotient.classification.surjective target
+  rw [← hclassify, retract.left_inverse]
+
 theorem CoherentQuotientLogicalRetract.logicalMap_leftInverse
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
     {source : CoherentIncidence I R T} {quotient : CoherentQuotient (Q := Q) source}
@@ -264,6 +274,15 @@ theorem CoherentQuotientLogicalRetract.logicalMap_leftInverse
     Formula.logicalMap retract.retraction (quotient.logicalMap formula) = formula :=
   Formula.logicalMap_leftInverse quotient.classification.classify
     retract.retraction retract.left_inverse formula
+
+theorem CoherentQuotientLogicalRetract.logicalMap_rightInverse
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} {quotient : CoherentQuotient (Q := Q) source}
+    (retract : CoherentQuotientLogicalRetract quotient)
+    (formula : Formula.LogicalEquivalenceClass Q) :
+    quotient.logicalMap (Formula.logicalMap retract.retraction formula) = formula :=
+  Formula.logicalMap_rightInverse quotient.classification.classify
+    retract.retraction retract.right_inverse formula
 
 theorem CoherentQuotient.logicalMap_injective
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
