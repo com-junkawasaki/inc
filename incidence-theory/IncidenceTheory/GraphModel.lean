@@ -1349,6 +1349,90 @@ def hfNatIncidenceQuotientEmbedding : HFNatIncidenceQuotientEmbedding where
     intro A f g step zero fSucc gSucc
     exact hfNatIncidenceQuotient_recursion_unique f g step zero fSucc gSucc
 
+abbrev HFNatIncidenceImage :=
+  { value : IncidenceQuotient hfIncidence //
+    ∃ n, value = hfNatIncidenceQuotientEncode n }
+
+def hfNatIncidenceImageEncode (n : Nat) : HFNatIncidenceImage :=
+  ⟨hfNatIncidenceQuotientEncode n, ⟨n, rfl⟩⟩
+
+noncomputable def HFNatIncidenceImage.index (value : HFNatIncidenceImage) : Nat :=
+  Classical.choose value.property
+
+theorem HFNatIncidenceImage.value_eq_encode (value : HFNatIncidenceImage) :
+    value.1 = hfNatIncidenceQuotientEncode value.index :=
+  Classical.choose_spec value.property
+
+theorem HFNatIncidenceImage.index_encode (n : Nat) :
+    (hfNatIncidenceImageEncode n).index = n := by
+  apply hfNatIncidenceQuotientEncode_injective
+  rw [← HFNatIncidenceImage.value_eq_encode (hfNatIncidenceImageEncode n)]
+  rfl
+
+theorem HFNatIncidenceImage.encode_index (value : HFNatIncidenceImage) :
+    hfNatIncidenceImageEncode value.index = value := by
+  apply Subtype.eq
+  exact (HFNatIncidenceImage.value_eq_encode value).symm
+
+structure HFNatIncidenceImageEquivalence where
+  forward : Nat → HFNatIncidenceImage
+  inverse : HFNatIncidenceImage → Nat
+  left_inverse : ∀ n, inverse (forward n) = n
+  right_inverse : ∀ value, forward (inverse value) = value
+
+noncomputable def hfNatIncidenceImageEquivalence :
+    HFNatIncidenceImageEquivalence where
+  forward := hfNatIncidenceImageEncode
+  inverse := HFNatIncidenceImage.index
+  left_inverse := HFNatIncidenceImage.index_encode
+  right_inverse := HFNatIncidenceImage.encode_index
+
+def hfNatIncidenceImageZero : HFNatIncidenceImage :=
+  hfNatIncidenceImageEncode 0
+
+noncomputable def HFNatIncidenceImage.succ
+    (value : HFNatIncidenceImage) : HFNatIncidenceImage :=
+  hfNatIncidenceImageEncode (value.index + 1)
+
+theorem HFNatIncidenceImage.index_succ (value : HFNatIncidenceImage) :
+    value.succ.index = value.index + 1 :=
+  HFNatIncidenceImage.index_encode (value.index + 1)
+
+theorem hfNatIncidenceImageZero_ne_succ (value : HFNatIncidenceImage) :
+    hfNatIncidenceImageZero ≠ value.succ := by
+  intro equal
+  have indexEqual := congrArg HFNatIncidenceImage.index equal
+  unfold hfNatIncidenceImageZero at indexEqual
+  rw [HFNatIncidenceImage.index_encode, HFNatIncidenceImage.index_succ] at indexEqual
+  cases indexEqual
+
+theorem HFNatIncidenceImage.succ_injective
+    {left right : HFNatIncidenceImage} : left.succ = right.succ → left = right := by
+  intro equal
+  have indexEqual := congrArg HFNatIncidenceImage.index equal
+  rw [HFNatIncidenceImage.index_succ, HFNatIncidenceImage.index_succ] at indexEqual
+  have predecessorEqual : left.index = right.index := Nat.add_right_cancel indexEqual
+  rw [← HFNatIncidenceImage.encode_index left,
+    ← HFNatIncidenceImage.encode_index right, predecessorEqual]
+
+theorem hfNatIncidenceImage_induction (predicate : HFNatIncidenceImage → Prop)
+    (zero : predicate hfNatIncidenceImageZero)
+    (successor : ∀ value, predicate value → predicate value.succ) :
+    ∀ value, predicate value := by
+  intro value
+  have encoded : ∀ n, predicate (hfNatIncidenceImageEncode n) := by
+    intro n
+    induction n with
+    | zero => exact zero
+    | succ n ih =>
+        have step := successor (hfNatIncidenceImageEncode n) ih
+        change predicate (hfNatIncidenceImageEncode
+          ((hfNatIncidenceImageEncode n).index + 1)) at step
+        rw [HFNatIncidenceImage.index_encode] at step
+        exact step
+  rw [← HFNatIncidenceImage.encode_index value]
+  exact encoded value.index
+
 /- Graph with nodes and edges as incidences. We take I as a sum of Node | Edge. -/
 inductive GId where | node (n : Nat) | edge (e : Nat)
 deriving DecidableEq, Repr
