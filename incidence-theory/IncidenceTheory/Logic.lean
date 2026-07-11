@@ -753,6 +753,7 @@ theorem derivablyEquivalent_imp_congr {Atom : Type u}
             (by intro formula hmem; simp at hmem)
             (derives_iffER (context := []) (left := left) (right := left') leftEquivalent)
         · exact Derives.ax (by simp)
+
   · apply Derives.impI
     apply Derives.impI
     apply Derives.impE
@@ -769,12 +770,29 @@ theorem derivablyEquivalent_imp_congr {Atom : Type u}
             (derives_iffEL (context := []) (left := left) (right := left') leftEquivalent)
         · exact Derives.ax (by simp)
 
+theorem derivablyEquivalent_map {Atom Atom' : Type u} (f : Atom → Atom')
+    {left right : Formula Atom} :
+    Formula.DerivablyEquivalent left right →
+      Formula.DerivablyEquivalent (left.map f) (right.map f) := by
+  intro equivalent
+  simpa [Formula.DerivablyEquivalent, Formula.iff, Formula.map,
+    Formula.mapContext] using derives_map f equivalent
+
 def Formula.derivablyEquivalentSetoid (Atom : Type u) : Setoid (Formula Atom) where
   r := Formula.DerivablyEquivalent
   iseqv := derivablyEquivalent_equivalence
 
 abbrev Formula.LogicalEquivalenceClass (Atom : Type u) : Type u :=
   Quotient (Formula.derivablyEquivalentSetoid Atom)
+
+def Formula.logicalMap {Atom Atom' : Type u} (f : Atom → Atom')
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.LogicalEquivalenceClass Atom' :=
+  Quotient.liftOn formula
+    (fun formula => Quotient.mk (Formula.derivablyEquivalentSetoid Atom') (formula.map f))
+    (by
+      intro left right equivalent
+      exact Quotient.sound (derivablyEquivalent_map f equivalent))
 
 theorem Formula.logicalClass_eq_of_derivablyEquivalent {Atom : Type u}
     {left right : Formula Atom}
@@ -844,6 +862,57 @@ theorem Formula.logicalNeg_mk {Atom : Type u} (formula : Formula Atom) :
     Formula.logicalNeg
       (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) formula) =
       Quotient.mk (Formula.derivablyEquivalentSetoid Atom) formula.neg := rfl
+
+theorem Formula.logicalMap_mk {Atom Atom' : Type u} (f : Atom → Atom')
+    (formula : Formula Atom) :
+    Formula.logicalMap f
+      (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) formula) =
+      Quotient.mk (Formula.derivablyEquivalentSetoid Atom') (formula.map f) := rfl
+
+theorem Formula.logicalMap_top {Atom Atom' : Type u} (f : Atom → Atom') :
+    Formula.logicalMap f (Formula.logicalTop : Formula.LogicalEquivalenceClass Atom) =
+      (Formula.logicalTop : Formula.LogicalEquivalenceClass Atom') := rfl
+
+theorem Formula.logicalMap_bottom {Atom Atom' : Type u} (f : Atom → Atom') :
+    Formula.logicalMap f (Formula.logicalBottom : Formula.LogicalEquivalenceClass Atom) =
+      (Formula.logicalBottom : Formula.LogicalEquivalenceClass Atom') := rfl
+
+theorem Formula.logicalMap_and {Atom Atom' : Type u} (f : Atom → Atom')
+    (left right : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalMap f (Formula.logicalAnd left right) =
+      Formula.logicalAnd (Formula.logicalMap f left) (Formula.logicalMap f right) := by
+  refine Quotient.inductionOn left ?_
+  intro left
+  refine Quotient.inductionOn right ?_
+  intro right
+  rfl
+
+theorem Formula.logicalMap_or {Atom Atom' : Type u} (f : Atom → Atom')
+    (left right : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalMap f (Formula.logicalOr left right) =
+      Formula.logicalOr (Formula.logicalMap f left) (Formula.logicalMap f right) := by
+  refine Quotient.inductionOn left ?_
+  intro left
+  refine Quotient.inductionOn right ?_
+  intro right
+  rfl
+
+theorem Formula.logicalMap_imp {Atom Atom' : Type u} (f : Atom → Atom')
+    (left right : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalMap f (Formula.logicalImp left right) =
+      Formula.logicalImp (Formula.logicalMap f left) (Formula.logicalMap f right) := by
+  refine Quotient.inductionOn left ?_
+  intro left
+  refine Quotient.inductionOn right ?_
+  intro right
+  rfl
+
+theorem Formula.logicalMap_neg {Atom Atom' : Type u} (f : Atom → Atom')
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalMap f (Formula.logicalNeg formula) =
+      Formula.logicalNeg (Formula.logicalMap f formula) := by
+  unfold Formula.logicalNeg
+  rw [Formula.logicalMap_imp, Formula.logicalMap_bottom]
 
 def Formula.LogicalEntails {Atom : Type u}
     (left right : Formula.LogicalEquivalenceClass Atom) : Prop :=

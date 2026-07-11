@@ -36,6 +36,11 @@ theorem CoherentIncidence.kripke_complete
     KripkeEntails.{u, u} context formula ↔ Derives context formula :=
   coherent.completeLogic.kripke_complete context formula
 
+theorem CoherentIncidence.internal_logic_heyting
+    {I R T : Type u} [DecidableEq I] (_coherent : CoherentIncidence I R T) :
+    Formula.LogicalHeytingAlgebraLaws I :=
+  Formula.logicalHeytingAlgebraLaws I
+
 /- Relative consistency at the internal-logic level: the empty coherent
    theory has a Kripke model and therefore cannot derive bottom.  This is a
    theorem of the Lean metatheory used by the project; it deliberately does
@@ -154,6 +159,36 @@ theorem CoherentQuotient.translate_derivation
     Derives (Formula.mapContext quotient.classification.classify context)
       (formula.map quotient.classification.classify) :=
   derives_map quotient.classification.classify derivation
+
+def CoherentQuotient.logicalMap
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source) :
+    Formula.LogicalEquivalenceClass I → Formula.LogicalEquivalenceClass Q :=
+  Formula.logicalMap quotient.classification.classify
+
+theorem CoherentQuotient.logicalMap_preserves_and
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    (left right : Formula.LogicalEquivalenceClass I) :
+    quotient.logicalMap (Formula.logicalAnd left right) =
+      Formula.logicalAnd (quotient.logicalMap left) (quotient.logicalMap right) :=
+  Formula.logicalMap_and quotient.classification.classify left right
+
+theorem CoherentQuotient.logicalMap_preserves_imp
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    (left right : Formula.LogicalEquivalenceClass I) :
+    quotient.logicalMap (Formula.logicalImp left right) =
+      Formula.logicalImp (quotient.logicalMap left) (quotient.logicalMap right) :=
+  Formula.logicalMap_imp quotient.classification.classify left right
+
+theorem CoherentQuotient.logicalMap_preserves_neg
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    (formula : Formula.LogicalEquivalenceClass I) :
+    quotient.logicalMap (Formula.logicalNeg formula) =
+      Formula.logicalNeg (quotient.logicalMap formula) :=
+  Formula.logicalMap_neg quotient.classification.classify formula
 
 theorem CoherentQuotient.translate_satisfies
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
