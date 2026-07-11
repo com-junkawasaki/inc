@@ -6917,6 +6917,30 @@ theorem incToSetFunctor_full_implies_fiber_subsingleton
   have functionEqual := congrArg IncLiftedFunction.function identityEqualConstant
   exact congrFun functionEqual left
 
+theorem incToSet_nullary_not_subsingleton
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (i : I) (nullary : inc.boundary i = []) :
+    ¬ (∀ left right : inc_to_set inc i, left = right) := by
+  unfold inc_to_set
+  rw [nullary]
+  intro subsingleton
+  have impossible := subsingleton (ULift.up true) (ULift.up false)
+  have : (true : Bool) = false := congrArg ULift.down impossible
+  contradiction
+
+theorem incToSetFunctor_full_implies_all_nonNullary
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T)
+    (full : ∀ {source target}
+      (morphism : incTypeCategory.Hom
+        ((incToSetFunctor inc).obj source) ((incToSetFunctor inc).obj target)),
+      ∃ preimage : (incDiscreteCategory I).Hom source target,
+        (incToSetFunctor inc).map preimage = morphism) :
+    ∀ i, inc.boundary i ≠ [] := by
+  intro i nullary
+  exact incToSet_nullary_not_subsingleton inc i nullary
+    (incToSetFunctor_full_implies_fiber_subsingleton inc full i)
+
 theorem incToSetFunctor_not_fullyFaithful_of_distinct
     {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) {i j : I} (different : i ≠ j) :
@@ -6962,6 +6986,18 @@ theorem incToSetFunctor_fullyFaithful_of_subsingleton_all_nonNullary
     funext value
     exact incToSet_nonNullary_subsingleton inc source.down
       (allNonNullary source.down) _ _
+
+theorem incToSetFunctor_fullyFaithful_iff
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    IncFunctorFullyFaithful (incToSetFunctor inc) ↔
+      ((∀ i j : I, i = j) ∧ ∀ i, inc.boundary i ≠ []) := by
+  constructor
+  · intro fullyFaithful
+    exact ⟨incToSetFunctor_fullyFaithful_implies_subsingleton inc fullyFaithful,
+      incToSetFunctor_full_implies_all_nonNullary inc fullyFaithful.full⟩
+  · rintro ⟨subsingleton, allNonNullary⟩
+    exact incToSetFunctor_fullyFaithful_of_subsingleton_all_nonNullary inc
+      subsingleton allNonNullary
 
 def inc_to_set_preserves_boundary_shape
     {I R₁ T₁ R₂ T₂ : Type u} [DecidableEq I]
