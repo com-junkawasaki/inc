@@ -231,6 +231,32 @@ theorem CoherentQuotientLogicalRetract.source_bisim_faithful
   apply retract.classifier_injective
   exact quotient.classification.respects hbisim
 
+noncomputable def CoherentQuotientLogicalRetract.of_source_bisim_faithful
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    (faithful : ∀ {left right : I},
+      approxBisim source.chainPushout.inc left right → left = right) :
+    CoherentQuotientLogicalRetract quotient where
+  retraction := fun target => Classical.choose (quotient.classification.surjective target)
+  left_inverse := by
+    intro incidence
+    apply faithful
+    apply quotient.classification.reflects
+    exact Classical.choose_spec
+      (quotient.classification.surjective (quotient.classification.classify incidence))
+
+theorem coherentQuotient_has_logicalRetract_iff_source_bisim_faithful
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source) :
+    Nonempty (CoherentQuotientLogicalRetract quotient) ↔
+      ∀ {left right : I},
+        approxBisim source.chainPushout.inc left right → left = right := by
+  constructor
+  · rintro ⟨retract⟩
+    exact retract.source_bisim_faithful
+  · intro faithful
+    exact ⟨CoherentQuotientLogicalRetract.of_source_bisim_faithful quotient faithful⟩
+
 def CoherentQuotient.target_glue_creates_pushout
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
     {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
