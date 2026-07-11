@@ -1130,6 +1130,79 @@ theorem IncNaturalTransformation.whiskerRight_vcomp
   intro object
   rfl
 
+theorem IncNaturalTransformation.whiskerLeft_identity
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    (F : IncFunctor C D) (K : IncFunctor D E) :
+    (IncNaturalTransformation.identity F).whiskerLeft K =
+      IncNaturalTransformation.identity (K.comp F) := by
+  apply IncNaturalTransformation.ext
+  intro object
+  exact K.map_id _
+
+theorem IncNaturalTransformation.whiskerRight_identity
+    {BObj CObj DObj : Type u}
+    {B : IncCategory BObj} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) (K : IncFunctor B C) :
+    (IncNaturalTransformation.identity F).whiskerRight K =
+      IncNaturalTransformation.identity (F.comp K) := by
+  apply IncNaturalTransformation.ext
+  intro object
+  rfl
+
+theorem IncNaturalTransformation.hcomp_identity
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    (F : IncFunctor C D) (G : IncFunctor D E) :
+    (IncNaturalTransformation.identity G).hcomp
+        (IncNaturalTransformation.identity F) =
+      IncNaturalTransformation.identity (G.comp F) := by
+  apply IncNaturalTransformation.ext
+  intro object
+  change E.comp (E.id (G.obj (F.obj object)))
+      (G.map (D.id (F.obj object))) = E.id (G.obj (F.obj object))
+  rw [G.map_id, E.id_comp]
+
+theorem IncNaturalTransformation.hcomp_vcomp_interchange
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F G H : IncFunctor C D} {K L M : IncFunctor D E}
+    (delta : IncNaturalTransformation L M)
+    (gamma : IncNaturalTransformation K L)
+    (beta : IncNaturalTransformation G H)
+    (alpha : IncNaturalTransformation F G) :
+    (delta.vcomp gamma).hcomp (beta.vcomp alpha) =
+      (delta.hcomp beta).vcomp (gamma.hcomp alpha) := by
+  apply IncNaturalTransformation.ext
+  intro object
+  change E.comp
+      (E.comp (delta.app (H.obj object)) (gamma.app (H.obj object)))
+      (K.map (D.comp (beta.app object) (alpha.app object))) =
+    E.comp
+      (E.comp (delta.app (H.obj object)) (L.map (beta.app object)))
+      (E.comp (gamma.app (G.obj object)) (K.map (alpha.app object)))
+  rw [K.map_comp]
+  calc
+    _ = E.comp
+        (E.comp (E.comp (delta.app (H.obj object)) (gamma.app (H.obj object)))
+          (K.map (beta.app object))) (K.map (alpha.app object)) :=
+      E.assoc _ _ _
+    _ = E.comp (delta.app (H.obj object))
+        (E.comp (E.comp (gamma.app (H.obj object)) (K.map (beta.app object)))
+          (K.map (alpha.app object))) := by
+      exact (congrArg (fun morphism => E.comp morphism (K.map (alpha.app object)))
+        (E.assoc (delta.app (H.obj object)) (gamma.app (H.obj object))
+          (K.map (beta.app object))).symm).trans
+        (E.assoc (delta.app (H.obj object))
+          (E.comp (gamma.app (H.obj object)) (K.map (beta.app object)))
+          (K.map (alpha.app object))).symm
+    _ = E.comp (delta.app (H.obj object))
+        (E.comp (E.comp (L.map (beta.app object)) (gamma.app (G.obj object)))
+          (K.map (alpha.app object))) := by
+      rw [gamma.naturality (beta.app object)]
+    _ = _ := by
+      rw [← E.assoc, ← E.assoc]
+
 structure IncNaturalIsomorphism
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (F G : IncFunctor C D) where
