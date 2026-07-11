@@ -251,6 +251,100 @@ theorem incDependentProduct_ext {I R T : Type u} [DecidableEq I]
     (h : ∀ i, left i = right i) : left = right :=
   funext h
 
+structure IncDependentFamilyMorphism
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (source target : IncDependentFamily inc) where
+  app : ∀ index, source.fiber index → target.fiber index
+
+def IncDependentFamilyMorphism.identity
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (family : IncDependentFamily inc) : IncDependentFamilyMorphism family family where
+  app := fun _ value => value
+
+def IncDependentFamilyMorphism.comp
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {first second third : IncDependentFamily inc}
+    (secondMap : IncDependentFamilyMorphism second third)
+    (firstMap : IncDependentFamilyMorphism first second) :
+    IncDependentFamilyMorphism first third where
+  app := fun index value => secondMap.app index (firstMap.app index value)
+
+theorem IncDependentFamilyMorphism.ext
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    {first second : IncDependentFamilyMorphism source target}
+    (pointwise : ∀ index value, first.app index value = second.app index value) :
+    first = second := by
+  cases first
+  cases second
+  congr
+  funext index value
+  exact pointwise index value
+
+theorem IncDependentFamilyMorphism.identity_comp
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (morphism : IncDependentFamilyMorphism source target) :
+    (IncDependentFamilyMorphism.identity target).comp morphism = morphism := by
+  apply IncDependentFamilyMorphism.ext
+  intro index value
+  rfl
+
+theorem IncDependentFamilyMorphism.comp_identity
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (morphism : IncDependentFamilyMorphism source target) :
+    morphism.comp (IncDependentFamilyMorphism.identity source) = morphism := by
+  apply IncDependentFamilyMorphism.ext
+  intro index value
+  rfl
+
+theorem IncDependentFamilyMorphism.comp_assoc
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {first second third fourth : IncDependentFamily inc}
+    (thirdMap : IncDependentFamilyMorphism third fourth)
+    (secondMap : IncDependentFamilyMorphism second third)
+    (firstMap : IncDependentFamilyMorphism first second) :
+    (thirdMap.comp secondMap).comp firstMap =
+      thirdMap.comp (secondMap.comp firstMap) := by
+  apply IncDependentFamilyMorphism.ext
+  intro index value
+  rfl
+
+def IncDependentFamilyMorphism.mapSum
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (morphism : IncDependentFamilyMorphism source target) :
+    IncDependentSum source → IncDependentSum target :=
+  IncDependentFamily.mapSum morphism.app
+
+def IncDependentFamilyMorphism.mapProduct
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (morphism : IncDependentFamilyMorphism source target) :
+    IncDependentProduct source → IncDependentProduct target :=
+  IncDependentFamily.mapProduct morphism.app
+
+theorem IncDependentFamilyMorphism.mapSum_comp
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {first second third : IncDependentFamily inc}
+    (secondMap : IncDependentFamilyMorphism second third)
+    (firstMap : IncDependentFamilyMorphism first second) :
+    (secondMap.comp firstMap).mapSum = secondMap.mapSum ∘ firstMap.mapSum := by
+  funext total
+  rcases total with ⟨index, value⟩
+  rfl
+
+theorem IncDependentFamilyMorphism.mapProduct_comp
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {first second third : IncDependentFamily inc}
+    (secondMap : IncDependentFamilyMorphism second third)
+    (firstMap : IncDependentFamilyMorphism first second) :
+    (secondMap.comp firstMap).mapProduct =
+      secondMap.mapProduct ∘ firstMap.mapProduct := by
+  funext value i
+  rfl
+
 /- A classification is the general sufficient condition for the behavioural
    quotient to have a concrete, fully described carrier.  `respects` is the
    well-definedness condition for `Quotient.lift`; `reflects` prevents two
