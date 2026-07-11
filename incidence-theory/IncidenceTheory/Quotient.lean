@@ -452,6 +452,48 @@ theorem BisimulationQuotientClassification.targetEquivalence_unique
   rw [commutes,
     BisimulationQuotientClassification.targetEquivalence_classify]
 
+theorem BisimulationQuotientClassification.targetEquivalence_self
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc) :
+    classification.targetEquivalence classification =
+      IncTypeEquivalence.refl Q := by
+  apply IncTypeEquivalence.ext_forward
+  exact (classification.targetEquivalence_unique classification id
+    (fun _ => rfl)).symm
+
+theorem BisimulationQuotientClassification.targetEquivalence_comp
+    {I R T Q₁ Q₂ Q₃ : Type u} [DecidableEq I]
+    {inc : Incidence I R T}
+    (first : BisimulationQuotientClassification (Q := Q₁) inc)
+    (second : BisimulationQuotientClassification (Q := Q₂) inc)
+    (third : BisimulationQuotientClassification (Q := Q₃) inc) :
+    (second.targetEquivalence third).trans
+        (first.targetEquivalence second) =
+      first.targetEquivalence third := by
+  apply IncTypeEquivalence.ext_forward
+  apply first.targetEquivalence_unique third
+  intro x
+  change (second.targetEquivalence third).forward
+      ((first.targetEquivalence second).forward (first.classify x)) =
+    third.classify x
+  rw [first.targetEquivalence_classify second,
+    second.targetEquivalence_classify third]
+
+theorem BisimulationQuotientClassification.targetEquivalence_symm
+    {I R T Q₁ Q₂ : Type u} [DecidableEq I]
+    {inc : Incidence I R T}
+    (first : BisimulationQuotientClassification (Q := Q₁) inc)
+    (second : BisimulationQuotientClassification (Q := Q₂) inc) :
+    (first.targetEquivalence second).symm =
+      second.targetEquivalence first := by
+  apply IncTypeEquivalence.ext_forward
+  apply second.targetEquivalence_unique first
+  intro x
+  have inverseForward := (first.targetEquivalence second).inverse_forward
+    (first.classify x)
+  rw [first.targetEquivalence_classify second] at inverseForward
+  exact inverseForward
+
 /- Concrete confirmation against both faithful instances built so far
    in this project (`natIncidence`, cycle 4; `cycleIncidenceFixed`,
    cycle 27) -- not vacuous, two genuinely different faithful instances
