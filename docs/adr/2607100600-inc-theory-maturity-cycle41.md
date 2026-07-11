@@ -108,6 +108,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   の coherence を証明した。Pi/Sigma formation の reindex stability、Pi lambda/apply、
   Sigma pair/first/second の substitution naturality も checked で、beta/eta だけでなく
   context substitution discipline まで成立する。
+- semantic context calculus 上にも contextual identity type を追加した。同一 contextual
+  type の二項から identity type を形成し、reflexivity、transport、J eliminator、transport
+  refl/J beta を証明した。identity formation の reindex stability と reflexivity の
+  substitution naturality も checked で、Pi/Sigma/Id の三主要 dependent connective が
+  同一の context/substitution calculus に揃った。
 - independent raw core syntax として de Bruijn variable、unit、product、function、pair、
   projections、lambda、application を定義し、context lookup と typing judgment を inductive
   derivation data として構成した。lookup determinism を証明し、任意の base-type model、

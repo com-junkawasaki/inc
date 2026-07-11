@@ -401,7 +401,7 @@ It currently establishes:
   beta law.  On `natIncidence × natIncidence`, the identity fiber at `(0,0)` is
   inhabited while the fiber at `(0,1)` is proved empty, so the construction is
   nontrivial.  This is not yet a completeness theorem for a full dependent
-  type theory or a complete context/substitution calculus.
+  type theory.
   The identity layer is connected to substitution rather than left isolated:
   identity witnesses are unique, functions act on them by `congrArg`, this
   action preserves identity and composition, symmetry is involutive, and
@@ -421,8 +421,11 @@ It currently establishes:
   to extended contexts, commuting with projection and the newest variable.
   Dependent Pi and Sigma formation are stable under this lift, and substitution
   is natural for Pi lambda/application as well as Sigma pairing and both
-  projections.  Thus these connectives satisfy context-substitution discipline
-  in addition to their beta/eta laws.  What remains is an independent raw
+  projections.  Contextual identity types are now formed from any two terms of
+  one contextual type; reflexivity, transport, J, the transport-reflexivity and
+  J beta laws are checked, and identity formation and reflexivity commute with
+  base substitution.  Thus Pi, Sigma, and identity satisfy the semantic
+  context-substitution discipline.  What remains is an independent raw
   telescope/term syntax and inductive typing judgment whose interpretation is
   this checked semantic calculus.  The first independent raw layer is now
   implemented: de Bruijn variables, unit, products, functions, pairing,

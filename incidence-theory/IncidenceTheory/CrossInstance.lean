@@ -970,6 +970,88 @@ theorem IncSigmaTerm.second_substitute
   intro assignment
   rfl
 
+def IncIdentityType
+    {context : IncContext.{u}}
+    (type : IncTypeInContext context)
+    (left right : IncTerm type) :
+    IncTypeInContext context :=
+  fun assignment =>
+    ULift.{u} (PLift (left assignment = right assignment))
+
+def IncIdentityTerm.refl
+    {context : IncContext.{u}}
+    {type : IncTypeInContext context}
+    (term : IncTerm type) :
+    IncTerm (IncIdentityType type term term) :=
+  fun _ => ⟨⟨rfl⟩⟩
+
+def IncIdentityTerm.transport
+    {context : IncContext.{u}}
+    {type : IncTypeInContext context}
+    {left right : IncTerm type}
+    (family : ∀ assignment, type assignment → Type u)
+    (equal : IncTerm (IncIdentityType type left right))
+    (value : ∀ assignment, family assignment (left assignment)) :
+    ∀ assignment, family assignment (right assignment) := by
+  intro assignment
+  have pointEqual := (equal assignment).down.down
+  rw [← pointEqual]
+  exact value assignment
+
+def IncIdentityTerm.J
+    {context : IncContext.{u}}
+    {type : IncTypeInContext context}
+    (motive : ∀ assignment (_left _right : type assignment), Type u)
+    (reflCase : ∀ assignment value,
+      motive assignment value value)
+    {left right : IncTerm type}
+    (equal : IncTerm (IncIdentityType type left right)) :
+    ∀ assignment,
+      motive assignment (left assignment) (right assignment) := by
+  intro assignment
+  exact (equal assignment).down.down ▸
+    reflCase assignment (left assignment)
+
+theorem IncIdentityTerm.transport_refl
+    {context : IncContext.{u}}
+    {type : IncTypeInContext context}
+    (family : ∀ assignment, type assignment → Type u)
+    (term : IncTerm type)
+    (value : ∀ assignment, family assignment (term assignment)) :
+    IncIdentityTerm.transport family (IncIdentityTerm.refl term) value = value := by
+  rfl
+
+theorem IncIdentityTerm.J_beta
+    {context : IncContext.{u}}
+    {type : IncTypeInContext context}
+    (motive : ∀ assignment (_left _right : type assignment), Type u)
+    (reflCase : ∀ assignment value,
+      motive assignment value value)
+    (term : IncTerm type) :
+    IncIdentityTerm.J motive reflCase (IncIdentityTerm.refl term) =
+      fun assignment => reflCase assignment (term assignment) := by
+  funext assignment
+  simp [IncIdentityTerm.J]
+
+theorem IncIdentityType.reindex
+    {source target : IncContext.{u}}
+    (substitution : source.Substitution target)
+    (type : IncTypeInContext target)
+    (left right : IncTerm type) :
+    (IncIdentityType type left right).reindex substitution =
+      IncIdentityType (type.reindex substitution)
+        (left.substitute substitution) (right.substitute substitution) := by
+  rfl
+
+theorem IncIdentityTerm.refl_substitute
+    {source target : IncContext.{u}}
+    (substitution : source.Substitution target)
+    {type : IncTypeInContext target}
+    (term : IncTerm type) :
+    (IncIdentityTerm.refl term).substitute substitution =
+      IncIdentityTerm.refl (term.substitute substitution) := by
+  rfl
+
 def IncIdentityFamily
     {I R T : Type u} [DecidableEq (I × I)]
     (pairIncidence : Incidence (I × I) R T) :
