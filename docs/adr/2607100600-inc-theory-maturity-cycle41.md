@@ -196,6 +196,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   first/second両projectionを型付けし、semantic側でも同じunit/refl dataからdependent pairを
   構成した。semantic first/second projectionの両beta則がdefinitionally成立する。これで
   Pi/Sigma/Id三主要connectiveすべてのraw/semantic constructor alignmentを具体的に検証した。
+- raw dependent calculusにone-step operational semanticsを追加した。Pi beta、Sigmaのfirst/
+  second両projection betaと、applicationのfunction/argument、pair両component、projection下の
+  congruence ruleを定義。closed dependent refl applicationは`refl unit`へ、dependent pairの
+  両projectionは`unit`/`refl unit`へstepすることを証明した。これらはsemantic beta equality
+  と対応し、一般reduction soundness theoremの対象relationとなる。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

@@ -1827,6 +1827,50 @@ def incDepRawDependentPair_second_hasType :
         (.first incDepRawDependentPair)) :=
   IncDepRawHasType.secondRule incDepRawDependentPair_hasType
 
+def IncDepRawTerm.instantiate (body argument : IncDepRawTerm) : IncDepRawTerm :=
+  body.substitute fun index => match index with
+    | 0 => argument
+    | next + 1 => .var next
+
+inductive IncDepRawStep : IncDepRawTerm → IncDepRawTerm → Prop
+  | piBeta {domain body argument} :
+      IncDepRawStep (.apply (.lambda domain body) argument)
+        (body.instantiate argument)
+  | sigmaFirstBeta {first second} :
+      IncDepRawStep (.first (.pair first second)) first
+  | sigmaSecondBeta {first second} :
+      IncDepRawStep (.second (.pair first second)) second
+  | applyFunction {function function' argument} :
+      IncDepRawStep function function' →
+      IncDepRawStep (.apply function argument) (.apply function' argument)
+  | applyArgument {function argument argument'} :
+      IncDepRawStep argument argument' →
+      IncDepRawStep (.apply function argument) (.apply function argument')
+  | pairFirst {first first' second} :
+      IncDepRawStep first first' →
+      IncDepRawStep (.pair first second) (.pair first' second)
+  | pairSecond {first second second'} :
+      IncDepRawStep second second' →
+      IncDepRawStep (.pair first second) (.pair first second')
+  | underFirst {pair pair'} :
+      IncDepRawStep pair pair' →
+      IncDepRawStep (.first pair) (.first pair')
+  | underSecond {pair pair'} :
+      IncDepRawStep pair pair' →
+      IncDepRawStep (.second pair) (.second pair')
+
+theorem incDepRawDependentRefl_betaStep :
+    IncDepRawStep (.apply incDepRawDependentRefl .unit) (.refl .unit) := by
+  exact IncDepRawStep.piBeta
+
+theorem incDepRawDependentPair_first_betaStep :
+    IncDepRawStep (.first incDepRawDependentPair) .unit := by
+  exact IncDepRawStep.sigmaFirstBeta
+
+theorem incDepRawDependentPair_second_betaStep :
+    IncDepRawStep (.second incDepRawDependentPair) (.refl .unit) := by
+  exact IncDepRawStep.sigmaSecondBeta
+
 structure IncContext where
   Assignment : Type u
 

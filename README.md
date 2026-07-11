@@ -536,6 +536,13 @@ It currently establishes:
   reflexivity data.  Its first and second projections satisfy their semantic beta
   laws definitionally.  Concrete raw/semantic alignment is therefore exercised
   for Pi, Sigma, and identity rather than for only one dependent connective.
+  The raw dependent calculus now has an explicit one-step operational semantics.
+  It contains Pi beta, both Sigma projection beta rules, and congruence rules for
+  function/argument positions, pair components, and projections.  The closed
+  dependent reflexivity application reduces to `refl unit`, while the two
+  projections of the dependent pair reduce to `unit` and `refl unit`.
+  These checked raw reduction witnesses match the semantic beta equalities and
+  provide the relation for the forthcoming general reduction-soundness theorem.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite
