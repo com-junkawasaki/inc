@@ -12067,6 +12067,48 @@ theorem IncDepRawSubstitutionFiberModel.preserveEmptyUnitIdentity_typing
         incDepRawEmptyContextSemantic) :=
   rfl
 
+def incDepRawUnitFunctionFormation :
+    IncDepRawWellFormed [] (.pi .unit .unit) :=
+  IncDepRawWellFormed.pi IncDepRawWellFormed.unit IncDepRawWellFormed.unit
+
+def incDepRawUnitIdentityTyping :
+    IncDepRawHasType [] (incDepRawIdentity .unit) (.pi .unit .unit) :=
+  IncDepRawHasType.lambdaRule IncDepRawWellFormed.unit
+    (IncDepRawHasType.varRule IncDepRawLookup.here)
+
+def incDepRawUnitIdentityCoherentReady :
+    IncDepRawCoherentTypingDispatchReady incDepRawUnitIdentityTyping
+      incDepRawUnitFunctionFormation :=
+  IncDepRawCoherentTypingDispatchReady.lambdaRule
+    IncDepRawCoherentFormationDispatchReady.unit
+    (IncDepRawCoherentTypingDispatchReady.varRule
+      IncDepRawCoherentFormationDispatchReady.unit)
+
+noncomputable def IncDepRawSubstitutionFiberModel.preserveUnitIdentityLambda
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses) :
+    IncDepRawStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.ofCoherent
+        incDepRawUnitIdentityCoherentReady)
+      (IncDepRawSubstitutionSemanticResult.identity
+        incDepRawEmptyContextSemantic) :=
+  (model.preservationCanonical hypotheses).typing.dispatch
+    incDepRawUnitIdentityCoherentReady incDepRawEmptyContextSemanticTree
+    (IncDepRawSubstitutionReplacementSemanticResult.identity
+      incDepRawEmptyContextSemanticTree)
+
+theorem IncDepRawSubstitutionFiberModel.preserveUnitIdentityLambda_coherent
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses) :
+    let result := model.preserveUnitIdentityLambda hypotheses
+    result.formationResult.semanticFiberEquivalence.transport
+        result.typingResult.sourceTermResult.semanticTerm =
+      result.typingResult.targetTermResult.semanticTerm.substitute
+        (IncDepRawSubstitutionSemanticResult.identity
+          incDepRawEmptyContextSemantic).semanticSubstitution := by
+  exact (model.preserveUnitIdentityLambda hypotheses).typingResult
+    |>.semanticTerm_coherence
+
 noncomputable def IncDepRawSubstitutionFiberModel.preservationDispatcher
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)

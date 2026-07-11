@@ -1545,6 +1545,14 @@ It currently establishes:
   `model.unit` and its typing result is `model.typingUnit`.  This confirms the
   public bundle, identity substitution semantics, replacement semantics, mutual
   recursor, and strict return type compose without an adapter or hidden cast.
+  `preserveUnitIdentityLambda` is the first binder-level example.  It constructs
+  coherent readiness for `λ (x : Unit), x`, preserves it under the empty
+  identity substitution, extends the semantic context for the body, lifts the
+  replacement interpretation, and reaches the variable-provider branch.
+  `preserveUnitIdentityLambda_coherent` then extracts the checked equality between
+  transporting the source lambda and substituting the target lambda.  Unlike the
+  unit leaf example, this path genuinely exercises binder recursion and variable
+  replacement.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
