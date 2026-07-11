@@ -618,6 +618,14 @@ It currently establishes:
   handles arbitrary de Bruijn depth without flattening dependent types.  What
   remains for the automatic fold is coordinating context/type/term proof indices
   in one mutual recursion, rather than defining any missing constructor case.
+  That proof-index requirement is now represented explicitly by deep typing
+  certification.  It mirrors every typing rule and records formation evidence
+  for all hidden intermediate domains and codomains, recursively certifying each
+  subderivation.  `IncDepRawDeepCertifiedTyping` combines this evidence with the
+  previously certified context, result type, and root typing.  The dependent
+  Pi/reflexivity and Sigma/pair examples are deeply certified.  This supplies the
+  intermediate formation data that application and projection branches of the
+  mutual semantic fold could not recover from root certification alone.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

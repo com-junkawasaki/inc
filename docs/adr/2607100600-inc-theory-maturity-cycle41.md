@@ -250,6 +250,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   tail semantic termを同projectionでsubstituteする。lookup resultはvariable typing builderへ
   直接変換でき、dependent typeをflattenせず任意de Bruijn depthを扱う。全constructor caseは
   揃い、自動foldの残件はcontext/type/term proof indexを一つのmutual recursionで調整すること。
+- root certificationだけではapplication/projectionのhidden intermediate domain/codomain
+  formationを再帰呼出しへ渡せないため、全typing ruleをmirrorし各subderivationを再帰certifyする
+  `IncDepRawTypingDeeplyWellFormed`を追加した。これをcontext/type/root typing certificationと
+  束ねた`IncDepRawDeepCertifiedTyping`を定義し、Pi/reflとSigma/pair例をdeep certifyした。
+  mutual semantic foldに必要な全intermediate formation dataが明示的に揃った。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

@@ -1784,6 +1784,67 @@ structure IncDepRawCertifiedTyping
   typeWellFormed : IncDepRawWellFormed context type
   typing : IncDepRawHasType context term type
 
+inductive IncDepRawTypingDeeplyWellFormed :
+    {context : List IncDepRawType} → {term : IncDepRawTerm} →
+    {type : IncDepRawType} → IncDepRawHasType context term type → Type
+  | varRule {context position type}
+      {lookup : IncDepRawLookup context position type} :
+      IncDepRawWellFormed context type →
+      IncDepRawTypingDeeplyWellFormed (IncDepRawHasType.varRule lookup)
+  | unitRule {context} :
+      IncDepRawTypingDeeplyWellFormed
+        (IncDepRawHasType.unitRule (context := context))
+  | lambdaRule {context domain codomain body}
+      {domainFormation : IncDepRawWellFormed context domain}
+      {bodyTyping : IncDepRawHasType (domain :: context) body codomain} :
+      IncDepRawWellFormed (domain :: context) codomain →
+      IncDepRawTypingDeeplyWellFormed bodyTyping →
+      IncDepRawTypingDeeplyWellFormed
+        (IncDepRawHasType.lambdaRule domainFormation bodyTyping)
+  | applyRule {context domain codomain function argument}
+      {functionTyping : IncDepRawHasType context function (.pi domain codomain)}
+      {argumentTyping : IncDepRawHasType context argument domain} :
+      IncDepRawWellFormed context domain →
+      IncDepRawWellFormed (domain :: context) codomain →
+      IncDepRawTypingDeeplyWellFormed functionTyping →
+      IncDepRawTypingDeeplyWellFormed argumentTyping →
+      IncDepRawTypingDeeplyWellFormed
+        (IncDepRawHasType.applyRule functionTyping argumentTyping)
+  | pairRule {context domain codomain first second}
+      {firstTyping : IncDepRawHasType context first domain}
+      {secondTyping : IncDepRawHasType context second (codomain.instantiate first)} :
+      IncDepRawWellFormed context domain →
+      IncDepRawWellFormed (domain :: context) codomain →
+      IncDepRawTypingDeeplyWellFormed firstTyping →
+      IncDepRawTypingDeeplyWellFormed secondTyping →
+      IncDepRawTypingDeeplyWellFormed
+        (IncDepRawHasType.pairRule firstTyping secondTyping)
+  | firstRule {context domain codomain pair}
+      {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)} :
+      IncDepRawWellFormed context domain →
+      IncDepRawWellFormed (domain :: context) codomain →
+      IncDepRawTypingDeeplyWellFormed pairTyping →
+      IncDepRawTypingDeeplyWellFormed
+        (IncDepRawHasType.firstRule pairTyping)
+  | secondRule {context domain codomain pair}
+      {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)} :
+      IncDepRawWellFormed context domain →
+      IncDepRawWellFormed (domain :: context) codomain →
+      IncDepRawTypingDeeplyWellFormed pairTyping →
+      IncDepRawTypingDeeplyWellFormed
+        (IncDepRawHasType.secondRule pairTyping)
+  | reflRule {context type term}
+      {termTyping : IncDepRawHasType context term type} :
+      IncDepRawWellFormed context type →
+      IncDepRawTypingDeeplyWellFormed termTyping →
+      IncDepRawTypingDeeplyWellFormed
+        (IncDepRawHasType.reflRule termTyping)
+
+structure IncDepRawDeepCertifiedTyping
+    (context : List IncDepRawType) (term : IncDepRawTerm)
+    (type : IncDepRawType) extends IncDepRawCertifiedTyping context term type where
+  deeplyWellFormed : IncDepRawTypingDeeplyWellFormed toIncDepRawCertifiedTyping.typing
+
 def IncDepRawCertifiedTyping.ofClosed
     {term : IncDepRawTerm} {type : IncDepRawType}
     (typeWellFormed : IncDepRawWellFormed [] type)
@@ -1857,6 +1918,21 @@ def incDepRawDependentRefl_certified :
   IncDepRawCertifiedTyping.ofClosed
     incDepRawDependentRefl_typeWellFormed incDepRawDependentRefl_hasType
 
+def incDepRawDependentRefl_deeplyWellFormed :
+    IncDepRawTypingDeeplyWellFormed incDepRawDependentRefl_hasType := by
+  exact IncDepRawTypingDeeplyWellFormed.lambdaRule
+    (IncDepRawWellFormed.identity IncDepRawWellFormed.unit
+      (IncDepRawHasType.varRule IncDepRawLookup.here)
+      (IncDepRawHasType.varRule IncDepRawLookup.here))
+    (IncDepRawTypingDeeplyWellFormed.reflRule IncDepRawWellFormed.unit
+      (IncDepRawTypingDeeplyWellFormed.varRule IncDepRawWellFormed.unit))
+
+def incDepRawDependentRefl_deepCertified :
+    IncDepRawDeepCertifiedTyping [] incDepRawDependentRefl
+      (.pi .unit (.identity .unit (.var 0) (.var 0))) where
+  toIncDepRawCertifiedTyping := incDepRawDependentRefl_certified
+  deeplyWellFormed := incDepRawDependentRefl_deeplyWellFormed
+
 theorem incDepRawDependentRefl_application_type :
     (IncDepRawType.identity .unit (.var 0) (.var 0)).instantiate .unit =
       .identity .unit .unit .unit := by
@@ -1884,6 +1960,23 @@ def incDepRawDependentPair_certified :
       (.sigma .unit (.identity .unit (.var 0) (.var 0))) :=
   IncDepRawCertifiedTyping.ofClosed
     incDepRawDependentPair_typeWellFormed incDepRawDependentPair_hasType
+
+def incDepRawDependentPair_deeplyWellFormed :
+    IncDepRawTypingDeeplyWellFormed incDepRawDependentPair_hasType := by
+  exact IncDepRawTypingDeeplyWellFormed.pairRule
+    IncDepRawWellFormed.unit
+    (IncDepRawWellFormed.identity IncDepRawWellFormed.unit
+      (IncDepRawHasType.varRule IncDepRawLookup.here)
+      (IncDepRawHasType.varRule IncDepRawLookup.here))
+    IncDepRawTypingDeeplyWellFormed.unitRule
+    (IncDepRawTypingDeeplyWellFormed.reflRule IncDepRawWellFormed.unit
+      IncDepRawTypingDeeplyWellFormed.unitRule)
+
+def incDepRawDependentPair_deepCertified :
+    IncDepRawDeepCertifiedTyping [] incDepRawDependentPair
+      (.sigma .unit (.identity .unit (.var 0) (.var 0))) where
+  toIncDepRawCertifiedTyping := incDepRawDependentPair_certified
+  deeplyWellFormed := incDepRawDependentPair_deeplyWellFormed
 
 def incDepRawDependentPair_first_hasType :
     IncDepRawHasType [] (.first incDepRawDependentPair) .unit :=
