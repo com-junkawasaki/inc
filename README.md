@@ -1192,6 +1192,12 @@ It currently establishes:
   formation, and retain instantiated output formations for apply, pair, and
   second.  Mutual `toSemanticReady` functions embed the strengthened trees into
   the existing readiness API while forgetting only that extra output evidence.
+  Variable-specific alignment is isolated behind
+  `IncDepRawVariableSubstitutionProvider`.  Its `dispatchVariable` operation
+  receives the lookup, strengthened type readiness, target context tree,
+  recursive type result, and replacement environment, and returns the uniform
+  variable result.  The mutual dispatcher now has exactly two external inputs:
+  the substitution fiber model and this lookup provider.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

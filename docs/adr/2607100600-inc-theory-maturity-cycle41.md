@@ -622,6 +622,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `IncDepRawFormationDispatchReady`/`IncDepRawTypingDispatchReady`を追加した。nested Identityを許し、apply/pair/secondでは
   instantiated output formation evidenceも保持する。mutual `toSemanticReady`が既存readiness APIへstructuralに埋め込み、
   追加output evidenceだけを安全に忘却する。total mutual dispatcherの有限入力treeが確定した。
+- lookup固有alignmentを`IncDepRawVariableSubstitutionProvider`へ隔離した。`dispatchVariable`はlookup、strengthened type
+  readiness、target context tree、recursive type result、replacement environmentからuniform variable resultを返す。mutual
+  dispatcherの外部入力はsubstitution fiber modelとこのlookup providerの二つに固定された。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

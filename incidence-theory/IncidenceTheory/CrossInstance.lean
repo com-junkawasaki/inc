@@ -8020,6 +8020,51 @@ noncomputable def IncDepRawSubstitutionFiberModel.variable
   targetAlignment.toTypingSubstitution typeResult replacements
     sourceFormationCoherence targetFormationCoherence variableCoherence
 
+structure IncDepRawVariableSubstitutionProvider where
+  dispatchVariable : ∀
+    {source target : List IncDepRawType} {position : Nat}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {lookup : IncDepRawLookup target position type}
+    {typeFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult},
+    (typeReady : IncDepRawFormationDispatchReady typeFormation) →
+    (targetTree : IncDepRawContextSemanticTree targetResult) →
+    (typeResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := typeFormation) substitutionResult) →
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult) →
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := IncDepRawHasType.varRule lookup) typeResult
+
+noncomputable def IncDepRawVariableSubstitutionProvider.dispatch
+    (provider : IncDepRawVariableSubstitutionProvider)
+    {source target : List IncDepRawType} {position : Nat}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {lookup : IncDepRawLookup target position type}
+    {typeFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (typeReady : IncDepRawFormationDispatchReady typeFormation)
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (typeResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := typeFormation) substitutionResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult) :
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := IncDepRawHasType.varRule lookup) typeResult :=
+  provider.dispatchVariable typeReady targetTree typeResult replacements
+
 noncomputable def IncDepRawReadyTypingSemanticResult.variable
     {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
     {lookup : IncDepRawLookup context position type}
