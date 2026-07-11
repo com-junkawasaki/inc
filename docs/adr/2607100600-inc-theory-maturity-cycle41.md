@@ -476,6 +476,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   equalityを明示的にalignした上で、`substitution.preserves lookup`が保証するsource replacement semanticを
   合成する。得られるvariable fiber resultは既存`toTyping`でuniform typing resultへ直結し、lookup
   substitution recursionの残責務はsource replacement interpretationと最終transport equationだけになった。
+- source replacementを`IncDepRawSubstitutionReplacementSemanticResult`というdependent semantic environmentに
+  集約した。各target lookupへ`substitution.preserves`が保証するsource termのsemantic type/typing resultを
+  割り当て、accessorに加えてformation-substitution recursionが選ぶsource familyへequality transportする
+  `typingResultAligned`を証明した。recursive replacement interpretationの出力形は確定し、残るのはenvironmentの
+  identity/lift constructorと最終variable equationである。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

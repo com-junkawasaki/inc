@@ -4594,6 +4594,50 @@ structure IncDepRawVariableSubstitutionFiberResult
         sourceReplacement.semanticTerm =
       targetVariable.substitute substitutionResult.semanticSubstitution
 
+structure IncDepRawSubstitutionReplacementSemanticResult
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) where
+  replacement : ∀ {position type}
+    (lookup : IncDepRawLookup target position type),
+    Sigma fun semanticType : IncTypeInContext sourceResult.semanticContext =>
+      IncDepRawTypingSemanticResult (substitution.preserves lookup)
+        sourceResult semanticType
+
+def IncDepRawSubstitutionReplacementSemanticResult.semanticType
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawSubstitutionReplacementSemanticResult substitutionResult)
+    {position type} (lookup : IncDepRawLookup target position type) :
+    IncTypeInContext sourceResult.semanticContext :=
+  (result.replacement lookup).1
+
+def IncDepRawSubstitutionReplacementSemanticResult.typingResult
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawSubstitutionReplacementSemanticResult substitutionResult)
+    {position type} (lookup : IncDepRawLookup target position type) :
+    IncDepRawTypingSemanticResult (substitution.preserves lookup) sourceResult
+      (result.semanticType lookup) :=
+  (result.replacement lookup).2
+
 def IncDepRawTypingSubstitutionFiberResult.identityFormation
     {source target : List IncDepRawType} {type : IncDepRawType}
     {left right : IncDepRawTerm}
@@ -4635,6 +4679,23 @@ def IncDepRawTypingSemanticResult.castType
     IncDepRawTypingSemanticResult typing contextResult target := by
   cases coherence
   exact result
+
+def IncDepRawSubstitutionReplacementSemanticResult.typingResultAligned
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawSubstitutionReplacementSemanticResult substitutionResult)
+    {position type} (lookup : IncDepRawLookup target position type)
+    (semanticType : IncTypeInContext sourceResult.semanticContext)
+    (coherence : result.semanticType lookup = semanticType) :
+    IncDepRawTypingSemanticResult (substitution.preserves lookup) sourceResult
+      semanticType :=
+  (result.typingResult lookup).castType coherence
 
 noncomputable def IncDepRawTypingSemanticResult.weaken
     {context : List IncDepRawType} {term : IncDepRawTerm}

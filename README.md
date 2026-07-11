@@ -963,6 +963,14 @@ It currently establishes:
   `IncDepRawVariableSubstitutionFiberResult` feeds the uniform typing result via
   `toTyping`; lookup substitution recursion now needs to supply only the source
   replacement interpretation and its final transport equation.
+  Source replacements are now collected by
+  `IncDepRawSubstitutionReplacementSemanticResult`, a dependent semantic
+  environment assigning every target lookup the semantic type and typing result
+  of the source term certified by `substitution.preserves`.  Its accessors expose
+  both components, and `typingResultAligned` transports a replacement result to
+  the source family selected by formation-substitution recursion.  This fixes
+  the output shape for recursive replacement interpretation; identity/lift
+  constructors for the environment and the final variable equation remain.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
