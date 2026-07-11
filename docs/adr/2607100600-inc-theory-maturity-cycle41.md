@@ -335,6 +335,12 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   substitutionでreindexする`instantiateFiber`を追加した。application、dependent pair、second
   projectionの全builderをこのnormal formへ統一し、raw `Type.instantiate`との可換性で証明すべき
   semantic operationを一意にした。
+- general raw substitutionとinterpreted context間のbridgeを
+  `IncDepRawSubstitutionSemanticResult`として追加した。raw substitution、source/target semantic
+  context、assignment mapを同時にindexし、identityとbinder liftを構成した。liftはdomain family
+  coherence equalityに沿ってnewest valueをtransportし、projectionとnewest-variableの計算則も
+  証明した。これによりsubstitution-coherence帰納法のlookup二分岐が局所的に閉じ、残りはこの
+  equationをformation/typingの全constructorへ持ち上げる仕事になった。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

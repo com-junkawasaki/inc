@@ -753,6 +753,14 @@ It currently establishes:
   anonymous fiber functions.  Thus every composite typing branch now exposes the
   exact semantic operation that the raw `Type.instantiate` substitution theorem
   must commute with.
+  General substitutions now cross the same bridge.  An
+  `IncDepRawSubstitutionSemanticResult` indexes a semantic assignment map by its
+  raw substitution and by interpreted source and target contexts.  Identity and
+  binder lift are constructed; lift consumes exactly the domain-family coherence
+  equality and transports the newest value along it.  Its projection and newest-
+  variable computation laws are checked, providing the two lookup cases required
+  by a substitution-coherence induction.  What remains is to lift these local
+  equations through every formation and typing constructor.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

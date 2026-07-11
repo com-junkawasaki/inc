@@ -3215,6 +3215,110 @@ def IncDepRawFormationSemanticResult.identity
   semanticType := IncIdentityType typeResult.semanticType
     leftSemantic rightSemantic
 
+structure IncDepRawSubstitutionSemanticResult
+    {source target : List IncDepRawType}
+    (substitution : IncDepRawSubstitution source target)
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    (sourceResult : IncDepRawContextSemanticResult sourceWellFormed)
+    (targetResult : IncDepRawContextSemanticResult targetWellFormed) where
+  semanticSubstitution : sourceResult.semanticContext.Substitution
+    targetResult.semanticContext
+
+def IncDepRawSubstitutionSemanticResult.identity
+    {context : List IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    (contextResult : IncDepRawContextSemanticResult contextWellFormed) :
+    IncDepRawSubstitutionSemanticResult
+      (IncDepRawSubstitution.identity context) contextResult contextResult where
+  semanticSubstitution := IncContext.Substitution.identity
+    contextResult.semanticContext
+
+noncomputable def IncDepRawSubstitutionSemanticResult.lift
+    {source target : List IncDepRawType} {domain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    {domainFormation : IncDepRawWellFormed target domain}
+    {substitutedDomainFormation : IncDepRawWellFormed source
+      (domain.substitute substitution.term)}
+    (targetDomain : IncDepRawFormationSemanticResult domainFormation targetResult)
+    (sourceDomain : IncDepRawFormationSemanticResult
+      substitutedDomainFormation sourceResult)
+    (coherence : sourceDomain.semanticType = targetDomain.semanticType.reindex
+      substitutionResult.semanticSubstitution) :
+    IncDepRawSubstitutionSemanticResult (substitution.lift domain)
+      (sourceResult.extend (typeWellFormed := substitutedDomainFormation)
+        sourceDomain.semanticType)
+      (targetResult.extend (typeWellFormed := domainFormation)
+        targetDomain.semanticType) where
+  semanticSubstitution := fun extended =>
+    ⟨substitutionResult.semanticSubstitution extended.1,
+      Eq.mp (congrFun coherence extended.1) extended.2⟩
+
+theorem IncDepRawSubstitutionSemanticResult.identity_apply
+    {context : List IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    (contextResult : IncDepRawContextSemanticResult contextWellFormed)
+    (assignment : contextResult.semanticContext.Assignment) :
+    (IncDepRawSubstitutionSemanticResult.identity contextResult).semanticSubstitution
+      assignment = assignment := by
+  rfl
+
+theorem IncDepRawSubstitutionSemanticResult.lift_projection
+    {source target : List IncDepRawType} {domain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    {domainFormation : IncDepRawWellFormed target domain}
+    {substitutedDomainFormation : IncDepRawWellFormed source
+      (domain.substitute substitution.term)}
+    (targetDomain : IncDepRawFormationSemanticResult domainFormation targetResult)
+    (sourceDomain : IncDepRawFormationSemanticResult
+      substitutedDomainFormation sourceResult)
+    (coherence : sourceDomain.semanticType = targetDomain.semanticType.reindex
+      substitutionResult.semanticSubstitution) :
+    (targetResult.semanticContext.extendProjection targetDomain.semanticType).comp
+        (IncDepRawSubstitutionSemanticResult.lift substitutionResult
+          targetDomain sourceDomain coherence).semanticSubstitution =
+      substitutionResult.semanticSubstitution.comp
+        (sourceResult.semanticContext.extendProjection sourceDomain.semanticType) := by
+  rfl
+
+theorem IncDepRawSubstitutionSemanticResult.lift_variable
+    {source target : List IncDepRawType} {domain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    {domainFormation : IncDepRawWellFormed target domain}
+    {substitutedDomainFormation : IncDepRawWellFormed source
+      (domain.substitute substitution.term)}
+    (targetDomain : IncDepRawFormationSemanticResult domainFormation targetResult)
+    (sourceDomain : IncDepRawFormationSemanticResult
+      substitutedDomainFormation sourceResult)
+    (coherence : sourceDomain.semanticType = targetDomain.semanticType.reindex
+      substitutionResult.semanticSubstitution)
+    (assignment : sourceResult.semanticContext.Assignment)
+    (value : sourceDomain.semanticType assignment) :
+    (targetResult.semanticContext.extendVariable targetDomain.semanticType)
+      ((IncDepRawSubstitutionSemanticResult.lift substitutionResult
+        targetDomain sourceDomain coherence).semanticSubstitution
+          ⟨assignment, value⟩) =
+      Eq.mp (congrFun coherence assignment) value := by
+  rfl
+
 inductive IncDepRawContextSemanticTree :
     {context : List IncDepRawType} →
     {wellFormed : IncDepRawContext.WellFormed context} →
