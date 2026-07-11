@@ -146,6 +146,23 @@ theorem CoherentQuotient.target_kripke_complete
     KripkeEntails.{u, u} context formula ↔ Derives context formula :=
   quotient.target.kripke_complete context formula
 
+theorem CoherentQuotient.translate_derivation
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    {context : List (Formula I)} {formula : Formula I}
+    (derivation : Derives context formula) :
+    Derives (Formula.mapContext quotient.classification.classify context)
+      (formula.map quotient.classification.classify) :=
+  derives_map quotient.classification.classify derivation
+
+theorem CoherentQuotient.translate_satisfies
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    (valuation : Q → Prop) (formula : Formula I) :
+    Satisfies valuation (formula.map quotient.classification.classify) ↔
+      Satisfies (fun incidence => valuation (quotient.classification.classify incidence)) formula :=
+  satisfies_map quotient.classification.classify valuation formula
+
 def CoherentQuotient.target_glue_creates_pushout
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
     {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
