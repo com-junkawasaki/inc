@@ -330,6 +330,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `align`へ隔離した。Unitとreflexivityはunchecked castなしでこの不変条件を保存する。
   composite branchの残件はraw instantiate/renameとsemantic reindexの一致、すなわち
   substitution-coherence theoremであり、total dispatcherの阻害条件を構造再帰から分離した。
+- semantic instantiationをcanonical化した。identity environmentをinterpreted argumentでextendする
+  `Substitution.instantiate`と、そのprojection/variable equation、dependent type/termをその
+  substitutionでreindexする`instantiateFiber`を追加した。application、dependent pair、second
+  projectionの全builderをこのnormal formへ統一し、raw `Type.instantiate`との可換性で証明すべき
+  semantic operationを一意にした。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

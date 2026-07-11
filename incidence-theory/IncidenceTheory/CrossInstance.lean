@@ -2689,6 +2689,63 @@ theorem IncContext.Substitution.extend_variable
         (substitution.extend family term) = term := by
   rfl
 
+def IncContext.Substitution.instantiate
+    {context : IncContext.{u}}
+    (family : IncTypeInContext context)
+    (argument : IncTerm family) :
+    context.Substitution (context.extend family) :=
+  (IncContext.Substitution.identity context).extend family argument
+
+theorem IncContext.Substitution.instantiate_projection
+    {context : IncContext.{u}}
+    (family : IncTypeInContext context)
+    (argument : IncTerm family) :
+    (context.extendProjection family).comp
+        (IncContext.Substitution.instantiate family argument) =
+      IncContext.Substitution.identity context := by
+  rfl
+
+theorem IncContext.Substitution.instantiate_variable
+    {context : IncContext.{u}}
+    (family : IncTypeInContext context)
+    (argument : IncTerm family) :
+    (context.extendVariable family).substitute
+        (IncContext.Substitution.instantiate family argument) = argument := by
+  rfl
+
+def IncTypeInContext.instantiateFiber
+    {context : IncContext.{u}}
+    {domain : IncTypeInContext context}
+    (codomain : IncTypeInContext (context.extend domain))
+    (argument : IncTerm domain) : IncTypeInContext context :=
+  codomain.reindex (IncContext.Substitution.instantiate domain argument)
+
+theorem IncTypeInContext.instantiateFiber_apply
+    {context : IncContext.{u}}
+    {domain : IncTypeInContext context}
+    (codomain : IncTypeInContext (context.extend domain))
+    (argument : IncTerm domain) :
+    IncTypeInContext.instantiateFiber codomain argument =
+      fun assignment => codomain ⟨assignment, argument assignment⟩ := by
+  rfl
+
+def IncTerm.instantiateFiber
+    {context : IncContext.{u}}
+    {domain : IncTypeInContext context}
+    {codomain : IncTypeInContext (context.extend domain)}
+    (body : IncTerm codomain) (argument : IncTerm domain) :
+    IncTerm (IncTypeInContext.instantiateFiber codomain argument) :=
+  body.substitute (IncContext.Substitution.instantiate domain argument)
+
+theorem IncTerm.instantiateFiber_apply
+    {context : IncContext.{u}}
+    {domain : IncTypeInContext context}
+    {codomain : IncTypeInContext (context.extend domain)}
+    (body : IncTerm codomain) (argument : IncTerm domain) :
+    IncTerm.instantiateFiber body argument =
+      fun assignment => body ⟨assignment, argument assignment⟩ := by
+  rfl
+
 def IncPiType
     {context : IncContext.{u}}
     (domain : IncTypeInContext context)
@@ -3442,8 +3499,8 @@ def IncDepRawTypingSemanticResult.apply
       semanticDomain) :
     IncDepRawTypingSemanticResult
       (IncDepRawHasType.applyRule functionTyping argumentTyping) contextResult
-      (fun assignment => semanticCodomain
-        ⟨assignment, argumentResult.semanticTerm assignment⟩) where
+      (IncTypeInContext.instantiateFiber semanticCodomain
+        argumentResult.semanticTerm) where
   semanticTerm := IncPiTerm.apply functionResult.semanticTerm
     argumentResult.semanticTerm
 
@@ -3460,8 +3517,8 @@ def IncDepRawTypingSemanticResult.pair
     (firstResult : IncDepRawTypingSemanticResult firstTyping contextResult
       semanticDomain)
     (secondResult : IncDepRawTypingSemanticResult secondTyping contextResult
-      (fun assignment => semanticCodomain
-        ⟨assignment, firstResult.semanticTerm assignment⟩)) :
+      (IncTypeInContext.instantiateFiber semanticCodomain
+        firstResult.semanticTerm)) :
     IncDepRawTypingSemanticResult
       (IncDepRawHasType.pairRule firstTyping secondTyping) contextResult
       (IncSigmaType semanticDomain semanticCodomain) where
@@ -3496,8 +3553,8 @@ def IncDepRawTypingSemanticResult.second
       (IncSigmaType semanticDomain semanticCodomain)) :
     IncDepRawTypingSemanticResult
       (IncDepRawHasType.secondRule pairTyping) contextResult
-      (fun assignment => semanticCodomain
-        ⟨assignment, (pairResult.semanticTerm assignment).1⟩) where
+      (IncTypeInContext.instantiateFiber semanticCodomain
+        (IncSigmaTerm.first pairResult.semanticTerm)) where
   semanticTerm := IncSigmaTerm.second pairResult.semanticTerm
 
 def IncDepRawTypingSemanticResult.refl
@@ -3700,8 +3757,8 @@ noncomputable def IncDepRawReadyTypingSemanticResult.apply
     IncDepRawReadyTypingSemanticResult
       (IncDepRawTypingSemanticReady.applyRule domainReady codomainReady
         functionReady argumentReady) contextTree where
-  semanticType := fun assignment => semanticCodomain
-    ⟨assignment, argumentResult.semanticTerm assignment⟩
+  semanticType := IncTypeInContext.instantiateFiber semanticCodomain
+    argumentResult.semanticTerm
   typingResult := IncDepRawTypingSemanticResult.apply
     functionResult argumentResult
 
@@ -3725,8 +3782,8 @@ noncomputable def IncDepRawReadyTypingSemanticResult.pair
     (firstResult : IncDepRawTypingSemanticResult firstTyping contextResult
       semanticDomain)
     (secondResult : IncDepRawTypingSemanticResult secondTyping contextResult
-      (fun assignment => semanticCodomain ⟨assignment,
-        firstResult.semanticTerm assignment⟩)) :
+      (IncTypeInContext.instantiateFiber semanticCodomain
+        firstResult.semanticTerm)) :
     IncDepRawReadyTypingSemanticResult
       (IncDepRawTypingSemanticReady.pairRule domainReady codomainReady
         firstReady secondReady) contextTree where
@@ -3776,8 +3833,8 @@ noncomputable def IncDepRawReadyTypingSemanticResult.second
     IncDepRawReadyTypingSemanticResult
       (IncDepRawTypingSemanticReady.secondRule domainReady codomainReady pairReady)
       contextTree where
-  semanticType := fun assignment => semanticCodomain
-    ⟨assignment, (pairResult.semanticTerm assignment).1⟩
+  semanticType := IncTypeInContext.instantiateFiber semanticCodomain
+    (IncSigmaTerm.first pairResult.semanticTerm)
   typingResult := IncDepRawTypingSemanticResult.second pairResult
 
 theorem IncDepRawTypingSemanticResult.pi_beta
@@ -3815,8 +3872,8 @@ theorem IncDepRawTypingSemanticResult.sigma_first_beta
     (firstResult : IncDepRawTypingSemanticResult firstTyping contextResult
       semanticDomain)
     (secondResult : IncDepRawTypingSemanticResult secondTyping contextResult
-      (fun assignment => semanticCodomain
-        ⟨assignment, firstResult.semanticTerm assignment⟩)) :
+      (IncTypeInContext.instantiateFiber semanticCodomain
+        firstResult.semanticTerm)) :
     IncSigmaTerm.first
       (IncSigmaTerm.pair firstResult.semanticTerm secondResult.semanticTerm) =
       firstResult.semanticTerm := by
@@ -3835,8 +3892,8 @@ theorem IncDepRawTypingSemanticResult.sigma_second_beta
     (firstResult : IncDepRawTypingSemanticResult firstTyping contextResult
       semanticDomain)
     (secondResult : IncDepRawTypingSemanticResult secondTyping contextResult
-      (fun assignment => semanticCodomain
-        ⟨assignment, firstResult.semanticTerm assignment⟩)) :
+      (IncTypeInContext.instantiateFiber semanticCodomain
+        firstResult.semanticTerm)) :
     IncSigmaTerm.second
       (IncSigmaTerm.pair firstResult.semanticTerm secondResult.semanticTerm) =
       secondResult.semanticTerm := by

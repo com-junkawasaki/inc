@@ -745,6 +745,14 @@ It currently establishes:
   branches must prove that raw instantiation/renaming agrees with semantic
   reindexing; that substitution-coherence theorem, rather than structural
   recursion itself, is now the precise blocker for the total dispatcher.
+  Semantic instantiation itself is now canonical: `Substitution.instantiate`
+  extends the identity environment by an interpreted argument, with checked
+  projection and variable equations, and `instantiateFiber` reindexes dependent
+  types and terms along that substitution.  Application, dependent pairing, and
+  second projection builders all use this one normal form instead of separate
+  anonymous fiber functions.  Thus every composite typing branch now exposes the
+  exact semantic operation that the raw `Type.instantiate` substitution theorem
+  must commute with.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
