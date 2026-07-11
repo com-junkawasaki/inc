@@ -445,6 +445,18 @@ structure IncDependentFamilyIsomorphism
   inv_hom : ∀ index value, inv.app index (hom.app index value) = value
   hom_inv : ∀ index value, hom.app index (inv.app index value) = value
 
+theorem IncDependentFamilyIsomorphism.ext
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    {first second : IncDependentFamilyIsomorphism source target}
+    (homEq : first.hom = second.hom) (invEq : first.inv = second.inv) :
+    first = second := by
+  cases first
+  cases second
+  cases homEq
+  cases invEq
+  rfl
+
 def IncDependentFamilyIsomorphism.refl
     {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
     (family : IncDependentFamily inc) :
@@ -484,6 +496,71 @@ def IncDependentFamilyIsomorphism.trans
       (firstIso.hom.app index
         (firstIso.inv.app index (secondIso.inv.app index value))) = value
     rw [firstIso.hom_inv, secondIso.hom_inv]
+
+theorem IncDependentFamilyIsomorphism.refl_trans
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target) :
+    iso.trans (IncDependentFamilyIsomorphism.refl source) = iso := by
+  apply IncDependentFamilyIsomorphism.ext
+  · exact iso.hom.comp_identity
+  · exact iso.inv.identity_comp
+
+theorem IncDependentFamilyIsomorphism.trans_refl
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target) :
+    (IncDependentFamilyIsomorphism.refl target).trans iso = iso := by
+  apply IncDependentFamilyIsomorphism.ext
+  · exact iso.hom.identity_comp
+  · exact iso.inv.comp_identity
+
+theorem IncDependentFamilyIsomorphism.trans_assoc
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {first second third fourth : IncDependentFamily inc}
+    (thirdIso : IncDependentFamilyIsomorphism third fourth)
+    (secondIso : IncDependentFamilyIsomorphism second third)
+    (firstIso : IncDependentFamilyIsomorphism first second) :
+    (thirdIso.trans secondIso).trans firstIso =
+      thirdIso.trans (secondIso.trans firstIso) := by
+  apply IncDependentFamilyIsomorphism.ext
+  · exact IncDependentFamilyMorphism.comp_assoc
+      thirdIso.hom secondIso.hom firstIso.hom
+  · exact (IncDependentFamilyMorphism.comp_assoc
+      firstIso.inv secondIso.inv thirdIso.inv).symm
+
+theorem IncDependentFamilyIsomorphism.symm_symm
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target) :
+    iso.symm.symm = iso := by
+  apply IncDependentFamilyIsomorphism.ext <;> rfl
+
+theorem IncDependentFamilyIsomorphism.symm_trans_self
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target) :
+    iso.symm.trans iso = IncDependentFamilyIsomorphism.refl source := by
+  apply IncDependentFamilyIsomorphism.ext
+  · apply IncDependentFamilyMorphism.ext
+    intro index value
+    exact iso.inv_hom index value
+  · apply IncDependentFamilyMorphism.ext
+    intro index value
+    exact iso.inv_hom index value
+
+theorem IncDependentFamilyIsomorphism.trans_symm_self
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target) :
+    iso.trans iso.symm = IncDependentFamilyIsomorphism.refl target := by
+  apply IncDependentFamilyIsomorphism.ext
+  · apply IncDependentFamilyMorphism.ext
+    intro index value
+    exact iso.hom_inv index value
+  · apply IncDependentFamilyMorphism.ext
+    intro index value
+    exact iso.hom_inv index value
 
 theorem IncDependentFamilyIsomorphism.mapSum_inv_hom
     {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
@@ -3304,6 +3381,54 @@ theorem IncDependentFamilyIsomorphism.productEquivalence_reindex
       fun index => (iso.fiberEquivalence (baseMap index)).forward
         (source.reindexProduct baseMap term index) := by
   funext index
+  rfl
+
+theorem IncDependentFamilyIsomorphism.sumEquivalence_trans_forward
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {first second third : IncDependentFamily inc}
+    (secondIso : IncDependentFamilyIsomorphism second third)
+    (firstIso : IncDependentFamilyIsomorphism first second) :
+    ((secondIso.trans firstIso).sumEquivalence.forward) =
+      secondIso.sumEquivalence.forward ∘ firstIso.sumEquivalence.forward := by
+  exact IncDependentFamilyMorphism.mapSum_comp secondIso.hom firstIso.hom
+
+theorem IncDependentFamilyIsomorphism.sumEquivalence_trans_inverse
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {first second third : IncDependentFamily inc}
+    (secondIso : IncDependentFamilyIsomorphism second third)
+    (firstIso : IncDependentFamilyIsomorphism first second) :
+    ((secondIso.trans firstIso).sumEquivalence.inverse) =
+      firstIso.sumEquivalence.inverse ∘ secondIso.sumEquivalence.inverse := by
+  exact IncDependentFamilyMorphism.mapSum_comp firstIso.inv secondIso.inv
+
+theorem IncDependentFamilyIsomorphism.productEquivalence_trans_forward
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {first second third : IncDependentFamily inc}
+    (secondIso : IncDependentFamilyIsomorphism second third)
+    (firstIso : IncDependentFamilyIsomorphism first second) :
+    ((secondIso.trans firstIso).productEquivalence.forward) =
+      secondIso.productEquivalence.forward ∘
+        firstIso.productEquivalence.forward := by
+  exact IncDependentFamilyMorphism.mapProduct_comp secondIso.hom firstIso.hom
+
+theorem IncDependentFamilyIsomorphism.productEquivalence_trans_inverse
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {first second third : IncDependentFamily inc}
+    (secondIso : IncDependentFamilyIsomorphism second third)
+    (firstIso : IncDependentFamilyIsomorphism first second) :
+    ((secondIso.trans firstIso).productEquivalence.inverse) =
+      firstIso.productEquivalence.inverse ∘
+        secondIso.productEquivalence.inverse := by
+  exact IncDependentFamilyMorphism.mapProduct_comp firstIso.inv secondIso.inv
+
+theorem IncDependentFamilyIsomorphism.fiberEquivalence_trans_forward
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {first second third : IncDependentFamily inc}
+    (secondIso : IncDependentFamilyIsomorphism second third)
+    (firstIso : IncDependentFamilyIsomorphism first second) (index : I) :
+    ((secondIso.trans firstIso).fiberEquivalence index).forward =
+      (secondIso.fiberEquivalence index).forward ∘
+        (firstIso.fiberEquivalence index).forward := by
   rfl
 
 def IncCategoryEquivalence.objectIsoClassEquivalence
