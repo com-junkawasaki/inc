@@ -1538,6 +1538,13 @@ It currently establishes:
   for any readiness tree, context semantics, and replacement interpretation.
   Downstream proofs can now rewrite through the compact bundle API without
   unfolding either the dispatcher records or the generated recursors.
+  `preserveEmptyUnitIdentity` is the first concrete end-to-end use of that
+  bundle: it feeds the empty semantic-context tree and its identity replacement
+  interpretation through canonical typing preservation for the unit judgment.
+  The checked projection theorems show by `rfl` that its formation result is
+  `model.unit` and its typing result is `model.typingUnit`.  This confirms the
+  public bundle, identity substitution semantics, replacement semantics, mutual
+  recursor, and strict return type compose without an adapter or hidden cast.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

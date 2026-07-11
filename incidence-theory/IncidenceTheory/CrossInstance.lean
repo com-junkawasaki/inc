@@ -12038,6 +12038,35 @@ theorem IncDepRawSubstitutionFiberModel.preservationCanonical_typing
         hypotheses.rebaseProvider ready targetTree replacements :=
   rfl
 
+noncomputable def IncDepRawSubstitutionFiberModel.preserveEmptyUnitIdentity
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses) :
+    IncDepRawStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.unitRule (context := []))
+      (IncDepRawSubstitutionSemanticResult.identity
+        incDepRawEmptyContextSemantic) :=
+  (model.preservationCanonical hypotheses).typing.dispatch
+    IncDepRawCoherentTypingDispatchReady.unitRule
+    incDepRawEmptyContextSemanticTree
+    (IncDepRawSubstitutionReplacementSemanticResult.identity
+      incDepRawEmptyContextSemanticTree)
+
+theorem IncDepRawSubstitutionFiberModel.preserveEmptyUnitIdentity_formation
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses) :
+    (model.preserveEmptyUnitIdentity hypotheses).formationResult =
+      model.unit (IncDepRawSubstitutionSemanticResult.identity
+        incDepRawEmptyContextSemantic) :=
+  rfl
+
+theorem IncDepRawSubstitutionFiberModel.preserveEmptyUnitIdentity_typing
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses) :
+    (model.preserveEmptyUnitIdentity hypotheses).typingResult =
+      model.typingUnit (IncDepRawSubstitutionSemanticResult.identity
+        incDepRawEmptyContextSemantic) :=
+  rfl
+
 noncomputable def IncDepRawSubstitutionFiberModel.preservationDispatcher
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)

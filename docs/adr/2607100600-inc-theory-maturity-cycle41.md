@@ -808,6 +808,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - canonical bundleのgeneric projection equations `preservationCanonical_formation`/`preservationCanonical_typing`を追加した。任意readiness tree、context
   semantics、replacement interpretationについてbundle projectionが対応するmutual-recursion projectionへdefinitionally (`rfl`)一致する。downstream proofは
   dispatcher recordsや生成recursorをunfoldせずcompact bundle APIをrewriteできる。
+- `preserveEmptyUnitIdentity`でcanonical bundleの最初のconcrete end-to-end利用例を追加した。empty semantic-context treeとidentity replacement
+  interpretationをunit judgmentのcanonical typing preservationへ渡し、formation resultが`model.unit`、typing resultが`model.typingUnit`に`rfl`で一致する。
+  public bundle、identity substitution semantics、replacement semantics、mutual recursor、strict return typeがhidden castなしに合成できることを確認した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
