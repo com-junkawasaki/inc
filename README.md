@@ -1507,6 +1507,14 @@ It currently establishes:
   alignment equalities and both rebase equivalences are reflexive.  This
   separates the constructive canonical fragment from the additional task of
   relating an independently dispatched structural result to the canonical one.
+  The three dependent typing rules that need instantiation now expose matching
+  canonical strict constructors:
+  `dispatchStrictApplyCanonical`, `dispatchStrictPairCanonical`, and
+  `dispatchStrictSecondCanonical`.  They return or consume
+  `instantiateCanonical` directly and require no instantiate-coherence provider.
+  The general preservation fold still follows the independently dispatched
+  structural formation tree, but clients that choose canonical formation results
+  can now execute all three dependent rules in the provider-free fragment.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

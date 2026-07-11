@@ -794,6 +794,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - canonical subcaseは無仮定でinhabitできることを`incDepRawCanonicalInstantiateFormationCoherenceProvider`としてpackageした。structural resultが
   `instantiateCanonical`そのものであればalignment equalitiesとsource/target rebase equivalencesはすべてreflexiveになる。既にconstructiveな
   canonical fragmentと、独立dispatchされたstructural resultをcanonical resultへ関連付ける追加課題を分離した。
+- instantiateを必要とするdependent typing 3 rulesにcanonical strict constructors
+  `dispatchStrictApplyCanonical`/`dispatchStrictPairCanonical`/`dispatchStrictSecondCanonical`を追加した。これらは`instantiateCanonical`を直接
+  return/consumeするためinstantiate-coherence providerを要求しない。一般保存foldは独立dispatchされたstructural formation treeを尊重するが、canonical
+  formation resultsを選ぶclientは3 rulesすべてをprovider-free fragmentで実行できる。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
