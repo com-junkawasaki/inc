@@ -417,6 +417,71 @@ theorem BisimulationQuotientClassification.equivalence_forward
     (classification : BisimulationQuotientClassification (Q := Q) inc) :
     classification.equivalence.forward = classification.lift := rfl
 
+def BisimulationQuotientClassification.mappedSourceBoundary
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (x : I) : Boundary Q R :=
+  (inc.boundary x).map fun endpoint =>
+    { endpoint with i := classification.classify endpoint.i }
+
+def BisimulationQuotientClassification.BoundaryInvariant
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc) : Prop :=
+  BisimulationInvariantMap inc classification.mappedSourceBoundary
+
+def BisimulationQuotientClassification.BoundaryRealization
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc) : Prop :=
+  ∃ boundary : Q → Boundary Q R,
+    ∀ x, boundary (classification.classify x) =
+      classification.mappedSourceBoundary x
+
+noncomputable def BisimulationQuotientClassification.canonicalBoundary
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (invariant : classification.BoundaryInvariant) : Q → Boundary Q R :=
+  bisimulationQuotientLift inc classification.mappedSourceBoundary invariant ∘
+    classification.equivalence.inverse
+
+theorem BisimulationQuotientClassification.canonicalBoundary_classify
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (invariant : classification.BoundaryInvariant) (x : I) :
+    classification.canonicalBoundary invariant (classification.classify x) =
+      classification.mappedSourceBoundary x := by
+  unfold canonicalBoundary
+  change bisimulationQuotientLift inc classification.mappedSourceBoundary invariant
+      (classification.equivalence.inverse (classification.classify x)) = _
+  have inverseClassify := classification.equivalence.inverse_forward
+    (Quotient.mk (approxBisimSetoid inc) x)
+  change classification.equivalence.inverse (classification.classify x) =
+    Quotient.mk (approxBisimSetoid inc) x at inverseClassify
+  rw [inverseClassify]
+  rfl
+
+theorem BisimulationQuotientClassification.boundaryRealization_iff_invariant
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc) :
+    classification.BoundaryRealization ↔ classification.BoundaryInvariant := by
+  constructor
+  · rintro ⟨boundary, realizes⟩ x y bisimilar
+    rw [← realizes x, ← realizes y, classification.respects bisimilar]
+  · intro invariant
+    exact ⟨classification.canonicalBoundary invariant,
+      classification.canonicalBoundary_classify invariant⟩
+
+theorem BisimulationQuotientClassification.canonicalBoundary_unique
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (invariant : classification.BoundaryInvariant)
+    (candidate : Q → Boundary Q R)
+    (realizes : ∀ x, candidate (classification.classify x) =
+      classification.mappedSourceBoundary x) :
+    candidate = classification.canonicalBoundary invariant := by
+  funext q
+  rcases classification.surjective q with ⟨x, rfl⟩
+  rw [realizes, classification.canonicalBoundary_classify]
+
 noncomputable def BisimulationQuotientClassification.targetEquivalence
     {I R T Q₁ Q₂ : Type u} [DecidableEq I] {inc : Incidence I R T}
     (first : BisimulationQuotientClassification (Q := Q₁) inc)
@@ -1089,6 +1154,33 @@ def shapeBoundary : SimplexShape → Boundary SimplexShape SimplexRole
     [ { i := .edgeShape, role := SimplexRole.src, sign := Sign.pos, mult := 1 }
     , { i := .edgeShape, role := SimplexRole.dst, sign := Sign.neg, mult := 1 }
     , { i := .edgeShape, role := SimplexRole.dst, sign := Sign.pos, mult := 1 } ]
+
+theorem simplexClassification_boundaryRealization :
+    simplexBisimulationQuotientClassification.BoundaryRealization := by
+  refine ⟨shapeBoundary, ?_⟩
+  intro atom
+  cases atom <;>
+    simp [shapeBoundary,
+      BisimulationQuotientClassification.mappedSourceBoundary,
+      simplexBisimulationQuotientClassification, simplexToShape,
+      simplexIncidence, simplexBoundary]
+
+theorem simplexClassification_boundaryInvariant :
+    simplexBisimulationQuotientClassification.BoundaryInvariant :=
+  (simplexBisimulationQuotientClassification.boundaryRealization_iff_invariant).mp
+    simplexClassification_boundaryRealization
+
+theorem simplexClassification_canonicalBoundary_eq_shapeBoundary :
+    simplexBisimulationQuotientClassification.canonicalBoundary
+      simplexClassification_boundaryInvariant = shapeBoundary := by
+  symm
+  apply simplexBisimulationQuotientClassification.canonicalBoundary_unique
+  intro atom
+  cases atom <;>
+    simp [shapeBoundary,
+      BisimulationQuotientClassification.mappedSourceBoundary,
+      simplexBisimulationQuotientClassification, simplexToShape,
+      simplexIncidence, simplexBoundary]
 
 def simplexShapeGrade : SimplexShape → Nat
   | .vertex => 0

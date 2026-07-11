@@ -40,13 +40,18 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   boundary self-loop が存在しないことである。graded 構成は strict decrease からこの
   条件を導く。未解決なのは任意の bisimulation 分類から canonical な raw data 自体を
   導出する問題である。
+- canonical boundary については、source boundary の endpoint carrier を classifier
+  で写した関数が bisimulation-invariant であることと、分類 target 上へ descent
+  できることが必要十分であり、descent は一意である。simplex 分類ではこの条件を
+  検証し、canonical descent が既存の `shapeBoundary` と等しいことも証明済み。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」ではなく、非可算 carrier への完全性条件の拡張、Incidence 固有の
 意味論とのさらに強い接続、依存型・圏論の内部再構成、より広い数学ライブラリ化、
-および任意の bisimulation 分類から quotient の raw boundary/glue を canonical に
-導出する条件である（raw target data の Incidence 実現可能性は no-self-loop と必要
-十分であり、grade-decreasing 条件から従うことまで現在証明済み）。
+および任意の bisimulation 分類から quotient の raw glue を canonical に導出する
+二変数 descent 条件である（boundary descent は invariance と必要十分かつ一意、raw
+target data の Incidence 実現可能性は no-self-loop と必要十分であり、さらに
+grade-decreasing 条件から従うことまで現在証明済み）。
 
 ## Context
 

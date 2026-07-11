@@ -421,6 +421,13 @@ It currently establishes:
   that strict grade decrease excludes every self-loop.  What remains open is
   not target realizability once raw data is given, but deriving canonical raw
   boundary and glue data from an arbitrary bisimulation classification.
+  The boundary half is now characterized exactly: mapping each source
+  endpoint through the classifier descends to a unique target boundary if and
+  only if that mapped boundary is bisimulation-invariant.  The canonical
+  quotient lift has a checked beta law and uniqueness theorem.  For the
+  simplex classification the invariant condition holds, and this canonical
+  boundary is proved equal to `shapeBoundary`.  The corresponding binary
+  descent and coherence problem for glue remains open.
 
 The minimal category/functor/pushout vocabulary is also formalized. A functor
 is proved to map a pushout cocone to a commuting cocone; preservation of the
