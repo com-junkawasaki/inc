@@ -3778,6 +3778,53 @@ theorem IncDepRawTypingSemanticResult.sigma_second_beta
       secondResult.semanticTerm := by
   rfl
 
+theorem IncDepRawTypingSemanticResult.pi_eta
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    {semanticDomain : IncTypeInContext contextResult.semanticContext}
+    {semanticCodomain : IncTypeInContext
+      (contextResult.semanticContext.extend semanticDomain)}
+    (termResult : IncDepRawTypingSemanticResult typing contextResult
+      (IncPiType semanticDomain semanticCodomain)) :
+    IncPiTerm.lambda (fun extended =>
+      termResult.semanticTerm extended.1 extended.2) =
+      termResult.semanticTerm := by
+  rfl
+
+theorem IncDepRawTypingSemanticResult.sigma_eta
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    {semanticDomain : IncTypeInContext contextResult.semanticContext}
+    {semanticCodomain : IncTypeInContext
+      (contextResult.semanticContext.extend semanticDomain)}
+    (termResult : IncDepRawTypingSemanticResult typing contextResult
+      (IncSigmaType semanticDomain semanticCodomain)) :
+    IncSigmaTerm.pair (IncSigmaTerm.first termResult.semanticTerm)
+      (IncSigmaTerm.second termResult.semanticTerm) =
+      termResult.semanticTerm := by
+  rfl
+
+theorem IncDepRawTypingSemanticResult.identity_J_beta
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult.{u} contextWellFormed}
+    {semanticType : IncTypeInContext contextResult.semanticContext}
+    (termResult : IncDepRawTypingSemanticResult typing contextResult semanticType)
+    (motive : ∀ assignment
+      (_left _right : semanticType assignment), Type u)
+    (reflCase : ∀ assignment value,
+      motive assignment value value) :
+    IncIdentityTerm.J motive reflCase
+      (IncIdentityTerm.refl termResult.semanticTerm) =
+      fun assignment => reflCase assignment
+        (termResult.semanticTerm assignment) := by
+  exact IncIdentityTerm.J_beta motive reflCase termResult.semanticTerm
+
 noncomputable def incDepRawDependentRefl_readySemanticResult :
     IncDepRawReadyTypingSemanticResult incDepRawDependentRefl_semanticReady
       incDepRawEmptyContextSemanticTree where

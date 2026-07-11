@@ -320,6 +320,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   追加し、multi-step/definitional-equality soundnessを全modelのmethodとした。canonical
   computation quotientをinstance化し、既存quotient mapとのdefinition equalityも証明した。
   contextual interpreterはこのinterfaceのfieldだけを供給すればsound modelになれる。
+- generic contextual lawをbeta以外へ拡張した。任意Pi-typed semantic resultのeta、任意Sigma-typed
+  resultが両projectionのpairとdefinitionally equalであるeta、interpreted reflへのidentity Jが任意
+  dependent motiveでbetaを満たすことを証明。Pi/Sigma/Idの主要beta/eta/elimination equationが
+  任意interpreted contextのtyping-indexed semantic result上でuniformに揃った。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

@@ -730,6 +730,12 @@ It currently establishes:
   computation quotient instantiates the interface and its evaluator is proved
   definitionally equal to the existing quotient map.  A contextual interpreter
   can therefore become a sound model by supplying exactly these interface fields.
+  Generic contextual laws now extend beyond beta: every Pi-typed semantic result
+  satisfies eta, every Sigma-typed result is definitionally equal to the pair of
+  its projections, and identity J applied to interpreted reflexivity satisfies
+  its beta rule for arbitrary dependent motives.  Pi, Sigma, and identity thus
+  expose their principal beta/eta/elimination equations uniformly on typing-
+  indexed semantic results in arbitrary interpreted contexts.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
