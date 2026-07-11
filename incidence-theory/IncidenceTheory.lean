@@ -437,6 +437,92 @@ theorem IncDependentFamilyMorphism.reindexSum_naturality
   rcases total with ⟨index, value⟩
   rfl
 
+structure IncDependentFamilyIsomorphism
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (source target : IncDependentFamily inc) where
+  hom : IncDependentFamilyMorphism source target
+  inv : IncDependentFamilyMorphism target source
+  inv_hom : ∀ index value, inv.app index (hom.app index value) = value
+  hom_inv : ∀ index value, hom.app index (inv.app index value) = value
+
+def IncDependentFamilyIsomorphism.refl
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (family : IncDependentFamily inc) :
+    IncDependentFamilyIsomorphism family family where
+  hom := IncDependentFamilyMorphism.identity family
+  inv := IncDependentFamilyMorphism.identity family
+  inv_hom := by intro index value; rfl
+  hom_inv := by intro index value; rfl
+
+def IncDependentFamilyIsomorphism.symm
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target) :
+    IncDependentFamilyIsomorphism target source where
+  hom := iso.inv
+  inv := iso.hom
+  inv_hom := iso.hom_inv
+  hom_inv := iso.inv_hom
+
+def IncDependentFamilyIsomorphism.trans
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {first second third : IncDependentFamily inc}
+    (secondIso : IncDependentFamilyIsomorphism second third)
+    (firstIso : IncDependentFamilyIsomorphism first second) :
+    IncDependentFamilyIsomorphism first third where
+  hom := secondIso.hom.comp firstIso.hom
+  inv := firstIso.inv.comp secondIso.inv
+  inv_hom := by
+    intro index value
+    change firstIso.inv.app index
+      (secondIso.inv.app index
+        (secondIso.hom.app index (firstIso.hom.app index value))) = value
+    rw [secondIso.inv_hom, firstIso.inv_hom]
+  hom_inv := by
+    intro index value
+    change secondIso.hom.app index
+      (firstIso.hom.app index
+        (firstIso.inv.app index (secondIso.inv.app index value))) = value
+    rw [firstIso.hom_inv, secondIso.hom_inv]
+
+theorem IncDependentFamilyIsomorphism.mapSum_inv_hom
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target) :
+    iso.inv.mapSum ∘ iso.hom.mapSum = id := by
+  funext total
+  rcases total with ⟨index, value⟩
+  change Sigma.mk index (iso.inv.app index (iso.hom.app index value)) =
+    Sigma.mk index value
+  rw [iso.inv_hom]
+
+theorem IncDependentFamilyIsomorphism.mapSum_hom_inv
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target) :
+    iso.hom.mapSum ∘ iso.inv.mapSum = id := by
+  funext total
+  rcases total with ⟨index, value⟩
+  change Sigma.mk index (iso.hom.app index (iso.inv.app index value)) =
+    Sigma.mk index value
+  rw [iso.hom_inv]
+
+theorem IncDependentFamilyIsomorphism.mapProduct_inv_hom
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target) :
+    iso.inv.mapProduct ∘ iso.hom.mapProduct = id := by
+  funext term index
+  exact iso.inv_hom index (term index)
+
+theorem IncDependentFamilyIsomorphism.mapProduct_hom_inv
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {source target : IncDependentFamily inc}
+    (iso : IncDependentFamilyIsomorphism source target) :
+    iso.hom.mapProduct ∘ iso.inv.mapProduct = id := by
+  funext term index
+  exact iso.hom_inv index (term index)
+
 /- A classification is the general sufficient condition for the behavioural
    quotient to have a concrete, fully described carrier.  `respects` is the
    well-definedness condition for `Quotient.lift`; `reflects` prevents two
