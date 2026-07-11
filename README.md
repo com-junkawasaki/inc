@@ -1292,6 +1292,12 @@ It currently establishes:
   aligned child packages, the structurally computed output formation, and its
   two-endpoint instantiate witness, then return a complete dispatch package
   whose formation and typing results share the same rebased fiber equivalence.
+  Dependent pair introduction now has `pairRebased`: a second component already
+  interpreted over a structural instantiated formation is transported first to
+  the aligned formation and then to the canonical family before invoking the
+  checked pair rule.  This branch also exposes an important final obligation:
+  endpoint family equalities alone do not identify two substitution fiber
+  equivalences, so a structural-to-aligned rebase witness is required explicitly.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

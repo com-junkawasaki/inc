@@ -681,6 +681,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - package-level `dispatchApplyStructural`/`dispatchSecondStructural`を追加し、rebased eliminatorをrecursive dispatcherへ公開した。
   aligned child package、structurally computed output formation、そのtwo-endpoint instantiate witnessを受け取り、formation resultと
   typing resultが同一のrebased fiber equivalenceを共有するcomplete dispatch packageを返す。
+- dependent pair introductionに`pairRebased`を追加した。structural instantiated formation上のsecond componentを、まずaligned
+  formationへ、次にcanonical familyへtransportしてchecked pair ruleへ渡す。このbranchにより最後のobligationも明確になった。
+  endpoint family equalityだけでは二つのsubstitution fiber equivalenceは同定されないため、structural-to-aligned rebase witnessを
+  明示的に要求する必要がある。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
