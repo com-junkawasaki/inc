@@ -782,6 +782,38 @@ theorem BisimulationQuotientIncidencePresentation.targetLeafEntails_iff
       IncidenceLeafEntails first.target context formula :=
   (first.targetObservationEmbedding second).leafEntails_iff context formula
 
+theorem BisimulationQuotientIncidencePresentation.target_nontrivial_of_source_boundary
+    {I R T Q QR QT : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : Incidence I R T}
+    (presentation : BisimulationQuotientIncidencePresentation
+      (Q := Q) (QR := QR) (QT := QT) source)
+    {atom : I} (sourceHasBoundary : IncidenceBoundaryValuation source atom) :
+    ∃ first second : Q, first ≠ second := by
+  have targetHasBoundary := (presentation.boundary_iff atom).mpr sourceHasBoundary
+  rcases targetHasBoundary with ⟨endpoint, member⟩
+  refine ⟨endpoint.i, presentation.classification.classify atom, ?_⟩
+  intro equal
+  exact presentation.target.well_founded
+    (presentation.classification.classify atom) ⟨endpoint, member, equal⟩
+
+theorem BisimulationQuotientIncidencePresentation.quotient_nontrivial_of_source_boundary
+    {I R T Q QR QT : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : Incidence I R T}
+    (presentation : BisimulationQuotientIncidencePresentation
+      (Q := Q) (QR := QR) (QT := QT) source)
+    {atom : I} (sourceHasBoundary : IncidenceBoundaryValuation source atom) :
+    ∃ first second : IncidenceQuotient source, first ≠ second := by
+  rcases presentation.target_nontrivial_of_source_boundary sourceHasBoundary with
+    ⟨firstTarget, secondTarget, different⟩
+  rcases presentation.classification.lift_surjective firstTarget with
+    ⟨first, firstValue⟩
+  rcases presentation.classification.lift_surjective secondTarget with
+    ⟨second, secondValue⟩
+  refine ⟨first, second, ?_⟩
+  intro equal
+  apply different
+  rw [← firstValue, ← secondValue, equal]
+
 theorem cycleIncidence_no_bisimulationQuotientIncidencePresentation
     {Q QR QT : Type} [DecidableEq Q] :
     ¬ Nonempty (BisimulationQuotientIncidencePresentation

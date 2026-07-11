@@ -393,7 +393,10 @@ It currently establishes:
   `cycleIncidence` has one bisimulation class but a nonempty boundary, no target
   type and no target Incidence can form a boundary-preserving quotient
   presentation for it; subsingleton well-foundedness forces the target boundary
-  empty and yields a checked contradiction.
+  empty and yields a checked contradiction.  More generally, any source atom
+  with a nonempty boundary forces both the presentation target and the actual
+  bisimulation quotient to contain two distinct points: the target boundary
+  endpoint and its owner cannot coincide by well-foundedness.
 
 The minimal category/functor/pushout vocabulary is also formalized. A functor
 is proved to map a pushout cocone to a commuting cocone; preservation of the
