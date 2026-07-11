@@ -669,6 +669,13 @@ It currently establishes:
   and for both projections of the dependent Sigma pair.  These examples exercise
   the hidden domain/codomain readiness carried by application, first projection,
   and second projection, rather than validating only lambda and pair formation.
+  Semantic readiness now folds back to ordinary deep well-formedness for every
+  typing branch.  The forgetful structural recursion extracts all variable,
+  binder, hidden-domain/codomain, pair/projection, and reflexivity formation
+  evidence.  A generic constructor combines any certified judgment and its
+  readiness tree into a deep-certified judgment.  This proves inside Lean that
+  the stronger semantic index is coherent with, and strictly supplies, the
+  previously required intermediate well-formedness data.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

@@ -1946,6 +1946,55 @@ mutual
         IncDepRawTypingSemanticReady (IncDepRawHasType.reflRule termTyping)
 end
 
+def IncDepRawFormationSemanticReady.formation
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (_ready : IncDepRawFormationSemanticReady formation) :
+    IncDepRawWellFormed context type :=
+  formation
+
+noncomputable def IncDepRawTypingSemanticReady.toDeeplyWellFormed
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    (ready : IncDepRawTypingSemanticReady typing) :
+    IncDepRawTypingDeeplyWellFormed typing := by
+  cases ready with
+  | varRule typeReady =>
+      exact IncDepRawTypingDeeplyWellFormed.varRule typeReady.formation
+  | unitRule => exact IncDepRawTypingDeeplyWellFormed.unitRule
+  | lambdaRule domainReady codomainReady bodyReady =>
+      exact IncDepRawTypingDeeplyWellFormed.lambdaRule
+        codomainReady.formation bodyReady.toDeeplyWellFormed
+  | applyRule domainReady codomainReady functionReady argumentReady
+      =>
+      exact IncDepRawTypingDeeplyWellFormed.applyRule
+        domainReady.formation codomainReady.formation
+        functionReady.toDeeplyWellFormed argumentReady.toDeeplyWellFormed
+  | pairRule domainReady codomainReady firstReady secondReady =>
+      exact IncDepRawTypingDeeplyWellFormed.pairRule
+        domainReady.formation codomainReady.formation
+        firstReady.toDeeplyWellFormed secondReady.toDeeplyWellFormed
+  | firstRule domainReady codomainReady pairReady =>
+      exact IncDepRawTypingDeeplyWellFormed.firstRule
+        domainReady.formation codomainReady.formation
+        pairReady.toDeeplyWellFormed
+  | secondRule domainReady codomainReady pairReady =>
+      exact IncDepRawTypingDeeplyWellFormed.secondRule
+        domainReady.formation codomainReady.formation
+        pairReady.toDeeplyWellFormed
+  | reflRule typeReady termReady =>
+      exact IncDepRawTypingDeeplyWellFormed.reflRule
+        typeReady.formation termReady.toDeeplyWellFormed
+
+noncomputable def IncDepRawDeepCertifiedTyping.ofSemanticReady
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (certified : IncDepRawCertifiedTyping context term type)
+    (ready : IncDepRawTypingSemanticReady certified.typing) :
+    IncDepRawDeepCertifiedTyping context term type where
+  toIncDepRawCertifiedTyping := certified
+  deeplyWellFormed := ready.toDeeplyWellFormed
+
 def IncDepRawCertifiedTyping.ofClosed
     {term : IncDepRawTerm} {type : IncDepRawType}
     (typeWellFormed : IncDepRawWellFormed [] type)

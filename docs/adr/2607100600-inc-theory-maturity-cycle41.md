@@ -280,6 +280,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - 強化branchを実際のdependent redexでinstantiationした。dependent refl functionのapplicationと
   dependent Sigma pairのfirst/second両projectionについてsemantic-readiness treeを構成し、
   application/両projectionが保持するhidden domain/codomain readinessをnontrivially検証した。
+- semantic readinessから従来のdeep well-formednessを全typing branchについて抽出するforgetful
+  structural foldを証明した。variable、binder、hidden domain/codomain、pair/projection、reflの
+  formation evidenceを回収し、任意certified judgmentとreadiness treeからdeep-certified judgmentを
+  作る汎用constructorも追加。強いsemantic indexが既存intermediate WF dataとcoherentである。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
