@@ -7202,6 +7202,64 @@ def BoundaryShapeEquivalence.strataEquivalence
           Sum.inr nonNullary
         rw [equivalence.nonNullaryEquivalence.forward_inverse]
 
+theorem BoundaryShapeEquivalence.nullary_exists_iff
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    (∃ i, source.boundary i = []) ↔ ∃ j, target.boundary j = [] := by
+  constructor
+  · rintro ⟨i, nullary⟩
+    exact ⟨equivalence.hom.map i,
+      (equivalence.hom.preservesReflectsNullary i).mp nullary⟩
+  · rintro ⟨j, nullary⟩
+    exact ⟨equivalence.inv.map j,
+      (equivalence.inv.preservesReflectsNullary j).mp nullary⟩
+
+theorem BoundaryShapeEquivalence.nonNullary_exists_iff
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    (∃ i, source.boundary i ≠ []) ↔ ∃ j, target.boundary j ≠ [] := by
+  constructor
+  · rintro ⟨i, nonNullary⟩
+    exact ⟨equivalence.hom.map i, fun targetNullary =>
+      nonNullary ((equivalence.hom.preservesReflectsNullary i).mpr targetNullary)⟩
+  · rintro ⟨j, nonNullary⟩
+    exact ⟨equivalence.inv.map j, fun sourceNullary =>
+      nonNullary ((equivalence.inv.preservesReflectsNullary j).mpr sourceNullary)⟩
+
+theorem BoundaryShapeEquivalence.all_nullary_iff
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    (∀ i, source.boundary i = []) ↔ ∀ j, target.boundary j = [] := by
+  constructor
+  · intro sourceNullary j
+    have atInverse := sourceNullary (equivalence.inv.map j)
+    have mapped :=
+      (equivalence.hom.preservesReflectsNullary
+        (equivalence.inv.map j)).mp atInverse
+    rw [equivalence.hom_inv] at mapped
+    exact mapped
+  · intro targetNullary i
+    have atForward := targetNullary (equivalence.hom.map i)
+    exact (equivalence.hom.preservesReflectsNullary i).mpr atForward
+
+theorem BoundaryShapeEquivalence.all_nonNullary_iff
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    (∀ i, source.boundary i ≠ []) ↔ ∀ j, target.boundary j ≠ [] := by
+  constructor
+  · intro sourceNonNullary j targetNullary
+    have sourceNullary : source.boundary (equivalence.inv.map j) = [] :=
+      (equivalence.inv.preservesReflectsNullary j).mp targetNullary
+    exact sourceNonNullary (equivalence.inv.map j) sourceNullary
+  · intro targetNonNullary i sourceNullary
+    have targetNullary : target.boundary (equivalence.hom.map i) = [] :=
+      (equivalence.hom.preservesReflectsNullary i).mp sourceNullary
+    exact targetNonNullary (equivalence.hom.map i) targetNullary
+
 /- The Inc-to-Set assignment above is not yet packaged as an `IncFunctor`, so
    a theorem specifically about that assignment still requires a source
    category of incidences.  The general categorical preservation theorem is
