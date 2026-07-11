@@ -3724,6 +3724,118 @@ structure BicartesianPreservingFamily
   pushouts : PushoutPreservingFamily F
   pullbacks : PullbackPreservingFamily F
 
+structure IncInitialObject {Obj : Type u} (C : IncCategory Obj) where
+  object : Obj
+  to : ∀ target : Obj, C.Hom object target
+  unique : ∀ (target : Obj) (morphism : C.Hom object target),
+    morphism = to target
+
+abbrev IncTerminalObject {Obj : Type u} (C : IncCategory Obj) :=
+  IncInitialObject C.op
+
+def IncCoherentCategoryEquivalence.mapInitialObject
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D)
+    (initial : IncInitialObject C) : IncInitialObject D where
+  object := coherent.equivalence.forward.obj initial.object
+  to := fun target =>
+    D.comp (coherent.equivalence.counit.hom.app target)
+      (coherent.equivalence.forward.map
+        (initial.to (coherent.equivalence.inverse.obj target)))
+  unique := by
+    intro target morphism
+    let F := coherent.equivalence.forward
+    let G := coherent.equivalence.inverse
+    let unit := coherent.equivalence.unit
+    let counit := coherent.equivalence.counit
+    have sourceUnique :
+        C.comp (G.map morphism) (unit.hom.app initial.object) =
+          initial.to (G.obj target) :=
+      initial.unique _ _
+    have counitInvNaturality :
+        D.comp ((F.comp G).map morphism)
+            (counit.inv.app (F.obj initial.object)) =
+          D.comp (counit.inv.app target) morphism := by
+      simpa [IncFunctor.identity] using counit.inv.naturality morphism
+    calc
+      morphism = D.comp (D.id target) morphism := (D.id_comp morphism).symm
+      _ = D.comp (D.comp (counit.hom.app target) (counit.inv.app target))
+          morphism := by
+            simpa [IncFunctor.identity] using
+              congrArg (fun arrow => D.comp arrow morphism)
+                (counit.inv_app_hom_app target).symm
+      _ = D.comp (counit.hom.app target)
+          (D.comp (counit.inv.app target) morphism) :=
+            (D.assoc _ _ _).symm
+      _ = D.comp (counit.hom.app target)
+          (D.comp ((F.comp G).map morphism)
+            (counit.inv.app (F.obj initial.object))) := by
+              rw [counitInvNaturality]
+      _ = D.comp (counit.hom.app target)
+          (D.comp ((F.comp G).map morphism)
+            (F.map (unit.hom.app initial.object))) := by
+              rw [coherent.counit_inv_forward_eq_map_unit]
+      _ = D.comp (counit.hom.app target)
+          (D.comp (F.map (G.map morphism))
+            (F.map (unit.hom.app initial.object))) := by rfl
+      _ = D.comp (counit.hom.app target)
+          (F.map (C.comp (G.map morphism)
+            (unit.hom.app initial.object))) := by rw [F.map_comp]
+      _ = D.comp (counit.hom.app target)
+          (F.map (initial.to (G.obj target))) := by rw [sourceUnique]
+
+noncomputable def IncFunctorEquivalenceCriterion.mapInitialObject
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F)
+    (initial : IncInitialObject C) : IncInitialObject D :=
+  criterion.toCoherentCategoryEquivalence.mapInitialObject initial
+
+noncomputable def IncFunctorEquivalenceCriterion.mapTerminalObject
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F)
+    (terminal : IncTerminalObject C) : IncTerminalObject D :=
+  criterion.op.toCoherentCategoryEquivalence.mapInitialObject terminal
+
+noncomputable def IncCategoryEquivalence.mapInitialObject
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D)
+    (initial : IncInitialObject C) : IncInitialObject D :=
+  equivalence.forward_criterion.mapInitialObject initial
+
+noncomputable def IncCategoryEquivalence.mapTerminalObject
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D)
+    (terminal : IncTerminalObject C) : IncTerminalObject D :=
+  equivalence.forward_criterion.mapTerminalObject terminal
+
+structure StrongFiniteBicartesianPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) extends StrongBicartesianPreservingFamily F where
+  initial : IncInitialObject C → IncInitialObject D
+  terminal : IncTerminalObject C → IncTerminalObject D
+  initial_object_is_map : ∀ object,
+    (initial object).object = F.obj object.object
+  terminal_object_is_map : ∀ object,
+    (terminal object).object = F.obj object.object
+
+noncomputable def IncFunctorEquivalenceCriterion.strongFiniteBicartesianPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F) :
+    StrongFiniteBicartesianPreservingFamily F where
+  pushouts := IncCoherentCategoryEquivalence.strongPushoutPreservingFamily
+    criterion.toCoherentCategoryEquivalence
+  pullbacks := criterion.strongPullbackPreservingFamily
+  initial := criterion.mapInitialObject
+  terminal := criterion.mapTerminalObject
+  initial_object_is_map := by intro object; rfl
+  terminal_object_is_map := by intro object; rfl
+
+noncomputable def IncCategoryEquivalence.strongFiniteBicartesianPreservingFamily
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    StrongFiniteBicartesianPreservingFamily equivalence.forward :=
+  equivalence.forward_criterion.strongFiniteBicartesianPreservingFamily
+
 def StrongBicartesianPreservingFamily.toBicartesianPreservingFamily
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     {F : IncFunctor C D} (strong : StrongBicartesianPreservingFamily F) :
@@ -4619,6 +4731,12 @@ noncomputable def category_equivalence_preserves_bicartesian_shapes
     (equivalence : IncCategoryEquivalence C D) :
     BicartesianPreservingFamily equivalence.forward :=
   equivalence.bicartesianPreservingFamily
+
+noncomputable def category_equivalence_strongly_preserves_finite_bicartesian_shapes
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    StrongFiniteBicartesianPreservingFamily equivalence.forward :=
+  equivalence.strongFiniteBicartesianPreservingFamily
 
 /- Merkle-ID: foundation.axiomatization.limit_preservation
    Placeholder only for the unbundled `inc_to_set` assignment above. -/
