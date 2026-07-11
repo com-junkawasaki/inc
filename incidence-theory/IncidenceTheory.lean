@@ -2360,6 +2360,49 @@ noncomputable def IncFunctorEquivalenceCriterion.toCategoryEquivalence
   unit := criterion.unit
   counit := criterion.counit
 
+theorem IncFunctorEquivalenceCriterion.left_triangle
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F)
+    (object : CObj) :
+    D.comp (criterion.counit.hom.app (F.obj object))
+        (F.map (criterion.unit.hom.app object)) =
+      D.id (F.obj object) := by
+  change D.comp (criterion.inverseObj_iso (F.obj object)).hom
+      (F.map (criterion.unitComponent object).hom) = D.id (F.obj object)
+  rw [criterion.map_unitComponent_hom]
+  exact (criterion.inverseObj_iso (F.obj object)).hom_inv
+
+theorem IncFunctorEquivalenceCriterion.right_triangle
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F)
+    (object : DObj) :
+    C.comp
+        (criterion.inverseFunctor.map (criterion.counit.hom.app object))
+        (criterion.unit.hom.app (criterion.inverseFunctor.obj object)) =
+      C.id (criterion.inverseFunctor.obj object) := by
+  apply criterion.fullyFaithful.faithful
+  rw [F.map_comp, F.map_id (criterion.inverseFunctor.obj object)]
+  change D.comp
+      (F.map (criterion.inverseMap (criterion.inverseObj_iso object).hom))
+      (F.map (criterion.unitComponent (criterion.inverseObj object)).hom) =
+    D.id (F.obj (criterion.inverseObj object))
+  rw [criterion.inverseMap_spec, criterion.map_unitComponent_hom]
+  let objectIso := criterion.inverseObj_iso object
+  let liftedIso := criterion.inverseObj_iso (F.obj (criterion.inverseObj object))
+  change D.comp
+      (D.comp objectIso.inv (D.comp objectIso.hom liftedIso.hom))
+      liftedIso.inv = D.id (F.obj (criterion.inverseObj object))
+  calc
+    D.comp (D.comp objectIso.inv (D.comp objectIso.hom liftedIso.hom))
+        liftedIso.inv =
+      D.comp objectIso.inv
+        (D.comp objectIso.hom (D.comp liftedIso.hom liftedIso.inv)) := by
+          rw [← D.assoc, ← D.assoc]
+    _ = D.comp objectIso.inv (D.comp objectIso.hom (D.id _)) := by
+      rw [liftedIso.hom_inv]
+    _ = D.comp objectIso.inv objectIso.hom := by rw [D.comp_id]
+    _ = D.id _ := objectIso.inv_hom
+
 theorem incFunctor_equivalenceCriterion_iff_exists_categoryEquivalence
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (F : IncFunctor C D) :
