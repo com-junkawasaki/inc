@@ -6216,6 +6216,43 @@ theorem observationQuotientToBisimulationQuotient_bijective_iff_faithful
         inc idx).mpr faithful,
       observationQuotientToBisimulationQuotient_surjective inc idx⟩
 
+theorem observationQuotientToBisimulationQuotient_kernel
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (left right : LinearObservationQuotient inc idx) :
+    observationQuotientToBisimulationQuotient inc idx left =
+        observationQuotientToBisimulationQuotient inc idx right ↔
+      approxBisim inc
+        ((linearObservationQuotientEquivalence inc idx).inverse left)
+        ((linearObservationQuotientEquivalence inc idx).inverse right) := by
+  refine Quotient.inductionOn₂ left right ?_
+  intro leftRepresentative rightRepresentative
+  change (Quotient.mk (approxBisimSetoid inc) leftRepresentative =
+      Quotient.mk (approxBisimSetoid inc) rightRepresentative) ↔
+    approxBisim inc leftRepresentative rightRepresentative
+  constructor
+  · exact Quotient.exact
+  · intro bisimilar
+    exact @Quotient.sound I (approxBisimSetoid inc)
+      leftRepresentative rightRepresentative bisimilar
+
+theorem distinct_bisimilar_points_witness_observation_map_noninjective
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) {i j : I}
+    (different : i ≠ j) (bisimilar : approxBisim inc i j) :
+    ∃ left right : LinearObservationQuotient inc idx,
+      left ≠ right ∧
+      observationQuotientToBisimulationQuotient inc idx left =
+        observationQuotientToBisimulationQuotient inc idx right := by
+  let left := Quotient.mk (linearObservationalSetoid inc idx) i
+  let right := Quotient.mk (linearObservationalSetoid inc idx) j
+  refine ⟨left, right, ?_, ?_⟩
+  · intro equal
+    apply different
+    exact (linearObservationallyEquivalent_iff_eq inc idx i j).mp
+      (Quotient.exact equal)
+  · exact @Quotient.sound I (approxBisimSetoid inc) i j bisimilar
+
 def observationBisimulationQuotientEquivalence_of_wellFounded_extensional
     {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I) (measure : I → Nat)
