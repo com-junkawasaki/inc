@@ -262,8 +262,9 @@ It currently establishes:
   subtraction and, more generally, under two-term integer linear combinations
   `a*x + b*y` whenever the combined witness factor remains represented.  A
   bounded Bézout certificate packages internal coefficients witnessing
-  `a*x+b*y=1`; every common internal divisor then divides `1`, ruling out any
-  common divisor explicitly certified as non-unit.  This is instantiated by a
+  `a*x+b*y=1`; every common internal divisor then divides `1`.  Internally,
+  dividing `1` is proved equivalent to being exactly `1` or `-1`, so every such
+  common divisor is a unit rather than merely being labeled as one.  This is instantiated by a
   kernel-checked certificate `2·(-1)+3·1=1`, so every represented common divisor
   of `2` and `3` divides `1` whenever its combined witness remains in the window.
   Their relational-composition presentation has exact two- and three-stage

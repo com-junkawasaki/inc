@@ -3288,6 +3288,29 @@ theorem hfRecursiveInteger_zero_divides_iff
   · intro value
     exact ⟨1, oneWithin, by simp [value]⟩
 
+theorem hfRecursiveIntegerDivides_one_iff
+    (bound : Nat) (divisor : Int)
+    (divisorWithin : HFRecursiveIntegerWithin bound divisor)
+    (oneWithin : HFRecursiveIntegerWithin bound 1)
+    (negOneWithin : HFRecursiveIntegerWithin bound (-1)) :
+    HFRecursiveIntegerDivides bound divisor 1 ↔
+      divisor = 1 ∨ divisor = -1 := by
+  rw [hfRecursiveIntegerDivides_iff bound divisor 1 divisorWithin]
+  constructor
+  · rintro ⟨factor, _, value⟩
+    by_cases nonnegative : 0 ≤ divisor
+    · exact Or.inl (Int.eq_one_of_mul_eq_one_right nonnegative value.symm)
+    · apply Or.inr
+      have negNonnegative : 0 ≤ -divisor := by omega
+      have negProduct : (-divisor) * (-factor) = 1 := by
+        rw [Int.neg_mul_neg]
+        exact value.symm
+      have negEqOne := Int.eq_one_of_mul_eq_one_right negNonnegative negProduct
+      omega
+  · rintro (rfl | rfl)
+    · exact ⟨1, oneWithin, by simp⟩
+    · exact ⟨-1, negOneWithin, by decide⟩
+
 theorem hfRecursiveIntegerDivides_trans
     (bound : Nat) (first second third : Int)
     (firstWithin : HFRecursiveIntegerWithin bound first)
@@ -3451,6 +3474,28 @@ theorem hfRecursiveIntegerBezout_common_divisor_divides_one
     divisorWithin dividesLeft dividesRight combinedFactorWithin
   rw [certificate.combination] at dividesCombination
   exact dividesCombination
+
+theorem hfRecursiveIntegerBezout_common_divisor_is_unit
+    (bound : Nat) (left right divisor : Int)
+    (divisorWithin : HFRecursiveIntegerWithin bound divisor)
+    (oneWithin : HFRecursiveIntegerWithin bound 1)
+    (negOneWithin : HFRecursiveIntegerWithin bound (-1))
+    (certificate : HFRecursiveIntegerBezoutCertificate bound left right)
+    (dividesLeft : HFRecursiveIntegerDivides bound divisor left)
+    (dividesRight : HFRecursiveIntegerDivides bound divisor right)
+    (combinedFactorWithin : ∀ leftFactor rightFactor,
+      HFRecursiveIntegerWithin bound leftFactor →
+      HFRecursiveIntegerWithin bound rightFactor →
+      left = divisor * leftFactor → right = divisor * rightFactor →
+      HFRecursiveIntegerWithin bound
+        (leftFactor * certificate.leftCoefficient +
+          rightFactor * certificate.rightCoefficient)) :
+    divisor = 1 ∨ divisor = -1 := by
+  apply (hfRecursiveIntegerDivides_one_iff bound divisor
+    divisorWithin oneWithin negOneWithin).mp
+  exact hfRecursiveIntegerBezout_common_divisor_divides_one bound
+    left right divisor divisorWithin certificate dividesLeft dividesRight
+    combinedFactorWithin
 
 theorem hfRecursiveIntegerBezout_no_nonunit_common_divisor
     (bound : Nat) (left right divisor : Int)
