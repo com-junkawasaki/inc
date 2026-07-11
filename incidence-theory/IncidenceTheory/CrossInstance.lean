@@ -3030,6 +3030,28 @@ structure IncFiberEquiv (source target : Type u) where
   backward_forward : ∀ value, backward (forward value) = value
   forward_backward : ∀ value, forward (backward value) = value
 
+def IncFiberEquiv.ofEq {source target : Type u}
+    (coherence : source = target) : IncFiberEquiv source target := by
+  cases coherence
+  exact
+    { forward := id
+      backward := id
+      backward_forward := fun _ => rfl
+      forward_backward := fun _ => rfl }
+
+def IncFiberEquiv.trans {first second third : Type u}
+    (firstEquivalence : IncFiberEquiv first second)
+    (secondEquivalence : IncFiberEquiv second third) :
+    IncFiberEquiv first third where
+  forward := secondEquivalence.forward ∘ firstEquivalence.forward
+  backward := firstEquivalence.backward ∘ secondEquivalence.backward
+  backward_forward := fun value => by
+    simp only [Function.comp_apply, secondEquivalence.backward_forward,
+      firstEquivalence.backward_forward]
+  forward_backward := fun value => by
+    simp only [Function.comp_apply, firstEquivalence.forward_backward,
+      secondEquivalence.forward_backward]
+
 def IncFiberEquiv.mapEquality
     {source target : Type u} (equivalence : IncFiberEquiv source target)
     {left right : source} (equality : left = right) :
@@ -4698,6 +4720,47 @@ noncomputable def IncDepRawFormationSubstitutionFiberResult.liftSubstitution
   IncDepRawSubstitutionSemanticResult.liftFiber substitutionResult
     domainResult.targetFormationResult domainResult.sourceFormationResult
     domainResult.semanticFiberEquivalence
+
+noncomputable def IncDepRawFormationSubstitutionFiberResult.instantiateFiberEquivalence
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (codomainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := codomainFormation)
+      domainResult.liftSubstitution)
+    (sourceTerm : IncTerm domainResult.sourceFormationResult.semanticType)
+    (targetTerm : IncTerm domainResult.targetFormationResult.semanticType)
+    (termCoherence : domainResult.semanticFiberEquivalence.transport sourceTerm =
+      targetTerm.substitute substitutionResult.semanticSubstitution) :
+    IncTypeInContext.FiberEquiv
+      (IncTypeInContext.instantiateFiber
+        codomainResult.sourceFormationResult.semanticType sourceTerm)
+      ((IncTypeInContext.instantiateFiber
+        codomainResult.targetFormationResult.semanticType targetTerm).reindex
+          substitutionResult.semanticSubstitution) where
+  fiberEquiv := fun assignment =>
+    let codomainEquivalence :=
+      codomainResult.semanticFiberEquivalence.fiberEquiv
+        ⟨assignment, sourceTerm assignment⟩
+    let endpointCoherence :
+        (domainResult.semanticFiberEquivalence.fiberEquiv assignment).forward
+            (sourceTerm assignment) =
+          targetTerm (substitutionResult.semanticSubstitution assignment) :=
+      congrFun termCoherence assignment
+    codomainEquivalence.trans (IncFiberEquiv.ofEq
+      (congrArg
+        (fun value => codomainResult.targetFormationResult.semanticType
+          ⟨substitutionResult.semanticSubstitution assignment, value⟩)
+        endpointCoherence))
 
 structure IncDepRawPiFormationSubstitutionFiberResult
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}

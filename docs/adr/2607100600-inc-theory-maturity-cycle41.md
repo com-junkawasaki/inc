@@ -545,6 +545,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - Sigma第一射影のuniform typing-substitution `.first` constructorを実装した。recursive pair coherenceへ
   `Sigma.fst`を適用し、canonical `sigmaForward`の第一成分がdomain fiber forwardへdefinitionally計算されることから
   domain term coherenceを導出した。第一射影分岐は追加term equationなしでend-to-endに閉じた。
+- `IncFiberEquiv.ofEq`と`.trans`を追加し、`instantiateFiberEquivalence`を証明した。recursive codomain equivalenceを
+  source argumentで評価し、そのtarget endpointをrecursive domain term coherenceに沿ってtransportして合成することで、
+  source/target instantiated semantic family間のfiber equivalenceを構成する。application、dependent pair、Sigma第二射影に
+  共通するsemantic formation bridgeが成立した。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

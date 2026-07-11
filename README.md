@@ -1074,6 +1074,12 @@ It currently establishes:
   `.first` constructor applies `Sigma.fst` to the recursive pair coherence; the
   canonical Sigma forward map computes definitionally on the first component,
   yielding exactly the recursive domain transport equation.
+  Instantiated dependent families now have their own substitution bridge.
+  `instantiateFiberEquivalence` evaluates the recursive codomain equivalence at
+  the source argument, transports its target endpoint along the recursive domain
+  term coherence, and composes the two fiber equivalences.  This is the semantic
+  formation result required by application, dependent pairing, and the second
+  Sigma projection.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
