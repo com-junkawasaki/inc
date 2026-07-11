@@ -4921,6 +4921,30 @@ noncomputable def IncDepRawContextSemanticTree.interpretVariable
       contextResult (tree.interpretLookup lookup).semanticType :=
   (tree.interpretLookup lookup).toTyping
 
+noncomputable def IncDepRawSubstitutionReplacementSemanticResult.identity
+    {context : List IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    (contextTree : IncDepRawContextSemanticTree contextResult) :
+    IncDepRawSubstitutionReplacementSemanticResult
+      (IncDepRawSubstitutionSemanticResult.identity contextResult) where
+  replacement := by
+    intro position type lookup
+    let lookupResult := contextTree.interpretLookup lookup
+    exact ⟨lookupResult.semanticType,
+      { semanticTerm := lookupResult.semanticTerm }⟩
+
+theorem IncDepRawSubstitutionReplacementSemanticResult.identity_term
+    {context : List IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    (contextTree : IncDepRawContextSemanticTree contextResult)
+    {position type} (lookup : IncDepRawLookup context position type) :
+    ((IncDepRawSubstitutionReplacementSemanticResult.identity contextTree).typingResult
+      lookup).semanticTerm =
+      (contextTree.interpretLookup lookup).semanticTerm := by
+  rfl
+
 def IncDepRawContextSemanticTree.interpretUnit
     {context : List IncDepRawType}
     {contextWellFormed : IncDepRawContext.WellFormed context}

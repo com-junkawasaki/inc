@@ -481,6 +481,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   割り当て、accessorに加えてformation-substitution recursionが選ぶsource familyへequality transportする
   `typingResultAligned`を証明した。recursive replacement interpretationの出力形は確定し、残るのはenvironmentの
   identity/lift constructorと最終variable equationである。
+- context semantic treeからidentity replacement environmentを構成した。各lookupをtreeで解釈し、その
+  semantic type/termをraw identity substitutionの`preserves lookup` proofへ割り当てる。`identity_term`により
+  environmentのreplacementがcontext lookup termそのものであることをdefinitionally確認した。残るenvironment
+  constructorはbinder liftのnewest/older二分岐である。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

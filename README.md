@@ -971,6 +971,12 @@ It currently establishes:
   the source family selected by formation-substitution recursion.  This fixes
   the output shape for recursive replacement interpretation; identity/lift
   constructors for the environment and the final variable equation remain.
+  The identity replacement environment is now constructed from a context
+  semantic tree.  Every lookup is interpreted by the tree and its semantic
+  type/term is assigned to the corresponding proof produced by raw identity
+  substitution.  `identity_term` checks definitionally that the environment's
+  replacement is exactly the context lookup term.  The remaining environment
+  constructor is binder lift, split into newest and older lookup cases.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
