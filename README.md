@@ -145,7 +145,16 @@ It currently establishes:
   `KripkeEntails ↔ Derives` for every finite sequent, without any global atom
   enumeration.  Only the genuinely empty atom type remains as a separate
   universe-polymorphic branch (the concrete `Fin 0` language was already
-  complete).
+  complete).  That final branch is now closed too: a generic formula
+  enumeration is constructed from an explicit emptiness eliminator at any
+  universe.  A classical empty/nonempty split yields
+  `kripke_entails_iff_derives_arbitrary_atoms`, proving full propositional
+  Kripke completeness for every lawful decidable-equality atom carrier with no
+  countability or nonemptiness hypothesis.  Every `Incidence` with its existing
+  `DecidableEq` carrier obtains this theorem directly through
+  `Incidence.internalLogic_complete_arbitrary`; countable presentations remain
+  useful for explicit canonical enumeration/countermodel APIs, not for the
+  completeness equivalence itself.
   This is instantiated non-vacuously for both `natIncidence × natIncidence` and
   `natIncidence ⊕ natIncidence`: consistent contexts have Kripke models, and every
   underivable formula has a canonical prime-theory counterworld in each language.

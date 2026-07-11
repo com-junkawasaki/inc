@@ -75,12 +75,15 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   元 sequent の derivation を decode で復元する定理も得た。既存の Kripke map/pullback
   定理で元 validity を翻訳 validity へ移し、非空かつ lawful decidable equality を持つ
   任意 atom carrier（非可算を含む）について `KripkeEntails ↔ Derives` を global coding
-  仮定なしで証明済み。残るのは universe-polymorphic な空 atom 型の分岐のみである
-  （具体的 `Fin 0` 完全性は既に証明済み）。
+  仮定なしで証明済み。さらに任意 universe の空 atom 型に対する formula enumeration
+  と完全性を一般化し、empty/nonempty case split から lawful decidable equality を持つ
+  全 atom carrier に対する単一の無条件完全性定理を証明した。任意 `Incidence` は
+  `internalLogic_complete_arbitrary` を直接持ち、countable presentation は完全性の仮定
+  ではなく explicit enumeration/canonical countermodel API のための追加構造となった。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
-「内部論理の着手」ではなく、非可算 carrier への完全性条件の拡張、Incidence 固有の
-意味論とのさらに強い接続、依存型・圏論の内部再構成、およびより広い数学ライブラリ化
+「内部論理の着手」や carrier 可算性の除去ではなく、Incidence 固有の意味論とのさらに
+強い接続、依存型・圏論の内部再構成、およびより広い数学ライブラリ化
 である。一般 quotient 構成の条件は boundary/glue/guard invariance、no-self-loop、
 glue type preservation として明示された。今後の quotient 課題は、個々の非忠実
 Incidence でこれらの coherence 条件を証明または反証し、成功例の範囲を拡大すること

@@ -5743,6 +5743,99 @@ noncomputable def emptyFormulaEnumeration : FormulaEnumeration (Fin 0) where
   enumerate := emptyFormulaDecode
   exhaustive := fun formula => ⟨emptyFormulaCode formula, emptyFormulaDecode_code formula⟩
 
+noncomputable def emptyAtomFormulaDecode
+    {Atom : Type u} (empty : Atom → False) : Nat → Formula Atom
+  | 0 => .top
+  | code + 1 =>
+    let payload := code / 5
+    match code % 5 with
+    | 0 => .top
+    | 1 => .bot
+    | 2 => .and (emptyAtomFormulaDecode empty (diagonalIndex payload))
+        (emptyAtomFormulaDecode empty (diagonalRemainder payload))
+    | 3 => .or (emptyAtomFormulaDecode empty (diagonalIndex payload))
+        (emptyAtomFormulaDecode empty (diagonalRemainder payload))
+    | _ => .imp (emptyAtomFormulaDecode empty (diagonalIndex payload))
+        (emptyAtomFormulaDecode empty (diagonalRemainder payload))
+termination_by code => code
+
+decreasing_by
+  all_goals
+    apply Nat.lt_succ_of_le
+    apply Nat.le_trans
+    · first | exact diagonalIndex_le_stage _ | exact diagonalRemainder_le_stage _
+    · exact Nat.div_le_self _ _
+
+noncomputable def emptyAtomFormulaCode
+    {Atom : Type u} (empty : Atom → False) : Formula Atom → Nat
+  | .atom atom => False.elim (empty atom)
+  | .top => 1
+  | .bot => 2
+  | .and p q => 5 * diagonalPair (emptyAtomFormulaCode empty p)
+      (emptyAtomFormulaCode empty q) + 3
+  | .or p q => 5 * diagonalPair (emptyAtomFormulaCode empty p)
+      (emptyAtomFormulaCode empty q) + 4
+  | .imp p q => 5 * diagonalPair (emptyAtomFormulaCode empty p)
+      (emptyAtomFormulaCode empty q) + 5
+
+theorem emptyAtomFormulaDecode_code
+    {Atom : Type u} (empty : Atom → False) : ∀ formula : Formula Atom,
+    emptyAtomFormulaDecode empty (emptyAtomFormulaCode empty formula) = formula := by
+  intro formula
+  induction formula with
+  | atom atom => exact False.elim (empty atom)
+  | top => simp [emptyAtomFormulaCode, emptyAtomFormulaDecode]
+  | bot => simp [emptyAtomFormulaCode, emptyAtomFormulaDecode]
+  | and p q ihp ihq =>
+    simp only [emptyAtomFormulaCode, emptyAtomFormulaDecode]
+    rw [show (5 * diagonalPair (emptyAtomFormulaCode empty p) (emptyAtomFormulaCode empty q) + 2) / 5 =
+        diagonalPair (emptyAtomFormulaCode empty p) (emptyAtomFormulaCode empty q) by omega]
+    rw [show (5 * diagonalPair (emptyAtomFormulaCode empty p) (emptyAtomFormulaCode empty q) + 2) % 5 = 2 by omega]
+    rw [diagonalIndex_pair, diagonalRemainder_pair, ihp, ihq]
+  | or p q ihp ihq =>
+    simp only [emptyAtomFormulaCode, emptyAtomFormulaDecode]
+    rw [show (5 * diagonalPair (emptyAtomFormulaCode empty p) (emptyAtomFormulaCode empty q) + 3) / 5 =
+        diagonalPair (emptyAtomFormulaCode empty p) (emptyAtomFormulaCode empty q) by omega]
+    rw [show (5 * diagonalPair (emptyAtomFormulaCode empty p) (emptyAtomFormulaCode empty q) + 3) % 5 = 3 by omega]
+    rw [diagonalIndex_pair, diagonalRemainder_pair, ihp, ihq]
+  | imp p q ihp ihq =>
+    simp only [emptyAtomFormulaCode, emptyAtomFormulaDecode]
+    rw [show (5 * diagonalPair (emptyAtomFormulaCode empty p) (emptyAtomFormulaCode empty q) + 4) / 5 =
+        diagonalPair (emptyAtomFormulaCode empty p) (emptyAtomFormulaCode empty q) by omega]
+    rw [show (5 * diagonalPair (emptyAtomFormulaCode empty p) (emptyAtomFormulaCode empty q) + 4) % 5 = 4 by omega]
+    rw [diagonalIndex_pair, diagonalRemainder_pair, ihp, ihq]
+
+noncomputable def emptyAtomFormulaEnumeration
+    {Atom : Type u} (empty : Atom → False) : FormulaEnumeration Atom where
+  enumerate := emptyAtomFormulaDecode empty
+  exhaustive := fun formula =>
+    ⟨emptyAtomFormulaCode empty formula, emptyAtomFormulaDecode_code empty formula⟩
+
+theorem kripke_entails_iff_derives_of_empty_atoms
+    {Atom : Type u} (empty : Atom → False)
+    (context : List (Formula Atom)) (formula : Formula Atom) :
+    KripkeEntails.{u, u} context formula ↔ Derives context formula :=
+  kripke_entails_iff_derives_of_enumeration
+    (emptyAtomFormulaEnumeration empty) context formula
+
+theorem kripke_entails_iff_derives_arbitrary_atoms
+    {Atom : Type u} [BEq Atom] [LawfulBEq Atom]
+    (context : List (Formula Atom)) (formula : Formula Atom) :
+    KripkeEntails.{u, u} context formula ↔ Derives context formula := by
+  classical
+  by_cases inhabited : Nonempty Atom
+  · letI : Nonempty Atom := inhabited
+    exact kripke_entails_iff_derives_of_nonempty_atoms context formula
+  · exact kripke_entails_iff_derives_of_empty_atoms
+      (fun atom => inhabited ⟨atom⟩) context formula
+
+theorem Incidence.internalLogic_complete_arbitrary
+    {I R T : Type u} [DecidableEq I]
+    (_incidence : Incidence I R T)
+    (context : List (Formula I)) (formula : Formula I) :
+    KripkeEntails.{u, u} context formula ↔ Derives context formula :=
+  kripke_entails_iff_derives_arbitrary_atoms context formula
+
 noncomputable def finFormulaEnumeration : (n : Nat) → FormulaEnumeration (Fin n)
   | 0 => emptyFormulaEnumeration
   | n + 1 => finSuccFormulaEnumeration n
