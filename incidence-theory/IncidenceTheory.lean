@@ -2651,6 +2651,25 @@ theorem IncFunctor.mapObjectIsoClass_mk
     F.mapObjectIsoClass (Quotient.mk _ object) = Quotient.mk _ (F.obj object) :=
   rfl
 
+theorem IncFunctor.identity_mapObjectIsoClass
+    {Obj : Type u} (C : IncCategory Obj) :
+    (IncFunctor.identity C).mapObjectIsoClass = id := by
+  funext objectClass
+  refine Quotient.inductionOn objectClass ?_
+  intro object
+  rfl
+
+theorem IncFunctor.comp_mapObjectIsoClass
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    (G : IncFunctor D E) (F : IncFunctor C D) :
+    (G.comp F).mapObjectIsoClass =
+      fun objectClass => G.mapObjectIsoClass (F.mapObjectIsoClass objectClass) := by
+  funext objectClass
+  refine Quotient.inductionOn objectClass ?_
+  intro object
+  rfl
+
 theorem IncFunctorFullyFaithful.mapObjectIsoClass_injective
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     {F : IncFunctor C D} (fullyFaithful : IncFunctorFullyFaithful F) :
@@ -2738,6 +2757,31 @@ structure IncTypeEquivalence (A B : Type u) where
   inverse_forward : ∀ value, inverse (forward value) = value
   forward_inverse : ∀ value, forward (inverse value) = value
 
+def IncTypeEquivalence.refl (A : Type u) : IncTypeEquivalence A A where
+  forward := id
+  inverse := id
+  inverse_forward := by intro value; rfl
+  forward_inverse := by intro value; rfl
+
+def IncTypeEquivalence.symm {A B : Type u}
+    (equivalence : IncTypeEquivalence A B) : IncTypeEquivalence B A where
+  forward := equivalence.inverse
+  inverse := equivalence.forward
+  inverse_forward := equivalence.forward_inverse
+  forward_inverse := equivalence.inverse_forward
+
+def IncTypeEquivalence.trans {A B C : Type u}
+    (second : IncTypeEquivalence B C) (first : IncTypeEquivalence A B) :
+    IncTypeEquivalence A C where
+  forward := fun value => second.forward (first.forward value)
+  inverse := fun value => first.inverse (second.inverse value)
+  inverse_forward := by
+    intro value
+    rw [second.inverse_forward, first.inverse_forward]
+  forward_inverse := by
+    intro value
+    rw [first.forward_inverse, second.forward_inverse]
+
 def IncCategoryEquivalence.objectIsoClassEquivalence
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (equivalence : IncCategoryEquivalence C D) :
@@ -2746,6 +2790,18 @@ def IncCategoryEquivalence.objectIsoClassEquivalence
   inverse := equivalence.inverse.mapObjectIsoClass
   inverse_forward := equivalence.inverse_forward_mapObjectIsoClass
   forward_inverse := equivalence.forward_inverse_mapObjectIsoClass
+
+theorem IncCategoryEquivalence.objectIsoClassEquivalence_forward
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    equivalence.objectIsoClassEquivalence.forward =
+      equivalence.forward.mapObjectIsoClass := rfl
+
+theorem IncCategoryEquivalence.objectIsoClassEquivalence_inverse
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    equivalence.objectIsoClassEquivalence.inverse =
+      equivalence.inverse.mapObjectIsoClass := rfl
 
 theorem MorphismIso.trans_hom {Obj : Type u} {C : IncCategory Obj}
     {source middle target : Obj} (first : MorphismIso C source middle)
