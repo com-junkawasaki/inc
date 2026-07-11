@@ -2416,6 +2416,67 @@ structure IncCoherentCategoryEquivalence
         (equivalence.unit.hom.app (equivalence.inverse.obj object)) =
       C.id (equivalence.inverse.obj object)
 
+theorem IncCoherentCategoryEquivalence.counit_inv_forward_eq_map_unit
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D) (object : CObj) :
+    coherent.equivalence.counit.inv.app
+        (coherent.equivalence.forward.obj object) =
+      coherent.equivalence.forward.map
+        (coherent.equivalence.unit.hom.app object) := by
+  let equivalence := coherent.equivalence
+  calc
+    equivalence.counit.inv.app (equivalence.forward.obj object) =
+      D.comp (equivalence.counit.inv.app (equivalence.forward.obj object))
+        (D.id (equivalence.forward.obj object)) :=
+          (D.comp_id _).symm
+    _ = D.comp (equivalence.counit.inv.app (equivalence.forward.obj object))
+        (D.comp (equivalence.counit.hom.app (equivalence.forward.obj object))
+          (equivalence.forward.map (equivalence.unit.hom.app object))) := by
+            rw [coherent.left_triangle object]
+    _ = D.comp
+        (D.comp (equivalence.counit.inv.app (equivalence.forward.obj object))
+          (equivalence.counit.hom.app (equivalence.forward.obj object)))
+        (equivalence.forward.map (equivalence.unit.hom.app object)) :=
+          D.assoc _ _ _
+    _ = D.comp
+        (D.id ((equivalence.forward.comp equivalence.inverse).obj
+          (equivalence.forward.obj object)))
+        (equivalence.forward.map (equivalence.unit.hom.app object)) := by
+          rw [equivalence.counit.hom_app_inv_app]
+    _ = equivalence.forward.map (equivalence.unit.hom.app object) :=
+      D.id_comp _
+
+theorem IncCoherentCategoryEquivalence.unit_inv_inverse_eq_map_counit
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D) (object : DObj) :
+    coherent.equivalence.unit.inv.app
+        (coherent.equivalence.inverse.obj object) =
+      coherent.equivalence.inverse.map
+        (coherent.equivalence.counit.hom.app object) := by
+  let equivalence := coherent.equivalence
+  calc
+    equivalence.unit.inv.app (equivalence.inverse.obj object) =
+      C.comp (C.id (equivalence.inverse.obj object))
+        (equivalence.unit.inv.app (equivalence.inverse.obj object)) :=
+          (C.id_comp _).symm
+    _ = C.comp
+        (C.comp
+          (equivalence.inverse.map (equivalence.counit.hom.app object))
+          (equivalence.unit.hom.app (equivalence.inverse.obj object)))
+        (equivalence.unit.inv.app (equivalence.inverse.obj object)) := by
+          rw [coherent.right_triangle object]
+    _ = C.comp
+        (equivalence.inverse.map (equivalence.counit.hom.app object))
+        (C.comp (equivalence.unit.hom.app (equivalence.inverse.obj object))
+          (equivalence.unit.inv.app (equivalence.inverse.obj object))) :=
+            (C.assoc _ _ _).symm
+    _ = C.comp (equivalence.inverse.map (equivalence.counit.hom.app object))
+        (C.id ((equivalence.inverse.comp equivalence.forward).obj
+          (equivalence.inverse.obj object))) := by
+            rw [equivalence.unit.inv_app_hom_app]
+    _ = equivalence.inverse.map (equivalence.counit.hom.app object) :=
+      C.comp_id _
+
 noncomputable def IncFunctorEquivalenceCriterion.toCoherentCategoryEquivalence
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     {F : IncFunctor C D} (criterion : IncFunctorEquivalenceCriterion F) :
