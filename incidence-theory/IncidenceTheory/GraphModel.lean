@@ -1278,13 +1278,47 @@ theorem hfNatIncidenceQuotientEncode_eq_iff (m n : Nat) :
   · intro equal
     rw [equal]
 
+theorem hfNatIncidenceQuotient_zero_ne_succ (n : Nat) :
+    hfNatIncidenceQuotientEncode 0 ≠ hfNatIncidenceQuotientEncode (n + 1) := by
+  intro equal
+  have indexEqual : 0 = n + 1 := hfNatIncidenceQuotientEncode_injective equal
+  cases indexEqual
+
+theorem hfNatIncidenceQuotient_succ_injective {m n : Nat} :
+    hfNatIncidenceQuotientEncode (m + 1) =
+      hfNatIncidenceQuotientEncode (n + 1) → m = n := by
+  intro equal
+  have indexEqual : m + 1 = n + 1 :=
+    hfNatIncidenceQuotientEncode_injective equal
+  exact Nat.add_right_cancel indexEqual
+
+theorem hfNatIncidenceQuotient_induction
+    (predicate : IncidenceQuotient hfIncidence → Prop)
+    (zero : predicate (hfNatIncidenceQuotientEncode 0))
+    (successor : ∀ n, predicate (hfNatIncidenceQuotientEncode n) →
+      predicate (hfNatIncidenceQuotientEncode (n + 1))) :
+    ∀ n, predicate (hfNatIncidenceQuotientEncode n) := by
+  intro n
+  induction n with
+  | zero => exact zero
+  | succ n ih => exact successor n ih
+
 structure HFNatIncidenceQuotientEmbedding where
   encode : Nat → IncidenceQuotient hfIncidence
   eq_iff : ∀ m n, encode m = encode n ↔ m = n
+  zero_ne_succ : ∀ n, encode 0 ≠ encode (n + 1)
+  succ_injective : ∀ {m n}, encode (m + 1) = encode (n + 1) → m = n
+  induction : ∀ predicate : IncidenceQuotient hfIncidence → Prop,
+    predicate (encode 0) →
+    (∀ n, predicate (encode n) → predicate (encode (n + 1))) →
+    ∀ n, predicate (encode n)
 
 def hfNatIncidenceQuotientEmbedding : HFNatIncidenceQuotientEmbedding where
   encode := hfNatIncidenceQuotientEncode
   eq_iff := hfNatIncidenceQuotientEncode_eq_iff
+  zero_ne_succ := hfNatIncidenceQuotient_zero_ne_succ
+  succ_injective := hfNatIncidenceQuotient_succ_injective
+  induction := hfNatIncidenceQuotient_induction
 
 /- Graph with nodes and edges as incidences. We take I as a sum of Node | Edge. -/
 inductive GId where | node (n : Nat) | edge (e : Nat)
