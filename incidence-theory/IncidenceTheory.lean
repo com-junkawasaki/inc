@@ -7089,6 +7089,30 @@ abbrev NonNullaryIncidences
     {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :=
   { i : I // inc.boundary i ≠ [] }
 
+noncomputable def boundaryStrataEquivalence
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    IncTypeEquivalence I
+      (Sum (NullaryIncidences inc) (NonNullaryIncidences inc)) := by
+  classical
+  exact {
+    forward := fun i =>
+      if nullary : inc.boundary i = [] then Sum.inl ⟨i, nullary⟩
+      else Sum.inr ⟨i, nullary⟩
+    inverse := fun value =>
+      match value with
+      | Sum.inl nullary => nullary.val
+      | Sum.inr nonNullary => nonNullary.val
+    inverse_forward := by
+      intro i
+      by_cases nullary : inc.boundary i = []
+      · simp [nullary]
+      · simp [nullary]
+    forward_inverse := by
+      intro value
+      cases value with
+      | inl nullary => simp [nullary.property]
+      | inr nonNullary => simp [nonNullary.property] }
+
 def BoundaryShapeEquivalence.nullaryEquivalence
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
     {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
@@ -7131,6 +7155,52 @@ def BoundaryShapeEquivalence.nonNullaryEquivalence
     intro value
     apply Subtype.eq
     exact equivalence.hom_inv value.val
+
+def BoundaryShapeEquivalence.strataEquivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    IncTypeEquivalence
+      (Sum (NullaryIncidences source) (NonNullaryIncidences source))
+      (Sum (NullaryIncidences target) (NonNullaryIncidences target)) where
+  forward := fun value =>
+    match value with
+    | Sum.inl nullary => Sum.inl (equivalence.nullaryEquivalence.forward nullary)
+    | Sum.inr nonNullary =>
+        Sum.inr (equivalence.nonNullaryEquivalence.forward nonNullary)
+  inverse := fun value =>
+    match value with
+    | Sum.inl nullary => Sum.inl (equivalence.nullaryEquivalence.inverse nullary)
+    | Sum.inr nonNullary =>
+        Sum.inr (equivalence.nonNullaryEquivalence.inverse nonNullary)
+  inverse_forward := by
+    intro value
+    cases value with
+    | inl nullary =>
+        change Sum.inl
+          (equivalence.nullaryEquivalence.inverse
+            (equivalence.nullaryEquivalence.forward nullary)) = Sum.inl nullary
+        rw [equivalence.nullaryEquivalence.inverse_forward]
+    | inr nonNullary =>
+        change Sum.inr
+          (equivalence.nonNullaryEquivalence.inverse
+            (equivalence.nonNullaryEquivalence.forward nonNullary)) =
+          Sum.inr nonNullary
+        rw [equivalence.nonNullaryEquivalence.inverse_forward]
+  forward_inverse := by
+    intro value
+    cases value with
+    | inl nullary =>
+        change Sum.inl
+          (equivalence.nullaryEquivalence.forward
+            (equivalence.nullaryEquivalence.inverse nullary)) = Sum.inl nullary
+        rw [equivalence.nullaryEquivalence.forward_inverse]
+    | inr nonNullary =>
+        change Sum.inr
+          (equivalence.nonNullaryEquivalence.forward
+            (equivalence.nonNullaryEquivalence.inverse nonNullary)) =
+          Sum.inr nonNullary
+        rw [equivalence.nonNullaryEquivalence.forward_inverse]
 
 /- The Inc-to-Set assignment above is not yet packaged as an `IncFunctor`, so
    a theorem specifically about that assignment still requires a source
