@@ -917,6 +917,15 @@ It currently establishes:
   producing the canonical renamed application judgment.  Six of eight typing
   branches are now closed; dependent pairing and second projection remain and
   use the same dependent-package technique in the opposite rewrite directions.
+  Those final two branches are now closed.  Dependent pairing transports the
+  renamed second component and its readiness witness forward along
+  `instantiate_rename` before constructing the pair.  Second projection packs
+  the projected derivation and readiness, simplifies term renaming under
+  `first`, and transports the package backward to the canonical instantiated
+  result type.  Therefore all eight typing-readiness constructors and all five
+  formation-readiness constructors now have proof-index-independent rename
+  combinators.  What remains is assembling these combinators into the total
+  mutual recursive dispatcher and then connecting it to lookup substitution.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

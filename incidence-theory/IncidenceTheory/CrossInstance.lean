@@ -2183,6 +2183,71 @@ noncomputable def IncDepRawTypingRenamedReadyResult.apply
   rw [← IncDepRawType.instantiate_rename] at packaged
   exact ⟨packaged.1, packaged.2⟩
 
+noncomputable def IncDepRawTypingRenamedReadyResult.pair
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {first second : IncDepRawTerm}
+    {firstTyping : IncDepRawHasType source first domain}
+    {secondTyping : IncDepRawHasType source second (codomain.instantiate first)}
+    {domainFormation : IncDepRawWellFormed source domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: source) codomain}
+    {domainReady : IncDepRawFormationSemanticReady domainFormation}
+    {codomainReady : IncDepRawFormationSemanticReady codomainFormation}
+    {firstReady : IncDepRawTypingSemanticReady firstTyping}
+    {secondReady : IncDepRawTypingSemanticReady secondTyping}
+    (renameMap : IncDepRawRenaming source target)
+    (domainResult : IncDepRawFormationRenamedReadyResult domainReady renameMap)
+    (codomainResult : IncDepRawFormationRenamedReadyResult codomainReady
+      (renameMap.lift domain))
+    (firstResult : IncDepRawTypingRenamedReadyResult firstReady renameMap)
+    (secondResult : IncDepRawTypingRenamedReadyResult secondReady renameMap) :
+    IncDepRawTypingRenamedReadyResult
+      (IncDepRawTypingSemanticReady.pairRule domainReady codomainReady
+        firstReady secondReady) renameMap := by
+  let packagedSecond : Sigma fun typing : IncDepRawHasType target
+      (second.rename renameMap.index)
+      ((codomain.instantiate first).rename renameMap.index) =>
+      IncDepRawTypingSemanticReady typing :=
+    ⟨secondResult.renamedTyping, secondResult.renamedReady⟩
+  rw [IncDepRawType.instantiate_rename] at packagedSecond
+  let renamedTyping := IncDepRawHasType.pairRule firstResult.renamedTyping
+    packagedSecond.1
+  let renamedReady := IncDepRawTypingSemanticReady.pairRule
+    domainResult.renamedReady codomainResult.renamedReady
+    firstResult.renamedReady packagedSecond.2
+  exact ⟨renamedTyping, renamedReady⟩
+
+noncomputable def IncDepRawTypingRenamedReadyResult.second
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {pairTyping : IncDepRawHasType source pair (.sigma domain codomain)}
+    {domainFormation : IncDepRawWellFormed source domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: source) codomain}
+    {domainReady : IncDepRawFormationSemanticReady domainFormation}
+    {codomainReady : IncDepRawFormationSemanticReady codomainFormation}
+    {pairReady : IncDepRawTypingSemanticReady pairTyping}
+    (renameMap : IncDepRawRenaming source target)
+    (domainResult : IncDepRawFormationRenamedReadyResult domainReady renameMap)
+    (codomainResult : IncDepRawFormationRenamedReadyResult codomainReady
+      (renameMap.lift domain))
+    (pairResult : IncDepRawTypingRenamedReadyResult pairReady renameMap) :
+    IncDepRawTypingRenamedReadyResult
+      (IncDepRawTypingSemanticReady.secondRule domainReady codomainReady pairReady)
+      renameMap := by
+  let renamedTyping := IncDepRawHasType.secondRule pairResult.renamedTyping
+  let packaged : Sigma fun typing : IncDepRawHasType target
+      (.second (pair.rename renameMap.index))
+      ((codomain.rename (IncDepRawTerm.liftRename renameMap.index)).instantiate
+        (.first (pair.rename renameMap.index))) =>
+      IncDepRawTypingSemanticReady typing :=
+    ⟨renamedTyping, IncDepRawTypingSemanticReady.secondRule
+      domainResult.renamedReady codomainResult.renamedReady
+      pairResult.renamedReady⟩
+  have instantiation := IncDepRawType.instantiate_rename
+    codomain (IncDepRawTerm.first pair) renameMap.index
+  simp only [IncDepRawTerm.rename] at instantiation
+  rw [← instantiation] at packaged
+  exact ⟨packaged.1, packaged.2⟩
+
 noncomputable def IncDepRawTypingSemanticReady.toDeeplyWellFormed
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} {typing : IncDepRawHasType context term type}
