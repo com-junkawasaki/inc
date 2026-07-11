@@ -1070,6 +1070,10 @@ It currently establishes:
   equality of dependent functions.  The uniform `.lambda` constructor combines
   recursive domain, codomain, and body results with the Pi round-trip laws and
   derives the final substituted-lambda coherence without an extra term equation.
+  The first Sigma projection substitution branch is also closed.  Its uniform
+  `.first` constructor applies `Sigma.fst` to the recursive pair coherence; the
+  canonical Sigma forward map computes definitionally on the first component,
+  yielding exactly the recursive domain transport equation.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

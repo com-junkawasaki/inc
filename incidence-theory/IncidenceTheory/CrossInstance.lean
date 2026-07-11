@@ -6118,6 +6118,50 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.lambda
       (fun sourceValue => congrFun bodyResult.semanticTerm_coherence
         ⟨assignment, sourceValue⟩)
 
+noncomputable def IncDepRawTypingSubstitutionFiberResult.first
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {pairTyping : IncDepRawHasType target pair (.sigma domain codomain)}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (codomainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := codomainFormation)
+      domainResult.liftSubstitution)
+    (backward_forward : ∀ assignment value,
+      (IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
+        domainResult codomainResult assignment).sigmaBackward
+        ((IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
+          domainResult codomainResult assignment).sigmaForward value) = value)
+    (forward_backward : ∀ assignment value,
+      (IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
+        domainResult codomainResult assignment).sigmaForward
+        ((IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
+          domainResult codomainResult assignment).sigmaBackward value) = value)
+    (pairResult : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := pairTyping)
+      (IncDepRawSigmaFormationSubstitutionFiberResult.ofCodomainCoherence
+        domainResult codomainResult backward_forward forward_backward).toFormationFiberResult) :
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := IncDepRawHasType.firstRule pairTyping) domainResult where
+  targetTermResult := IncDepRawTypingSemanticResult.first
+    pairResult.targetTermResult
+  sourceTermResult := IncDepRawTypingSemanticResult.first
+    pairResult.sourceTermResult
+  semanticTerm_coherence := by
+    funext assignment
+    have pairCoherence := congrFun pairResult.semanticTerm_coherence assignment
+    have firstCoherence := congrArg Sigma.fst pairCoherence
+    exact firstCoherence
+
 def IncDepRawTypingFormationSemanticResult.unit
     {context : List IncDepRawType}
     {contextWellFormed : IncDepRawContext.WellFormed context}

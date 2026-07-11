@@ -542,6 +542,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   liftし、uniform typing-substitution `.lambda` constructorを実装した。recursive domain/codomain/body resultsとPiの
   round-trip lawsからtarget/source lambda interpretationおよび最終term coherenceをsorry-freeで構成し、lambda分岐を
   end-to-endで閉じた。
+- Sigma第一射影のuniform typing-substitution `.first` constructorを実装した。recursive pair coherenceへ
+  `Sigma.fst`を適用し、canonical `sigmaForward`の第一成分がdomain fiber forwardへdefinitionally計算されることから
+  domain term coherenceを導出した。第一射影分岐は追加term equationなしでend-to-endに閉じた。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
