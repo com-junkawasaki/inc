@@ -522,6 +522,8 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `IncDepRawSigmaFormationSubstitutionFiberResult`へrecursive domain/codomain interpretationとfiberwise coherenceを
   統合した。`sigmaFiberEquivalence`と`toFormationFiberResult`によりSigma formation constructorもuniform
   formation-substitution fiber interfaceまでsorry-freeで閉じた。
+- base/unit leafにも`IncDepRawFormationSubstitutionFiberResult.base`/`.unit`を追加し、全5 formation shapeが
+  uniform fiber-result constructorを持つ状態に揃えた。次の残件はこれらを再帰的に選ぶtotal dispatcherである。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

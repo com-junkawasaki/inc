@@ -1039,6 +1039,9 @@ It currently establishes:
   `IncDepRawSigmaFormationSubstitutionFiberResult` combines it with recursive
   domain and codomain interpretations.  Its `toFormationFiberResult` closes the
   Sigma formation constructor under the same uniform substitution interface.
+  Direct `IncDepRawFormationSubstitutionFiberResult.base` and `.unit`
+  constructors now put the two leaf cases on that interface as well, so all five
+  formation shapes have a checked uniform-result constructor.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

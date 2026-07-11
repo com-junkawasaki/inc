@@ -4513,6 +4513,36 @@ def IncDepRawFormationSubstitutionSemanticResult.unit
   sourceFormationResult := IncDepRawFormationSemanticResult.unit sourceResult
   semanticType_coherence := rfl
 
+def IncDepRawFormationSubstitutionFiberResult.base
+    {source target : List IncDepRawType} {index : Nat}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    (baseModel : Nat → Type u) :
+    IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := IncDepRawWellFormed.base (index := index))
+      substitutionResult :=
+  (IncDepRawFormationSubstitutionSemanticResult.base
+    substitutionResult baseModel).toFiberResult
+
+def IncDepRawFormationSubstitutionFiberResult.unit
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) :
+    IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := IncDepRawWellFormed.unit) substitutionResult :=
+  (IncDepRawFormationSubstitutionSemanticResult.unit
+    substitutionResult).toFiberResult
+
 structure IncDepRawPiFormationSubstitutionFiberResult
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
     {substitution : IncDepRawSubstitution source target}
