@@ -256,6 +256,24 @@ theorem CoherentQuotientLogicalRetract.classifier_injective
   have h := congrArg retract.retraction hclassify
   simpa only [retract.left_inverse] using h
 
+theorem CoherentQuotientLogicalRetract.logicalMap_leftInverse
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} {quotient : CoherentQuotient (Q := Q) source}
+    (retract : CoherentQuotientLogicalRetract quotient)
+    (formula : Formula.LogicalEquivalenceClass I) :
+    Formula.logicalMap retract.retraction (quotient.logicalMap formula) = formula :=
+  Formula.logicalMap_leftInverse quotient.classification.classify
+    retract.retraction retract.left_inverse formula
+
+theorem CoherentQuotient.logicalMap_injective
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
+    (retract : CoherentQuotientLogicalRetract quotient) :
+    ∀ ⦃left right : Formula.LogicalEquivalenceClass I⦄,
+      quotient.logicalMap left = quotient.logicalMap right → left = right :=
+  Formula.logicalMap_injective_of_leftInverse quotient.classification.classify
+    retract.retraction retract.left_inverse
+
 theorem CoherentQuotientLogicalRetract.source_bisim_faithful
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
     {source : CoherentIncidence I R T} {quotient : CoherentQuotient (Q := Q) source}

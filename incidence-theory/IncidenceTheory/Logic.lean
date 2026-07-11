@@ -914,6 +914,52 @@ theorem Formula.logicalMap_neg {Atom Atom' : Type u} (f : Atom → Atom')
   unfold Formula.logicalNeg
   rw [Formula.logicalMap_imp, Formula.logicalMap_bottom]
 
+theorem Formula.logicalMap_id {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalMap id formula = formula := by
+  refine Quotient.inductionOn formula ?_
+  intro formula
+  change Quotient.mk (Formula.derivablyEquivalentSetoid Atom) (formula.map id) =
+    Quotient.mk (Formula.derivablyEquivalentSetoid Atom) formula
+  rw [Formula.map_id]
+
+theorem Formula.logicalMap_comp {Atom Atom' Atom'' : Type u}
+    (g : Atom' → Atom'') (f : Atom → Atom')
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalMap g (Formula.logicalMap f formula) =
+      Formula.logicalMap (g ∘ f) formula := by
+  refine Quotient.inductionOn formula ?_
+  intro formula
+  change Quotient.mk (Formula.derivablyEquivalentSetoid Atom'')
+      ((formula.map f).map g) =
+    Quotient.mk (Formula.derivablyEquivalentSetoid Atom'') (formula.map (g ∘ f))
+  rw [Formula.map_comp]
+
+theorem Formula.logicalMap_leftInverse {Atom Atom' : Type u}
+    (f : Atom → Atom') (g : Atom' → Atom)
+    (hgf : ∀ atom, g (f atom) = atom)
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalMap g (Formula.logicalMap f formula) = formula := by
+  rw [Formula.logicalMap_comp]
+  refine Quotient.inductionOn formula ?_
+  intro formula
+  change Quotient.mk (Formula.derivablyEquivalentSetoid Atom)
+      (formula.map (g ∘ f)) =
+    Quotient.mk (Formula.derivablyEquivalentSetoid Atom) formula
+  have hmap : formula.map (g ∘ f) = formula := by
+    rw [← Formula.map_comp g f]
+    exact Formula.map_leftInverse f g hgf formula
+  rw [hmap]
+
+theorem Formula.logicalMap_injective_of_leftInverse {Atom Atom' : Type u}
+    (f : Atom → Atom') (g : Atom' → Atom)
+    (hgf : ∀ atom, g (f atom) = atom) :
+    ∀ ⦃left right : Formula.LogicalEquivalenceClass Atom⦄,
+      Formula.logicalMap f left = Formula.logicalMap f right → left = right := by
+  intro left right equal
+  have mappedEqual := congrArg (Formula.logicalMap g) equal
+  simpa only [Formula.logicalMap_leftInverse f g hgf] using mappedEqual
+
 def Formula.LogicalEntails {Atom : Type u}
     (left right : Formula.LogicalEquivalenceClass Atom) : Prop :=
   Formula.logicalImp left right = Formula.logicalTop
