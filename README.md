@@ -249,7 +249,9 @@ It currently establishes:
   asymmetry, additive preservation/reflection, and trichotomy are all checked.
   Negation reverses strict order, while multiplication by a factor certified
   internally as strictly positive preserves it, again with explicit bounds on
-  both products.
+  both products.  As a nontrivial arithmetic application, every internally
+  represented square is nonnegative, and a fully checked graph computation
+  proves that `x*x + y*y = 0` forces both encoded integers `x` and `y` to be zero.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.

@@ -3166,6 +3166,73 @@ theorem hfRecursiveIntegerMultiplicationGraph_eq_zero_iff
     apply congrArg hfRecursiveInteger
     exact (Int.mul_eq_zero.mpr zeroFactor).symm
 
+theorem integer_mul_self_nonnegative (integer : Int) :
+    0 ≤ integer * integer := by
+  by_cases nonnegative : 0 ≤ integer
+  · exact Int.mul_nonneg nonnegative nonnegative
+  · have nonpositive : integer ≤ 0 := by omega
+    exact Int.mul_nonneg_of_nonpos_of_nonpos nonpositive nonpositive
+
+theorem hfRecursiveIntegerOrderGraph_square_nonnegative
+    (bound : Nat) (integer : Int)
+    (zeroWithin : HFRecursiveIntegerWithin bound 0)
+    (squareWithin : HFRecursiveIntegerWithin bound (integer * integer)) :
+    HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger 0)
+          (hfRecursiveInteger (integer * integer)))
+        (hfRecursiveInteger 1))
+      (hfRecursiveIntegerOrderGraph bound) := by
+  apply (hfRecursiveIntegerOrderGraph_holds_iff bound
+    0 (integer * integer) zeroWithin squareWithin).mpr
+  exact integer_mul_self_nonnegative integer
+
+theorem hfRecursiveInteger_sum_of_squares_eq_zero
+    (bound : Nat) (left right : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (rightWithin : HFRecursiveIntegerWithin bound right)
+    (leftSquareWithin : HFRecursiveIntegerWithin bound (left * left))
+    (rightSquareWithin : HFRecursiveIntegerWithin bound (right * right))
+    (leftSquare : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger left) (hfRecursiveInteger left))
+        (hfRecursiveInteger (left * left)))
+      (hfRecursiveIntegerMultiplicationGraph bound))
+    (rightSquare : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger right) (hfRecursiveInteger right))
+        (hfRecursiveInteger (right * right)))
+      (hfRecursiveIntegerMultiplicationGraph bound))
+    (sumZero : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger (left * left))
+          (hfRecursiveInteger (right * right)))
+        (hfRecursiveInteger 0))
+      (hfRecursiveIntegerAdditionGraph bound)) :
+    left = 0 ∧ right = 0 := by
+  have leftValue := (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+    bound left left leftWithin leftWithin _).mp leftSquare
+  have rightValue := (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+    bound right right rightWithin rightWithin _).mp rightSquare
+  have sumValue := (hfRecursiveIntegerAdditionGraph_on_integers_iff
+    bound (left * left) (right * right) leftSquareWithin rightSquareWithin _).mp sumZero
+  have leftIndex : left * left = left * left :=
+    hfRecursiveInteger_injective leftValue
+  have rightIndex : right * right = right * right :=
+    hfRecursiveInteger_injective rightValue
+  have sumIndex : left * left + right * right = 0 :=
+    hfRecursiveInteger_injective sumValue.symm
+  have leftSquareZero : left * left = 0 := by
+    have leftNonnegative := integer_mul_self_nonnegative left
+    have rightNonnegative := integer_mul_self_nonnegative right
+    omega
+  have rightSquareZero : right * right = 0 := by
+    have leftNonnegative := integer_mul_self_nonnegative left
+    have rightNonnegative := integer_mul_self_nonnegative right
+    omega
+  exact ⟨(Int.mul_eq_zero.mp leftSquareZero).elim id id,
+    (Int.mul_eq_zero.mp rightSquareZero).elim id id⟩
+
 /- The graph of the identity function on the internally represented finite
    ordinal `n`. -/
 def hfRecursiveNatIdentityGraph : Nat → HFRecursiveSet
