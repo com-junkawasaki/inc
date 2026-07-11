@@ -237,6 +237,10 @@ It currently establishes:
   bounded characteristic graph `⟨x,y⟩ ↦ 1/0`; application evaluates to `1`
   exactly when `x≤y`.  The graph is functional and total on its window, and
   reflexivity, transitivity, and antisymmetry are proved from graph applications.
+  Order is compatible with the internal arithmetic: adding a common offset
+  preserves it, negation reverses it, and multiplication by an internally
+  certified nonnegative factor preserves it, subject only to the explicit
+  finite-window hypotheses for the resulting values.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.

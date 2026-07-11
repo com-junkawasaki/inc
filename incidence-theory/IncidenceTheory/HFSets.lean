@@ -2376,6 +2376,79 @@ theorem hfRecursiveIntegerOrderGraph_antisymm
     ((hfRecursiveIntegerOrderGraph_holds_iff
       bound right left rightWithin leftWithin).mp rightLeft)
 
+theorem hfRecursiveIntegerOrderGraph_add_right
+    (bound : Nat) (left right offset : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (rightWithin : HFRecursiveIntegerWithin bound right)
+    (sumLeftWithin : HFRecursiveIntegerWithin bound (left + offset))
+    (sumRightWithin : HFRecursiveIntegerWithin bound (right + offset)) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger left) (hfRecursiveInteger right))
+          (hfRecursiveInteger 1)) (hfRecursiveIntegerOrderGraph bound) →
+      HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger (left + offset))
+            (hfRecursiveInteger (right + offset)))
+          (hfRecursiveInteger 1)) (hfRecursiveIntegerOrderGraph bound) := by
+  intro ordered
+  apply (hfRecursiveIntegerOrderGraph_holds_iff bound
+    (left + offset) (right + offset) sumLeftWithin sumRightWithin).mpr
+  exact Int.add_le_add_right
+    ((hfRecursiveIntegerOrderGraph_holds_iff
+      bound left right leftWithin rightWithin).mp ordered) offset
+
+theorem hfRecursiveIntegerOrderGraph_neg_reverses
+    (bound : Nat) (left right : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (rightWithin : HFRecursiveIntegerWithin bound right)
+    (negLeftWithin : HFRecursiveIntegerWithin bound (-left))
+    (negRightWithin : HFRecursiveIntegerWithin bound (-right)) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger left) (hfRecursiveInteger right))
+          (hfRecursiveInteger 1)) (hfRecursiveIntegerOrderGraph bound) →
+      HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger (-right))
+            (hfRecursiveInteger (-left)))
+          (hfRecursiveInteger 1)) (hfRecursiveIntegerOrderGraph bound) := by
+  intro ordered
+  apply (hfRecursiveIntegerOrderGraph_holds_iff bound
+    (-right) (-left) negRightWithin negLeftWithin).mpr
+  exact Int.neg_le_neg
+    ((hfRecursiveIntegerOrderGraph_holds_iff
+      bound left right leftWithin rightWithin).mp ordered)
+
+theorem hfRecursiveIntegerOrderGraph_mul_nonnegative_right
+    (bound : Nat) (left right factor : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (rightWithin : HFRecursiveIntegerWithin bound right)
+    (zeroWithin : HFRecursiveIntegerWithin bound 0)
+    (factorWithin : HFRecursiveIntegerWithin bound factor)
+    (leftProductWithin : HFRecursiveIntegerWithin bound (left * factor))
+    (rightProductWithin : HFRecursiveIntegerWithin bound (right * factor))
+    (ordered : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger left) (hfRecursiveInteger right))
+        (hfRecursiveInteger 1)) (hfRecursiveIntegerOrderGraph bound))
+    (nonnegative : HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger 0) (hfRecursiveInteger factor))
+        (hfRecursiveInteger 1)) (hfRecursiveIntegerOrderGraph bound)) :
+    HFRecursiveMember
+      (hfRecursiveOrderedPair
+        (hfRecursiveOrderedPair (hfRecursiveInteger (left * factor))
+          (hfRecursiveInteger (right * factor)))
+        (hfRecursiveInteger 1)) (hfRecursiveIntegerOrderGraph bound) := by
+  apply (hfRecursiveIntegerOrderGraph_holds_iff bound
+    (left * factor) (right * factor) leftProductWithin rightProductWithin).mpr
+  exact Int.mul_le_mul_of_nonneg_right
+    ((hfRecursiveIntegerOrderGraph_holds_iff
+      bound left right leftWithin rightWithin).mp ordered)
+    ((hfRecursiveIntegerOrderGraph_holds_iff
+      bound 0 factor zeroWithin factorWithin).mp nonnegative)
+
 def hfRecursiveIntegerMultiplicationGraph (bound : Nat) : HFRecursiveSet :=
   hfRecursiveIntegerBinaryRows (fun left right => left * right)
     (hfRecursiveIntegerWindow bound) (hfRecursiveIntegerWindow bound)
