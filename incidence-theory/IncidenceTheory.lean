@@ -6862,6 +6862,29 @@ theorem incToSetFunctor_not_full_of_distinct
   apply different
   exact congrArg IncLiftedObject.down preimage.equality
 
+theorem incToSetFunctor_full_implies_subsingleton
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T)
+    (full : ∀ {source target}
+      (morphism : incTypeCategory.Hom
+        ((incToSetFunctor inc).obj source) ((incToSetFunctor inc).obj target)),
+      ∃ preimage : (incDiscreteCategory I).Hom source target,
+        (incToSetFunctor inc).map preimage = morphism) :
+    ∀ i j : I, i = j := by
+  intro i j
+  let constant : incTypeCategory.Hom
+      ((incToSetFunctor inc).obj ⟨i⟩) ((incToSetFunctor inc).obj ⟨j⟩) :=
+    ⟨fun _ => incToSetDefault inc j⟩
+  obtain ⟨preimage, _⟩ := full constant
+  exact congrArg IncLiftedObject.down preimage.equality
+
+theorem incToSetFunctor_fullyFaithful_implies_subsingleton
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T)
+    (fullyFaithful : IncFunctorFullyFaithful (incToSetFunctor inc)) :
+    ∀ i j : I, i = j :=
+  incToSetFunctor_full_implies_subsingleton inc fullyFaithful.full
+
 theorem incToSetFunctor_not_fullyFaithful_of_distinct
     {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) {i j : I} (different : i ≠ j) :
