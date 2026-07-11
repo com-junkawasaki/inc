@@ -4109,6 +4109,85 @@ theorem IncCoherentCategoryEquivalence.pulledEqualizerArrow_equalizes
         (C.comp (unit.inv.app source) (G.map arrow)) :=
           (C.assoc _ _ _).symm
 
+def IncCoherentCategoryEquivalence.mappedEqualizerLift
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D)
+    {source target : CObj} {first second : C.Hom source target}
+    (equalizer : IncEqualizer first second)
+    (candidate : DObj)
+    (arrow : D.Hom candidate (coherent.equivalence.forward.obj source))
+    (equalizes :
+      D.comp (coherent.equivalence.forward.map first) arrow =
+        D.comp (coherent.equivalence.forward.map second) arrow) :
+    D.Hom candidate (coherent.equivalence.forward.obj equalizer.object) :=
+  D.comp
+    (coherent.equivalence.forward.map
+      (equalizer.lift (coherent.equivalence.inverse.obj candidate)
+        (C.comp (coherent.equivalence.unit.inv.app source)
+          (coherent.equivalence.inverse.map arrow))
+        (coherent.pulledEqualizerArrow_equalizes first second arrow equalizes)))
+    (coherent.equivalence.counit.inv.app candidate)
+
+theorem IncCoherentCategoryEquivalence.mappedEqualizerLift_inclusion
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (coherent : IncCoherentCategoryEquivalence C D)
+    {source target : CObj} {first second : C.Hom source target}
+    (equalizer : IncEqualizer first second)
+    (candidate : DObj)
+    (arrow : D.Hom candidate (coherent.equivalence.forward.obj source))
+    (equalizes :
+      D.comp (coherent.equivalence.forward.map first) arrow =
+        D.comp (coherent.equivalence.forward.map second) arrow) :
+    D.comp (coherent.equivalence.forward.map equalizer.inclusion)
+        (coherent.mappedEqualizerLift equalizer candidate arrow equalizes) =
+      arrow := by
+  let F := coherent.equivalence.forward
+  let G := coherent.equivalence.inverse
+  let unit := coherent.equivalence.unit
+  let counit := coherent.equivalence.counit
+  let pulledEqualizes :=
+    coherent.pulledEqualizerArrow_equalizes first second arrow equalizes
+  let sourceLift := equalizer.lift (G.obj candidate)
+    (C.comp (unit.inv.app source) (G.map arrow)) pulledEqualizes
+  have sourceLiftInclusion :
+      C.comp equalizer.inclusion sourceLift =
+        C.comp (unit.inv.app source) (G.map arrow) :=
+    equalizer.lift_inclusion _ _ _
+  have counitNaturality :
+      D.comp arrow (counit.hom.app candidate) =
+        D.comp (counit.hom.app (F.obj source)) ((F.comp G).map arrow) := by
+    simpa [IncFunctor.identity] using counit.hom.naturality arrow
+  change D.comp (F.map equalizer.inclusion)
+      (D.comp (F.map sourceLift) (counit.inv.app candidate)) = arrow
+  calc
+    D.comp (F.map equalizer.inclusion)
+        (D.comp (F.map sourceLift) (counit.inv.app candidate)) =
+      D.comp
+        (D.comp (F.map equalizer.inclusion) (F.map sourceLift))
+        (counit.inv.app candidate) := D.assoc _ _ _
+    _ = D.comp (F.map (C.comp equalizer.inclusion sourceLift))
+        (counit.inv.app candidate) := by rw [F.map_comp]
+    _ = D.comp (F.map (C.comp (unit.inv.app source) (G.map arrow)))
+        (counit.inv.app candidate) := by rw [sourceLiftInclusion]
+    _ = D.comp
+        (D.comp (F.map (unit.inv.app source)) (F.map (G.map arrow)))
+        (counit.inv.app candidate) := by rw [F.map_comp]
+    _ = D.comp
+        (D.comp (counit.hom.app (F.obj source)) ((F.comp G).map arrow))
+        (counit.inv.app candidate) := by
+          simp only [IncFunctor.comp]
+          rw [coherent.counit_hom_forward_eq_map_unit_inv]
+    _ = D.comp
+        (D.comp arrow (counit.hom.app candidate))
+        (counit.inv.app candidate) := by rw [counitNaturality]
+    _ = D.comp arrow
+        (D.comp (counit.hom.app candidate) (counit.inv.app candidate)) :=
+          (D.assoc _ _ _).symm
+    _ = D.comp arrow (D.id candidate) := by
+      simpa [IncFunctor.identity] using congrArg (D.comp arrow)
+        (counit.inv_app_hom_app candidate)
+    _ = arrow := D.comp_id _
+
 noncomputable def IncCategoryEquivalence.stronglyPreservesBinaryProduct
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (equivalence : IncCategoryEquivalence C D)
