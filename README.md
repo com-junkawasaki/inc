@@ -1104,6 +1104,13 @@ It currently establishes:
   `.pair` constructor obtains both from the recursive first and second results
   and the canonical instantiated equivalence; only the exact substituted source
   derivation's alignment with the canonical semantic pair remains explicit.
+  Application substitution is now integrated.  Pi round-trip laws alone do not
+  identify evaluation of `piForward` at a transported argument with the
+  recursively supplied codomain map, so `piForward_apply_transport` isolates the
+  necessary evaluation-coherence law.  The uniform `.apply` constructor combines
+  that law with recursive function and argument results and the canonical
+  instantiated formation result; only the exact substituted source derivation's
+  semantic alignment remains explicit.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

@@ -565,6 +565,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   uniform typing-substitution `.pair` constructorを実装した。recursive first/second resultsとcanonical instantiate equivalenceから
   二component coherenceを導出する。explicit inputはexact substituted source derivationとcanonical semantic pairのalignmentだけで、
   dependent pair introductionの意味論的分岐も閉じた。
+- Pi round-trip lawsだけではtransport済みargument上の`piForward` evaluationとrecursive codomain mapの一致は導けないため、
+  必要なevaluation coherenceを`piForward_apply_transport`へ分離した。uniform typing-substitution `.apply` constructorはこのlaw、
+  recursive function/argument results、canonical instantiated formation resultを合成してapplication term coherenceを証明する。
+  explicit boundaryはexact substituted source derivationのsemantic application alignmentだけである。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
