@@ -698,6 +698,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - package-level `dispatchApplyCoherent`/`dispatchSecondCoherent`も追加し、semantic layerより上でも同じ統一を完成した。
   `dispatchPairStructural`/`pairCoherent`と合わせ、mutual dispatcherは全dependent branchへ単一instantiate-coherence objectを
   渡せばよく、そのendpoint/naturality fieldsを展開する必要がない。
+- remaining theorem inputを`IncDepRawInstantiateFormationCoherenceProvider`として固定した。単一`provide` fieldはstructurally
+  interpreted instantiated formation、domain/codomain results、argument substitution equationからcomplete coherence bundleを返し、
+  `dispatch`がuniform call boundaryとなる。providerの存在を仮定済みとはしておらず、arbitrary structural output上のtotal mutual
+  foldを閉じるため構成すべき定理を正確に隔離したinterfaceである。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

@@ -1319,6 +1319,13 @@ It currently establishes:
   `dispatchPairStructural`/`pairCoherent`, a mutual dispatcher can now pass one
   instantiate-coherence object through every dependent branch without unpacking
   its endpoint or naturality fields.
+  The remaining theorem input is now fixed as
+  `IncDepRawInstantiateFormationCoherenceProvider`.  Its single `provide` field
+  turns a structurally interpreted instantiated formation, the domain/codomain
+  results, and an argument substitution equation into the complete coherence
+  bundle.  `dispatch` is the uniform call boundary.  This does not assume the
+  provider exists; it isolates exactly the theorem that must be constructed to
+  close the total mutual fold for arbitrary structural outputs.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
