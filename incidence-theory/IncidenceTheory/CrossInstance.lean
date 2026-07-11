@@ -8090,6 +8090,48 @@ def IncDepRawTypingSubstitutionDispatchResult.semanticSourceType
       substitutionResult) : IncTypeInContext sourceResult.semanticContext :=
   result.formationResult.sourceFormationResult.semanticType
 
+def IncDepRawTypingSubstitutionFiberResult.castFormation
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {targetFormation : IncDepRawWellFormed target type}
+    {left right : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult}
+    (result : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := targetTyping) left)
+    (alignment : left = right) :
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := targetTyping) right := by
+  cases alignment
+  exact result
+
+def IncDepRawTypingSubstitutionDispatchResult.typingResultAligned
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawTypingSubstitutionDispatchResult targetTyping
+      substitutionResult)
+    (expected : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := result.typeFormation) substitutionResult)
+    (alignment : result.formationResult = expected) :
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := targetTyping) expected :=
+  result.typingResult.castFormation alignment
+
 noncomputable def IncDepRawVariableSubstitutionProvider.dispatch
     (provider : IncDepRawVariableSubstitutionProvider)
     {source target : List IncDepRawType} {position : Nat}

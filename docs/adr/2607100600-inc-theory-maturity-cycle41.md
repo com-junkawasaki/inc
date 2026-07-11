@@ -632,6 +632,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - package再帰constructor `dispatchRefl`/`dispatchLambda`を追加した。前者はchild typing packageからIdentity formationと
   refl resultを、後者はrecursive domain resultとそのlift下のbody packageからPi formationとlambda resultを一体構成する。
   dependent return shapeがformation/typing境界とbinder境界の双方で成立することを確認した。
+- proof-index alignmentを暗黙の同一視ではなくchecked operationとして切り出した。`castFormation`は完全なformation
+  fiber resultのequalityに沿う場合だけtyping-substitution resultをtransportし、`typingResultAligned`がrecursive package
+  境界でこれを公開する。残るapply/pair/projection分岐が要求するcanonical Pi/Sigma/instantiate resultとの一致条件を
+  Leanの型として明記できるようになった。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

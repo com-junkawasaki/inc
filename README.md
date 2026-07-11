@@ -1210,6 +1210,13 @@ It currently establishes:
   body package computed under its lifted substitution, returning the Pi formation
   and lambda typing result together.  These validate the package shape across
   both the formation/typing boundary and a binder boundary.
+  Proof-index alignment is now an explicit checked operation rather than an
+  implicit assumption.  `castFormation` transports a typing-substitution result
+  only along equality of complete formation fiber results, and
+  `typingResultAligned` exposes that operation at the recursive package boundary.
+  The remaining apply/pair/projection branches can therefore state precisely
+  which recursively computed formation result must agree with their canonical
+  Pi, Sigma, or instantiated result.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
