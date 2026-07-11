@@ -4034,6 +4034,57 @@ theorem IncBinaryCoproduct.copair_unique
     mediator = coproduct.copair target first second :=
   coproduct.lift_unique _ _ _ _ mediator hfirst hsecond
 
+def binaryCoproducts_unique_up_to_iso
+    {Obj : Type u} {C : IncCategory Obj}
+    {initial : IncInitialObject C} {left right : Obj}
+    (first second : IncBinaryCoproduct initial left right) :
+    MorphismIso C first.apex second.apex :=
+  pushout_unique_up_to_iso first second
+
+def binaryProducts_unique_up_to_iso
+    {Obj : Type u} {C : IncCategory Obj}
+    {terminal : IncTerminalObject C} {left right : Obj}
+    (first second : IncBinaryProduct terminal left right) :
+    MorphismIso C first.apex second.apex := by
+  let oppositeIso := pushout_unique_up_to_iso (C := C.op) first second
+  exact
+    { hom := oppositeIso.inv
+      inv := oppositeIso.hom
+      inv_hom := oppositeIso.inv_hom
+      hom_inv := oppositeIso.hom_inv }
+
+theorem binaryCoproductComparison_inl
+    {Obj : Type u} {C : IncCategory Obj}
+    {initial : IncInitialObject C} {left right : Obj}
+    (first second : IncBinaryCoproduct initial left right) :
+    C.comp (binaryCoproducts_unique_up_to_iso first second).hom first.inl =
+      second.inl :=
+  pushoutComparison_inl first second
+
+theorem binaryCoproductComparison_inr
+    {Obj : Type u} {C : IncCategory Obj}
+    {initial : IncInitialObject C} {left right : Obj}
+    (first second : IncBinaryCoproduct initial left right) :
+    C.comp (binaryCoproducts_unique_up_to_iso first second).hom first.inr =
+      second.inr :=
+  pushoutComparison_inr first second
+
+theorem binaryProductComparison_fst
+    {Obj : Type u} {C : IncCategory Obj}
+    {terminal : IncTerminalObject C} {left right : Obj}
+    (first second : IncBinaryProduct terminal left right) :
+    C.comp second.inl (binaryProducts_unique_up_to_iso first second).hom =
+      first.inl :=
+  pushoutComparison_inl second first
+
+theorem binaryProductComparison_snd
+    {Obj : Type u} {C : IncCategory Obj}
+    {terminal : IncTerminalObject C} {left right : Obj}
+    (first second : IncBinaryProduct terminal left right) :
+    C.comp second.inr (binaryProducts_unique_up_to_iso first second).hom =
+      first.inr :=
+  pushoutComparison_inr second first
+
 structure IncEqualizer {Obj : Type u} {C : IncCategory Obj}
     {source target : Obj} (first second : C.Hom source target) where
   object : Obj
