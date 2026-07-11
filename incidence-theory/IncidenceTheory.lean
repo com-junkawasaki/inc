@@ -6765,6 +6765,14 @@ structure IncDiscreteHom {Obj : Type u}
 structure IncLiftedFunction (source target : Type u) : Type (u + 1) where
   function : source → target
 
+theorem IncLiftedFunction.ext {source target : Type u}
+    {first second : IncLiftedFunction source target}
+    (functionEq : first.function = second.function) : first = second := by
+  cases first
+  cases second
+  cases functionEq
+  rfl
+
 def incDiscreteCategory (Obj : Type u) : IncCategory (IncLiftedObject Obj) where
   Hom := IncDiscreteHom
   id := fun _ => ⟨rfl⟩
@@ -7052,6 +7060,41 @@ def BoundaryShapeTranslation.incToSetEquivalence
           contradiction
       | cons targetHead targetTail =>
           exact IncTypeEquivalence.refl (ULift Unit)
+
+def BoundaryShapeTranslation.discreteFunctor
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : BoundaryShapeTranslation source target) :
+    IncFunctor (incDiscreteCategory I) (incDiscreteCategory J) where
+  obj := fun i => ⟨translation.map i.down⟩
+  map := by
+    intro first second morphism
+    exact ⟨by
+      cases morphism.equality
+      rfl⟩
+  map_id := by
+    intro object
+    rfl
+  map_comp := by
+    intro first second third secondMap firstMap
+    rcases firstMap with ⟨firstEqual⟩
+    rcases secondMap with ⟨secondEqual⟩
+    cases firstEqual
+    cases secondEqual
+    rfl
+
+def BoundaryShapeTranslation.incToSetNaturalTransformation
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : BoundaryShapeTranslation source target) :
+    IncNaturalTransformation (incToSetFunctor source)
+      ((incToSetFunctor target).comp translation.discreteFunctor) where
+  app := fun i => ⟨(translation.incToSetEquivalence i.down).forward⟩
+  naturality := by
+    intro first second morphism
+    rcases morphism with ⟨equal⟩
+    cases equal
+    rfl
 
 structure BoundaryShapeEmbedding
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
@@ -7821,6 +7864,33 @@ def BehavioralBoundaryShapeEquivalence.toBoundaryShapeEquivalence
   inv := equivalence.inv.toBoundaryShapeTranslation
   inv_hom := equivalence.inv_hom
   hom_inv := equivalence.hom_inv
+
+def BoundaryShapeEquivalence.incToSetNaturalIsomorphism
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : BoundaryShapeEquivalence source target) :
+    IncNaturalIsomorphism (incToSetFunctor source)
+      ((incToSetFunctor target).comp equivalence.hom.discreteFunctor) where
+  hom := equivalence.hom.incToSetNaturalTransformation
+  inv := {
+    app := fun i => ⟨(equivalence.hom.incToSetEquivalence i.down).inverse⟩
+    naturality := by
+      intro first second morphism
+      rcases morphism with ⟨equal⟩
+      cases equal
+      rfl }
+  hom_inv_id := by
+    apply IncNaturalTransformation.ext
+    intro i
+    apply IncLiftedFunction.ext
+    funext value
+    exact (equivalence.hom.incToSetEquivalence i.down).inverse_forward value
+  inv_hom_id := by
+    apply IncNaturalTransformation.ext
+    intro i
+    apply IncLiftedFunction.ext
+    funext value
+    exact (equivalence.hom.incToSetEquivalence i.down).forward_inverse value
 
 def BoundaryShapeEquivalence.toEmbedding
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
