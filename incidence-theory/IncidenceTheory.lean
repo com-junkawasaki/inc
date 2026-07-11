@@ -6885,6 +6885,38 @@ theorem incToSetFunctor_fullyFaithful_implies_subsingleton
     ∀ i j : I, i = j :=
   incToSetFunctor_full_implies_subsingleton inc fullyFaithful.full
 
+theorem incToSetFunctor_map_endomorphism_eq_identity
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (i : I)
+    (morphism : (incDiscreteCategory I).Hom ⟨i⟩ ⟨i⟩) :
+    (incToSetFunctor inc).map morphism =
+      incTypeCategory.id ((incToSetFunctor inc).obj ⟨i⟩) := by
+  rcases morphism with ⟨equal⟩
+  have equalRfl : equal = rfl := Subsingleton.elim _ _
+  cases equalRfl
+  rfl
+
+theorem incToSetFunctor_full_implies_fiber_subsingleton
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T)
+    (full : ∀ {source target}
+      (morphism : incTypeCategory.Hom
+        ((incToSetFunctor inc).obj source) ((incToSetFunctor inc).obj target)),
+      ∃ preimage : (incDiscreteCategory I).Hom source target,
+        (incToSetFunctor inc).map preimage = morphism) :
+    ∀ i (left right : inc_to_set inc i), left = right := by
+  intro i left right
+  let constant : incTypeCategory.Hom
+      ((incToSetFunctor inc).obj ⟨i⟩) ((incToSetFunctor inc).obj ⟨i⟩) :=
+    ⟨fun _ => right⟩
+  obtain ⟨preimage, imageEqual⟩ := full constant
+  have identityEqualConstant :
+      incTypeCategory.id ((incToSetFunctor inc).obj ⟨i⟩) = constant :=
+    (incToSetFunctor_map_endomorphism_eq_identity inc i preimage).symm.trans
+      imageEqual
+  have functionEqual := congrArg IncLiftedFunction.function identityEqualConstant
+  exact congrFun functionEqual left
+
 theorem incToSetFunctor_not_fullyFaithful_of_distinct
     {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) {i j : I} (different : i ≠ j) :
