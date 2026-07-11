@@ -1360,6 +1360,12 @@ It currently establishes:
   `toDispatchReady`, and `formationDispatchReady` connect it to all earlier APIs.
   A total dispatcher can therefore consume a strict tree and avoid assuming
   global readiness proof uniqueness.
+  Strict constructors now cover all eight typing rules: variable, unit, lambda,
+  application, pair, both projections, and reflexivity.  Each constructor either
+  returns the parent's requested formation-readiness evidence definitionally or,
+  for the binder case, eliminates the body's stored equality once.  The full
+  strict typing syntax tree can therefore be built compositionally without the
+  global alignment provider.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

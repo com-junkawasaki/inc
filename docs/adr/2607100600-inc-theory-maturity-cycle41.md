@@ -722,6 +722,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   treeを親が選んだexact coherent formation-readiness evidenceでindexし、treeから導出される`formationReady`とのequalityを保持する。
   `ofCoherent`/`toCoherent`/`toDispatchReady`/`formationDispatchReady`で既存APIへ接続済み。total dispatcherはstrict treeを入力に
   すればglobal readiness proof uniquenessを要求しない。
+- strict constructorをtyping全8 rules（variable/unit/lambda/application/pair/両projection/reflexivity）へ追加した。各constructorは
+  親が要求するformation-readiness evidenceをdefinitionally返し、binder caseだけbodyが保持するequalityを一度eliminateする。
+  full strict typing syntax treeをglobal alignment providerなしでcompositionalに構築できる。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

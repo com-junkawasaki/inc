@@ -6195,6 +6195,137 @@ def IncDepRawStrictTypingDispatchReady.formationDispatchReady
     IncDepRawFormationDispatchReady formation :=
   formationReady.toDispatchReady
 
+def IncDepRawStrictTypingDispatchReady.varRule
+    {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {typeFormation : IncDepRawWellFormed context type}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation) :
+    IncDepRawStrictTypingDispatchReady
+      (IncDepRawHasType.varRule lookup) typeReady where
+  ready := IncDepRawCoherentTypingDispatchReady.varRule typeReady
+  formationReady_eq := rfl
+
+def IncDepRawStrictTypingDispatchReady.unitRule
+    {context : List IncDepRawType} :
+    IncDepRawStrictTypingDispatchReady
+      (IncDepRawHasType.unitRule (context := context))
+      (IncDepRawCoherentFormationDispatchReady.unit (context := context)) where
+  ready := IncDepRawCoherentTypingDispatchReady.unitRule
+  formationReady_eq := rfl
+
+def IncDepRawStrictTypingDispatchReady.lambdaRule
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {body : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {bodyTyping : IncDepRawHasType (domain :: context) body codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (bodyReady : IncDepRawStrictTypingDispatchReady bodyTyping codomainReady) :
+    IncDepRawStrictTypingDispatchReady
+      (IncDepRawHasType.lambdaRule domainFormation bodyTyping)
+      (IncDepRawCoherentFormationDispatchReady.pi domainReady codomainReady) := by
+  cases bodyReady with
+  | mk ready readinessEq =>
+      cases readinessEq
+      exact
+        { ready := IncDepRawCoherentTypingDispatchReady.lambdaRule
+            domainReady ready
+          formationReady_eq := rfl }
+
+def IncDepRawStrictTypingDispatchReady.applyRule
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {function argument : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {resultFormation : IncDepRawWellFormed context
+      (codomain.instantiate argument)}
+    {functionTyping : IncDepRawHasType context function (.pi domain codomain)}
+    {argumentTyping : IncDepRawHasType context argument domain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (resultReady : IncDepRawCoherentFormationDispatchReady resultFormation)
+    (functionReady : IncDepRawStrictTypingDispatchReady functionTyping
+      (IncDepRawCoherentFormationDispatchReady.pi domainReady codomainReady))
+    (argumentReady : IncDepRawStrictTypingDispatchReady argumentTyping
+      domainReady) :
+    IncDepRawStrictTypingDispatchReady
+      (IncDepRawHasType.applyRule functionTyping argumentTyping) resultReady where
+  ready := IncDepRawCoherentTypingDispatchReady.applyRule domainReady
+    codomainReady resultReady functionReady.ready argumentReady.ready
+  formationReady_eq := rfl
+
+def IncDepRawStrictTypingDispatchReady.pairRule
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {first second : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {resultFormation : IncDepRawWellFormed context
+      (codomain.instantiate first)}
+    {firstTyping : IncDepRawHasType context first domain}
+    {secondTyping : IncDepRawHasType context second (codomain.instantiate first)}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (resultReady : IncDepRawCoherentFormationDispatchReady resultFormation)
+    (firstReady : IncDepRawStrictTypingDispatchReady firstTyping domainReady)
+    (secondReady : IncDepRawStrictTypingDispatchReady secondTyping resultReady) :
+    IncDepRawStrictTypingDispatchReady
+      (IncDepRawHasType.pairRule firstTyping secondTyping)
+      (IncDepRawCoherentFormationDispatchReady.sigma domainReady codomainReady) where
+  ready := IncDepRawCoherentTypingDispatchReady.pairRule domainReady
+    codomainReady resultReady firstReady.ready secondReady.ready
+  formationReady_eq := rfl
+
+def IncDepRawStrictTypingDispatchReady.firstRule
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (pairReady : IncDepRawStrictTypingDispatchReady pairTyping
+      (IncDepRawCoherentFormationDispatchReady.sigma domainReady codomainReady)) :
+    IncDepRawStrictTypingDispatchReady
+      (IncDepRawHasType.firstRule pairTyping) domainReady where
+  ready := IncDepRawCoherentTypingDispatchReady.firstRule domainReady
+    codomainReady pairReady.ready
+  formationReady_eq := rfl
+
+def IncDepRawStrictTypingDispatchReady.secondRule
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {resultFormation : IncDepRawWellFormed context
+      (codomain.instantiate (.first pair))}
+    {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (resultReady : IncDepRawCoherentFormationDispatchReady resultFormation)
+    (pairReady : IncDepRawStrictTypingDispatchReady pairTyping
+      (IncDepRawCoherentFormationDispatchReady.sigma domainReady codomainReady)) :
+    IncDepRawStrictTypingDispatchReady
+      (IncDepRawHasType.secondRule pairTyping) resultReady where
+  ready := IncDepRawCoherentTypingDispatchReady.secondRule domainReady
+    codomainReady resultReady pairReady.ready
+  formationReady_eq := rfl
+
+def IncDepRawStrictTypingDispatchReady.reflRule
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {term : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {termTyping : IncDepRawHasType context term type}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (termReady : IncDepRawStrictTypingDispatchReady termTyping typeReady) :
+    IncDepRawStrictTypingDispatchReady
+      (IncDepRawHasType.reflRule termTyping)
+      (IncDepRawCoherentFormationDispatchReady.identity typeReady
+        termReady.ready termReady.ready) where
+  ready := IncDepRawCoherentTypingDispatchReady.reflRule typeReady
+    termReady.ready
+  formationReady_eq := rfl
+
 mutual
   noncomputable def IncDepRawFormationDispatchReady.toSemanticReady
       {context : List IncDepRawType} {type : IncDepRawType}
