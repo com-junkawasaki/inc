@@ -5307,6 +5307,44 @@ noncomputable def IncDepRawReadyVariableFormationSemanticResult.toTypingFormatio
   IncDepRawTypingFormationSemanticResult.align result.formationResult
     (contextTree.interpretVariable lookup) result.lookupType_coherence
 
+noncomputable def IncDepRawReadyVariableFormationSemanticResult.toVariableSubstitution
+    {source target : List IncDepRawType} {position : Nat}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {lookup : IncDepRawLookup target position type}
+    {typeFormation : IncDepRawWellFormed target type}
+    {typeReady : IncDepRawFormationSemanticReady typeFormation}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {targetTree : IncDepRawContextSemanticTree targetResult}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (targetAlignment : IncDepRawReadyVariableFormationSemanticResult
+      (lookup := lookup) typeReady targetTree)
+    (typeResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := typeFormation) substitutionResult)
+    (sourceReplacement : IncDepRawTypingSemanticResult
+      (substitution.preserves lookup) sourceResult
+      typeResult.sourceFormationResult.semanticType)
+    (targetFormationCoherence :
+      typeResult.targetFormationResult.semanticType =
+        targetAlignment.formationResult.semanticType)
+    (variableCoherence :
+      typeResult.semanticFiberEquivalence.transport
+          sourceReplacement.semanticTerm =
+        (targetAlignment.toTypingFormation.typingResult.castType
+          targetFormationCoherence.symm).semanticTerm.substitute
+            substitutionResult.semanticSubstitution) :
+    IncDepRawVariableSubstitutionFiberResult
+      (lookup := lookup) typeResult where
+  targetVariable :=
+    (targetAlignment.toTypingFormation.typingResult.castType
+      targetFormationCoherence.symm).semanticTerm
+  sourceReplacement := sourceReplacement
+  variableCoherence := variableCoherence
+
 noncomputable def IncDepRawReadyTypingSemanticResult.variable
     {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
     {lookup : IncDepRawLookup context position type}

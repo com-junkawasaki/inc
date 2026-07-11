@@ -471,6 +471,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   readiness weakeningとsemantic weakeningを再利用し、lookup equalityをprojection reindexで保存する。
   newest/older raw lookup formationはcontext treeと再帰的にalignedとなり、次はこのresultをsubstitutionが
   preserveするreplacement typingと合成する。
+- alignmentとsubstitution replacementを合成する`toVariableSubstitution`を追加した。target variable
+  interpretationをaligned lookup packageから取得し、独立に生成されたtarget formation interpretationとの
+  equalityを明示的にalignした上で、`substitution.preserves lookup`が保証するsource replacement semanticを
+  合成する。得られるvariable fiber resultは既存`toTyping`でuniform typing resultへ直結し、lookup
+  substitution recursionの残責務はsource replacement interpretationと最終transport equationだけになった。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

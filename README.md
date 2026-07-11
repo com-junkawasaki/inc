@@ -955,6 +955,14 @@ It currently establishes:
   by projection reindexing.  Thus newest and older raw lookup formations are now
   recursively aligned with the context tree; the next step is combining this
   result with substitution-preserved replacement typings.
+  That composition now has a checked constructor,
+  `toVariableSubstitution`.  It obtains the target variable interpretation from
+  the aligned lookup package, explicitly aligns the independently produced
+  target formation interpretation, and combines it with the semantic source
+  replacement certified by `substitution.preserves lookup`.  The resulting
+  `IncDepRawVariableSubstitutionFiberResult` feeds the uniform typing result via
+  `toTyping`; lookup substitution recursion now needs to supply only the source
+  replacement interpretation and its final transport equation.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
