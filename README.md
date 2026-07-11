@@ -34,7 +34,12 @@ It currently establishes:
   derivations.  Arbitrary atom translations reflect consistency from the
   translated theory back to the source; split-injective translations preserve
   and reflect both consistency and avoidance of any designated formula
-  exactly, alongside derivability and semantic consequence.  Its intuitionistic
+  exactly, alongside derivability and semantic consequence.  A concrete
+  Incidence-boundary semantics now interprets an atom as true exactly when its
+  boundary is inhabited; natural-deduction soundness specializes directly to
+  this observation, and translations preserving boundary inhabitation preserve
+  formula and context truth iff.  For `natIncidence`, atom `n` is true exactly
+  when `n≠0`, including a checked negation of the zero atom.  Its intuitionistic
   Kripke semantics, persistence theorem, and
   Kripke soundness theorem are checked; atom translations pull Kripke models
   back and preserve formula and context forcing exactly. Assumption substitution and cut are

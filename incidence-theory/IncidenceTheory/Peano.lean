@@ -82,6 +82,21 @@ theorem natIncidence_internalLogic_consistent_iff_model
     DerivationallyConsistent context ↔ KripkeSatisfiable context :=
   natCountablyPresentedIncidence.internalLogic_consistent_iff_model context
 
+theorem natIncidence_boundaryValuation_iff (n : Nat) :
+    IncidenceBoundaryValuation natIncidence n ↔ n ≠ 0 := by
+  cases n with
+  | zero => simp [IncidenceBoundaryValuation, natIncidence, peanoBoundary]
+  | succ n => simp [IncidenceBoundaryValuation, natIncidence, peanoBoundary]
+
+theorem natIncidence_boundarySatisfies_atom_iff (n : Nat) :
+    IncidenceBoundarySatisfies natIncidence (.atom n) ↔ n ≠ 0 := by
+  exact natIncidence_boundaryValuation_iff n
+
+theorem natIncidence_boundarySatisfies_zero_negation :
+    IncidenceBoundarySatisfies natIncidence (Formula.neg (.atom 0)) := by
+  intro holds
+  exact (natIncidence_boundaryValuation_iff 0).mp holds rfl
+
 /- glue-with-1 realizes the successor function. -/
 theorem natIncidence_succ (n : Nat) : natIncidence.glue n 1 = some (n + 1) := rfl
 

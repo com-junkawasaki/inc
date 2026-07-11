@@ -5039,6 +5039,64 @@ structure CountablyPresentedIncidence (I R T : Type u) [DecidableEq I] where
   incidence : Incidence I R T
   atoms : CountableAtomCoding I
 
+/- A concrete incidence semantics: an atomic proposition holds exactly when
+   the represented incidence has an observed boundary endpoint.  Unlike the
+   arbitrary valuations used for generic soundness/completeness, this truth
+   assignment is computed directly from the `Incidence` object. -/
+def IncidenceBoundaryValuation {I R T : Type u} [DecidableEq I]
+    (incidence : Incidence I R T) (atom : I) : Prop :=
+  ∃ endpoint, endpoint ∈ incidence.boundary atom
+
+def IncidenceBoundarySatisfies {I R T : Type u} [DecidableEq I]
+    (incidence : Incidence I R T) (formula : Formula I) : Prop :=
+  Satisfies (IncidenceBoundaryValuation incidence) formula
+
+def IncidenceBoundaryContextSatisfies {I R T : Type u} [DecidableEq I]
+    (incidence : Incidence I R T) (context : List (Formula I)) : Prop :=
+  ContextSatisfies (IncidenceBoundaryValuation incidence) context
+
+theorem incidenceBoundarySatisfies_atom_iff
+    {I R T : Type u} [DecidableEq I] (incidence : Incidence I R T) (atom : I) :
+    IncidenceBoundarySatisfies incidence (.atom atom) ↔
+      ∃ endpoint, endpoint ∈ incidence.boundary atom := by
+  rfl
+
+theorem derives_incidenceBoundary_sound
+    {I R T : Type u} [DecidableEq I] {incidence : Incidence I R T}
+    {context : List (Formula I)} {formula : Formula I}
+    (derivation : Derives context formula)
+    (holds : IncidenceBoundaryContextSatisfies incidence context) :
+    IncidenceBoundarySatisfies incidence formula :=
+  derives_sound derivation holds
+
+theorem incidenceBoundarySatisfies_map_iff
+    {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
+    (source : Incidence I R T) (target : Incidence I' R' T')
+    (translate : I → I')
+    (preservesBoundaryObservation : ∀ atom,
+      IncidenceBoundaryValuation target (translate atom) ↔
+        IncidenceBoundaryValuation source atom)
+    (formula : Formula I) :
+    IncidenceBoundarySatisfies target (formula.map translate) ↔
+      IncidenceBoundarySatisfies source formula := by
+  unfold IncidenceBoundarySatisfies
+  rw [satisfies_map]
+  exact satisfies_congr preservesBoundaryObservation formula
+
+theorem incidenceBoundaryContextSatisfies_map_iff
+    {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
+    (source : Incidence I R T) (target : Incidence I' R' T')
+    (translate : I → I')
+    (preservesBoundaryObservation : ∀ atom,
+      IncidenceBoundaryValuation target (translate atom) ↔
+        IncidenceBoundaryValuation source atom)
+    (context : List (Formula I)) :
+    IncidenceBoundaryContextSatisfies target (Formula.mapContext translate context) ↔
+      IncidenceBoundaryContextSatisfies source context := by
+  unfold IncidenceBoundaryContextSatisfies
+  rw [context_satisfies_map_iff]
+  exact contextSatisfies_congr preservesBoundaryObservation context
+
 abbrev CountablyPresentedIncidence.InternalFormula {I R T : Type u}
     [DecidableEq I] (_presentation : CountablyPresentedIncidence I R T) := Formula I
 
