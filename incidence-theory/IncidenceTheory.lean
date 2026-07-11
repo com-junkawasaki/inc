@@ -6815,6 +6815,97 @@ theorem inc_to_set_equivalent_iff_boundary_shape
   · intro preservesShape i
     exact ⟨inc_to_set_preserves_boundary_shape source target preservesShape i⟩
 
+structure BoundaryShapeTranslation
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂) where
+  map : I → J
+  preservesReflectsNullary : ∀ i,
+    source.boundary i = [] ↔ target.boundary (map i) = []
+
+def BoundaryShapeTranslation.identity
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    BoundaryShapeTranslation inc inc where
+  map := id
+  preservesReflectsNullary := by
+    intro i
+    rfl
+
+def BoundaryShapeTranslation.comp
+    {I J K R₁ T₁ R₂ T₂ R₃ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (secondMap : BoundaryShapeTranslation second third)
+    (firstMap : BoundaryShapeTranslation first second) :
+    BoundaryShapeTranslation first third where
+  map := secondMap.map ∘ firstMap.map
+  preservesReflectsNullary := by
+    intro i
+    exact (firstMap.preservesReflectsNullary i).trans
+      (secondMap.preservesReflectsNullary (firstMap.map i))
+
+theorem BoundaryShapeTranslation.ext
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    {first second : BoundaryShapeTranslation source target}
+    (mapEq : first.map = second.map) : first = second := by
+  cases first
+  cases second
+  cases mapEq
+  rfl
+
+theorem BoundaryShapeTranslation.identity_comp
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : BoundaryShapeTranslation source target) :
+    (BoundaryShapeTranslation.identity target).comp translation = translation := by
+  apply BoundaryShapeTranslation.ext
+  rfl
+
+theorem BoundaryShapeTranslation.comp_identity
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : BoundaryShapeTranslation source target) :
+    translation.comp (BoundaryShapeTranslation.identity source) = translation := by
+  apply BoundaryShapeTranslation.ext
+  rfl
+
+theorem BoundaryShapeTranslation.comp_assoc
+    {I J K L R₁ T₁ R₂ T₂ R₃ T₃ R₄ T₄ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K] [DecidableEq L]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃} {fourth : Incidence L R₄ T₄}
+    (thirdMap : BoundaryShapeTranslation third fourth)
+    (secondMap : BoundaryShapeTranslation second third)
+    (firstMap : BoundaryShapeTranslation first second) :
+    (thirdMap.comp secondMap).comp firstMap =
+      thirdMap.comp (secondMap.comp firstMap) := by
+  apply BoundaryShapeTranslation.ext
+  rfl
+
+def BoundaryShapeTranslation.incToSetEquivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : BoundaryShapeTranslation source target) (i : I) :
+    IncTypeEquivalence (inc_to_set source i)
+      (inc_to_set target (translation.map i)) := by
+  unfold inc_to_set
+  cases sourceBoundary : source.boundary i with
+  | nil =>
+      have targetNullary : target.boundary (translation.map i) = [] :=
+        (translation.preservesReflectsNullary i).mp sourceBoundary
+      rw [targetNullary]
+      exact IncTypeEquivalence.refl (ULift Bool)
+  | cons sourceHead sourceTail =>
+      cases targetBoundary : target.boundary (translation.map i) with
+      | nil =>
+          have sourceNullary : source.boundary i = [] :=
+            (translation.preservesReflectsNullary i).mpr targetBoundary
+          rw [sourceBoundary] at sourceNullary
+          contradiction
+      | cons targetHead targetTail =>
+          exact IncTypeEquivalence.refl (ULift Unit)
+
 /- The Inc-to-Set assignment above is not yet packaged as an `IncFunctor`, so
    a theorem specifically about that assignment still requires a source
    category of incidences.  The general categorical preservation theorem is
