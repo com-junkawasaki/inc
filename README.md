@@ -610,6 +610,14 @@ It currently establishes:
   dependent fibers.  A variable builder consumes an interpreted lookup term.
   Thus every term constructor has a checked semantic target, leaving recursive
   lookup interpretation as the core missing piece of the automatic fold.
+  Lookup interpretation is now represented recursively as well.  The newest
+  variable is interpreted by the semantic extension variable at the reindexed
+  head family; an older variable reindexes its tail lookup type and substitutes
+  its tail semantic term along the extension projection.  The resulting lookup
+  certificate converts directly to the variable typing-result builder.  This
+  handles arbitrary de Bruijn depth without flattening dependent types.  What
+  remains for the automatic fold is coordinating context/type/term proof indices
+  in one mutual recursion, rather than defining any missing constructor case.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

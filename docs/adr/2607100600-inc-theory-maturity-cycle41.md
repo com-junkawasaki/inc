@@ -245,6 +245,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   second projectionは真のdependent fiberを保持する。variable builderはinterpreted lookup termを
   受け取る。全term constructorのsemantic targetがcheckedとなり、自動foldの核心的残件は
   recursive lookup interpretationとなった。
+- lookup interpretationを再帰resultとして実装した。newest variableはsemantic extensionの
+  reindexed head family上のvariable、older variableはtail lookup typeをprojectionでreindexし、
+  tail semantic termを同projectionでsubstituteする。lookup resultはvariable typing builderへ
+  直接変換でき、dependent typeをflattenせず任意de Bruijn depthを扱う。全constructor caseは
+  揃い、自動foldの残件はcontext/type/term proof indexを一つのmutual recursionで調整すること。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

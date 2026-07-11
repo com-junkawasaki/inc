@@ -2790,6 +2790,43 @@ structure IncDepRawTypingSemanticResult
     (semanticType : IncTypeInContext contextResult.semanticContext) where
   semanticTerm : IncTerm semanticType
 
+structure IncDepRawLookupSemanticResult
+    {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
+    (lookup : IncDepRawLookup context position type)
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    (contextResult : IncDepRawContextSemanticResult contextWellFormed) where
+  semanticType : IncTypeInContext contextResult.semanticContext
+  semanticTerm : IncTerm semanticType
+
+def IncDepRawLookupSemanticResult.here
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {typeWellFormed : IncDepRawWellFormed context type}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    (semanticType : IncTypeInContext contextResult.semanticContext) :
+    IncDepRawLookupSemanticResult
+      (IncDepRawLookup.here (context := context) (type := type))
+      (contextResult.extend (typeWellFormed := typeWellFormed) semanticType) where
+  semanticType := semanticType.reindex
+    (contextResult.semanticContext.extendProjection semanticType)
+  semanticTerm := contextResult.semanticContext.extendVariable semanticType
+
+def IncDepRawLookupSemanticResult.there
+    {context : List IncDepRawType} {position : Nat} {type head : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {headWellFormed : IncDepRawWellFormed context head}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    (lookupResult : IncDepRawLookupSemanticResult lookup contextResult)
+    (semanticHead : IncTypeInContext contextResult.semanticContext) :
+    IncDepRawLookupSemanticResult
+      (IncDepRawLookup.there (head := head) lookup)
+      (contextResult.extend (typeWellFormed := headWellFormed) semanticHead) where
+  semanticType := lookupResult.semanticType.reindex
+    (contextResult.semanticContext.extendProjection semanticHead)
+  semanticTerm := lookupResult.semanticTerm.substitute
+    (contextResult.semanticContext.extendProjection semanticHead)
+
 def IncDepRawTypingSemanticResult.variable
     {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
     {lookup : IncDepRawLookup context position type}
@@ -2800,6 +2837,16 @@ def IncDepRawTypingSemanticResult.variable
     IncDepRawTypingSemanticResult (IncDepRawHasType.varRule lookup)
       contextResult semanticType where
   semanticTerm := semanticVariable
+
+def IncDepRawLookupSemanticResult.toTyping
+    {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {contextWellFormed : IncDepRawContext.WellFormed context}
+    {contextResult : IncDepRawContextSemanticResult contextWellFormed}
+    (lookupResult : IncDepRawLookupSemanticResult lookup contextResult) :
+    IncDepRawTypingSemanticResult (IncDepRawHasType.varRule lookup)
+      contextResult lookupResult.semanticType :=
+  IncDepRawTypingSemanticResult.variable lookupResult.semanticTerm
 
 def IncDepRawTypingSemanticResult.unit
     {context : List IncDepRawType}
