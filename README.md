@@ -1,5 +1,10 @@
 # Theory of Incidence
 
+> The cycle-41 maturity ADR remains a historical snapshot. Its 2026-07-11
+> addendum records the now-checked Kripke completeness, compositional internal
+> logic, HF integer arithmetic/order/number theory, and current remaining
+> research boundary.
+
 This repository develops a Lean 4 core for incidence structures: relations
 whose boundaries consist of labelled, oriented endpoints.
 

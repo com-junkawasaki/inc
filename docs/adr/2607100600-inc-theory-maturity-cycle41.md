@@ -5,6 +5,38 @@
 - **Context repo**: `com-junkawasaki/inc`（plain-git、west管理下ではない独立リポジトリ）
 - **Source of truth**: `RESEARCH_LOG.md`（cycle 1–41、仮説/手法/結果/統合を毎サイクル記録）
 
+## 2026-07-11 追補（現行 main）
+
+この文書の本文は cycle 41 時点の歴史的スナップショットとして保持する。ただし、
+その後の形式化により、本文の「内部論理は未着手」「自然数以外の主要数学は未構成」
+という評価は現行 main には当てはまらない。2026-07-11 時点の機械的な再集計では、
+Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`instance` 宣言は
+約 714 であり、`Logic.lean` と `HFSets.lean` だけで約 12,143 行に達している。
+
+現行 main で追加確認済みの主要到達点は次の通り。
+
+- intuitionistic natural deduction、Kripke semantics、soundness、canonical
+  prime-theory model、truth lemma、および formula enumeration を仮定した
+  soundness/completeness iff が sorry-free で証明済み。
+- `Fin n`、`Bool`、`Nat`、具体的 `FiniteIncidence` atom language について完全性、
+  無矛盾性とモデル存在の同値、非導出 sequent の canonical countermodel を具体化済み。
+- `CountablyPresentedIncidence` が Incidence と可算 atom coding を束ね、完全性・
+  モデル存在・countermodel を対象から直接供給する。汎用 `incidenceProd` と
+  `incidenceSum` はこのパッケージを合成し、自然数 Incidence の積・和で検証済み。
+- derivability、semantic consequence、無矛盾性、指定式の非導出性は atom translation
+  で保存され、split-injective translation では保存・反映の iff が成立する。
+- HF 内部数学は自然数演算を越え、符号付き整数、negation、加減乗算、線形順序、
+  strict order、零積・cancellation・分配律、divisibility、Bézout coprimality、
+  Euclid の補題まで有限 graph application として再構成済み。
+- nontrivial theorem として、内部平方和 `x*x + y*y = 0` から `x=0 ∧ y=0`、
+  coprime pair の共通 divisor が `±1`、bounded Euclid lemma などを証明済み。
+- `verify.sh` は clean 56-job build、実行例、未証明宣言検査を通し、`sorryAx` は 0。
+
+したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
+「内部論理の着手」ではなく、非可算 carrier への完全性条件の拡張、Incidence 固有の
+意味論とのさらに強い接続、依存型・圏論の内部再構成、より広い数学ライブラリ化、
+および quotient 成功条件の一般定理化である。
+
 ## Context
 
 Inc（Theory of Incidence）は、Set理論・Category理論・Type理論に次ぐ「第四の基礎」を
