@@ -6822,6 +6822,67 @@ structure BoundaryShapeTranslation
   preservesReflectsNullary : ∀ i,
     source.boundary i = [] ↔ target.boundary (map i) = []
 
+def boundaryShapeCode
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) (i : I) : Bool :=
+  match inc.boundary i with
+  | [] => true
+  | _ :: _ => false
+
+theorem boundaryShapeCode_eq_true_iff
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) (i : I) :
+    boundaryShapeCode inc i = true ↔ inc.boundary i = [] := by
+  cases boundaryEq : inc.boundary i with
+  | nil => simp [boundaryShapeCode, boundaryEq]
+  | cons head tail => simp [boundaryShapeCode, boundaryEq]
+
+theorem BoundaryShapeTranslation.preservesCode
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : BoundaryShapeTranslation source target) (i : I) :
+    boundaryShapeCode source i = boundaryShapeCode target (translation.map i) := by
+  cases sourceBoundary : source.boundary i with
+  | nil =>
+      have targetNullary :=
+        (translation.preservesReflectsNullary i).mp sourceBoundary
+      simp [boundaryShapeCode, sourceBoundary, targetNullary]
+  | cons sourceHead sourceTail =>
+      cases targetBoundary : target.boundary (translation.map i) with
+      | nil =>
+          have sourceNullary :=
+            (translation.preservesReflectsNullary i).mpr targetBoundary
+          rw [sourceBoundary] at sourceNullary
+          contradiction
+      | cons targetHead targetTail =>
+          simp [boundaryShapeCode, sourceBoundary, targetBoundary]
+
+def boundaryShapeTranslationOfCodePreserving
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (map : I → J)
+    (preservesCode : ∀ i,
+      boundaryShapeCode source i = boundaryShapeCode target (map i)) :
+    BoundaryShapeTranslation source target where
+  map := map
+  preservesReflectsNullary := by
+    intro i
+    rw [← boundaryShapeCode_eq_true_iff source i,
+      ← boundaryShapeCode_eq_true_iff target (map i)]
+    exact ⟨fun equal => preservesCode i ▸ equal,
+      fun equal => (preservesCode i).symm ▸ equal⟩
+
+theorem boundaryShapeTranslation_exists_iff_code_preserving
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂)
+    (map : I → J) :
+    (∃ translation : BoundaryShapeTranslation source target,
+      translation.map = map) ↔
+      ∀ i, boundaryShapeCode source i = boundaryShapeCode target (map i) := by
+  constructor
+  · rintro ⟨translation, rfl⟩
+    exact translation.preservesCode
+  · intro preservesCode
+    exact ⟨boundaryShapeTranslationOfCodePreserving map preservesCode, rfl⟩
+
 def BoundaryShapeTranslation.identity
     {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
     BoundaryShapeTranslation inc inc where
@@ -6997,6 +7058,40 @@ def BoundaryShapeEquivalence.trans
       (firstEquivalence.hom.map
         (firstEquivalence.inv.map (secondEquivalence.inv.map k))) = k
     rw [firstEquivalence.hom_inv, secondEquivalence.hom_inv]
+
+def boundaryShapeEquivalenceOfCodeEquivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (carrier : IncTypeEquivalence I J)
+    (preservesCode : ∀ i,
+      boundaryShapeCode source i = boundaryShapeCode target (carrier.forward i)) :
+    BoundaryShapeEquivalence source target where
+  hom := boundaryShapeTranslationOfCodePreserving carrier.forward preservesCode
+  inv := boundaryShapeTranslationOfCodePreserving carrier.inverse (by
+    intro j
+    have atInverse := preservesCode (carrier.inverse j)
+    rw [carrier.forward_inverse] at atInverse
+    exact atInverse.symm)
+  inv_hom := carrier.inverse_forward
+  hom_inv := carrier.forward_inverse
+
+theorem boundaryShapeEquivalence_exists_iff_code_equivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂) :
+    Nonempty (BoundaryShapeEquivalence source target) ↔
+      ∃ carrier : IncTypeEquivalence I J, ∀ i,
+        boundaryShapeCode source i =
+          boundaryShapeCode target (carrier.forward i) := by
+  constructor
+  · rintro ⟨equivalence⟩
+    let carrier : IncTypeEquivalence I J :=
+      { forward := equivalence.hom.map
+        inverse := equivalence.inv.map
+        inverse_forward := equivalence.inv_hom
+        forward_inverse := equivalence.hom_inv }
+    exact ⟨carrier, equivalence.hom.preservesCode⟩
+  · rintro ⟨carrier, preservesCode⟩
+    exact ⟨boundaryShapeEquivalenceOfCodeEquivalence carrier preservesCode⟩
 
 theorem BoundaryShapeEquivalence.refl_trans
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
