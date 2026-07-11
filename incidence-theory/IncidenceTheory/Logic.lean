@@ -1622,6 +1622,36 @@ theorem Formula.logicalHeytingAlgebraLaws (Atom : Type u) :
   distributive := Formula.logicalAnd_distrib_or
   implication := Formula.logicalAnd_le_iff_le_logicalImp
 
+theorem Formula.logicalAnd_le_bottom_iff_le_neg {Atom : Type u}
+    (q p : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalAnd q p ≤ Formula.logicalBottom ↔ q ≤ Formula.logicalNeg p := by
+  exact Formula.logicalAnd_le_iff_le_logicalImp q p Formula.logicalBottom
+
+theorem Formula.logicalAnd_neg_le_bottom {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalAnd formula (Formula.logicalNeg formula) ≤
+      Formula.logicalBottom := by
+  rw [Formula.logicalAnd_comm]
+  apply (Formula.logicalAnd_le_bottom_iff_le_neg
+    (Formula.logicalNeg formula) formula).2
+  exact Formula.logicalEntails_refl _
+
+theorem Formula.logicalAnd_neg {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalAnd formula (Formula.logicalNeg formula) =
+      Formula.logicalBottom := by
+  apply Formula.logicalEntails_antisymm
+  · exact Formula.logicalAnd_neg_le_bottom formula
+  · exact Formula.logicalBottom_le _
+
+theorem Formula.le_doubleNeg {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    formula ≤ Formula.logicalNeg (Formula.logicalNeg formula) := by
+  apply (Formula.logicalAnd_le_bottom_iff_le_neg formula
+    (Formula.logicalNeg formula)).1
+  rw [Formula.logicalAnd_neg]
+  exact Formula.logicalEntails_refl _
+
 theorem satisfies_or_and_distributive_iff {Atom : Type u}
     (valuation : Atom → Prop) (p q r : Formula Atom) :
     Satisfies valuation (Formula.iff (.or p (.and q r))
