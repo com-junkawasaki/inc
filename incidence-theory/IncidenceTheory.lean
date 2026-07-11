@@ -1453,6 +1453,60 @@ theorem incNaturallyIsomorphic_equivalence
     rcases hGH with ⟨beta⟩
     exact ⟨beta.trans alpha⟩
 
+theorem IncNaturallyIsomorphic.whiskerLeft
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F G : IncFunctor C D} (K : IncFunctor D E)
+    (h : IncNaturallyIsomorphic F G) :
+    IncNaturallyIsomorphic (K.comp F) (K.comp G) := by
+  rcases h with ⟨iso⟩
+  exact ⟨iso.whiskerLeft K⟩
+
+theorem IncNaturallyIsomorphic.whiskerRight
+    {BObj CObj DObj : Type u}
+    {B : IncCategory BObj} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (h : IncNaturallyIsomorphic F G)
+    (K : IncFunctor B C) :
+    IncNaturallyIsomorphic (F.comp K) (G.comp K) := by
+  rcases h with ⟨iso⟩
+  exact ⟨iso.whiskerRight K⟩
+
+theorem IncNaturallyIsomorphic.hcomp
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F G : IncFunctor C D} {H K : IncFunctor D E}
+    (outer : IncNaturallyIsomorphic H K)
+    (inner : IncNaturallyIsomorphic F G) :
+    IncNaturallyIsomorphic (H.comp F) (K.comp G) := by
+  rcases outer with ⟨outerIso⟩
+  rcases inner with ⟨innerIso⟩
+  exact ⟨outerIso.hcomp innerIso⟩
+
+theorem IncNaturallyIsomorphic.comp_left_congr
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F G : IncFunctor C D} (K : IncFunctor D E)
+    (h : IncNaturallyIsomorphic F G) :
+    IncNaturallyIsomorphic (K.comp F) (K.comp G) :=
+  h.whiskerLeft K
+
+theorem IncNaturallyIsomorphic.comp_right_congr
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F G : IncFunctor D E} (h : IncNaturallyIsomorphic F G)
+    (K : IncFunctor C D) :
+    IncNaturallyIsomorphic (F.comp K) (G.comp K) :=
+  h.whiskerRight K
+
+theorem IncNaturallyIsomorphic.comp_congr
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F G : IncFunctor C D} {H K : IncFunctor D E}
+    (outer : IncNaturallyIsomorphic H K)
+    (inner : IncNaturallyIsomorphic F G) :
+    IncNaturallyIsomorphic (H.comp F) (K.comp G) :=
+  outer.hcomp inner
+
 structure IncFunctorFullyFaithful
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     (F : IncFunctor C D) : Prop where
