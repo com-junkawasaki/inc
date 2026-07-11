@@ -172,6 +172,47 @@ theorem incidence_quotient_sound {I R T : Type u} [DecidableEq I]
       Quotient.mk (approxBisimSetoid inc) j :=
   Quotient.sound h
 
+/- A classification is the general sufficient condition for the behavioural
+   quotient to have a concrete, fully described carrier.  `respects` is the
+   well-definedness condition for `Quotient.lift`; `reflects` prevents two
+   distinct quotient classes from being identified in the target; and
+   `surjective` says that the target has no spurious classes.  Constructing an
+   `Incidence` on that carrier additionally needs boundary/glue compatibility,
+   but this record isolates the quotient-theoretic part of that obligation. -/
+structure BisimulationQuotientClassification {I R T Q : Type u} [DecidableEq I]
+    (inc : Incidence I R T) where
+  classify : I → Q
+  respects : ∀ {x y}, approxBisim inc x y → classify x = classify y
+  reflects : ∀ {x y}, classify x = classify y → approxBisim inc x y
+  surjective : ∀ q : Q, ∃ x, classify x = q
+
+noncomputable def BisimulationQuotientClassification.lift
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc) :
+    IncidenceQuotient inc → Q :=
+  Quotient.lift classification.classify (fun _ _ h => classification.respects h)
+
+theorem BisimulationQuotientClassification.lift_injective
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    {q₁ q₂ : IncidenceQuotient inc}
+    (h : classification.lift q₁ = classification.lift q₂) : q₁ = q₂ := by
+  induction q₁ using Quotient.ind with
+  | _ x =>
+    induction q₂ using Quotient.ind with
+    | _ y =>
+      apply Quotient.sound
+      apply classification.reflects
+      simpa [BisimulationQuotientClassification.lift] using h
+
+theorem BisimulationQuotientClassification.lift_surjective
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc) :
+    ∀ q : Q, ∃ quotient : IncidenceQuotient inc, classification.lift quotient = q := by
+  intro q
+  rcases classification.surjective q with ⟨x, hx⟩
+  exact ⟨Quotient.mk _ x, by simpa [BisimulationQuotientClassification.lift] using hx⟩
+
 /- Derived linear data.  It is computation, not an additional assumption. -/
 def boundaryMatrix {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (_idx : List I) : Matrix I I Int :=

@@ -258,9 +258,27 @@ example : ∀ x y : CycleId, Quotient.mk (approxBisimSetoid cycleIncidenceFixed)
    (cycle 23) already established (`approxBisim → shape-equal`, the
    precise hypothesis `Quotient.lift` requires). No new proof needed,
    only recognizing the old theorem already had this shape. -/
+def simplexBisimulationQuotientClassification :
+    BisimulationQuotientClassification (Q := SimplexShape) simplexIncidence where
+  classify := simplexToShape
+  respects := fun h => simplexToShape_distinguishes _ _ h
+  reflects := fun h => simplexToShape_reflects _ _ h
+  surjective := by
+    intro shape
+    cases shape with
+    | vertex => exact ⟨SimplexId.v0, rfl⟩
+    | edgeShape => exact ⟨SimplexId.e01, rfl⟩
+    | faceShape => exact ⟨SimplexId.face, rfl⟩
+
 noncomputable def simplexQuotientToShape :
   Quotient (approxBisimSetoid simplexIncidence) → SimplexShape :=
   Quotient.lift simplexToShape simplexToShape_distinguishes
+
+theorem simplexBisimulationQuotientClassification_exact :
+    simplexBisimulationQuotientClassification.lift = simplexQuotientToShape := by
+  funext quotient
+  induction quotient using Quotient.ind with
+  | _ simplex => rfl
 
 /- Injective: `simplexToShape`-agreement implies `≈` too
    (`simplexToShape_reflects`, cycle 22), so two quotient classes
