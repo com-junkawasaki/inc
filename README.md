@@ -761,6 +761,15 @@ It currently establishes:
   variable computation laws are checked, providing the two lookup cases required
   by a substitution-coherence induction.  What remains is to lift these local
   equations through every formation and typing constructor.
+  Formation-level substitution coherence now has its own dependent result type,
+  `IncDepRawFormationSubstitutionSemanticResult`, retaining the target formation,
+  its raw-substituted source formation, both semantic interpretations, and their
+  reindexing equation.  Base families and Unit close this result directly.  The
+  attempted dependent-Pi composition also sharpens the next invariant: equality
+  of domain families alone does not determine the transport used by a dependent
+  codomain in intensional Lean.  Composite coherence must therefore retain an
+  explicit fiber transport (and its computation law), not merely a family
+  equality; no univalence or unchecked equality axiom is assumed.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

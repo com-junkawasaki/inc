@@ -3319,6 +3319,58 @@ theorem IncDepRawSubstitutionSemanticResult.lift_variable
       Eq.mp (congrFun coherence assignment) value := by
   rfl
 
+structure IncDepRawFormationSubstitutionSemanticResult
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) where
+  targetFormationResult : IncDepRawFormationSemanticResult targetFormation
+    targetResult
+  sourceFormationResult : IncDepRawFormationSemanticResult
+    (targetFormation.substitute substitution) sourceResult
+  semanticType_coherence : sourceFormationResult.semanticType =
+    targetFormationResult.semanticType.reindex
+      substitutionResult.semanticSubstitution
+
+def IncDepRawFormationSubstitutionSemanticResult.base
+    {source target : List IncDepRawType} {index : Nat}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    (baseModel : Nat → Type u) :
+    IncDepRawFormationSubstitutionSemanticResult
+      (targetFormation := IncDepRawWellFormed.base (index := index))
+      substitutionResult where
+  targetFormationResult := IncDepRawFormationSemanticResult.base
+    targetResult baseModel
+  sourceFormationResult := IncDepRawFormationSemanticResult.base
+    sourceResult baseModel
+  semanticType_coherence := rfl
+
+def IncDepRawFormationSubstitutionSemanticResult.unit
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) :
+    IncDepRawFormationSubstitutionSemanticResult
+      (targetFormation := IncDepRawWellFormed.unit) substitutionResult where
+  targetFormationResult := IncDepRawFormationSemanticResult.unit targetResult
+  sourceFormationResult := IncDepRawFormationSemanticResult.unit sourceResult
+  semanticType_coherence := rfl
+
 inductive IncDepRawContextSemanticTree :
     {context : List IncDepRawType} →
     {wellFormed : IncDepRawContext.WellFormed context} →

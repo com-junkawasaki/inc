@@ -341,6 +341,13 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   coherence equalityに沿ってnewest valueをtransportし、projectionとnewest-variableの計算則も
   証明した。これによりsubstitution-coherence帰納法のlookup二分岐が局所的に閉じ、残りはこの
   equationをformation/typingの全constructorへ持ち上げる仕事になった。
+- formation-level substitution coherenceを
+  `IncDepRawFormationSubstitutionSemanticResult`としてpackageした。target formation、そのraw
+  substituted source formation、両semantic interpretation、reindex equationを同時に保持し、baseと
+  Unit branchを閉じた。dependent Pi合成の監査により、domain family equalityだけではintensional
+  Lean内でdependent codomainが使うtransportを決定できない境界も確定した。composite coherenceは
+  family equalityだけでなく明示的fiber transportと計算則を保持する必要があり、univalenceや
+  unchecked equality axiomは導入しない。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
