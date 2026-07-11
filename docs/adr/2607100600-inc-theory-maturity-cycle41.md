@@ -605,6 +605,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - replacement environmentにも一般fiber equivalence版`liftFiber`と、recursive domain formation resultへspecializeした
   `liftResult`を追加した。binder下でsemantic substitutionとreplacement interpretationを同一domain fiber equivalenceに
   沿って同時にliftでき、従来のtype equality限定へ戻らずmutual recursionを継続できる。
+- generalized replacement liftに`liftResult_here_term`/`liftResult_there_term`計算則と`liftResult_here_fiber`を証明した。
+  newest/older replacement termの正規形が公開され、newest termをdomain forwardでtransportした結果がfiber-lifted
+  substitution下のtarget extended variableと一致する。binder variable recursionのhere branchが一般fiber版で閉じた。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

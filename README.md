@@ -1165,6 +1165,12 @@ It currently establishes:
   `liftFiber`, and `liftResult` specializes it to a recursive domain formation
   result.  Binder recursion can therefore lift the semantic substitution and its
   replacement interpretation together, without falling back to type equality.
+  The generalized lift now has stable rewrite laws:
+  `liftResult_here_term`, `liftResult_there_term`, and
+  `liftResult_here_fiber`.  The first two compute newest and older replacement
+  terms; the third identifies the newest term after domain forward transport
+  with the target extended variable under the fiber-lifted substitution.  The
+  binder variable recursion's newest branch is therefore closed generically.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

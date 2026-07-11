@@ -6413,6 +6413,78 @@ noncomputable def IncDepRawSubstitutionReplacementSemanticResult.liftResult
     replacements domainResult.targetFormationResult
     domainResult.sourceFormationResult domainResult.semanticFiberEquivalence
 
+theorem IncDepRawSubstitutionReplacementSemanticResult.liftResult_here_term
+    {source target : List IncDepRawType} {domain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult)
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult) :
+    ((replacements.liftResult domainResult).typingResult
+      (IncDepRawLookup.here (context := target) (type := domain))).semanticTerm =
+    sourceResult.semanticContext.extendVariable
+      domainResult.sourceFormationResult.semanticType := by
+  rfl
+
+theorem IncDepRawSubstitutionReplacementSemanticResult.liftResult_there_term
+    {source target : List IncDepRawType} {domain type : IncDepRawType}
+    {position : Nat}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult)
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (lookup : IncDepRawLookup target position type) :
+    ((replacements.liftResult domainResult).typingResult
+      (IncDepRawLookup.there (head := domain) lookup)).semanticTerm =
+    (replacements.typingResult lookup).semanticTerm.substitute
+      (sourceResult.semanticContext.extendProjection
+        domainResult.sourceFormationResult.semanticType) := by
+  rfl
+
+theorem IncDepRawSubstitutionReplacementSemanticResult.liftResult_here_fiber
+    {source target : List IncDepRawType} {domain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult)
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (assignment : sourceResult.semanticContext.Assignment)
+    (value : domainResult.sourceFormationResult.semanticType assignment) :
+    (domainResult.semanticFiberEquivalence.fiberEquiv assignment).forward
+        (((replacements.liftResult domainResult).typingResult
+          (IncDepRawLookup.here (context := target) (type := domain))).semanticTerm
+            ⟨assignment, value⟩) =
+      (targetResult.semanticContext.extendVariable
+        domainResult.targetFormationResult.semanticType)
+        (domainResult.liftSubstitution.semanticSubstitution
+          ⟨assignment, value⟩) := by
+  exact IncDepRawSubstitutionSemanticResult.liftFiber_variable
+    substitutionResult domainResult.targetFormationResult
+    domainResult.sourceFormationResult domainResult.semanticFiberEquivalence
+    assignment value
+
 theorem IncDepRawSubstitutionReplacementSemanticResult.lift_here_term
     {source target : List IncDepRawType} {domain : IncDepRawType}
     {substitution : IncDepRawSubstitution source target}
