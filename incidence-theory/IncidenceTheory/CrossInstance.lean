@@ -2666,6 +2666,14 @@ theorem IncFiberEquiv.mapEquality_trans
   cases secondEquality
   rfl
 
+theorem IncFiberEquiv.mapEquality_symm
+    {source target : Type u} (equivalence : IncFiberEquiv source target)
+    {left right : source} (equality : left = right) :
+    equivalence.mapEquality equality.symm =
+      (equivalence.mapEquality equality).symm := by
+  cases equality
+  rfl
+
 def IncFiberEquiv.mapEqualityBackward
     {source target : Type u} (equivalence : IncFiberEquiv source target)
     {left right : target} (equality : left = right) :

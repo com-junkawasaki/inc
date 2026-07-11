@@ -803,6 +803,8 @@ It currently establishes:
   reflexivity computation rule, completing the bidirectional identity-fiber API.
   Forward equality transport also preserves transitive composition, giving the
   path-composition law needed by iterated identity elimination.
+  It also preserves path reversal, so reflexivity, composition, and symmetry are
+  all respected by identity transport.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
