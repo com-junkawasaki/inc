@@ -408,6 +408,12 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   transport equationを保持する。このresultからuniform typing-substitution resultへの変換を証明した。
   残るlookup recursionはidentityおよびlifted substitutionのnewest/older二分岐でこのresultを生成し、既存の
   lift projection/variable equationへ接続することである。
+- newest lookup caseが使うequality-to-fiber境界を証明した。
+  `FiberEquiv.ofEq_forward`/`ofEq_transport_apply`によりexplicit forward transportが
+  `Eq.mp (congrFun coherence assignment)`と一致することを示し、`lift_variable_fiber`で既存のlifted
+  substitution variable lawをfiber-forward equationへ変換した。したがってnewest variableの値レベル
+  coherenceはunchecked castなしで閉じた。残るのはreindexed lookup formationのpackage化と、recursive
+  older-variable caseである。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

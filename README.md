@@ -854,6 +854,13 @@ It currently establishes:
   replace a variable by any well-typed term.  The remaining lookup recursion is
   to generate this result for identity and for the newest/older cases of lifted
   substitutions, using the existing lift projection/variable equations.
+  The equality-to-fiber boundary used by the newest lookup case is now checked:
+  `FiberEquiv.ofEq_forward` and `ofEq_transport_apply` prove that explicit
+  forward transport is exactly `Eq.mp (congrFun coherence assignment)`.
+  `lift_variable_fiber` then rewrites the existing lifted-substitution variable
+  law into that fiber-forward form.  Consequently the newest-variable value
+  equation is closed without an unchecked cast; packaging its reindexed lookup
+  formation, followed by the recursive older-variable case, remains.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

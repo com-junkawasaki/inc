@@ -2775,6 +2775,25 @@ def IncTypeInContext.FiberEquiv.transport
     (term : IncTerm source) : IncTerm target :=
   fun assignment => (equivalence.fiberEquiv assignment).forward (term assignment)
 
+theorem IncTypeInContext.FiberEquiv.ofEq_forward
+    {context : IncContext.{u}} {source target : IncTypeInContext context}
+    (coherence : source = target)
+    (assignment : context.Assignment) (value : source assignment) :
+    ((IncTypeInContext.FiberEquiv.ofEq coherence).fiberEquiv assignment).forward
+        value =
+      Eq.mp (congrFun coherence assignment) value := by
+  cases coherence
+  rfl
+
+theorem IncTypeInContext.FiberEquiv.ofEq_transport_apply
+    {context : IncContext.{u}} {source target : IncTypeInContext context}
+    (coherence : source = target) (term : IncTerm source)
+    (assignment : context.Assignment) :
+    (IncTypeInContext.FiberEquiv.ofEq coherence).transport term assignment =
+      Eq.mp (congrFun coherence assignment) (term assignment) := by
+  exact IncTypeInContext.FiberEquiv.ofEq_forward coherence assignment
+    (term assignment)
+
 theorem IncTypeInContext.FiberEquiv.transport_symm
     {context : IncContext.{u}} {source target : IncTypeInContext context}
     (equivalence : IncTypeInContext.FiberEquiv source target)
@@ -3821,6 +3840,35 @@ theorem IncDepRawSubstitutionSemanticResult.lift_variable
           ⟨assignment, value⟩) =
       Eq.mp (congrFun coherence assignment) value := by
   rfl
+
+theorem IncDepRawSubstitutionSemanticResult.lift_variable_fiber
+    {source target : List IncDepRawType} {domain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    {domainFormation : IncDepRawWellFormed target domain}
+    {substitutedDomainFormation : IncDepRawWellFormed source
+      (domain.substitute substitution.term)}
+    (targetDomain : IncDepRawFormationSemanticResult domainFormation targetResult)
+    (sourceDomain : IncDepRawFormationSemanticResult
+      substitutedDomainFormation sourceResult)
+    (coherence : sourceDomain.semanticType = targetDomain.semanticType.reindex
+      substitutionResult.semanticSubstitution)
+    (assignment : sourceResult.semanticContext.Assignment)
+    (value : sourceDomain.semanticType assignment) :
+    ((IncTypeInContext.FiberEquiv.ofEq coherence).fiberEquiv assignment).forward
+        value =
+      (targetResult.semanticContext.extendVariable targetDomain.semanticType)
+        ((IncDepRawSubstitutionSemanticResult.lift substitutionResult
+          targetDomain sourceDomain coherence).semanticSubstitution
+            ⟨assignment, value⟩) := by
+  rw [IncTypeInContext.FiberEquiv.ofEq_forward]
+  exact (IncDepRawSubstitutionSemanticResult.lift_variable substitutionResult
+    targetDomain sourceDomain coherence assignment value).symm
 
 structure IncDepRawFormationSubstitutionSemanticResult
     {source target : List IncDepRawType} {type : IncDepRawType}
