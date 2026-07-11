@@ -2235,6 +2235,182 @@ theorem hfRecursiveIntegerMultiplicationGraph_one_left
   rw [hfRecursiveIntegerMultiplicationGraph_on_integers_iff
     bound 1 integer oneWithin within, Int.one_mul]
 
+theorem hfRecursiveIntegerAdditionGraph_associative
+    (bound : Nat) (a b c : Int)
+    (aWithin : HFRecursiveIntegerWithin bound a)
+    (bWithin : HFRecursiveIntegerWithin bound b)
+    (cWithin : HFRecursiveIntegerWithin bound c)
+    (abWithin : HFRecursiveIntegerWithin bound (a + b))
+    (bcWithin : HFRecursiveIntegerWithin bound (b + c)) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger a) (hfRecursiveInteger b))
+          (hfRecursiveInteger (a + b)))
+        (hfRecursiveIntegerAdditionGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger (a + b)) (hfRecursiveInteger c))
+          (hfRecursiveInteger ((a + b) + c)))
+        (hfRecursiveIntegerAdditionGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger b) (hfRecursiveInteger c))
+          (hfRecursiveInteger (b + c)))
+        (hfRecursiveIntegerAdditionGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger a) (hfRecursiveInteger (b + c)))
+          (hfRecursiveInteger (a + (b + c))))
+        (hfRecursiveIntegerAdditionGraph bound) ∧
+    hfRecursiveInteger ((a + b) + c) = hfRecursiveInteger (a + (b + c)) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩
+  · exact (hfRecursiveIntegerAdditionGraph_on_integers_iff
+      bound a b aWithin bWithin _).mpr rfl
+  · exact (hfRecursiveIntegerAdditionGraph_on_integers_iff
+      bound (a + b) c abWithin cWithin _).mpr rfl
+  · exact (hfRecursiveIntegerAdditionGraph_on_integers_iff
+      bound b c bWithin cWithin _).mpr rfl
+  · exact (hfRecursiveIntegerAdditionGraph_on_integers_iff
+      bound a (b + c) aWithin bcWithin _).mpr rfl
+  · exact congrArg hfRecursiveInteger (Int.add_assoc a b c)
+
+theorem hfRecursiveIntegerMultiplicationGraph_associative
+    (bound : Nat) (a b c : Int)
+    (aWithin : HFRecursiveIntegerWithin bound a)
+    (bWithin : HFRecursiveIntegerWithin bound b)
+    (cWithin : HFRecursiveIntegerWithin bound c)
+    (abWithin : HFRecursiveIntegerWithin bound (a * b))
+    (bcWithin : HFRecursiveIntegerWithin bound (b * c)) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger a) (hfRecursiveInteger b))
+          (hfRecursiveInteger (a * b)))
+        (hfRecursiveIntegerMultiplicationGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger (a * b)) (hfRecursiveInteger c))
+          (hfRecursiveInteger ((a * b) * c)))
+        (hfRecursiveIntegerMultiplicationGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger b) (hfRecursiveInteger c))
+          (hfRecursiveInteger (b * c)))
+        (hfRecursiveIntegerMultiplicationGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger a) (hfRecursiveInteger (b * c)))
+          (hfRecursiveInteger (a * (b * c))))
+        (hfRecursiveIntegerMultiplicationGraph bound) ∧
+    hfRecursiveInteger ((a * b) * c) = hfRecursiveInteger (a * (b * c)) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩
+  · exact (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+      bound a b aWithin bWithin _).mpr rfl
+  · exact (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+      bound (a * b) c abWithin cWithin _).mpr rfl
+  · exact (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+      bound b c bWithin cWithin _).mpr rfl
+  · exact (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+      bound a (b * c) aWithin bcWithin _).mpr rfl
+  · exact congrArg hfRecursiveInteger (Int.mul_assoc a b c)
+
+theorem hfRecursiveIntegerMultiplicationGraph_distributes_over_addition
+    (bound : Nat) (a b c : Int)
+    (aWithin : HFRecursiveIntegerWithin bound a)
+    (bWithin : HFRecursiveIntegerWithin bound b)
+    (cWithin : HFRecursiveIntegerWithin bound c)
+    (bcWithin : HFRecursiveIntegerWithin bound (b + c))
+    (abWithin : HFRecursiveIntegerWithin bound (a * b))
+    (acWithin : HFRecursiveIntegerWithin bound (a * c)) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger b) (hfRecursiveInteger c))
+          (hfRecursiveInteger (b + c)))
+        (hfRecursiveIntegerAdditionGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger a) (hfRecursiveInteger (b + c)))
+          (hfRecursiveInteger (a * (b + c))))
+        (hfRecursiveIntegerMultiplicationGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger a) (hfRecursiveInteger b))
+          (hfRecursiveInteger (a * b)))
+        (hfRecursiveIntegerMultiplicationGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger a) (hfRecursiveInteger c))
+          (hfRecursiveInteger (a * c)))
+        (hfRecursiveIntegerMultiplicationGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger (a * b))
+            (hfRecursiveInteger (a * c)))
+          (hfRecursiveInteger (a * b + a * c)))
+        (hfRecursiveIntegerAdditionGraph bound) ∧
+    hfRecursiveInteger (a * (b + c)) =
+      hfRecursiveInteger (a * b + a * c) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact (hfRecursiveIntegerAdditionGraph_on_integers_iff
+      bound b c bWithin cWithin _).mpr rfl
+  · exact (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+      bound a (b + c) aWithin bcWithin _).mpr rfl
+  · exact (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+      bound a b aWithin bWithin _).mpr rfl
+  · exact (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+      bound a c aWithin cWithin _).mpr rfl
+  · exact (hfRecursiveIntegerAdditionGraph_on_integers_iff
+      bound (a * b) (a * c) abWithin acWithin _).mpr rfl
+  · exact congrArg hfRecursiveInteger (Int.mul_add a b c)
+
+theorem hfRecursiveIntegerMultiplicationGraph_right_distributes_over_addition
+    (bound : Nat) (a b c : Int)
+    (aWithin : HFRecursiveIntegerWithin bound a)
+    (bWithin : HFRecursiveIntegerWithin bound b)
+    (cWithin : HFRecursiveIntegerWithin bound c)
+    (abWithin : HFRecursiveIntegerWithin bound (a + b))
+    (acWithin : HFRecursiveIntegerWithin bound (a * c))
+    (bcWithin : HFRecursiveIntegerWithin bound (b * c)) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger a) (hfRecursiveInteger b))
+          (hfRecursiveInteger (a + b)))
+        (hfRecursiveIntegerAdditionGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger (a + b)) (hfRecursiveInteger c))
+          (hfRecursiveInteger ((a + b) * c)))
+        (hfRecursiveIntegerMultiplicationGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger a) (hfRecursiveInteger c))
+          (hfRecursiveInteger (a * c)))
+        (hfRecursiveIntegerMultiplicationGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger b) (hfRecursiveInteger c))
+          (hfRecursiveInteger (b * c)))
+        (hfRecursiveIntegerMultiplicationGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger (a * c))
+            (hfRecursiveInteger (b * c)))
+          (hfRecursiveInteger (a * c + b * c)))
+        (hfRecursiveIntegerAdditionGraph bound) ∧
+    hfRecursiveInteger ((a + b) * c) =
+      hfRecursiveInteger (a * c + b * c) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact (hfRecursiveIntegerAdditionGraph_on_integers_iff
+      bound a b aWithin bWithin _).mpr rfl
+  · exact (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+      bound (a + b) c abWithin cWithin _).mpr rfl
+  · exact (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+      bound a c aWithin cWithin _).mpr rfl
+  · exact (hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+      bound b c bWithin cWithin _).mpr rfl
+  · exact (hfRecursiveIntegerAdditionGraph_on_integers_iff
+      bound (a * c) (b * c) acWithin bcWithin _).mpr rfl
+  · exact congrArg hfRecursiveInteger (Int.add_mul a b c)
+
 /- The graph of the identity function on the internally represented finite
    ordinal `n`. -/
 def hfRecursiveNatIdentityGraph : Nat → HFRecursiveSet

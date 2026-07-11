@@ -200,7 +200,10 @@ It currently establishes:
   their bounded two-dimensional domains.  Evaluation on concrete integer codes
   has an output-equality iff; both operations are commutative, addition has
   left/right zero and additive-inverse laws, and multiplication has left/right
-  zero and one laws, all stated as internal graph applications.
+  zero and one laws, all stated as internal graph applications.  With explicit
+  window hypotheses for intermediate values, addition and multiplication are
+  associative and multiplication distributes over addition from both sides;
+  the proofs certify the complete internal computation diagrams.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
