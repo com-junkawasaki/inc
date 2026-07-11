@@ -6030,6 +6030,30 @@ def ContainsLinearIndicators
     (language : LinearObservationLanguage inc idx) : Prop :=
   ∀ pivot, language (indicatorLinearObservation inc idx pivot)
 
+def indicatorObservationLanguage
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) :
+    LinearObservationLanguage inc idx :=
+  fun observation => ∃ pivot,
+    observation = indicatorLinearObservation inc idx pivot
+
+theorem indicatorObservationLanguage_containsIndicators
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) :
+    ContainsLinearIndicators inc idx (indicatorObservationLanguage inc idx) := by
+  intro pivot
+  exact ⟨pivot, rfl⟩
+
+theorem containsLinearIndicators_mono
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    {smaller larger : LinearObservationLanguage inc idx}
+    (included : ∀ observation, smaller observation → larger observation)
+    (contains : ContainsLinearIndicators inc idx smaller) :
+    ContainsLinearIndicators inc idx larger := by
+  intro pivot
+  exact included (indicatorLinearObservation inc idx pivot) (contains pivot)
+
 def AgreeOnLinearObservationLanguage
     {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I)
@@ -6136,6 +6160,37 @@ theorem indicator_complete_language_bisimulation_completeness
     containsIndicators i j).mp agrees
   cases equal
   exact approxBisim_refl inc i
+
+theorem indicator_language_agreement_iff_eq
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (i j : I) :
+    AgreeOnLinearObservationLanguage inc idx
+      (indicatorObservationLanguage inc idx) i j ↔ i = j :=
+  indicator_complete_language_agreement_iff_eq inc idx
+    (indicatorObservationLanguage inc idx)
+    (indicatorObservationLanguage_containsIndicators inc idx) i j
+
+def indicatorLanguageQuotientEquivalence
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) :
+    IncTypeEquivalence I
+      (LanguageObservationQuotient inc idx
+        (indicatorObservationLanguage inc idx)
+        (indicatorObservationLanguage_containsIndicators inc idx)) :=
+  indicatorCompleteLanguageQuotientEquivalence inc idx
+    (indicatorObservationLanguage inc idx)
+    (indicatorObservationLanguage_containsIndicators inc idx)
+
+theorem language_extension_preserves_completeness
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    {smaller larger : LinearObservationLanguage inc idx}
+    (included : ∀ observation, smaller observation → larger observation)
+    (smallerContainsIndicators : ContainsLinearIndicators inc idx smaller)
+    (i j : I) :
+    AgreeOnLinearObservationLanguage inc idx larger i j ↔ i = j :=
+  indicator_complete_language_agreement_iff_eq inc idx larger
+    (containsLinearIndicators_mono inc idx included smallerContainsIndicators) i j
 
 theorem all_linear_observations_agree_iff_eq
     {I R T : Type u} [DecidableEq I]
