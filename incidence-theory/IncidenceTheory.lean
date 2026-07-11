@@ -1133,6 +1133,26 @@ theorem IncNaturalIsomorphism.inv_app_hom_app
     iso.inv_hom_id
   exact component
 
+def IncFunctor.comp_assoc_iso
+    {AObj BObj CObj DObj : Type u}
+    {A : IncCategory AObj} {B : IncCategory BObj}
+    {C : IncCategory CObj} {D : IncCategory DObj}
+    (H : IncFunctor C D) (G : IncFunctor B C) (F : IncFunctor A B) :
+    IncNaturalIsomorphism ((H.comp G).comp F) (H.comp (G.comp F)) :=
+  IncNaturalIsomorphism.refl ((H.comp G).comp F)
+
+def IncFunctor.identity_comp_iso
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) :
+    IncNaturalIsomorphism ((IncFunctor.identity D).comp F) F :=
+  IncNaturalIsomorphism.refl F
+
+def IncFunctor.comp_identity_iso
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) :
+    IncNaturalIsomorphism (F.comp (IncFunctor.identity C)) F :=
+  IncNaturalIsomorphism.refl F
+
 def IncNaturalIsomorphism.trans
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     {F G H : IncFunctor C D}
