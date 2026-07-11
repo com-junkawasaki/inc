@@ -1391,6 +1391,12 @@ It currently establishes:
   before returning `model.sigma`; first consumes that exact Sigma result directly.
   Every one of the eight typing constructors now has a checked strict-result
   combinator.  What remains is assembling them into the single recursive fold.
+  The formation side now has the parallel exact return type
+  `IncDepRawStrictFormationSubstitutionDispatchResult` and checked constructors
+  for base, unit, Pi, Sigma, and Identity.  Pi/Sigma lift the substitution for the
+  codomain result; Identity consumes endpoint typing results already aligned to
+  its exact type result.  Both halves of the intended mutual fold therefore have
+  complete constructor APIs.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
