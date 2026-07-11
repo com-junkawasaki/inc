@@ -402,6 +402,12 @@ It currently establishes:
   inhabited while the fiber at `(0,1)` is proved empty, so the construction is
   nontrivial.  This is not yet a completeness theorem for a full dependent
   type theory or a complete context/substitution calculus.
+  The identity layer is connected to substitution rather than left isolated:
+  identity witnesses are unique, functions act on them by `congrArg`, this
+  action preserves identity and composition, symmetry is involutive, and
+  transport is natural with respect to every dependent-family morphism.  These
+  are the core equality/substitution coherence laws needed before adding a
+  full telescope syntax and typing judgment.
 - the `inc_to_set` translation packaged as a functor from the discrete
   incidence carrier category to the category of types.  It is always faithful
   but never full or essentially surjective; explicit morphisms and objects

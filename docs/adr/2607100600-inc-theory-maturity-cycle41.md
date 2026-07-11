@@ -90,6 +90,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   transport の refl/合成則、J beta 則まで拡張した。`natIncidence × natIncidence` では
   `(0,0)` identity fiber が inhabited、`(0,1)` fiber が empty であることを証明し、
   単なる全要素同一視ではないことを確認済み。
+- identity witness の一意性、function の `congrArg`、`congrArg` の identity/合成則、
+  symmetry involution、任意の dependent-family morphism に対する transport naturality を
+  証明し、identity elimination を既存 substitution/reindex 層へ接続した。残る依存型
+  課題は telescope syntax と typing judgment を明示した完全な context calculus である。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」や carrier 可算性の除去ではなく、Incidence 固有の意味論とのさらに

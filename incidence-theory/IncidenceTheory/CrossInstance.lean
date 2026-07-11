@@ -126,6 +126,78 @@ theorem natIncIdentity_zero_one_empty :
   rintro ⟨witness⟩
   exact Nat.zero_ne_one witness.down.down
 
+def IncIdentityFamily.congrArg
+    {I J R T R' T' : Type u}
+    [DecidableEq (I × I)] [DecidableEq (J × J)]
+    {sourcePairs : Incidence (I × I) R T}
+    {targetPairs : Incidence (J × J) R' T'}
+    (map : I → J) {left right : I} :
+    (IncIdentityFamily sourcePairs).fiber (left, right) →
+      (IncIdentityFamily targetPairs).fiber (map left, map right) :=
+  fun equal => ⟨⟨_root_.congrArg map equal.down.down⟩⟩
+
+theorem IncIdentityFamily.witness_unique
+    {I R T : Type u} [DecidableEq (I × I)]
+    {pairIncidence : Incidence (I × I) R T} {left right : I}
+    (first second : (IncIdentityFamily pairIncidence).fiber (left, right)) :
+    first = second := by
+  rcases first with ⟨⟨firstProof⟩⟩
+  rcases second with ⟨⟨secondProof⟩⟩
+  have proofsEqual : firstProof = secondProof := Subsingleton.elim _ _
+  exact _root_.congrArg
+    (fun proof => (⟨⟨proof⟩⟩ : (IncIdentityFamily pairIncidence).fiber (left, right)))
+    proofsEqual
+
+theorem IncIdentityFamily.congrArg_id
+    {I R T : Type u} [DecidableEq (I × I)]
+    {pairIncidence : Incidence (I × I) R T}
+    {left right : I}
+    (equal : (IncIdentityFamily pairIncidence).fiber (left, right)) :
+    IncIdentityFamily.congrArg (sourcePairs := pairIncidence)
+      (targetPairs := pairIncidence) id equal = equal := by
+  exact IncIdentityFamily.witness_unique _ _
+
+theorem IncIdentityFamily.congrArg_comp
+    {I J K R T R' T' R'' T'' : Type u}
+    [DecidableEq (I × I)] [DecidableEq (J × J)] [DecidableEq (K × K)]
+    {sourcePairs : Incidence (I × I) R T}
+    {middlePairs : Incidence (J × J) R' T'}
+    {targetPairs : Incidence (K × K) R'' T''}
+    (second : J → K) (first : I → J) {left right : I}
+    (equal : (IncIdentityFamily sourcePairs).fiber (left, right)) :
+    IncIdentityFamily.congrArg (sourcePairs := sourcePairs)
+        (targetPairs := targetPairs) (second ∘ first) equal =
+      IncIdentityFamily.congrArg (sourcePairs := middlePairs)
+        (targetPairs := targetPairs) second
+        (IncIdentityFamily.congrArg (sourcePairs := sourcePairs)
+          (targetPairs := middlePairs) first equal) := by
+  exact IncIdentityFamily.witness_unique _ _
+
+theorem IncIdentityFamily.transport_morphism_naturality
+    {I R T Rb Tb : Type u} [DecidableEq I] [DecidableEq (I × I)]
+    {baseIncidence : Incidence I Rb Tb}
+    {pairIncidence : Incidence (I × I) R T}
+    {source target : IncDependentFamily baseIncidence}
+    (morphism : IncDependentFamilyMorphism source target)
+    {left right : I}
+    (equal : (IncIdentityFamily pairIncidence).fiber (left, right))
+    (value : source.fiber left) :
+    morphism.app right
+        (IncIdentityFamily.transport source.fiber equal value) =
+      IncIdentityFamily.transport target.fiber equal
+        (morphism.app left value) := by
+  have indicesEqual : left = right := equal.down.down
+  subst right
+  rfl
+
+theorem IncIdentityFamily.symm_symm
+    {I R T : Type u} [DecidableEq (I × I)]
+    {pairIncidence : Incidence (I × I) R T} {left right : I}
+    (equal : (IncIdentityFamily pairIncidence).fiber (left, right)) :
+    IncIdentityFamily.symm (pairIncidence := pairIncidence)
+        (IncIdentityFamily.symm (pairIncidence := pairIncidence) equal) = equal := by
+  exact IncIdentityFamily.witness_unique _ _
+
 def IncDependentFamily.pullbackAlongBoundaryEmbedding
     {I I' R T R' T' : Type u} [DecidableEq I] [DecidableEq I']
     {source : Incidence I R T} {target : Incidence I' R' T'}
