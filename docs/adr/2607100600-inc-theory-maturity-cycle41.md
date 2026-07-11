@@ -783,6 +783,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - `IncDepRawCoherentReadinessAlignmentProvider.toStrictTyping`を証明し、strict typing readiness alignmentを独立仮定から除いた。coherent treeの等式は
   既存providerが供給し、strict structureの残るfieldは等式証明なのでproof irrelevanceにより一意である。推奨bundle constructor
   `preservationDispatcherAligned`はseparate strict-alignment providerを要求せず、保存定理の明示的仮定を1つ削減する。
+- 一方、coherent readiness alignment自体のplain mutual constructor inductionによる導出は失敗した。base/unit/Pi/Sigma/Identity/variable/lambda/first/refl
+  shapeは閉じるが、apply/pair/secondでは同じouter judgmentの内部に命題的には関連するがdefinitionally equalではないcodomain/instantiate indicesが隠れ、
+  dependent eliminationが成立しない。したがってcoherent alignment providerは現時点でhonest coherence hypothesisとして残し、自動的proof irrelevanceとは
+  主張しない。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

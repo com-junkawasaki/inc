@@ -1485,6 +1485,14 @@ It currently establishes:
   itself an equality proof and is unique by proof irrelevance.
   `preservationDispatcherAligned` is therefore the preferred bundle constructor
   and no longer asks callers for a separate strict-alignment provider.
+  By contrast, coherent readiness alignment itself is not currently derivable by
+  plain constructor induction.  The attempted mutual uniqueness proof closes the
+  base, unit, Pi, Sigma, Identity, variable, lambda, first, and reflexivity shapes,
+  but dependent elimination fails at apply, pair, and second: two readiness trees
+  with the same outer judgment may hide propositionally related yet non-
+  definitionally equal codomain/instantiation indices.  The coherent alignment
+  provider therefore remains an honest coherence hypothesis; treating it as
+  automatic proof irrelevance would overstate what Lean has checked.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
