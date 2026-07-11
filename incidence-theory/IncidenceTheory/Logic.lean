@@ -895,6 +895,98 @@ theorem Formula.logicalOr_commutative {Atom : Type u}
         (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) left) := by
   exact Quotient.sound (derives_or_commutative_iff left right)
 
+theorem derives_and_associative_iff {Atom : Type u}
+    (p q r : Formula Atom) :
+    Derives [] (Formula.iff (.and (.and p q) r) (.and p (.and q r))) := by
+  apply derives_iffI
+  · apply Derives.impI
+    apply Derives.andI
+    · exact Derives.andEL (p := p) (q := q)
+        (Derives.andEL (p := .and p q) (q := r) (Derives.ax (by simp)))
+    · apply Derives.andI
+      · exact Derives.andER (p := p) (q := q)
+          (Derives.andEL (p := .and p q) (q := r) (Derives.ax (by simp)))
+      · exact Derives.andER (p := .and p q) (q := r) (Derives.ax (by simp))
+  · apply Derives.impI
+    apply Derives.andI
+    · apply Derives.andI
+      · exact Derives.andEL (p := p) (q := .and q r) (Derives.ax (by simp))
+      · exact Derives.andEL (p := q) (q := r)
+          (Derives.andER (p := p) (q := .and q r) (Derives.ax (by simp)))
+    · exact Derives.andER (p := q) (q := r)
+        (Derives.andER (p := p) (q := .and q r) (Derives.ax (by simp)))
+
+theorem Formula.logicalAnd_associative {Atom : Type u} (p q r : Formula Atom) :
+    Formula.logicalAnd
+        (Formula.logicalAnd
+          (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) p)
+          (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) q))
+        (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) r) =
+      Formula.logicalAnd
+        (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) p)
+        (Formula.logicalAnd
+          (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) q)
+          (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) r)) := by
+  exact Quotient.sound (derives_and_associative_iff p q r)
+
+theorem Formula.logicalAnd_assoc {Atom : Type u}
+    (p q r : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalAnd (Formula.logicalAnd p q) r =
+      Formula.logicalAnd p (Formula.logicalAnd q r) := by
+  refine Quotient.inductionOn p ?_
+  intro p
+  refine Quotient.inductionOn q ?_
+  intro q
+  refine Quotient.inductionOn r ?_
+  intro r
+  exact Formula.logicalAnd_associative p q r
+
+theorem derives_or_associative_iff {Atom : Type u}
+    (p q r : Formula Atom) :
+    Derives [] (Formula.iff (.or (.or p q) r) (.or p (.or q r))) := by
+  apply derives_iffI
+  · apply Derives.impI
+    refine Derives.orE (p := .or p q) (q := r) (r := .or p (.or q r))
+      (Derives.ax (by simp)) ?_ ?_
+    · refine Derives.orE (p := p) (q := q) (r := .or p (.or q r))
+        (Derives.ax (by simp)) ?_ ?_
+      · exact Derives.orIL (Derives.ax (by simp))
+      · exact Derives.orIR (Derives.orIL (Derives.ax (by simp)))
+    · exact Derives.orIR (Derives.orIR (Derives.ax (by simp)))
+  · apply Derives.impI
+    refine Derives.orE (p := p) (q := .or q r) (r := .or (.or p q) r)
+      (Derives.ax (by simp)) ?_ ?_
+    · exact Derives.orIL (Derives.orIL (Derives.ax (by simp)))
+    · refine Derives.orE (p := q) (q := r) (r := .or (.or p q) r)
+        (Derives.ax (by simp)) ?_ ?_
+      · exact Derives.orIL (Derives.orIR (Derives.ax (by simp)))
+      · exact Derives.orIR (Derives.ax (by simp))
+
+theorem Formula.logicalOr_associative {Atom : Type u} (p q r : Formula Atom) :
+    Formula.logicalOr
+        (Formula.logicalOr
+          (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) p)
+          (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) q))
+        (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) r) =
+      Formula.logicalOr
+        (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) p)
+        (Formula.logicalOr
+          (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) q)
+          (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) r)) := by
+  exact Quotient.sound (derives_or_associative_iff p q r)
+
+theorem Formula.logicalOr_assoc {Atom : Type u}
+    (p q r : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalOr (Formula.logicalOr p q) r =
+      Formula.logicalOr p (Formula.logicalOr q r) := by
+  refine Quotient.inductionOn p ?_
+  intro p
+  refine Quotient.inductionOn q ?_
+  intro q
+  refine Quotient.inductionOn r ?_
+  intro r
+  exact Formula.logicalOr_associative p q r
+
 theorem satisfies_and_or_distributive {Atom : Type u} (valuation : Atom → Prop)
     (p q r : Formula Atom) :
     Satisfies valuation (.and p (.or q r)) ↔
