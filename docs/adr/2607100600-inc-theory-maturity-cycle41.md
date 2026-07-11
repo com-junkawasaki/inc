@@ -692,6 +692,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   structural-to-aligned substitution rebaseを一体で保持し、canonical constructorでは3componentすべてdefinitionally reflexiveに
   構成できる。`pairCoherent`はこの単一objectを消費するため、recursive callerはendpoint alignmentとequivalence-square proofを
   別々に管理する必要がなくなった。
+- `applyCoherent`/`secondCoherent`も同じbundleを消費するよう追加した。`pairCoherent`と合わせ、instantiate境界を横断する
+  dependent 3 semantic rulesは単一のuniform coherence interfaceを持つ。rule固有codeが供給するのはargument termと既証明の
+  substitution equationだけである。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

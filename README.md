@@ -1310,6 +1310,10 @@ It currently establishes:
   is definitionally reflexive for all three components.  `pairCoherent` consumes
   this one object, so recursive callers no longer manage the endpoint alignment
   and equivalence-square proof separately.
+  `applyCoherent` and `secondCoherent` now consume the same bundle too.  Together
+  with `pairCoherent`, all three instantiate-crossing semantic rules have one
+  uniform coherence interface; their rule-specific code only supplies the
+  argument term and its already proved substitution equation.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
