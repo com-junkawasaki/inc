@@ -272,6 +272,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   追加引数なしの公開interpretation pathを与える。`IncDepRawEqualityLawfulSubstitutionFiberModel`はrebaseをformation-preservation resultのliteral uniquenessで
   強化し、自動的にlawful modelへ変換する。これらはsyntax-local synthesisではなく真のsemantic model lawsである。特にdependent eliminationでは同じ
   instantiate済みresult typeが内部derivationを一意に定めないため、readiness alignmentをoutput indexだけから一般導出する主張は採用しない。
+- concrete-model構成から非本質的なbase carrier選択を除いた。`withUnitBase`は全primitive base typeを明示的な`ULift Unit` familyへ置換しつつ、
+  typing-formation、Pi/Sigma transport coherence、全canonical preservation lawsを保存する。simp theoremでcarrierとlaw preservationを確認した。
+  raw base indexの解釈選択はconsistency上の残件ではなく、本質的な具体モデル課題はdependent transport coherenceとglobal
+  variable/alignment/rebase lawsに限定される。dependent Sigma round tripをfiber inverse lawsだけから導出する試行では、dependent `Eq.mp` transportの
+  naturalityが別途必要と判明したため、Pi/Sigma coherence fieldsを未証明のまま冗長とは扱わない。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

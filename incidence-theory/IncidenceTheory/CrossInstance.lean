@@ -12435,6 +12435,31 @@ structure IncDepRawLawfulSubstitutionFiberModel extends
     IncDepRawSubstitutionFiberModel.{u} where
   canonicalLaws : IncDepRawCanonicalSubstitutionPreservationHypotheses
 
+def IncDepRawSubstitutionFiberModel.withUnitBase
+    (model : IncDepRawSubstitutionFiberModel.{u}) :
+    IncDepRawSubstitutionFiberModel.{u} where
+  baseModel := fun _ => ULift Unit
+  typingFormation := model.typingFormation
+  piCoherence := model.piCoherence
+  sigmaCoherence := model.sigmaCoherence
+
+@[simp] theorem IncDepRawSubstitutionFiberModel.withUnitBase_baseModel
+    (model : IncDepRawSubstitutionFiberModel.{u}) (index : Nat) :
+    model.withUnitBase.baseModel index = ULift Unit := by
+  rfl
+
+def IncDepRawLawfulSubstitutionFiberModel.withUnitBase
+    (model : IncDepRawLawfulSubstitutionFiberModel.{u}) :
+    IncDepRawLawfulSubstitutionFiberModel.{u} where
+  toIncDepRawSubstitutionFiberModel :=
+    model.toIncDepRawSubstitutionFiberModel.withUnitBase
+  canonicalLaws := model.canonicalLaws
+
+@[simp] theorem IncDepRawLawfulSubstitutionFiberModel.withUnitBase_laws
+    (model : IncDepRawLawfulSubstitutionFiberModel.{u}) :
+    model.withUnitBase.canonicalLaws = model.canonicalLaws := by
+  rfl
+
 noncomputable def IncDepRawLawfulSubstitutionFiberModel.preservation
     (model : IncDepRawLawfulSubstitutionFiberModel.{u}) :
     IncDepRawStrictMutualSubstitutionDispatcher :=

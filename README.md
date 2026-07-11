@@ -695,6 +695,18 @@ It currently establishes:
   syntax-local obligations: readiness alignment cannot be derived merely from
   the output index, because dependent elimination can hide different internal
   derivations behind the same instantiated result type.
+  Concrete-model construction has also been separated from an inessential
+  choice.  `withUnitBase` replaces every primitive base type by the explicit
+  family `ULift Unit` while preserving typing-formation, Pi/Sigma transport
+  coherence, and all canonical preservation laws; simp theorems expose both the
+  concrete carrier and unchanged laws.  Hence choosing interpretations for raw
+  base indices is not a remaining consistency obstacle.  The genuine concrete
+  model work is now confined to dependent transport coherence and the global
+  variable/alignment/rebase laws.  An attempted derivation of dependent Sigma
+  round trips from fiber inverse laws alone also exposed the precise issue:
+  dependent `Eq.mp` transport naturality is required, so the current
+  Pi/Sigma-coherence fields must not be reported as redundant until those
+  transport equations are proved.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
