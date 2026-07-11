@@ -799,6 +799,8 @@ It currently establishes:
   witnesses by congruence of its forward map, and mapped reflexivity computes to
   reflexivity definitionally.  This is the introduction/computation core for the
   forthcoming Id formation and J coherence branch.
+  Equality witnesses now transport backward as well, with the corresponding
+  reflexivity computation rule, completing the bidirectional identity-fiber API.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
