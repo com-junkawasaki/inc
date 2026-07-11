@@ -151,6 +151,10 @@ It currently establishes:
   More generally, finite shift graphs implement `m ↦ m + k`; shift by zero is
   proved equal to the identity graph and shift by one to the successor graph.
   Their pointwise composition is proved to add offsets.
+  A bounded two-input addition graph is now constructed as an internal HF set
+  of ordered input/output pairs.  Its exact application law is
+  `⟨m,n⟩ ↦ m+n` for both inputs below the bound, and the graph is proved
+  functional and total on that finite square domain.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
