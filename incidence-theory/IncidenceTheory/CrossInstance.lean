@@ -2675,6 +2675,58 @@ theorem incDepRawDependentPair_second_reductionSound :
   exact ⟨IncDepRawDefEq.ofStep incDepRawDependentPair_second_betaStep,
     incDepRawDependentPairSemantic_second_beta⟩
 
+structure IncDepRawClosedSemanticResult
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    (certified : IncDepRawCertifiedTyping [] term type) where
+  semanticType : IncTypeInContext IncContext.empty
+  semanticTerm : IncTerm semanticType
+
+def incDepRawDependentRefl_interpretation :
+    IncDepRawClosedSemanticResult incDepRawDependentRefl_certified where
+  semanticType := IncPiType incDepUnitType
+    incDepRawDependentReflSemanticCodomain
+  semanticTerm := incDepRawDependentReflSemantic
+
+def incDepRawDependentPair_interpretation :
+    IncDepRawClosedSemanticResult incDepRawDependentPair_certified where
+  semanticType := IncSigmaType incDepUnitType
+    incDepRawDependentReflSemanticCodomain
+  semanticTerm := incDepRawDependentPairSemantic
+
+structure IncDepRawClosedReductionResult
+    {first second : IncDepRawTerm} (steps : IncDepRawSteps first second) where
+  semanticType : IncTypeInContext IncContext.empty
+  firstSemantic : IncTerm semanticType
+  secondSemantic : IncTerm semanticType
+  sound : firstSemantic = secondSemantic
+
+def incDepRawDependentRefl_reductionInterpretation :
+    IncDepRawClosedReductionResult
+      (IncDepRawSteps.tail incDepRawDependentRefl_betaStep
+        (IncDepRawSteps.refl _)) where
+  semanticType := IncIdentityType incDepUnitType incDepUnitTerm incDepUnitTerm
+  firstSemantic := IncPiTerm.apply incDepRawDependentReflSemantic incDepUnitTerm
+  secondSemantic := IncIdentityTerm.refl incDepUnitTerm
+  sound := incDepRawDependentReflSemantic_beta
+
+def incDepRawDependentPair_first_reductionInterpretation :
+    IncDepRawClosedReductionResult
+      (IncDepRawSteps.tail incDepRawDependentPair_first_betaStep
+        (IncDepRawSteps.refl _)) where
+  semanticType := incDepUnitType
+  firstSemantic := IncSigmaTerm.first incDepRawDependentPairSemantic
+  secondSemantic := incDepUnitTerm
+  sound := incDepRawDependentPairSemantic_first_beta
+
+def incDepRawDependentPair_second_reductionInterpretation :
+    IncDepRawClosedReductionResult
+      (IncDepRawSteps.tail incDepRawDependentPair_second_betaStep
+        (IncDepRawSteps.refl _)) where
+  semanticType := IncIdentityType incDepUnitType incDepUnitTerm incDepUnitTerm
+  firstSemantic := IncSigmaTerm.second incDepRawDependentPairSemantic
+  secondSemantic := IncIdentityTerm.refl incDepUnitTerm
+  sound := incDepRawDependentPairSemantic_second_beta
+
 def IncIdentityFamily
     {I R T : Type u} [DecidableEq (I × I)]
     (pairIncidence : Incidence (I × I) R T) :

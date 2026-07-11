@@ -229,6 +229,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `IncDepRawCertifiedTyping`を追加し、dependent Pi/reflとSigma/pairのclosed例をcertifyした。
   certified judgmentがtype-aware renamingとtyped dependent substitutionで保存されることも
   証明。general semantic interpreter signatureを妨げていた暗黙premiseを除去した。
+- closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
+  typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
+  写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
+  packageした。general recursive interpreterのdependent return shapeとsoundness obligationを
+  固定した段階であり、一般再帰関数自体は未完である。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

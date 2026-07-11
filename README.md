@@ -587,6 +587,13 @@ It currently establishes:
   substitution whenever the destination/source telescope is certified.  This
   removes an implicit premise that previously prevented a well-typed general
   semantic interpreter signature.
+  Closed interpreter result types are now formalized.  A certified closed
+  judgment maps to a contextual semantic type together with a term of that type;
+  a closed multi-step reduction maps to two terms in one semantic type together
+  with their equality.  The dependent Pi/reflexivity and Sigma/pair judgments
+  inhabit the first API, and Pi beta plus both Sigma projection reductions
+  inhabit the second.  This fixes the dependent result shape and soundness
+  obligation for the general recursive interpreter, which is still pending.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite
