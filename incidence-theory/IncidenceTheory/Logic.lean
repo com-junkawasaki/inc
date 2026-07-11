@@ -816,6 +816,50 @@ theorem Formula.logicalOr_bottom {Atom : Type u} (formula : Formula Atom) :
       Formula.logicalBottom = Quotient.mk (Formula.derivablyEquivalentSetoid Atom) formula := by
   exact Quotient.sound (derives_or_bottom_iff formula)
 
+theorem derives_and_bottom_iff {Atom : Type u} (formula : Formula Atom) :
+    Derives [] (Formula.iff (.and formula .bot) .bot) := by
+  apply derives_iffI
+  · apply Derives.impI
+    exact Derives.andER (p := formula) (q := .bot) (Derives.ax (by simp))
+  · apply Derives.impI
+    exact Derives.botE (Derives.ax (by simp))
+
+theorem derives_or_top_iff {Atom : Type u} (formula : Formula Atom) :
+    Derives [] (Formula.iff (.or formula .top) .top) := by
+  apply derives_iffI
+  · apply Derives.impI
+    exact Derives.topI
+  · apply Derives.impI
+    exact Derives.orIR Derives.topI
+
+theorem Formula.logicalAnd_bottom {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalAnd formula Formula.logicalBottom = Formula.logicalBottom := by
+  refine Quotient.inductionOn formula ?_
+  intro formula
+  exact Quotient.sound (derives_and_bottom_iff formula)
+
+theorem Formula.logicalOr_top {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalOr formula Formula.logicalTop = Formula.logicalTop := by
+  refine Quotient.inductionOn formula ?_
+  intro formula
+  exact Quotient.sound (derives_or_top_iff formula)
+
+theorem Formula.logicalAnd_top_all {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalAnd formula Formula.logicalTop = formula := by
+  refine Quotient.inductionOn formula ?_
+  intro formula
+  exact Formula.logicalAnd_top formula
+
+theorem Formula.logicalOr_bottom_all {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalOr formula Formula.logicalBottom = formula := by
+  refine Quotient.inductionOn formula ?_
+  intro formula
+  exact Formula.logicalOr_bottom formula
+
 /- The first nontrivial connective law needed to read incidence products and
    sums as logical structure.  Both directions are natural-deduction
    derivations, rather than an appeal to a Boolean meta-semantics, so the law
@@ -872,6 +916,15 @@ theorem Formula.logicalAnd_commutative {Atom : Type u}
         (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) left) := by
   exact Quotient.sound (derives_and_commutative_iff left right)
 
+theorem Formula.logicalAnd_comm {Atom : Type u}
+    (left right : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalAnd left right = Formula.logicalAnd right left := by
+  refine Quotient.inductionOn left ?_
+  intro left
+  refine Quotient.inductionOn right ?_
+  intro right
+  exact Formula.logicalAnd_commutative left right
+
 theorem derives_or_commutative_iff {Atom : Type u}
     (left right : Formula Atom) :
     Derives [] (Formula.iff (.or left right) (.or right left)) := by
@@ -894,6 +947,35 @@ theorem Formula.logicalOr_commutative {Atom : Type u}
       Formula.logicalOr (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) right)
         (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) left) := by
   exact Quotient.sound (derives_or_commutative_iff left right)
+
+theorem Formula.logicalOr_comm {Atom : Type u}
+    (left right : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalOr left right = Formula.logicalOr right left := by
+  refine Quotient.inductionOn left ?_
+  intro left
+  refine Quotient.inductionOn right ?_
+  intro right
+  exact Formula.logicalOr_commutative left right
+
+theorem Formula.logicalTop_and {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalAnd Formula.logicalTop formula = formula := by
+  rw [Formula.logicalAnd_comm, Formula.logicalAnd_top_all]
+
+theorem Formula.logicalBottom_or {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalOr Formula.logicalBottom formula = formula := by
+  rw [Formula.logicalOr_comm, Formula.logicalOr_bottom_all]
+
+theorem Formula.logicalBottom_and {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalAnd Formula.logicalBottom formula = Formula.logicalBottom := by
+  rw [Formula.logicalAnd_comm, Formula.logicalAnd_bottom]
+
+theorem Formula.logicalTop_or {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalOr Formula.logicalTop formula = Formula.logicalTop := by
+  rw [Formula.logicalOr_comm, Formula.logicalOr_top]
 
 theorem derives_and_associative_iff {Atom : Type u}
     (p q r : Formula Atom) :
