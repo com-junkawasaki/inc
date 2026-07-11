@@ -523,6 +523,13 @@ It currently establishes:
   reflexivity.  Thus the raw dependent calculus now has full renaming and
   substitution judgment preservation; its remaining major bridge is semantic
   interpretation and soundness in the contextual Pi/Sigma/Id model.
+  The semantic bridge now has a first end-to-end dependent witness.  The raw
+  closed inhabitant `Pi (x : Unit), Id Unit x x` is mirrored in the semantic
+  context calculus using context extension, the newest variable, contextual
+  identity formation, reflexivity, and Pi lambda.  Applying that semantic term
+  to unit is proved definitionally equal to semantic reflexivity.  This checks
+  the intended raw-to-semantic constructor alignment and beta computation while
+  the general derivation interpreter remains to be completed.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite

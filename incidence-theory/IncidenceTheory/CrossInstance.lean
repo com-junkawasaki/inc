@@ -2242,6 +2242,32 @@ theorem IncIdentityTerm.refl_substitute
       IncIdentityTerm.refl (term.substitute substitution) := by
   rfl
 
+def incDepUnitType : IncTypeInContext IncContext.empty :=
+  fun _ => ULift Unit
+
+def incDepUnitTerm : IncTerm incDepUnitType :=
+  fun _ => ⟨()⟩
+
+def incDepRawDependentReflSemanticCodomain :
+    IncTypeInContext (IncContext.empty.extend incDepUnitType) :=
+  IncIdentityType
+    (incDepUnitType.reindex
+      (IncContext.empty.extendProjection incDepUnitType))
+    (IncContext.empty.extendVariable incDepUnitType)
+    (IncContext.empty.extendVariable incDepUnitType)
+
+def incDepRawDependentReflSemantic :
+    IncTerm (IncPiType incDepUnitType
+      incDepRawDependentReflSemanticCodomain) :=
+  IncPiTerm.lambda
+    (IncIdentityTerm.refl
+      (IncContext.empty.extendVariable incDepUnitType))
+
+theorem incDepRawDependentReflSemantic_beta :
+    IncPiTerm.apply incDepRawDependentReflSemantic incDepUnitTerm =
+      IncIdentityTerm.refl incDepUnitTerm := by
+  rfl
+
 def IncIdentityFamily
     {I R T : Type u} [DecidableEq (I × I)]
     (pairIncidence : Incidence (I × I) R T) :

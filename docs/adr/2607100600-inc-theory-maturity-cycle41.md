@@ -187,6 +187,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   両projection、identity formation、reflの全ruleを含む。raw dependent calculusのrenaming/
   substitution judgment preservationは完成し、主要な残件はcontextual Pi/Sigma/Id modelへの
   semantic interpretation/soundnessとなった。
+- semantic bridgeの最初のend-to-end dependent witnessを追加した。rawで構成した
+  `Pi (x : Unit), Id Unit x x`と同じclosed inhabitantを、semantic context extension、newest
+  variable、contextual identity formation/refl、Pi lambdaで構成した。semantic unit termへの
+  applicationがsemantic reflへdefinitionally beta簡約することを証明し、raw/semanticの
+  constructor対応と計算則を具体例で接続した。一般derivation interpreterは引き続き残る。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性
