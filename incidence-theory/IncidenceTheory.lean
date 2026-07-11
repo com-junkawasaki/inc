@@ -2670,6 +2670,37 @@ theorem IncFunctor.comp_mapObjectIsoClass
   intro object
   rfl
 
+theorem IncNaturalIsomorphism.mapObjectIsoClass_eq
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (iso : IncNaturalIsomorphism F G) :
+    F.mapObjectIsoClass = G.mapObjectIsoClass := by
+  funext objectClass
+  refine Quotient.inductionOn objectClass ?_
+  intro object
+  change Quotient.mk _ (F.obj object) = Quotient.mk _ (G.obj object)
+  apply Quotient.sound
+  exact ⟨
+    { hom := iso.hom.app object
+      inv := iso.inv.app object
+      inv_hom := iso.hom_app_inv_app object
+      hom_inv := iso.inv_app_hom_app object }⟩
+
+theorem IncNaturallyIsomorphic.mapObjectIsoClass_eq
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    {F G : IncFunctor C D} (h : IncNaturallyIsomorphic F G) :
+    F.mapObjectIsoClass = G.mapObjectIsoClass := by
+  rcases h with ⟨iso⟩
+  exact iso.mapObjectIsoClass_eq
+
+theorem IncNaturallyIsomorphic.comp_mapObjectIsoClass_eq
+    {CObj DObj EObj : Type u}
+    {C : IncCategory CObj} {D : IncCategory DObj} {E : IncCategory EObj}
+    {F G : IncFunctor C D} {H K : IncFunctor D E}
+    (outer : IncNaturallyIsomorphic H K)
+    (inner : IncNaturallyIsomorphic F G) :
+    (H.comp F).mapObjectIsoClass = (K.comp G).mapObjectIsoClass :=
+  (outer.hcomp inner).mapObjectIsoClass_eq
+
 theorem IncFunctorFullyFaithful.mapObjectIsoClass_injective
     {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
     {F : IncFunctor C D} (fullyFaithful : IncFunctorFullyFaithful F) :
