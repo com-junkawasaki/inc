@@ -987,6 +987,74 @@ theorem Formula.logicalOr_assoc {Atom : Type u}
   intro r
   exact Formula.logicalOr_associative p q r
 
+theorem derives_and_idempotent_iff {Atom : Type u} (p : Formula Atom) :
+    Derives [] (Formula.iff (.and p p) p) := by
+  apply derives_iffI
+  · apply Derives.impI
+    exact Derives.andEL (p := p) (q := p) (Derives.ax (by simp))
+  · apply Derives.impI
+    exact Derives.andI (Derives.ax (by simp)) (Derives.ax (by simp))
+
+theorem derives_or_idempotent_iff {Atom : Type u} (p : Formula Atom) :
+    Derives [] (Formula.iff (.or p p) p) := by
+  apply derives_iffI
+  · apply Derives.impI
+    exact Derives.orE (p := p) (q := p) (r := p) (Derives.ax (by simp))
+      (Derives.ax (by simp)) (Derives.ax (by simp))
+  · apply Derives.impI
+    exact Derives.orIL (Derives.ax (by simp))
+
+theorem Formula.logicalAnd_idempotent {Atom : Type u}
+    (p : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalAnd p p = p := by
+  refine Quotient.inductionOn p ?_
+  intro p
+  exact Quotient.sound (derives_and_idempotent_iff p)
+
+theorem Formula.logicalOr_idempotent {Atom : Type u}
+    (p : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalOr p p = p := by
+  refine Quotient.inductionOn p ?_
+  intro p
+  exact Quotient.sound (derives_or_idempotent_iff p)
+
+theorem derives_and_absorbs_or_iff {Atom : Type u} (p q : Formula Atom) :
+    Derives [] (Formula.iff (.and p (.or p q)) p) := by
+  apply derives_iffI
+  · apply Derives.impI
+    exact Derives.andEL (p := p) (q := .or p q) (Derives.ax (by simp))
+  · apply Derives.impI
+    exact Derives.andI (Derives.ax (by simp))
+      (Derives.orIL (Derives.ax (by simp)))
+
+theorem derives_or_absorbs_and_iff {Atom : Type u} (p q : Formula Atom) :
+    Derives [] (Formula.iff (.or p (.and p q)) p) := by
+  apply derives_iffI
+  · apply Derives.impI
+    refine Derives.orE (p := p) (q := .and p q) (r := p)
+      (Derives.ax (by simp)) (Derives.ax (by simp)) ?_
+    exact Derives.andEL (p := p) (q := q) (Derives.ax (by simp))
+  · apply Derives.impI
+    exact Derives.orIL (Derives.ax (by simp))
+
+theorem Formula.logicalAnd_absorbs_or {Atom : Type u}
+    (p q : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalAnd p (Formula.logicalOr p q) = p := by
+  refine Quotient.inductionOn p ?_
+  intro p
+  refine Quotient.inductionOn q ?_
+  intro q
+  exact Quotient.sound (derives_and_absorbs_or_iff p q)
+
+theorem Formula.logicalOr_absorbs_and {Atom : Type u}
+    (p q : Formula.LogicalEquivalenceClass Atom) :
+    Formula.logicalOr p (Formula.logicalAnd p q) = p := by
+  refine Quotient.inductionOn p ?_
+  intro p
+  refine Quotient.inductionOn q ?_
+  intro q
+  exact Quotient.sound (derives_or_absorbs_and_iff p q)
+
 theorem satisfies_and_or_distributive {Atom : Type u} (valuation : Atom → Prop)
     (p q r : Formula Atom) :
     Satisfies valuation (.and p (.or q r)) ↔
