@@ -2670,6 +2670,29 @@ theorem hfRecursiveUnion_least {s t u : HFRecursiveSet} :
   · exact hsu x hxs
   · exact htu x hxt
 
+theorem hfRecursiveUnion_eq_right_iff_subset (s t : HFRecursiveSet) :
+    hfRecursiveUnion s t = t ↔ HFRecursiveSubset s t := by
+  constructor
+  · intro unionEq x hxs
+    have hxUnion : HFRecursiveMember x (hfRecursiveUnion s t) :=
+      (hfRecursiveMember_union_iff x s t).mpr (Or.inl hxs)
+    simpa only [unionEq] using hxUnion
+  · intro subset
+    apply hfRecursiveSet_extensionality
+    intro x
+    rw [hfRecursiveMember_union_iff]
+    constructor
+    · rintro (hxs | hxt)
+      · exact subset x hxs
+      · exact hxt
+    · intro hxt
+      exact Or.inr hxt
+
+theorem hfRecursiveUnion_eq_left_iff_subset (s t : HFRecursiveSet) :
+    hfRecursiveUnion s t = s ↔ HFRecursiveSubset t s := by
+  rw [hfRecursiveUnion_comm]
+  exact hfRecursiveUnion_eq_right_iff_subset t s
+
 /- The quotient Cartesian product has the expected zero laws.  These are
    proved from the quotient membership specification, so they do not depend on
    a chosen syntactic presentation of either factor. -/
@@ -3304,6 +3327,10 @@ structure HFRecursiveSetFragmentModel where
   pair_spec : ∀ x s t, HFRecursiveMember x (pair s t) ↔ x = s ∨ x = t
   union_spec : ∀ x s t, HFRecursiveMember x (union s t) ↔
     HFRecursiveMember x s ∨ HFRecursiveMember x t
+  union_eq_right_iff_subset : ∀ s t,
+    union s t = t ↔ HFRecursiveSubset s t
+  union_eq_left_iff_subset : ∀ s t,
+    union s t = s ↔ HFRecursiveSubset t s
   product_spec : ∀ x s t, HFRecursiveMember x (product s t) ↔
     ∃ leftMember, HFRecursiveMember leftMember s ∧
       ∃ rightMember, HFRecursiveMember rightMember t ∧
@@ -3357,6 +3384,8 @@ def hfRecursiveSetFragmentModel : HFRecursiveSetFragmentModel where
   pair_right := hfRecursiveMember_pair_right
   pair_spec := hfRecursiveMember_pair_iff
   union_spec := hfRecursiveMember_union_iff
+  union_eq_right_iff_subset := hfRecursiveUnion_eq_right_iff_subset
+  union_eq_left_iff_subset := hfRecursiveUnion_eq_left_iff_subset
   product_spec := hfRecursiveMember_product_iff
   product_empty_left := hfRecursiveProduct_empty_left
   product_empty_right := hfRecursiveProduct_empty_right
