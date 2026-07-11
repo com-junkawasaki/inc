@@ -1014,6 +1014,14 @@ It currently establishes:
   and variable packages are hidden inside the checked API.  The remaining total
   dispatcher work is to recursively supply these formation results and
   equations for each typing constructor.
+  Auditing the Pi formation branch identified a sharper invariant boundary.
+  Pointwise `IncDependentFiberEquiv` alone does not imply that `piForward` and
+  `piBackward` are inverse: transporting across the domain inverse changes the
+  source index, and coherence between the codomain equivalences at those two
+  indices is additional data.  `IncDependentPiFiberEquiv` now records both Pi
+  round-trip laws explicitly and `toFiberEquiv` produces the resulting function-
+  space equivalence.  Pi formation substitution must recursively construct this
+  stronger coherence rather than assume pointwise fiber maps suffice.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

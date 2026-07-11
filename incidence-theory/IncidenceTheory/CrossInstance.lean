@@ -3275,6 +3275,32 @@ theorem IncDependentFiberEquiv.piBackward_apply
         (targetFunction (domainEquiv.forward sourceValue)) := by
   rfl
 
+structure IncDependentPiFiberEquiv
+    {sourceDomain targetDomain : Type u}
+    (domainEquiv : IncFiberEquiv sourceDomain targetDomain)
+    (sourceCodomain : sourceDomain → Type u)
+    (targetCodomain : targetDomain → Type u) where
+  dependentEquiv : IncDependentFiberEquiv domainEquiv
+    sourceCodomain targetCodomain
+  backward_forward : ∀ function,
+    dependentEquiv.piBackward (dependentEquiv.piForward function) = function
+  forward_backward : ∀ function,
+    dependentEquiv.piForward (dependentEquiv.piBackward function) = function
+
+def IncDependentPiFiberEquiv.toFiberEquiv
+    {sourceDomain targetDomain : Type u}
+    {domainEquiv : IncFiberEquiv sourceDomain targetDomain}
+    {sourceCodomain : sourceDomain → Type u}
+    {targetCodomain : targetDomain → Type u}
+    (equivalence : IncDependentPiFiberEquiv domainEquiv
+      sourceCodomain targetCodomain) :
+    IncFiberEquiv ((value : sourceDomain) → sourceCodomain value)
+      ((value : targetDomain) → targetCodomain value) where
+  forward := equivalence.dependentEquiv.piForward
+  backward := equivalence.dependentEquiv.piBackward
+  backward_forward := equivalence.backward_forward
+  forward_backward := equivalence.forward_backward
+
 def IncDependentFiberEquiv.sigmaForward
     {sourceDomain targetDomain : Type u}
     {domainEquiv : IncFiberEquiv sourceDomain targetDomain}

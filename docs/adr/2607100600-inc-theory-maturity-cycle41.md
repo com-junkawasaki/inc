@@ -505,6 +505,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   formation-substitution fiber result、replacement environment、source/target family alignment、最終term equationを
   合成し、uniform `IncDepRawTypingSubstitutionFiberResult`を直接返す。中間cast/packageはchecked API内部へ隠蔽され、
   total dispatcherに残るのは各typing constructorでformation result/equationを再帰供給することになった。
+- Pi formation branchの監査でinvariant境界をさらに特定した。pointwise `IncDependentFiberEquiv`だけでは
+  `piForward`/`piBackward`のinverse lawは導けない。domain inverse transportでsource indexが変わるため、二つの
+  index上のcodomain equivalence間coherenceが追加データとして必要である。`IncDependentPiFiberEquiv`にPiの
+  両round-trip lawを明示保持し、`toFiberEquiv`でfunction-space equivalenceを構成した。Pi formation substitutionは
+  pointwise mapだけでなく、この強いcoherenceを再帰構成する必要がある。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ
