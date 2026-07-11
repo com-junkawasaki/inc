@@ -458,6 +458,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   formation 5種・typing 8種を上記checked combinatorへdispatchし、partial definition、custom termination axiom、
   unchecked castは使わない。残るbridgeはreadiness renameではなくlookup-substitution recursionとsemantic
   alignmentに限定された。
+- total dispatcherをbinder extensionへ特殊化するformation/typing `weakenResult`を追加した。identity
+  renamingとtarget weakeningを選び、任意readiness treeのrenamed-readiness packageを返す。older lookup
+  branchはconstructor recursionを再実装せずdispatcherを再利用でき、残件はraw weakened resultとsemantic
+  projection resultのalignmentだけになった。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

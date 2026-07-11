@@ -2321,6 +2321,25 @@ mutual
           (IncDepRawTypingSemanticReady.renameResult termReady renameMap)
 end
 
+noncomputable def IncDepRawFormationSemanticReady.weakenResult
+    {context : List IncDepRawType} {type head : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawFormationSemanticReady formation) :
+    IncDepRawFormationRenamedReadyResult ready
+      ((IncDepRawRenaming.identity context).weakenTarget head) :=
+  ready.renameResult
+    ((IncDepRawRenaming.identity context).weakenTarget head)
+
+noncomputable def IncDepRawTypingSemanticReady.weakenResult
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type head : IncDepRawType}
+    {typing : IncDepRawHasType context term type}
+    (ready : IncDepRawTypingSemanticReady typing) :
+    IncDepRawTypingRenamedReadyResult ready
+      ((IncDepRawRenaming.identity context).weakenTarget head) :=
+  ready.renameResult
+    ((IncDepRawRenaming.identity context).weakenTarget head)
+
 noncomputable def IncDepRawTypingSemanticReady.toDeeplyWellFormed
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} {typing : IncDepRawHasType context term type}

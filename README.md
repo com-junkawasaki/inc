@@ -934,6 +934,12 @@ It currently establishes:
   definition, custom termination axiom, or unchecked cast.  The remaining
   bridge is now specifically lookup-substitution recursion and its semantic
   alignment, rather than readiness renaming itself.
+  The dispatcher is now specialized to binder extension by formation and typing
+  `weakenResult`.  Each chooses identity renaming followed by target weakening
+  and returns the corresponding renamed-readiness package for an arbitrary
+  readiness tree.  The older lookup branch can therefore reuse the total
+  dispatcher instead of reproducing constructor recursion; its remaining work
+  is only to align this raw weakened result with the semantic projection result.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
