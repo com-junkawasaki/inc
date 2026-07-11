@@ -3139,6 +3139,25 @@ noncomputable def formulaEnumerationOfAtomCoding {Atom : Type u}
   exhaustive := fun formula => ⟨formulaCodeOfAtomCoding codeAtom formula,
     formulaDecodeOfAtomCoding_code decodeAtom codeAtom hcode formula⟩
 
+/- A complete propositional internal language packages its only infinitary
+   requirement—the ability to enumerate formulas.  Completeness is therefore
+   unconditional for every value of this structure, rather than silently
+   assuming that arbitrary incidence atoms are countable. -/
+structure CompletePropositionalInternalLogic (Atom : Type u) where
+  enumeration : FormulaEnumeration Atom
+
+theorem CompletePropositionalInternalLogic.kripke_complete
+    {Atom : Type u} (logic : CompletePropositionalInternalLogic Atom)
+    (context : List (Formula Atom)) (formula : Formula Atom) :
+    KripkeEntails.{u, u} context formula ↔ Derives context formula :=
+  kripke_entails_iff_derives_of_enumeration logic.enumeration context formula
+
+noncomputable def completeLogicOfAtomCoding {Atom : Type u}
+    (decodeAtom : Nat → Atom) (codeAtom : Atom → Nat)
+    (hcode : ∀ atom, decodeAtom (codeAtom atom) = atom) :
+    CompletePropositionalInternalLogic Atom where
+  enumeration := formulaEnumerationOfAtomCoding decodeAtom codeAtom hcode
+
 /-! The coding retraction is precisely the data needed to apply the generic
    enumeration-based completeness construction.  Keeping this theorem at the
    coding interface makes every countably retracted atom language an immediate
