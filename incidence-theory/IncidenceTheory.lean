@@ -7144,6 +7144,26 @@ def inc_to_set_preserves_boundary_shape
       | cons targetHead targetTail =>
           exact IncTypeEquivalence.refl (ULift Unit)
 
+theorem inc_to_set_fiber_classification
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) (i : I) :
+    (inc.boundary i = [] ∧
+      Nonempty (IncTypeEquivalence (inc_to_set inc i) (ULift Bool))) ∨
+    (inc.boundary i ≠ [] ∧
+      Nonempty (IncTypeEquivalence (inc_to_set inc i) (ULift Unit))) := by
+  cases boundaryEq : inc.boundary i with
+  | nil =>
+      left
+      refine ⟨rfl, ?_⟩
+      exact ⟨by simpa [inc_to_set, boundaryEq] using
+        IncTypeEquivalence.refl (ULift Bool)⟩
+  | cons head tail =>
+      right
+      refine ⟨?_, ?_⟩
+      · intro nullary
+        cases nullary
+      · exact ⟨by simpa [inc_to_set, boundaryEq] using
+          IncTypeEquivalence.refl (ULift Unit)⟩
+
 theorem uliftBool_equivalent_uliftUnit_false
     (equivalence : IncTypeEquivalence (ULift Bool) (ULift Unit)) : False := by
   have forwardEqual : equivalence.forward ⟨true⟩ =
