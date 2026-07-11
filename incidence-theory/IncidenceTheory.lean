@@ -6013,6 +6013,43 @@ structure LinearObservation {I R T : Type u} [DecidableEq I]
   laplacian : Matrix I I Int
   -- spectral data, ranks, etc.
 
+theorem all_linear_observations_agree_iff_eq
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (i j : I) :
+    (∀ obs : LinearObservation inc idx,
+      obs.boundary_matrix i = obs.boundary_matrix j ∧
+      obs.laplacian i = obs.laplacian j) ↔ i = j := by
+  constructor
+  · intro observations
+    have rowEquality :
+        (fun (_ : I) => if i = i then (1 : Int) else 0) =
+          (fun (_ : I) => if j = i then (1 : Int) else 0) :=
+      (observations
+        ⟨fun a _ => if a = i then (1 : Int) else 0, fun _ _ => 0⟩).left
+    have valueEquality :
+        (if i = i then (1 : Int) else 0) =
+          (if j = i then (1 : Int) else 0) :=
+      congrFun rowEquality j
+    by_cases equal : j = i
+    · exact equal.symm
+    · simp [equal] at valueEquality
+  · intro equal obs
+    cases equal
+    exact ⟨rfl, rfl⟩
+
+theorem linear_observations_separate_points
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) {i j : I} (different : i ≠ j) :
+    ∃ obs : LinearObservation inc idx,
+      obs.boundary_matrix i ≠ obs.boundary_matrix j ∨
+      obs.laplacian i ≠ obs.laplacian j := by
+  let indicator : LinearObservation inc idx :=
+    ⟨fun a _ => if a = i then (1 : Int) else 0, fun _ _ => 0⟩
+  refine ⟨indicator, Or.inl ?_⟩
+  intro rowsEqual
+  have atColumn := congrFun rowsEqual i
+  simp [indicator, Ne.symm different] at atColumn
+
 /- Completeness theorem: with an observation language rich enough to admit
    an "indicator of i" observation, agreement of *all* observations forces
    literal equality (hence bisimilarity, via reflexivity). -/
@@ -6024,17 +6061,8 @@ theorem linear_completeness {I R T : Type u} [DecidableEq I]
     obs.boundary_matrix i = obs.boundary_matrix j ∧
     obs.laplacian i = obs.laplacian j) :
   approxBisim inc i j := by
-  -- Instantiate at the observation whose boundary_matrix row is the
-  -- indicator of `i`; agreement of rows i and j then forces i = j.
-  have hrow : (fun (_ : I) => if i = i then (1 : Int) else 0)
-            = (fun (_ : I) => if j = i then (1 : Int) else 0) :=
-    (h_observations ⟨fun a _ => if a = i then (1 : Int) else 0, fun _ _ => 0⟩).left
-  have hval : (if i = i then (1 : Int) else 0) = (if j = i then (1 : Int) else 0) :=
-    congrFun hrow j
-  have hij : i = j := by
-    by_cases hne : j = i
-    · exact hne.symm
-    · simp [hne] at hval
+  have hij : i = j :=
+    (all_linear_observations_agree_iff_eq inc idx i j).mp h_observations
   exact hij ▸ approxBisim_refl inc i
 
 end CompletenessTheory
