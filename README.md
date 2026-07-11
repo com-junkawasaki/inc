@@ -240,7 +240,10 @@ It currently establishes:
   Order is compatible with the internal arithmetic: adding a common offset
   preserves it, negation reverses it, and multiplication by an internally
   certified nonnegative factor preserves it, subject only to the explicit
-  finite-window hypotheses for the resulting values.
+  finite-window hypotheses for the resulting values.  The comparison graph is
+  a linear order: every encoded pair is comparable, comparison in both
+  directions is equivalent to equality of the represented integers, and adding
+  a common offset both preserves and reflects comparison.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.

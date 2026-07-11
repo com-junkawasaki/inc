@@ -2449,6 +2449,69 @@ theorem hfRecursiveIntegerOrderGraph_mul_nonnegative_right
     ((hfRecursiveIntegerOrderGraph_holds_iff
       bound 0 factor zeroWithin factorWithin).mp nonnegative)
 
+theorem hfRecursiveIntegerOrderGraph_total_order
+    (bound : Nat) (left right : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (rightWithin : HFRecursiveIntegerWithin bound right) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger left) (hfRecursiveInteger right))
+          (hfRecursiveInteger 1)) (hfRecursiveIntegerOrderGraph bound) ∨
+      HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger right) (hfRecursiveInteger left))
+          (hfRecursiveInteger 1)) (hfRecursiveIntegerOrderGraph bound) := by
+  by_cases ordered : left ≤ right
+  · exact Or.inl ((hfRecursiveIntegerOrderGraph_holds_iff
+      bound left right leftWithin rightWithin).mpr ordered)
+  · apply Or.inr
+    apply (hfRecursiveIntegerOrderGraph_holds_iff
+      bound right left rightWithin leftWithin).mpr
+    omega
+
+theorem hfRecursiveIntegerOrderGraph_both_iff_eq
+    (bound : Nat) (left right : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (rightWithin : HFRecursiveIntegerWithin bound right) :
+    (HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger left) (hfRecursiveInteger right))
+          (hfRecursiveInteger 1)) (hfRecursiveIntegerOrderGraph bound) ∧
+      HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger right) (hfRecursiveInteger left))
+          (hfRecursiveInteger 1)) (hfRecursiveIntegerOrderGraph bound)) ↔
+      left = right := by
+  constructor
+  · rintro ⟨leftRight, rightLeft⟩
+    exact hfRecursiveIntegerOrderGraph_antisymm bound left right
+      leftWithin rightWithin leftRight rightLeft
+  · intro equal
+    subst right
+    exact ⟨hfRecursiveIntegerOrderGraph_refl bound left leftWithin,
+      hfRecursiveIntegerOrderGraph_refl bound left leftWithin⟩
+
+theorem hfRecursiveIntegerOrderGraph_add_right_iff
+    (bound : Nat) (left right offset : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (rightWithin : HFRecursiveIntegerWithin bound right)
+    (sumLeftWithin : HFRecursiveIntegerWithin bound (left + offset))
+    (sumRightWithin : HFRecursiveIntegerWithin bound (right + offset)) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger (left + offset))
+            (hfRecursiveInteger (right + offset)))
+          (hfRecursiveInteger 1)) (hfRecursiveIntegerOrderGraph bound) ↔
+      HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger left) (hfRecursiveInteger right))
+          (hfRecursiveInteger 1)) (hfRecursiveIntegerOrderGraph bound) := by
+  rw [hfRecursiveIntegerOrderGraph_holds_iff bound
+      (left + offset) (right + offset) sumLeftWithin sumRightWithin,
+    hfRecursiveIntegerOrderGraph_holds_iff bound
+      left right leftWithin rightWithin]
+  omega
+
 def hfRecursiveIntegerMultiplicationGraph (bound : Nat) : HFRecursiveSet :=
   hfRecursiveIntegerBinaryRows (fun left right => left * right)
     (hfRecursiveIntegerWindow bound) (hfRecursiveIntegerWindow bound)
