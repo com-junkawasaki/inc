@@ -1067,6 +1067,23 @@ def Formula.LogicalEntails {Atom : Type u}
     (left right : Formula.LogicalEquivalenceClass Atom) : Prop :=
   Formula.logicalImp left right = Formula.logicalTop
 
+theorem logicalClass_eq_top_iff_derives {Atom : Type u} (formula : Formula Atom) :
+    (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) formula :
+        Formula.LogicalEquivalenceClass Atom) = Formula.logicalTop ↔
+      Derives [] formula := by
+  constructor
+  · intro equal
+    have equivalent : Formula.DerivablyEquivalent formula .top := Quotient.exact equal
+    exact Derives.impE (derives_iffER equivalent) Derives.topI
+  · intro derives
+    apply Quotient.sound
+    apply derives_iffI
+    · apply Derives.impI
+      exact Derives.topI
+    · apply Derives.impI
+      exact derives_weaken (source := []) (target := [.top])
+        (by intro assumption hmem; simp at hmem) derives
+
 theorem derives_imp_and_curry_iff {Atom : Type u} (p q r : Formula Atom) :
     Derives [] (Formula.iff (.imp (.and p q) r) (.imp p (.imp q r))) := by
   apply derives_iffI
@@ -3523,6 +3540,18 @@ theorem double_neg_excluded_middle_derivable {Atom : Type u} (atom : Atom) :
           (Formula.neg (Formula.or (Formula.atom atom) (Formula.neg (Formula.atom atom)))))
     · apply Derives.orIL
       exact Derives.ax (by simp)
+
+theorem Formula.logicalDoubleNegExcludedMiddle_eq_top {Atom : Type u} (atom : Atom) :
+    Formula.logicalNeg (Formula.logicalNeg
+      (Formula.logicalOr
+        (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) (.atom atom))
+        (Formula.logicalNeg
+          (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) (.atom atom))))) =
+      Formula.logicalTop := by
+  apply (logicalClass_eq_top_iff_derives
+    (Formula.neg (Formula.neg
+      (.or (.atom atom) (Formula.neg (.atom atom)))))).2
+  exact double_neg_excluded_middle_derivable atom
 
 /- Canonical worlds for the eventual completeness construction.  Closure is
    stated directly in terms of finite natural-deduction derivations. -/

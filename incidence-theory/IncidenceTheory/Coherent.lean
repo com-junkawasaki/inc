@@ -64,6 +64,17 @@ theorem CoherentIncidence.internal_double_neg_elimination_fails
       Quotient.mk (Formula.derivablyEquivalentSetoid I) (.atom incidence) :=
   Formula.logicalDoubleNeg_not_le_atom incidence
 
+theorem CoherentIncidence.internal_double_neg_excluded_middle
+    {I R T : Type u} [DecidableEq I] (_coherent : CoherentIncidence I R T)
+    (incidence : I) :
+    Formula.logicalNeg (Formula.logicalNeg
+      (Formula.logicalOr
+        (Quotient.mk (Formula.derivablyEquivalentSetoid I) (.atom incidence))
+        (Formula.logicalNeg
+          (Quotient.mk (Formula.derivablyEquivalentSetoid I) (.atom incidence))))) =
+      Formula.logicalTop :=
+  Formula.logicalDoubleNegExcludedMiddle_eq_top incidence
+
 /- Relative consistency at the internal-logic level: the empty coherent
    theory has a Kripke model and therefore cannot derive bottom.  This is a
    theorem of the Lean metatheory used by the project; it deliberately does
