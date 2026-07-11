@@ -170,6 +170,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   instantiated dependent codomainのrenameが「lift mapでcodomainをrename後、renamed argument
   でinstantiate」と一致するnaturalityを導出した。dependent application/second projectionの
   result typeをtyping preservationで整列する主要補題が成立した。
+- type formationとterm typingが任意のtype-aware telescope renamingで保存されることを相互
+  再帰で証明した。Pi/Sigma binderではrenamingをliftし、variable/unit/lambda/application、
+  pair/first/second、reflの全ruleを処理した。application、pairのsecond component、second
+  projectionのdependent result typeはinstantiation naturalityでtransportしており、closed
+  weakeningだけでなく完全なjudgment-level renaming preservationが成立する。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

@@ -1477,6 +1477,85 @@ mutual
         IncDepRawHasType context (.refl term) (.identity type term term)
 end
 
+mutual
+  noncomputable def IncDepRawWellFormed.rename
+      {source target : List IncDepRawType} {type : IncDepRawType}
+      (formation : IncDepRawWellFormed source type)
+      (renameMap : IncDepRawRenaming source target) :
+      IncDepRawWellFormed target (type.rename renameMap.index) := by
+    cases formation with
+    | base => exact IncDepRawWellFormed.base
+    | unit => exact IncDepRawWellFormed.unit
+    | pi domainFormation codomainFormation =>
+        exact IncDepRawWellFormed.pi
+          (domainFormation.rename renameMap)
+          (codomainFormation.rename (renameMap.lift _))
+    | sigma domainFormation codomainFormation =>
+        exact IncDepRawWellFormed.sigma
+          (domainFormation.rename renameMap)
+          (codomainFormation.rename (renameMap.lift _))
+    | identity typeFormation leftTyping rightTyping =>
+        exact IncDepRawWellFormed.identity
+          (typeFormation.rename renameMap)
+          (leftTyping.rename renameMap)
+          (rightTyping.rename renameMap)
+
+  noncomputable def IncDepRawHasType.rename
+      {source target : List IncDepRawType}
+      {term : IncDepRawTerm} {type : IncDepRawType}
+      (typing : IncDepRawHasType source term type)
+      (renameMap : IncDepRawRenaming source target) :
+      IncDepRawHasType target (term.rename renameMap.index)
+        (type.rename renameMap.index) := by
+    cases typing with
+    | varRule lookup =>
+        exact IncDepRawHasType.varRule (renameMap.preserves lookup)
+    | unitRule => exact IncDepRawHasType.unitRule
+    | lambdaRule domainFormation bodyTyping =>
+        exact IncDepRawHasType.lambdaRule
+          (domainFormation.rename renameMap)
+          (bodyTyping.rename (renameMap.lift _))
+    | applyRule functionTyping argumentTyping =>
+        have renamed := IncDepRawHasType.applyRule
+          (functionTyping.rename renameMap)
+          (argumentTyping.rename renameMap)
+        have liftEq :
+            (fun index => match index with
+              | 0 => 0
+              | next + 1 => renameMap.index next + 1) =
+              IncDepRawTerm.liftRename renameMap.index := by
+          funext index
+          cases index <;> rfl
+        rw [liftEq] at renamed
+        rw [← IncDepRawType.instantiate_rename] at renamed
+        exact renamed
+    | pairRule firstTyping secondTyping =>
+        have renamedSecond := secondTyping.rename renameMap
+        rw [IncDepRawType.instantiate_rename] at renamedSecond
+        exact IncDepRawHasType.pairRule
+          (firstTyping.rename renameMap) renamedSecond
+    | firstRule pairTyping =>
+        exact IncDepRawHasType.firstRule (pairTyping.rename renameMap)
+    | @secondRule _ domain codomain pair pairTyping =>
+        have renamed := IncDepRawHasType.secondRule
+          (pairTyping.rename renameMap)
+        have liftEq :
+            (fun index => match index with
+              | 0 => 0
+              | next + 1 => renameMap.index next + 1) =
+              IncDepRawTerm.liftRename renameMap.index := by
+          funext index
+          cases index <;> rfl
+        rw [liftEq] at renamed
+        have instantiation := IncDepRawType.instantiate_rename
+          codomain (IncDepRawTerm.first pair) renameMap.index
+        simp only [IncDepRawTerm.rename] at instantiation
+        rw [← instantiation] at renamed
+        exact renamed
+    | reflRule termTyping =>
+        exact IncDepRawHasType.reflRule (termTyping.rename renameMap)
+end
+
 inductive IncDepRawContext.WellFormed : List IncDepRawType → Type
   | empty : WellFormed []
   | extend {context type} :

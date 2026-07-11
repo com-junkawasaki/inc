@@ -500,6 +500,13 @@ It currently establishes:
   instantiated dependent type equals first renaming the codomain under the
   lifted map and then instantiating it with the renamed argument.  This aligns
   the result types required by dependent application and second projection.
+  Type formation and term typing are now preserved by every type-aware
+  telescope renaming.  The proof is mutual across formation and typing,
+  lifts the telescope map through Pi/Sigma binders, and covers every term rule,
+  including dependent application, pairing, second projection, and identity
+  reflexivity.  Instantiation naturality supplies the required transports for
+  all dependent result types, so this is a full judgment-preservation theorem,
+  not merely weakening of closed examples.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite
