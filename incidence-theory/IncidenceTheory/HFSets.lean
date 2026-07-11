@@ -1681,6 +1681,133 @@ theorem hfRecursiveSingletonGraph_functional (input output : HFRecursiveSet) :
   have h₂' := (hfRecursiveSingletonGraph_apply_iff input output queryInput output₂).mp h₂
   exact h₁'.right.trans h₂'.right.symm
 
+def HFRecursiveIntegerWithin (bound : Nat) : Int → Prop
+  | .ofNat magnitude => magnitude < bound
+  | .negSucc magnitude => magnitude < bound
+
+def hfRecursiveIntegerNonnegativeNegationGraph : Nat → HFRecursiveSet
+  | 0 => hfRecursiveEmpty
+  | bound + 1 =>
+    hfRecursiveUnion
+      (hfRecursiveSingletonGraph
+        (hfRecursiveInteger (Int.ofNat bound))
+        (hfRecursiveInteger (-Int.ofNat bound)))
+      (hfRecursiveIntegerNonnegativeNegationGraph bound)
+
+theorem hfRecursiveIntegerNonnegativeNegationGraph_apply_iff
+    (bound : Nat) (input output : HFRecursiveSet) :
+    HFRecursiveMember (hfRecursiveOrderedPair input output)
+      (hfRecursiveIntegerNonnegativeNegationGraph bound) ↔
+      ∃ magnitude, magnitude < bound ∧
+        input = hfRecursiveInteger (Int.ofNat magnitude) ∧
+        output = hfRecursiveInteger (-Int.ofNat magnitude) := by
+  induction bound with
+  | zero =>
+      constructor
+      · intro member
+        exact False.elim (hfRecursiveMember_empty _ member)
+      · rintro ⟨magnitude, less, _, _⟩
+        exact False.elim (Nat.not_lt_zero magnitude less)
+  | succ bound ih =>
+      rw [hfRecursiveIntegerNonnegativeNegationGraph,
+        hfRecursiveMember_union_iff, hfRecursiveSingletonGraph_apply_iff, ih]
+      constructor
+      · rintro (⟨inputEq, outputEq⟩ | ⟨magnitude, less, inputEq, outputEq⟩)
+        · exact ⟨bound, Nat.lt_succ_self bound, inputEq, outputEq⟩
+        · exact ⟨magnitude, Nat.lt_trans less (Nat.lt_succ_self bound),
+            inputEq, outputEq⟩
+      · rintro ⟨magnitude, less, inputEq, outputEq⟩
+        rcases Nat.lt_or_eq_of_le (Nat.le_of_lt_succ less) with earlier | rfl
+        · exact Or.inr ⟨magnitude, earlier, inputEq, outputEq⟩
+        · exact Or.inl ⟨inputEq, outputEq⟩
+
+def hfRecursiveIntegerNegativeNegationGraph : Nat → HFRecursiveSet
+  | 0 => hfRecursiveEmpty
+  | bound + 1 =>
+    hfRecursiveUnion
+      (hfRecursiveSingletonGraph
+        (hfRecursiveInteger (Int.negSucc bound))
+        (hfRecursiveInteger (-Int.negSucc bound)))
+      (hfRecursiveIntegerNegativeNegationGraph bound)
+
+theorem hfRecursiveIntegerNegativeNegationGraph_apply_iff
+    (bound : Nat) (input output : HFRecursiveSet) :
+    HFRecursiveMember (hfRecursiveOrderedPair input output)
+      (hfRecursiveIntegerNegativeNegationGraph bound) ↔
+      ∃ magnitude, magnitude < bound ∧
+        input = hfRecursiveInteger (Int.negSucc magnitude) ∧
+        output = hfRecursiveInteger (-Int.negSucc magnitude) := by
+  induction bound with
+  | zero =>
+      constructor
+      · intro member
+        exact False.elim (hfRecursiveMember_empty _ member)
+      · rintro ⟨magnitude, less, _, _⟩
+        exact False.elim (Nat.not_lt_zero magnitude less)
+  | succ bound ih =>
+      rw [hfRecursiveIntegerNegativeNegationGraph,
+        hfRecursiveMember_union_iff, hfRecursiveSingletonGraph_apply_iff, ih]
+      constructor
+      · rintro (⟨inputEq, outputEq⟩ | ⟨magnitude, less, inputEq, outputEq⟩)
+        · exact ⟨bound, Nat.lt_succ_self bound, inputEq, outputEq⟩
+        · exact ⟨magnitude, Nat.lt_trans less (Nat.lt_succ_self bound),
+            inputEq, outputEq⟩
+      · rintro ⟨magnitude, less, inputEq, outputEq⟩
+        rcases Nat.lt_or_eq_of_le (Nat.le_of_lt_succ less) with earlier | rfl
+        · exact Or.inr ⟨magnitude, earlier, inputEq, outputEq⟩
+        · exact Or.inl ⟨inputEq, outputEq⟩
+
+def hfRecursiveIntegerNegationGraph (bound : Nat) : HFRecursiveSet :=
+  hfRecursiveUnion
+    (hfRecursiveIntegerNonnegativeNegationGraph bound)
+    (hfRecursiveIntegerNegativeNegationGraph bound)
+
+theorem hfRecursiveIntegerNegationGraph_apply_iff
+    (bound : Nat) (input output : HFRecursiveSet) :
+    HFRecursiveMember (hfRecursiveOrderedPair input output)
+      (hfRecursiveIntegerNegationGraph bound) ↔
+      ∃ integer, HFRecursiveIntegerWithin bound integer ∧
+        input = hfRecursiveInteger integer ∧
+        output = hfRecursiveInteger (-integer) := by
+  rw [hfRecursiveIntegerNegationGraph, hfRecursiveMember_union_iff,
+    hfRecursiveIntegerNonnegativeNegationGraph_apply_iff,
+    hfRecursiveIntegerNegativeNegationGraph_apply_iff]
+  constructor
+  · rintro (⟨magnitude, less, inputEq, outputEq⟩ |
+      ⟨magnitude, less, inputEq, outputEq⟩)
+    · exact ⟨Int.ofNat magnitude, less, inputEq, outputEq⟩
+    · exact ⟨Int.negSucc magnitude, less, inputEq, outputEq⟩
+  · rintro ⟨integer, within, inputEq, outputEq⟩
+    cases integer with
+    | ofNat magnitude => exact Or.inl ⟨magnitude, within, inputEq, outputEq⟩
+    | negSucc magnitude => exact Or.inr ⟨magnitude, within, inputEq, outputEq⟩
+
+theorem hfRecursiveIntegerNegationGraph_functional (bound : Nat) :
+    HFRecursiveFunctional (hfRecursiveIntegerNegationGraph bound) := by
+  intro input output₁ output₂ first second
+  rcases (hfRecursiveIntegerNegationGraph_apply_iff bound input output₁).mp first with
+    ⟨integer₁, _, inputEq₁, outputEq₁⟩
+  rcases (hfRecursiveIntegerNegationGraph_apply_iff bound input output₂).mp second with
+    ⟨integer₂, _, inputEq₂, outputEq₂⟩
+  have integerEq : integer₁ = integer₂ :=
+    hfRecursiveInteger_injective (inputEq₁.symm.trans inputEq₂)
+  subst integer₂
+  exact outputEq₁.trans outputEq₂.symm
+
+theorem hfRecursiveIntegerNegationGraph_total
+    (bound : Nat) (integer : Int) (within : HFRecursiveIntegerWithin bound integer) :
+    ∃ output,
+      HFRecursiveMember
+        (hfRecursiveOrderedPair (hfRecursiveInteger integer) output)
+        (hfRecursiveIntegerNegationGraph bound) := by
+  refine ⟨hfRecursiveInteger (-integer), ?_⟩
+  exact (hfRecursiveIntegerNegationGraph_apply_iff bound _ _).mpr
+    ⟨integer, within, rfl, rfl⟩
+
+theorem hfRecursiveInteger_neg_neg (integer : Int) :
+    hfRecursiveInteger (-(-integer)) = hfRecursiveInteger integer := by
+  rw [Int.neg_neg]
+
 /- The graph of the identity function on the internally represented finite
    ordinal `n`. -/
 def hfRecursiveNatIdentityGraph : Nat → HFRecursiveSet

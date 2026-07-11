@@ -191,8 +191,10 @@ It currently establishes:
   Kuratowski pair of a sign tag and a natural magnitude.  Positive/nonnegative
   and negative encodings are disjoint, the embedding from `Int` is injective,
   and every value satisfying the integer-code predicate has a unique integer
-  representation.  Integer arithmetic graphs are a subsequent layer, not
-  claimed by this carrier result alone.
+  representation.  A bounded internal negation graph covers both sign branches
+  with exact law `z ↦ -z`; it is functional and total on its represented
+  bounded domain, and the encoding satisfies double negation.  Integer
+  addition and multiplication graphs remain subsequent layers.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
