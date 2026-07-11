@@ -269,6 +269,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   extensionとformation resultを構成し、newest lookupのsemantic termがdefinitionally
   `assignment.2`、older lookupが`assignment.1.2`へ評価されることを証明した。recursive
   projection/reindexがde Bruijn depthを正しく追い、常にnewestを返す誤実装でないことを確認した。
+- semantic readinessをtermination evidenceだけでなくcoherent fold indexへ強化し始めた。
+  variable nodeはlookup型formation readiness、refl nodeはendpoint termに加えてunderlying type
+  formation readinessを保持する。既存Pi/Sigma treeを強いconstructorで再構成し、foldがvariable/
+  reflのsemantic typeを独立term resultから推測せず再構成できるようにした。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

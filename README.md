@@ -650,6 +650,13 @@ It currently establishes:
   the older lookup evaluates to `assignment.1.2`.  This is a nontrivial check
   that recursive projection/reindexing follows de Bruijn depth correctly rather
   than accidentally returning the newest value at every level.
+  Semantic readiness is being tightened from mere termination evidence to a
+  coherent fold index.  Variable nodes now carry readiness of their looked-up
+  type formation, and reflexivity nodes carry readiness of the underlying type
+  formation in addition to the endpoint term.  The existing Pi and Sigma trees
+  were reconstructed with these stronger constructors.  The fold can therefore
+  recover the semantic type of variables and reflexivity without guessing it
+  from an independently produced term result.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

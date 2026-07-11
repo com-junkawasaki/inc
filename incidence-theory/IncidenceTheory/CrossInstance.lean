@@ -1883,7 +1883,9 @@ mutual
       {context : List IncDepRawType} → {term : IncDepRawTerm} →
       {type : IncDepRawType} → IncDepRawHasType context term type → Type
     | varRule {context position type}
-        {lookup : IncDepRawLookup context position type} :
+        {lookup : IncDepRawLookup context position type}
+        {typeFormation : IncDepRawWellFormed context type} :
+        IncDepRawFormationSemanticReady typeFormation →
         IncDepRawTypingSemanticReady (IncDepRawHasType.varRule lookup)
     | unitRule {context} :
         IncDepRawTypingSemanticReady
@@ -1919,7 +1921,9 @@ mutual
         IncDepRawTypingSemanticReady pairTyping →
         IncDepRawTypingSemanticReady (IncDepRawHasType.secondRule pairTyping)
     | reflRule {context type term}
-        {termTyping : IncDepRawHasType context term type} :
+        {termTyping : IncDepRawHasType context term type}
+        {typeFormation : IncDepRawWellFormed context type} :
+        IncDepRawFormationSemanticReady typeFormation →
         IncDepRawTypingSemanticReady termTyping →
         IncDepRawTypingSemanticReady (IncDepRawHasType.reflRule termTyping)
 end
@@ -2017,7 +2021,9 @@ def incDepRawDependentRefl_semanticReady :
   exact IncDepRawTypingSemanticReady.lambdaRule
     IncDepRawFormationSemanticReady.unit
     (IncDepRawTypingSemanticReady.reflRule
-      IncDepRawTypingSemanticReady.varRule)
+      IncDepRawFormationSemanticReady.unit
+      (IncDepRawTypingSemanticReady.varRule
+        IncDepRawFormationSemanticReady.unit))
 
 def incDepRawDependentRefl_typeSemanticReady :
     IncDepRawFormationSemanticReady
@@ -2026,8 +2032,10 @@ def incDepRawDependentRefl_typeSemanticReady :
     IncDepRawFormationSemanticReady.unit
     (IncDepRawFormationSemanticReady.identity
       IncDepRawFormationSemanticReady.unit
-      IncDepRawTypingSemanticReady.varRule
-      IncDepRawTypingSemanticReady.varRule)
+      (IncDepRawTypingSemanticReady.varRule
+        IncDepRawFormationSemanticReady.unit)
+      (IncDepRawTypingSemanticReady.varRule
+        IncDepRawFormationSemanticReady.unit))
 
 theorem incDepRawDependentRefl_application_type :
     (IncDepRawType.identity .unit (.var 0) (.var 0)).instantiate .unit =
@@ -2079,6 +2087,7 @@ def incDepRawDependentPair_semanticReady :
   exact IncDepRawTypingSemanticReady.pairRule
     IncDepRawTypingSemanticReady.unitRule
     (IncDepRawTypingSemanticReady.reflRule
+      IncDepRawFormationSemanticReady.unit
       IncDepRawTypingSemanticReady.unitRule)
 
 def incDepRawDependentPair_typeSemanticReady :
@@ -2088,8 +2097,10 @@ def incDepRawDependentPair_typeSemanticReady :
     IncDepRawFormationSemanticReady.unit
     (IncDepRawFormationSemanticReady.identity
       IncDepRawFormationSemanticReady.unit
-      IncDepRawTypingSemanticReady.varRule
-      IncDepRawTypingSemanticReady.varRule)
+      (IncDepRawTypingSemanticReady.varRule
+        IncDepRawFormationSemanticReady.unit)
+      (IncDepRawTypingSemanticReady.varRule
+        IncDepRawFormationSemanticReady.unit))
 
 def incDepRawDependentPair_first_hasType :
     IncDepRawHasType [] (.first incDepRawDependentPair) .unit :=
