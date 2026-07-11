@@ -6759,6 +6759,62 @@ def inc_to_set_preserves_boundary_shape
       | cons targetHead targetTail =>
           exact IncTypeEquivalence.refl (ULift Unit)
 
+theorem uliftBool_equivalent_uliftUnit_false
+    (equivalence : IncTypeEquivalence (ULift Bool) (ULift Unit)) : False := by
+  have forwardEqual : equivalence.forward ⟨true⟩ =
+      equivalence.forward ⟨false⟩ := by
+    rcases valueTrue : equivalence.forward ⟨true⟩ with ⟨valueTrue⟩
+    rcases valueFalse : equivalence.forward ⟨false⟩ with ⟨valueFalse⟩
+    cases valueTrue
+    cases valueFalse
+    rfl
+  have inverseEqual := congrArg equivalence.inverse forwardEqual
+  rw [equivalence.inverse_forward, equivalence.inverse_forward] at inverseEqual
+  contradiction
+
+theorem inc_to_set_equivalent_reflects_boundary_shape
+    {I R₁ T₁ R₂ T₂ : Type u} [DecidableEq I]
+    (source : Incidence I R₁ T₁) (target : Incidence I R₂ T₂)
+    (i : I)
+    (equivalent : IncTypeEquivalence (inc_to_set source i)
+      (inc_to_set target i)) :
+    source.boundary i = [] ↔ target.boundary i = [] := by
+  cases sourceBoundary : source.boundary i with
+  | nil =>
+      constructor
+      · intro _
+        cases targetBoundary : target.boundary i with
+        | nil => rfl
+        | cons head tail =>
+            exfalso
+            apply uliftBool_equivalent_uliftUnit_false
+            simpa [inc_to_set, sourceBoundary, targetBoundary] using equivalent
+      · intro _
+        rfl
+  | cons sourceHead sourceTail =>
+      constructor
+      · intro impossible
+        contradiction
+      · intro targetNullary
+        exfalso
+        apply uliftBool_equivalent_uliftUnit_false
+        have reversed := equivalent.symm
+        simpa [inc_to_set, sourceBoundary, targetNullary] using reversed
+
+theorem inc_to_set_equivalent_iff_boundary_shape
+    {I R₁ T₁ R₂ T₂ : Type u} [DecidableEq I]
+    (source : Incidence I R₁ T₁) (target : Incidence I R₂ T₂) :
+    (∀ i, Nonempty (IncTypeEquivalence (inc_to_set source i)
+      (inc_to_set target i))) ↔
+      (∀ i, source.boundary i = [] ↔ target.boundary i = []) := by
+  constructor
+  · intro equivalences i
+    rcases equivalences i with ⟨equivalence⟩
+    exact inc_to_set_equivalent_reflects_boundary_shape source target i
+      equivalence
+  · intro preservesShape i
+    exact ⟨inc_to_set_preserves_boundary_shape source target preservesShape i⟩
+
 /- The Inc-to-Set assignment above is not yet packaged as an `IncFunctor`, so
    a theorem specifically about that assignment still requires a source
    category of incidences.  The general categorical preservation theorem is
