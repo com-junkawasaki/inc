@@ -1260,6 +1260,13 @@ It currently establishes:
   structural interpretation of the same output formation.  They need not be
   definitionally equal, so the next theorem must construct an explicit fiber
   equivalence and transport the typing result along it.
+  That semantic transport layer is now implemented as
+  `IncDepRawFormationSubstitutionFiberRebase`.  It carries source and target
+  fiber equivalences plus the naturality square relating both to substitution.
+  `IncDepRawTypingSubstitutionFiberResult.rebase` transports both semantic terms
+  and proves the substituted-term coherence in the new formation result.
+  Reflexive and transitive rebase witnesses are checked, so several recursive
+  normalization steps can be composed without collapsing them to equality.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

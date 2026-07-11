@@ -663,6 +663,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   obligationはsyntax equalityではなくsemantic rebaseであることが確定した。application/second projectionが作るcanonical
   instantiate fiber resultと、同一output formationのstructural interpretationはdefinitionally equalとは限らないため、両者の
   explicit fiber equivalenceを構成しtyping resultをtransportする定理が次の中心補題となる。
+- semantic transport層`IncDepRawFormationSubstitutionFiberRebase`を実装した。source/target fiber equivalenceと、それらが
+  substitution fiber equivalenceに関して作るnaturality squareを保持する。`IncDepRawTypingSubstitutionFiberResult.rebase`は
+  source/target両termをtransportし、新formation result上のsubstituted-term coherenceを証明する。rebaseのreflexive witnessと
+  transitive compositionもcheckedにし、複数のrecursive normalization stepをequalityへ潰さず合成可能にした。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

@@ -6338,6 +6338,111 @@ structure IncDepRawTypingSubstitutionFiberResult
       targetTermResult.semanticTerm.substitute
         substitutionResult.semanticSubstitution
 
+structure IncDepRawFormationSubstitutionFiberRebase
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (left right : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult) where
+  sourceEquivalence : IncTypeInContext.FiberEquiv
+    left.sourceFormationResult.semanticType
+    right.sourceFormationResult.semanticType
+  targetEquivalence : IncTypeInContext.FiberEquiv
+    left.targetFormationResult.semanticType
+    right.targetFormationResult.semanticType
+  naturality : ∀ term : IncTerm left.sourceFormationResult.semanticType,
+    right.semanticFiberEquivalence.transport
+        (sourceEquivalence.transport term) =
+      (targetEquivalence.reindex
+        substitutionResult.semanticSubstitution).transport
+          (left.semanticFiberEquivalence.transport term)
+
+def IncDepRawFormationSubstitutionFiberRebase.refl
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult) :
+    IncDepRawFormationSubstitutionFiberRebase result result where
+  sourceEquivalence := IncTypeInContext.FiberEquiv.refl _
+  targetEquivalence := IncTypeInContext.FiberEquiv.refl _
+  naturality := by intro term; rfl
+
+def IncDepRawFormationSubstitutionFiberRebase.trans
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {first second third : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult}
+    (firstRebase : IncDepRawFormationSubstitutionFiberRebase first second)
+    (secondRebase : IncDepRawFormationSubstitutionFiberRebase second third) :
+    IncDepRawFormationSubstitutionFiberRebase first third where
+  sourceEquivalence := firstRebase.sourceEquivalence.trans
+    secondRebase.sourceEquivalence
+  targetEquivalence := firstRebase.targetEquivalence.trans
+    secondRebase.targetEquivalence
+  naturality := by
+    intro term
+    change third.semanticFiberEquivalence.transport
+        (secondRebase.sourceEquivalence.transport
+          (firstRebase.sourceEquivalence.transport term)) =
+      (secondRebase.targetEquivalence.reindex
+        substitutionResult.semanticSubstitution).transport
+        ((firstRebase.targetEquivalence.reindex
+          substitutionResult.semanticSubstitution).transport
+          (first.semanticFiberEquivalence.transport term))
+    rw [secondRebase.naturality
+        (firstRebase.sourceEquivalence.transport term),
+      firstRebase.naturality term]
+
+noncomputable def IncDepRawTypingSubstitutionFiberResult.rebase
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {left right : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult}
+    (result : IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := targetTyping) left)
+    (rebase : IncDepRawFormationSubstitutionFiberRebase left right) :
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := targetTyping) right where
+  targetTermResult :=
+    { semanticTerm := rebase.targetEquivalence.transport
+        result.targetTermResult.semanticTerm }
+  sourceTermResult :=
+    { semanticTerm := rebase.sourceEquivalence.transport
+        result.sourceTermResult.semanticTerm }
+  semanticTerm_coherence := by
+    rw [rebase.naturality result.sourceTermResult.semanticTerm,
+      result.semanticTerm_coherence,
+      IncTypeInContext.FiberEquiv.reindex_transport]
+
 structure IncDepRawVariableSubstitutionFiberResult
     {source target : List IncDepRawType} {position : Nat}
     {type : IncDepRawType}
