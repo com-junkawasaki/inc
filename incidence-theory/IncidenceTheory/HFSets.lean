@@ -1944,6 +1944,31 @@ theorem hfRecursiveIntegerAdditionGraph_apply_iff
       (hfRecursiveInteger_mem_window_iff bound right).mpr rightWithin,
       inputEq, outputEq⟩
 
+theorem hfRecursiveIntegerAdditionGraph_on_integers_iff
+    (bound : Nat) (left right : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (rightWithin : HFRecursiveIntegerWithin bound right)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger left)
+            (hfRecursiveInteger right)) output)
+        (hfRecursiveIntegerAdditionGraph bound) ↔
+      output = hfRecursiveInteger (left + right) := by
+  constructor
+  · intro applies
+    rcases (hfRecursiveIntegerAdditionGraph_apply_iff bound _ _).mp applies with
+      ⟨actualLeft, actualRight, _, _, inputEq, outputEq⟩
+    rcases hfRecursiveOrderedPair_injective inputEq with ⟨leftEq, rightEq⟩
+    have actualLeftEq : left = actualLeft := hfRecursiveInteger_injective leftEq
+    have actualRightEq : right = actualRight := hfRecursiveInteger_injective rightEq
+    subst actualLeft
+    subst actualRight
+    exact outputEq
+  · intro outputEq
+    exact (hfRecursiveIntegerAdditionGraph_apply_iff bound _ _).mpr
+      ⟨left, right, leftWithin, rightWithin, rfl, outputEq⟩
+
 theorem hfRecursiveIntegerAdditionGraph_functional (bound : Nat) :
     HFRecursiveFunctional (hfRecursiveIntegerAdditionGraph bound) := by
   intro input output₁ output₂ first second
@@ -1999,6 +2024,31 @@ theorem hfRecursiveIntegerMultiplicationGraph_apply_iff
       (hfRecursiveInteger_mem_window_iff bound right).mpr rightWithin,
       inputEq, outputEq⟩
 
+theorem hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+    (bound : Nat) (left right : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (rightWithin : HFRecursiveIntegerWithin bound right)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger left)
+            (hfRecursiveInteger right)) output)
+        (hfRecursiveIntegerMultiplicationGraph bound) ↔
+      output = hfRecursiveInteger (left * right) := by
+  constructor
+  · intro applies
+    rcases (hfRecursiveIntegerMultiplicationGraph_apply_iff bound _ _).mp applies with
+      ⟨actualLeft, actualRight, _, _, inputEq, outputEq⟩
+    rcases hfRecursiveOrderedPair_injective inputEq with ⟨leftEq, rightEq⟩
+    have actualLeftEq : left = actualLeft := hfRecursiveInteger_injective leftEq
+    have actualRightEq : right = actualRight := hfRecursiveInteger_injective rightEq
+    subst actualLeft
+    subst actualRight
+    exact outputEq
+  · intro outputEq
+    exact (hfRecursiveIntegerMultiplicationGraph_apply_iff bound _ _).mpr
+      ⟨left, right, leftWithin, rightWithin, rfl, outputEq⟩
+
 theorem hfRecursiveIntegerMultiplicationGraph_functional (bound : Nat) :
     HFRecursiveFunctional (hfRecursiveIntegerMultiplicationGraph bound) := by
   intro input output₁ output₂ first second
@@ -2026,6 +2076,164 @@ theorem hfRecursiveIntegerMultiplicationGraph_total
   refine ⟨hfRecursiveInteger (left * right), ?_⟩
   exact (hfRecursiveIntegerMultiplicationGraph_apply_iff bound _ _).mpr
     ⟨left, right, leftWithin, rightWithin, rfl, rfl⟩
+
+theorem hfRecursiveIntegerAdditionGraph_comm
+    (bound : Nat) (left right : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (rightWithin : HFRecursiveIntegerWithin bound right)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger left)
+            (hfRecursiveInteger right)) output)
+        (hfRecursiveIntegerAdditionGraph bound) ↔
+      HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger right)
+            (hfRecursiveInteger left)) output)
+        (hfRecursiveIntegerAdditionGraph bound) := by
+  rw [hfRecursiveIntegerAdditionGraph_on_integers_iff
+      bound left right leftWithin rightWithin,
+    hfRecursiveIntegerAdditionGraph_on_integers_iff
+      bound right left rightWithin leftWithin,
+    Int.add_comm left right]
+
+theorem hfRecursiveIntegerMultiplicationGraph_comm
+    (bound : Nat) (left right : Int)
+    (leftWithin : HFRecursiveIntegerWithin bound left)
+    (rightWithin : HFRecursiveIntegerWithin bound right)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger left)
+            (hfRecursiveInteger right)) output)
+        (hfRecursiveIntegerMultiplicationGraph bound) ↔
+      HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger right)
+            (hfRecursiveInteger left)) output)
+        (hfRecursiveIntegerMultiplicationGraph bound) := by
+  rw [hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+      bound left right leftWithin rightWithin,
+    hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+      bound right left rightWithin leftWithin,
+    Int.mul_comm left right]
+
+theorem hfRecursiveIntegerAdditionGraph_add_neg
+    (bound : Nat) (integer : Int)
+    (within : HFRecursiveIntegerWithin bound integer)
+    (negWithin : HFRecursiveIntegerWithin bound (-integer))
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger integer)
+            (hfRecursiveInteger (-integer))) output)
+        (hfRecursiveIntegerAdditionGraph bound) ↔
+      output = hfRecursiveInteger 0 := by
+  rw [hfRecursiveIntegerAdditionGraph_on_integers_iff
+    bound integer (-integer) within negWithin]
+  have cancels : integer + -integer = 0 := by omega
+  rw [cancels]
+
+theorem hfRecursiveIntegerAdditionGraph_neg_add
+    (bound : Nat) (integer : Int)
+    (within : HFRecursiveIntegerWithin bound integer)
+    (negWithin : HFRecursiveIntegerWithin bound (-integer))
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger (-integer))
+            (hfRecursiveInteger integer)) output)
+        (hfRecursiveIntegerAdditionGraph bound) ↔
+      output = hfRecursiveInteger 0 := by
+  rw [hfRecursiveIntegerAdditionGraph_on_integers_iff
+    bound (-integer) integer negWithin within]
+  have cancels : -integer + integer = 0 := by omega
+  rw [cancels]
+
+theorem hfRecursiveIntegerAdditionGraph_zero_right
+    (bound : Nat) (integer : Int)
+    (within : HFRecursiveIntegerWithin bound integer)
+    (zeroWithin : HFRecursiveIntegerWithin bound 0)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger integer)
+            (hfRecursiveInteger 0)) output)
+        (hfRecursiveIntegerAdditionGraph bound) ↔
+      output = hfRecursiveInteger integer := by
+  rw [hfRecursiveIntegerAdditionGraph_on_integers_iff
+    bound integer 0 within zeroWithin, Int.add_zero]
+
+theorem hfRecursiveIntegerAdditionGraph_zero_left
+    (bound : Nat) (integer : Int)
+    (zeroWithin : HFRecursiveIntegerWithin bound 0)
+    (within : HFRecursiveIntegerWithin bound integer)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger 0)
+            (hfRecursiveInteger integer)) output)
+        (hfRecursiveIntegerAdditionGraph bound) ↔
+      output = hfRecursiveInteger integer := by
+  rw [hfRecursiveIntegerAdditionGraph_on_integers_iff
+    bound 0 integer zeroWithin within, Int.zero_add]
+
+theorem hfRecursiveIntegerMultiplicationGraph_zero_right
+    (bound : Nat) (integer : Int)
+    (within : HFRecursiveIntegerWithin bound integer)
+    (zeroWithin : HFRecursiveIntegerWithin bound 0)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger integer)
+            (hfRecursiveInteger 0)) output)
+        (hfRecursiveIntegerMultiplicationGraph bound) ↔
+      output = hfRecursiveInteger 0 := by
+  rw [hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+    bound integer 0 within zeroWithin, Int.mul_zero]
+
+theorem hfRecursiveIntegerMultiplicationGraph_zero_left
+    (bound : Nat) (integer : Int)
+    (zeroWithin : HFRecursiveIntegerWithin bound 0)
+    (within : HFRecursiveIntegerWithin bound integer)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger 0)
+            (hfRecursiveInteger integer)) output)
+        (hfRecursiveIntegerMultiplicationGraph bound) ↔
+      output = hfRecursiveInteger 0 := by
+  rw [hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+    bound 0 integer zeroWithin within, Int.zero_mul]
+
+theorem hfRecursiveIntegerMultiplicationGraph_one_right
+    (bound : Nat) (integer : Int)
+    (within : HFRecursiveIntegerWithin bound integer)
+    (oneWithin : HFRecursiveIntegerWithin bound 1)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger integer)
+            (hfRecursiveInteger 1)) output)
+        (hfRecursiveIntegerMultiplicationGraph bound) ↔
+      output = hfRecursiveInteger integer := by
+  rw [hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+    bound integer 1 within oneWithin, Int.mul_one]
+
+theorem hfRecursiveIntegerMultiplicationGraph_one_left
+    (bound : Nat) (integer : Int)
+    (oneWithin : HFRecursiveIntegerWithin bound 1)
+    (within : HFRecursiveIntegerWithin bound integer)
+    (output : HFRecursiveSet) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveInteger 1)
+            (hfRecursiveInteger integer)) output)
+        (hfRecursiveIntegerMultiplicationGraph bound) ↔
+      output = hfRecursiveInteger integer := by
+  rw [hfRecursiveIntegerMultiplicationGraph_on_integers_iff
+    bound 1 integer oneWithin within, Int.one_mul]
 
 /- The graph of the identity function on the internally represented finite
    ordinal `n`. -/
