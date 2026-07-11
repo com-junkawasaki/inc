@@ -210,6 +210,27 @@ theorem CoherentQuotient.reflect_satisfies
     rw [retract.left_inverse]
   rw [hvaluation]
 
+theorem CoherentQuotientLogicalRetract.classifier_injective
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} {quotient : CoherentQuotient (Q := Q) source}
+    (retract : CoherentQuotientLogicalRetract quotient) :
+    ∀ ⦃left right : I⦄,
+      quotient.classification.classify left = quotient.classification.classify right →
+        left = right := by
+  intro left right hclassify
+  have h := congrArg retract.retraction hclassify
+  simpa only [retract.left_inverse] using h
+
+theorem CoherentQuotientLogicalRetract.source_bisim_faithful
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
+    {source : CoherentIncidence I R T} {quotient : CoherentQuotient (Q := Q) source}
+    (retract : CoherentQuotientLogicalRetract quotient)
+    {left right : I} :
+    approxBisim source.chainPushout.inc left right → left = right := by
+  intro hbisim
+  apply retract.classifier_injective
+  exact quotient.classification.respects hbisim
+
 def CoherentQuotient.target_glue_creates_pushout
     {I R T Q : Type u} [DecidableEq I] [DecidableEq Q]
     {source : CoherentIncidence I R T} (quotient : CoherentQuotient (Q := Q) source)
