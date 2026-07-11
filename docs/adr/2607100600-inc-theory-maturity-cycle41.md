@@ -376,6 +376,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - path mapを実際の`IncIdentityType`表現`ULift (PLift equality)`へ双方向にliftし、両方向の
   reflexivity equationをdefinitionally証明した。abstract groupoid APIとinterpreterが使うsemantic
   Id witnessを接続した。
+- lifted witness mapを文脈付きidentity termへ持ち上げる`IncIdentityTerm.map`/`mapBackward`を追加し、
+  両方向がreflexivityをdefinitionally保存することを証明した。さらに`J_map_refl`により、transport済み
+  reflexivity witnessに対するJ eliminationがtarget側のrefl caseへ計算されることを証明した。これで
+  fiber equivalenceとsemantic Id introduction/J computationが接続され、任意witnessに対するmotive
+  transportはcomposite Id substitution-coherence branchの明示的残件となった。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

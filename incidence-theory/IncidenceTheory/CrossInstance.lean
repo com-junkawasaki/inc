@@ -3289,12 +3289,53 @@ theorem IncFiberEquiv.mapIdentityWitnessBackward_refl
         (equivalence.backward value = equivalence.backward value))) := by
   rfl
 
+def IncIdentityTerm.map
+    {context : IncContext.{u}}
+    {source target : IncTypeInContext context}
+    (equivalence : IncTypeInContext.FiberEquiv source target)
+    {left right : IncTerm source}
+    (equal : IncTerm (IncIdentityType source left right)) :
+    IncTerm (IncIdentityType target
+      (equivalence.transport left) (equivalence.transport right)) :=
+  fun assignment =>
+    (equivalence.fiberEquiv assignment).mapIdentityWitness (equal assignment)
+
+def IncIdentityTerm.mapBackward
+    {context : IncContext.{u}}
+    {source target : IncTypeInContext context}
+    (equivalence : IncTypeInContext.FiberEquiv source target)
+    {left right : IncTerm target}
+    (equal : IncTerm (IncIdentityType target left right)) :
+    IncTerm (IncIdentityType source
+      (equivalence.symm.transport left) (equivalence.symm.transport right)) :=
+  fun assignment =>
+    (equivalence.fiberEquiv assignment).mapIdentityWitnessBackward
+      (equal assignment)
+
 def IncIdentityTerm.refl
     {context : IncContext.{u}}
     {type : IncTypeInContext context}
     (term : IncTerm type) :
     IncTerm (IncIdentityType type term term) :=
   fun _ => ⟨⟨rfl⟩⟩
+
+theorem IncIdentityTerm.map_refl
+    {context : IncContext.{u}}
+    {source target : IncTypeInContext context}
+    (equivalence : IncTypeInContext.FiberEquiv source target)
+    (term : IncTerm source) :
+    IncIdentityTerm.map equivalence (IncIdentityTerm.refl term) =
+      IncIdentityTerm.refl (equivalence.transport term) := by
+  rfl
+
+theorem IncIdentityTerm.mapBackward_refl
+    {context : IncContext.{u}}
+    {source target : IncTypeInContext context}
+    (equivalence : IncTypeInContext.FiberEquiv source target)
+    (term : IncTerm target) :
+    IncIdentityTerm.mapBackward equivalence (IncIdentityTerm.refl term) =
+      IncIdentityTerm.refl (equivalence.symm.transport term) := by
+  rfl
 
 def IncIdentityTerm.transport
     {context : IncContext.{u}}
@@ -3343,6 +3384,20 @@ theorem IncIdentityTerm.J_beta
       fun assignment => reflCase assignment (term assignment) := by
   funext assignment
   simp [IncIdentityTerm.J]
+
+theorem IncIdentityTerm.J_map_refl
+    {context : IncContext.{u}}
+    {source target : IncTypeInContext context}
+    (equivalence : IncTypeInContext.FiberEquiv source target)
+    (motive : ∀ assignment (_left _right : target assignment), Type u)
+    (reflCase : ∀ assignment value, motive assignment value value)
+    (term : IncTerm source) :
+    IncIdentityTerm.J motive reflCase
+        (IncIdentityTerm.map equivalence (IncIdentityTerm.refl term)) =
+      fun assignment => reflCase assignment
+        (equivalence.transport term assignment) := by
+  rw [IncIdentityTerm.map_refl]
+  exact IncIdentityTerm.J_beta motive reflCase (equivalence.transport term)
 
 theorem IncIdentityType.reindex
     {source target : IncContext.{u}}

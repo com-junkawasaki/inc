@@ -811,6 +811,13 @@ It currently establishes:
   `ULift (PLift equality)`, in both directions.  Both lifted reflexivity equations
   compute definitionally, connecting the abstract groupoid API to semantic Id
   witnesses used by the interpreter.
+  The lifted maps now act on contextual identity terms through
+  `IncIdentityTerm.map` and `mapBackward`.  Both preserve reflexivity
+  definitionally, and `J_map_refl` proves that eliminating a transported
+  reflexivity witness computes to the target reflexivity case.  Thus the
+  fiber-equivalence layer is connected to the semantic Id introduction and J
+  computation rules; general motive transport for arbitrary witnesses remains
+  part of the composite Id substitution-coherence branch.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
