@@ -6999,6 +6999,33 @@ theorem incToSetFunctor_fullyFaithful_iff
     exact incToSetFunctor_fullyFaithful_of_subsingleton_all_nonNullary inc
       subsingleton allNonNullary
 
+theorem incToSetFunctor_not_essentiallySurjective
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    ¬ IncFunctorEssentiallySurjective (incToSetFunctor inc) := by
+  intro essentiallySurjective
+  obtain ⟨source, hom, inv, inverseHom, homInverse⟩ :=
+    essentiallySurjective (ULift Empty)
+  have impossible : ULift Empty :=
+    hom.function (incToSetDefault inc source.down)
+  exact Empty.elim impossible.down
+
+theorem incToSetFunctor_has_no_equivalenceCriterion
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    ¬ IncFunctorEquivalenceCriterion (incToSetFunctor inc) := by
+  intro criterion
+  exact incToSetFunctor_not_essentiallySurjective inc
+    criterion.essentiallySurjective
+
+theorem incToSetFunctor_is_not_categoryEquivalence_forward
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    ¬ (∃ equivalence : IncCategoryEquivalence
+        (incDiscreteCategory I) incTypeCategory,
+      equivalence.forward = incToSetFunctor inc) := by
+  rintro ⟨equivalence, forwardEq⟩
+  have criterion := equivalence.forward_criterion
+  rw [forwardEq] at criterion
+  exact incToSetFunctor_has_no_equivalenceCriterion inc criterion
+
 def inc_to_set_preserves_boundary_shape
     {I R₁ T₁ R₂ T₂ : Type u} [DecidableEq I]
     (source : Incidence I R₁ T₁) (target : Incidence I R₂ T₂)
