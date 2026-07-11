@@ -6103,6 +6103,82 @@ def linearObservationQuotientEquivalence
     intro representative
     rfl
 
+def observationQuotientToBisimulationQuotient
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) :
+    LinearObservationQuotient inc idx → IncidenceQuotient inc :=
+  Quotient.lift (Quotient.mk (approxBisimSetoid inc)) (by
+    intro i j observationallyEqual
+    apply Quotient.sound
+    have equal : i = j :=
+      (linearObservationallyEquivalent_iff_eq inc idx i j).mp
+        observationallyEqual
+    cases equal
+    exact approxBisim_refl inc i)
+
+theorem observationQuotientToBisimulationQuotient_surjective
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) :
+    ∀ target : IncidenceQuotient inc,
+      ∃ source : LinearObservationQuotient inc idx,
+        observationQuotientToBisimulationQuotient inc idx source = target := by
+  intro target
+  refine Quotient.inductionOn target ?_
+  intro representative
+  exact ⟨Quotient.mk (linearObservationalSetoid inc idx) representative, rfl⟩
+
+def BisimulationFaithful {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) : Prop :=
+  ∀ {i j}, approxBisim inc i j → i = j
+
+theorem bisimulationFaithful_of_wellFounded_extensional
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (measure : I → Nat)
+    (decreases : ∀ i e, e ∈ inc.boundary i → measure e.i < measure i)
+    (extensional : ∀ x y, inc.typeFunc x = inc.typeFunc y →
+      boundaryMatched inc (· = ·) x y → x = y) :
+    BisimulationFaithful inc := by
+  intro i j bisimilar
+  rcases bisimilar with ⟨relation, isBisimulation, related⟩
+  exact incidence_bisim_faithful inc measure decreases extensional
+    isBisimulation i j related
+
+def observationBisimulationQuotientEquivalence
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I)
+    (faithful : BisimulationFaithful inc) :
+    IncTypeEquivalence (LinearObservationQuotient inc idx)
+      (IncidenceQuotient inc) where
+  forward := observationQuotientToBisimulationQuotient inc idx
+  inverse := Quotient.lift
+    (Quotient.mk (linearObservationalSetoid inc idx)) (by
+      intro i j bisimilar
+      apply Quotient.sound
+      exact (linearObservationallyEquivalent_iff_eq inc idx i j).mpr
+        (faithful bisimilar))
+  inverse_forward := by
+    intro value
+    refine Quotient.inductionOn value ?_
+    intro representative
+    rfl
+  forward_inverse := by
+    intro value
+    refine Quotient.inductionOn value ?_
+    intro representative
+    rfl
+
+def observationBisimulationQuotientEquivalence_of_wellFounded_extensional
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (measure : I → Nat)
+    (decreases : ∀ i e, e ∈ inc.boundary i → measure e.i < measure i)
+    (extensional : ∀ x y, inc.typeFunc x = inc.typeFunc y →
+      boundaryMatched inc (· = ·) x y → x = y) :
+    IncTypeEquivalence (LinearObservationQuotient inc idx)
+      (IncidenceQuotient inc) :=
+  observationBisimulationQuotientEquivalence inc idx
+    (bisimulationFaithful_of_wellFounded_extensional inc measure
+      decreases extensional)
+
 /- Completeness theorem: with an observation language rich enough to admit
    an "indicator of i" observation, agreement of *all* observations forces
    literal equality (hence bisimilarity, via reflexivity). -/
