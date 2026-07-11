@@ -163,9 +163,9 @@ It currently establishes:
   by an output-equality iff, from which the left/right additive identity,
   multiplicative zero, and multiplicative identity laws are proved internally.
   With explicit bounds covering intermediate results, both operations are
-  associative and multiplication distributes over addition; these theorems
-  certify every intermediate graph application as well as equality of the two
-  final internal ordinals.
+  associative and multiplication distributes over addition from both sides;
+  these theorems certify every intermediate graph application as well as
+  equality of the two final internal ordinals.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.

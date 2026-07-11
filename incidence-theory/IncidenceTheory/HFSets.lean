@@ -2310,6 +2310,49 @@ theorem hfRecursiveNatMultiplicationGraph_distributes_over_addition
       bound (a * b) (a * c) abLess acLess _).mpr rfl
   · exact congrArg hfRecursiveNat (Nat.mul_add a b c)
 
+theorem hfRecursiveNatMultiplicationGraph_right_distributes_over_addition
+    (bound a b c : Nat) (aLess : a < bound) (bLess : b < bound)
+    (cLess : c < bound) (abLess : a + b < bound)
+    (acLess : a * c < bound) (bcLess : b * c < bound) :
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat a) (hfRecursiveNat b))
+          (hfRecursiveNat (a + b)))
+        (hfRecursiveNatAdditionGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat (a + b)) (hfRecursiveNat c))
+          (hfRecursiveNat ((a + b) * c)))
+        (hfRecursiveNatMultiplicationGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat a) (hfRecursiveNat c))
+          (hfRecursiveNat (a * c)))
+        (hfRecursiveNatMultiplicationGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat b) (hfRecursiveNat c))
+          (hfRecursiveNat (b * c)))
+        (hfRecursiveNatMultiplicationGraph bound) ∧
+    HFRecursiveMember
+        (hfRecursiveOrderedPair
+          (hfRecursiveOrderedPair (hfRecursiveNat (a * c)) (hfRecursiveNat (b * c)))
+          (hfRecursiveNat (a * c + b * c)))
+        (hfRecursiveNatAdditionGraph bound) ∧
+    hfRecursiveNat ((a + b) * c) = hfRecursiveNat (a * c + b * c) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact (hfRecursiveNatAdditionGraph_on_nats_iff
+      bound a b aLess bLess _).mpr rfl
+  · exact (hfRecursiveNatMultiplicationGraph_on_nats_iff
+      bound (a + b) c abLess cLess _).mpr rfl
+  · exact (hfRecursiveNatMultiplicationGraph_on_nats_iff
+      bound a c aLess cLess _).mpr rfl
+  · exact (hfRecursiveNatMultiplicationGraph_on_nats_iff
+      bound b c bLess cLess _).mpr rfl
+  · exact (hfRecursiveNatAdditionGraph_on_nats_iff
+      bound (a * c) (b * c) acLess bcLess _).mpr rfl
+  · exact congrArg hfRecursiveNat (Nat.add_mul a b c)
+
 theorem hfRecursiveNatShiftGraph_zero (n : Nat) :
     hfRecursiveNatShiftGraph 0 n = hfRecursiveNatIdentityGraph n := by
   induction n with
