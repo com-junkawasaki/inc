@@ -2670,6 +2670,19 @@ theorem hfRecursiveUnion_least {s t u : HFRecursiveSet} :
   · exact hsu x hxs
   · exact htu x hxt
 
+theorem hfRecursiveUnion_subset_iff {s t u : HFRecursiveSet} :
+    HFRecursiveSubset (hfRecursiveUnion s t) u ↔
+      HFRecursiveSubset s u ∧ HFRecursiveSubset t u := by
+  constructor
+  · intro unionSubset
+    constructor
+    · intro x hxs
+      exact unionSubset x (hfRecursiveSubset_union_left s t x hxs)
+    · intro x hxt
+      exact unionSubset x (hfRecursiveSubset_union_right s t x hxt)
+  · rintro ⟨hsu, htu⟩
+    exact hfRecursiveUnion_least hsu htu
+
 theorem hfRecursiveUnion_eq_right_iff_subset (s t : HFRecursiveSet) :
     hfRecursiveUnion s t = t ↔ HFRecursiveSubset s t := by
   constructor
@@ -3321,12 +3334,22 @@ structure HFRecursiveSetFragmentModel where
   power : HFRecursiveSet → HFRecursiveSet
   filter : HFRecursivePredicate → HFRecursiveSet → HFRecursiveSet
   bigUnion : HFRecursiveSet → HFRecursiveSet
+  subset_refl : ∀ s, HFRecursiveSubset s s
+  subset_trans : ∀ {r s t},
+    HFRecursiveSubset r s → HFRecursiveSubset s t → HFRecursiveSubset r t
+  subset_antisymm : ∀ {s t},
+    HFRecursiveSubset s t → HFRecursiveSubset t s → s = t
   empty_no_member : ∀ x, ¬ HFRecursiveMember x empty
   pair_left : ∀ s t, HFRecursiveMember s (pair s t)
   pair_right : ∀ s t, HFRecursiveMember t (pair s t)
   pair_spec : ∀ x s t, HFRecursiveMember x (pair s t) ↔ x = s ∨ x = t
   union_spec : ∀ x s t, HFRecursiveMember x (union s t) ↔
     HFRecursiveMember x s ∨ HFRecursiveMember x t
+  subset_union_left : ∀ s t, HFRecursiveSubset s (union s t)
+  subset_union_right : ∀ s t, HFRecursiveSubset t (union s t)
+  union_subset_iff : ∀ {s t u},
+    HFRecursiveSubset (union s t) u ↔
+      HFRecursiveSubset s u ∧ HFRecursiveSubset t u
   union_eq_right_iff_subset : ∀ s t,
     union s t = t ↔ HFRecursiveSubset s t
   union_eq_left_iff_subset : ∀ s t,
@@ -3379,11 +3402,17 @@ def hfRecursiveSetFragmentModel : HFRecursiveSetFragmentModel where
   power := hfRecursivePower
   filter := hfRecursiveFilter
   bigUnion := hfRecursiveBigUnion
+  subset_refl := hfRecursiveSubset_refl
+  subset_trans := hfRecursiveSubset_trans
+  subset_antisymm := hfRecursiveSubset_antisymm
   empty_no_member := hfRecursiveMember_empty
   pair_left := hfRecursiveMember_pair_left
   pair_right := hfRecursiveMember_pair_right
   pair_spec := hfRecursiveMember_pair_iff
   union_spec := hfRecursiveMember_union_iff
+  subset_union_left := hfRecursiveSubset_union_left
+  subset_union_right := hfRecursiveSubset_union_right
+  union_subset_iff := hfRecursiveUnion_subset_iff
   union_eq_right_iff_subset := hfRecursiveUnion_eq_right_iff_subset
   union_eq_left_iff_subset := hfRecursiveUnion_eq_left_iff_subset
   product_spec := hfRecursiveMember_product_iff
