@@ -258,7 +258,9 @@ It currently establishes:
   integer, while `0` divides exactly `0`.  Common divisors are closed under
   addition, remain divisors after multiplying the dividend, and survive
   negation, with precisely the factor-sum/product/negation window obligations
-  exposed by the finite presentation.
+  exposed by the finite presentation.  Common divisors are also closed under
+  subtraction and, more generally, under two-term integer linear combinations
+  `a*x + b*y` whenever the combined witness factor remains represented.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.

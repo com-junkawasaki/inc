@@ -3371,6 +3371,58 @@ theorem hfRecursiveIntegerDivides_neg
   rw [dividendValue]
   exact (Int.mul_neg divisor factor).symm
 
+theorem hfRecursiveIntegerDivides_sub
+    (bound : Nat) (divisor left right : Int)
+    (divisorWithin : HFRecursiveIntegerWithin bound divisor)
+    (dividesLeft : HFRecursiveIntegerDivides bound divisor left)
+    (dividesRight : HFRecursiveIntegerDivides bound divisor right)
+    (factorDifferenceWithin : ∀ leftFactor rightFactor,
+      HFRecursiveIntegerWithin bound leftFactor →
+      HFRecursiveIntegerWithin bound rightFactor →
+      left = divisor * leftFactor → right = divisor * rightFactor →
+      HFRecursiveIntegerWithin bound (leftFactor - rightFactor)) :
+    HFRecursiveIntegerDivides bound divisor (left - right) := by
+  rcases (hfRecursiveIntegerDivides_iff
+    bound divisor left divisorWithin).mp dividesLeft with
+    ⟨leftFactor, leftFactorWithin, leftValue⟩
+  rcases (hfRecursiveIntegerDivides_iff
+    bound divisor right divisorWithin).mp dividesRight with
+    ⟨rightFactor, rightFactorWithin, rightValue⟩
+  have differenceWithin := factorDifferenceWithin leftFactor rightFactor
+    leftFactorWithin rightFactorWithin leftValue rightValue
+  apply (hfRecursiveIntegerDivides_iff
+    bound divisor (left - right) divisorWithin).mpr
+  refine ⟨leftFactor - rightFactor, differenceWithin, ?_⟩
+  rw [leftValue, rightValue, Int.mul_sub]
+
+theorem hfRecursiveIntegerDivides_add_mul
+    (bound : Nat) (divisor left right leftMultiplier rightMultiplier : Int)
+    (divisorWithin : HFRecursiveIntegerWithin bound divisor)
+    (dividesLeft : HFRecursiveIntegerDivides bound divisor left)
+    (dividesRight : HFRecursiveIntegerDivides bound divisor right)
+    (combinedFactorWithin : ∀ leftFactor rightFactor,
+      HFRecursiveIntegerWithin bound leftFactor →
+      HFRecursiveIntegerWithin bound rightFactor →
+      left = divisor * leftFactor → right = divisor * rightFactor →
+      HFRecursiveIntegerWithin bound
+        (leftFactor * leftMultiplier + rightFactor * rightMultiplier)) :
+    HFRecursiveIntegerDivides bound divisor
+      (left * leftMultiplier + right * rightMultiplier) := by
+  rcases (hfRecursiveIntegerDivides_iff
+    bound divisor left divisorWithin).mp dividesLeft with
+    ⟨leftFactor, leftFactorWithin, leftValue⟩
+  rcases (hfRecursiveIntegerDivides_iff
+    bound divisor right divisorWithin).mp dividesRight with
+    ⟨rightFactor, rightFactorWithin, rightValue⟩
+  have combinedWithin := combinedFactorWithin leftFactor rightFactor
+    leftFactorWithin rightFactorWithin leftValue rightValue
+  apply (hfRecursiveIntegerDivides_iff bound divisor
+    (left * leftMultiplier + right * rightMultiplier) divisorWithin).mpr
+  refine ⟨leftFactor * leftMultiplier + rightFactor * rightMultiplier,
+    combinedWithin, ?_⟩
+  rw [leftValue, rightValue, Int.mul_add]
+  simp only [Int.mul_assoc]
+
 /- The graph of the identity function on the internally represented finite
    ordinal `n`. -/
 def hfRecursiveNatIdentityGraph : Nat → HFRecursiveSet
