@@ -165,6 +165,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   substitution と一致する一般 fusion law をdependent raw type/termの相互再帰で証明した。
   binder caseではlifted replacementのrenameとrename済みreplacementのliftが一致する補題を
   rename compositionから導き、nested Pi/Sigma と lambda を含めて成立させた。
+- 逆方向のfusion law、すなわちrename後のsubstitutionがreplacementとindex mapのcomposition
+  による直接substitutionと一致することもtype/term相互再帰で証明した。両方向を組み合わせ、
+  instantiated dependent codomainのrenameが「lift mapでcodomainをrename後、renamed argument
+  でinstantiate」と一致するnaturalityを導出した。dependent application/second projectionの
+  result typeをtyping preservationで整列する主要補題が成立した。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

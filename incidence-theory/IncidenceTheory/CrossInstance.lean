@@ -1191,6 +1191,93 @@ mutual
           IncDepRawTerm.substitute_rename term]
 end
 
+theorem IncDepRawTerm.liftRename_substitute
+    (renameMap : Nat → Nat) (replacement : Nat → IncDepRawTerm) :
+    IncDepRawTerm.liftReplacement replacement ∘
+        IncDepRawTerm.liftRename renameMap =
+    IncDepRawTerm.liftReplacement (replacement ∘ renameMap) := by
+  funext index
+  cases index <;> rfl
+
+mutual
+  theorem IncDepRawType.rename_substitute (type : IncDepRawType)
+      (renameMap : Nat → Nat) (replacement : Nat → IncDepRawTerm) :
+      (type.rename renameMap).substitute replacement =
+        type.substitute (replacement ∘ renameMap) := by
+    cases type with
+    | base index => rfl
+    | unit => rfl
+    | pi domain codomain =>
+        simp only [IncDepRawType.rename, IncDepRawType.substitute]
+        rw [IncDepRawType.rename_substitute domain]
+        rw [IncDepRawType.rename_substitute codomain]
+        have liftEq :
+            (fun index => match index with
+              | 0 => 0
+              | next + 1 => renameMap next + 1) =
+              IncDepRawTerm.liftRename renameMap := by
+          funext index
+          cases index <;> rfl
+        rw [liftEq]
+        rw [IncDepRawTerm.liftRename_substitute]
+    | sigma domain codomain =>
+        simp only [IncDepRawType.rename, IncDepRawType.substitute]
+        rw [IncDepRawType.rename_substitute domain]
+        rw [IncDepRawType.rename_substitute codomain]
+        have liftEq :
+            (fun index => match index with
+              | 0 => 0
+              | next + 1 => renameMap next + 1) =
+              IncDepRawTerm.liftRename renameMap := by
+          funext index
+          cases index <;> rfl
+        rw [liftEq]
+        rw [IncDepRawTerm.liftRename_substitute]
+    | identity type left right =>
+        simp only [IncDepRawType.rename, IncDepRawType.substitute]
+        rw [IncDepRawType.rename_substitute type,
+          IncDepRawTerm.rename_substitute left,
+          IncDepRawTerm.rename_substitute right]
+
+  theorem IncDepRawTerm.rename_substitute (term : IncDepRawTerm)
+      (renameMap : Nat → Nat) (replacement : Nat → IncDepRawTerm) :
+      (term.rename renameMap).substitute replacement =
+        term.substitute (replacement ∘ renameMap) := by
+    cases term with
+    | var index => rfl
+    | unit => rfl
+    | lambda domain body =>
+        simp only [IncDepRawTerm.rename, IncDepRawTerm.substitute]
+        rw [IncDepRawType.rename_substitute domain]
+        rw [IncDepRawTerm.rename_substitute body]
+        have liftEq :
+            (fun index => match index with
+              | 0 => 0
+              | next + 1 => renameMap next + 1) =
+              IncDepRawTerm.liftRename renameMap := by
+          funext index
+          cases index <;> rfl
+        rw [liftEq]
+        rw [IncDepRawTerm.liftRename_substitute]
+    | apply function argument =>
+        simp only [IncDepRawTerm.rename, IncDepRawTerm.substitute]
+        rw [IncDepRawTerm.rename_substitute function,
+          IncDepRawTerm.rename_substitute argument]
+    | pair first second =>
+        simp only [IncDepRawTerm.rename, IncDepRawTerm.substitute]
+        rw [IncDepRawTerm.rename_substitute first,
+          IncDepRawTerm.rename_substitute second]
+    | first pair =>
+        simp [IncDepRawTerm.rename, IncDepRawTerm.substitute,
+          IncDepRawTerm.rename_substitute pair]
+    | second pair =>
+        simp [IncDepRawTerm.rename, IncDepRawTerm.substitute,
+          IncDepRawTerm.rename_substitute pair]
+    | refl term =>
+        simp [IncDepRawTerm.rename, IncDepRawTerm.substitute,
+          IncDepRawTerm.rename_substitute term]
+end
+
 mutual
   theorem IncDepRawType.substitute_identity (type : IncDepRawType) :
       type.substitute IncDepRawTerm.var = type := by
@@ -1239,6 +1326,19 @@ def IncDepRawType.instantiate (codomain : IncDepRawType)
   codomain.substitute fun index => match index with
     | 0 => argument
     | next + 1 => .var next
+
+theorem IncDepRawType.instantiate_rename
+    (codomain : IncDepRawType) (argument : IncDepRawTerm)
+    (renameMap : Nat → Nat) :
+    (codomain.instantiate argument).rename renameMap =
+      (codomain.rename (IncDepRawTerm.liftRename renameMap)).instantiate
+        (argument.rename renameMap) := by
+  simp only [IncDepRawType.instantiate]
+  rw [IncDepRawType.substitute_rename,
+    IncDepRawType.rename_substitute]
+  congr 1
+  funext index
+  cases index <;> rfl
 
 inductive IncDepRawLookup : List IncDepRawType → Nat → IncDepRawType → Type
   | here {context type} :

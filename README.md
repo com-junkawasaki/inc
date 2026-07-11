@@ -494,6 +494,12 @@ It currently establishes:
   renamed replacements.  The binder proof establishes that renaming a lifted
   replacement is the same as lifting the renamed replacement, so the theorem
   covers nested Pi/Sigma types and lambdas without a closed-term restriction.
+  The converse fusion law is checked too: substituting after a renaming equals
+  direct substitution by the replacement composed with the index map.  Combining
+  both directions yields codomain-instantiation naturality: renaming an
+  instantiated dependent type equals first renaming the codomain under the
+  lifted map and then instantiating it with the renamed argument.  This aligns
+  the result types required by dependent application and second projection.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite
