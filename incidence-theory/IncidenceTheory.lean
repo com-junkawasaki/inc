@@ -5828,19 +5828,30 @@ theorem three_link_composition_value {I R T : Type u} [DecidableEq I]
   rw [hBij1, hBij2, hBij3]
   simp [Int.zero_add]
 
-/- Glue operation matrix correspondence -/
+/- Glue operation matrix correspondence.  Since the minimal `Incidence`
+   signature does not prescribe an algebraic formula combining the two input
+   rows, the canonical semantics of a successful glue is the actual boundary
+   matrix row of its result.  Any stronger merge formula must be supplied as
+   an additional compatibility law and proved equal to this semantics. -/
 /- Merkle-ID: implementation.linear_algebra.glue_matrix
-   How glue operations correspond to matrix operations on boundary matrices. -/
+   The matrix semantics of a successful glue operation. -/
 def glue_boundary_matrix {I R T : Type u} [DecidableEq I]
-  (inc : Incidence I R T) (idx : List I) (i j : I) : Matrix I I Int :=
-  -- When gluing i and j, the resulting boundary matrix combines their boundaries
-  -- This is a simplified model; real glue would require more complex operations
-  fun x y =>
-    if x = i ∧ y = j then
-      -- Combine boundaries along the glue interface
-      0  -- Placeholder: would need proper boundary merging logic
-    else
-      boundaryMatrix inc idx x y
+    (inc : Incidence I R T) (idx : List I) {i j k : I}
+    (_hglue : inc.glue i j = some k) : I → Int :=
+  boundaryMatrix inc idx k
+
+theorem glue_boundary_matrix_represents_result
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) {i j k : I}
+    (hglue : inc.glue i j = some k) :
+    glue_boundary_matrix inc idx hglue = boundaryMatrix inc idx k := rfl
+
+theorem glue_boundary_matrix_witness_independent
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) {i j k : I}
+    (first second : inc.glue i j = some k) :
+    glue_boundary_matrix inc idx first = glue_boundary_matrix inc idx second :=
+  rfl
 
 /- The exact compatibility condition needed to make glue preserve the chain
    condition.  It is deliberately separate from `Incidence`: the minimal
