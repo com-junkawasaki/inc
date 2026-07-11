@@ -825,6 +825,16 @@ It currently establishes:
   showing that J commutes with transported identity witnesses.  The remaining
   Id bridge is to construct this motive map recursively in the raw formation/
   substitution interpreter, rather than postulate it as branch input.
+  The raw Id-formation branch now has its explicit transport invariant.
+  `IncIdentityType.fiberEquivalence` builds an equivalence between identity
+  families from a base-family equivalence plus coherence of both endpoints;
+  its forward computation maps the source path and composes the two endpoint
+  equations.  `IncDepRawIdentityFormationSubstitutionFiberResult` packages the
+  underlying raw type result, all four endpoint interpretations, and their two
+  substitution equations, and derives the substituted Id-family equivalence.
+  This removes the Id composite branch's former dependence on literal family
+  equality.  The remaining recursive step is producing the two endpoint
+  equations from typing-substitution coherence automatically.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

@@ -386,6 +386,13 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `IncIdentityTerm.J_map`でcontextual term上の可換性をsorry-free証明した。したがってsemantic Jと
   identity witness transportの一般可換性は閉じた。Id branchに残るのは、このmotive mapをraw
   formation/substitution interpreterの再帰から構成するcoherence証明である。
+- raw Id formation branchの明示的transport invariantを追加した。
+  `IncIdentityType.fiberEquivalence`はbase familyのfiber equivalenceとleft/right endpointの
+  coherence equationからId family間のfiber equivalenceを構成し、forward path mapの計算則も証明する。
+  `IncDepRawIdentityFormationSubstitutionFiberResult`はunderlying raw type result、置換前後の四つの
+  endpoint interpretation、二つのendpoint substitution equationをpackageし、substituted Id familyの
+  equivalenceを導出する。これでId composite branchはliteral family equalityを要求しなくなり、残件は
+  typing-substitution recursionから二つのendpoint equationを自動生成することに絞られた。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

@@ -3312,6 +3312,59 @@ def IncIdentityTerm.mapBackward
     (equivalence.fiberEquiv assignment).mapIdentityWitnessBackward
       (equal assignment)
 
+def IncIdentityType.fiberEquivalence
+    {context : IncContext.{u}}
+    {source target : IncTypeInContext context}
+    (equivalence : IncTypeInContext.FiberEquiv source target)
+    {sourceLeft sourceRight : IncTerm source}
+    {targetLeft targetRight : IncTerm target}
+    (leftCoherence : equivalence.transport sourceLeft = targetLeft)
+    (rightCoherence : equivalence.transport sourceRight = targetRight) :
+    IncTypeInContext.FiberEquiv
+      (IncIdentityType source sourceLeft sourceRight)
+      (IncIdentityType target targetLeft targetRight) where
+  fiberEquiv := fun assignment =>
+    let fiber := equivalence.fiberEquiv assignment
+    let leftEq := congrFun leftCoherence assignment
+    let rightEq := congrFun rightCoherence assignment
+    { forward := fun witness =>
+        ⟨⟨leftEq.symm.trans
+          ((fiber.mapEquality witness.down.down).trans rightEq)⟩⟩
+      backward := fun witness =>
+        ⟨⟨(fiber.backward_forward (sourceLeft assignment)).symm.trans
+          ((congrArg fiber.backward leftEq).trans
+            ((fiber.mapEqualityBackward witness.down.down).trans
+              ((congrArg fiber.backward rightEq).symm.trans
+                (fiber.backward_forward (sourceRight assignment)))))⟩⟩
+      backward_forward := by
+        intro witness
+        cases witness with
+        | up lifted =>
+          cases lifted with
+          | up path => congr
+      forward_backward := by
+        intro witness
+        cases witness with
+        | up lifted =>
+          cases lifted with
+          | up path => congr }
+
+theorem IncIdentityType.fiberEquivalence_forward
+    {context : IncContext.{u}}
+    {source target : IncTypeInContext context}
+    (equivalence : IncTypeInContext.FiberEquiv source target)
+    {sourceLeft sourceRight : IncTerm source}
+    {targetLeft targetRight : IncTerm target}
+    (leftCoherence : equivalence.transport sourceLeft = targetLeft)
+    (rightCoherence : equivalence.transport sourceRight = targetRight)
+    (assignment) (witness : IncIdentityType source sourceLeft sourceRight assignment) :
+    ((IncIdentityType.fiberEquivalence equivalence leftCoherence rightCoherence).fiberEquiv
+        assignment).forward witness =
+      ⟨⟨(congrFun leftCoherence assignment).symm.trans
+        (((equivalence.fiberEquiv assignment).mapEquality witness.down.down).trans
+          (congrFun rightCoherence assignment))⟩⟩ := by
+  rfl
+
 def IncIdentityTerm.refl
     {context : IncContext.{u}}
     {type : IncTypeInContext context}
@@ -3849,6 +3902,62 @@ structure IncDepRawTypingSemanticResult
     (contextResult : IncDepRawContextSemanticResult contextWellFormed)
     (semanticType : IncTypeInContext contextResult.semanticContext) where
   semanticTerm : IncTerm semanticType
+
+structure IncDepRawIdentityFormationSubstitutionFiberResult
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {typeFormation : IncDepRawWellFormed target type}
+    {leftTyping : IncDepRawHasType target left type}
+    {rightTyping : IncDepRawHasType target right type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) where
+  typeResult : IncDepRawFormationSubstitutionSemanticResult
+    (targetFormation := typeFormation) substitutionResult
+  targetLeft : IncDepRawTypingSemanticResult leftTyping targetResult
+    typeResult.targetFormationResult.semanticType
+  targetRight : IncDepRawTypingSemanticResult rightTyping targetResult
+    typeResult.targetFormationResult.semanticType
+  sourceLeft : IncDepRawTypingSemanticResult
+    (leftTyping.substitute substitution) sourceResult
+    typeResult.sourceFormationResult.semanticType
+  sourceRight : IncDepRawTypingSemanticResult
+    (rightTyping.substitute substitution) sourceResult
+    typeResult.sourceFormationResult.semanticType
+  leftCoherence : typeResult.fiberEquivalence.transport sourceLeft.semanticTerm =
+    targetLeft.semanticTerm.substitute substitutionResult.semanticSubstitution
+  rightCoherence : typeResult.fiberEquivalence.transport sourceRight.semanticTerm =
+    targetRight.semanticTerm.substitute substitutionResult.semanticSubstitution
+
+def IncDepRawIdentityFormationSubstitutionFiberResult.identityFiberEquivalence
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {substitution : IncDepRawSubstitution source target}
+    {typeFormation : IncDepRawWellFormed target type}
+    {leftTyping : IncDepRawHasType target left type}
+    {rightTyping : IncDepRawHasType target right type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawIdentityFormationSubstitutionFiberResult
+      (typeFormation := typeFormation) (leftTyping := leftTyping)
+      (rightTyping := rightTyping) substitutionResult) :
+    IncTypeInContext.FiberEquiv
+      (IncIdentityType result.typeResult.sourceFormationResult.semanticType
+        result.sourceLeft.semanticTerm result.sourceRight.semanticTerm)
+      ((IncIdentityType result.typeResult.targetFormationResult.semanticType
+        result.targetLeft.semanticTerm result.targetRight.semanticTerm).reindex
+          substitutionResult.semanticSubstitution) := by
+  rw [IncIdentityType.reindex]
+  exact IncIdentityType.fiberEquivalence result.typeResult.fiberEquivalence
+    result.leftCoherence result.rightCoherence
 
 def IncDepRawTypingSemanticResult.castType
     {context : List IncDepRawType} {term : IncDepRawTerm}
