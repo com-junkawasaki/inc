@@ -731,6 +731,44 @@ theorem derivablyEquivalent_or_congr {Atom : Type u}
           (derives_iffER (context := []) (left := right) (right := right') rightEquivalent)
       · exact Derives.ax (by simp)
 
+theorem derivablyEquivalent_imp_congr {Atom : Type u}
+    {left left' right right' : Formula Atom} :
+    Formula.DerivablyEquivalent left left' →
+      Formula.DerivablyEquivalent right right' →
+        Formula.DerivablyEquivalent (.imp left right) (.imp left' right') := by
+  intro leftEquivalent rightEquivalent
+  apply derives_iffI
+  · apply Derives.impI
+    apply Derives.impI
+    apply Derives.impE
+    · exact derives_weaken (source := [])
+        (target := left' :: (.imp left right) :: [])
+        (by intro formula hmem; simp at hmem)
+        (derives_iffEL (context := []) (left := right) (right := right') rightEquivalent)
+    · apply Derives.impE
+      · exact Derives.ax (p := .imp left right) (by simp)
+      · apply Derives.impE
+        · exact derives_weaken (source := [])
+            (target := left' :: (.imp left right) :: [])
+            (by intro formula hmem; simp at hmem)
+            (derives_iffER (context := []) (left := left) (right := left') leftEquivalent)
+        · exact Derives.ax (by simp)
+  · apply Derives.impI
+    apply Derives.impI
+    apply Derives.impE
+    · exact derives_weaken (source := [])
+        (target := left :: (.imp left' right') :: [])
+        (by intro formula hmem; simp at hmem)
+        (derives_iffER (context := []) (left := right) (right := right') rightEquivalent)
+    · apply Derives.impE
+      · exact Derives.ax (p := .imp left' right') (by simp)
+      · apply Derives.impE
+        · exact derives_weaken (source := [])
+            (target := left :: (.imp left' right') :: [])
+            (by intro formula hmem; simp at hmem)
+            (derives_iffEL (context := []) (left := left) (right := left') leftEquivalent)
+        · exact Derives.ax (by simp)
+
 def Formula.derivablyEquivalentSetoid (Atom : Type u) : Setoid (Formula Atom) where
   r := Formula.DerivablyEquivalent
   iseqv := derivablyEquivalent_equivalence
@@ -764,11 +802,25 @@ def Formula.logicalOr {Atom : Type u}
       intro left right left' right' hleft hright
       exact Quotient.sound (derivablyEquivalent_or_congr hleft hright))
 
+def Formula.logicalImp {Atom : Type u}
+    (left right : Formula.LogicalEquivalenceClass Atom) :
+    Formula.LogicalEquivalenceClass Atom :=
+  Quotient.liftOn₂ left right
+    (fun left right => Quotient.mk (Formula.derivablyEquivalentSetoid Atom) (.imp left right))
+    (by
+      intro left right left' right' hleft hright
+      exact Quotient.sound (derivablyEquivalent_imp_congr hleft hright))
+
 def Formula.logicalTop {Atom : Type u} : Formula.LogicalEquivalenceClass Atom :=
   Quotient.mk (Formula.derivablyEquivalentSetoid Atom) .top
 
 def Formula.logicalBottom {Atom : Type u} : Formula.LogicalEquivalenceClass Atom :=
   Quotient.mk (Formula.derivablyEquivalentSetoid Atom) .bot
+
+def Formula.logicalNeg {Atom : Type u}
+    (formula : Formula.LogicalEquivalenceClass Atom) :
+    Formula.LogicalEquivalenceClass Atom :=
+  Formula.logicalImp formula Formula.logicalBottom
 
 theorem Formula.logicalAnd_mk {Atom : Type u} (left right : Formula Atom) :
     Formula.logicalAnd
@@ -781,6 +833,17 @@ theorem Formula.logicalOr_mk {Atom : Type u} (left right : Formula Atom) :
       (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) left)
       (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) right) =
       Quotient.mk (Formula.derivablyEquivalentSetoid Atom) (.or left right) := rfl
+
+theorem Formula.logicalImp_mk {Atom : Type u} (left right : Formula Atom) :
+    Formula.logicalImp
+      (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) left)
+      (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) right) =
+      Quotient.mk (Formula.derivablyEquivalentSetoid Atom) (.imp left right) := rfl
+
+theorem Formula.logicalNeg_mk {Atom : Type u} (formula : Formula Atom) :
+    Formula.logicalNeg
+      (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) formula) =
+      Quotient.mk (Formula.derivablyEquivalentSetoid Atom) formula.neg := rfl
 
 theorem inconsistent_extension_iff_derives_neg {Atom : Type u}
     {context : List (Formula Atom)} {formula : Formula Atom} :
