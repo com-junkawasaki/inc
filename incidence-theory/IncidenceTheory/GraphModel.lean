@@ -1853,6 +1853,59 @@ noncomputable def hfNatIncidenceImageEuclideanLaws :
   div_add_mod := HFNatIncidenceImage.div_add_mod
   mod_lt := HFNatIncidenceImage.mod_lt
 
+noncomputable def HFNatIncidenceImage.pow
+    (base exponent : HFNatIncidenceImage) : HFNatIncidenceImage :=
+  hfNatIncidenceImageEncode (base.index ^ exponent.index)
+
+theorem HFNatIncidenceImage.index_pow (base exponent : HFNatIncidenceImage) :
+    (base.pow exponent).index = base.index ^ exponent.index :=
+  HFNatIncidenceImage.index_encode _
+
+theorem HFNatIncidenceImage.pow_zero (base : HFNatIncidenceImage) :
+    base.pow hfNatIncidenceImageZero = hfNatIncidenceImageOne := by
+  apply HFNatIncidenceImage.eq_of_index_eq
+  rw [HFNatIncidenceImage.index_pow]
+  unfold hfNatIncidenceImageZero hfNatIncidenceImageOne
+  rw [HFNatIncidenceImage.index_encode, HFNatIncidenceImage.index_encode]
+  exact Nat.pow_zero base.index
+
+theorem HFNatIncidenceImage.pow_succ
+    (base exponent : HFNatIncidenceImage) :
+    base.pow exponent.succ = (base.pow exponent).mul base := by
+  apply HFNatIncidenceImage.eq_of_index_eq
+  rw [HFNatIncidenceImage.index_pow, HFNatIncidenceImage.index_succ,
+    HFNatIncidenceImage.index_mul, HFNatIncidenceImage.index_pow]
+  simpa [Nat.succ_eq_add_one] using Nat.pow_succ base.index exponent.index
+
+theorem HFNatIncidenceImage.pow_add
+    (base first second : HFNatIncidenceImage) :
+    base.pow (first.add second) = (base.pow first).mul (base.pow second) := by
+  apply HFNatIncidenceImage.eq_of_index_eq
+  rw [HFNatIncidenceImage.index_pow, HFNatIncidenceImage.index_add,
+    HFNatIncidenceImage.index_mul, HFNatIncidenceImage.index_pow,
+    HFNatIncidenceImage.index_pow]
+  exact Nat.pow_add base.index first.index second.index
+
+structure HFNatIncidenceImagePowerLaws where
+  arithmetic : HFNatIncidenceImageEuclideanLaws
+  pow : HFNatIncidenceImage → HFNatIncidenceImage → HFNatIncidenceImage
+  pow_zero : ∀ base, pow base arithmetic.orderedSemiring.semiring.zero =
+    arithmetic.orderedSemiring.semiring.one
+  pow_succ : ∀ base exponent,
+    pow base exponent.succ =
+      arithmetic.orderedSemiring.semiring.mul (pow base exponent) base
+  pow_add : ∀ base first second,
+    pow base (arithmetic.orderedSemiring.semiring.add first second) =
+      arithmetic.orderedSemiring.semiring.mul (pow base first) (pow base second)
+
+noncomputable def hfNatIncidenceImagePowerLaws :
+    HFNatIncidenceImagePowerLaws where
+  arithmetic := hfNatIncidenceImageEuclideanLaws
+  pow := HFNatIncidenceImage.pow
+  pow_zero := HFNatIncidenceImage.pow_zero
+  pow_succ := HFNatIncidenceImage.pow_succ
+  pow_add := HFNatIncidenceImage.pow_add
+
 /- Graph with nodes and edges as incidences. We take I as a sum of Node | Edge. -/
 inductive GId where | node (n : Nat) | edge (e : Nat)
 deriving DecidableEq, Repr
