@@ -1955,6 +1955,28 @@ def IncDepRawFormationSemanticReady.formation
     IncDepRawWellFormed context type :=
   formation
 
+def IncDepRawFormationSemanticReady.renameBase
+    {source target : List IncDepRawType} {index : Nat}
+    (renameMap : IncDepRawRenaming source target) :
+    IncDepRawFormationSemanticReady
+      ((IncDepRawWellFormed.base (context := source) (index := index)).rename
+        renameMap) :=
+  IncDepRawFormationSemanticReady.base
+
+def IncDepRawFormationSemanticReady.renameUnit
+    {source target : List IncDepRawType}
+    (renameMap : IncDepRawRenaming source target) :
+    IncDepRawFormationSemanticReady
+      ((IncDepRawWellFormed.unit (context := source)).rename renameMap) :=
+  IncDepRawFormationSemanticReady.unit
+
+def IncDepRawTypingSemanticReady.renameUnit
+    {source target : List IncDepRawType}
+    (renameMap : IncDepRawRenaming source target) :
+    IncDepRawTypingSemanticReady
+      ((IncDepRawHasType.unitRule (context := source)).rename renameMap) :=
+  IncDepRawTypingSemanticReady.unitRule
+
 noncomputable def IncDepRawTypingSemanticReady.toDeeplyWellFormed
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} {typing : IncDepRawHasType context term type}

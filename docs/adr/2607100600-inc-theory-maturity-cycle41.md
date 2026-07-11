@@ -430,6 +430,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   substitutionを構成する。両計算則はdefinitionally checkedである。これはolder lookup alignmentと後続の
   Pi/Sigma binder recursionが共有する不足constructorであり、次はこのrenameに対するreadiness proof index
   preservationを接続する。
+- readiness renameのatomic branchとして`renameBase`、formation `renameUnit`、typing `renameUnit`を
+  checkedにした。full mutual recursionの監査ではapply/pair/secondが`instantiate_rename`に沿ったproof-index
+  transportを含み、renamed typing derivationとconstructor derivationがdefinitionally一致しないことを確認した。
+  composite readiness layerはこれらindex equalityとmutual termination measureを明示的に保持してから
+  Pi/Sigma/Id branchを組み立てる必要がある。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

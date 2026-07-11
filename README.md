@@ -886,6 +886,14 @@ It currently establishes:
   definitionally.  This is the shared missing constructor for the older lookup
   alignment and for subsequent Pi/Sigma binder recursion; readiness preservation
   under this rename is the next proof-index layer to connect.
+  Readiness renaming now closes its atomic cases: `renameBase`, formation
+  `renameUnit`, and typing `renameUnit` construct renamed witnesses directly.
+  Auditing the full mutual recursion exposed the exact composite obstruction:
+  application, pairing, and second projection carry proof indices transported
+  by `instantiate_rename`, so the renamed derivations are propositionally rather
+  than definitionally the corresponding constructor derivations.  The remaining
+  readiness layer must retain those index equalities explicitly, together with
+  a mutual termination measure, before the Pi/Sigma/Id cases can be assembled.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
