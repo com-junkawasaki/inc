@@ -585,6 +585,8 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - total recursionの外部データを`IncDepRawSubstitutionFiberModel`へ統合した。base-type interpretationと、任意のrecursive
   domain/codomain resultsに対するcanonical Pi/Sigma coherence providerを保持する。`.base`/`.unit` model methodsがleaf
   formation casesを既にdispatchし、binder branchも同じmodelからcoherence packageを取得できる。
+- model `.pi`/`.sigma` methodsを追加し、recursive domain/codomain resultsからproviderを呼び、uniform parent formation
+  resultまで直接返すようにした。Identityを除くbase/unit/Pi/Sigmaの4 formation branchesがmodel-dispatchedとなった。
 - closed interpreter result APIを形式化した。certified closed judgmentはsemantic contextual
   typeとそのtermへ、closed multi-step reductionは同一semantic type内の二termとそのequalityへ
   写る。dependent Pi/reflとSigma/pairを前者、Pi betaとSigma両projection reductionを後者へ

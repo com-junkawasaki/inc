@@ -5550,6 +5550,30 @@ def IncDepRawSubstitutionFiberModel.unit
       (targetFormation := IncDepRawWellFormed.unit) substitutionResult :=
   IncDepRawFormationSubstitutionFiberResult.unit substitutionResult
 
+noncomputable def IncDepRawSubstitutionFiberModel.pi
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (codomainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := codomainFormation)
+      domainResult.liftSubstitution) :
+    IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := IncDepRawWellFormed.pi domainFormation codomainFormation)
+      substitutionResult :=
+  (IncDepRawPiFormationSubstitutionFiberResult.ofApplicationCoherence
+    domainResult codomainResult (model.piCoherence domainResult codomainResult))
+      |>.toFormationFiberResult
+
 noncomputable def IncDepRawSigmaFormationSubstitutionFiberResult.ofCodomainCoherence
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
     {substitution : IncDepRawSubstitution source target}
@@ -5683,6 +5707,29 @@ noncomputable def IncDepRawFormationSubstitutionFiberResult.sigmaCoherent
       substitutionResult :=
   (IncDepRawSigmaFormationSubstitutionFiberResult.ofCoherence
     domainResult codomainResult coherence).toFormationFiberResult
+
+noncomputable def IncDepRawSubstitutionFiberModel.sigma
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (codomainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := codomainFormation)
+      domainResult.liftSubstitution) :
+    IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := IncDepRawWellFormed.sigma domainFormation codomainFormation)
+      substitutionResult :=
+  IncDepRawFormationSubstitutionFiberResult.sigmaCoherent domainResult
+    codomainResult (model.sigmaCoherence domainResult codomainResult)
 
 inductive IncDepRawContextSemanticTree :
     {context : List IncDepRawType} →

@@ -1133,7 +1133,9 @@ It currently establishes:
   `IncDepRawSubstitutionFiberModel` contains the base-type interpretation and
   canonical Pi/Sigma coherence providers for arbitrary recursive domain and
   codomain results.  Its `.base` and `.unit` methods already dispatch both leaf
-  formation cases; binder recursion obtains its package from the same model.
+  formation cases.  Its `.pi` and `.sigma` methods now obtain the appropriate
+  package from the provider and return the uniform parent result directly, so all
+  four non-identity formation branches are model-dispatched.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
