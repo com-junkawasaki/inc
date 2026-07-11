@@ -764,6 +764,12 @@ def Formula.logicalOr {Atom : Type u}
       intro left right left' right' hleft hright
       exact Quotient.sound (derivablyEquivalent_or_congr hleft hright))
 
+def Formula.logicalTop {Atom : Type u} : Formula.LogicalEquivalenceClass Atom :=
+  Quotient.mk (Formula.derivablyEquivalentSetoid Atom) .top
+
+def Formula.logicalBottom {Atom : Type u} : Formula.LogicalEquivalenceClass Atom :=
+  Quotient.mk (Formula.derivablyEquivalentSetoid Atom) .bot
+
 theorem Formula.logicalAnd_mk {Atom : Type u} (left right : Formula Atom) :
     Formula.logicalAnd
       (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) left)
@@ -780,6 +786,35 @@ theorem inconsistent_extension_iff_derives_neg {Atom : Type u}
     {context : List (Formula Atom)} {formula : Formula Atom} :
     Derives (formula :: context) .bot ↔ Derives context formula.neg :=
   derives_imp_iff.symm
+
+theorem derives_and_top_iff {Atom : Type u} (formula : Formula Atom) :
+    Derives [] (Formula.iff (.and formula .top) formula) := by
+  apply derives_iffI
+  · apply Derives.impI
+    exact Derives.andEL (p := formula) (q := .top) (Derives.ax (by simp))
+  · apply Derives.impI
+    exact Derives.andI (Derives.ax (by simp)) Derives.topI
+
+theorem derives_or_bottom_iff {Atom : Type u} (formula : Formula Atom) :
+    Derives [] (Formula.iff (.or formula .bot) formula) := by
+  apply derives_iffI
+  · apply Derives.impI
+    refine Derives.orE (p := formula) (q := .bot) (r := formula)
+      (Derives.ax (by simp)) ?_ ?_
+    · exact Derives.ax (by simp)
+    · exact Derives.botE (Derives.ax (by simp))
+  · apply Derives.impI
+    exact Derives.orIL (Derives.ax (by simp))
+
+theorem Formula.logicalAnd_top {Atom : Type u} (formula : Formula Atom) :
+    Formula.logicalAnd (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) formula)
+      Formula.logicalTop = Quotient.mk (Formula.derivablyEquivalentSetoid Atom) formula := by
+  exact Quotient.sound (derives_and_top_iff formula)
+
+theorem Formula.logicalOr_bottom {Atom : Type u} (formula : Formula Atom) :
+    Formula.logicalOr (Quotient.mk (Formula.derivablyEquivalentSetoid Atom) formula)
+      Formula.logicalBottom = Quotient.mk (Formula.derivablyEquivalentSetoid Atom) formula := by
+  exact Quotient.sound (derives_or_bottom_iff formula)
 
 /- The first nontrivial connective law needed to read incidence products and
    sums as logical structure.  Both directions are natural-deduction
