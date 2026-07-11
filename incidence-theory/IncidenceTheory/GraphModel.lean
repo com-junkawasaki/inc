@@ -1616,6 +1616,34 @@ theorem HFNatIncidenceImage.add_mono
   rw [HFNatIncidenceImage.index_add, HFNatIncidenceImage.index_add]
   exact Nat.add_le_add hleft hright
 
+theorem HFNatIncidenceImage.le_iff_exists_add (left right : HFNatIncidenceImage) :
+    left.le right ↔ ∃ offset, left.add offset = right := by
+  constructor
+  · intro order
+    obtain ⟨offset, hoffset⟩ := Nat.le.dest order
+    refine ⟨hfNatIncidenceImageEncode offset, ?_⟩
+    apply HFNatIncidenceImage.eq_of_index_eq
+    rw [HFNatIncidenceImage.index_add, HFNatIncidenceImage.index_encode]
+    exact hoffset
+  · rintro ⟨offset, equal⟩
+    have indexEqual := congrArg HFNatIncidenceImage.index equal
+    rw [HFNatIncidenceImage.index_add] at indexEqual
+    unfold HFNatIncidenceImage.le
+    rw [← indexEqual]
+    exact Nat.le_add_right left.index offset.index
+
+theorem HFNatIncidenceImage.le_succ (value : HFNatIncidenceImage) :
+    value.le value.succ := by
+  unfold HFNatIncidenceImage.le
+  rw [HFNatIncidenceImage.index_succ]
+  exact Nat.le_succ value.index
+
+theorem HFNatIncidenceImage.not_succ_le (value : HFNatIncidenceImage) :
+    ¬ value.succ.le value := by
+  unfold HFNatIncidenceImage.le
+  rw [HFNatIncidenceImage.index_succ]
+  exact Nat.not_succ_le_self value.index
+
 theorem HFNatIncidenceImage.mul_mono
     {left left' right right' : HFNatIncidenceImage} :
     left.le left' → right.le right' →
@@ -1729,6 +1757,10 @@ structure HFNatIncidenceImageOrderedSemiringLaws where
     le left left' → le right right' → le (semiring.add left right) (semiring.add left' right')
   mul_mono : ∀ {left left' right right'},
     le left left' → le right right' → le (semiring.mul left right) (semiring.mul left' right')
+  le_iff_exists_add : ∀ left right,
+    le left right ↔ ∃ offset, semiring.add left offset = right
+  le_succ : ∀ value, le value value.succ
+  not_succ_le : ∀ value, ¬ le value.succ value
   zero_ne_one : semiring.zero ≠ semiring.one
   mul_eq_zero_iff : ∀ left right,
     semiring.mul left right = semiring.zero ↔
@@ -1754,6 +1786,9 @@ noncomputable def hfNatIncidenceImageOrderedSemiringLaws :
   le_total := HFNatIncidenceImage.le_total
   add_mono := HFNatIncidenceImage.add_mono
   mul_mono := HFNatIncidenceImage.mul_mono
+  le_iff_exists_add := HFNatIncidenceImage.le_iff_exists_add
+  le_succ := HFNatIncidenceImage.le_succ
+  not_succ_le := HFNatIncidenceImage.not_succ_le
   zero_ne_one := hfNatIncidenceImageZero_ne_one
   mul_eq_zero_iff := HFNatIncidenceImage.mul_eq_zero_iff
   add_left_cancel := HFNatIncidenceImage.add_left_cancel
