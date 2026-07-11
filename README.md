@@ -992,6 +992,12 @@ It currently establishes:
   expose the exact normal forms required by `lift_variable_fiber` and
   `lift_older_transport`.  The next step is packaging those two existing
   equations into the final variable-coherence recursion.
+  The final newest-variable equation is now proved as `lift_here_fiber`.
+  Evaluating the lifted replacement environment's `here` term and applying the
+  domain equality's explicit fiber forward map yields exactly the target
+  extended variable evaluated under the lifted semantic substitution.  This
+  completes the newest variable branch end-to-end; only the recursive older
+  branch must now combine `lift_there_term` with `lift_older_transport`.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together

@@ -5034,6 +5034,39 @@ theorem IncDepRawSubstitutionReplacementSemanticResult.lift_there_term
         (sourceResult.semanticContext.extendProjection sourceDomain.semanticType) := by
   rfl
 
+theorem IncDepRawSubstitutionReplacementSemanticResult.lift_here_fiber
+    {source target : List IncDepRawType} {domain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult)
+    {domainFormation : IncDepRawWellFormed target domain}
+    {substitutedDomainFormation : IncDepRawWellFormed source
+      (domain.substitute substitution.term)}
+    (targetDomain : IncDepRawFormationSemanticResult domainFormation targetResult)
+    (sourceDomain : IncDepRawFormationSemanticResult
+      substitutedDomainFormation sourceResult)
+    (coherence : sourceDomain.semanticType = targetDomain.semanticType.reindex
+      substitutionResult.semanticSubstitution)
+    (assignment : sourceResult.semanticContext.Assignment)
+    (value : sourceDomain.semanticType assignment) :
+    ((IncTypeInContext.FiberEquiv.ofEq coherence).fiberEquiv assignment).forward
+        (((IncDepRawSubstitutionReplacementSemanticResult.lift
+          substitutionResult replacements targetDomain sourceDomain coherence).typingResult
+              (IncDepRawLookup.here (context := target) (type := domain))).semanticTerm
+                ⟨assignment, value⟩) =
+      (targetResult.semanticContext.extendVariable targetDomain.semanticType)
+        ((IncDepRawSubstitutionSemanticResult.lift substitutionResult
+          targetDomain sourceDomain coherence).semanticSubstitution
+            ⟨assignment, value⟩) := by
+  exact IncDepRawSubstitutionSemanticResult.lift_variable_fiber
+    substitutionResult targetDomain sourceDomain coherence assignment value
+
 def IncDepRawContextSemanticTree.interpretUnit
     {context : List IncDepRawType}
     {contextWellFormed : IncDepRawContext.WellFormed context}
