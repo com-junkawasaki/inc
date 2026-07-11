@@ -171,7 +171,9 @@ It currently establishes:
   encoded factor is zero.  Internal ordinal inclusion is preserved and
   reflected by adding a common summand and by multiplying with a positive
   common factor; addition and multiplication are monotone jointly in both
-  arguments.
+  arguments.  The corresponding preservation-and-reflection equivalences are
+  also proved for strict internal inclusion (proper subset), so these common
+  summand/factor maps are order embeddings for both `≤` and `<`.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.

@@ -3381,6 +3381,32 @@ theorem hfRecursiveNat_properSubset_iff (m n : Nat) :
     have hle : n ≤ m := (hfRecursiveNat_subset_iff n m).mp hnm
     exact (Nat.not_le_of_gt hmn) hle
 
+theorem hfRecursiveNat_add_right_properSubset_iff (a b c : Nat) :
+    HFRecursiveProperSubset (hfRecursiveNat (a + c)) (hfRecursiveNat (b + c)) ↔
+      HFRecursiveProperSubset (hfRecursiveNat a) (hfRecursiveNat b) := by
+  rw [hfRecursiveNat_properSubset_iff, hfRecursiveNat_properSubset_iff,
+    Nat.add_lt_add_iff_right]
+
+theorem hfRecursiveNat_add_left_properSubset_iff (a b c : Nat) :
+    HFRecursiveProperSubset (hfRecursiveNat (c + a)) (hfRecursiveNat (c + b)) ↔
+      HFRecursiveProperSubset (hfRecursiveNat a) (hfRecursiveNat b) := by
+  rw [hfRecursiveNat_properSubset_iff, hfRecursiveNat_properSubset_iff,
+    Nat.add_lt_add_iff_left]
+
+theorem hfRecursiveNat_mul_right_properSubset_iff
+    (a b c : Nat) (positive : 0 < c) :
+    HFRecursiveProperSubset (hfRecursiveNat (a * c)) (hfRecursiveNat (b * c)) ↔
+      HFRecursiveProperSubset (hfRecursiveNat a) (hfRecursiveNat b) := by
+  rw [hfRecursiveNat_properSubset_iff, hfRecursiveNat_properSubset_iff,
+    Nat.mul_lt_mul_right positive]
+
+theorem hfRecursiveNat_mul_left_properSubset_iff
+    (a b c : Nat) (positive : 0 < c) :
+    HFRecursiveProperSubset (hfRecursiveNat (c * a)) (hfRecursiveNat (c * b)) ↔
+      HFRecursiveProperSubset (hfRecursiveNat a) (hfRecursiveNat b) := by
+  rw [hfRecursiveNat_properSubset_iff, hfRecursiveNat_properSubset_iff,
+    Nat.mul_lt_mul_left positive]
+
 /- Equality of internal finite ordinals is exactly equality of their external
    indices; this is the order-reflecting half of the ordinal embedding. -/
 theorem hfRecursiveNat_eq_iff (m n : Nat) :
