@@ -80,6 +80,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   全 atom carrier に対する単一の無条件完全性定理を証明した。任意 `Incidence` は
   `internalLogic_complete_arbitrary` を直接持ち、countable presentation は完全性の仮定
   ではなく explicit enumeration/canonical countermodel API のための追加構造となった。
+- 同じ任意-carrier完全性から、非導出と Kripke countermodel 存在の同値、導出と
+  countermodel 不在の同値、derivational consistency と Kripke satisfiability の同値を
+  証明した。任意 Incidence は consistency/model existence の同値を直接持つ。countable
+  presentation が追加で与えるのは existential model existence ではなく、明示的な
+  canonical prime-theory model 内の counterworld である。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」や carrier 可算性の除去ではなく、Incidence 固有の意味論とのさらに

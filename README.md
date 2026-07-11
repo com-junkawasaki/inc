@@ -155,6 +155,13 @@ It currently establishes:
   `Incidence.internalLogic_complete_arbitrary`; countable presentations remain
   useful for explicit canonical enumeration/countermodel APIs, not for the
   completeness equivalence itself.
+  The arbitrary-carrier result now also provides the model-theoretic forms:
+  non-derivability is equivalent to existence of a Kripke countermodel,
+  derivability is equivalent to absence of one, and derivational consistency
+  is equivalent to Kripke satisfiability.  Every Incidence receives the latter
+  equivalence directly.  Countable presentations remain relevant specifically
+  when a countermodel inside the explicit canonical prime-theory model is
+  required, rather than merely an existential Kripke countermodel.
   This is instantiated non-vacuously for both `natIncidence × natIncidence` and
   `natIncidence ⊕ natIncidence`: consistent contexts have Kripke models, and every
   underivable formula has a canonical prime-theory counterworld in each language.

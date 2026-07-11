@@ -5836,6 +5836,68 @@ theorem Incidence.internalLogic_complete_arbitrary
     KripkeEntails.{u, u} context formula ↔ Derives context formula :=
   kripke_entails_iff_derives_arbitrary_atoms context formula
 
+theorem not_derives_iff_has_kripke_countermodel_arbitrary
+    {Atom : Type u} [BEq Atom] [LawfulBEq Atom]
+    (context : List (Formula Atom)) (formula : Formula Atom) :
+    ¬ Derives context formula ↔
+      ∃ model : KripkeModel.{u, u} Atom,
+        ∃ world : model.World,
+          KripkeContextForces model world context ∧
+            ¬ KripkeForces model world formula := by
+  classical
+  constructor
+  · intro notDerives
+    apply Classical.byContradiction
+    intro noCountermodel
+    apply notDerives
+    apply (kripke_entails_iff_derives_arbitrary_atoms context formula).mp
+    intro model world contextHolds
+    apply Classical.byContradiction
+    intro formulaFails
+    exact noCountermodel ⟨model, world, contextHolds, formulaFails⟩
+  · rintro ⟨model, world, contextHolds, formulaFails⟩ derives
+    exact formulaFails
+      ((derives_kripke_entails derives) model world contextHolds)
+
+theorem derives_iff_no_kripke_countermodel_arbitrary
+    {Atom : Type u} [BEq Atom] [LawfulBEq Atom]
+    (context : List (Formula Atom)) (formula : Formula Atom) :
+    Derives context formula ↔
+      ¬ (∃ model : KripkeModel.{u, u} Atom,
+        ∃ world : model.World,
+          KripkeContextForces model world context ∧
+            ¬ KripkeForces model world formula) := by
+  classical
+  constructor
+  · intro derives countermodel
+    exact (not_derives_iff_has_kripke_countermodel_arbitrary context formula).mpr
+      countermodel derives
+  · intro noCountermodel
+    apply Classical.byContradiction
+    intro notDerives
+    exact noCountermodel
+      ((not_derives_iff_has_kripke_countermodel_arbitrary context formula).mp
+        notDerives)
+
+theorem derivationallyConsistent_iff_kripkeSatisfiable_arbitrary
+    {Atom : Type u} [BEq Atom] [LawfulBEq Atom]
+    (context : List (Formula Atom)) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context := by
+  constructor
+  · intro consistent
+    rcases (not_derives_iff_has_kripke_countermodel_arbitrary
+      context Formula.bot).mp consistent with
+      ⟨model, world, contextHolds, _⟩
+    exact ⟨model, world, contextHolds⟩
+  · rintro ⟨model, world, contextHolds⟩
+    exact kripke_satisfiable_consistent contextHolds
+
+theorem Incidence.internalLogic_consistent_iff_model_arbitrary
+    {I R T : Type u} [DecidableEq I]
+    (_incidence : Incidence I R T) (context : List (Formula I)) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context :=
+  derivationallyConsistent_iff_kripkeSatisfiable_arbitrary context
+
 noncomputable def finFormulaEnumeration : (n : Nat) → FormulaEnumeration (Fin n)
   | 0 => emptyFormulaEnumeration
   | n + 1 => finSuccFormulaEnumeration n
