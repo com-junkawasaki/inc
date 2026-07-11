@@ -2655,6 +2655,17 @@ theorem IncFiberEquiv.mapEquality_refl
     equivalence.mapEquality (Eq.refl value) = Eq.refl (equivalence.forward value) := by
   rfl
 
+theorem IncFiberEquiv.mapEquality_trans
+    {source target : Type u} (equivalence : IncFiberEquiv source target)
+    {first second third : source}
+    (firstEquality : first = second) (secondEquality : second = third) :
+    equivalence.mapEquality (firstEquality.trans secondEquality) =
+      (equivalence.mapEquality firstEquality).trans
+        (equivalence.mapEquality secondEquality) := by
+  cases firstEquality
+  cases secondEquality
+  rfl
+
 def IncFiberEquiv.mapEqualityBackward
     {source target : Type u} (equivalence : IncFiberEquiv source target)
     {left right : target} (equality : left = right) :

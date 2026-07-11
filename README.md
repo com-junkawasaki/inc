@@ -801,6 +801,8 @@ It currently establishes:
   forthcoming Id formation and J coherence branch.
   Equality witnesses now transport backward as well, with the corresponding
   reflexivity computation rule, completing the bidirectional identity-fiber API.
+  Forward equality transport also preserves transitive composition, giving the
+  path-composition law needed by iterated identity elimination.
   Closed interpreter result types are now formalized.  A certified closed
   judgment maps to a contextual semantic type together with a term of that type;
   a closed multi-step reduction maps to two terms in one semantic type together
