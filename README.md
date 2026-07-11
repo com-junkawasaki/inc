@@ -132,8 +132,16 @@ It currently establishes:
   contexts.  In particular, an encode/decode pair need be a left inverse only
   on the displayed sequent support for formula and context translation to
   round-trip exactly.  Constructing the corresponding finite code/retraction
-  and transporting Kripke countermodels through it remain the next steps
-  toward completeness for arbitrary, possibly uncountable, carriers.
+  is now checked as well: for every nonempty finite support, `List.idxOf` and
+  `List.getD` give an `ULift Nat` coding whose decode/encode law holds on that
+  support (the lift keeps arbitrary atom universes aligned with `Formula.map`).
+  `ULift Nat` has an explicit global countable coding, so the existing Kripke
+  completeness theorem applies to the translated sequent.  If that translated
+  sequent is semantically valid, its derivation decodes back to a derivation of
+  the original sequent using only the support-local roundtrip law.  What
+  remains for arbitrary-carrier completeness is transporting validity (or a
+  countermodel) between the original and this support-restricted translation,
+  plus the atom-free empty-support branch.
   This is instantiated non-vacuously for both `natIncidence × natIncidence` and
   `natIncidence ⊕ natIncidence`: consistent contexts have Kripke models, and every
   underivable formula has a canonical prime-theory counterworld in each language.

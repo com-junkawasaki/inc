@@ -69,7 +69,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   support を定義した。atom map が support 上だけで一致すれば formula/context translation
   が一致し、encode/decode が sequent support 上だけで left inverse なら context と結論が
   正確に round-trip することを証明済み。global な atom coding を有限 sequent ごとの coding
-  に置き換える基盤であり、有限 code/retraction と Kripke countermodel transport が次段。
+  に置き換える基盤である。非空 support には `List.idxOf`/`List.getD` から `ULift Nat`
+  code/retraction を構成し、support-local left inverse を証明済み。`ULift Nat` の global
+  countable coding に既存 Kripke 完全性を適用し、翻訳 sequent の semantic validity から
+  元 sequent の derivation を decode で復元する定理も得た。残るのは validity/countermodel
+  の翻訳 transport と atom-free な empty-support 分岐である。
 
 したがって本文の cycle 41 評価は研究史の基準点としてのみ読み、現在の残件は
 「内部論理の着手」ではなく、非可算 carrier への完全性条件の拡張、Incidence 固有の

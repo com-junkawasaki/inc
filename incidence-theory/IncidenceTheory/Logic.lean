@@ -257,6 +257,78 @@ theorem Formula.sequent_roundtrip_of_leftInverse_on_support
     intro atom member
     exact leftInverse atom (List.mem_append.mpr (Or.inr member))
 
+def finiteSupportEncode {Atom : Type u} [BEq Atom]
+    (support : List Atom) (atom : Atom) : Nat :=
+  support.idxOf atom
+
+def finiteSupportDecode {Atom : Type u}
+    (support : List Atom) (fallback : Atom) (code : Nat) : Atom :=
+  support.getD code fallback
+
+theorem finiteSupportDecode_encode_of_mem
+    {Atom : Type u} [BEq Atom] [LawfulBEq Atom]
+    (support : List Atom) (fallback atom : Atom)
+    (member : atom ∈ support) :
+    finiteSupportDecode support fallback
+        (finiteSupportEncode support atom) = atom := by
+  induction support with
+  | nil => simp at member
+  | cons head tail ih =>
+      simp only [List.mem_cons] at member
+      rcases member with rfl | member
+      · simp [finiteSupportDecode, finiteSupportEncode]
+      · by_cases equal : head = atom
+        · subst head
+          simp [finiteSupportDecode, finiteSupportEncode]
+        · have beqFalse : (head == atom) = false := by simp [equal]
+          unfold finiteSupportDecode finiteSupportEncode
+          rw [List.idxOf_cons, beqFalse]
+          change finiteSupportDecode tail fallback
+            (finiteSupportEncode tail atom) = atom
+          exact ih member
+
+structure FiniteSupportNatCoding (Atom : Type u) [BEq Atom]
+    (support : List Atom) where
+  encode : Atom → ULift.{u} Nat
+  decode : ULift.{u} Nat → Atom
+  decode_encode_of_mem : ∀ atom, atom ∈ support → decode (encode atom) = atom
+
+def finiteSupportNatCodingOfFallback
+    {Atom : Type u} [BEq Atom] [LawfulBEq Atom]
+    (support : List Atom) (fallback : Atom) :
+    FiniteSupportNatCoding Atom support where
+  encode := fun atom => ULift.up (finiteSupportEncode support atom)
+  decode := fun code => finiteSupportDecode support fallback code.down
+  decode_encode_of_mem := finiteSupportDecode_encode_of_mem support fallback
+
+def finiteSupportNatCodingOfNonempty
+    {Atom : Type u} [BEq Atom] [LawfulBEq Atom]
+    {support : List Atom} (nonempty : support ≠ []) :
+    FiniteSupportNatCoding Atom support :=
+  finiteSupportNatCodingOfFallback support (support.head nonempty)
+
+theorem FiniteSupportNatCoding.formula_roundtrip
+    {Atom : Type u} [BEq Atom] {support : List Atom}
+    (coding : FiniteSupportNatCoding Atom support)
+    (formula : Formula Atom)
+    (contained : ∀ atom, atom ∈ formulaAtoms formula → atom ∈ support) :
+    (formula.map coding.encode).map coding.decode = formula := by
+  apply Formula.map_roundtrip_of_leftInverse_on_atoms
+  intro atom member
+  exact coding.decode_encode_of_mem atom (contained atom member)
+
+theorem FiniteSupportNatCoding.sequent_roundtrip
+    {Atom : Type u} [BEq Atom] {support : List Atom}
+    (coding : FiniteSupportNatCoding Atom support)
+    (context : List (Formula Atom)) (conclusion : Formula Atom)
+    (contained : ∀ atom,
+      atom ∈ Formula.sequentAtoms context conclusion → atom ∈ support) :
+    Formula.mapContext coding.decode (Formula.mapContext coding.encode context) = context ∧
+      (conclusion.map coding.encode).map coding.decode = conclusion := by
+  apply Formula.sequent_roundtrip_of_leftInverse_on_support
+  intro atom member
+  exact coding.decode_encode_of_mem atom (contained atom member)
+
 theorem Formula.mapContext_id {Atom : Type u} (context : List (Formula Atom)) :
     Formula.mapContext id context = context := by
   induction context with
@@ -5050,6 +5122,11 @@ structure CountableAtomCoding (Atom : Type u) where
   code : Atom → Nat
   decode_code : ∀ atom, decode (code atom) = atom
 
+def uliftNatAtomCoding : CountableAtomCoding (ULift.{u} Nat) where
+  decode := fun index => ULift.up index
+  code := fun index => index.down
+  decode_code := fun _ => rfl
+
 noncomputable def CountableAtomCoding.formulaEnumeration {Atom : Type u}
     (coding : CountableAtomCoding Atom) : FormulaEnumeration Atom :=
   formulaEnumerationOfAtomCoding coding.decode coding.code coding.decode_code
@@ -5092,6 +5169,32 @@ theorem CountableAtomCoding.kripke_complete {Atom : Type u}
     (context : List (Formula Atom)) (formula : Formula Atom) :
     KripkeEntails.{u, u} context formula ↔ Derives context formula :=
   kripke_entails_iff_derives_of_enumeration coding.formulaEnumeration context formula
+
+theorem FiniteSupportNatCoding.translated_kripke_complete
+    {Atom : Type u} [BEq Atom] {support : List Atom}
+    (coding : FiniteSupportNatCoding Atom support)
+    (context : List (Formula Atom)) (conclusion : Formula Atom) :
+    KripkeEntails.{u, u} (Formula.mapContext coding.encode context)
+        (conclusion.map coding.encode) ↔
+      Derives (Formula.mapContext coding.encode context)
+        (conclusion.map coding.encode) :=
+  uliftNatAtomCoding.kripke_complete _ _
+
+theorem FiniteSupportNatCoding.derives_of_translated_kripke_entails
+    {Atom : Type u} [BEq Atom] {support : List Atom}
+    (coding : FiniteSupportNatCoding Atom support)
+    (context : List (Formula Atom)) (conclusion : Formula Atom)
+    (contained : ∀ atom,
+      atom ∈ Formula.sequentAtoms context conclusion → atom ∈ support)
+    (entails : KripkeEntails.{u, u}
+      (Formula.mapContext coding.encode context) (conclusion.map coding.encode)) :
+    Derives context conclusion := by
+  have translatedDerives :=
+    (coding.translated_kripke_complete context conclusion).mp entails
+  have decodedDerives := derives_map coding.decode translatedDerives
+  rcases coding.sequent_roundtrip context conclusion contained with
+    ⟨contextRoundtrip, conclusionRoundtrip⟩
+  simpa only [contextRoundtrip, conclusionRoundtrip] using decodedDerives
 
 theorem CountableAtomCoding.sum_kripke_complete {Left Right : Type u}
     (left : CountableAtomCoding Left) (right : CountableAtomCoding Right)
