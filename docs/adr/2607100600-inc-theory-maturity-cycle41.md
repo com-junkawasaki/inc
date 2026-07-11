@@ -211,6 +211,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   contextual term equalityを同一theoremで返すreduction soundness certificateを追加した。
   Pi applicationとSigma両projectionを含む。これらは一般semantic reduction theoremの具体的
   instanceであり、一般性はderivation interpreter完成後に主張する境界を維持している。
+- term instantiateがrenamingとsimultaneous substitutionの両方にnaturalであることを証明し、
+  任意one-step reductionがrename/substitute後にもone-step reductionとなる安定性を証明した。
+  Pi betaのsubstituted bodyと全congruence ruleを含み、operational computationを既存の
+  judgment renaming/substitution preservation infrastructureへ接続した。
 - evaluator の variable/unit/pair/projection/lambda/application 各 constructor equation を
   公開定理として証明し、opaque proof-indexed recursor を直接展開しない rewrite API を
   得た。lookup derivation の proof uniqueness も証明済み。typing derivation 全体の一意性

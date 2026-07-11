@@ -1832,6 +1832,41 @@ def IncDepRawTerm.instantiate (body argument : IncDepRawTerm) : IncDepRawTerm :=
     | 0 => argument
     | next + 1 => .var next
 
+theorem IncDepRawTerm.instantiate_substitute
+    (body argument : IncDepRawTerm)
+    (replacement : Nat → IncDepRawTerm) :
+    (body.instantiate argument).substitute replacement =
+      (body.substitute (IncDepRawTerm.liftReplacement replacement)).instantiate
+        (argument.substitute replacement) := by
+  simp only [IncDepRawTerm.instantiate]
+  rw [IncDepRawTerm.substitute_comp, IncDepRawTerm.substitute_comp]
+  congr 1
+  funext index
+  cases index with
+  | zero => rfl
+  | succ next =>
+      simp only [IncDepRawTerm.liftReplacement, IncDepRawTerm.substitute]
+      rw [IncDepRawTerm.rename_substitute]
+      have mapIdentity :
+          ((fun index => match index with
+            | 0 => argument.substitute replacement
+            | next + 1 => .var next) ∘ Nat.succ) = IncDepRawTerm.var := by
+        funext index
+        rfl
+      rw [mapIdentity, IncDepRawTerm.substitute_identity]
+
+theorem IncDepRawTerm.instantiate_rename
+    (body argument : IncDepRawTerm) (renameMap : Nat → Nat) :
+    (body.instantiate argument).rename renameMap =
+      (body.rename (IncDepRawTerm.liftRename renameMap)).instantiate
+        (argument.rename renameMap) := by
+  simp only [IncDepRawTerm.instantiate]
+  rw [IncDepRawTerm.substitute_rename,
+    IncDepRawTerm.rename_substitute]
+  congr 1
+  funext index
+  cases index <;> rfl
+
 inductive IncDepRawStep : IncDepRawTerm → IncDepRawTerm → Prop
   | piBeta {domain body argument} :
       IncDepRawStep (.apply (.lambda domain body) argument)
@@ -1858,6 +1893,41 @@ inductive IncDepRawStep : IncDepRawTerm → IncDepRawTerm → Prop
   | underSecond {pair pair'} :
       IncDepRawStep pair pair' →
       IncDepRawStep (.second pair) (.second pair')
+
+theorem IncDepRawStep.substitute
+    {first second : IncDepRawTerm} (step : IncDepRawStep first second)
+    (replacement : Nat → IncDepRawTerm) :
+    IncDepRawStep (first.substitute replacement)
+      (second.substitute replacement) := by
+  induction step with
+  | piBeta =>
+      rw [IncDepRawTerm.instantiate_substitute]
+      exact IncDepRawStep.piBeta
+  | sigmaFirstBeta => exact IncDepRawStep.sigmaFirstBeta
+  | sigmaSecondBeta => exact IncDepRawStep.sigmaSecondBeta
+  | applyFunction _ ih => exact IncDepRawStep.applyFunction ih
+  | applyArgument _ ih => exact IncDepRawStep.applyArgument ih
+  | pairFirst _ ih => exact IncDepRawStep.pairFirst ih
+  | pairSecond _ ih => exact IncDepRawStep.pairSecond ih
+  | underFirst _ ih => exact IncDepRawStep.underFirst ih
+  | underSecond _ ih => exact IncDepRawStep.underSecond ih
+
+theorem IncDepRawStep.rename
+    {first second : IncDepRawTerm} (step : IncDepRawStep first second)
+    (renameMap : Nat → Nat) :
+    IncDepRawStep (first.rename renameMap) (second.rename renameMap) := by
+  induction step with
+  | piBeta =>
+      rw [IncDepRawTerm.instantiate_rename]
+      exact IncDepRawStep.piBeta
+  | sigmaFirstBeta => exact IncDepRawStep.sigmaFirstBeta
+  | sigmaSecondBeta => exact IncDepRawStep.sigmaSecondBeta
+  | applyFunction _ ih => exact IncDepRawStep.applyFunction ih
+  | applyArgument _ ih => exact IncDepRawStep.applyArgument ih
+  | pairFirst _ ih => exact IncDepRawStep.pairFirst ih
+  | pairSecond _ ih => exact IncDepRawStep.pairSecond ih
+  | underFirst _ ih => exact IncDepRawStep.underFirst ih
+  | underSecond _ ih => exact IncDepRawStep.underSecond ih
 
 inductive IncDepRawDefEq : IncDepRawTerm → IncDepRawTerm → Prop
   | refl (term) : IncDepRawDefEq term term

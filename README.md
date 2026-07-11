@@ -558,6 +558,13 @@ It currently establishes:
   Sigma projections.  They are concrete instances of the intended general
   semantic reduction theorem; generality still depends on the derivation
   interpreter rather than being claimed from the examples alone.
+  Operational reduction is stable under the full structural discipline as well.
+  Term instantiation commutes with both renaming and simultaneous substitution,
+  including the lifted map below a binder.  Consequently every one-step
+  reduction can be renamed or simultaneously substituted to obtain another
+  valid one-step reduction.  The proof covers Pi beta's substituted body and all
+  congruence rules, connecting computation to the previously checked judgment
+  preservation infrastructure.
   The evaluator now exposes checked computation equations for every typing
   constructor (variable, unit, pair, projections, lambda, and application),
   and lookup derivations are proof-unique.  These laws provide a stable rewrite
