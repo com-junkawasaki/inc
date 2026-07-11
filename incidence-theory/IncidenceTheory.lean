@@ -1189,6 +1189,72 @@ def IncNaturalIsomorphism.trans
             rw [D.id_comp]
       _ = D.id (H.obj object) := beta.inv_app_hom_app object
 
+structure IncFunctorFullyFaithful
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) : Prop where
+  faithful : ∀ {source target} (left right : C.Hom source target),
+    F.map left = F.map right → left = right
+  full : ∀ {source target} (morphism : D.Hom (F.obj source) (F.obj target)),
+    ∃ preimage : C.Hom source target, F.map preimage = morphism
+
+def IncFunctorEssentiallySurjective
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (F : IncFunctor C D) : Prop :=
+  ∀ target : DObj, ∃ source : CObj,
+    ∃ hom : D.Hom (F.obj source) target,
+    ∃ inv : D.Hom target (F.obj source),
+      D.comp inv hom = D.id (F.obj source) ∧ D.comp hom inv = D.id target
+
+structure IncCategoryEquivalence
+    {CObj DObj : Type u} (C : IncCategory CObj) (D : IncCategory DObj) where
+  forward : IncFunctor C D
+  inverse : IncFunctor D C
+  unit : IncNaturalIsomorphism (IncFunctor.identity C) (inverse.comp forward)
+  counit : IncNaturalIsomorphism (forward.comp inverse) (IncFunctor.identity D)
+
+def IncCategoryEquivalence.refl
+    {Obj : Type u} (C : IncCategory Obj) : IncCategoryEquivalence C C where
+  forward := IncFunctor.identity C
+  inverse := IncFunctor.identity C
+  unit := IncNaturalIsomorphism.refl (IncFunctor.identity C)
+  counit := IncNaturalIsomorphism.refl (IncFunctor.identity C)
+
+def IncCategoryEquivalence.symm
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) : IncCategoryEquivalence D C where
+  forward := equivalence.inverse
+  inverse := equivalence.forward
+  unit := equivalence.counit.symm
+  counit := equivalence.unit.symm
+
+theorem IncCategoryEquivalence.forward_essentiallySurjective
+    {CObj DObj : Type u} {C : IncCategory CObj} {D : IncCategory DObj}
+    (equivalence : IncCategoryEquivalence C D) :
+    IncFunctorEssentiallySurjective equivalence.forward := by
+  intro target
+  exact ⟨equivalence.inverse.obj target,
+    equivalence.counit.hom.app target,
+    equivalence.counit.inv.app target,
+    equivalence.counit.hom_app_inv_app target,
+    equivalence.counit.inv_app_hom_app target⟩
+
+theorem IncFunctor.identity_fullyFaithful
+    {Obj : Type u} (C : IncCategory Obj) :
+    IncFunctorFullyFaithful (IncFunctor.identity C) where
+  faithful := by
+    intro source target left right equal
+    exact equal
+  full := by
+    intro source target morphism
+    exact ⟨morphism, rfl⟩
+
+theorem IncFunctor.identity_essentiallySurjective
+    {Obj : Type u} (C : IncCategory Obj) :
+    IncFunctorEssentiallySurjective (IncFunctor.identity C) := by
+  intro target
+  exact ⟨target, C.id target, C.id target,
+    C.id_comp (C.id target), C.id_comp (C.id target)⟩
+
 structure MorphismCospan {Obj : Type u} (C : IncCategory Obj) where
   a : Obj
   b : Obj
