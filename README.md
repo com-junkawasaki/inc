@@ -155,6 +155,9 @@ It currently establishes:
   of ordered input/output pairs.  Its exact application law is
   `⟨m,n⟩ ↦ m+n` for both inputs below the bound, and the graph is proved
   functional and total on that finite square domain.
+  The same construction is carried out independently for multiplication,
+  with exact law `⟨m,n⟩ ↦ m*n` and checked functionality and totality on
+  every bounded finite square.
   Their relational-composition presentation has exact two- and three-stage
   application laws and finite-domain totality; binary and three-stage
   composite presentations are extensionally unique and coherent.
