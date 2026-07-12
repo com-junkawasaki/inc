@@ -1434,6 +1434,16 @@ It currently establishes:
   Identity assembly coherence and returns the full assembly-lawful model.  This
   makes partial concrete-model progress a typed artifact rather than an
   all-or-nothing record construction.
+  Instantiation now has a relational form too:
+  `InstantiateAssemblyCoherenceProvider` relates the result formation fold to
+  the canonical instantiate motive in heterogeneous environments and projects
+  to the legacy weak instantiate provider.  `ProviderFreeRelationalNaturalityLaws`
+  collects relational instantiate, dependent-constructor, and Identity laws at
+  one transport-coherent level; `.toAssembly` performs the sole weak
+  diagonalization needed by the existing typing constructors.
+  `AssemblyHypotheses.ofRelational` and
+  `AssemblyLawfulSubstitutionFiberModel.ofRelational` expose the end-to-end path
+  from this uniform strong law bundle.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

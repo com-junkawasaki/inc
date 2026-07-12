@@ -13537,6 +13537,44 @@ def IncDepRawCanonicalInstantiateFoldAgreementProvider.dispatch
   provider.provide domainReady codomainReady resultReady argumentReady domainIH
     codomainIH resultIH argumentIH argumentAgreement
 
+/-- Relational naturality of type instantiation in the canonical fold. -/
+structure IncDepRawCanonicalInstantiateAssemblyCoherenceProvider where
+  provide : ∀
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {argument : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {resultFormation : IncDepRawWellFormed context
+      (codomain.instantiate argument)}
+    {argumentTyping : IncDepRawHasType context argument domain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (resultReady : IncDepRawCoherentFormationDispatchReady resultFormation)
+    (argumentReady : IncDepRawCoherentTypingDispatchReady argumentTyping
+      domainFormation)
+    (domainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive.{u}
+      domainReady)
+    (codomainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive.{u}
+      codomainReady)
+    (resultIH : IncDepRawCanonicalFormationSubstitutionFoldMotive.{u}
+      resultReady)
+    (argumentIH : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive.{u}
+      argumentReady)
+    (argumentAgreement : IncDepRawCanonicalFoldAgreement domainIH argumentIH),
+    IncDepRawCanonicalRelationalFormationFoldAgreement resultIH
+      (IncDepRawCanonicalInstantiateSubstitutionFoldMotive domainReady
+        codomainReady resultReady argumentReady domainIH codomainIH argumentIH
+        argumentAgreement)
+
+def IncDepRawCanonicalInstantiateAssemblyCoherenceProvider.toWeak
+    (provider : IncDepRawCanonicalInstantiateAssemblyCoherenceProvider.{u}) :
+    IncDepRawCanonicalInstantiateFoldAgreementProvider.{u} where
+  provide := fun domainReady codomainReady resultReady argumentReady domainIH
+      codomainIH resultIH argumentIH argumentAgreement =>
+    (provider.provide domainReady codomainReady resultReady argumentReady domainIH
+      codomainIH resultIH argumentIH argumentAgreement)
+      |>.toHeterogeneousDiagonal.toWeakOfSameReady
+
 noncomputable def
     IncDepRawSubstitutionFiberModel.alignedCanonicalMutualFoldRefl
     (model : IncDepRawSubstitutionFiberModel.{u})
@@ -17749,6 +17787,28 @@ structure IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws
   generatedIdentityAssemblyCoherenceProvider :
     IncDepRawCanonicalGeneratedIdentityAssemblyCoherenceProvider.{u} model
 
+/-- Fully relational naturality: all three dependent laws live at the same
+transport-coherent agreement level. -/
+structure IncDepRawCanonicalProviderFreeRelationalNaturalityLaws
+    (model : IncDepRawSubstitutionFiberModel.{u}) where
+  instantiateAssemblyCoherenceProvider :
+    IncDepRawCanonicalInstantiateAssemblyCoherenceProvider.{u}
+  dependentAssemblyCoherenceProvider :
+    IncDepRawCanonicalDependentAssemblyCoherenceProvider.{u} model
+  generatedIdentityAssemblyCoherenceProvider :
+    IncDepRawCanonicalGeneratedIdentityAssemblyCoherenceProvider.{u} model
+
+def IncDepRawCanonicalProviderFreeRelationalNaturalityLaws.toAssembly
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (laws : IncDepRawCanonicalProviderFreeRelationalNaturalityLaws.{u} model) :
+    IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.{u} model where
+  instantiateAgreementProvider :=
+    laws.instantiateAssemblyCoherenceProvider.toWeak
+  dependentAssemblyCoherenceProvider :=
+    laws.dependentAssemblyCoherenceProvider
+  generatedIdentityAssemblyCoherenceProvider :=
+    laws.generatedIdentityAssemblyCoherenceProvider
+
 structure IncDepRawCanonicalProviderFreeAssemblyHypotheses
     (model : IncDepRawSubstitutionFiberModel.{u}) where
   variableProvider : IncDepRawVariableSubstitutionProvider
@@ -17764,6 +17824,14 @@ def IncDepRawCanonicalProviderFreeAssemblyHypotheses.ofPreservation
   variableProvider := preservation.variableProvider
   readinessAlignment := preservation.readinessProvider
   naturality := naturality
+
+def IncDepRawCanonicalProviderFreeAssemblyHypotheses.ofRelational
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (preservation : IncDepRawCanonicalSubstitutionPreservationHypotheses)
+    (naturality :
+      IncDepRawCanonicalProviderFreeRelationalNaturalityLaws.{u} model) :
+    IncDepRawCanonicalProviderFreeAssemblyHypotheses.{u} model :=
+  .ofPreservation preservation naturality.toAssembly
 
 /-- Common internal inputs for the single recursive fold implementation. -/
 structure IncDepRawCanonicalRecursiveFoldInputs
@@ -18450,6 +18518,15 @@ def IncDepRawAssemblyLawfulSubstitutionFiberModel.ofComponents
   model := model
   assemblyLaws := .ofPreservation preservation
     (.ofComponents instantiate dependent identity)
+
+def IncDepRawAssemblyLawfulSubstitutionFiberModel.ofRelational
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (preservation : IncDepRawCanonicalSubstitutionPreservationHypotheses)
+    (naturality :
+      IncDepRawCanonicalProviderFreeRelationalNaturalityLaws.{u} model) :
+    IncDepRawAssemblyLawfulSubstitutionFiberModel.{u} where
+  model := model
+  assemblyLaws := .ofRelational preservation naturality
 
 def IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage2.complete
     (stage : IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage2.{u})

@@ -1349,6 +1349,13 @@ cycle 38–41 で以下の3極構造が判明した:
   naturality、`.withDependent`でdependent assembly coherenceを加えた`Stage2`、`.complete`で
   generated Identity assembly coherenceを受けfull assembly-lawful modelを返す。具体モデルの
   部分進捗をall-or-nothing recordでなく型付きartifactとして保持できる。
+  instantiateも`InstantiateAssemblyCoherenceProvider`としてrelational formへ昇格した。
+  heterogeneous environments上でresult formation foldとcanonical instantiate motiveを関係付け、
+  legacy weak instantiate providerへprojectionする。`ProviderFreeRelationalNaturalityLaws`は
+  relational instantiate/dependent-constructor/Identity lawsを同一transport-coherent levelへ収集し、
+  `.toAssembly`だけが既存typing constructors用のweak diagonalizationを行う。
+  `AssemblyHypotheses.ofRelational`と`AssemblyLawful...ofRelational`がuniform strong law bundleから
+  end-to-end APIへの経路を公開する。
   Identity closureもcheckedとなった。`GeneratedIdentityAssemblyCoherenceProvider`は二つの
   generated Identity formationsのrelational preservationを述べ、legacy weak Identity lawへ
   projectionする。`RecursivelyGenerated.relationalAgreement`はdependent assembly coherenceと
