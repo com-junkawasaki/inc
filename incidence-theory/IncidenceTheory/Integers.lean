@@ -73,6 +73,21 @@ theorem integerBoundary_decreases :
       cases n <;> simp [integerBoundary, integerRank] at member ⊢
       all_goals subst endpoint <;> simp
 
+theorem integerIncidence_one_not_bisim_negOne :
+    ¬ approxBisim integerIncidence 1 (-1) := by
+  apply not_approxBisim_of_boundary_mismatch integerIncidence 1 (-1)
+    { i := 0, role := .positiveTowardZero, sign := .neg,
+      mult := 1, mult_pos := by omega }
+  · simp [integerIncidence, integerBoundary]
+  · intro endpoint member
+    change endpoint ∈ integerBoundary (Int.negSucc 0) at member
+    have endpointEq : endpoint =
+        { i := (0 : Int), role := IntegerRole.negativeTowardZero,
+          sign := .neg, mult := 1, mult_pos := by omega } := by
+      simpa [integerBoundary] using member
+    subst endpoint
+    simp [boundaryCompatible]
+
 def integerResonanceSpec : FunctionalResonanceSpec integerIncidence where
   symmetric := by
     intro i j k resonant

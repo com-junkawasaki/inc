@@ -155,7 +155,9 @@ Checked constructions include:
 Major remaining areas include rationals, broader algebra, real analysis, and a
 larger categorical library. Integer bisimulation faithfulness is not yet
 exported as a global theorem, although its boundary roles distinguish positive
-and negative directions and its rank decrease is checked.
+and negative directions and its rank decrease is checked. In particular,
+`integerIncidence_one_not_bisim_negOne` proves `+1` and `-1` are not
+bisimilar, so the signed-role design prevents the first nontrivial collapse.
 
 ## Verification evidence
 

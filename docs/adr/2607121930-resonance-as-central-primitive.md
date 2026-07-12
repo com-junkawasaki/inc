@@ -127,3 +127,5 @@ case where the selector is complete and resonance has no unselected modes.
   functional associative resonance. Every value resonates with its additive
   inverse at the vacuum, so the model provably refutes unit reflection while
   supporting a genuine group-level interaction absent from naturals.
+  Positive and negative predecessor roles are observationally distinct;
+  `+1 ≉ -1` is formally refuted by a boundary-role mismatch theorem.
