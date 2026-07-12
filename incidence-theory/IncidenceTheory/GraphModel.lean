@@ -661,6 +661,51 @@ theorem finiteIncidenceToBool_boolToFiniteIncidence (bit : Bool) :
     finiteIncidenceToBool (boolToFiniteIncidence bit) = bit := by
   cases bit <;> rfl
 
+def finiteIncidenceAtomCoding : CountableAtomCoding FiniteIncidence where
+  decode index := boolToFiniteIncidence (index % 2 == 1)
+  code node := if node = .leaf then 0 else 1
+  decode_code := by
+    intro node
+    cases node <;> decide
+
+noncomputable def finiteResonanceAtomCoding :
+    CountableAtomCoding (ResonanceAtom FiniteIncidence) := by
+  let triples := finiteIncidenceAtomCoding.prod
+    (finiteIncidenceAtomCoding.prod finiteIncidenceAtomCoding)
+  exact
+    { decode := fun index =>
+        let values := triples.decode index
+        ⟨values.1, values.2.1, values.2.2⟩
+      code := fun atom => triples.code (atom.left, atom.right, atom.mode)
+      decode_code := by
+        rintro ⟨left, right, mode⟩
+        have decoded := triples.decode_code (left, right, mode)
+        rw [decoded] }
+
+theorem finiteResonance_kripke_entails_iff_derives
+    (context : List (Formula (ResonanceAtom FiniteIncidence)))
+    (formula : Formula (ResonanceAtom FiniteIncidence)) :
+    KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
+  finiteResonanceAtomCoding.kripke_complete context formula
+
+theorem finiteResonance_derivationallyConsistent_iff_kripkeSatisfiable
+    (context : List (Formula (ResonanceAtom FiniteIncidence))) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context :=
+  derivationallyConsistent_iff_kripkeSatisfiable_of_enumeration
+    finiteResonanceAtomCoding.formulaEnumeration context
+
+theorem finiteResonance_canonical_countermodel_of_not_derives
+    {context : List (Formula (ResonanceAtom FiniteIncidence))}
+    {formula : Formula (ResonanceAtom FiniteIncidence)}
+    (hnot : ¬ Derives context formula) :
+    ∃ theory : PrimeTheory (ResonanceAtom FiniteIncidence),
+      KripkeContextForces
+          (canonicalKripkeModel (ResonanceAtom FiniteIncidence)) theory context ∧
+        ¬ KripkeForces
+          (canonicalKripkeModel (ResonanceAtom FiniteIncidence)) theory formula :=
+  canonical_countermodel_of_not_derives_of_enumeration
+    finiteResonanceAtomCoding.formulaEnumeration hnot
+
 noncomputable def finiteIncidenceFormulaDecode : Nat → Formula FiniteIncidence :=
   fun code => (boolFormulaDecode code).map boolToFiniteIncidence
 

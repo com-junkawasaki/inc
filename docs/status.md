@@ -37,6 +37,11 @@ belong in [`adr/`](adr/).
   valid formulas, and resonance homomorphisms preserve atomic formulas. The
   bridge to `ResonanceSpec` lives in the coherent layer to avoid a core/logic
   dependency cycle.
+- For `finiteIncidence`, all resonance triples are explicitly countably coded.
+  The resulting resonance-atom language has checked Kripke completeness,
+  consistency/satisfiability equivalence, and canonical countermodels. This is
+  propositional completeness over resonance atoms; completeness for only the
+  physically lawful valuations remains a separate theory-extension problem.
 - The incidence core and bisimulation equivalence are formalized in Lean.
 - Concrete finite, graph, natural-number, pair, path, cycle, and simplex models
   witness non-vacuity of the implemented fragments.

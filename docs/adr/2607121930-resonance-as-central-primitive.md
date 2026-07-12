@@ -87,3 +87,9 @@ case where the selector is complete and resonance has no unselected modes.
 - `finiteIncidence` supplies a second normalized dependent completion. Its
   resonance is associative and quotient-congruent but provably not functional:
   two modes resonate at `(root, root)` while the selector chooses only one.
+- The finite model also gives a concrete enumeration of
+  `ResonanceAtom FiniteIncidence`, hence full canonical Kripke completeness and
+  countermodels for its propositional resonance language. These metatheorems
+  quantify over arbitrary atom valuations; restricting completeness to
+  valuations satisfying physical resonance laws requires an axiomatized theory
+  extension.
