@@ -15997,23 +15997,27 @@ inductive IncDepRawCanonicalAnchoredTypingFoldOutput.Generated
         domainFormation}
       {secondReady : IncDepRawCoherentTypingDispatchReady secondTyping
         resultFormation}
-      (instantiateAgreementProvider :
-        IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
       (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
       (codomainOutput : IncDepRawCanonicalFormationFoldOutput codomainReady)
       (resultOutput : IncDepRawCanonicalFormationFoldOutput resultReady)
       (firstOutput : IncDepRawCanonicalAnchoredTypingFoldOutput firstReady
         domainOutput)
       (secondOutput : IncDepRawCanonicalAnchoredTypingFoldOutput secondReady
-        resultOutput) :
+        resultOutput)
+      (instantiateAgreement : IncDepRawCanonicalFormationFoldAgreement
+        resultOutput.fold
+        (IncDepRawCanonicalInstantiateSubstitutionFoldMotive domainReady
+          codomainReady resultReady firstReady domainOutput.fold
+          codomainOutput.fold firstOutput.typing firstOutput.agreement)) :
       Generated model variableProvider domainOutput firstOutput →
       Generated model variableProvider resultOutput secondOutput →
       Generated model variableProvider
         (model.canonicalFormationFoldOutputSigma domainReady codomainReady
           domainOutput codomainOutput)
-        (model.anchoredTypingFoldResultPairExact instantiateAgreementProvider
+        (model.anchoredTypingFoldResultPairExactOfAgreement
           domainReady codomainReady resultReady firstReady secondReady
-          domainOutput codomainOutput resultOutput firstOutput secondOutput).output
+          domainOutput codomainOutput resultOutput firstOutput secondOutput
+          instantiateAgreement).output
   | second {context : List IncDepRawType} {domain codomain : IncDepRawType}
       {pairTerm : IncDepRawTerm}
       {domainFormation : IncDepRawWellFormed context domain}
@@ -16027,21 +16031,29 @@ inductive IncDepRawCanonicalAnchoredTypingFoldOutput.Generated
       {resultReady : IncDepRawCoherentFormationDispatchReady resultFormation}
       {pairReady : IncDepRawCoherentTypingDispatchReady pairTyping
         (.sigma domainFormation codomainFormation)}
-      (instantiateAgreementProvider :
-        IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
       (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
       (codomainOutput : IncDepRawCanonicalFormationFoldOutput codomainReady)
       (resultOutput : IncDepRawCanonicalFormationFoldOutput resultReady)
       (pairOutput : IncDepRawCanonicalAnchoredTypingFoldOutput pairReady
         (model.canonicalFormationFoldOutputSigma domainReady codomainReady
-          domainOutput codomainOutput)) :
+          domainOutput codomainOutput))
+      (instantiateAgreement : IncDepRawCanonicalFormationFoldAgreement
+        resultOutput.fold
+        (IncDepRawCanonicalInstantiateSubstitutionFoldMotive domainReady
+          codomainReady resultReady
+          (.firstRule domainReady codomainReady pairReady)
+          domainOutput.fold codomainOutput.fold
+          (model.anchoredTypingFoldResultFirstExact domainReady codomainReady
+            pairReady domainOutput codomainOutput pairOutput).output.typing
+          (model.anchoredTypingFoldResultFirstExact domainReady codomainReady
+            pairReady domainOutput codomainOutput pairOutput).output.agreement)) :
       Generated model variableProvider
         (model.canonicalFormationFoldOutputSigma domainReady codomainReady
           domainOutput codomainOutput) pairOutput →
       Generated model variableProvider resultOutput
-        (model.anchoredTypingFoldResultSecondExact instantiateAgreementProvider
+        (model.anchoredTypingFoldResultSecondExactOfAgreement
           domainReady codomainReady resultReady pairReady domainOutput
-          codomainOutput resultOutput pairOutput).output
+          codomainOutput resultOutput pairOutput instantiateAgreement).output
   | refl {context : List IncDepRawType} {type : IncDepRawType}
       {term : IncDepRawTerm}
       {typeFormation : IncDepRawWellFormed context type}
@@ -16921,15 +16933,83 @@ noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingPair
   let alignedFirst := first.output.retargetFormation domain.output firstAgreement
   let alignedSecond := second.output.retargetFormation result.output
     secondAgreement
+  let instantiateAgreement := instantiateAgreementProvider.dispatch domainReady
+    codomainReady resultReady firstReady domain.output.fold codomain.output.fold
+    result.output.fold alignedFirst.typing alignedFirst.agreement
   exact
     { formation := model.recursivelyGeneratedFormationSigma variableProvider
         domain codomain
-      output := (model.anchoredTypingFoldResultPairExact
-        instantiateAgreementProvider domainReady codomainReady resultReady
+      output := (model.anchoredTypingFoldResultPairExactOfAgreement
+        domainReady codomainReady resultReady
         firstReady secondReady domain.output codomain.output result.output
-        alignedFirst alignedSecond).output
-      generated := .pair instantiateAgreementProvider domain.output
+        alignedFirst alignedSecond instantiateAgreement).output
+      generated := .pair domain.output codomain.output result.output
+        alignedFirst alignedSecond instantiateAgreement
+        (.retarget first.formation.output domain.output first.output
+          firstAgreement first.generated)
+        (.retarget second.formation.output result.output second.output
+          secondAgreement second.generated) }
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingPairScoped
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (agreementProvider : IncDepRawCanonicalRecursiveGeneratedAgreementProvider
+      model variableProvider)
+    (instantiateAgreementProvider :
+      IncDepRawCanonicalRecursiveInstantiateAgreementProvider model
+        variableProvider)
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {first second : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {resultFormation : IncDepRawWellFormed context
+      (codomain.instantiate first)}
+    {firstTyping : IncDepRawHasType context first domain}
+    {secondTyping : IncDepRawHasType context second
+      (codomain.instantiate first)}
+    {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+    {codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation}
+    {resultReady : IncDepRawCoherentFormationDispatchReady resultFormation}
+    {firstReady : IncDepRawCoherentTypingDispatchReady firstTyping
+      domainFormation}
+    {secondReady : IncDepRawCoherentTypingDispatchReady secondTyping
+      resultFormation}
+    (domain : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider domainReady)
+    (codomain : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider codomainReady)
+    (result : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider resultReady)
+    (first : IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+      variableProvider firstReady)
+    (second : IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput
+      model variableProvider secondReady) :
+    IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+      variableProvider
+      (.pairRule domainReady codomainReady resultReady firstReady secondReady) := by
+  let firstAgreement : IncDepRawCanonicalFormationFoldAgreement
+      domain.output.fold first.formation.output.fold :=
+    agreementProvider.align domain.output first.formation.output
+      domain.recursivelyGenerated first.formation.recursivelyGenerated
+  let secondAgreement : IncDepRawCanonicalFormationFoldAgreement
+      result.output.fold second.formation.output.fold :=
+    agreementProvider.align result.output second.formation.output
+      result.recursivelyGenerated second.formation.recursivelyGenerated
+  let alignedFirst := first.output.retargetFormation domain.output firstAgreement
+  let alignedSecond := second.output.retargetFormation result.output
+    secondAgreement
+  let instantiateAgreement := instantiateAgreementProvider.dispatch domain
+    codomain result first alignedFirst.agreement
+  exact
+    { formation := model.recursivelyGeneratedFormationSigma variableProvider
+        domain codomain
+      output := (model.anchoredTypingFoldResultPairExactOfAgreement domainReady
+        codomainReady resultReady firstReady secondReady domain.output
         codomain.output result.output alignedFirst alignedSecond
+        instantiateAgreement).output
+      generated := .pair domain.output codomain.output result.output alignedFirst
+        alignedSecond instantiateAgreement
         (.retarget first.formation.output domain.output first.output
           firstAgreement first.generated)
         (.retarget second.formation.output result.output second.output
@@ -16972,13 +17052,73 @@ noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingSeco
     agreementProvider.align sigma.output pair.formation.output
       sigma.recursivelyGenerated pair.formation.recursivelyGenerated
   let alignedPair := pair.output.retargetFormation sigma.output pairAgreement
+  let firstResult := model.anchoredTypingFoldResultFirstExact domainReady
+    codomainReady pairReady domain.output codomain.output alignedPair
+  let instantiateAgreement := instantiateAgreementProvider.dispatch domainReady
+    codomainReady resultReady (.firstRule domainReady codomainReady pairReady)
+    domain.output.fold codomain.output.fold result.output.fold
+    firstResult.output.typing firstResult.output.agreement
   exact
     { formation := result
-      output := (model.anchoredTypingFoldResultSecondExact
-        instantiateAgreementProvider domainReady codomainReady resultReady
-        pairReady domain.output codomain.output result.output alignedPair).output
-      generated := .second instantiateAgreementProvider domain.output
-        codomain.output result.output alignedPair
+      output := (model.anchoredTypingFoldResultSecondExactOfAgreement
+        domainReady codomainReady resultReady
+        pairReady domain.output codomain.output result.output alignedPair
+        instantiateAgreement).output
+      generated := .second domain.output codomain.output result.output alignedPair
+        instantiateAgreement
+        (.retarget pair.formation.output sigma.output pair.output pairAgreement
+          pair.generated) }
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingSecondScoped
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (agreementProvider : IncDepRawCanonicalRecursiveGeneratedAgreementProvider
+      model variableProvider)
+    (instantiateAgreementProvider :
+      IncDepRawCanonicalRecursiveInstantiateAgreementProvider model
+        variableProvider)
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pairTerm : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {resultFormation : IncDepRawWellFormed context
+      (codomain.instantiate (.first pairTerm))}
+    {pairTyping : IncDepRawHasType context pairTerm (.sigma domain codomain)}
+    {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+    {codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation}
+    {resultReady : IncDepRawCoherentFormationDispatchReady resultFormation}
+    {pairReady : IncDepRawCoherentTypingDispatchReady pairTyping
+      (.sigma domainFormation codomainFormation)}
+    (domain : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider domainReady)
+    (codomain : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider codomainReady)
+    (result : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider resultReady)
+    (pair : IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+      variableProvider pairReady) :
+    IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+      variableProvider
+      (.secondRule domainReady codomainReady resultReady pairReady) := by
+  let sigma := model.recursivelyGeneratedFormationSigma variableProvider domain
+    codomain
+  let pairAgreement : IncDepRawCanonicalFormationFoldAgreement
+      sigma.output.fold pair.formation.output.fold :=
+    agreementProvider.align sigma.output pair.formation.output
+      sigma.recursivelyGenerated pair.formation.recursivelyGenerated
+  let alignedPair := pair.output.retargetFormation sigma.output pairAgreement
+  let first := model.recursivelyGeneratedTypingFirst variableProvider
+    agreementProvider domain codomain pair
+  let instantiateAgreement := instantiateAgreementProvider.dispatch domain
+    codomain result first first.output.agreement
+  exact
+    { formation := result
+      output := (model.anchoredTypingFoldResultSecondExactOfAgreement domainReady
+        codomainReady resultReady pairReady domain.output codomain.output
+        result.output alignedPair instantiateAgreement).output
+      generated := .second domain.output codomain.output result.output alignedPair
+        instantiateAgreement
         (.retarget pair.formation.output sigma.output pair.output pairAgreement
           pair.generated) }
 
@@ -17450,14 +17590,17 @@ noncomputable def IncDepRawSubstitutionFiberModel.generatedTypingOutputPair
   let alignedFirst := first.output.retargetFormation domain.output firstAgreement
   let alignedSecond := second.output.retargetFormation result.output
     secondAgreement
+  let instantiateAgreement := instantiateAgreementProvider.dispatch domainReady
+    codomainReady resultReady firstReady domain.output.fold codomain.output.fold
+    result.output.fold alignedFirst.typing alignedFirst.agreement
   exact
     { formation := model.generatedFormationSigma domain codomain
-      output := (model.anchoredTypingFoldResultPairExact
-        instantiateAgreementProvider domainReady codomainReady resultReady
+      output := (model.anchoredTypingFoldResultPairExactOfAgreement
+        domainReady codomainReady resultReady
         firstReady secondReady domain.output codomain.output result.output
-        alignedFirst alignedSecond).output
-      generated := .pair instantiateAgreementProvider domain.output
-        codomain.output result.output alignedFirst alignedSecond
+        alignedFirst alignedSecond instantiateAgreement).output
+      generated := .pair domain.output codomain.output result.output
+        alignedFirst alignedSecond instantiateAgreement
         (.retarget first.formation.output domain.output first.output
           firstAgreement first.generated)
         (.retarget second.formation.output result.output second.output
@@ -17499,13 +17642,19 @@ noncomputable def IncDepRawSubstitutionFiberModel.generatedTypingOutputSecond
     sigma.generated.agreementAcrossReady dependentAgreement readinessAlignment
       pair.formation.generated
   let alignedPair := pair.output.retargetFormation sigma.output pairAgreement
+  let firstResult := model.anchoredTypingFoldResultFirstExact domainReady
+    codomainReady pairReady domain.output codomain.output alignedPair
+  let instantiateAgreement := instantiateAgreementProvider.dispatch domainReady
+    codomainReady resultReady (.firstRule domainReady codomainReady pairReady)
+    domain.output.fold codomain.output.fold result.output.fold
+    firstResult.output.typing firstResult.output.agreement
   exact
     { formation := result
-      output := (model.anchoredTypingFoldResultSecondExact
-        instantiateAgreementProvider domainReady codomainReady resultReady
-        pairReady domain.output codomain.output result.output alignedPair).output
-      generated := .second instantiateAgreementProvider domain.output
-        codomain.output result.output alignedPair
+      output := (model.anchoredTypingFoldResultSecondExactOfAgreement
+        domainReady codomainReady resultReady pairReady domain.output
+        codomain.output result.output alignedPair instantiateAgreement).output
+      generated := .second domain.output codomain.output result.output alignedPair
+        instantiateAgreement
         (.retarget pair.formation.output sigma.output pair.output pairAgreement
           pair.generated) }
 

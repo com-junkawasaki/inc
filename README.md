@@ -2634,7 +2634,10 @@ that contract: it quantifies only over provenance-carrying domain, codomain,
 result, and argument packages, plus their local alignment.  Apply is connected
 end-to-end through `recursivelyGeneratedTypingApplyScoped`; a legacy global
 relational provider projects to the scoped one for compatibility.  Pair and
-Second are the remaining recursive connections.
+Second are now connected by `recursivelyGeneratedTypingPairScoped` and
+`recursivelyGeneratedTypingSecondScoped` as well.  Second constructs the
+provenance-carrying First result used as its instantiation argument, so all
+three dependent typing consumers now avoid arbitrary-fold quantification.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo
