@@ -462,6 +462,22 @@ theorem incidenceProd_approxBisim_iff
   ⟨incidenceProd_project inc1 inc2,
    fun ⟨h1, h2⟩ => incidenceProd_approxBisim_of_approxBisim inc1 inc2 h1 h2⟩
 
+theorem quotientResonanceCongruentProd
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (first : QuotientResonanceCongruent inc1)
+    (second : QuotientResonanceCongruent inc2) :
+    QuotientResonanceCongruent (incidenceProd inc1 inc2) := by
+  intro i₁ i₂ j₁ j₂ k₁ k₂ hi hj hk
+  rw [incidenceProd_approxBisim_iff] at hi hj hk
+  constructor
+  · rintro ⟨resonant1, resonant2⟩
+    exact ⟨(first hi.1 hj.1 hk.1).mp resonant1,
+      (second hi.2 hj.2 hk.2).mp resonant2⟩
+  · rintro ⟨resonant1, resonant2⟩
+    exact ⟨(first hi.1 hj.1 hk.1).mpr resonant1,
+      (second hi.2 hj.2 hk.2).mpr resonant2⟩
+
 /- The payoff: faithfulness (`≈ ↔ =`) transports cleanly through the
    product whenever both factors are individually faithful -- answering
    the question cycle 31 queued but didn't check. Unlike `∂² = 0`, which

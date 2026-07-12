@@ -8390,6 +8390,19 @@ structure IncDepRawNormalizedResonanceCompletion
   associative : AssociativeResonanceSpec inc
   quotientCongruent : QuotientResonanceCongruent inc
 
+noncomputable def IncDepRawNormalizedResonanceCompletion.prod
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    {inc1 : Incidence I1 R1 T1} {inc2 : Incidence I2 R2 T2}
+    (first : IncDepRawNormalizedResonanceCompletion inc1)
+    (second : IncDepRawNormalizedResonanceCompletion inc2) :
+    IncDepRawNormalizedResonanceCompletion (incidenceProd inc1 inc2) where
+  structural := first.structural
+  resonance := resonanceProdSpec inc1 inc2 first.resonance second.resonance
+  associative := associativeResonanceProdSpec inc1 inc2
+    first.associative second.associative
+  quotientCongruent := quotientResonanceCongruentProd inc1 inc2
+    first.quotientCongruent second.quotientCongruent
+
 noncomputable def natIncDepRawNormalizedResonanceCompletion :
     IncDepRawNormalizedResonanceCompletion natIncidence where
   structural := incDepRawNormalizedBasicPreservation
@@ -8403,6 +8416,12 @@ noncomputable def finiteIncDepRawNormalizedResonanceCompletion :
   resonance := finiteResonanceSpec
   associative := finiteAssociativeResonanceSpec
   quotientCongruent := finiteQuotientResonanceCongruent
+
+noncomputable def natFiniteProdNormalizedResonanceCompletion :
+    IncDepRawNormalizedResonanceCompletion
+      (incidenceProd natIncidence finiteIncidence) :=
+  natIncDepRawNormalizedResonanceCompletion.prod
+    finiteIncDepRawNormalizedResonanceCompletion
 
 structure IncDepRawStrictTypingDispatchReady
     {context : List IncDepRawType} {term : IncDepRawTerm}

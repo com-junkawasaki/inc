@@ -102,6 +102,11 @@ instantiate/substitute equalities with synchronized casts.
   A second complete instance uses multi-valued `finiteIncidence`; it is proved
   not to admit any `FunctionalResonanceSpec`, so the new completion is strictly
   more relational than the selector-based special case.
+- Normalized resonance completion is compositional under products.
+  `quotientResonanceCongruentProd` proves quotient extensionality componentwise,
+  and `IncDepRawNormalizedResonanceCompletion.prod` transports every completion
+  field. `natIncidence × finiteIncidence` is a checked mixed functional/
+  multi-valued instance.
 - Pushout preservation and generic boundary-square-zero are conditional on the
   categorical or linear hypotheses in their declarations.
 - Translation completeness is proved only for the stated fragments and

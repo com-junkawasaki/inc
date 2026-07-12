@@ -101,3 +101,6 @@ case where the selector is complete and resonance has no unselected modes.
   diagram from an exhaustive finite triple list and a decision procedure.
   `FinitePhysicalResonanceLogic` proves relative completeness for every such
   presentation with countably coded atoms.
+- Completion is closed under incidence products: resonance laws, relational
+  associativity, and bisimulation-quotient congruence all transport
+  componentwise. The dependent normalized completion exposes this as `.prod`.
