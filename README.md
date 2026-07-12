@@ -1428,6 +1428,12 @@ It currently establishes:
   combines those pieces with the existing preservation core in one call.  A
   concrete model can therefore land each law separately and becomes fully
   usable immediately when the third component is supplied.
+  Concrete-law development can now be staged explicitly.  `Stage1` stores the
+  established preservation core plus instantiate naturality; `.withDependent`
+  adds dependent assembly coherence as `Stage2`; `.complete` accepts generated
+  Identity assembly coherence and returns the full assembly-lawful model.  This
+  makes partial concrete-model progress a typed artifact rather than an
+  all-or-nothing record construction.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

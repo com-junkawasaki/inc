@@ -18422,6 +18422,23 @@ structure IncDepRawAssemblyLawfulSubstitutionFiberModel where
   model : IncDepRawSubstitutionFiberModel.{u}
   assemblyLaws : IncDepRawCanonicalProviderFreeAssemblyHypotheses.{u} model
 
+structure IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage1 where
+  model : IncDepRawSubstitutionFiberModel.{u}
+  preservation : IncDepRawCanonicalSubstitutionPreservationHypotheses
+  instantiate : IncDepRawCanonicalInstantiateNaturalModel.{u} model
+
+structure IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage2 extends
+    IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage1.{u} where
+  dependent : IncDepRawCanonicalDependentAssemblyNaturalModel.{u} model
+
+def IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage1.withDependent
+    (stage : IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage1.{u})
+    (dependent :
+      IncDepRawCanonicalDependentAssemblyNaturalModel.{u} stage.model) :
+    IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage2.{u} where
+  toStage1 := stage
+  dependent := dependent
+
 def IncDepRawAssemblyLawfulSubstitutionFiberModel.ofComponents
     (model : IncDepRawSubstitutionFiberModel.{u})
     (preservation : IncDepRawCanonicalSubstitutionPreservationHypotheses)
@@ -18433,6 +18450,14 @@ def IncDepRawAssemblyLawfulSubstitutionFiberModel.ofComponents
   model := model
   assemblyLaws := .ofPreservation preservation
     (.ofComponents instantiate dependent identity)
+
+def IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage2.complete
+    (stage : IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage2.{u})
+    (identity : IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel.{u}
+      stage.model) :
+    IncDepRawAssemblyLawfulSubstitutionFiberModel.{u} :=
+  .ofComponents stage.model stage.preservation stage.instantiate
+    stage.dependent identity
 
 noncomputable def IncDepRawAssemblyLawfulSubstitutionFiberModel.witness
     (model : IncDepRawAssemblyLawfulSubstitutionFiberModel.{u}) :

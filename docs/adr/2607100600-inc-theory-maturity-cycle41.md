@@ -1345,6 +1345,10 @@ cycle 38–41 で以下の3極構造が判明した:
   `DependentAssemblyNaturalModel`をlegacy weak componentと並べて公開した。残closureは
   generated Identityのrelational lawであり、その後recursive formations全深度でstrong routeを
   利用できる。
+  concrete-law開発をtyped stagesへした。`Stage1`は既存preservation coreとinstantiate
+  naturality、`.withDependent`でdependent assembly coherenceを加えた`Stage2`、`.complete`で
+  generated Identity assembly coherenceを受けfull assembly-lawful modelを返す。具体モデルの
+  部分進捗をall-or-nothing recordでなく型付きartifactとして保持できる。
   Identity closureもcheckedとなった。`GeneratedIdentityAssemblyCoherenceProvider`は二つの
   generated Identity formationsのrelational preservationを述べ、legacy weak Identity lawへ
   projectionする。`RecursivelyGenerated.relationalAgreement`はdependent assembly coherenceと
