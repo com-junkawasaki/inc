@@ -2756,6 +2756,12 @@ Pi/Sigma formation and Lambda/First typing now join those leaf cases.  Their
 domain/codomain results are shared directly by the typing constructor, so no
 formation-proof cast or legacy renaming equation is needed.  The remaining
 renaming constructors are Apply, Pair, Second, and Identity/Refl.
+Those remaining constructors are now implemented too.  Apply, Pair, and Second
+reuse `instantiate_rename` with synchronized formation/typing readiness casts;
+Identity/Refl share one aligned renamed formation.  Fully semantic renaming
+therefore has constructor-level coverage for every formation and typing rule.
+The remaining lift work is no longer a missing rule, but packaging these rules
+as a total mutual recursion while preserving shared formation alignment.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

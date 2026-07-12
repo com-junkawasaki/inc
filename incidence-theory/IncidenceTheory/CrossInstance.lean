@@ -2378,6 +2378,135 @@ theorem IncDepRawWellFormed.castType_symm
   cases typeEq
   rfl
 
+noncomputable def IncDepRawFullySemanticTypingRenamingResult.apply
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {function argument : IncDepRawTerm}
+    (renameMap : IncDepRawRenaming source target)
+    (domainResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := domain) renameMap)
+    (codomainResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := codomain) (renameMap.lift domain))
+    (resultResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := codomain.instantiate argument) renameMap)
+    (functionResult : IncDepRawFullySemanticTypingRenamingResult
+      (term := function) renameMap
+      (.pi renameMap domainResult codomainResult))
+    (argumentResult : IncDepRawFullySemanticTypingRenamingResult
+      (term := argument) renameMap domainResult) :
+    IncDepRawFullySemanticTypingRenamingResult
+      (term := .apply function argument) renameMap resultResult := by
+  let typeEq := IncDepRawType.instantiate_rename codomain argument
+    renameMap.index
+  let constructedTyping := IncDepRawHasType.applyRule
+    functionResult.renamedTyping argumentResult.renamedTyping
+  let renamedTyping := constructedTyping.castType typeEq.symm
+  let resultReadyRight := resultResult.readiness.castType typeEq
+  let constructedReady := IncDepRawCoherentTypingDispatchReady.applyRule
+    domainResult.readiness codomainResult.readiness resultReadyRight
+    functionResult.readiness argumentResult.readiness
+  let returnedReady := constructedReady.castType typeEq.symm
+  exact
+    { renamedTyping := renamedTyping
+      readiness := returnedReady.castFormation
+        (IncDepRawWellFormed.castType_symm resultResult.renamedFormation
+          typeEq) }
+
+noncomputable def IncDepRawFullySemanticTypingRenamingResult.pair
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {first second : IncDepRawTerm}
+    (renameMap : IncDepRawRenaming source target)
+    (domainResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := domain) renameMap)
+    (codomainResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := codomain) (renameMap.lift domain))
+    (resultResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := codomain.instantiate first) renameMap)
+    (firstResult : IncDepRawFullySemanticTypingRenamingResult
+      (term := first) renameMap domainResult)
+    (secondResult : IncDepRawFullySemanticTypingRenamingResult
+      (term := second) renameMap resultResult) :
+    IncDepRawFullySemanticTypingRenamingResult
+      (term := .pair first second) renameMap
+      (.sigma renameMap domainResult codomainResult) := by
+  let typeEq := IncDepRawType.instantiate_rename codomain first renameMap.index
+  exact
+    { renamedTyping := .pairRule firstResult.renamedTyping
+        (secondResult.renamedTyping.castType typeEq)
+      readiness := .pairRule domainResult.readiness codomainResult.readiness
+        (resultResult.readiness.castType typeEq) firstResult.readiness
+        (secondResult.readiness.castType typeEq) }
+
+noncomputable def IncDepRawFullySemanticTypingRenamingResult.second
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    (renameMap : IncDepRawRenaming source target)
+    (domainResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := domain) renameMap)
+    (codomainResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := codomain) (renameMap.lift domain))
+    (resultResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := codomain.instantiate (.first pair)) renameMap)
+    (pairResult : IncDepRawFullySemanticTypingRenamingResult
+      (term := pair) renameMap
+      (.sigma renameMap domainResult codomainResult)) :
+    IncDepRawFullySemanticTypingRenamingResult
+      (term := .second pair) renameMap resultResult := by
+  let typeEq := IncDepRawType.instantiate_rename codomain (.first pair)
+    renameMap.index
+  let constructedTyping := IncDepRawHasType.secondRule pairResult.renamedTyping
+  let renamedTyping := constructedTyping.castType typeEq.symm
+  let constructedReady := IncDepRawCoherentTypingDispatchReady.secondRule
+    domainResult.readiness codomainResult.readiness
+    (resultResult.readiness.castType typeEq) pairResult.readiness
+  let returnedReady := constructedReady.castType typeEq.symm
+  exact
+    { renamedTyping := renamedTyping
+      readiness := returnedReady.castFormation
+        (IncDepRawWellFormed.castType_symm resultResult.renamedFormation
+          typeEq) }
+
+structure IncDepRawAlignedSemanticTypingRenamingResult
+    {source target : List IncDepRawType}
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    (renameMap : IncDepRawRenaming source target)
+    (formationResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := type) renameMap) where
+  renamedTyping : IncDepRawHasType target (term.rename renameMap.index)
+    (type.rename renameMap.index)
+  readiness : IncDepRawCoherentTypingDispatchReady renamedTyping
+    formationResult.renamedFormation
+
+def IncDepRawFullySemanticFormationRenamingResult.identity
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    (renameMap : IncDepRawRenaming source target)
+    (typeResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := type) renameMap)
+    (leftResult : IncDepRawAlignedSemanticTypingRenamingResult
+      (term := left) renameMap typeResult)
+    (rightResult : IncDepRawAlignedSemanticTypingRenamingResult
+      (term := right) renameMap typeResult) :
+    IncDepRawFullySemanticFormationRenamingResult
+      (type := .identity type left right) renameMap where
+  renamedFormation := .identity typeResult.renamedFormation
+    leftResult.renamedTyping rightResult.renamedTyping
+  readiness := .identity typeResult.readiness leftResult.readiness
+    rightResult.readiness
+
+def IncDepRawFullySemanticTypingRenamingResult.refl
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {term : IncDepRawTerm}
+    (renameMap : IncDepRawRenaming source target)
+    (typeResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := type) renameMap)
+    (termResult : IncDepRawAlignedSemanticTypingRenamingResult
+      (term := term) renameMap typeResult) :
+    IncDepRawFullySemanticTypingRenamingResult
+      (term := .refl term) renameMap
+      (.identity renameMap typeResult termResult termResult) where
+  renamedTyping := .reflRule termResult.renamedTyping
+  readiness := .reflRule typeResult.readiness termResult.readiness
+
 def IncDepRawTypingReadinessSubstitutionResult.toSemantic
     {source target : List IncDepRawType}
     {term : IncDepRawTerm} {type : IncDepRawType}
