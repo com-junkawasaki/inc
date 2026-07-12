@@ -357,6 +357,153 @@ theorem rationalMul_cancel_right {factor left right : IncRational}
   apply rationalMul_cancel_left factorNonzero
   simpa [rationalMul_comm] using equal
 
+def RationalRepresentative.LE
+    (left right : RationalRepresentative) : Prop :=
+  left.numerator * right.denominator ≤
+    right.numerator * left.denominator
+
+theorem rationalLE_respects
+    {left left' right right' : RationalRepresentative}
+    (leftEq : left.Equivalent left') (rightEq : right.Equivalent right') :
+    left.LE right ↔ left'.LE right' := by
+  have forward : ∀ {a a' b b' : RationalRepresentative},
+      a.Equivalent a' → b.Equivalent b' → a.LE b → a'.LE b' := by
+    intro a a' b b' aEq bEq ordered
+    have scaled := Int.mul_le_mul_of_nonneg_right ordered
+      (Int.le_of_lt (Int.mul_pos a'.denominator_pos b'.denominator_pos))
+    apply Int.le_of_mul_le_mul_right _
+      (Int.mul_pos a.denominator_pos b.denominator_pos)
+    calc
+      (a'.numerator * b'.denominator) *
+          (a.denominator * b.denominator) =
+        (a'.numerator * a.denominator) *
+          (b.denominator * b'.denominator) := by ac_rfl
+      _ = (a.numerator * a'.denominator) *
+          (b.denominator * b'.denominator) := by rw [aEq]
+      _ = (a.numerator * b.denominator) *
+          (a'.denominator * b'.denominator) := by ac_rfl
+      _ ≤ (b.numerator * a.denominator) *
+          (a'.denominator * b'.denominator) := scaled
+      _ = (b.numerator * b'.denominator) *
+          (a.denominator * a'.denominator) := by ac_rfl
+      _ = (b'.numerator * b.denominator) *
+          (a.denominator * a'.denominator) := by rw [bEq]
+      _ = (b'.numerator * a'.denominator) *
+          (a.denominator * b.denominator) := by ac_rfl
+  exact ⟨forward leftEq rightEq,
+    forward (rationalEquivalent_symm leftEq)
+      (rationalEquivalent_symm rightEq)⟩
+
+def rationalLE : IncRational → IncRational → Prop :=
+  Quotient.lift₂ RationalRepresentative.LE (by
+    intro left right left' right' leftEq rightEq
+    exact propext (rationalLE_respects leftEq rightEq))
+
+theorem rationalLE_refl (value : IncRational) : rationalLE value value := by
+  refine Quotient.inductionOn value ?_
+  intro representative
+  exact Int.le_refl _
+
+theorem rationalLE_antisymm {left right : IncRational}
+    (leftRight : rationalLE left right) (rightLeft : rationalLE right left) :
+    left = right := by
+  refine Quotient.inductionOn₂ left right ?_ leftRight rightLeft
+  intro leftRep rightRep ordered reverse
+  apply Quotient.sound
+  exact Int.le_antisymm ordered reverse
+
+theorem rationalLE_trans {first second third : IncRational}
+    (firstSecond : rationalLE first second)
+    (secondThird : rationalLE second third) : rationalLE first third := by
+  revert firstSecond secondThird
+  refine Quotient.inductionOn₃ first second third ?_
+  intro firstRep secondRep thirdRep firstSecond secondThird
+  apply Int.le_of_mul_le_mul_right _ secondRep.denominator_pos
+  calc
+    (firstRep.numerator * thirdRep.denominator) * secondRep.denominator =
+        (firstRep.numerator * secondRep.denominator) *
+          thirdRep.denominator := by ac_rfl
+    _ ≤ (secondRep.numerator * firstRep.denominator) *
+          thirdRep.denominator :=
+      Int.mul_le_mul_of_nonneg_right firstSecond
+        (Int.le_of_lt thirdRep.denominator_pos)
+    _ = (secondRep.numerator * thirdRep.denominator) *
+          firstRep.denominator := by ac_rfl
+    _ ≤ (thirdRep.numerator * secondRep.denominator) *
+          firstRep.denominator :=
+      Int.mul_le_mul_of_nonneg_right secondThird
+        (Int.le_of_lt firstRep.denominator_pos)
+    _ = (thirdRep.numerator * firstRep.denominator) *
+          secondRep.denominator := by ac_rfl
+
+theorem rationalLE_total (left right : IncRational) :
+    rationalLE left right ∨ rationalLE right left := by
+  refine Quotient.inductionOn₂ left right ?_
+  intro leftRep rightRep
+  exact Int.le_total _ _
+
+theorem rationalOfInteger_le_iff (left right : Int) :
+    rationalLE (rationalOfInteger left) (rationalOfInteger right) ↔
+      left ≤ right := by
+  change left * 1 ≤ right * 1 ↔ left ≤ right
+  simp
+
+theorem rationalLE_add_left (offset : IncRational) {left right : IncRational}
+    (ordered : rationalLE left right) :
+    rationalLE (rationalAdd offset left) (rationalAdd offset right) := by
+  revert ordered
+  refine Quotient.inductionOn₃ offset left right ?_
+  intro offsetRep leftRep rightRep ordered
+  have scaled := Int.mul_le_mul_of_nonneg_right ordered
+    (Int.le_of_lt (Int.mul_pos offsetRep.denominator_pos
+      offsetRep.denominator_pos))
+  change
+    (offsetRep.numerator * leftRep.denominator +
+        leftRep.numerator * offsetRep.denominator) *
+          (offsetRep.denominator * rightRep.denominator) ≤
+      (offsetRep.numerator * rightRep.denominator +
+        rightRep.numerator * offsetRep.denominator) *
+          (offsetRep.denominator * leftRep.denominator)
+  calc
+    _ = offsetRep.numerator * leftRep.denominator *
+          (offsetRep.denominator * rightRep.denominator) +
+        (leftRep.numerator * rightRep.denominator) *
+          (offsetRep.denominator * offsetRep.denominator) := by
+            rw [Int.add_mul]
+            congr 1 <;> ac_rfl
+    _ ≤ offsetRep.numerator * leftRep.denominator *
+          (offsetRep.denominator * rightRep.denominator) +
+        (rightRep.numerator * leftRep.denominator) *
+          (offsetRep.denominator * offsetRep.denominator) :=
+      Int.add_le_add_left scaled _
+    _ = (offsetRep.numerator * rightRep.denominator +
+          rightRep.numerator * offsetRep.denominator) *
+          (offsetRep.denominator * leftRep.denominator) := by
+            rw [Int.add_mul]
+            congr 1 <;> ac_rfl
+
+theorem rationalLE_add_right (offset : IncRational) {left right : IncRational}
+    (ordered : rationalLE left right) :
+    rationalLE (rationalAdd left offset) (rationalAdd right offset) := by
+  simpa [rationalAdd_comm] using rationalLE_add_left offset ordered
+
+theorem rationalMul_nonnegative {left right : IncRational}
+    (leftNonnegative : rationalLE (rationalOfInteger 0) left)
+    (rightNonnegative : rationalLE (rationalOfInteger 0) right) :
+    rationalLE (rationalOfInteger 0) (rationalMul left right) := by
+  revert leftNonnegative rightNonnegative
+  refine Quotient.inductionOn₂ left right ?_
+  intro leftRep rightRep leftNonnegative rightNonnegative
+  change 0 * leftRep.denominator ≤ leftRep.numerator * 1 at leftNonnegative
+  change 0 * rightRep.denominator ≤ rightRep.numerator * 1 at rightNonnegative
+  have leftNumerator : 0 ≤ leftRep.numerator := by
+    simpa using leftNonnegative
+  have rightNumerator : 0 ≤ rightRep.numerator := by
+    simpa using rightNonnegative
+  change 0 * (leftRep.denominator * rightRep.denominator) ≤
+    (leftRep.numerator * rightRep.numerator) * 1
+  simpa using Int.mul_nonneg leftNumerator rightNumerator
+
 noncomputable instance : DecidableEq IncRational :=
   Classical.typeDecidableEq IncRational
 
@@ -492,6 +639,30 @@ noncomputable def rationalFieldResonanceSpec :
   multiplicative_inverse := by
     intro value nonzero
     exact rational_nonzero_has_mul_inverse nonzero
+
+noncomputable def rationalOrderedFieldResonanceSpec :
+    OrderedFieldResonanceSpec rationalIncidence where
+  toFieldResonanceSpec := rationalFieldResonanceSpec
+  le := rationalLE
+  le_refl := rationalLE_refl
+  le_antisymm := by intro i j; exact rationalLE_antisymm
+  le_trans := by intro i j k; exact rationalLE_trans
+  le_total := rationalLE_total
+  add_monotone := by
+    intro offset i j outI outJ ordered leftMode rightMode
+    have leftEq : rationalAdd offset i = outI := by
+      simpa [rationalIncidence] using leftMode
+    have rightEq : rationalAdd offset j = outJ := by
+      simpa [rationalIncidence] using rightMode
+    subst outI
+    subst outJ
+    exact rationalLE_add_left offset ordered
+  multiply_nonnegative := by
+    intro i j out iNonnegative jNonnegative multiplied
+    have outEq : rationalMul i j = out := by
+      simpa [rationalMulResonance] using multiplied
+    subst out
+    exact rationalMul_nonnegative iNonnegative jNonnegative
 
 theorem rationalIncidence_half_resonance :
     let half := Quotient.mk rationalRepresentativeSetoid

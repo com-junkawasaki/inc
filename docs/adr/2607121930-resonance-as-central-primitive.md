@@ -153,3 +153,8 @@ case where the selector is complete and resonance has no unselected modes.
   `IncDepRawNormalizedResonanceCompletion`. Replacing the value-indexed role by
   a canonical reduced numerator/denominator observation remains a refinement,
   not a prerequisite for semantic faithfulness.
+- Ordered algebra is also relational. `OrderedFieldResonanceSpec` extends the
+  field layer by a total partial order, monotonicity of additive resonance, and
+  closure of the nonnegative cone under multiplicative resonance. Rational
+  cross-multiplication order is representative-independent, instantiates this
+  specification, and reflects the ordinary integer order along the embedding.

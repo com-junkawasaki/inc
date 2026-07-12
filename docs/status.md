@@ -157,7 +157,11 @@ Checked constructions include:
   unital, associative, and has inverses, multiplication is commutative, unital,
   associative, and distributes over addition; every nonzero rational has a
   multiplicative inverse resonance mode, nonzero multiplication cancels on
-  either side, and concrete half addition/multiplication examples are checked
+  either side, and concrete half addition/multiplication examples are checked;
+  cross-multiplication order descends to the quotient, is reflexive,
+  antisymmetric, transitive, and total, exactly preserves integer order,
+  is translation-monotone under addition, and has a multiplicatively closed
+  nonnegative cone
 - hereditary finite sets
 - ordered pairs and trees
 - paths, cycles, and simplices

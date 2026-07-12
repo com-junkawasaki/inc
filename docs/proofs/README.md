@@ -26,7 +26,7 @@ research chronology.
 | Natural numbers and HF sets | `Peano.lean`, `HFSets.lean` | [history](../history/post-cycle-41.md) |
 | Faithful integers, additive inverses, and resonance completion | `Integers.lean`, `CrossInstance.lean` | [status](../status.md#existing-mathematics-reconstruction) |
 | Distributive additive/multiplicative resonance algebra | `IncidenceTheory.lean`, `Integers.lean` | [status](../status.md#checked-foundations) |
-| Faithful rational quotient field resonance and normalized completion | `IncidenceTheory.lean`, `Rationals.lean`, `CrossInstance.lean` | [status](../status.md#existing-mathematics-reconstruction) |
+| Faithful ordered rational field resonance and normalized completion | `IncidenceTheory.lean`, `Rationals.lean`, `CrossInstance.lean` | [status](../status.md#existing-mathematics-reconstruction) |
 | Pairs and trees | `Pairs.lean`, `Tree.lean` | [history](../history/post-cycle-41.md) |
 | Paths and simplices | `PathComplex.lean`, `Simplex.lean` | [history](../history/post-cycle-41.md) |
 | Product, sum, quotient | `Product.lean`, `Sum.lean`, `Quotient.lean` | [cycle-41 ADR](../adr/2607100600-inc-theory-maturity-cycle41.md) |

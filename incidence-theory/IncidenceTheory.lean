@@ -1127,6 +1127,22 @@ structure FieldResonanceSpec {I R T : Type u} [DecidableEq I]
   multiplicative_inverse : ∀ {i}, i ≠ inc.unit →
     ∃ inverse, multiply i inverse one
 
+/- An ordered field remains relational in both algebraic channels. Order is
+required to be total, additive resonance is monotone in either translated
+input (by symmetry), and multiplication preserves the nonnegative cone. -/
+structure OrderedFieldResonanceSpec {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) extends FieldResonanceSpec inc where
+  le : I → I → Prop
+  le_refl : ∀ i, le i i
+  le_antisymm : ∀ {i j}, le i j → le j i → i = j
+  le_trans : ∀ {i j k}, le i j → le j k → le i k
+  le_total : ∀ i j, le i j ∨ le j i
+  add_monotone : ∀ {offset i j outI outJ}, le i j →
+    inc.resonance offset i outI → inc.resonance offset j outJ →
+    le outI outJ
+  multiply_nonnegative : ∀ {i j out}, le inc.unit i → le inc.unit j →
+    multiply i j out → le inc.unit out
+
 theorem resonance_reassociate {I R T : Type u} [DecidableEq I]
     {inc : Incidence I R T} (spec : AssociativeResonanceSpec inc)
     {i j k out : I} :
