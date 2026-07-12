@@ -931,6 +931,11 @@ It currently establishes:
   the canonical instantiated family from domain, codomain, and an argument fold
   agreement.  Apply, Pair, and Second can therefore share one fold-local
   instantiate agreement while retaining provenance for both recursive paths.
+  The Pair branch now realizes that design end to end.  It transports the
+  independently recursive result family to the canonical instantiated family by
+  chaining structural provenance, the fold-local canonical equality, and
+  instantiate provenance.  The second component is then cast into that exact
+  dependent fiber and paired semantically.  Only Apply and Second remain.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

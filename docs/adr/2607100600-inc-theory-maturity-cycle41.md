@@ -377,6 +377,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - 残る3枝の共通境界をfold-localに形式化した。`IncDepRawCanonicalFormationFoldAgreement`は同じtree/replacements上の二formation motivesの
   canonical outputsだけを比較する。`IncDepRawCanonicalInstantiateSubstitutionFoldMotive`はdomain/codomainとargument fold agreementからcanonical
   instantiate packageを生成する。したがってApply/Pair/Secondはglobal rebaseではなく、一つの局所instantiate agreementと両経路のprovenanceを共有できる。
+- Pair枝をこの境界上でend-to-end化した。独立result IHのformation resultからcanonical instantiate resultへの等式を、structural provenance、
+  fold-local canonical equality、instantiate provenanceの連鎖だけで導出し、second componentをexact dependent fiberへcastしてsemantic pairを構成する。
+  残るagreement枝はApplyとSecondである。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
