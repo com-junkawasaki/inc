@@ -2096,6 +2096,34 @@ def IncDepRawCoherentTypingDispatchReady.castFormation
   cases formationEq
   exact ready
 
+/-- A syntactic substitution equipped with the exact readiness evidence needed
+at the Variable branch.  Its replacement may be any well-typed term, not only
+a variable, so ordinary `.varRule` readiness is insufficient. -/
+structure IncDepRawReadinessPreservingSubstitution
+    (source target : List IncDepRawType) extends
+    IncDepRawSubstitution source target where
+  preservesReadiness : ∀ {position : Nat} {type : IncDepRawType}
+    (lookup : IncDepRawLookup target position type)
+    {typeFormation : IncDepRawWellFormed target type},
+    IncDepRawFormationReadinessSubstitutionResult
+      (formation := typeFormation) toIncDepRawSubstitution →
+    IncDepRawTypingReadinessSubstitutionResult
+      (typing := IncDepRawHasType.varRule lookup)
+      (formation := typeFormation) toIncDepRawSubstitution
+
+def IncDepRawTypingReadinessSubstitutionResult.variable
+    {source target : List IncDepRawType} {position : Nat}
+    {type : IncDepRawType}
+    {lookup : IncDepRawLookup target position type}
+    {typeFormation : IncDepRawWellFormed target type}
+    (substitution : IncDepRawReadinessPreservingSubstitution source target)
+    (typeResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := typeFormation) substitution.toIncDepRawSubstitution) :
+    IncDepRawTypingReadinessSubstitutionResult
+      (typing := IncDepRawHasType.varRule lookup)
+      (formation := typeFormation) substitution.toIncDepRawSubstitution :=
+  substitution.preservesReadiness lookup typeResult
+
 def IncDepRawFormationReadinessSubstitutionResult.base
     {source target : List IncDepRawType} {index : Nat}
     (substitution : IncDepRawSubstitution source target) :
@@ -2278,6 +2306,131 @@ def IncDepRawTypingReadinessSubstitutionResult.first
       sigmaResult.formation_eq.symm
     .firstRule domainResult.readiness codomainResult.readiness
       (pairResult.readiness.castFormation pairFormationEq)
+
+/- Apply/Pair/Second normalize dependent equation-compiler transports from
+`HasType.substitute`.  Clean compilation may exceed the default elaboration
+budget while checking those equations, so subsequent declarations use the
+project's existing unbounded proof-checking discipline. -/
+/-
+noncomputable def IncDepRawTypingReadinessSubstitutionResult.apply
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {function argument : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {resultFormation : IncDepRawWellFormed target
+      (codomain.instantiate argument)}
+    {functionTyping : IncDepRawHasType target function (.pi domain codomain)}
+    {argumentTyping : IncDepRawHasType target argument domain}
+    (substitution : IncDepRawSubstitution source target)
+    (domainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := domainFormation) substitution)
+    (codomainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := codomainFormation) (substitution.lift domain))
+    (resultResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := resultFormation) substitution)
+    (functionResult : IncDepRawTypingReadinessSubstitutionResult
+      (typing := functionTyping)
+      (formation := IncDepRawWellFormed.pi domainFormation codomainFormation)
+      substitution)
+    (argumentResult : IncDepRawTypingReadinessSubstitutionResult
+      (typing := argumentTyping) (formation := domainFormation) substitution) :
+    IncDepRawTypingReadinessSubstitutionResult
+      (typing := IncDepRawHasType.applyRule functionTyping argumentTyping)
+      (formation := resultFormation) substitution where
+  formationResult := resultResult
+  substitutedTyping :=
+    (IncDepRawHasType.applyRule functionTyping argumentTyping).substitute
+      substitution
+  typing_eq := rfl
+  readiness := by
+    rw [IncDepRawHasType.substitute]
+    let piResult := IncDepRawFormationReadinessSubstitutionResult.pi
+      substitution domainResult codomainResult
+    let functionFormationEq := functionResult.formationResult.formation_eq.trans
+      piResult.formation_eq.symm
+    let argumentFormationEq := argumentResult.formationResult.formation_eq.trans
+      domainResult.formation_eq.symm
+    exact .applyRule domainResult.readiness codomainResult.readiness
+      resultResult.readiness
+      (functionResult.readiness.castFormation functionFormationEq)
+      (argumentResult.readiness.castFormation argumentFormationEq)
+
+noncomputable def IncDepRawTypingReadinessSubstitutionResult.pair
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {first second : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {resultFormation : IncDepRawWellFormed target
+      (codomain.instantiate first)}
+    {firstTyping : IncDepRawHasType target first domain}
+    {secondTyping : IncDepRawHasType target second
+      (codomain.instantiate first)}
+    (substitution : IncDepRawSubstitution source target)
+    (domainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := domainFormation) substitution)
+    (codomainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := codomainFormation) (substitution.lift domain))
+    (resultResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := resultFormation) substitution)
+    (firstResult : IncDepRawTypingReadinessSubstitutionResult
+      (typing := firstTyping) (formation := domainFormation) substitution)
+    (secondResult : IncDepRawTypingReadinessSubstitutionResult
+      (typing := secondTyping) (formation := resultFormation) substitution) :
+    IncDepRawTypingReadinessSubstitutionResult
+      (typing := IncDepRawHasType.pairRule firstTyping secondTyping)
+      (formation := IncDepRawWellFormed.sigma domainFormation codomainFormation)
+      substitution where
+  formationResult := .sigma substitution domainResult codomainResult
+  substitutedTyping :=
+    (IncDepRawHasType.pairRule firstTyping secondTyping).substitute substitution
+  typing_eq := rfl
+  readiness := by
+    rw [IncDepRawHasType.substitute]
+    let firstFormationEq := firstResult.formationResult.formation_eq.trans
+      domainResult.formation_eq.symm
+    let secondFormationEq := secondResult.formationResult.formation_eq.trans
+      resultResult.formation_eq.symm
+    exact .pairRule domainResult.readiness codomainResult.readiness
+      resultResult.readiness
+      (firstResult.readiness.castFormation firstFormationEq)
+      (secondResult.readiness.castFormation secondFormationEq)
+
+noncomputable def IncDepRawTypingReadinessSubstitutionResult.second
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {resultFormation : IncDepRawWellFormed target
+      (codomain.instantiate (.first pair))}
+    {pairTyping : IncDepRawHasType target pair (.sigma domain codomain)}
+    (substitution : IncDepRawSubstitution source target)
+    (domainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := domainFormation) substitution)
+    (codomainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := codomainFormation) (substitution.lift domain))
+    (resultResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := resultFormation) substitution)
+    (pairResult : IncDepRawTypingReadinessSubstitutionResult
+      (typing := pairTyping)
+      (formation := IncDepRawWellFormed.sigma domainFormation codomainFormation)
+      substitution) :
+    IncDepRawTypingReadinessSubstitutionResult
+      (typing := IncDepRawHasType.secondRule pairTyping)
+      (formation := resultFormation) substitution where
+  formationResult := resultResult
+  substitutedTyping :=
+    (IncDepRawHasType.secondRule pairTyping).substitute substitution
+  typing_eq := rfl
+  readiness := by
+    rw [IncDepRawHasType.substitute]
+    let sigmaResult := IncDepRawFormationReadinessSubstitutionResult.sigma
+      substitution domainResult codomainResult
+    let pairFormationEq := pairResult.formationResult.formation_eq.trans
+      sigmaResult.formation_eq.symm
+    exact .secondRule domainResult.readiness codomainResult.readiness
+      resultResult.readiness
+      (pairResult.readiness.castFormation pairFormationEq)
+-/
 
 inductive IncDepRawContext.WellFormed : List IncDepRawType → Type
   | empty : WellFormed []

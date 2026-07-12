@@ -2692,6 +2692,13 @@ formation cast from the child packages' equalities to their shared canonical
 substitution.  Coverage is 4/8; Variable, Apply, Pair, and Second are the
 remaining branches whose typing derivations contain explicit substitution
 rewrites.
+Variable correctly cannot use `.varRule` for an arbitrary replacement term;
+`IncDepRawReadinessPreservingSubstitution` records exactly the required
+replacement readiness, and the Variable constructor consumes it.  Stable
+typing constructor coverage is therefore 5/8.  Direct equation normalization
+for Apply, Pair, and Second typechecks incrementally but is deliberately not
+accepted: it exceeds the clean-build elaboration budget.  Those three branches
+need explicit lightweight transport lemmas before the mutual recursor is tied.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo
