@@ -17263,6 +17263,40 @@ structure IncDepRawCanonicalProviderFreeMutualFoldHypotheses
   generatedIdentityAgreementProvider :
     IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider.{u} model
 
+/-- The genuinely new naturality fragment after variable replacement and
+readiness alignment are reused from the established preservation interface. -/
+structure IncDepRawCanonicalProviderFreeNaturalityLaws
+    (model : IncDepRawSubstitutionFiberModel.{u}) where
+  instantiateAgreementProvider :
+    IncDepRawCanonicalInstantiateFoldAgreementProvider.{u}
+  dependentFormationAgreementProvider :
+    IncDepRawCanonicalDependentFormationFoldAgreementProvider.{u} model
+  generatedIdentityAgreementProvider :
+    IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider.{u} model
+
+def IncDepRawCanonicalProviderFreeMutualFoldHypotheses.ofPreservation
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (preservation : IncDepRawCanonicalSubstitutionPreservationHypotheses)
+    (naturality : IncDepRawCanonicalProviderFreeNaturalityLaws.{u} model) :
+    IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u} model where
+  variableProvider := preservation.variableProvider
+  readinessAlignment := preservation.readinessProvider
+  instantiateAgreementProvider := naturality.instantiateAgreementProvider
+  dependentFormationAgreementProvider :=
+    naturality.dependentFormationAgreementProvider
+  generatedIdentityAgreementProvider :=
+    naturality.generatedIdentityAgreementProvider
+
+def IncDepRawCanonicalProviderFreeMutualFoldHypotheses.toPreservationCore
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
+      model)
+    (rebaseProvider : IncDepRawFormationSubstitutionFiberRebaseProvider) :
+    IncDepRawCanonicalSubstitutionPreservationHypotheses where
+  variableProvider := hypotheses.variableProvider
+  readinessProvider := hypotheses.readinessAlignment
+  rebaseProvider := rebaseProvider
+
 noncomputable def
     IncDepRawSubstitutionFiberModel.recursivelyGeneratedFormationFold
     (model : IncDepRawSubstitutionFiberModel.{u})
@@ -18007,6 +18041,14 @@ canonical mutual preservation theorem. -/
 structure IncDepRawLawfulSubstitutionFiberModel extends
     IncDepRawSubstitutionFiberModel.{u} where
   canonicalLaws : IncDepRawCanonicalSubstitutionPreservationHypotheses
+
+def IncDepRawLawfulSubstitutionFiberModel.toProviderFree
+    (model : IncDepRawLawfulSubstitutionFiberModel.{u})
+    (naturality : IncDepRawCanonicalProviderFreeNaturalityLaws.{u}
+      model.toIncDepRawSubstitutionFiberModel) :
+    IncDepRawProviderFreeLawfulSubstitutionFiberModel.{u} where
+  model := model.toIncDepRawSubstitutionFiberModel
+  scopedLaws := .ofPreservation model.canonicalLaws naturality
 
 def IncDepRawSubstitutionFiberModel.withUnitBase
     (_model : IncDepRawSubstitutionFiberModel.{u}) :

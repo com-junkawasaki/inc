@@ -1302,6 +1302,12 @@ cycle 38–41 で以下の3極構造が判明した:
   primitive base carrierが`ULift Unit`でもdependent Pi/Sigma/Identity semanticsが関数・依存対
   を導入するため、それだけでlawfulとは宣言しない。具体inhabitantはblanket subsingleton
   仮定でなく5 fieldsを実際に証明する必要がある。
+  5 fieldsは実際のreuse境界で分解した。`ProviderFreeNaturalityLaws`は新規3 obligations、
+  すなわちinstantiate agreement、dependent Pi/Sigma agreement、generated Identity agreement
+  だけを保持する。`ofPreservation`は既存canonical preservation hypothesesからvariable
+  replacement/readiness alignmentを再利用し、`toPreservationCore`はrebase lawがある場合の
+  逆core projectionを与える。既存lawful modelは`.toProviderFree`へ3-law fragmentだけで
+  upgradeできるため、具体モデル残件は5独立証明ではなく3自然性証明である。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

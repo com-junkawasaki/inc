@@ -1293,6 +1293,16 @@ It currently establishes:
   function and dependent-pair semantics whose naturality still requires proof.
   A concrete inhabitant must discharge those five fields rather than relying on
   an unsound blanket subsingleton assumption.
+  The five-field record is now split along the actual reuse boundary.
+  `ProviderFreeNaturalityLaws` contains only the three new obligations:
+  instantiate agreement, dependent Pi/Sigma agreement, and generated Identity
+  agreement.  `ProviderFreeMutualFoldHypotheses.ofPreservation` reuses variable
+  replacement and readiness alignment from the established canonical
+  preservation hypotheses, while `toPreservationCore` provides the reverse core
+  projection when a rebase law is available.  Existing lawful models can be
+  upgraded with `.toProviderFree` by supplying only this three-law naturality
+  fragment.  Concrete-model work is therefore no longer counted as five
+  independent proofs.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
