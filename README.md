@@ -2625,8 +2625,10 @@ provider-inhabitation step.
 That narrowing has started at the first concrete consumer: Apply now has
 `anchoredTypingFoldResultApplyExactOfAgreement`, which consumes one local
 instantiate agreement rather than a globally quantified provider.  The former
-Apply API remains as a compatibility wrapper.  Pair and Second still require
-the same extraction before the recursive route can switch wholesale.
+Apply API remains as a compatibility wrapper.  Pair and Second now have the
+corresponding `...ExactOfAgreement` builders as well, so all three consumers
+are localized.  The remaining step is to feed these builders from a provider
+quantified only over recursively generated results.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo
