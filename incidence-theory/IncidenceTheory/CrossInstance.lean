@@ -8397,6 +8397,13 @@ noncomputable def natIncDepRawNormalizedResonanceCompletion :
   associative := natAssociativeResonanceSpec
   quotientCongruent := natQuotientResonanceCongruent
 
+noncomputable def finiteIncDepRawNormalizedResonanceCompletion :
+    IncDepRawNormalizedResonanceCompletion finiteIncidence where
+  structural := incDepRawNormalizedBasicPreservation
+  resonance := finiteResonanceSpec
+  associative := finiteAssociativeResonanceSpec
+  quotientCongruent := finiteQuotientResonanceCongruent
+
 structure IncDepRawStrictTypingDispatchReady
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} (typing : IncDepRawHasType context term type)

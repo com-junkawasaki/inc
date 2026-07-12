@@ -82,6 +82,9 @@ instantiate/substitute equalities with synchronized casts.
   preservation with resonance, relational associativity, and quotient
   congruence. A complete Nat instance is checked, and legacy certificates have
   a compatibility bridge to the normalized structural theorem.
+  A second complete instance uses multi-valued `finiteIncidence`; it is proved
+  not to admit any `FunctionalResonanceSpec`, so the new completion is strictly
+  more relational than the selector-based special case.
 - Pushout preservation and generic boundary-square-zero are conditional on the
   categorical or linear hypotheses in their declarations.
 - Translation completeness is proved only for the stated fragments and

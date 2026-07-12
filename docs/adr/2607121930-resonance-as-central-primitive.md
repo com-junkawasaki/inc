@@ -84,3 +84,6 @@ case where the selector is complete and resonance has no unselected modes.
   alignment, while the semantic carrier supplies resonance, relational
   associativity, and quotient congruence. Peano resonance provides the first
   complete instance.
+- `finiteIncidence` supplies a second normalized dependent completion. Its
+  resonance is associative and quotient-congruent but provably not functional:
+  two modes resonate at `(root, root)` while the selector chooses only one.

@@ -148,6 +148,21 @@ def finiteResonanceSpec : ResonanceSpec finiteIncidence where
     intro i j k resonant
     exact ⟨rfl, rfl⟩
 
+def finiteAssociativeResonanceSpec :
+    AssociativeResonanceSpec finiteIncidence where
+  reassociate := by
+    intro i j k out
+    constructor
+    · intro _
+      exact ⟨FiniteIncidence.leaf, trivial, trivial⟩
+    · intro _
+      exact ⟨FiniteIncidence.leaf, trivial, trivial⟩
+
+theorem finiteQuotientResonanceCongruent :
+    QuotientResonanceCongruent finiteIncidence := by
+  intro i₁ i₂ j₁ j₂ k₁ k₂ hi hj hk
+  exact ⟨fun _ => trivial, fun _ => trivial⟩
+
 theorem finiteIncidence_resonance_multivalued :
     finiteIncidence.resonance .root .root .leaf ∧
       finiteIncidence.resonance .root .root .root := by
@@ -157,6 +172,14 @@ theorem finiteIncidence_selector_chooses_one_mode :
     finiteIncidence.glue .root .root = some .root ∧
       finiteIncidence.glue .root .root ≠ some .leaf := by
   decide
+
+theorem finiteIncidence_not_functionalResonance :
+    ¬ Nonempty (FunctionalResonanceSpec finiteIncidence) := by
+  rintro ⟨functional⟩
+  have selected := functional.selected_complete
+    (i := FiniteIncidence.root) (j := FiniteIncidence.root)
+    (k := FiniteIncidence.leaf) True.intro
+  simp [finiteIncidence, finiteGlue] at selected
 
 /- A checked, nondegenerate model certificate for the data and laws of the
    incidence core.  It records that the carrier is inhabited and that the
