@@ -16609,6 +16609,62 @@ def IncDepRawCanonicalRecursiveInstantiateAgreementProvider.ofGlobal
     provider.provide _ _ _ _ domain.output.fold codomain.output.fold
       result.output.fold argument.output.typing argumentAgreement
 
+def IncDepRawSubstitutionFiberModel.recursiveInstantiateAgreementBase
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {domain : IncDepRawType}
+    {argument : IncDepRawTerm} {index : Nat}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {argumentTyping : IncDepRawHasType context argument domain}
+    {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+    {argumentReady : IncDepRawCoherentTypingDispatchReady argumentTyping
+      domainFormation}
+    (domainPackage :
+      IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+        variableProvider domainReady)
+    (argumentPackage :
+      IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+        variableProvider argumentReady)
+    (argumentAgreement : IncDepRawCanonicalFoldAgreement
+      domainPackage.output.fold argumentPackage.output.typing) :
+    IncDepRawCanonicalRelationalFormationFoldAgreement
+      (model.canonicalFormationFoldOutputBase
+        (context := context) (index := index)).fold
+      (IncDepRawCanonicalInstantiateSubstitutionFoldMotive domainReady .base
+        .base argumentReady domainPackage.output.fold
+        (model.canonicalFormationFoldOutputBase
+          (context := domain :: context) (index := index)).fold
+        argumentPackage.output.typing argumentAgreement) :=
+  .refl _
+
+def IncDepRawSubstitutionFiberModel.recursiveInstantiateAgreementUnit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {domain : IncDepRawType}
+    {argument : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {argumentTyping : IncDepRawHasType context argument domain}
+    {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+    {argumentReady : IncDepRawCoherentTypingDispatchReady argumentTyping
+      domainFormation}
+    (domainPackage :
+      IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+        variableProvider domainReady)
+    (argumentPackage :
+      IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+        variableProvider argumentReady)
+    (argumentAgreement : IncDepRawCanonicalFoldAgreement
+      domainPackage.output.fold argumentPackage.output.typing) :
+    IncDepRawCanonicalRelationalFormationFoldAgreement
+      (model.canonicalFormationFoldOutputUnit
+        (context := context)).fold
+      (IncDepRawCanonicalInstantiateSubstitutionFoldMotive domainReady .unit
+        .unit argumentReady domainPackage.output.fold
+        (model.canonicalFormationFoldOutputUnit
+          (context := domain :: context)).fold
+        argumentPackage.output.typing argumentAgreement) :=
+  .refl _
+
 def IncDepRawSubstitutionFiberModel.recursivelyGeneratedFormationBase
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)

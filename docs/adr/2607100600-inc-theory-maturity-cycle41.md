@@ -1471,6 +1471,11 @@ cycle 38–41 で以下の3極構造が判明した:
   first-class component化され、scoped relational bundleに3 componentsの組立・射影・β則を
   追加した。Unit Stage2もこのcomponentを直接受け取るため、instantiate/dependent/identityを
   独立に証明してraw provider recordを展開せず合成できる。
+  scoped instantiate証明をprovenanceで分解すると外側constructorは
+  Base/Unit/Pi/Sigma/Identityの5ケースになる。このうちBaseとUnitは任意modelについて
+  `recursiveInstantiateAgreementBase`/`recursiveInstantiateAgreementUnit`として
+  sorry-freeで閉じた。いずれもdefinitional relational reflexivityである。残るPi/Sigma/
+  Identityはcomponent agreementsの再帰合成を要する。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

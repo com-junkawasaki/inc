@@ -2666,6 +2666,13 @@ bundle has component assembly/projection functions and checked beta laws, and
 Unit Stage2 consumes this component directly.  Instantiation, dependent
 assembly, and generated identity can therefore be proved independently and
 combined without unpacking raw provider records.
+The scoped instantiation proof itself has now started.  Splitting on generated
+codomain and result provenance yields exactly five outer cases.  Base and Unit
+are closed, for every substitution-fiber model, by the sorry-free lemmas
+`recursiveInstantiateAgreementBase` and
+`recursiveInstantiateAgreementUnit`; both are definitional relational
+reflexivity.  Pi, Sigma, and Identity remain and require recursive composition
+of their component agreements.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo
