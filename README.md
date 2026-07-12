@@ -1234,6 +1234,15 @@ It currently establishes:
   closure must be normalized from its current “ordinary output or Identity”
   presentation to explicit Base/Unit/Pi/Sigma/Identity constructors so that an
   Identity formation may itself occur recursively inside a later Pi or Sigma.
+  That normalization is now checked as `RecursivelyGenerated`.  Its five
+  constructors are exactly Base, Unit, Pi, Sigma, and Identity; Pi and Sigma
+  consume recursively generated children, so nested Identity types are no
+  longer excluded.  Structural agreement covers all five matching cases using
+  the scoped Pi/Sigma and generated-Identity laws, and both provenance and
+  agreement transport across readiness witnesses.  The corresponding
+  `RecursivelyGeneratedFormationFoldOutput` package is now the formation motive
+  for the final recursor.  The next step is to replace the typing package's
+  temporary complete-formation field with this recursive-normal-form package.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

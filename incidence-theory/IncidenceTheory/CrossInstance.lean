@@ -15673,6 +15673,169 @@ structure IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider
         typeReady leftReady rightReady secondTypeOutput secondLeft
         secondRight).fold
 
+/-- Normal-form formation provenance used by the final recursor.  Unlike the
+temporary complete closure, Pi and Sigma recurse over this same predicate, so
+Identity formations may occur at arbitrary depth. -/
+inductive IncDepRawCanonicalFormationFoldOutput.RecursivelyGenerated
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider) : ∀
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentFormationDispatchReady formation},
+    IncDepRawCanonicalFormationFoldOutput.{u} ready → Prop
+  | base {context : List IncDepRawType} {index : Nat} :
+      RecursivelyGenerated model variableProvider
+        (model.canonicalFormationFoldOutputBase
+          (context := context) (index := index))
+  | unit {context : List IncDepRawType} :
+      RecursivelyGenerated model variableProvider
+        (model.canonicalFormationFoldOutputUnit (context := context))
+  | pi {context : List IncDepRawType} {domain codomain : IncDepRawType}
+      {domainFormation : IncDepRawWellFormed context domain}
+      {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+      {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+      {codomainReady :
+        IncDepRawCoherentFormationDispatchReady codomainFormation}
+      (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
+      (codomainOutput : IncDepRawCanonicalFormationFoldOutput codomainReady) :
+      RecursivelyGenerated model variableProvider domainOutput →
+      RecursivelyGenerated model variableProvider codomainOutput →
+      RecursivelyGenerated model variableProvider
+        (model.canonicalFormationFoldOutputPi domainReady codomainReady
+          domainOutput codomainOutput)
+  | sigma {context : List IncDepRawType} {domain codomain : IncDepRawType}
+      {domainFormation : IncDepRawWellFormed context domain}
+      {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+      {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+      {codomainReady :
+        IncDepRawCoherentFormationDispatchReady codomainFormation}
+      (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
+      (codomainOutput : IncDepRawCanonicalFormationFoldOutput codomainReady) :
+      RecursivelyGenerated model variableProvider domainOutput →
+      RecursivelyGenerated model variableProvider codomainOutput →
+      RecursivelyGenerated model variableProvider
+        (model.canonicalFormationFoldOutputSigma domainReady codomainReady
+          domainOutput codomainOutput)
+  | identity {context : List IncDepRawType} {type : IncDepRawType}
+      {left right : IncDepRawTerm}
+      {typeFormation : IncDepRawWellFormed context type}
+      {leftTyping : IncDepRawHasType context left type}
+      {rightTyping : IncDepRawHasType context right type}
+      {typeReady : IncDepRawCoherentFormationDispatchReady typeFormation}
+      {leftReady : IncDepRawCoherentTypingDispatchReady leftTyping typeFormation}
+      {rightReady : IncDepRawCoherentTypingDispatchReady rightTyping
+        typeFormation}
+      (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+      (typeOutput : IncDepRawCanonicalFormationFoldOutput typeReady)
+      (leftOutput : IncDepRawCanonicalAnchoredTypingFoldOutput leftReady
+        typeOutput)
+      (rightOutput : IncDepRawCanonicalAnchoredTypingFoldOutput rightReady
+        typeOutput) :
+      RecursivelyGenerated model variableProvider typeOutput →
+      leftOutput.Generated model variableProvider →
+      rightOutput.Generated model variableProvider →
+      RecursivelyGenerated model variableProvider
+        (model.canonicalFormationFoldOutputIdentityExact readinessAlignment
+          typeReady leftReady rightReady typeOutput leftOutput rightOutput)
+
+theorem
+    IncDepRawCanonicalFormationFoldOutput.RecursivelyGenerated.agreement
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (dependentAgreement :
+      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
+    (identityAgreement :
+      IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider model)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentFormationDispatchReady formation}
+    {first second : IncDepRawCanonicalFormationFoldOutput.{u} ready}
+    (firstGenerated : first.RecursivelyGenerated model variableProvider)
+    (secondGenerated : second.RecursivelyGenerated model variableProvider) :
+    IncDepRawCanonicalFormationFoldAgreement first.fold second.fold := by
+  induction firstGenerated with
+  | base =>
+      cases secondGenerated
+      exact .refl _
+  | unit =>
+      cases secondGenerated
+      exact .refl _
+  | pi firstDomain firstCodomain _ _ domainIH codomainIH =>
+      cases secondGenerated with
+      | pi secondDomain secondCodomain secondDomainGenerated
+          secondCodomainGenerated =>
+        exact dependentAgreement.pi _ _ _ _ _ _
+          (domainIH secondDomainGenerated)
+          (codomainIH secondCodomainGenerated)
+  | sigma firstDomain firstCodomain _ _ domainIH codomainIH =>
+      cases secondGenerated with
+      | sigma secondDomain secondCodomain secondDomainGenerated
+          secondCodomainGenerated =>
+        exact dependentAgreement.sigma _ _ _ _ _ _
+          (domainIH secondDomainGenerated)
+          (codomainIH secondCodomainGenerated)
+  | identity firstAlignment firstType firstLeft firstRight _ _ _ =>
+      cases secondGenerated with
+      | identity secondAlignment secondType secondLeft secondRight _ _ _ =>
+        exact identityAgreement.identity firstAlignment secondAlignment _ _ _
+          firstType secondType firstLeft firstRight secondLeft secondRight
+
+theorem IncDepRawCanonicalFormationFoldOutput.RecursivelyGenerated.castReady
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {firstReady secondReady :
+      IncDepRawCoherentFormationDispatchReady formation}
+    {output : IncDepRawCanonicalFormationFoldOutput.{u} firstReady}
+    (generated : output.RecursivelyGenerated model variableProvider)
+    (readyEq : firstReady = secondReady) :
+    (output.castReady readyEq).RecursivelyGenerated model variableProvider := by
+  cases readyEq
+  exact generated
+
+theorem
+    IncDepRawCanonicalFormationFoldOutput.RecursivelyGenerated.agreementAcrossReady
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (dependentAgreement :
+      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
+    (identityAgreement :
+      IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider model)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {firstReady secondReady :
+      IncDepRawCoherentFormationDispatchReady formation}
+    {first : IncDepRawCanonicalFormationFoldOutput.{u} firstReady}
+    {second : IncDepRawCanonicalFormationFoldOutput.{u} secondReady}
+    (firstGenerated : first.RecursivelyGenerated model variableProvider)
+    (secondGenerated : second.RecursivelyGenerated model variableProvider) :
+    IncDepRawCanonicalFormationFoldAgreement first.fold second.fold := by
+  let readyEq := readinessAlignment.alignFormation secondReady firstReady
+  let castSecond := second.castReady readyEq
+  let sameReady := firstGenerated.agreement dependentAgreement identityAgreement
+    (secondGenerated.castReady readyEq)
+  exact
+    { agree := by
+        intro source substitution sourceWellFormed targetWellFormed sourceResult
+          targetResult substitutionResult targetTree replacements
+        calc
+          (first.fold targetTree replacements).canonical =
+              (castSecond.fold targetTree replacements).canonical :=
+            sameReady.agree targetTree replacements
+          _ = (second.fold targetTree replacements).canonical :=
+            (second.castReady_canonical readyEq targetTree replacements).symm }
+
+structure IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentFormationDispatchReady formation) where
+  output : IncDepRawCanonicalFormationFoldOutput.{u} ready
+  recursivelyGenerated : output.RecursivelyGenerated model variableProvider
+
 theorem IncDepRawCanonicalFormationFoldOutput.CompletelyGenerated.agreement
     {model : IncDepRawSubstitutionFiberModel.{u}}
     {variableProvider : IncDepRawVariableSubstitutionProvider}

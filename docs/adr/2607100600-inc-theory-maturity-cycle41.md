@@ -1261,6 +1261,12 @@ cycle 38–41 で以下の3極構造が判明した:
   再実装する必要はない。recursor組立て前の残件は、現在の「ordinaryまたはIdentity」
   closureを明示的Base/Unit/Pi/Sigma/Identity closureへ正規化し、Identityを後続Pi/Sigmaの
   内側にも再帰出現可能にすることである。
+  この正規化は`RecursivelyGenerated`としてcheckedとなった。5 constructorsは正確に
+  Base/Unit/Pi/Sigma/Identityで、Pi/Sigmaは同じpredicateの子を再帰消費するためnested
+  Identityを除外しない。5ケースのstructural agreement、readinessをまたぐprovenance
+  transportとagreementも証明済みである。`RecursivelyGeneratedFormationFoldOutput` package
+  がfinal recursorのformation motiveとなる。次はtyping packageの一時complete-formation
+  fieldをこのrecursive normal formへ置換する。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。
