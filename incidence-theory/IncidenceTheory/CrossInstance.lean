@@ -14311,6 +14311,37 @@ structure IncDepRawCanonicalDependentFormationFoldAgreementProvider
       (model.canonicalMutualFoldSigma domainReady codomainReady rightDomainIH
         rightCodomainIH)
 
+  identity : ∀
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {leftTyping : IncDepRawHasType context left type}
+    {rightTyping : IncDepRawHasType context right type}
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (leftReady : IncDepRawCoherentTypingDispatchReady leftTyping typeFormation)
+    (rightReady : IncDepRawCoherentTypingDispatchReady rightTyping typeFormation)
+    (leftTypeIH rightTypeIH :
+      IncDepRawCanonicalFormationSubstitutionFoldMotive.{u} typeReady)
+    (leftIH : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive.{u}
+      leftReady)
+    (rightIH : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive.{u}
+      rightReady)
+    (typeAgreement : IncDepRawCanonicalFormationFoldAgreement rightTypeIH
+      leftTypeIH)
+    (leftAgreement : IncDepRawCanonicalFoldAgreement leftTypeIH leftIH)
+    (rightAgreement : IncDepRawCanonicalFoldAgreement leftTypeIH rightIH),
+    IncDepRawCanonicalFormationFoldAgreement
+      (model.canonicalMutualFoldIdentityOfAgreements readinessAlignment typeReady
+        leftReady rightReady leftTypeIH leftIH rightIH leftAgreement
+        rightAgreement)
+      (model.canonicalMutualFoldIdentityOfAgreements readinessAlignment typeReady
+        leftReady rightReady rightTypeIH leftIH rightIH
+        (IncDepRawCanonicalFoldAgreement.retargetFormation typeAgreement
+          leftAgreement)
+        (IncDepRawCanonicalFoldAgreement.retargetFormation typeAgreement
+          rightAgreement))
+
 noncomputable def IncDepRawSubstitutionFiberModel.preserveFormation
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)

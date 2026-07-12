@@ -978,6 +978,11 @@ It currently establishes:
   this transport naturality for Pi and Sigma.  The total recursion therefore has
   two scoped inputs—instantiate naturality and dependent-extension naturality—
   neither of which grants arbitrary semantic equality or rebase.
+  The dependent provider now covers Identity formation too.  A type-path
+  agreement retargets both endpoint typing agreements to the second type path,
+  after which the provider compares the two canonical Identity folds.  Together
+  with reflexive Base/Unit cases, its Pi, Sigma, and Identity fields cover every
+  formation constructor needed by the mutual path-congruence recursion.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

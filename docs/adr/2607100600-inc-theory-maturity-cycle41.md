@@ -400,6 +400,8 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - parent Pi agreementの導出試行から第二の依存境界を特定した。domain fiber resultの等式はcodomain IHが走るextended semantic treeとlifted replacementsの
   型自体を変更する。`IncDepRawCanonicalDependentFormationFoldAgreementProvider`はPi/Sigmaにおけるこのtransport naturalityだけを隔離する。
   total recursionのscoped inputsはinstantiate naturalityとdependent-extension naturalityの二つで、どちらも任意semantic equality/rebase権限を持たない。
+- dependent providerをIdentity formationにも拡張した。type-path agreementで両endpoint typing agreementsを第二type pathへretargetし、二つのcanonical Identity
+  foldsを比較する。反射的なBase/Unitと合わせ、Pi/Sigma/Identity fieldsがmutual path-congruence recursionに必要なformation全constructorを覆う。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
