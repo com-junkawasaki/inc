@@ -2740,6 +2740,12 @@ the original substitution's arbitrary replacement term renamed into the
 extended source context.  Hence lift closure depends on a general theorem that
 coherent formation/typing readiness is preserved by weakening renaming; a
 variable-only cast lemma would be insufficient.
+Identity/Refl now use a fully derivation-independent layer as well.
+`IncDepRawFullySemanticFormationSubstitutionResult` removes the last legacy
+formation proof equality, while aligned semantic typing requires both identity
+endpoints to share that exact semantic formation.  Identity formation and Refl
+typing are then constructed directly and sorry-free.  The sole integration
+boundary for total recursion is now weakening-renaming preservation for lift.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

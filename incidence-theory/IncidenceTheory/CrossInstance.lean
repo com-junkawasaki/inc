@@ -2094,6 +2094,95 @@ structure IncDepRawSemanticTypingSubstitutionResult
   readiness : IncDepRawCoherentTypingDispatchReady substitutedTyping
     formationResult.substitutedFormation
 
+/-- Fully derivation-independent formation preservation. -/
+structure IncDepRawFullySemanticFormationSubstitutionResult
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    (substitution : IncDepRawSubstitution source target) where
+  substitutedFormation :
+    IncDepRawWellFormed source (type.substitute substitution.term)
+  readiness :
+    IncDepRawCoherentFormationDispatchReady substitutedFormation
+
+/-- Fully derivation-independent typing preservation, including its formation
+proof object. -/
+structure IncDepRawFullySemanticTypingSubstitutionResult
+    {source target : List IncDepRawType}
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    (substitution : IncDepRawSubstitution source target) where
+  formationResult : IncDepRawFullySemanticFormationSubstitutionResult
+    (type := type) substitution
+  substitutedTyping : IncDepRawHasType source
+    (term.substitute substitution.term) (type.substitute substitution.term)
+  readiness : IncDepRawCoherentTypingDispatchReady substitutedTyping
+    formationResult.substitutedFormation
+
+def IncDepRawFormationReadinessSubstitutionResult.toFullySemantic
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed target type}
+    {substitution : IncDepRawSubstitution source target}
+    (result : IncDepRawFormationReadinessSubstitutionResult
+      (formation := formation) substitution) :
+    IncDepRawFullySemanticFormationSubstitutionResult
+      (type := type) substitution where
+  substitutedFormation := result.substitutedFormation
+  readiness := result.readiness
+
+def IncDepRawSemanticTypingSubstitutionResult.toFullySemantic
+    {source target : List IncDepRawType}
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed target type}
+    {substitution : IncDepRawSubstitution source target}
+    (result : IncDepRawSemanticTypingSubstitutionResult
+      (term := term) (type := type) (formation := formation) substitution) :
+    IncDepRawFullySemanticTypingSubstitutionResult
+      (term := term) (type := type) substitution where
+  formationResult := result.formationResult.toFullySemantic
+  substitutedTyping := result.substitutedTyping
+  readiness := result.readiness
+
+structure IncDepRawAlignedSemanticTypingSubstitutionResult
+    {source target : List IncDepRawType}
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    (substitution : IncDepRawSubstitution source target)
+    (formationResult : IncDepRawFullySemanticFormationSubstitutionResult
+      (type := type) substitution) where
+  substitutedTyping : IncDepRawHasType source
+    (term.substitute substitution.term) (type.substitute substitution.term)
+  readiness : IncDepRawCoherentTypingDispatchReady substitutedTyping
+    formationResult.substitutedFormation
+
+def IncDepRawFullySemanticFormationSubstitutionResult.identity
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    (substitution : IncDepRawSubstitution source target)
+    (typeResult : IncDepRawFullySemanticFormationSubstitutionResult
+      (type := type) substitution)
+    (leftResult : IncDepRawAlignedSemanticTypingSubstitutionResult
+      (term := left) substitution typeResult)
+    (rightResult : IncDepRawAlignedSemanticTypingSubstitutionResult
+      (term := right) substitution typeResult) :
+    IncDepRawFullySemanticFormationSubstitutionResult
+      (type := .identity type left right) substitution where
+  substitutedFormation := .identity typeResult.substitutedFormation
+    leftResult.substitutedTyping rightResult.substitutedTyping
+  readiness := .identity typeResult.readiness
+    leftResult.readiness rightResult.readiness
+
+def IncDepRawFullySemanticTypingSubstitutionResult.refl
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {term : IncDepRawTerm}
+    (substitution : IncDepRawSubstitution source target)
+    (typeResult : IncDepRawFullySemanticFormationSubstitutionResult
+      (type := type) substitution)
+    (termResult : IncDepRawAlignedSemanticTypingSubstitutionResult
+      (term := term) substitution typeResult) :
+    IncDepRawFullySemanticTypingSubstitutionResult
+      (term := .refl term) (type := .identity type term term)
+      substitution where
+  formationResult := .identity substitution typeResult termResult termResult
+  substitutedTyping := .reflRule termResult.substitutedTyping
+  readiness := .reflRule typeResult.readiness termResult.readiness
+
 def IncDepRawCoherentFormationDispatchReady.castFormation
     {context : List IncDepRawType} {type : IncDepRawType}
     {first second : IncDepRawWellFormed context type}

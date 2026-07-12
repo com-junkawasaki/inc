@@ -1521,6 +1521,11 @@ cycle 38–41 で以下の3極構造が判明した:
   older lookupは元substitutionの任意replacement termをextended source contextへweakening rename
   した導出になる。従ってlift閉包にはcoherent formation/typing readinessの一般rename保存定理が
   必要であり、variable専用castだけでは不足する。
+  Identity/Refl側はfully derivation-independent層で解消した。
+  `IncDepRawFullySemanticFormationSubstitutionResult`がlegacy formation proof equalityを除去し、
+  aligned semantic typingが両endpointを同一semantic formationへ整列する。これによりIdentity
+  formationとRefl typingを直接sorry-freeに構成できる。total recursionの統合境界はliftに必要な
+  weakening rename保存へ一本化された。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。
