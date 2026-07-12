@@ -924,6 +924,13 @@ It currently establishes:
   formation package and its provenance are reused unchanged as the projection's
   result family.  Only the instantiate-dependent Apply, Pair, and Second
   agreement branches remain before dispatcher assembly.
+  Their common remaining boundary is now represented directly rather than by a
+  global rebase.  `IncDepRawCanonicalFormationFoldAgreement` compares the
+  canonical outputs of two formation motives only at the same tree and
+  replacements.  `IncDepRawCanonicalInstantiateSubstitutionFoldMotive` builds
+  the canonical instantiated family from domain, codomain, and an argument fold
+  agreement.  Apply, Pair, and Second can therefore share one fold-local
+  instantiate agreement while retaining provenance for both recursive paths.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

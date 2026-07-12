@@ -12711,6 +12711,26 @@ structure IncDepRawCanonicalFoldAgreement
       (formationIH targetTree replacements)
       (typingIH targetTree replacements).typing
 
+structure IncDepRawCanonicalFormationFoldAgreement
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    {ready : IncDepRawCoherentFormationDispatchReady targetFormation}
+    (leftIH rightIH : IncDepRawCanonicalFormationSubstitutionFoldMotive ready) :
+    Prop where
+  agree : ∀ {source : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult),
+    (leftIH targetTree replacements).canonical =
+      (rightIH targetTree replacements).canonical
+
 def IncDepRawSubstitutionFiberModel.mutualFoldBase
     (model : IncDepRawSubstitutionFiberModel.{u})
     {context : List IncDepRawType} {index : Nat} :
@@ -13188,6 +13208,46 @@ noncomputable def
           (fun codomainResult =>
             model.pi domainResult.formationResult codomainResult)
           bodyResultEq }
+
+noncomputable def
+    IncDepRawCanonicalInstantiateSubstitutionFoldMotive
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {argument : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {resultFormation : IncDepRawWellFormed context
+      (codomain.instantiate argument)}
+    {argumentTyping : IncDepRawHasType context argument domain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (resultReady : IncDepRawCoherentFormationDispatchReady resultFormation)
+    (argumentReady : IncDepRawCoherentTypingDispatchReady argumentTyping
+      domainFormation)
+    (domainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive domainReady)
+    (codomainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive codomainReady)
+    (argumentIH : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive
+      argumentReady)
+    (argumentAgreement : IncDepRawCanonicalFoldAgreement domainIH argumentIH) :
+    IncDepRawCanonicalFormationSubstitutionFoldMotive resultReady :=
+  fun targetTree replacements =>
+    let domain := domainIH targetTree replacements
+    let domainResult := domain.result.dispatchResult.formationResult
+    let extendedTree := IncDepRawContextSemanticTree.extend targetTree
+      domainResult.targetFormationResult
+    let liftedReplacements := replacements.liftResult domainResult
+    let codomain := codomainIH extendedTree liftedReplacements
+    let argumentResult :=
+      (argumentAgreement.agree targetTree replacements).typingResultAligned
+    let canonical :=
+      IncDepRawFormationSubstitutionFiberResult.instantiateCanonical
+        resultFormation domainResult codomain.result.dispatchResult.formationResult
+        argumentResult.sourceTermResult.semanticTerm
+        argumentResult.targetTermResult.semanticTerm
+        argumentResult.semanticTerm_coherence
+    { canonical := canonical
+      result :=
+        { dispatchResult := { formationResult := canonical }
+          provenance := .canonical _ } }
 
 noncomputable def
     IncDepRawSubstitutionFiberModel.alignedCanonicalMutualFoldRefl
