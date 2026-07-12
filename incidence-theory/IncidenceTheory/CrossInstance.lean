@@ -12714,8 +12714,10 @@ structure IncDepRawCanonicalFoldAgreement
 structure IncDepRawCanonicalFormationFoldAgreement
     {target : List IncDepRawType} {type : IncDepRawType}
     {targetFormation : IncDepRawWellFormed target type}
-    {ready : IncDepRawCoherentFormationDispatchReady targetFormation}
-    (leftIH rightIH : IncDepRawCanonicalFormationSubstitutionFoldMotive ready) :
+    {leftReady rightReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    (leftIH : IncDepRawCanonicalFormationSubstitutionFoldMotive leftReady)
+    (rightIH : IncDepRawCanonicalFormationSubstitutionFoldMotive rightReady) :
     Prop where
   agree : ∀ {source : List IncDepRawType}
     {substitution : IncDepRawSubstitution source target}
@@ -12767,11 +12769,12 @@ def IncDepRawCanonicalFoldAgreement.retargetFormation
     {type : IncDepRawType}
     {targetTyping : IncDepRawHasType target term type}
     {targetFormation : IncDepRawWellFormed target type}
-    {formationReady : IncDepRawCoherentFormationDispatchReady targetFormation}
+    {leftReady rightReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
     {typingReady : IncDepRawCoherentTypingDispatchReady targetTyping
       targetFormation}
-    {leftIH : IncDepRawCanonicalFormationSubstitutionFoldMotive formationReady}
-    {rightIH : IncDepRawCanonicalFormationSubstitutionFoldMotive formationReady}
+    {leftIH : IncDepRawCanonicalFormationSubstitutionFoldMotive leftReady}
+    {rightIH : IncDepRawCanonicalFormationSubstitutionFoldMotive rightReady}
     {typingIH : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive typingReady}
     (formationAgreement : IncDepRawCanonicalFormationFoldAgreement leftIH rightIH)
     (typingAgreement : IncDepRawCanonicalFoldAgreement rightIH typingIH) :
@@ -14290,13 +14293,36 @@ structure IncDepRawCanonicalFormationFoldOutput
     (ready : IncDepRawCoherentFormationDispatchReady formation) where
   fold : IncDepRawCanonicalFormationSubstitutionFoldMotive ready
 
+def IncDepRawCanonicalFormationSubstitutionFoldMotive.castReady
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    {firstReady secondReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    (fold : IncDepRawCanonicalFormationSubstitutionFoldMotive firstReady)
+    (readyEq : firstReady = secondReady) :
+    IncDepRawCanonicalFormationSubstitutionFoldMotive secondReady :=
+  fun targetTree replacements =>
+    (fold targetTree replacements).castReady readyEq
+
+def IncDepRawCanonicalFormationSubstitutionFoldMotive.castReadyAgreement
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    {firstReady secondReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    (fold : IncDepRawCanonicalFormationSubstitutionFoldMotive firstReady)
+    (readyEq : firstReady = secondReady) :
+    IncDepRawCanonicalFormationFoldAgreement (fold.castReady readyEq) fold := by
+  cases readyEq
+  exact .refl fold
+
 structure IncDepRawCanonicalTypingFoldOutput
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} {typing : IncDepRawHasType context term type}
     {formation : IncDepRawWellFormed context type}
     (ready : IncDepRawCoherentTypingDispatchReady typing formation) where
+  formationReady : IncDepRawCoherentFormationDispatchReady formation
   formation : IncDepRawCanonicalFormationSubstitutionFoldMotive
-    ready.formationReady
+    formationReady
   typing : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive ready
   agreement : IncDepRawCanonicalFoldAgreement formation typing
 
@@ -14306,15 +14332,33 @@ def IncDepRawCanonicalTypingFoldOutput.retargetFormation
     {formation : IncDepRawWellFormed context type}
     {ready : IncDepRawCoherentTypingDispatchReady typing formation}
     (output : IncDepRawCanonicalTypingFoldOutput ready)
+    {newFormationReady : IncDepRawCoherentFormationDispatchReady formation}
     (newFormation : IncDepRawCanonicalFormationSubstitutionFoldMotive
-      ready.formationReady)
+      newFormationReady)
     (formationAgreement : IncDepRawCanonicalFormationFoldAgreement newFormation
       output.formation) :
     IncDepRawCanonicalTypingFoldOutput ready where
+  formationReady := newFormationReady
   formation := newFormation
   typing := output.typing
   agreement := IncDepRawCanonicalFoldAgreement.retargetFormation
     formationAgreement output.agreement
+
+def IncDepRawCanonicalTypingFoldOutput.castFormationReady
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentTypingDispatchReady typing formation}
+    (output : IncDepRawCanonicalTypingFoldOutput ready)
+    (targetReady : IncDepRawCoherentFormationDispatchReady formation)
+    (readyEq : output.formationReady = targetReady) :
+    IncDepRawCanonicalTypingFoldOutput ready := by
+  cases readyEq
+  exact
+    { formationReady := output.formationReady
+      formation := output.formation
+      typing := output.typing
+      agreement := output.agreement }
 
 noncomputable def
     IncDepRawVariableSubstitutionProvider.canonicalTypingFoldOutputVariable
@@ -14327,6 +14371,7 @@ noncomputable def
     IncDepRawCanonicalTypingFoldOutput
       (IncDepRawCoherentTypingDispatchReady.varRule (lookup := lookup)
         typeReady) where
+  formationReady := typeReady
   formation := typeOutput.fold
   typing := provider.alignedCanonicalMutualFoldVariable
     (lookup := lookup) typeReady typeOutput.fold
@@ -14338,6 +14383,7 @@ def IncDepRawSubstitutionFiberModel.canonicalTypingFoldOutputUnit
     {context : List IncDepRawType} :
     IncDepRawCanonicalTypingFoldOutput
       (IncDepRawCoherentTypingDispatchReady.unitRule (context := context)) where
+  formationReady := IncDepRawCoherentFormationDispatchReady.unit
   formation := model.canonicalMutualFoldUnitFormation (context := context)
   typing := model.alignedCanonicalMutualFoldTypingUnit (context := context)
   agreement := model.canonicalFoldAgreementTypingUnit (context := context)
@@ -14345,6 +14391,7 @@ def IncDepRawSubstitutionFiberModel.canonicalTypingFoldOutputUnit
 noncomputable def
     IncDepRawSubstitutionFiberModel.canonicalTypingFoldOutputLambda
     (model : IncDepRawSubstitutionFiberModel.{u})
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
     {context : List IncDepRawType} {domain codomain : IncDepRawType}
     {body : IncDepRawTerm}
     {domainFormation : IncDepRawWellFormed context domain}
@@ -14356,14 +14403,91 @@ noncomputable def
     (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
     (bodyOutput : IncDepRawCanonicalTypingFoldOutput bodyReady) :
     IncDepRawCanonicalTypingFoldOutput
-      (IncDepRawCoherentTypingDispatchReady.lambdaRule domainReady bodyReady) where
-  formation := model.canonicalMutualFoldPi domainReady bodyReady.formationReady
-    domainOutput.fold bodyOutput.formation
-  typing := model.alignedCanonicalMutualFoldLambda domainReady bodyReady
-    domainOutput.fold bodyOutput.typing
-  agreement := model.canonicalFoldAgreementLambda domainReady bodyReady
-    domainOutput.fold bodyOutput.formation bodyOutput.typing
-    bodyOutput.agreement
+      (IncDepRawCoherentTypingDispatchReady.lambdaRule domainReady bodyReady) :=
+  let bodyReadyEq := readinessAlignment.alignFormation bodyOutput.formationReady
+    bodyReady.formationReady
+  { formationReady := IncDepRawCoherentFormationDispatchReady.pi domainReady
+      bodyReady.formationReady
+    formation := model.canonicalMutualFoldPi domainReady bodyReady.formationReady
+      domainOutput.fold
+      (IncDepRawCanonicalFormationSubstitutionFoldMotive.castReady
+        bodyOutput.formation bodyReadyEq)
+    typing := model.alignedCanonicalMutualFoldLambda domainReady bodyReady
+      domainOutput.fold bodyOutput.typing
+    agreement := model.canonicalFoldAgreementLambda domainReady bodyReady
+      domainOutput.fold
+      (IncDepRawCanonicalFormationSubstitutionFoldMotive.castReady
+        bodyOutput.formation bodyReadyEq)
+      bodyOutput.typing
+      (IncDepRawCanonicalFoldAgreement.retargetFormation
+        (IncDepRawCanonicalFormationSubstitutionFoldMotive.castReadyAgreement
+          bodyOutput.formation bodyReadyEq) bodyOutput.agreement) }
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.canonicalTypingFoldOutputFirst
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (pairReady : IncDepRawCoherentTypingDispatchReady pairTyping
+      (IncDepRawWellFormed.sigma domainFormation codomainFormation))
+    (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
+    (codomainOutput : IncDepRawCanonicalFormationFoldOutput codomainReady)
+    (pairOutput : IncDepRawCanonicalTypingFoldOutput pairReady)
+    (pairPathAgreement : IncDepRawCanonicalFormationFoldAgreement
+      (model.canonicalMutualFoldSigma domainReady codomainReady domainOutput.fold
+        codomainOutput.fold) pairOutput.formation) :
+    IncDepRawCanonicalTypingFoldOutput
+      (IncDepRawCoherentTypingDispatchReady.firstRule domainReady codomainReady
+        pairReady) :=
+  let sigmaFormation : IncDepRawCanonicalFormationSubstitutionFoldMotive
+      (IncDepRawCoherentFormationDispatchReady.sigma domainReady
+        codomainReady) :=
+    model.canonicalMutualFoldSigma domainReady codomainReady domainOutput.fold
+      codomainOutput.fold
+  let alignedPair := pairOutput.retargetFormation sigmaFormation
+    pairPathAgreement
+  { formationReady := domainReady
+    formation := domainOutput.fold
+    typing := model.alignedCanonicalMutualFoldFirst domainReady codomainReady
+      pairReady domainOutput.fold codomainOutput.fold alignedPair.typing
+      alignedPair.agreement
+    agreement := model.canonicalFoldAgreementFirst domainReady codomainReady
+      pairReady domainOutput.fold codomainOutput.fold alignedPair.typing
+      alignedPair.agreement }
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.canonicalTypingFoldOutputRefl
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {term : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {termTyping : IncDepRawHasType context term type}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (termReady : IncDepRawCoherentTypingDispatchReady termTyping typeFormation)
+    (typeOutput : IncDepRawCanonicalFormationFoldOutput typeReady)
+    (termOutput : IncDepRawCanonicalTypingFoldOutput termReady)
+    (termPathAgreement : IncDepRawCanonicalFormationFoldAgreement typeOutput.fold
+      termOutput.formation) :
+    IncDepRawCanonicalTypingFoldOutput
+      (IncDepRawCoherentTypingDispatchReady.reflRule typeReady termReady) :=
+  let alignedTerm := termOutput.retargetFormation typeOutput.fold
+    termPathAgreement
+  { formationReady := IncDepRawCoherentFormationDispatchReady.identity typeReady
+      termReady termReady
+    formation := model.canonicalMutualFoldIdentityOfAgreements
+      readinessAlignment typeReady termReady termReady typeOutput.fold
+      alignedTerm.typing alignedTerm.typing alignedTerm.agreement
+      alignedTerm.agreement
+    typing := model.alignedCanonicalMutualFoldRefl readinessAlignment typeReady
+      termReady typeOutput.fold alignedTerm.typing alignedTerm.agreement
+    agreement := model.canonicalFoldAgreementRefl readinessAlignment typeReady
+      termReady typeOutput.fold alignedTerm.typing alignedTerm.agreement }
 
 structure IncDepRawCanonicalDependentFormationFoldAgreementProvider
     (model : IncDepRawSubstitutionFiberModel.{u}) where

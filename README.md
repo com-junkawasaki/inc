@@ -997,6 +997,13 @@ It currently establishes:
   formation path, returning its Pi formation, aligned typing result, and
   agreement together.  These are the first three handlers in the final recursor
   at the exact output type it will expose.
+  Formation agreements now permit distinct coherent-readiness proof indices on
+  their two sides; their canonical fibers still have the same underlying type.
+  `castReady` plus `castReadyAgreement` changes only that proof index, allowing
+  Lambda to normalize its body path safely.  Bundle constructors for First and
+  Refl are also checked: each retargets its child typing bundle to the parent
+  formation path and then invokes the already-proved constructor handler.  Five
+  of eight typing rules now operate entirely at bundle level.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
