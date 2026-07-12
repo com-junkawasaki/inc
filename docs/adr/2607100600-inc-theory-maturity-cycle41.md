@@ -435,6 +435,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - provider-free fixed pointの具体構成を`IncDepRawCanonicalAnchoredTypingFoldOutput`として開始した。typing resultを同時生成されたformation outputへ直接indexし、
   独立選択motiveでなくそのexact `.fold`とのagreementを保持する。public typing bundleへの変換と`.anchor`操作もchecked。direct mutual recursionが
   formation outputsとanchored typing outputsを同時に返せばpath agreementは構造dataとなり、recursive call graphから外部path providerを除去できる。
+- `IncDepRawCanonicalAnchoredTypingFoldResult`でtyping側mutual motiveを閉じた。formation output本体と、それへanchorされたtyping outputを同時保持し、
+  `toAnchoredResult`を含む通常bundleとの相互変換がchecked。次のrecursor motiveはresult型から外部formation関数/path providerを参照せず、
+  各親枝がexact child formation outputを再帰dataとして受け取れる。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

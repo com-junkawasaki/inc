@@ -1065,6 +1065,12 @@ It currently establishes:
   A direct mutual recursion can therefore return formation outputs and anchored
   typing outputs together, making path agreement structural data and eliminating
   the external path provider from the recursive call graph.
+  `IncDepRawCanonicalAnchoredTypingFoldResult` closes the typing-side mutual
+  motive by storing both the formation output itself and the typing output
+  anchored to it.  Conversions in both directions are checked, including
+  `toAnchoredResult`.  The next recursor motive can therefore be stated without
+  referring to an external formation function or path provider in its result
+  type; every parent receives the exact child formation output as recursive data.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
