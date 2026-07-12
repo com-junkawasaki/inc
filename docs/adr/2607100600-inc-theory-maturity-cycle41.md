@@ -314,6 +314,12 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `model.pi`/`model.sigma`を適用したoutputを固定し、`IncDepRawCanonicalIdentityFormationFiberResult`はtype/endpoint typing resultsへの
   `model.identity` outputを固定する。base/unitと合わせ全5formation casesにscoped equality/rebase routeが成立した。残るintegrationはmutual dispatcherが
   formation/typing resultと同時にprovenance witnessを返し、recursive callsが任意semantic inhabitantでなくgenerated outputsを比較するようにすることである。
+- formation dispatcherのconstructor-level provenance integrationを完了した。
+  `IncDepRawCanonicalStrictFormationSubstitutionDispatchResult`が既存strict resultをfixed canonical fiber resultとprovenance proofで包む。
+  `dispatchCanonicalBaseFormation`、`dispatchCanonicalUnitFormation`、`dispatchCanonicalPiFormation`、`dispatchCanonicalSigmaFormation`、
+  `dispatchCanonicalIdentityFormation`が全5readiness constructorsを覆い、checked strict dispatcherを再利用しつつprovenanceはdefinitionally `rfl`である。
+  既存APIを壊さずnew mutual foldでgenerated-result uniquenessを利用できる。次はtyping wrapper（特にvariable lookup）を統合し、recursive foldのbroad rebase callsを
+  scoped provenance rebaseへ置換する。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

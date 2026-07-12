@@ -791,6 +791,18 @@ It currently establishes:
   to make the mutual dispatcher return these provenance witnesses alongside its
   formation and typing results, so recursive calls compare generated outputs
   rather than arbitrary semantic inhabitants.
+  Constructor-level dispatcher integration is now complete for formations.
+  `IncDepRawCanonicalStrictFormationSubstitutionDispatchResult` wraps the
+  existing strict result with its fixed canonical fiber result and a provenance
+  proof.  `dispatchCanonicalBaseFormation`,
+  `dispatchCanonicalUnitFormation`, `dispatchCanonicalPiFormation`,
+  `dispatchCanonicalSigmaFormation`, and
+  `dispatchCanonicalIdentityFormation` cover all five readiness constructors;
+  each reuses the checked strict dispatcher and its provenance is definitionally
+  `rfl`.  This leaves existing APIs untouched while making generated-result
+  uniqueness available to a new mutual fold.  The next integration layer is the
+  typing wrapper—especially variable lookup—followed by replacing broad rebase
+  calls in the recursive fold with the scoped provenance rebase.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
