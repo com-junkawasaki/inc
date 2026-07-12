@@ -5943,6 +5943,98 @@ def IncDepRawSubstitutionFiberModel.unit
       (targetFormation := IncDepRawWellFormed.unit) substitutionResult :=
   IncDepRawFormationSubstitutionFiberResult.unit substitutionResult
 
+structure IncDepRawCanonicalBaseFormationFiberResult
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType} {index : Nat}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := IncDepRawWellFormed.base (index := index))
+      substitutionResult) : Prop where
+  eq_canonical : result = model.base substitutionResult
+
+structure IncDepRawCanonicalUnitFormationFiberResult
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := IncDepRawWellFormed.unit) substitutionResult) : Prop where
+  eq_canonical : result = model.unit substitutionResult
+
+def IncDepRawCanonicalBaseFormationFiberResult.canonical
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType} {index : Nat}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) :
+    IncDepRawCanonicalBaseFormationFiberResult model
+      (index := index) (model.base substitutionResult) where
+  eq_canonical := rfl
+
+def IncDepRawCanonicalUnitFormationFiberResult.canonical
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) :
+    IncDepRawCanonicalUnitFormationFiberResult model
+      (model.unit substitutionResult) where
+  eq_canonical := rfl
+
+theorem IncDepRawCanonicalBaseFormationFiberResult.unique
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {source target : List IncDepRawType} {index : Nat}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {first second : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := IncDepRawWellFormed.base (index := index))
+      substitutionResult}
+    (firstCanonical : IncDepRawCanonicalBaseFormationFiberResult model first)
+    (secondCanonical : IncDepRawCanonicalBaseFormationFiberResult model second) :
+    first = second :=
+  firstCanonical.eq_canonical.trans secondCanonical.eq_canonical.symm
+
+theorem IncDepRawCanonicalUnitFormationFiberResult.unique
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {first second : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := IncDepRawWellFormed.unit) substitutionResult}
+    (firstCanonical : IncDepRawCanonicalUnitFormationFiberResult model first)
+    (secondCanonical : IncDepRawCanonicalUnitFormationFiberResult model second) :
+    first = second :=
+  firstCanonical.eq_canonical.trans secondCanonical.eq_canonical.symm
+
 noncomputable def IncDepRawSubstitutionFiberModel.pi
     (_model : IncDepRawSubstitutionFiberModel.{u})
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
@@ -7194,6 +7286,23 @@ def IncDepRawFormationSubstitutionFiberRebase.refl
   sourceEquivalence := IncTypeInContext.FiberEquiv.refl _
   targetEquivalence := IncTypeInContext.FiberEquiv.refl _
   naturality := by intro term; rfl
+
+def IncDepRawFormationSubstitutionFiberRebase.ofEq
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {first second : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult}
+    (resultEq : first = second) :
+    IncDepRawFormationSubstitutionFiberRebase first second := by
+  cases resultEq
+  exact IncDepRawFormationSubstitutionFiberRebase.refl first
 
 def IncDepRawFormationSubstitutionFiberRebase.trans
     {source target : List IncDepRawType} {type : IncDepRawType}

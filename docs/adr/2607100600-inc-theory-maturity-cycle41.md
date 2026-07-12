@@ -303,6 +303,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   fiber equivalenceも一様供給不能（供給すればBoolがSubsingletonになる）と証明する。旧`LawfulSubstitutionFiberModel`は過強境界の記録として残すが、
   concrete lawful modelの存在根拠とは扱わない。preservation lawfulnessはcanonical interpreter/dispatcherが生成したresultまたはprovenance invariant付きresultへ
   量化し直し、任意Unit/Bool reinterpretationを除外する必要がある。従来の不可能なcompletion criterionを撤回し、次の作業をcanonical-generated lawへ限定する。
+- corrected provenance-scoped designをformation foldのbase/unitで実装した。
+  `IncDepRawCanonicalBaseFormationFiberResult`と`IncDepRawCanonicalUnitFormationFiberResult`はresultが`model.base`/`model.unit`のliteral outputであることを保持し、
+  canonical constructorがpredicateをinhabitする。各`unique` theoremはprovenance付きresult同士の等式を証明するため、任意Unit/Bool counterexampleはAPIへ入れない。
+  `IncDepRawFormationSubstitutionFiberRebase.ofEq`がscoped equalityをnatural rebaseへ変換する。これで不可能なglobal providerを置き換えるbase/unit casesが成立し、
+  次は同じprovenance disciplineをPi、Sigma、identity、mutual typing foldへ伝播する。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

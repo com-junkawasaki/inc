@@ -767,6 +767,17 @@ It currently establishes:
   provenance invariant), where arbitrary Unit/Bool reinterpretations are
   excluded.  This correction narrows the next proof task and removes a formerly
   impossible completion criterion.
+  The corrected provenance-scoped design is now implemented for the first two
+  formation constructors.  `IncDepRawCanonicalBaseFormationFiberResult` and
+  `IncDepRawCanonicalUnitFormationFiberResult` assert that a result is literally
+  the output of `model.base` or `model.unit`; canonical constructors inhabit
+  these predicates.  Their `unique` theorems prove equality of any two
+  provenance-carrying results, so the arbitrary Unit/Bool counterexample cannot
+  enter this API.  `IncDepRawFormationSubstitutionFiberRebase.ofEq` then turns
+  that scoped equality into the required natural rebase.  This establishes the
+  base and unit cases of the replacement for the impossible global provider;
+  the same provenance discipline must now be propagated through Pi, Sigma,
+  identity, and the mutual typing fold.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
