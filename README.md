@@ -2638,6 +2638,12 @@ Second are now connected by `recursivelyGeneratedTypingPairScoped` and
 `recursivelyGeneratedTypingSecondScoped` as well.  Second constructs the
 provenance-carrying First result used as its instantiation argument, so all
 three dependent typing consumers now avoid arbitrary-fold quantification.
+`IncDepRawCanonicalScopedRecursiveFoldInputs` carries this scoped law together
+with variable replacement, readiness alignment, and generated agreement.
+`recursivelyGeneratedFormationFoldOfScopedInputs` and
+`recursivelyGeneratedTypingFoldOfScopedInputs` run the complete mutual
+recursion over all thirteen constructors without falling back to the global
+instantiate provider in Apply, Pair, or Second.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo
