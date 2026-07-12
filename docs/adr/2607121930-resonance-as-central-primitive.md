@@ -166,3 +166,9 @@ case where the selector is complete and resonance has no unselected modes.
   nonempty upper-bounded family is again a cut and is proved to be its least
   upper bound, establishing Dedekind completeness. Cut arithmetic and real
   analysis remain the next layer rather than being inferred from completeness.
+- Dedekind addition is now defined by existential rational sum modes below each
+  cut. Density supplies the slack needed for the identity and associativity
+  proofs. It is associative, commutative, monotone, preserves principal rational
+  addition, and has the principal zero as unit. A faithful value-observed
+  `realIncidence` selects this addition as its central resonance; its resonance
+  is quotient-congruent and instantiates normalized dependent completion.

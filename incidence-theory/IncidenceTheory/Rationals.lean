@@ -249,6 +249,19 @@ theorem rationalAdd_assoc (first second third : IncRational) :
   simp only [RationalRepresentative.add, Int.add_mul]
   ac_rfl
 
+theorem rationalAdd_neg_left (value : IncRational) :
+    rationalAdd (rationalNeg value) value = rationalOfInteger 0 := by
+  rw [rationalAdd_comm]
+  exact rationalAdd_neg value
+
+theorem rationalAdd_sub_cancel (left right : IncRational) :
+    rationalAdd (rationalAdd left (rationalNeg right)) right = left := by
+  rw [rationalAdd_assoc, rationalAdd_neg_left, rationalAdd_zero_right]
+
+theorem rationalAdd_add_neg_cancel (left right : IncRational) :
+    rationalAdd (rationalAdd left right) (rationalNeg right) = left := by
+  rw [rationalAdd_assoc, rationalAdd_neg, rationalAdd_zero_right]
+
 theorem rationalMul_comm (left right : IncRational) :
     rationalMul left right = rationalMul right left := by
   refine Quotient.inductionOn₂ left right ?_
@@ -624,6 +637,68 @@ theorem rational_add_neg_one_lt (value : IncRational) :
     have positive := representative.denominator_pos
     omega
   simpa using Int.mul_lt_mul_of_pos_right decreased representative.denominator_pos
+
+theorem rationalLT_add_left (offset : IncRational) {left right : IncRational}
+    (strict : rationalLT left right) :
+    rationalLT (rationalAdd offset left) (rationalAdd offset right) := by
+  revert strict
+  refine Quotient.inductionOn₃ offset left right ?_
+  intro offsetRep leftRep rightRep strict
+  apply (rational_mk_lt_iff _ _).mpr
+  have crossStrict := (rational_mk_lt_iff leftRep rightRep).mp strict
+  have scaled := Int.mul_lt_mul_of_pos_right crossStrict
+    (Int.mul_pos offsetRep.denominator_pos offsetRep.denominator_pos)
+  change
+    (offsetRep.numerator * leftRep.denominator +
+        leftRep.numerator * offsetRep.denominator) *
+          (offsetRep.denominator * rightRep.denominator) <
+      (offsetRep.numerator * rightRep.denominator +
+        rightRep.numerator * offsetRep.denominator) *
+          (offsetRep.denominator * leftRep.denominator)
+  calc
+    _ = offsetRep.numerator * leftRep.denominator *
+          (offsetRep.denominator * rightRep.denominator) +
+        (leftRep.numerator * rightRep.denominator) *
+          (offsetRep.denominator * offsetRep.denominator) := by
+            rw [Int.add_mul]
+            congr 1 <;> ac_rfl
+    _ < offsetRep.numerator * leftRep.denominator *
+          (offsetRep.denominator * rightRep.denominator) +
+        (rightRep.numerator * leftRep.denominator) *
+          (offsetRep.denominator * offsetRep.denominator) :=
+      Int.add_lt_add_left scaled _
+    _ = (offsetRep.numerator * rightRep.denominator +
+          rightRep.numerator * offsetRep.denominator) *
+          (offsetRep.denominator * leftRep.denominator) := by
+            rw [Int.add_mul]
+            congr 1 <;> ac_rfl
+
+theorem rationalLT_add_right (offset : IncRational) {left right : IncRational}
+    (strict : rationalLT left right) :
+    rationalLT (rationalAdd left offset) (rationalAdd right offset) := by
+  simpa [rationalAdd_comm] using rationalLT_add_left offset strict
+
+theorem rationalLT_add {left left' right right' : IncRational}
+    (leftStrict : rationalLT left left')
+    (rightStrict : rationalLT right right') :
+    rationalLT (rationalAdd left right) (rationalAdd left' right') := by
+  exact rationalLT_trans
+    (rationalLT_add_right right leftStrict)
+    (rationalLT_add_left left' rightStrict)
+
+theorem rationalLT_add_cancel_right {left right : IncRational}
+    (offset : IncRational)
+    (strict : rationalLT (rationalAdd left offset)
+      (rationalAdd right offset)) : rationalLT left right := by
+  have shifted := rationalLT_add_right (rationalNeg offset) strict
+  simpa [rationalAdd_add_neg_cancel] using shifted
+
+theorem rationalLT_add_cancel_left {left right : IncRational}
+    (offset : IncRational)
+    (strict : rationalLT (rationalAdd offset left)
+      (rationalAdd offset right)) : rationalLT left right := by
+  rw [rationalAdd_comm offset left, rationalAdd_comm offset right] at strict
+  exact rationalLT_add_cancel_right offset strict
 
 noncomputable instance : DecidableEq IncRational :=
   Classical.typeDecidableEq IncRational

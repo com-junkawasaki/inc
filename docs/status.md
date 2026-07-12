@@ -166,7 +166,11 @@ Checked constructions include:
   rational cuts; cut inclusion is a total order, rational principal cuts are
   well formed, and the rational-to-real embedding is injective and exactly
   preserves/reflects order, using the checked density of rational order; every
-  nonempty upper-bounded family has a least upper bound given by union of cuts
+  nonempty upper-bounded family has a least upper bound given by union of cuts;
+  cut addition is well formed, associative, commutative, monotone, and has the
+  principal zero as identity, while the rational embedding preserves addition;
+  a value-observed real incidence is faithful, quotient-congruent, and connected
+  to normalized dependent resonance completion
 - hereditary finite sets
 - ordered pairs and trees
 - paths, cycles, and simplices
@@ -174,7 +178,8 @@ Checked constructions include:
 - propositional logic and a dependent Pi/Sigma/Identity fragment
 
 Major remaining areas include a canonical reduced-fraction boundary and
-computational reciprocal selector, Dedekind-cut arithmetic and field laws,
+computational reciprocal selector, Dedekind-cut additive inverses,
+multiplication and field laws,
 real analysis, broader algebra, and a larger categorical library. Rational
 incidence is now observationally faithful:
 zero has an empty boundary and every nonzero rational has a one-step boundary

@@ -24,9 +24,9 @@ kept under [`docs/`](docs/).
 | Dependent raw calculus | Pi, Sigma, Identity, reduction and semantics checked |
 | Structural rename/substitution preservation | Complete; certificate inhabited |
 | Quotient theory | Conditional general theory plus concrete simplex quotient |
-| Existing mathematics | Peano, integers, faithful ordered rational field, Dedekind-complete real order, HF sets, pairs, trees, paths, simplices, product, sum, quotient |
+| Existing mathematics | Peano, integers, faithful ordered rational field, Dedekind-complete additive real resonance, HF sets, pairs, trees, paths, simplices, product, sum, quotient |
 | Unit-fiber relational semantics | Legacy alignment-dependent API being replaced |
-| Integer/rational/analysis reconstruction | Dedekind-complete real order checked; real arithmetic/analysis open |
+| Integer/rational/analysis reconstruction | Dedekind-complete additive reals checked; multiplication/analysis open |
 
 The structural preservation completion certificate is
 `incDepRawNormalizedBasicPreservation : IncDepRawNormalizedBasicPreservation`.
