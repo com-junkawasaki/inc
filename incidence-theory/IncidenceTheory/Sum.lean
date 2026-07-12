@@ -204,7 +204,7 @@ def resonanceSumSpec
     · exact Or.inl unitRight
     · rcases x with x1 | x2 <;> rcases y with y1 | y2 <;>
         rcases k with k1 | k2
-      all_goals simp only [sumResonance] at sameSide ⊢
+      all_goals simp only at sameSide ⊢
       · exact Or.inr (Or.inr (first.symmetric sameSide))
       · exact Or.inr (Or.inr (second.symmetric sameSide))
   unit_left := by
@@ -216,6 +216,28 @@ def resonanceSumSpec
   type_compatible := by
     intro i j k resonant
     exact ⟨rfl, rfl⟩
+
+theorem finiteIncidenceSum_not_associativeResonance :
+    ¬ Nonempty (AssociativeResonanceSpec
+      (incidenceSum finiteIncidence finiteIncidence)) := by
+  rintro ⟨associative⟩
+  have reassociated := associative.reassociate
+    (i := Sum.inl FiniteIncidence.root)
+    (j := Sum.inl FiniteIncidence.root)
+    (k := Sum.inr FiniteIncidence.root)
+    (out := Sum.inr FiniteIncidence.root)
+  have leftReachable :
+      ∃ ij,
+        (incidenceSum finiteIncidence finiteIncidence).resonance
+          (Sum.inl .root) (Sum.inl .root) ij ∧
+        (incidenceSum finiteIncidence finiteIncidence).resonance
+          ij (Sum.inr .root) (Sum.inr .root) := by
+    exact ⟨Sum.inl FiniteIncidence.leaf,
+      Or.inr (Or.inr True.intro), Or.inl ⟨rfl, rfl⟩⟩
+  rcases reassociated.mp leftReachable with ⟨jk, hjk, hout⟩
+  rcases jk with jk1 | jk2
+  · simp [incidenceSum, sumResonance, finiteIncidence] at hjk
+  · simp [incidenceSum, sumResonance, finiteIncidence] at hjk
 
 noncomputable def countablyPresentedIncidenceSum
     {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
@@ -345,6 +367,19 @@ theorem incidenceSum_leaves_collapse
 theorem incidenceSum_leaves_cross_natIncidence :
   approxBisim (incidenceSum natIncidence natIncidence) (Sum.inl 0) (Sum.inr 0) :=
   incidenceSum_leaves_collapse natIncidence natIncidence rfl rfl
+
+theorem incidenceSum_nat_not_quotientResonanceCongruent :
+    ¬ QuotientResonanceCongruent
+      (incidenceSum natIncidence natIncidence) := by
+  intro congruent
+  have preserved := (congruent
+    incidenceSum_leaves_cross_natIncidence
+    (approxBisim_refl _ (Sum.inl 1))
+    (approxBisim_refl _ (Sum.inl 1))).mp
+    (show (incidenceSum natIncidence natIncidence).resonance
+      (Sum.inl 0) (Sum.inl 1) (Sum.inl 1) from
+      Or.inl ⟨rfl, rfl⟩)
+  simp [incidenceSum, sumResonance, natIncidence] at preserved
 
 theorem incidenceSum_inl0_ne_inr0 :
   (Sum.inl (0 : Nat) : Nat ⊕ Nat) ≠ Sum.inr (0 : Nat) := by simp

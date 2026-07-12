@@ -108,3 +108,9 @@ case where the selector is complete and resonance has no unselected modes.
   so provably erased unselected component modes. Its explicit `sumResonance`
   now retains all same-side modes, supplies symmetric unit interactions, and
   has a generic `ResonanceSpec` whenever both factors do.
+- Unlike products, sums do not preserve the full completion unconditionally.
+  A component resonance may generate the designated unit and thereby enable a
+  cross-side second step in only one parenthesization; moreover bisimulation
+  may identify leaves across sides while resonance remains side-sensitive.
+  Both failures have checked finite/Nat counterexamples. Any positive closure
+  theorem must assume unit reflection and cross-side observational separation.

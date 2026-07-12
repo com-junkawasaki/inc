@@ -113,7 +113,13 @@ instantiate/substitute equalities with synchronized casts.
   the required unit interactions; `selected_resonates` and `resonanceSumSpec`
   are checked generically. A concrete theorem confirms that the finite
   `(root, root, leaf)` mode survives the sum. Associativity and quotient
-  congruence for sums remain to be characterized.
+  congruence were then audited and both fail without extra hypotheses:
+  `finiteIncidenceSum_not_associativeResonance` exhibits a unit-generating
+  intermediate mode available under only one parenthesization, while
+  `incidenceSum_nat_not_quotientResonanceCongruent` shows cross-side leaf
+  collapse erases the side information used by resonance. Sum completion
+  therefore requires explicit unit-reflection and bisimulation-separation
+  conditions; it is not an unconditional closure theorem.
 - Pushout preservation and generic boundary-square-zero are conditional on the
   categorical or linear hypotheses in their declarations.
 - Translation completeness is proved only for the stated fragments and
