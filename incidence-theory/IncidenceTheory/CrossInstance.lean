@@ -14825,6 +14825,18 @@ structure IncDepRawCanonicalFoldPathAgreementProvider where
     IncDepRawCanonicalFormationFoldAgreement formationOutput.fold
       typingOutput.formation
 
+structure IncDepRawCanonicalMutualFoldDispatcher.Lawful
+    (dispatcher : IncDepRawCanonicalMutualFoldDispatcher.{u}) : Prop where
+  pathAgreement : ∀
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (formationReady : IncDepRawCoherentFormationDispatchReady formation)
+    (typingReady : IncDepRawCoherentTypingDispatchReady typing formation),
+    IncDepRawCanonicalFormationFoldAgreement
+      (dispatcher.formation formationReady).fold
+      (dispatcher.typing typingReady).formation
+
 def IncDepRawCanonicalFoldPathAgreementProvider.dispatch
     (provider : IncDepRawCanonicalFoldPathAgreementProvider.{u})
     {context : List IncDepRawType} {term : IncDepRawTerm}
@@ -14990,6 +15002,24 @@ noncomputable def IncDepRawSubstitutionFiberModel.canonicalMutualFoldDispatcher
     instantiateAgreementProvider pathAgreementProvider
   typing := model.canonicalTypingFold variableProvider readinessAlignment
     instantiateAgreementProvider pathAgreementProvider
+
+theorem IncDepRawSubstitutionFiberModel.canonicalMutualFoldDispatcher_lawful
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (instantiateAgreementProvider :
+      IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
+    (pathAgreementProvider : IncDepRawCanonicalFoldPathAgreementProvider.{u}) :
+    (model.canonicalMutualFoldDispatcher variableProvider readinessAlignment
+      instantiateAgreementProvider pathAgreementProvider).Lawful where
+  pathAgreement := fun formationReady typingReady =>
+    pathAgreementProvider.dispatch formationReady typingReady
+      (model.canonicalMutualFoldDispatcher variableProvider readinessAlignment
+        instantiateAgreementProvider pathAgreementProvider
+        |>.formation formationReady)
+      (model.canonicalMutualFoldDispatcher variableProvider readinessAlignment
+        instantiateAgreementProvider pathAgreementProvider
+        |>.typing typingReady)
 
 structure IncDepRawCanonicalMutualFoldHypotheses where
   variableProvider : IncDepRawVariableSubstitutionProvider

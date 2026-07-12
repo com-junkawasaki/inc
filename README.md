@@ -1043,6 +1043,13 @@ It currently establishes:
   while `strictPreservationOfCanonicalFoldHypotheses` projects the existing
   strict preservation interface in one call.  Thus conditional preservation is
   complete as an API; unconditional completion is exactly provider inhabitation.
+  The genuinely required property is now separated from the external provider's
+  broad call signature.  `IncDepRawCanonicalMutualFoldDispatcher.Lawful` asks
+  only that a generated dispatcher's own formation and typing projections agree
+  on each shared raw formation.  `canonicalMutualFoldDispatcher_lawful` proves
+  the conditional construction satisfies this intrinsic law.  Unconditional
+  completion is therefore the construction of this lawful mutual fixed point,
+  rather than a claim that arbitrary user-authored fold outputs are equal.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

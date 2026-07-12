@@ -426,6 +426,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - conditional theoremを利用可能なmodel APIへまとめた。`IncDepRawCanonicalMutualFoldHypotheses`がvariable/readiness/instantiate-agreement/path-agreement
   inputsを集約し、`canonicalMutualFoldDispatcherOfHypotheses`がcanonical dispatcher、`strictPreservationOfCanonicalFoldHypotheses`が既存互換strict
   preservation interfaceを一呼び出しで返す。条件付き保存定理はAPIとして完成し、無条件化の残件はprovider inhabitationと完全に一致する。
+- 外部path providerの広いcall signatureと、本質的に必要な性質を分離した。`IncDepRawCanonicalMutualFoldDispatcher.Lawful`は生成dispatcher自身の
+  formation/typing projectionsが共有raw formation上で一致することだけを要求する。`canonicalMutualFoldDispatcher_lawful`はconditional constructionが
+  この内在lawを満たすと証明する。無条件化は任意user-authored outputsの等式ではなく、このlawful mutual fixed pointの構成問題である。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
