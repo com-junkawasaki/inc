@@ -1,6 +1,7 @@
 import IncidenceTheory.GraphModel
 import IncidenceTheory.Peano
 import IncidenceTheory.Integers
+import IncidenceTheory.Rationals
 import IncidenceTheory.Pairs
 import IncidenceTheory.CrossInstance
 import IncidenceTheory.PathComplex

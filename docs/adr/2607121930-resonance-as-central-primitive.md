@@ -136,3 +136,11 @@ case where the selector is complete and resonance has no unselected modes.
   resonance and states its unit, commutativity, associativity, and distribution
   over additive resonance. The integer instance proves these laws from integer
   multiplication and addition.
+- Rational reconstruction now quotients positive-denominator integer fractions
+  by cross multiplication. Addition and multiplication respect that relation;
+  the lifted addition gives a functional associative resonance and embeds the
+  integers injectively. Its first incidence presentation intentionally has
+  empty boundaries, so a checked negative theorem shows that all rationals are
+  bisimilar. Canonical signed numerator/denominator observations are therefore
+  required before rational resonance can descend faithfully to the
+  observational quotient.

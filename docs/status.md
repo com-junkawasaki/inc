@@ -151,14 +151,23 @@ Checked constructions include:
 - integers with signed predecessor boundaries, additive resonance, zero,
   inverses, additive/multiplicative relational associativity, and distributive
   ring-style resonance
+- rationals as positive-denominator integer fractions modulo cross
+  multiplication, with an injective integer embedding and quotient-respecting
+  addition and multiplication; additive resonance is commutative, unital, and
+  associative, and concrete half addition/multiplication examples are checked
 - hereditary finite sets
 - ordered pairs and trees
 - paths, cycles, and simplices
 - products, sums, and conditional quotients
 - propositional logic and a dependent Pi/Sigma/Identity fragment
 
-Major remaining areas include rationals, broader algebra, real analysis, and a
-larger categorical library. Integer bisimulation faithfulness is complete:
+Major remaining areas include a faithful rational boundary presentation, full
+rational field laws, broader algebra, real analysis, and a larger categorical
+library. The initial rational incidence uses empty boundaries, and the checked
+`rationalIncidence_all_bisimilar` and
+`rationalIncidence_not_bisimulationFaithful` theorems explicitly show that its
+observational quotient collapses; the fraction quotient algebra itself does
+not. Integer bisimulation faithfulness is complete:
 indexed signed boundary roles give boundary extensionality, and
 `integerIncidence_approxBisim_iff` proves observational equivalence is exactly
 equality. Consequently integer resonance descends to the bisimulation quotient
@@ -168,4 +177,4 @@ and supplies a complete normalized dependent resonance completion.
 
 Run `./verify.sh` from the repository root. The verifier performs a full Lean
 build, executes examples, and scans for unproved declarations. The latest
-completion audit passed all 56 build jobs with no unproved declarations.
+completion audit passes all build jobs with no unproved declarations.
