@@ -7801,6 +7801,95 @@ theorem BehavioralBoundaryShapeTranslation.comp_assoc
   apply BehavioralBoundaryShapeTranslation.ext
   rfl
 
+/- A translation of the interaction theory must preserve the whole ternary
+resonance relation, not merely the deterministic selected mode. -/
+structure ResonantBehavioralTranslation
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂)
+    extends BehavioralBoundaryShapeTranslation source target where
+  preservesResonance : ∀ {i j k}, source.resonance i j k →
+    target.resonance (map i) (map j) (map k)
+
+def ResonantBehavioralTranslation.toResonanceHomomorphism
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : ResonantBehavioralTranslation source target) :
+    ResonanceHomomorphism source target where
+  toFun := translation.map
+  preserves := translation.preservesResonance
+
+def ResonantBehavioralTranslation.identity
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    ResonantBehavioralTranslation inc inc where
+  toBehavioralBoundaryShapeTranslation :=
+    BehavioralBoundaryShapeTranslation.identity inc
+  preservesResonance := fun resonant => resonant
+
+def ResonantBehavioralTranslation.comp
+    {I J K R₁ T₁ R₂ T₂ R₃ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (secondMap : ResonantBehavioralTranslation second third)
+    (firstMap : ResonantBehavioralTranslation first second) :
+    ResonantBehavioralTranslation first third where
+  toBehavioralBoundaryShapeTranslation :=
+    secondMap.toBehavioralBoundaryShapeTranslation.comp
+      firstMap.toBehavioralBoundaryShapeTranslation
+  preservesResonance := fun resonant =>
+    secondMap.preservesResonance (firstMap.preservesResonance resonant)
+
+theorem ResonantBehavioralTranslation.ext
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    {first second : ResonantBehavioralTranslation source target}
+    (mapEq : first.map = second.map) : first = second := by
+  have baseEq : first.toBehavioralBoundaryShapeTranslation =
+      second.toBehavioralBoundaryShapeTranslation :=
+    BehavioralBoundaryShapeTranslation.ext mapEq
+  cases first
+  cases second
+  cases baseEq
+  rfl
+
+theorem ResonantBehavioralTranslation.identity_comp
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : ResonantBehavioralTranslation source target) :
+    (ResonantBehavioralTranslation.identity target).comp translation =
+      translation := by
+  apply ResonantBehavioralTranslation.ext
+  rfl
+
+theorem ResonantBehavioralTranslation.comp_identity
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : ResonantBehavioralTranslation source target) :
+    translation.comp (ResonantBehavioralTranslation.identity source) =
+      translation := by
+  apply ResonantBehavioralTranslation.ext
+  rfl
+
+theorem ResonantBehavioralTranslation.comp_assoc
+    {I J K L R₁ T₁ R₂ T₂ R₃ T₃ R₄ T₄ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K] [DecidableEq L]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃} {fourth : Incidence L R₄ T₄}
+    (thirdMap : ResonantBehavioralTranslation third fourth)
+    (secondMap : ResonantBehavioralTranslation second third)
+    (firstMap : ResonantBehavioralTranslation first second) :
+    (thirdMap.comp secondMap).comp firstMap =
+      thirdMap.comp (secondMap.comp firstMap) := by
+  apply ResonantBehavioralTranslation.ext
+  rfl
+
+structure ResonantBehavioralEmbedding
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂)
+    extends ResonantBehavioralTranslation source target where
+  reflectsResonance : ∀ {i j k},
+    target.resonance (map i) (map j) (map k) → source.resonance i j k
+
 def BehavioralBoundaryShapeTranslation.mapBisimulationQuotient
     {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
     {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}

@@ -63,3 +63,6 @@ case where the selector is complete and resonance has no unselected modes.
 - Translation and quotient APIs should use `ResonanceHomomorphism` and
   `ResonanceRespects` when their claims concern the interaction itself;
   selector equations remain appropriate only for executable choices.
+- `ResonantBehavioralTranslation` is the combined translation interface: it
+  preserves boundary shape, bisimulation, and every resonance triple.
+  `ResonantBehavioralEmbedding` strengthens it by reflecting resonance.

@@ -21,6 +21,10 @@ belong in [`adr/`](adr/).
   `BisimulationResonanceSpec` specializes it to observational equivalence.
   `ResonanceHomomorphism` has checked identity and composition operations;
   product projections and the diagonal are concrete homomorphisms.
+- `ResonantBehavioralTranslation` integrates resonance preservation with the
+  existing boundary-shape and bisimulation translation API. Its identity,
+  composition, unit laws, and associativity are checked;
+  `ResonantBehavioralEmbedding` additionally reflects resonance.
 - The incidence core and bisimulation equivalence are formalized in Lean.
 - Concrete finite, graph, natural-number, pair, path, cycle, and simplex models
   witness non-vacuity of the implemented fragments.
@@ -55,6 +59,10 @@ instantiate/substitute equalities with synchronized casts.
 - Most historical models currently use the default functional resonance
   induced by `glue`. Their public APIs will migrate incrementally to relational
   resonance and `selectedMode` terminology.
+- Existing concrete translation witnesses still need to be upgraded to
+  `ResonantBehavioralTranslation` where their boundary and interaction laws
+  genuinely agree; some historical glue homomorphisms do not meet this stronger
+  specification.
 - The legacy `IncDepRawUnitRelationalCompletion` depends on coherent readiness
   alignment. Its replacement should consume normalized readiness instead.
 - Pushout preservation and generic boundary-square-zero are conditional on the
