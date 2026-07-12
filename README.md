@@ -2644,6 +2644,11 @@ with variable replacement, readiness alignment, and generated agreement.
 `recursivelyGeneratedTypingFoldOfScopedInputs` run the complete mutual
 recursion over all thirteen constructors without falling back to the global
 instantiate provider in Apply, Pair, or Second.
+`scopedAnchoredMutualFoldDispatcher` promotes those recursors to the public
+dispatcher level.  The lawful, strict, and path-agreement projections of
+`IncDepRawRelationalLawfulSubstitutionFiberModel` now use this scoped route
+directly; conversion to the older assembly-lawful bundle remains only as a
+compatibility API.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

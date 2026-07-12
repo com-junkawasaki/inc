@@ -18916,6 +18916,34 @@ noncomputable def
         typingPackage.formation.recursivelyGenerated
     typingPackage.output.retargetFormation formationPackage.output agreement
 
+noncomputable def
+    IncDepRawSubstitutionFiberModel.scopedAnchoredMutualFoldDispatcher
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (inputs : IncDepRawCanonicalScopedRecursiveFoldInputs.{u} model) :
+    IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u} where
+  formation := fun ready =>
+    (model.recursivelyGeneratedFormationFoldOfScopedInputs inputs ready).output
+  typing := fun ready =>
+    let formationPackage :=
+      model.recursivelyGeneratedFormationFoldOfScopedInputs inputs
+        ready.formationReady
+    let typingPackage := model.recursivelyGeneratedTypingFoldOfScopedInputs
+      inputs ready
+    let agreement : IncDepRawCanonicalFormationFoldAgreement
+        formationPackage.output.fold typingPackage.formation.output.fold :=
+      inputs.agreementProvider.align formationPackage.output
+        typingPackage.formation.output formationPackage.recursivelyGenerated
+        typingPackage.formation.recursivelyGenerated
+    typingPackage.output.retargetFormation formationPackage.output agreement
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.scopedCanonicalLawfulPreservation
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (inputs : IncDepRawCanonicalScopedRecursiveFoldInputs.{u} model) :
+    IncDepRawCanonicalLawfulMutualFold.{u} :=
+  (model.scopedAnchoredMutualFoldDispatcher inputs)
+    |>.toLawfulMutualFoldCanonical inputs.readinessAlignment
+
 structure IncDepRawCanonicalProviderFreeMutualFoldWitness
     (model : IncDepRawSubstitutionFiberModel.{u})
     (_hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
@@ -19032,6 +19060,13 @@ noncomputable def IncDepRawCanonicalLawfulMutualFold.strict
   fold.dispatcher.strict
 
 noncomputable def
+    IncDepRawSubstitutionFiberModel.scopedCanonicalStrictPreservation
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (inputs : IncDepRawCanonicalScopedRecursiveFoldInputs.{u} model) :
+    IncDepRawStrictMutualSubstitutionDispatcher :=
+  (model.scopedCanonicalLawfulPreservation inputs).strict
+
+noncomputable def
     IncDepRawCanonicalProviderFreeMutualFoldWitness.strict
     {model : IncDepRawSubstitutionFiberModel.{u}}
     {hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
@@ -19125,6 +19160,12 @@ def IncDepRawRelationalLawfulSubstitutionFiberModel.toAssemblyLawful
     { variableProvider := model.preservation.variableProvider
       readinessAlignment := model.preservation.readinessAlignment
       naturality := model.relationalLaws.toAssembly }
+
+def IncDepRawRelationalLawfulSubstitutionFiberModel.scopedInputs
+    (model : IncDepRawRelationalLawfulSubstitutionFiberModel.{u}) :
+    IncDepRawCanonicalScopedRecursiveFoldInputs.{u} model.model :=
+  .ofRelational model.preservation.variableProvider
+    model.preservation.readinessAlignment model.relationalLaws
 
 structure IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage1 where
   model : IncDepRawSubstitutionFiberModel.{u}
@@ -19232,13 +19273,13 @@ noncomputable def
     IncDepRawRelationalLawfulSubstitutionFiberModel.lawfulPreservation
     (model : IncDepRawRelationalLawfulSubstitutionFiberModel.{u}) :
     IncDepRawCanonicalLawfulMutualFold.{u} :=
-  model.toAssemblyLawful.lawfulPreservation
+  model.model.scopedCanonicalLawfulPreservation model.scopedInputs
 
 noncomputable def
     IncDepRawRelationalLawfulSubstitutionFiberModel.strictPreservation
     (model : IncDepRawRelationalLawfulSubstitutionFiberModel.{u}) :
     IncDepRawStrictMutualSubstitutionDispatcher :=
-  model.toAssemblyLawful.strictPreservation
+  model.model.scopedCanonicalStrictPreservation model.scopedInputs
 
 theorem IncDepRawRelationalLawfulSubstitutionFiberModel.pathAgreement
     (model : IncDepRawRelationalLawfulSubstitutionFiberModel.{u})
@@ -19250,7 +19291,7 @@ theorem IncDepRawRelationalLawfulSubstitutionFiberModel.pathAgreement
     IncDepRawCanonicalFormationFoldAgreement
       (model.lawfulPreservation.dispatcher.formation formationReady).fold
       (model.lawfulPreservation.dispatcher.typing typingReady).formation :=
-  model.toAssemblyLawful.pathAgreement formationReady typingReady
+  model.lawfulPreservation.lawful.pathAgreement formationReady typingReady
 
 noncomputable def
     IncDepRawProviderFreeLawfulSubstitutionFiberModel.witness
