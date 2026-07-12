@@ -32,6 +32,10 @@ belong in [`adr/`](adr/).
 - `AssociativeResonanceSpec` states relational associativity as equality of the
   modes reachable through either parenthesization. Peano addition satisfies it,
   and `incidenceProd` preserves it componentwise.
+- `DistributiveResonanceSpec` adds a second multiplicative resonance channel
+  with one, symmetry, relational associativity, and distribution over the
+  central additive resonance. Integers instantiate the full specification,
+  including a checked nontrivial distributivity example.
 - The internal propositional logic now has structured `ResonanceAtom` triples,
   interpreted by `resonanceValuation`. Symmetry and unit laws are semantically
   valid formulas, and resonance homomorphisms preserve atomic formulas. The
@@ -145,7 +149,8 @@ Checked constructions include:
 
 - Peano natural numbers
 - integers with signed predecessor boundaries, additive resonance, zero,
-  inverses, and relational associativity
+  inverses, additive/multiplicative relational associativity, and distributive
+  ring-style resonance
 - hereditary finite sets
 - ordered pairs and trees
 - paths, cycles, and simplices

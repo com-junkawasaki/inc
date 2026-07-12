@@ -1098,6 +1098,24 @@ structure UnitReflectingResonanceSpec {I R T : Type u} [DecidableEq I]
   reflects : ∀ {i j}, inc.resonance i j inc.unit →
     i = inc.unit ∨ j = inc.unit
 
+/- A second resonance channel can interact distributively with the central
+additive resonance. This packages semiring/ring-style algebra without reducing
+either interaction to a primitive binary function. -/
+structure DistributiveResonanceSpec {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) where
+  one : I
+  multiply : I → I → I → Prop
+  symmetric : ∀ {i j k}, multiply i j k → multiply j i k
+  unit_left : ∀ i, multiply one i i
+  unit_right : ∀ i, multiply i one i
+  associative : ∀ {i j k out},
+    (∃ ij, multiply i j ij ∧ multiply ij k out) ↔
+    (∃ jk, multiply j k jk ∧ multiply i jk out)
+  distributes : ∀ {i j k out},
+    (∃ jk, inc.resonance j k jk ∧ multiply i jk out) ↔
+    (∃ ij ik, multiply i j ij ∧ multiply i k ik ∧
+      inc.resonance ij ik out)
+
 theorem resonance_reassociate {I R T : Type u} [DecidableEq I]
     {inc : Incidence I R T} (spec : AssociativeResonanceSpec inc)
     {i j k out : I} :

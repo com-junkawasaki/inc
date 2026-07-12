@@ -131,3 +131,8 @@ case where the selector is complete and resonance has no unselected modes.
   their indexed tags make the whole model faithful, not merely `+1 ≉ -1`.
   Integer resonance is therefore quotient-congruent and instantiates
   `IncDepRawNormalizedResonanceCompletion`.
+- Algebraic operations beyond the central interaction can remain relational:
+  `DistributiveResonanceSpec` equips an incidence with a multiplicative ternary
+  resonance and states its unit, commutativity, associativity, and distribution
+  over additive resonance. The integer instance proves these laws from integer
+  multiplication and addition.

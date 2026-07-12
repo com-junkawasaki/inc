@@ -265,6 +265,51 @@ def integerAssociativeResonanceSpec :
       · simp [integerIncidence]
       · simpa [integerIncidence, Int.add_assoc] using hout
 
+def integerMultiplicativeResonance (i j k : Int) : Prop :=
+  i * j = k
+
+def integerDistributiveResonanceSpec :
+    DistributiveResonanceSpec integerIncidence where
+  one := 1
+  multiply := integerMultiplicativeResonance
+  symmetric := by
+    intro i j k multiplied
+    simpa [integerMultiplicativeResonance, Int.mul_comm] using multiplied
+  unit_left := by intro i; simp [integerMultiplicativeResonance]
+  unit_right := by intro i; simp [integerMultiplicativeResonance]
+  associative := by
+    intro i j k out
+    constructor
+    · rintro ⟨ij, hij, hout⟩
+      subst ij
+      refine ⟨j * k, rfl, ?_⟩
+      simpa [integerMultiplicativeResonance, Int.mul_assoc] using hout
+    · rintro ⟨jk, hjk, hout⟩
+      subst jk
+      refine ⟨i * j, rfl, ?_⟩
+      simpa [integerMultiplicativeResonance, Int.mul_assoc] using hout
+  distributes := by
+    intro i j k out
+    constructor
+    · rintro ⟨jk, hjk, hout⟩
+      have hjkEq : j + k = jk := by simpa [integerIncidence] using hjk
+      subst jk
+      refine ⟨i * j, i * k, rfl, rfl, ?_⟩
+      simpa [integerIncidence, integerMultiplicativeResonance,
+        Int.mul_add] using hout
+    · rintro ⟨ij, ik, hij, hik, hout⟩
+      subst ij
+      subst ik
+      refine ⟨j + k, ?_, ?_⟩
+      · simp [integerIncidence]
+      · simpa [integerIncidence, integerMultiplicativeResonance,
+          Int.mul_add] using hout
+
+theorem integer_resonance_distributive_example :
+    integerIncidence.resonance
+      (2 * 3) (2 * (-1)) (2 * (3 + (-1))) := by
+  simp [integerIncidence]
+
 theorem integerIncidence_additive_inverse (value : Int) :
     integerIncidence.resonance value (-value) integerIncidence.unit := by
   simpa [integerIncidence] using Int.add_neg_cancel_right 0 value
