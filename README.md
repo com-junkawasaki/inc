@@ -1057,6 +1057,14 @@ It currently establishes:
   preservation and coherence without retaining or reusing the external path
   provider.  The remaining unconditional theorem is precisely construction of
   this package without the path-provider field.
+  The provider-free fixed point now has a concrete construction strategy.
+  `IncDepRawCanonicalAnchoredTypingFoldOutput` indexes a typing result directly
+  by the formation output generated alongside it, storing an agreement with
+  that exact `.fold` rather than an independently chosen formation motive.
+  Conversion to the public typing bundle and an `.anchor` operation are checked.
+  A direct mutual recursion can therefore return formation outputs and anchored
+  typing outputs together, making path agreement structural data and eliminating
+  the external path provider from the recursive call graph.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

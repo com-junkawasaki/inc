@@ -14371,6 +14371,46 @@ structure IncDepRawCanonicalTypingFoldOutput
   typing : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive ready
   agreement : IncDepRawCanonicalFoldAgreement formation typing
 
+structure IncDepRawCanonicalAnchoredTypingFoldOutput
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    {formationReady : IncDepRawCoherentFormationDispatchReady formation}
+    (typingReady : IncDepRawCoherentTypingDispatchReady typing formation)
+    (formationOutput : IncDepRawCanonicalFormationFoldOutput formationReady) where
+  typing : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive typingReady
+  agreement : IncDepRawCanonicalFoldAgreement formationOutput.fold typing
+
+def IncDepRawCanonicalAnchoredTypingFoldOutput.toTypingFoldOutput
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    {formationReady : IncDepRawCoherentFormationDispatchReady formation}
+    {typingReady : IncDepRawCoherentTypingDispatchReady typing formation}
+    {formationOutput : IncDepRawCanonicalFormationFoldOutput formationReady}
+    (output : IncDepRawCanonicalAnchoredTypingFoldOutput typingReady
+      formationOutput) :
+    IncDepRawCanonicalTypingFoldOutput typingReady where
+  formationReady := formationReady
+  formation := formationOutput.fold
+  typing := output.typing
+  agreement := output.agreement
+
+def IncDepRawCanonicalTypingFoldOutput.anchor
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    {typingReady : IncDepRawCoherentTypingDispatchReady typing formation}
+    (output : IncDepRawCanonicalTypingFoldOutput typingReady)
+    {formationReady : IncDepRawCoherentFormationDispatchReady formation}
+    (formationOutput : IncDepRawCanonicalFormationFoldOutput formationReady)
+    (pathAgreement : IncDepRawCanonicalFormationFoldAgreement
+      formationOutput.fold output.formation) :
+    IncDepRawCanonicalAnchoredTypingFoldOutput typingReady formationOutput where
+  typing := output.typing
+  agreement := IncDepRawCanonicalFoldAgreement.retargetFormation pathAgreement
+    output.agreement
+
 def IncDepRawCanonicalTypingFoldOutput.retargetFormation
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} {typing : IncDepRawHasType context term type}
