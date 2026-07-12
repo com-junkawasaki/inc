@@ -444,6 +444,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - exact anchored handlersのLambda/First/Reflもcheckedとなり、leaf 2枝と合わせprovider-free anchored coverageは5/8。Pi/domain/Identity formation outputと
   typing agreementを同じfold expressionsから構成するためanchorは後付け仮定でなく構造的である。通常bundle段階と異なり、final fixed pointが必要とする
   formation output object自体を各resultが保持する。
+- Apply/Pair/Second exact anchored handlersもcheckedとなり、全8 typing rulesがpath providerなしで
+  `IncDepRawCanonicalAnchoredTypingFoldResult`を返す。Applyはfunction/argument anchors、Pairはfirst/second anchorsを消費し、Secondはanchored First resultを
+  内部生成・再利用する。dependent branchesに残る自然性入力はscoped instantiate-agreement providerだけで、final direct mutual recursionはformation 5枝と
+  anchored typing 8枝を接続するだけになった。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

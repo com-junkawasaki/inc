@@ -1085,6 +1085,13 @@ It currently establishes:
   is therefore five of eight typing rules; unlike the earlier ordinary bundles,
   these results retain the formation output object needed by the final fixed
   point directly.
+  Apply, Pair, and Second now complete exact anchored coverage: all eight typing
+  rules return `IncDepRawCanonicalAnchoredTypingFoldResult` without a path
+  provider.  Apply consumes function/argument anchors, Pair consumes first/second
+  anchors, and Second constructs and reuses an anchored First result internally.
+  The only remaining naturality input in these dependent branches is the scoped
+  instantiate-agreement provider.  The final direct mutual recursion now only
+  has to connect the five formation handlers to these eight anchored handlers.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

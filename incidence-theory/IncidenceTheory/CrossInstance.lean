@@ -14668,6 +14668,150 @@ noncomputable def
           termOutput.agreement } }
 
 noncomputable def
+    IncDepRawSubstitutionFiberModel.anchoredTypingFoldResultApplyExact
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (instantiateAgreementProvider :
+      IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {function argument : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {resultFormation : IncDepRawWellFormed context
+      (codomain.instantiate argument)}
+    {functionTyping : IncDepRawHasType context function (.pi domain codomain)}
+    {argumentTyping : IncDepRawHasType context argument domain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (resultReady : IncDepRawCoherentFormationDispatchReady resultFormation)
+    (functionReady : IncDepRawCoherentTypingDispatchReady functionTyping
+      (IncDepRawWellFormed.pi domainFormation codomainFormation))
+    (argumentReady : IncDepRawCoherentTypingDispatchReady argumentTyping
+      domainFormation)
+    (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
+    (codomainOutput : IncDepRawCanonicalFormationFoldOutput codomainReady)
+    (resultOutput : IncDepRawCanonicalFormationFoldOutput resultReady)
+    (functionOutput : IncDepRawCanonicalAnchoredTypingFoldOutput functionReady
+      (model.canonicalFormationFoldOutputPi domainReady codomainReady domainOutput
+        codomainOutput))
+    (argumentOutput : IncDepRawCanonicalAnchoredTypingFoldOutput argumentReady
+      domainOutput) :
+    IncDepRawCanonicalAnchoredTypingFoldResult
+      (IncDepRawCoherentTypingDispatchReady.applyRule domainReady codomainReady
+        resultReady functionReady argumentReady) :=
+  let instantiateAgreement := instantiateAgreementProvider.dispatch domainReady
+    codomainReady resultReady argumentReady domainOutput.fold codomainOutput.fold
+    resultOutput.fold argumentOutput.typing argumentOutput.agreement
+  { formationReady := resultReady
+    formationOutput := resultOutput
+    output :=
+      { typing := model.alignedCanonicalMutualFoldApply domainReady codomainReady
+          resultReady functionReady argumentReady domainOutput.fold
+          codomainOutput.fold resultOutput.fold functionOutput.typing
+          argumentOutput.typing functionOutput.agreement argumentOutput.agreement
+          instantiateAgreement
+        agreement := model.canonicalFoldAgreementApply domainReady codomainReady
+          resultReady functionReady argumentReady domainOutput.fold
+          codomainOutput.fold resultOutput.fold functionOutput.typing
+          argumentOutput.typing functionOutput.agreement argumentOutput.agreement
+          instantiateAgreement } }
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.anchoredTypingFoldResultPairExact
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (instantiateAgreementProvider :
+      IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {first second : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {resultFormation : IncDepRawWellFormed context
+      (codomain.instantiate first)}
+    {firstTyping : IncDepRawHasType context first domain}
+    {secondTyping : IncDepRawHasType context second
+      (codomain.instantiate first)}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (resultReady : IncDepRawCoherentFormationDispatchReady resultFormation)
+    (firstReady : IncDepRawCoherentTypingDispatchReady firstTyping
+      domainFormation)
+    (secondReady : IncDepRawCoherentTypingDispatchReady secondTyping
+      resultFormation)
+    (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
+    (codomainOutput : IncDepRawCanonicalFormationFoldOutput codomainReady)
+    (resultOutput : IncDepRawCanonicalFormationFoldOutput resultReady)
+    (firstOutput : IncDepRawCanonicalAnchoredTypingFoldOutput firstReady
+      domainOutput)
+    (secondOutput : IncDepRawCanonicalAnchoredTypingFoldOutput secondReady
+      resultOutput) :
+    IncDepRawCanonicalAnchoredTypingFoldResult
+      (IncDepRawCoherentTypingDispatchReady.pairRule domainReady codomainReady
+        resultReady firstReady secondReady) :=
+  let instantiateAgreement := instantiateAgreementProvider.dispatch domainReady
+    codomainReady resultReady firstReady domainOutput.fold codomainOutput.fold
+    resultOutput.fold firstOutput.typing firstOutput.agreement
+  { formationReady := IncDepRawCoherentFormationDispatchReady.sigma domainReady
+      codomainReady
+    formationOutput := model.canonicalFormationFoldOutputSigma domainReady
+      codomainReady domainOutput codomainOutput
+    output :=
+      { typing := model.alignedCanonicalMutualFoldPair domainReady codomainReady
+          resultReady firstReady secondReady domainOutput.fold
+          codomainOutput.fold resultOutput.fold firstOutput.typing
+          secondOutput.typing firstOutput.agreement instantiateAgreement
+          secondOutput.agreement
+        agreement := model.canonicalFoldAgreementPair domainReady codomainReady
+          resultReady firstReady secondReady domainOutput.fold
+          codomainOutput.fold resultOutput.fold firstOutput.typing
+          secondOutput.typing firstOutput.agreement instantiateAgreement
+          secondOutput.agreement } }
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.anchoredTypingFoldResultSecondExact
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (instantiateAgreementProvider :
+      IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {resultFormation : IncDepRawWellFormed context
+      (codomain.instantiate (.first pair))}
+    {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (resultReady : IncDepRawCoherentFormationDispatchReady resultFormation)
+    (pairReady : IncDepRawCoherentTypingDispatchReady pairTyping
+      (IncDepRawWellFormed.sigma domainFormation codomainFormation))
+    (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
+    (codomainOutput : IncDepRawCanonicalFormationFoldOutput codomainReady)
+    (resultOutput : IncDepRawCanonicalFormationFoldOutput resultReady)
+    (pairOutput : IncDepRawCanonicalAnchoredTypingFoldOutput pairReady
+      (model.canonicalFormationFoldOutputSigma domainReady codomainReady
+        domainOutput codomainOutput)) :
+    IncDepRawCanonicalAnchoredTypingFoldResult
+      (IncDepRawCoherentTypingDispatchReady.secondRule domainReady codomainReady
+        resultReady pairReady) :=
+  let firstResult := model.anchoredTypingFoldResultFirstExact domainReady
+    codomainReady pairReady domainOutput codomainOutput pairOutput
+  let instantiateAgreement := instantiateAgreementProvider.dispatch domainReady
+    codomainReady resultReady
+    (IncDepRawCoherentTypingDispatchReady.firstRule domainReady codomainReady
+      pairReady)
+    domainOutput.fold codomainOutput.fold resultOutput.fold
+    firstResult.output.typing firstResult.output.agreement
+  { formationReady := resultReady
+    formationOutput := resultOutput
+    output :=
+      { typing := model.alignedCanonicalMutualFoldSecond domainReady
+          codomainReady resultReady pairReady domainOutput.fold
+          codomainOutput.fold resultOutput.fold pairOutput.typing
+          pairOutput.agreement instantiateAgreement
+        agreement := model.canonicalFoldAgreementSecond domainReady
+          codomainReady resultReady pairReady domainOutput.fold
+          codomainOutput.fold resultOutput.fold pairOutput.typing
+          pairOutput.agreement instantiateAgreement } }
+
+noncomputable def
     IncDepRawSubstitutionFiberModel.canonicalTypingFoldOutputFirst
     (model : IncDepRawSubstitutionFiberModel.{u})
     {context : List IncDepRawType} {domain codomain : IncDepRawType}
