@@ -2710,6 +2710,12 @@ Transported Apply/Pair/Second prototypes confirm the cast shape, but their
 a clean build and is therefore not accepted as a stable proof.  The remaining
 task is an opaque, constructor-specific equation theorem whose checking does
 not replay that expansion.
+Derivation proof-irrelevance is not a valid shortcut here: dependent lookup
+stores a pre-weakening type, and distinct such types can have the same renamed
+index.  Consequently the completion path must preserve semantics independently
+of the particular typing derivation, rather than postulating that all typing
+derivations are equal.  This also fixes the foundation roadmap: semantic
+preservation precedes global completeness and broader mathematics imports.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo
