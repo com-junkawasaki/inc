@@ -1526,6 +1526,10 @@ cycle 38–41 で以下の3極構造が判明した:
   aligned semantic typingが両endpointを同一semantic formationへ整列する。これによりIdentity
   formationとRefl typingを直接sorry-freeに構成できる。total recursionの統合境界はliftに必要な
   weakening rename保存へ一本化された。
+  この最終境界にfully semantic renaming interfaceを実装した。formation/typing resultはrenamed
+  derivationとcoherent readinessを組で保持し、legacy mutual renamerとのproof equalityを要求しない。
+  Base/Unit formationとVariable/Unit typingのleaf casesをsorry-freeに証明した。残りはdependent
+  composite constructorsを同じrenaming層へ追加することである。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

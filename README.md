@@ -2746,6 +2746,12 @@ formation proof equality, while aligned semantic typing requires both identity
 endpoints to share that exact semantic formation.  Identity formation and Refl
 typing are then constructed directly and sorry-free.  The sole integration
 boundary for total recursion is now weakening-renaming preservation for lift.
+That final boundary now has an active fully semantic interface:
+`IncDepRawFullySemanticFormationRenamingResult` and its typing counterpart keep
+the renamed derivation and coherent readiness together without identifying it
+with the legacy mutual renamer.  Base/Unit formation and Variable/Unit typing
+constructors are proved.  These are the leaf cases of the structural renaming
+theorem needed for lift; the dependent composite constructors remain.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

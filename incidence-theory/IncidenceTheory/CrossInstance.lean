@@ -2183,6 +2183,62 @@ def IncDepRawFullySemanticTypingSubstitutionResult.refl
   substitutedTyping := .reflRule termResult.substitutedTyping
   readiness := .reflRule typeResult.readiness termResult.readiness
 
+/-- Derivation-independent preservation of coherent formation readiness under
+renaming.  This is the environment-extension interface needed by substitution
+lift. -/
+structure IncDepRawFullySemanticFormationRenamingResult
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    (renameMap : IncDepRawRenaming source target) where
+  renamedFormation : IncDepRawWellFormed target (type.rename renameMap.index)
+  readiness : IncDepRawCoherentFormationDispatchReady renamedFormation
+
+/-- Typing counterpart of fully semantic formation renaming. -/
+structure IncDepRawFullySemanticTypingRenamingResult
+    {source target : List IncDepRawType}
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    (renameMap : IncDepRawRenaming source target)
+    (formationResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := type) renameMap) where
+  renamedTyping : IncDepRawHasType target (term.rename renameMap.index)
+    (type.rename renameMap.index)
+  readiness : IncDepRawCoherentTypingDispatchReady renamedTyping
+    formationResult.renamedFormation
+
+def IncDepRawFullySemanticFormationRenamingResult.base
+    {source target : List IncDepRawType} {index : Nat}
+    (renameMap : IncDepRawRenaming source target) :
+    IncDepRawFullySemanticFormationRenamingResult
+      (type := .base index) renameMap where
+  renamedFormation := .base
+  readiness := .base
+
+def IncDepRawFullySemanticFormationRenamingResult.unit
+    {source target : List IncDepRawType}
+    (renameMap : IncDepRawRenaming source target) :
+    IncDepRawFullySemanticFormationRenamingResult
+      (type := .unit) renameMap where
+  renamedFormation := .unit
+  readiness := .unit
+
+def IncDepRawFullySemanticTypingRenamingResult.variable
+    {source target : List IncDepRawType} {position : Nat}
+    {type : IncDepRawType} {lookup : IncDepRawLookup source position type}
+    (renameMap : IncDepRawRenaming source target)
+    (formationResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := type) renameMap) :
+    IncDepRawFullySemanticTypingRenamingResult
+      (term := .var position) renameMap formationResult where
+  renamedTyping := .varRule (renameMap.preserves lookup)
+  readiness := .varRule formationResult.readiness
+
+def IncDepRawFullySemanticTypingRenamingResult.unit
+    {source target : List IncDepRawType}
+    (renameMap : IncDepRawRenaming source target) :
+    IncDepRawFullySemanticTypingRenamingResult
+      (term := .unit) renameMap (.unit renameMap) where
+  renamedTyping := .unitRule
+  readiness := .unitRule
+
 def IncDepRawCoherentFormationDispatchReady.castFormation
     {context : List IncDepRawType} {type : IncDepRawType}
     {first second : IncDepRawWellFormed context type}
