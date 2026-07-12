@@ -17263,11 +17263,184 @@ structure IncDepRawCanonicalProviderFreeMutualFoldHypotheses
   generatedIdentityAgreementProvider :
     IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider.{u} model
 
+noncomputable def
+    IncDepRawSubstitutionFiberModel.recursivelyGeneratedFormationFold
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
+      model)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentFormationDispatchReady formation) :
+    IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      hypotheses.variableProvider ready :=
+  IncDepRawCoherentFormationDispatchReady.rec
+    (motive_1 := fun _ ready =>
+      IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+        hypotheses.variableProvider ready)
+    (motive_2 := fun _ _ ready =>
+      IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+        hypotheses.variableProvider ready)
+    (model.recursivelyGeneratedFormationBase hypotheses.variableProvider)
+    (model.recursivelyGeneratedFormationUnit hypotheses.variableProvider)
+    (fun _ _ domain codomain =>
+      model.recursivelyGeneratedFormationPi hypotheses.variableProvider domain
+        codomain)
+    (fun _ _ domain codomain =>
+      model.recursivelyGeneratedFormationSigma hypotheses.variableProvider
+        domain codomain)
+    (fun _ _ _ typeOutput leftOutput rightOutput =>
+      model.recursivelyGeneratedIdentity hypotheses.variableProvider
+        hypotheses.readinessAlignment
+        hypotheses.dependentFormationAgreementProvider
+        hypotheses.generatedIdentityAgreementProvider typeOutput leftOutput
+        rightOutput)
+    (fun _ typeOutput =>
+      hypotheses.variableProvider.recursivelyGeneratedTypingVariable model
+        typeOutput)
+    (model.recursivelyGeneratedTypingUnit hypotheses.variableProvider)
+    (fun _ _ domain body =>
+      model.recursivelyGeneratedTypingLambda hypotheses.variableProvider domain
+        body)
+    (fun _ _ _ _ _ domain codomain result function argument =>
+      model.recursivelyGeneratedTypingApply hypotheses.variableProvider
+        hypotheses.dependentFormationAgreementProvider
+        hypotheses.generatedIdentityAgreementProvider
+        hypotheses.readinessAlignment hypotheses.instantiateAgreementProvider
+        domain codomain result function argument)
+    (fun _ _ _ _ _ domain codomain result first second =>
+      model.recursivelyGeneratedTypingPair hypotheses.variableProvider
+        hypotheses.dependentFormationAgreementProvider
+        hypotheses.generatedIdentityAgreementProvider
+        hypotheses.readinessAlignment hypotheses.instantiateAgreementProvider
+        domain codomain result first second)
+    (fun _ _ _ domain codomain pair =>
+      model.recursivelyGeneratedTypingFirst hypotheses.variableProvider
+        hypotheses.dependentFormationAgreementProvider
+        hypotheses.generatedIdentityAgreementProvider
+        hypotheses.readinessAlignment domain codomain pair)
+    (fun _ _ _ _ domain codomain result pair =>
+      model.recursivelyGeneratedTypingSecond hypotheses.variableProvider
+        hypotheses.dependentFormationAgreementProvider
+        hypotheses.generatedIdentityAgreementProvider
+        hypotheses.readinessAlignment hypotheses.instantiateAgreementProvider
+        domain codomain result pair)
+    (fun _ _ typeOutput termOutput =>
+      model.recursivelyGeneratedRefl hypotheses.variableProvider
+        hypotheses.readinessAlignment
+        hypotheses.dependentFormationAgreementProvider
+        hypotheses.generatedIdentityAgreementProvider typeOutput termOutput)
+    ready
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingFold
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
+      model)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation) :
+    IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+      hypotheses.variableProvider ready :=
+  IncDepRawCoherentTypingDispatchReady.rec
+    (motive_1 := fun _ ready =>
+      IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+        hypotheses.variableProvider ready)
+    (motive_2 := fun _ _ ready =>
+      IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+        hypotheses.variableProvider ready)
+    (model.recursivelyGeneratedFormationBase hypotheses.variableProvider)
+    (model.recursivelyGeneratedFormationUnit hypotheses.variableProvider)
+    (fun _ _ domain codomain =>
+      model.recursivelyGeneratedFormationPi hypotheses.variableProvider domain
+        codomain)
+    (fun _ _ domain codomain =>
+      model.recursivelyGeneratedFormationSigma hypotheses.variableProvider
+        domain codomain)
+    (fun _ _ _ typeOutput leftOutput rightOutput =>
+      model.recursivelyGeneratedIdentity hypotheses.variableProvider
+        hypotheses.readinessAlignment
+        hypotheses.dependentFormationAgreementProvider
+        hypotheses.generatedIdentityAgreementProvider typeOutput leftOutput
+        rightOutput)
+    (fun _ typeOutput =>
+      hypotheses.variableProvider.recursivelyGeneratedTypingVariable model
+        typeOutput)
+    (model.recursivelyGeneratedTypingUnit hypotheses.variableProvider)
+    (fun _ _ domain body =>
+      model.recursivelyGeneratedTypingLambda hypotheses.variableProvider domain
+        body)
+    (fun _ _ _ _ _ domain codomain result function argument =>
+      model.recursivelyGeneratedTypingApply hypotheses.variableProvider
+        hypotheses.dependentFormationAgreementProvider
+        hypotheses.generatedIdentityAgreementProvider
+        hypotheses.readinessAlignment hypotheses.instantiateAgreementProvider
+        domain codomain result function argument)
+    (fun _ _ _ _ _ domain codomain result first second =>
+      model.recursivelyGeneratedTypingPair hypotheses.variableProvider
+        hypotheses.dependentFormationAgreementProvider
+        hypotheses.generatedIdentityAgreementProvider
+        hypotheses.readinessAlignment hypotheses.instantiateAgreementProvider
+        domain codomain result first second)
+    (fun _ _ _ domain codomain pair =>
+      model.recursivelyGeneratedTypingFirst hypotheses.variableProvider
+        hypotheses.dependentFormationAgreementProvider
+        hypotheses.generatedIdentityAgreementProvider
+        hypotheses.readinessAlignment domain codomain pair)
+    (fun _ _ _ _ domain codomain result pair =>
+      model.recursivelyGeneratedTypingSecond hypotheses.variableProvider
+        hypotheses.dependentFormationAgreementProvider
+        hypotheses.generatedIdentityAgreementProvider
+        hypotheses.readinessAlignment hypotheses.instantiateAgreementProvider
+        domain codomain result pair)
+    (fun _ _ typeOutput termOutput =>
+      model.recursivelyGeneratedRefl hypotheses.variableProvider
+        hypotheses.readinessAlignment
+        hypotheses.dependentFormationAgreementProvider
+        hypotheses.generatedIdentityAgreementProvider typeOutput termOutput)
+    ready
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.providerFreeAnchoredMutualFoldDispatcher
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
+      model) :
+    IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u} where
+  formation := fun ready =>
+    (model.recursivelyGeneratedFormationFold hypotheses ready).output
+  typing := fun ready =>
+    let formationPackage := model.recursivelyGeneratedFormationFold hypotheses
+      ready.formationReady
+    let typingPackage := model.recursivelyGeneratedTypingFold hypotheses ready
+    let agreement : IncDepRawCanonicalFormationFoldAgreement
+        formationPackage.output.fold typingPackage.formation.output.fold :=
+      formationPackage.recursivelyGenerated.agreementAcrossReady
+        hypotheses.dependentFormationAgreementProvider
+        hypotheses.generatedIdentityAgreementProvider
+        hypotheses.readinessAlignment
+        typingPackage.formation.recursivelyGenerated
+    typingPackage.output.retargetFormation formationPackage.output agreement
+
 structure IncDepRawCanonicalProviderFreeMutualFoldWitness
     (model : IncDepRawSubstitutionFiberModel.{u})
     (_hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
       model) where
   anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u}
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.providerFreeMutualFoldWitness
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
+      model) :
+    IncDepRawCanonicalProviderFreeMutualFoldWitness model hypotheses where
+  anchored := model.providerFreeAnchoredMutualFoldDispatcher hypotheses
+
+theorem IncDepRawSubstitutionFiberModel.providerFreeMutualFoldWitness_inhabited
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
+      model) :
+    Nonempty (IncDepRawCanonicalProviderFreeMutualFoldWitness model hypotheses) :=
+  ⟨model.providerFreeMutualFoldWitness hypotheses⟩
 
 noncomputable def
     IncDepRawSubstitutionFiberModel.providerFreeMutualFoldWitnessOfPathProvider

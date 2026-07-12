@@ -1267,6 +1267,17 @@ It currently establishes:
   Together with recursive Identity and Refl, all 13 final-motive handlers are
   checked.  The remaining construction is wiring them into the mutual readiness
   recursor and projecting the anchored dispatcher and witness.
+  That construction is now complete.  `recursivelyGeneratedFormationFold` and
+  `recursivelyGeneratedTypingFold` supply all 13 handlers to the two projections
+  of the mutual readiness recursor.  The typing projection is finally aligned
+  with the independently computed formation projection using recursive
+  generated agreement, producing `providerFreeAnchoredMutualFoldDispatcher`.
+  `providerFreeMutualFoldWitness` directly inhabits the public witness type and
+  the corresponding `Nonempty` theorem requires no old path provider.  Its
+  existing `.lawful` and `.strict` projections therefore yield canonical lawful
+  and strict substitution preservation from the five scoped hypotheses alone.
+  The former `...OfPathProvider` bridge remains only as compatibility evidence;
+  it is no longer the only inhabitant construction.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

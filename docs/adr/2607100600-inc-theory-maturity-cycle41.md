@@ -1285,6 +1285,13 @@ cycle 38–41 で以下の3極構造が判明した:
   provenanceを保持する。Identity/Reflと合わせfinal motiveを返す全13 handlersがchecked。
   残constructionはmutual readiness recursorへの配線とanchored dispatcher/witness projection
   だけである。
+  このconstructionは完了した。`recursivelyGeneratedFormationFold`と
+  `recursivelyGeneratedTypingFold`が全13 handlersをmutual readiness recursorの両projection
+  へ供給し、typing projectionを独立に計算したformation projectionへrecursive generated
+  agreementで最終整列する。`providerFreeAnchoredMutualFoldDispatcher`と
+  `providerFreeMutualFoldWitness`は旧path providerなしで直接inhabitされ、対応Nonempty theorem
+  も無条件である。既存`.lawful`/`.strict`から5 scoped hypothesesだけでcanonical lawful/strict
+  substitution preservationを得る。旧`...OfPathProvider`は互換bridgeとしてのみ残る。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。
