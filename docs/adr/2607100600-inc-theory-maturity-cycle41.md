@@ -1436,6 +1436,11 @@ cycle 38–41 で以下の3極構造が判明した:
   する契約だと確認できる。またinstantiate providerは現在任意の`resultIH`まで量化するが、
   recursive dispatcherが使うのはrecursively-generated resultだけである。この過剰量化を
   generated provenanceでscopeすることが、次のinhabitation上の設計修正である。
+  最初の実装としてApply exact builderを
+  `anchoredTypingFoldResultApplyExactOfAgreement`へ分離した。このbuilderは全域provider
+  ではなく、そのApply nodeに必要な単一instantiate agreementだけを受け取る。旧APIは
+  providerから局所agreementを取り出す互換wrapperとして保持する。Pair/Secondにも同じ
+  分離を適用後、recursive provenance側をscoped providerへ切り替えられる。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

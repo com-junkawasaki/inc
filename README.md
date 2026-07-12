@@ -2622,6 +2622,11 @@ The instantiate component is under the same audit: its legacy provider ranges
 over arbitrary fold results, while the recursive dispatcher only consumes it
 for recursively generated results.  Narrowing that quantifier is the next
 provider-inhabitation step.
+That narrowing has started at the first concrete consumer: Apply now has
+`anchoredTypingFoldResultApplyExactOfAgreement`, which consumes one local
+instantiate agreement rather than a globally quantified provider.  The former
+Apply API remains as a compatibility wrapper.  Pair and Second still require
+the same extraction before the recursive route can switch wholesale.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo
