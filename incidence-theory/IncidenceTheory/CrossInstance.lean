@@ -2449,6 +2449,20 @@ def IncDepRawTypingReadinessSubstitutionResult.variable
       (formation := typeFormation) substitution.toIncDepRawSubstitution :=
   substitution.preservesReadiness lookup typeResult
 
+def IncDepRawSemanticTypingSubstitutionResult.variable
+    {source target : List IncDepRawType} {position : Nat}
+    {type : IncDepRawType}
+    {lookup : IncDepRawLookup target position type}
+    {typeFormation : IncDepRawWellFormed target type}
+    (substitution : IncDepRawReadinessPreservingSubstitution source target)
+    (typeResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := typeFormation) substitution.toIncDepRawSubstitution) :
+    IncDepRawSemanticTypingSubstitutionResult
+      (term := .var position) (type := type) (formation := typeFormation)
+      substitution.toIncDepRawSubstitution :=
+  (IncDepRawTypingReadinessSubstitutionResult.variable (lookup := lookup)
+    substitution typeResult).toSemantic
+
 def IncDepRawFormationReadinessSubstitutionResult.base
     {source target : List IncDepRawType} {index : Nat}
     (substitution : IncDepRawSubstitution source target) :
