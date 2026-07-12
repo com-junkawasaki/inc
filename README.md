@@ -936,6 +936,12 @@ It currently establishes:
   chaining structural provenance, the fold-local canonical equality, and
   instantiate provenance.  The second component is then cast into that exact
   dependent fiber and paired semantically.  Only Apply and Second remain.
+  Apply is now complete as well.  Its actual dispatch formation is the canonical
+  instantiated family, while its existential package deliberately exposes the
+  independently recursive result IH canonical.  The fold-local instantiate
+  equality supplies exactly the provenance connecting those two layers, so the
+  application result agrees with the result formation IH without global rebase.
+  Second is the final constructor-level agreement branch.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

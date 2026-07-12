@@ -380,6 +380,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - Pair枝をこの境界上でend-to-end化した。独立result IHのformation resultからcanonical instantiate resultへの等式を、structural provenance、
   fold-local canonical equality、instantiate provenanceの連鎖だけで導出し、second componentをexact dependent fiberへcastしてsemantic pairを構成する。
   残るagreement枝はApplyとSecondである。
+- Apply枝も閉じた。dispatchの実formationはcanonical instantiate family、existential packageが公開するcanonicalは独立result IHとし、
+  fold-local instantiate equalityから両層を結ぶprovenanceを構成する。global rebaseなしでapplication resultとresult formation IHが一致し、
+  constructor-level agreementの残りはSecondのみとなった。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
