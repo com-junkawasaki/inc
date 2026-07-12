@@ -9703,6 +9703,50 @@ structure IncDepRawFormationSubstitutionFiberEqualityProvider where
       (targetFormation := targetFormation) substitutionResult),
     first = second
 
+def incDepRawArbitraryEmptyBaseFiberResult (fiber : Type) :
+    IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := IncDepRawWellFormed.base
+        (context := []) (index := 0))
+      (IncDepRawSubstitutionSemanticResult.identity
+        incDepRawEmptyContextSemantic) where
+  targetFormationResult :=
+    { semanticType := fun _ => fiber }
+  sourceFormationResult :=
+    { semanticType := fun _ => fiber }
+  semanticFiberEquivalence :=
+    { fiberEquiv := fun _ => IncFiberEquiv.identity fiber }
+
+theorem incDepRaw_no_global_formation_fiber_equality_provider :
+    ¬ Nonempty IncDepRawFormationSubstitutionFiberEqualityProvider.{0} := by
+  intro provider
+  let unitResult := incDepRawArbitraryEmptyBaseFiberResult Unit
+  let boolResult := incDepRawArbitraryEmptyBaseFiberResult Bool
+  have resultEq := provider.1.equal unitResult boolResult
+  have familyEq := congrArg
+    (fun result => result.targetFormationResult.semanticType) resultEq
+  have fiberEq : Unit = Bool := congrFun familyEq (ULift.up ())
+  have boolSubsingleton : Subsingleton Bool :=
+    fiberEq ▸ (inferInstance : Subsingleton Unit)
+  exact Bool.false_ne_true (boolSubsingleton.elim false true)
+
+theorem incDepRaw_no_global_formation_fiber_rebase_provider :
+    ¬ Nonempty IncDepRawFormationSubstitutionFiberRebaseProvider.{0} := by
+  intro provider
+  rcases provider with ⟨provider⟩
+  let unitResult := incDepRawArbitraryEmptyBaseFiberResult Unit
+  let boolResult := incDepRawArbitraryEmptyBaseFiberResult Bool
+  let rebase := provider.provide unitResult boolResult
+  let equivalence := rebase.sourceEquivalence.fiberEquiv (ULift.up ())
+  change IncFiberEquiv Unit Bool at equivalence
+  have boolSubsingleton : Subsingleton Bool :=
+    { allEq := fun first second =>
+        (equivalence.forward_backward first).symm.trans
+          ((congrArg equivalence.forward
+            (Subsingleton.elim (equivalence.backward first)
+              (equivalence.backward second))).trans
+            (equivalence.forward_backward second)) }
+  exact Bool.false_ne_true (boolSubsingleton.elim false true)
+
 def IncDepRawFormationSubstitutionFiberEqualityProvider.toRebase
     (provider : IncDepRawFormationSubstitutionFiberEqualityProvider) :
     IncDepRawFormationSubstitutionFiberRebaseProvider where

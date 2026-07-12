@@ -297,6 +297,12 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `IncDepRawSubstitutionFiberModel`は`baseModel`だけを持つ構造となり、`incDepRawUnitSubstitutionFiberModel`は条件付きshellではない完全な具体
   substitution-fiber modelである。`withUnitBase_eq_unit`は全universe-zero modelがこれへnormalizeすることも示す。fully lawful modelへの残件は
   semantic Pi/Sigma model構成ではなく、variable substitution、readiness alignment、formation rebase/equalityというcanonical preservation-law layerだけである。
+- countermodel auditにより、既存global rebase/equality interfacesは証明待ちlawではなく過大全称であると判明した。
+  `IncDepRawFormationSemanticResult`は任意contextual familyを許すため、同じempty-context base formationにUnit fiber resultとBool fiber resultを構成できる。
+  `incDepRaw_no_global_formation_fiber_equality_provider`と`incDepRaw_no_global_formation_fiber_rebase_provider`はuniverse 0で、全result間のliteral equalityも
+  fiber equivalenceも一様供給不能（供給すればBoolがSubsingletonになる）と証明する。旧`LawfulSubstitutionFiberModel`は過強境界の記録として残すが、
+  concrete lawful modelの存在根拠とは扱わない。preservation lawfulnessはcanonical interpreter/dispatcherが生成したresultまたはprovenance invariant付きresultへ
+  量化し直し、任意Unit/Bool reinterpretationを除外する必要がある。従来の不可能なcompletion criterionを撤回し、次の作業をcanonical-generated lawへ限定する。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
