@@ -1358,6 +1358,11 @@ cycle 38–41 で以下の3極構造が判明した:
   naturality fragmentはinstantiate agreement、dependent assembly coherence、generated Identity
   assembly coherenceを保持する。legacy weak dependent/Identity providersもunrestricted path
   providerも含まず、alternate final dispatcherのtarget inputsとなる。
+  recursive typing handlersが実際に消費する単一整列操作を
+  `RecursiveGeneratedAgreementProvider`として抽象化した。`ofWeak`はlegacy
+  dependent/Identity lawsから、`ofAssembly`はrelational assembly lawsから同じserviceを
+  構成し、readiness transportも内部処理する。handlerをこのservice消費へrefactorすれば、
+  formation整列を行う6 handlersを複製せずfinal dispatcherをstrong routeへ切替できる。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

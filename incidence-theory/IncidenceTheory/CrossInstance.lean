@@ -16224,6 +16224,61 @@ theorem IncDepRawCanonicalFormationFoldOutput.RecursivelyGenerated.castReady
   cases readyEq
   exact generated
 
+/-- The only formation-alignment operation required by recursive typing
+handlers, abstracted from whether it is implemented by weak or relational laws. -/
+structure IncDepRawCanonicalRecursiveGeneratedAgreementProvider
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider) where
+  align : ∀
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {firstReady secondReady :
+      IncDepRawCoherentFormationDispatchReady formation}
+    (first : IncDepRawCanonicalFormationFoldOutput.{u} firstReady)
+    (second : IncDepRawCanonicalFormationFoldOutput.{u} secondReady),
+    first.RecursivelyGenerated model variableProvider →
+    second.RecursivelyGenerated model variableProvider →
+    IncDepRawCanonicalFormationFoldAgreement first.fold second.fold
+
+def IncDepRawCanonicalRecursiveGeneratedAgreementProvider.ofWeak
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (dependentAgreement :
+      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
+    (identityAgreement :
+      IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider model)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider) :
+    IncDepRawCanonicalRecursiveGeneratedAgreementProvider model
+      variableProvider where
+  align := fun first second firstGenerated secondGenerated =>
+    let readyEq := readinessAlignment.alignFormation _ _
+    let castSecond := second.castReady readyEq
+    let castGenerated := secondGenerated.castReady readyEq
+    let sameReady := firstGenerated.agreement dependentAgreement
+      identityAgreement castGenerated
+    { agree := by
+        intro source substitution sourceWellFormed targetWellFormed sourceResult
+          targetResult substitutionResult targetTree replacements
+        calc
+          (first.fold targetTree replacements).canonical =
+              (castSecond.fold targetTree replacements).canonical :=
+            sameReady.agree targetTree replacements
+          _ = (second.fold targetTree replacements).canonical :=
+            (second.castReady_canonical readyEq targetTree replacements).symm }
+
+def IncDepRawCanonicalRecursiveGeneratedAgreementProvider.ofAssembly
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (assembly : IncDepRawCanonicalDependentAssemblyCoherenceProvider model)
+    (identityAssembly :
+      IncDepRawCanonicalGeneratedIdentityAssemblyCoherenceProvider model)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider) :
+    IncDepRawCanonicalRecursiveGeneratedAgreementProvider model
+      variableProvider where
+  align := fun _ _ firstGenerated secondGenerated =>
+    firstGenerated.agreementAcrossReadyOfAssembly assembly identityAssembly
+      readinessAlignment secondGenerated
+
 theorem
     IncDepRawCanonicalFormationFoldOutput.RecursivelyGenerated.agreementAcrossReady
     {model : IncDepRawSubstitutionFiberModel.{u}}

@@ -1373,6 +1373,13 @@ It currently establishes:
   These records contain neither legacy weak dependent/Identity providers nor an
   unrestricted path provider.  They are now the target inputs for the alternate
   final dispatcher.
+  `RecursiveGeneratedAgreementProvider` now abstracts the single alignment
+  operation actually consumed by recursive typing handlers.  `ofWeak` implements
+  it from the legacy dependent/Identity laws, while `ofAssembly` implements the
+  same service from relational assembly laws.  Both handle readiness transport
+  internally.  Refactoring handlers to consume this service will switch the
+  final dispatcher to the strong route without duplicating the six handlers that
+  align recursive formation outputs.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
