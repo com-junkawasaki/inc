@@ -1418,10 +1418,13 @@ cycle 38–41 で以下の3極構造が判明した:
   **Current status (2026-07-12):** 上記の段階的履歴の残件は解消された。13枝すべての
   formation/typing相互fold、recursive provenance、path agreement、lawful/strict
   dispatcherへの射影がcheckedである。さらに
-  `IncDepRawRelationalLawfulSubstitutionFiberModel`はpreservation coreと
+  `IncDepRawRelationalLawfulSubstitutionFiberModel`は実際にfoldが消費する
+  scoped preservation core（variable replacement + readiness alignment）と
   instantiate/dependent/identityの3 relational naturality lawsを強い形のまま束ねる。
   `IncDepRawUnitRelationalCompletion`は具体的Unit-fiber modelの残る証明義務を正確に
-  型として固定し、inhabitantからlawful/strict preservationを直接得る。現在の残件は
+  型として固定し、inhabitantからlawful/strict preservationを直接得る。旧canonical coreの
+  global fiber rebaseは一般に存在しないことが既に反証済みで、provider-free foldも使用しないため、
+  completionから除外した。現在の残件は
   recursor構築ではなく、このUnit completionを実際にinhabitすることである。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。

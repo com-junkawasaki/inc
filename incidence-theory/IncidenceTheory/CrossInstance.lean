@@ -18523,9 +18523,29 @@ structure IncDepRawAssemblyLawfulSubstitutionFiberModel where
   model : IncDepRawSubstitutionFiberModel.{u}
   assemblyLaws : IncDepRawCanonicalProviderFreeAssemblyHypotheses.{u} model
 
+/-- The reusable preservation core actually consumed by the provider-free
+recursive fold.  Unlike the legacy canonical hypotheses, it contains no
+impossible global fiber-rebase field. -/
+structure IncDepRawCanonicalRecursivePreservationCore where
+  variableProvider : IncDepRawVariableSubstitutionProvider
+  readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider
+
+def IncDepRawCanonicalRecursivePreservationCore.ofLegacy
+    (hypotheses : IncDepRawCanonicalSubstitutionPreservationHypotheses) :
+    IncDepRawCanonicalRecursivePreservationCore where
+  variableProvider := hypotheses.variableProvider
+  readinessAlignment := hypotheses.readinessProvider
+
+def IncDepRawCanonicalProviderFreeAssemblyHypotheses.toRecursiveCore
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (hypotheses : IncDepRawCanonicalProviderFreeAssemblyHypotheses.{u} model) :
+    IncDepRawCanonicalRecursivePreservationCore where
+  variableProvider := hypotheses.variableProvider
+  readinessAlignment := hypotheses.readinessAlignment
+
 structure IncDepRawRelationalLawfulSubstitutionFiberModel where
   model : IncDepRawSubstitutionFiberModel.{u}
-  preservation : IncDepRawCanonicalSubstitutionPreservationHypotheses
+  preservation : IncDepRawCanonicalRecursivePreservationCore
   relationalLaws :
     IncDepRawCanonicalProviderFreeRelationalNaturalityLaws.{u} model
 
@@ -18533,7 +18553,10 @@ def IncDepRawRelationalLawfulSubstitutionFiberModel.toAssemblyLawful
     (model : IncDepRawRelationalLawfulSubstitutionFiberModel.{u}) :
     IncDepRawAssemblyLawfulSubstitutionFiberModel.{u} where
   model := model.model
-  assemblyLaws := .ofRelational model.preservation model.relationalLaws
+  assemblyLaws :=
+    { variableProvider := model.preservation.variableProvider
+      readinessAlignment := model.preservation.readinessAlignment
+      naturality := model.relationalLaws.toAssembly }
 
 structure IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage1 where
   model : IncDepRawSubstitutionFiberModel.{u}
@@ -19132,7 +19155,7 @@ def incDepRawUnitSubstitutionFiberModel :
 an unconditional canonical preservation model.  Keeping the relational laws
 here avoids discarding their stronger assembly-level statements. -/
 structure IncDepRawUnitRelationalCompletion where
-  preservation : IncDepRawCanonicalSubstitutionPreservationHypotheses
+  preservation : IncDepRawCanonicalRecursivePreservationCore
   relationalLaws :
     IncDepRawCanonicalProviderFreeRelationalNaturalityLaws
       incDepRawUnitSubstitutionFiberModel

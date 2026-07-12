@@ -2598,13 +2598,17 @@ For the dependent raw Pi/Sigma/Identity calculus, canonical mutual
 substitution preservation now covers every formation and typing constructor
 and exposes lawful and strict dispatchers with path agreement.
 `IncDepRawRelationalLawfulSubstitutionFiberModel` packages a semantic model,
-the preservation core, and the three strong relational naturality laws
+the exact recursive preservation core (variable replacement and readiness
+alignment), and the three strong relational naturality laws
 (instantiation, dependent assembly, and generated identity) without first
 weakening those laws.  The exact remaining obligation for the concrete
 Unit-fiber model is represented by `IncDepRawUnitRelationalCompletion`; an
 inhabitant projects directly to lawful and strict preservation.  The target
 type and projections are checked, but the completion is not yet inhabited,
 so a concrete unconditional preservation theorem is not claimed yet.
+In particular, this scoped core deliberately omits the legacy global fiber
+rebase field: the library proves that no such provider exists in general, and
+the provider-free recursive theorem does not consume it.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo
