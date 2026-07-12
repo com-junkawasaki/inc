@@ -1558,6 +1558,11 @@ cycle 38–41 で以下の3極構造が判明した:
   `preserves`とreadiness proofの循環を除去した。normalized liftは両lookup枝で証明済みで、newestは
   substituted domain formationをweakening renameし、olderは任意replacementをtotal normalized
   renamerでweakeningする。明示的`rename_substitute`等式がformation/typing/readinessを同期transportする。
+  normalized substitution theoremをtotal化した。formation/typingの相互再帰
+  `substituteNormalized`が全規則を覆う。Pi/Sigma/Lambdaは証明済みnormalized liftを再帰利用し、
+  Apply/Pair/Secondは`instantiate_substitute`同期cast、Identity/Reflはalignment仮定なしで閉じる。
+  dependent raw calculusの従来conditionalだったstructural substitution-preservation境界は、
+  normalized readiness levelで解消された。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

@@ -2793,6 +2793,14 @@ is proved for both lookup branches: the newest variable renames the substituted
 domain formation, while an older variable renames its arbitrary replacement
 through the total normalized renamer.  Explicit `rename_substitute` equations
 transport formation, typing, and readiness in lockstep.
+The normalized substitution theorem is now total.  The mutually recursive
+`IncDepRawFormationDispatchReady.substituteNormalized` and
+`IncDepRawTypingDispatchReady.substituteNormalized` cover every formation and
+typing rule.  Pi/Sigma/Lambda recurse through the proved normalized lift;
+Apply/Pair/Second use synchronized `instantiate_substitute` casts; and
+Identity/Refl need no proof-alignment hypothesis.  This closes the previously
+conditional structural substitution-preservation boundary for the dependent
+raw calculus at normalized readiness level.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

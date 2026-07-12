@@ -8132,6 +8132,159 @@ noncomputable def IncDepRawNormalizedReadinessPreservingSubstitution.lift
             substitutedTyping := renamedResult.renamedTyping.castType typeEq.symm
             readiness := renamedResult.readiness.castType typeEq.symm }
 
+mutual
+  noncomputable def IncDepRawFormationDispatchReady.substituteNormalized
+      {source target : List IncDepRawType} {type : IncDepRawType}
+      {formation : IncDepRawWellFormed target type}
+      (ready : IncDepRawFormationDispatchReady formation)
+      (substitution : IncDepRawNormalizedReadinessPreservingSubstitution
+        source target) :
+      IncDepRawNormalizedFormationSubstitutionResult
+        (source := source) (target := target) (type := type)
+        substitution.term :=
+    match ready with
+    | .base =>
+        { substitutedFormation := .base
+          readiness := .base }
+    | .unit =>
+        { substitutedFormation := .unit
+          readiness := .unit }
+    | .pi domainReady codomainReady =>
+        let domainResult := domainReady.substituteNormalized substitution
+        let lifted := substitution.lift domainResult
+        let codomainResult := codomainReady.substituteNormalized lifted
+        { substitutedFormation := .pi domainResult.substitutedFormation
+            codomainResult.substitutedFormation
+          readiness := .pi domainResult.readiness codomainResult.readiness }
+    | .sigma domainReady codomainReady =>
+        let domainResult := domainReady.substituteNormalized substitution
+        let lifted := substitution.lift domainResult
+        let codomainResult := codomainReady.substituteNormalized lifted
+        { substitutedFormation := .sigma domainResult.substitutedFormation
+            codomainResult.substitutedFormation
+          readiness := .sigma domainResult.readiness codomainResult.readiness }
+    | .identity typeReady leftReady rightReady =>
+        let typeResult := typeReady.substituteNormalized substitution
+        let leftResult := leftReady.substituteNormalized substitution
+        let rightResult := rightReady.substituteNormalized substitution
+        { substitutedFormation := .identity typeResult.substitutedFormation
+            leftResult.substitutedTyping rightResult.substitutedTyping
+          readiness := .identity typeResult.readiness leftResult.readiness
+            rightResult.readiness }
+
+  noncomputable def IncDepRawTypingDispatchReady.substituteNormalized
+      {source target : List IncDepRawType} {term : IncDepRawTerm}
+      {type : IncDepRawType} {typing : IncDepRawHasType target term type}
+      (ready : IncDepRawTypingDispatchReady typing)
+      (substitution : IncDepRawNormalizedReadinessPreservingSubstitution
+        source target) :
+      IncDepRawNormalizedTypingSubstitutionResult
+        (source := source) (target := target) (term := term) (type := type)
+        substitution.term :=
+    match ready with
+    | @IncDepRawTypingDispatchReady.varRule _ _ _ lookup _ _ =>
+        substitution.preservesNormalized lookup
+    | .unitRule =>
+        { formationResult :=
+            { substitutedFormation := .unit
+              readiness := .unit }
+          substitutedTyping := .unitRule
+          readiness := .unitRule }
+    | .lambdaRule domainReady codomainReady bodyReady =>
+        let domainResult := domainReady.substituteNormalized substitution
+        let lifted := substitution.lift domainResult
+        let codomainResult := codomainReady.substituteNormalized lifted
+        let bodyResult := bodyReady.substituteNormalized lifted
+        { formationResult :=
+            { substitutedFormation := .pi domainResult.substitutedFormation
+                codomainResult.substitutedFormation
+              readiness := .pi domainResult.readiness codomainResult.readiness }
+          substitutedTyping := .lambdaRule domainResult.substitutedFormation
+            bodyResult.substitutedTyping
+          readiness := .lambdaRule domainResult.readiness
+            codomainResult.readiness bodyResult.readiness }
+    | @IncDepRawTypingDispatchReady.applyRule _ domain codomain _ argument
+        _ _ _ _ _ domainReady codomainReady resultReady functionReady
+        argumentReady => by
+        let domainResult := domainReady.substituteNormalized substitution
+        let lifted := substitution.lift domainResult
+        let codomainResult := codomainReady.substituteNormalized lifted
+        let resultResult := resultReady.substituteNormalized substitution
+        let functionResult := functionReady.substituteNormalized substitution
+        let argumentResult := argumentReady.substituteNormalized substitution
+        let typeEq := IncDepRawType.instantiate_substitute codomain argument
+          substitution.term
+        let constructedTyping := IncDepRawHasType.applyRule
+          functionResult.substitutedTyping argumentResult.substitutedTyping
+        exact
+          { formationResult := resultResult
+            substitutedTyping := constructedTyping.castType typeEq.symm
+            readiness :=
+              (IncDepRawTypingDispatchReady.applyRule domainResult.readiness
+                codomainResult.readiness (resultResult.readiness.castType typeEq)
+                functionResult.readiness argumentResult.readiness).castType
+                  typeEq.symm }
+    | @IncDepRawTypingDispatchReady.pairRule _ domain codomain first _
+        _ _ _ _ _ domainReady codomainReady resultReady firstReady
+        secondReady => by
+        let domainResult := domainReady.substituteNormalized substitution
+        let lifted := substitution.lift domainResult
+        let codomainResult := codomainReady.substituteNormalized lifted
+        let resultResult := resultReady.substituteNormalized substitution
+        let firstResult := firstReady.substituteNormalized substitution
+        let secondResult := secondReady.substituteNormalized substitution
+        let typeEq := IncDepRawType.instantiate_substitute codomain first
+          substitution.term
+        exact
+          { formationResult :=
+              { substitutedFormation := .sigma domainResult.substitutedFormation
+                  codomainResult.substitutedFormation
+                readiness := .sigma domainResult.readiness
+                  codomainResult.readiness }
+            substitutedTyping := .pairRule firstResult.substitutedTyping
+              (secondResult.substitutedTyping.castType typeEq)
+            readiness := .pairRule domainResult.readiness
+              codomainResult.readiness (resultResult.readiness.castType typeEq)
+              firstResult.readiness (secondResult.readiness.castType typeEq) }
+    | .firstRule domainReady codomainReady pairReady =>
+        let domainResult := domainReady.substituteNormalized substitution
+        let lifted := substitution.lift domainResult
+        let codomainResult := codomainReady.substituteNormalized lifted
+        let pairResult := pairReady.substituteNormalized substitution
+        { formationResult := domainResult
+          substitutedTyping := .firstRule pairResult.substitutedTyping
+          readiness := .firstRule domainResult.readiness codomainResult.readiness
+            pairResult.readiness }
+    | @IncDepRawTypingDispatchReady.secondRule _ domain codomain pair
+        _ _ _ _ domainReady codomainReady resultReady pairReady => by
+        let domainResult := domainReady.substituteNormalized substitution
+        let lifted := substitution.lift domainResult
+        let codomainResult := codomainReady.substituteNormalized lifted
+        let resultResult := resultReady.substituteNormalized substitution
+        let pairResult := pairReady.substituteNormalized substitution
+        let typeEq := IncDepRawType.instantiate_substitute codomain (.first pair)
+          substitution.term
+        let constructedTyping := IncDepRawHasType.secondRule
+          pairResult.substitutedTyping
+        exact
+          { formationResult := resultResult
+            substitutedTyping := constructedTyping.castType typeEq.symm
+            readiness :=
+              (IncDepRawTypingDispatchReady.secondRule domainResult.readiness
+                codomainResult.readiness (resultResult.readiness.castType typeEq)
+                pairResult.readiness).castType typeEq.symm }
+    | .reflRule typeReady termReady =>
+        let typeResult := typeReady.substituteNormalized substitution
+        let termResult := termReady.substituteNormalized substitution
+        { formationResult :=
+            { substitutedFormation := .identity typeResult.substitutedFormation
+                termResult.substitutedTyping termResult.substitutedTyping
+              readiness := .identity typeResult.readiness termResult.readiness
+                termResult.readiness }
+          substitutedTyping := .reflRule termResult.substitutedTyping
+          readiness := .reflRule typeResult.readiness termResult.readiness }
+end
+
 structure IncDepRawStrictTypingDispatchReady
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} (typing : IncDepRawHasType context term type)
