@@ -1100,6 +1100,13 @@ It currently establishes:
   `ReadinessLawful`, asserting only that formation evaluation is insensitive to
   the choice of coherent-readiness proof.  With that law,
   `toLawfulMutualFold` produces the fully lawful package.
+  A computational sufficient condition is now formalized as
+  `ReadinessStable`: casting a formation output along the readiness equality
+  must equal evaluation at the target readiness proof.  `castReady_canonical`
+  proves such casts preserve the canonical result, and
+  `ReadinessStable.toLawful` derives the fold-local readiness agreement.  Thus
+  the remaining readiness theorem is a structural proof that the final
+  formation recursion commutes with proof-index casts, not a new semantic law.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

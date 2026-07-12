@@ -14304,6 +14304,29 @@ def IncDepRawCanonicalFormationFoldOutput.castReady
   cases readyEq
   exact output
 
+theorem IncDepRawCanonicalFormationFoldOutput.castReady_canonical
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {firstReady secondReady :
+      IncDepRawCoherentFormationDispatchReady formation}
+    (output : IncDepRawCanonicalFormationFoldOutput firstReady)
+    (readyEq : firstReady = secondReady)
+    {source : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source context}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed context}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult) :
+    (output.fold targetTree replacements).canonical =
+      ((output.castReady readyEq).fold targetTree replacements).canonical := by
+  cases readyEq
+  rfl
+
 def IncDepRawSubstitutionFiberModel.canonicalFormationFoldOutputBase
     (model : IncDepRawSubstitutionFiberModel.{u})
     {context : List IncDepRawType} {index : Nat} :
@@ -15215,6 +15238,45 @@ structure IncDepRawCanonicalAnchoredMutualFoldDispatcher.ReadinessLawful
     IncDepRawCanonicalFormationFoldAgreement
       (anchored.formation firstReady).fold
       (anchored.formation secondReady).fold
+
+structure IncDepRawCanonicalAnchoredMutualFoldDispatcher.ReadinessStable
+    (anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u})
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider) : Prop where
+  formation_eq : ∀
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (firstReady secondReady :
+      IncDepRawCoherentFormationDispatchReady formation),
+    (anchored.formation firstReady).castReady
+      (readinessAlignment.alignFormation firstReady secondReady) =
+        anchored.formation secondReady
+
+theorem
+    IncDepRawCanonicalAnchoredMutualFoldDispatcher.ReadinessStable.toLawful
+    {anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u}}
+    {readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider}
+    (stable : anchored.ReadinessStable readinessAlignment) :
+    anchored.ReadinessLawful where
+  formationAgreement := by
+    intro context type formation firstReady secondReady
+    let readyEq := readinessAlignment.alignFormation firstReady secondReady
+    have outputEq := stable.formation_eq firstReady secondReady
+    exact
+      { agree := by
+          intro source substitution sourceWellFormed targetWellFormed
+            sourceResult targetResult substitutionResult targetTree replacements
+          have packageEq := congrArg
+            (fun output => output.fold targetTree replacements) outputEq
+          calc
+            ((anchored.formation firstReady).fold targetTree
+                replacements).canonical =
+                (((anchored.formation firstReady).castReady readyEq).fold
+                  targetTree replacements).canonical :=
+              (anchored.formation firstReady).castReady_canonical readyEq
+                targetTree replacements
+            _ = ((anchored.formation secondReady).fold targetTree
+                  replacements).canonical :=
+              congrArg (fun package => package.canonical) packageEq }
 
 theorem
     IncDepRawCanonicalAnchoredMutualFoldDispatcher.dispatcher_lawful_of_readiness
