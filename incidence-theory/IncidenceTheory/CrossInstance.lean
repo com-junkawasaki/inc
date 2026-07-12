@@ -15481,6 +15481,40 @@ noncomputable def IncDepRawSubstitutionFiberModel.canonicalMutualFoldDispatcher
   typing := model.canonicalTypingFold variableProvider readinessAlignment
     instantiateAgreementProvider pathAgreementProvider
 
+noncomputable def
+    IncDepRawSubstitutionFiberModel.canonicalAnchoredMutualFoldDispatcher
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (instantiateAgreementProvider :
+      IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
+    (pathAgreementProvider : IncDepRawCanonicalFoldPathAgreementProvider.{u}) :
+    IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u} where
+  formation := model.canonicalFormationFold variableProvider readinessAlignment
+    instantiateAgreementProvider pathAgreementProvider
+  typing := fun ready =>
+    let formationOutput := model.canonicalFormationFold variableProvider
+      readinessAlignment instantiateAgreementProvider pathAgreementProvider
+      ready.formationReady
+    let typingOutput := model.canonicalTypingFold variableProvider
+      readinessAlignment instantiateAgreementProvider pathAgreementProvider ready
+    typingOutput.anchor formationOutput
+      (pathAgreementProvider.dispatch ready.formationReady ready formationOutput
+        typingOutput)
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.canonicalLawfulMutualFold
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (instantiateAgreementProvider :
+      IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
+    (pathAgreementProvider : IncDepRawCanonicalFoldPathAgreementProvider.{u}) :
+    IncDepRawCanonicalLawfulMutualFold.{u} :=
+  (model.canonicalAnchoredMutualFoldDispatcher variableProvider
+    readinessAlignment instantiateAgreementProvider pathAgreementProvider)
+    |>.toLawfulMutualFoldCanonical readinessAlignment
+
 theorem IncDepRawSubstitutionFiberModel.canonicalMutualFoldDispatcher_lawful
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)
@@ -15512,6 +15546,15 @@ noncomputable def
     (hypotheses : IncDepRawCanonicalMutualFoldHypotheses.{u}) :
     IncDepRawCanonicalMutualFoldDispatcher.{u} :=
   model.canonicalMutualFoldDispatcher hypotheses.variableProvider
+    hypotheses.readinessAlignment hypotheses.instantiateAgreementProvider
+    hypotheses.pathAgreementProvider
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.canonicalAnchoredMutualFoldOfHypotheses
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalMutualFoldHypotheses.{u}) :
+    IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u} :=
+  model.canonicalAnchoredMutualFoldDispatcher hypotheses.variableProvider
     hypotheses.readinessAlignment hypotheses.instantiateAgreementProvider
     hypotheses.pathAgreementProvider
 

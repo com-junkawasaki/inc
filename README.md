@@ -1113,6 +1113,13 @@ It currently establishes:
   hypothesis.  `toLawfulMutualFoldCanonical` consequently promotes every
   anchored dispatcher to a lawful mutual fold using only readiness alignment.
   The sole remaining construction is the anchored dispatcher itself.
+  The anchored fixed-point API is now connected end to end under the scoped
+  inputs.  `canonicalAnchoredMutualFoldDispatcher` anchors the two recursive
+  projections at identical readiness indices, and `canonicalLawfulMutualFold`
+  promotes it using the generic readiness-stability theorem.  The hypotheses
+  record has a matching anchored constructor.  Ordinary, anchored, lawful, and
+  strict preservation projections are therefore all checked; unconditional
+  completion is now solely removal of the external path-agreement provider.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

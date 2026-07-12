@@ -458,6 +458,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - readiness theoremを一般に閉じた。任意anchored dispatcherについてreadiness equalityを消去するとcasted output equationは`rfl`へ還元され、
   `readinessStable`は追加model hypothesisを要しない。`toLawfulMutualFoldCanonical`はreadiness alignmentだけで任意anchored dispatcherをlawful mutual foldへ
   昇格する。残件はanchored dispatcher本体の構造再帰だけに再縮約された。
+- anchored fixed-point APIをscoped inputs下でend-to-end接続した。`canonicalAnchoredMutualFoldDispatcher`が同一readiness indexで両recursive projectionsを
+  anchorし、`canonicalLawfulMutualFold`が一般readiness-stability theoremでlawful packageへ昇格する。hypotheses record版constructorも追加。
+  ordinary/anchored/lawful/strict preservation projectionsはすべてcheckedとなり、無条件化は外部path-agreement provider除去だけになった。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
