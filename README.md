@@ -2629,6 +2629,12 @@ Apply API remains as a compatibility wrapper.  Pair and Second now have the
 corresponding `...ExactOfAgreement` builders as well, so all three consumers
 are localized.  The remaining step is to feed these builders from a provider
 quantified only over recursively generated results.
+`IncDepRawCanonicalRecursiveInstantiateAgreementProvider` now supplies exactly
+that contract: it quantifies only over provenance-carrying domain, codomain,
+result, and argument packages, plus their local alignment.  Apply is connected
+end-to-end through `recursivelyGeneratedTypingApplyScoped`; a legacy global
+relational provider projects to the scoped one for compatibility.  Pair and
+Second are the remaining recursive connections.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

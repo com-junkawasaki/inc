@@ -15958,8 +15958,6 @@ inductive IncDepRawCanonicalAnchoredTypingFoldOutput.Generated
         (.pi domainFormation codomainFormation)}
       {argumentReady : IncDepRawCoherentTypingDispatchReady argumentTyping
         domainFormation}
-      (instantiateAgreementProvider :
-        IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
       (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
       (codomainOutput : IncDepRawCanonicalFormationFoldOutput codomainReady)
       (resultOutput : IncDepRawCanonicalFormationFoldOutput resultReady)
@@ -15967,16 +15965,21 @@ inductive IncDepRawCanonicalAnchoredTypingFoldOutput.Generated
         (model.canonicalFormationFoldOutputPi domainReady codomainReady
           domainOutput codomainOutput))
       (argumentOutput : IncDepRawCanonicalAnchoredTypingFoldOutput argumentReady
-        domainOutput) :
+        domainOutput)
+      (instantiateAgreement : IncDepRawCanonicalFormationFoldAgreement
+        resultOutput.fold
+        (IncDepRawCanonicalInstantiateSubstitutionFoldMotive domainReady
+          codomainReady resultReady argumentReady domainOutput.fold
+          codomainOutput.fold argumentOutput.typing argumentOutput.agreement)) :
       Generated model variableProvider
         (model.canonicalFormationFoldOutputPi domainReady codomainReady
           domainOutput codomainOutput) functionOutput →
       Generated model variableProvider domainOutput argumentOutput →
       Generated model variableProvider resultOutput
-        (model.anchoredTypingFoldResultApplyExact instantiateAgreementProvider
+        (model.anchoredTypingFoldResultApplyExactOfAgreement
           domainReady codomainReady resultReady functionReady argumentReady
           domainOutput codomainOutput resultOutput functionOutput
-          argumentOutput).output
+          argumentOutput instantiateAgreement).output
   | pair {context : List IncDepRawType} {domain codomain : IncDepRawType}
       {first second : IncDepRawTerm}
       {domainFormation : IncDepRawWellFormed context domain}
@@ -16516,6 +16519,84 @@ structure IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput
   output : IncDepRawCanonicalAnchoredTypingFoldOutput.{u} ready formation.output
   generated : output.Generated model variableProvider
 
+/-- Instantiation naturality scoped to exactly the provenance-carrying inputs
+used by the recursive Apply/Pair/Second handlers. -/
+structure IncDepRawCanonicalRecursiveInstantiateAgreementProvider
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider) where
+  provide : ∀
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {argument : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {resultFormation : IncDepRawWellFormed context
+      (codomain.instantiate argument)}
+    {argumentTyping : IncDepRawHasType context argument domain}
+    {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+    {codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation}
+    {resultReady : IncDepRawCoherentFormationDispatchReady resultFormation}
+    {argumentReady : IncDepRawCoherentTypingDispatchReady argumentTyping
+      domainFormation}
+    (domain : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider domainReady)
+    (codomain : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider codomainReady)
+    (result : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider resultReady)
+    (argument : IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput
+      model variableProvider argumentReady)
+    (argumentAgreement : IncDepRawCanonicalFoldAgreement domain.output.fold
+      argument.output.typing),
+    IncDepRawCanonicalRelationalFormationFoldAgreement result.output.fold
+      (IncDepRawCanonicalInstantiateSubstitutionFoldMotive domainReady
+        codomainReady resultReady argumentReady domain.output.fold
+        codomain.output.fold argument.output.typing argumentAgreement)
+
+def IncDepRawCanonicalRecursiveInstantiateAgreementProvider.dispatch
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (provider : IncDepRawCanonicalRecursiveInstantiateAgreementProvider model
+      variableProvider)
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {argument : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {resultFormation : IncDepRawWellFormed context
+      (codomain.instantiate argument)}
+    {argumentTyping : IncDepRawHasType context argument domain}
+    {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+    {codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation}
+    {resultReady : IncDepRawCoherentFormationDispatchReady resultFormation}
+    {argumentReady : IncDepRawCoherentTypingDispatchReady argumentTyping
+      domainFormation}
+    (domain : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider domainReady)
+    (codomain : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider codomainReady)
+    (result : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider resultReady)
+    (argument : IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput
+      model variableProvider argumentReady)
+    (argumentAgreement : IncDepRawCanonicalFoldAgreement domain.output.fold
+      argument.output.typing) :
+    IncDepRawCanonicalFormationFoldAgreement result.output.fold
+      (IncDepRawCanonicalInstantiateSubstitutionFoldMotive domainReady
+        codomainReady resultReady argumentReady domain.output.fold
+        codomain.output.fold argument.output.typing argumentAgreement) :=
+  (provider.provide domain codomain result argument argumentAgreement)
+    |>.toHeterogeneousDiagonal
+    |>.toWeakOfSameReady
+
+def IncDepRawCanonicalRecursiveInstantiateAgreementProvider.ofGlobal
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (provider : IncDepRawCanonicalInstantiateAssemblyCoherenceProvider.{u}) :
+    IncDepRawCanonicalRecursiveInstantiateAgreementProvider model
+      variableProvider where
+  provide := fun domain codomain result argument argumentAgreement =>
+    provider.provide _ _ _ _ domain.output.fold codomain.output.fold
+      result.output.fold argument.output.typing argumentAgreement
+
 def IncDepRawSubstitutionFiberModel.recursivelyGeneratedFormationBase
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)
@@ -16710,14 +16791,84 @@ noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingAppl
     functionAgreement
   let alignedArgument := argument.output.retargetFormation domain.output
     argumentAgreement
+  let instantiateAgreement := instantiateAgreementProvider.dispatch domainReady
+    codomainReady resultReady argumentReady domain.output.fold
+    codomain.output.fold result.output.fold alignedArgument.typing
+    alignedArgument.agreement
   exact
     { formation := result
-      output := (model.anchoredTypingFoldResultApplyExact
-        instantiateAgreementProvider domainReady codomainReady resultReady
+      output := (model.anchoredTypingFoldResultApplyExactOfAgreement
+        domainReady codomainReady resultReady
         functionReady argumentReady domain.output codomain.output result.output
-        alignedFunction alignedArgument).output
-      generated := .apply instantiateAgreementProvider domain.output
+        alignedFunction alignedArgument instantiateAgreement).output
+      generated := .apply domain.output codomain.output result.output
+        alignedFunction alignedArgument instantiateAgreement
+        (.retarget function.formation.output pi.output function.output
+          functionAgreement function.generated)
+        (.retarget argument.formation.output domain.output argument.output
+          argumentAgreement argument.generated) }
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingApplyScoped
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (agreementProvider : IncDepRawCanonicalRecursiveGeneratedAgreementProvider
+      model variableProvider)
+    (instantiateAgreementProvider :
+      IncDepRawCanonicalRecursiveInstantiateAgreementProvider model
+        variableProvider)
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {function argument : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {resultFormation : IncDepRawWellFormed context
+      (codomain.instantiate argument)}
+    {functionTyping : IncDepRawHasType context function (.pi domain codomain)}
+    {argumentTyping : IncDepRawHasType context argument domain}
+    {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+    {codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation}
+    {resultReady : IncDepRawCoherentFormationDispatchReady resultFormation}
+    {functionReady : IncDepRawCoherentTypingDispatchReady functionTyping
+      (.pi domainFormation codomainFormation)}
+    {argumentReady : IncDepRawCoherentTypingDispatchReady argumentTyping
+      domainFormation}
+    (domain : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider domainReady)
+    (codomain : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider codomainReady)
+    (result : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider resultReady)
+    (function : IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput
+      model variableProvider functionReady)
+    (argument : IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput
+      model variableProvider argumentReady) :
+    IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+      variableProvider (.applyRule domainReady codomainReady resultReady
+        functionReady argumentReady) := by
+  let pi := model.recursivelyGeneratedFormationPi variableProvider domain
+    codomain
+  let functionAgreement : IncDepRawCanonicalFormationFoldAgreement
+      pi.output.fold function.formation.output.fold :=
+    agreementProvider.align pi.output function.formation.output
+      pi.recursivelyGenerated function.formation.recursivelyGenerated
+  let argumentAgreement : IncDepRawCanonicalFormationFoldAgreement
+      domain.output.fold argument.formation.output.fold :=
+    agreementProvider.align domain.output argument.formation.output
+      domain.recursivelyGenerated argument.formation.recursivelyGenerated
+  let alignedFunction := function.output.retargetFormation pi.output
+    functionAgreement
+  let alignedArgument := argument.output.retargetFormation domain.output
+    argumentAgreement
+  let instantiateAgreement := instantiateAgreementProvider.dispatch domain
+    codomain result argument alignedArgument.agreement
+  exact
+    { formation := result
+      output := (model.anchoredTypingFoldResultApplyExactOfAgreement domainReady
+        codomainReady resultReady functionReady argumentReady domain.output
         codomain.output result.output alignedFunction alignedArgument
+        instantiateAgreement).output
+      generated := .apply domain.output codomain.output result.output
+        alignedFunction alignedArgument instantiateAgreement
         (.retarget function.formation.output pi.output function.output
           functionAgreement function.generated)
         (.retarget argument.formation.output domain.output argument.output
@@ -17235,14 +17386,18 @@ noncomputable def IncDepRawSubstitutionFiberModel.generatedTypingOutputApply
     functionAgreement
   let alignedArgument := argument.output.retargetFormation domain.output
     argumentAgreement
+  let instantiateAgreement := instantiateAgreementProvider.dispatch domainReady
+    codomainReady resultReady argumentReady domain.output.fold
+    codomain.output.fold result.output.fold alignedArgument.typing
+    alignedArgument.agreement
   exact
     { formation := result
-      output := (model.anchoredTypingFoldResultApplyExact
-        instantiateAgreementProvider domainReady codomainReady resultReady
+      output := (model.anchoredTypingFoldResultApplyExactOfAgreement
+        domainReady codomainReady resultReady
         functionReady argumentReady domain.output codomain.output result.output
-        alignedFunction alignedArgument).output
-      generated := .apply instantiateAgreementProvider domain.output
-        codomain.output result.output alignedFunction alignedArgument
+        alignedFunction alignedArgument instantiateAgreement).output
+      generated := .apply domain.output codomain.output result.output
+        alignedFunction alignedArgument instantiateAgreement
         (.retarget function.formation.output pi.output function.output
           functionAgreement function.generated)
         (.retarget argument.formation.output domain.output argument.output
