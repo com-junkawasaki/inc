@@ -2785,6 +2785,14 @@ typing constructor.  Dependent Apply/Pair/Second use `instantiate_rename` and
 synchronized casts.  Because typing readiness is no longer formation-indexed,
 the theorem requires no alignment provider.  This is the renaming theorem
 needed by the older-variable branch of substitution lift.
+Normalized substitution readiness is now indexed by its replacement function,
+and the ordinary `IncDepRawSubstitution` is derived from the readiness-carrying
+typing results.  This removes the previous circularity between `preserves` and
+its readiness proof.  `IncDepRawNormalizedReadinessPreservingSubstitution.lift`
+is proved for both lookup branches: the newest variable renames the substituted
+domain formation, while an older variable renames its arbitrary replacement
+through the total normalized renamer.  Explicit `rename_substitute` equations
+transport formation, typing, and readiness in lockstep.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

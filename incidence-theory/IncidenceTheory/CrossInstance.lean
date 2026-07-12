@@ -7865,31 +7865,40 @@ structure IncDepRawNormalizedTypingRenamingResult
 
 structure IncDepRawNormalizedFormationSubstitutionResult
     {source target : List IncDepRawType} {type : IncDepRawType}
-    (substitution : IncDepRawSubstitution source target) where
+    (replacement : Nat → IncDepRawTerm) where
   substitutedFormation :
-    IncDepRawWellFormed source (type.substitute substitution.term)
+    IncDepRawWellFormed source (type.substitute replacement)
   readiness : IncDepRawFormationDispatchReady substitutedFormation
 
 structure IncDepRawNormalizedTypingSubstitutionResult
     {source target : List IncDepRawType}
     {term : IncDepRawTerm} {type : IncDepRawType}
-    (substitution : IncDepRawSubstitution source target) where
+    (replacement : Nat → IncDepRawTerm) where
   formationResult : IncDepRawNormalizedFormationSubstitutionResult
-    (type := type) substitution
+    (source := source) (target := target) (type := type) replacement
   substitutedTyping : IncDepRawHasType source
-    (term.substitute substitution.term) (type.substitute substitution.term)
+    (term.substitute replacement) (type.substitute replacement)
   readiness : IncDepRawTypingDispatchReady substitutedTyping
 
 /-- A substitution whose replacement at every lookup already carries normalized
 typing/formation readiness.  Unlike the coherent predecessor, this interface
 does not quantify over a caller-chosen formation proof object. -/
 structure IncDepRawNormalizedReadinessPreservingSubstitution
-    (source target : List IncDepRawType) extends
-    IncDepRawSubstitution source target where
+    (source target : List IncDepRawType) where
+  term : Nat → IncDepRawTerm
   preservesNormalized : ∀ {position : Nat} {type : IncDepRawType},
     IncDepRawLookup target position type →
     IncDepRawNormalizedTypingSubstitutionResult
-      (term := .var position) (type := type) toIncDepRawSubstitution
+      (source := source) (target := target)
+      (term := .var position) (type := type) term
+
+def IncDepRawNormalizedReadinessPreservingSubstitution.toIncDepRawSubstitution
+    {source target : List IncDepRawType}
+    (substitution : IncDepRawNormalizedReadinessPreservingSubstitution
+      source target) : IncDepRawSubstitution source target where
+  term := substitution.term
+  preserves := fun lookup =>
+    (substitution.preservesNormalized lookup).substitutedTyping
 
 def IncDepRawFormationDispatchReady.castType
     {context : List IncDepRawType} {first second : IncDepRawType}
@@ -8052,6 +8061,76 @@ mutual
           renamedTyping := .reflRule termResult.renamedTyping
           readiness := .reflRule typeResult.readiness termResult.readiness }
 end
+
+noncomputable def IncDepRawNormalizedReadinessPreservingSubstitution.lift
+    {source target : List IncDepRawType} {domain : IncDepRawType}
+    (substitution : IncDepRawNormalizedReadinessPreservingSubstitution
+      source target)
+    (domainResult : IncDepRawNormalizedFormationSubstitutionResult
+      (source := source) (target := target) (type := domain)
+      substitution.term) :
+    IncDepRawNormalizedReadinessPreservingSubstitution
+      (domain.substitute substitution.term :: source) (domain :: target) where
+  term := IncDepRawTerm.liftReplacement substitution.term
+  preservesNormalized := by
+    intro position type lookup
+    cases lookup with
+    | here =>
+        have mapEq :
+            IncDepRawTerm.liftReplacement substitution.term ∘ Nat.succ =
+              fun index => (substitution.term index).rename Nat.succ := by
+          funext index
+          rfl
+        let weakenMap :=
+          (IncDepRawRenaming.identity source).weakenTarget
+            (domain.substitute substitution.term)
+        let formationResult :=
+          domainResult.readiness.renameNormalized weakenMap
+        let typeEq :
+            (domain.rename Nat.succ).substitute
+                (IncDepRawTerm.liftReplacement substitution.term) =
+              (domain.substitute substitution.term).rename Nat.succ := by
+          rw [IncDepRawType.rename_substitute, mapEq,
+            ← IncDepRawType.substitute_rename]
+        let newestTyping : IncDepRawHasType
+            (domain.substitute substitution.term :: source) (.var 0)
+            ((domain.substitute substitution.term).rename Nat.succ) :=
+          .varRule IncDepRawLookup.here
+        exact
+          { formationResult :=
+              { substitutedFormation :=
+                  formationResult.renamedFormation.castType typeEq.symm
+                readiness := formationResult.readiness.castType typeEq.symm }
+            substitutedTyping := newestTyping.castType typeEq.symm
+            readiness :=
+              (IncDepRawTypingDispatchReady.varRule
+                formationResult.readiness).castType typeEq.symm }
+    | @there _ position previousType _ previous =>
+        have mapEq :
+            IncDepRawTerm.liftReplacement substitution.term ∘ Nat.succ =
+              fun index => (substitution.term index).rename Nat.succ := by
+          funext index
+          rfl
+        let previousResult := substitution.preservesNormalized previous
+        let weakenMap :=
+          (IncDepRawRenaming.identity source).weakenTarget
+            (domain.substitute substitution.term)
+        let renamedResult := previousResult.readiness.renameNormalized weakenMap
+        let typeEq :
+            (previousType.rename Nat.succ).substitute
+                (IncDepRawTerm.liftReplacement substitution.term) =
+              (previousType.substitute substitution.term).rename Nat.succ := by
+          rw [IncDepRawType.rename_substitute, mapEq,
+            ← IncDepRawType.substitute_rename]
+        exact
+          { formationResult :=
+              { substitutedFormation :=
+                  renamedResult.formationResult.renamedFormation.castType
+                    typeEq.symm
+                readiness :=
+                  renamedResult.formationResult.readiness.castType typeEq.symm }
+            substitutedTyping := renamedResult.renamedTyping.castType typeEq.symm
+            readiness := renamedResult.readiness.castType typeEq.symm }
 
 structure IncDepRawStrictTypingDispatchReady
     {context : List IncDepRawType} {term : IncDepRawTerm}
