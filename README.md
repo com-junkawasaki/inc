@@ -1386,6 +1386,13 @@ It currently establishes:
   coupling from those two handlers.  Apply, Pair, First, and Second remain to be
   switched to the same service before an assembly-only recursor can reuse the
   full handler set.
+  That handler refactor is now complete.  Apply, Pair, First, and Second join
+  Identity/Refl in consuming only `RecursiveGeneratedAgreementProvider`; every
+  weak-law recursor call site explicitly supplies `ofWeak`.  No final-motive
+  handler mentions the legacy dependent-formation or generated-Identity weak
+  provider types anymore.  The assembly-only dispatcher can therefore reuse all
+  13 handlers by supplying `ofAssembly`; only the recursor input bundle/wiring
+  remains.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

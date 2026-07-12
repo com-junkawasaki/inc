@@ -16461,11 +16461,8 @@ noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingLamb
 noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingFirst
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)
-    (dependentAgreement :
-      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
-    (identityAgreement :
-      IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider model)
-    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (agreementProvider : IncDepRawCanonicalRecursiveGeneratedAgreementProvider
+      model variableProvider)
     {context : List IncDepRawType} {domain codomain : IncDepRawType}
     {pair : IncDepRawTerm}
     {domainFormation : IncDepRawWellFormed context domain}
@@ -16487,8 +16484,8 @@ noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingFirs
     codomain
   let pairAgreement : IncDepRawCanonicalFormationFoldAgreement
       sigma.output.fold pair.formation.output.fold :=
-    sigma.recursivelyGenerated.agreementAcrossReady dependentAgreement
-      identityAgreement readinessAlignment pair.formation.recursivelyGenerated
+    agreementProvider.align sigma.output pair.formation.output
+      sigma.recursivelyGenerated pair.formation.recursivelyGenerated
   let alignedPair := pair.output.retargetFormation sigma.output pairAgreement
   exact
     { formation := domain
@@ -16501,11 +16498,8 @@ noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingFirs
 noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingApply
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)
-    (dependentAgreement :
-      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
-    (identityAgreement :
-      IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider model)
-    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (agreementProvider : IncDepRawCanonicalRecursiveGeneratedAgreementProvider
+      model variableProvider)
     (instantiateAgreementProvider :
       IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
     {context : List IncDepRawType} {domain codomain : IncDepRawType}
@@ -16540,14 +16534,12 @@ noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingAppl
     codomain
   let functionAgreement : IncDepRawCanonicalFormationFoldAgreement
       pi.output.fold function.formation.output.fold :=
-    pi.recursivelyGenerated.agreementAcrossReady dependentAgreement
-      identityAgreement readinessAlignment
-      function.formation.recursivelyGenerated
+    agreementProvider.align pi.output function.formation.output
+      pi.recursivelyGenerated function.formation.recursivelyGenerated
   let argumentAgreement : IncDepRawCanonicalFormationFoldAgreement
       domain.output.fold argument.formation.output.fold :=
-    domain.recursivelyGenerated.agreementAcrossReady dependentAgreement
-      identityAgreement readinessAlignment
-      argument.formation.recursivelyGenerated
+    agreementProvider.align domain.output argument.formation.output
+      domain.recursivelyGenerated argument.formation.recursivelyGenerated
   let alignedFunction := function.output.retargetFormation pi.output
     functionAgreement
   let alignedArgument := argument.output.retargetFormation domain.output
@@ -16568,11 +16560,8 @@ noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingAppl
 noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingPair
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)
-    (dependentAgreement :
-      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
-    (identityAgreement :
-      IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider model)
-    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (agreementProvider : IncDepRawCanonicalRecursiveGeneratedAgreementProvider
+      model variableProvider)
     (instantiateAgreementProvider :
       IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
     {context : List IncDepRawType} {domain codomain : IncDepRawType}
@@ -16606,12 +16595,12 @@ noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingPair
       (.pairRule domainReady codomainReady resultReady firstReady secondReady) := by
   let firstAgreement : IncDepRawCanonicalFormationFoldAgreement
       domain.output.fold first.formation.output.fold :=
-    domain.recursivelyGenerated.agreementAcrossReady dependentAgreement
-      identityAgreement readinessAlignment first.formation.recursivelyGenerated
+    agreementProvider.align domain.output first.formation.output
+      domain.recursivelyGenerated first.formation.recursivelyGenerated
   let secondAgreement : IncDepRawCanonicalFormationFoldAgreement
       result.output.fold second.formation.output.fold :=
-    result.recursivelyGenerated.agreementAcrossReady dependentAgreement
-      identityAgreement readinessAlignment second.formation.recursivelyGenerated
+    agreementProvider.align result.output second.formation.output
+      result.recursivelyGenerated second.formation.recursivelyGenerated
   let alignedFirst := first.output.retargetFormation domain.output firstAgreement
   let alignedSecond := second.output.retargetFormation result.output
     secondAgreement
@@ -16632,11 +16621,8 @@ noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingPair
 noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingSecond
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)
-    (dependentAgreement :
-      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
-    (identityAgreement :
-      IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider model)
-    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (agreementProvider : IncDepRawCanonicalRecursiveGeneratedAgreementProvider
+      model variableProvider)
     (instantiateAgreementProvider :
       IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
     {context : List IncDepRawType} {domain codomain : IncDepRawType}
@@ -16666,8 +16652,8 @@ noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingSeco
     codomain
   let pairAgreement : IncDepRawCanonicalFormationFoldAgreement
       sigma.output.fold pair.formation.output.fold :=
-    sigma.recursivelyGenerated.agreementAcrossReady dependentAgreement
-      identityAgreement readinessAlignment pair.formation.recursivelyGenerated
+    agreementProvider.align sigma.output pair.formation.output
+      sigma.recursivelyGenerated pair.formation.recursivelyGenerated
   let alignedPair := pair.output.retargetFormation sigma.output pairAgreement
   exact
     { formation := result
@@ -17891,26 +17877,26 @@ noncomputable def
         body)
     (fun _ _ _ _ _ domain codomain result function argument =>
       model.recursivelyGeneratedTypingApply hypotheses.variableProvider
-        hypotheses.dependentFormationAgreementProvider
-        hypotheses.generatedIdentityAgreementProvider
-        hypotheses.readinessAlignment hypotheses.instantiateAgreementProvider
+        (.ofWeak hypotheses.dependentFormationAgreementProvider
+          hypotheses.generatedIdentityAgreementProvider
+          hypotheses.readinessAlignment) hypotheses.instantiateAgreementProvider
         domain codomain result function argument)
     (fun _ _ _ _ _ domain codomain result first second =>
       model.recursivelyGeneratedTypingPair hypotheses.variableProvider
-        hypotheses.dependentFormationAgreementProvider
-        hypotheses.generatedIdentityAgreementProvider
-        hypotheses.readinessAlignment hypotheses.instantiateAgreementProvider
+        (.ofWeak hypotheses.dependentFormationAgreementProvider
+          hypotheses.generatedIdentityAgreementProvider
+          hypotheses.readinessAlignment) hypotheses.instantiateAgreementProvider
         domain codomain result first second)
     (fun _ _ _ domain codomain pair =>
       model.recursivelyGeneratedTypingFirst hypotheses.variableProvider
-        hypotheses.dependentFormationAgreementProvider
-        hypotheses.generatedIdentityAgreementProvider
-        hypotheses.readinessAlignment domain codomain pair)
+        (.ofWeak hypotheses.dependentFormationAgreementProvider
+          hypotheses.generatedIdentityAgreementProvider
+          hypotheses.readinessAlignment) domain codomain pair)
     (fun _ _ _ _ domain codomain result pair =>
       model.recursivelyGeneratedTypingSecond hypotheses.variableProvider
-        hypotheses.dependentFormationAgreementProvider
-        hypotheses.generatedIdentityAgreementProvider
-        hypotheses.readinessAlignment hypotheses.instantiateAgreementProvider
+        (.ofWeak hypotheses.dependentFormationAgreementProvider
+          hypotheses.generatedIdentityAgreementProvider
+          hypotheses.readinessAlignment) hypotheses.instantiateAgreementProvider
         domain codomain result pair)
     (fun _ _ typeOutput termOutput =>
       model.recursivelyGeneratedRefl hypotheses.variableProvider
@@ -17962,26 +17948,26 @@ noncomputable def
         body)
     (fun _ _ _ _ _ domain codomain result function argument =>
       model.recursivelyGeneratedTypingApply hypotheses.variableProvider
-        hypotheses.dependentFormationAgreementProvider
-        hypotheses.generatedIdentityAgreementProvider
-        hypotheses.readinessAlignment hypotheses.instantiateAgreementProvider
+        (.ofWeak hypotheses.dependentFormationAgreementProvider
+          hypotheses.generatedIdentityAgreementProvider
+          hypotheses.readinessAlignment) hypotheses.instantiateAgreementProvider
         domain codomain result function argument)
     (fun _ _ _ _ _ domain codomain result first second =>
       model.recursivelyGeneratedTypingPair hypotheses.variableProvider
-        hypotheses.dependentFormationAgreementProvider
-        hypotheses.generatedIdentityAgreementProvider
-        hypotheses.readinessAlignment hypotheses.instantiateAgreementProvider
+        (.ofWeak hypotheses.dependentFormationAgreementProvider
+          hypotheses.generatedIdentityAgreementProvider
+          hypotheses.readinessAlignment) hypotheses.instantiateAgreementProvider
         domain codomain result first second)
     (fun _ _ _ domain codomain pair =>
       model.recursivelyGeneratedTypingFirst hypotheses.variableProvider
-        hypotheses.dependentFormationAgreementProvider
-        hypotheses.generatedIdentityAgreementProvider
-        hypotheses.readinessAlignment domain codomain pair)
+        (.ofWeak hypotheses.dependentFormationAgreementProvider
+          hypotheses.generatedIdentityAgreementProvider
+          hypotheses.readinessAlignment) domain codomain pair)
     (fun _ _ _ _ domain codomain result pair =>
       model.recursivelyGeneratedTypingSecond hypotheses.variableProvider
-        hypotheses.dependentFormationAgreementProvider
-        hypotheses.generatedIdentityAgreementProvider
-        hypotheses.readinessAlignment hypotheses.instantiateAgreementProvider
+        (.ofWeak hypotheses.dependentFormationAgreementProvider
+          hypotheses.generatedIdentityAgreementProvider
+          hypotheses.readinessAlignment) hypotheses.instantiateAgreementProvider
         domain codomain result pair)
     (fun _ _ typeOutput termOutput =>
       model.recursivelyGeneratedRefl hypotheses.variableProvider
