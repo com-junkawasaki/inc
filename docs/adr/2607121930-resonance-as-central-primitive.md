@@ -104,3 +104,7 @@ case where the selector is complete and resonance has no unselected modes.
 - Completion is closed under incidence products: resonance laws, relational
   associativity, and bisimulation-quotient congruence all transport
   componentwise. The dependent normalized completion exposes this as `.prod`.
+- `incidenceSum` must not inherit the default selector-induced relation: doing
+  so provably erased unselected component modes. Its explicit `sumResonance`
+  now retains all same-side modes, supplies symmetric unit interactions, and
+  has a generic `ResonanceSpec` whenever both factors do.

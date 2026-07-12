@@ -73,12 +73,58 @@ def sumGlue {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
       | Sum.inr x2, Sum.inr y2 => (inc2.glue x2 y2).map Sum.inr
       | _, _ => none
 
+def sumResonance {I1 R1 T1 I2 R2 T2 : Type u}
+    [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (unit : I1 ⊕ I2) : (I1 ⊕ I2) → (I1 ⊕ I2) → (I1 ⊕ I2) → Prop :=
+  fun x y k =>
+    (x = unit ∧ k = y) ∨ (y = unit ∧ k = x) ∨
+      match x, y, k with
+      | .inl x1, .inl y1, .inl k1 => inc1.resonance x1 y1 k1
+      | .inr x2, .inr y2, .inr k2 => inc2.resonance x2 y2 k2
+      | _, _, _ => False
+
 def incidenceSum {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
   (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) :
   Incidence (I1 ⊕ I2) (R1 ⊕ R2) GraphType where
   boundary := sumBoundary inc1 inc2
   typeFunc := fun _ => GraphType.unit
+  resonance := sumResonance inc1 inc2 (Sum.inl inc1.unit)
   glue := sumGlue inc1 inc2 (Sum.inl inc1.unit)
+  selected_resonates := by
+    intro x y k selected
+    simp only [sumGlue] at selected
+    split at selected
+    next hy =>
+      have hk : k = x := by simpa using selected.symm
+      exact Or.inr (Or.inl ⟨hy, hk⟩)
+    next hy =>
+      split at selected
+      next hx =>
+        have hk : k = y := by simpa using selected.symm
+        exact Or.inl ⟨hx, hk⟩
+      next hx =>
+        cases x with
+        | inl x1 =>
+          cases y with
+          | inl y1 =>
+            cases glueEq : inc1.glue x1 y1 with
+            | none => simp [glueEq] at selected
+            | some k1 =>
+              simp [glueEq] at selected
+              subst k
+              exact Or.inr (Or.inr (inc1.selected_resonates glueEq))
+          | inr y2 => simp at selected
+        | inr x2 =>
+          cases y with
+          | inl y1 => simp at selected
+          | inr y2 =>
+            cases glueEq : inc2.glue x2 y2 with
+            | none => simp [glueEq] at selected
+            | some k2 =>
+              simp [glueEq] at selected
+              subst k
+              exact Or.inr (Or.inr (inc2.selected_resonates glueEq))
   unit := Sum.inl inc1.unit
   guards := Guards.permissive (I1 ⊕ I2)
   boundaryMatrix := fun _ _ => 0
@@ -137,6 +183,39 @@ def incidenceSum {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
     simp only [sumGlue]
     simp
   type_preserve := fun _ _ => rfl
+
+theorem incidenceSum_preserves_unselected_resonance_mode :
+    finiteIncidence.resonance .root .root .leaf ∧
+      (incidenceSum finiteIncidence finiteIncidence).resonance
+        (Sum.inl .root) (Sum.inl .root) (Sum.inl .leaf) := by
+  constructor
+  · trivial
+  · exact Or.inr (Or.inr True.intro)
+
+def resonanceSumSpec
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (first : ResonanceSpec inc1) (second : ResonanceSpec inc2) :
+    ResonanceSpec (incidenceSum inc1 inc2) where
+  symmetric := by
+    intro x y k resonant
+    rcases resonant with unitLeft | unitRight | sameSide
+    · exact Or.inr (Or.inl unitLeft)
+    · exact Or.inl unitRight
+    · rcases x with x1 | x2 <;> rcases y with y1 | y2 <;>
+        rcases k with k1 | k2
+      all_goals simp only [sumResonance] at sameSide ⊢
+      · exact Or.inr (Or.inr (first.symmetric sameSide))
+      · exact Or.inr (Or.inr (second.symmetric sameSide))
+  unit_left := by
+    intro i
+    exact Or.inl ⟨rfl, rfl⟩
+  unit_right := by
+    intro i
+    exact Or.inr (Or.inl ⟨rfl, rfl⟩)
+  type_compatible := by
+    intro i j k resonant
+    exact ⟨rfl, rfl⟩
 
 noncomputable def countablyPresentedIncidenceSum
     {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]

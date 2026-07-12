@@ -107,6 +107,13 @@ instantiate/substitute equalities with synchronized casts.
   and `IncDepRawNormalizedResonanceCompletion.prod` transports every completion
   field. `natIncidence × finiteIncidence` is a checked mixed functional/
   multi-valued instance.
+- The sum constructor was audited and corrected: its previous default
+  resonance was selector-induced and erased unselected modes of multi-valued
+  factors. `sumResonance` now lifts the full same-side relations and adds only
+  the required unit interactions; `selected_resonates` and `resonanceSumSpec`
+  are checked generically. A concrete theorem confirms that the finite
+  `(root, root, leaf)` mode survives the sum. Associativity and quotient
+  congruence for sums remain to be characterized.
 - Pushout preservation and generic boundary-square-zero are conditional on the
   categorical or linear hypotheses in their declarations.
 - Translation completeness is proved only for the stated fragments and
