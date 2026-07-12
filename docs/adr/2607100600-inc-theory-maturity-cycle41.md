@@ -341,6 +341,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `canonicalMutualFoldPi`/`canonicalMutualFoldSigma`がrecursive domain package、lifted semantic context/replacements、codomain packageを順に開いて
   provenance-aware constructorを返す。4handlersはglobal rebase/result-equality providerを要求しない。formation側の残りはendpoint typing resultsを
   canonical type resultへscoped provenanceでalignするIdentity handlerである。
+- typing recursor handlersも3つ配線した。`canonicalMutualFoldVariable`はformation IH packageを消費してexact existential canonical resultをlookup dispatch後も保持し、
+  `canonicalMutualFoldTypingUnit`はunit packageを直接生成し、`canonicalMutualFoldLambda`はdomain再帰、context/replacements extension、body再帰を経てcanonical Pi
+  formationをpackageする。いずれもreadiness alignment/rebase不要である。4formation handlersと合わせ13 mutual branches中7つがprovenance-scoped foldで実行可能。
+  残branchは中心不変条件を明示する：recursive typing canonical resultを対応する独立formation IH canonical resultと同定してから、Apply/Pair/projections/
+  Identity/Reflが消費する必要がある。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

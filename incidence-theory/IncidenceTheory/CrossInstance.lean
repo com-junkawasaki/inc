@@ -12653,6 +12653,34 @@ def IncDepRawSubstitutionFiberModel.mutualFoldTypingUnit
       (IncDepRawCoherentTypingDispatchReady.unitRule (context := context)) :=
   fun _ _ => model.dispatchStrictUnit _
 
+noncomputable def
+    IncDepRawVariableSubstitutionProvider.canonicalMutualFoldVariable
+    (provider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {typeFormation : IncDepRawWellFormed context type}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (typeIH : IncDepRawCanonicalFormationSubstitutionFoldMotive typeReady) :
+    IncDepRawCanonicalTypingSubstitutionFoldMotive
+      (IncDepRawCoherentTypingDispatchReady.varRule (lookup := lookup)
+        typeReady) :=
+  fun targetTree replacements =>
+    let typeResult := typeIH targetTree replacements
+    let result := provider.dispatchCanonicalVariable targetTree typeResult.result
+      replacements
+    { canonical := typeResult.canonical
+      result := result }
+
+def IncDepRawSubstitutionFiberModel.canonicalMutualFoldTypingUnit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} :
+    IncDepRawCanonicalTypingSubstitutionFoldMotive
+      (IncDepRawCoherentTypingDispatchReady.unitRule (context := context)) :=
+  fun _ _ =>
+    let result := model.dispatchCanonicalTypingUnit _
+    { canonical := model.unit _
+      result := result }
+
 noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldLambda
     (model : IncDepRawSubstitutionFiberModel.{u})
     (strictAlignment : IncDepRawStrictTypingReadinessAlignmentProvider)
@@ -12679,6 +12707,36 @@ noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldLambda
     let result := model.dispatchStrictLambda domainReady codomainReady strictBody
       domainResult.formationResult bodyResult
     result.castReady (strictAlignment.alignment _ _)
+
+noncomputable def IncDepRawSubstitutionFiberModel.canonicalMutualFoldLambda
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {body : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {bodyTyping : IncDepRawHasType (domain :: context) body codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (bodyReady : IncDepRawCoherentTypingDispatchReady bodyTyping
+      codomainFormation)
+    (domainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive domainReady)
+    (bodyIH : IncDepRawCanonicalTypingSubstitutionFoldMotive bodyReady) :
+    IncDepRawCanonicalTypingSubstitutionFoldMotive
+      (IncDepRawCoherentTypingDispatchReady.lambdaRule domainReady bodyReady) :=
+  fun targetTree replacements =>
+    let domain := domainIH targetTree replacements
+    let domainResult := domain.result.dispatchResult
+    let extendedTree := IncDepRawContextSemanticTree.extend targetTree
+      domainResult.formationResult.targetFormationResult
+    let liftedReplacements := replacements.liftResult domainResult.formationResult
+    let body := bodyIH extendedTree liftedReplacements
+    let bodyResult := body.result.dispatchResult
+    let codomainReady := bodyReady.formationReady
+    let strictBody := IncDepRawStrictTypingDispatchReady.ofCoherent bodyReady
+    let result := model.dispatchCanonicalLambda domainReady codomainReady
+      strictBody domainResult.formationResult bodyResult
+    { canonical := model.pi domainResult.formationResult
+        bodyResult.formationResult
+      result := result }
 
 noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldRefl
     (model : IncDepRawSubstitutionFiberModel.{u})

@@ -851,6 +851,19 @@ It currently establishes:
   Identity is the remaining formation handler because its endpoint typing
   results must first be aligned to the canonical type result using scoped
   provenance.
+  Three typing recursor handlers are now wired as well.
+  `canonicalMutualFoldVariable` consumes the formation IH package and preserves
+  its exact existential canonical result through lookup dispatch;
+  `canonicalMutualFoldTypingUnit` creates the unit package directly; and
+  `canonicalMutualFoldLambda` recursively interprets the domain, extends the
+  context and replacements, interprets the body, and packages the resulting
+  canonical Pi formation.  None requires readiness alignment or rebase.
+  Together with the four formation handlers, seven of the thirteen mutual
+  recursor branches now execute in the provenance-scoped fold.  The remaining
+  branches expose the central invariant still to encode: recursive typing
+  canonical results must be identified with the corresponding independently
+  computed formation IH canonical result before Apply, Pair, projections,
+  Identity, and Refl can consume them.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
