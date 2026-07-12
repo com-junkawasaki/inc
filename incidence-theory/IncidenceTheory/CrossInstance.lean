@@ -12684,6 +12684,33 @@ abbrev IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive
     IncDepRawSubstitutionReplacementSemanticResult substitutionResult →
     IncDepRawAlignedCanonicalTypingFoldResult ready substitutionResult
 
+structure IncDepRawCanonicalFoldAgreement
+    {target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {formationReady : IncDepRawCoherentFormationDispatchReady targetFormation}
+    {typingReady : IncDepRawCoherentTypingDispatchReady targetTyping
+      targetFormation}
+    (formationIH : IncDepRawCanonicalFormationSubstitutionFoldMotive
+      formationReady)
+    (typingIH : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive
+      typingReady) : Prop where
+  agree : ∀ {source : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult),
+    IncDepRawCanonicalFormationTypingAgreement
+      (formationIH targetTree replacements)
+      (typingIH targetTree replacements).typing
+
 def IncDepRawSubstitutionFiberModel.mutualFoldBase
     (model : IncDepRawSubstitutionFiberModel.{u})
     {context : List IncDepRawType} {index : Nat} :
@@ -12804,6 +12831,54 @@ noncomputable def IncDepRawSubstitutionFiberModel.canonicalMutualFoldSigma
     let result := model.dispatchCanonicalSigmaFormation domainResult codomainResult
     { canonical := model.sigma domainResult.formationResult
         codomainResult.formationResult
+      result := result }
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.canonicalMutualFoldIdentityOfAgreements
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {leftTyping : IncDepRawHasType context left type}
+    {rightTyping : IncDepRawHasType context right type}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (leftReady : IncDepRawCoherentTypingDispatchReady leftTyping typeFormation)
+    (rightReady : IncDepRawCoherentTypingDispatchReady rightTyping typeFormation)
+    (typeIH : IncDepRawCanonicalFormationSubstitutionFoldMotive typeReady)
+    (leftIH : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive leftReady)
+    (rightIH : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive rightReady)
+    (leftAgreement : IncDepRawCanonicalFoldAgreement typeIH leftIH)
+    (rightAgreement : IncDepRawCanonicalFoldAgreement typeIH rightIH) :
+    IncDepRawCanonicalFormationSubstitutionFoldMotive
+      (IncDepRawCoherentFormationDispatchReady.identity typeReady leftReady
+        rightReady) :=
+  fun targetTree replacements =>
+    let typeResult := typeIH targetTree replacements
+    let leftEq := readinessAlignment.alignFormation leftReady.formationReady
+      typeReady
+    let rightEq := readinessAlignment.alignFormation rightReady.formationReady
+      typeReady
+    let leftStrict := (IncDepRawStrictTypingDispatchReady.ofCoherent leftReady)
+      |>.castFormationReady leftEq
+    let rightStrict := (IncDepRawStrictTypingDispatchReady.ofCoherent rightReady)
+      |>.castFormationReady rightEq
+    let leftTypingResult :=
+      (leftAgreement.agree targetTree replacements).typingResultAligned
+    let rightTypingResult :=
+      (rightAgreement.agree targetTree replacements).typingResultAligned
+    let rawResult := model.dispatchCanonicalIdentityFormation leftStrict
+      rightStrict typeResult.result.dispatchResult leftTypingResult
+      rightTypingResult
+    let readyEq := readinessAlignment.alignFormation
+      (IncDepRawCoherentFormationDispatchReady.identityStrict typeReady
+        leftStrict rightStrict)
+      (IncDepRawCoherentFormationDispatchReady.identity typeReady leftReady
+        rightReady)
+    let result := rawResult.castReady readyEq
+    { canonical := model.identity
+        typeResult.result.dispatchResult.formationResult leftTypingResult
+        rightTypingResult
       result := result }
 
 noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldIdentity

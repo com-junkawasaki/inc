@@ -361,6 +361,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   local formation/typing agreementの`castFormationReady`も同じcanonical equalityをindex change越しに保持する。したがってproof-index reconciliationに残る
   readiness alignment providerはsemantic rebase権限を持たず、fiber result変更や任意interpretation導入はできない。Identity/Reflの残課題はreadiness index整列後、
   二recursive pathsが計算したcanonical outputsの等式だけを証明することである。
+- canonical-output equalityをfold-scoped interfaceで消費し、Identity formation branchからglobal rebaseを除去した。
+  `IncDepRawCanonicalFoldAgreement`は同じsemantic tree/replacementsへ一つのformation IHと一つのaligned typing IHを適用したoutputsだけを比較する。
+  `canonicalMutualFoldIdentityOfAgreements`は両endpointのlocal agreementを受け、endpoint typing fiber resultsをexact canonical type resultへcastし、semanticを
+  変えないreadiness-index castsを行い、outer canonical identity resultを構築する。unrestricted formation-result providerなしでhandlerがtypecheckした。
+  残件は全typing derivationについてfold agreementsを再帰構成することであり、それが供給されればIdentity branch自体は完了である。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

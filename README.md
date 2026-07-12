@@ -899,6 +899,17 @@ It currently establishes:
   introduce an arbitrary interpretation.  The remaining Identity/Refl issue is
   solely proving equality of the canonical outputs computed by two recursive
   paths after their readiness indices have been aligned.
+  That equality is now consumed through a fold-scoped interface and the Identity
+  formation branch no longer uses global rebase.  `IncDepRawCanonicalFoldAgreement`
+  compares only the outputs obtained by applying one formation IH and one
+  aligned typing IH to the same semantic tree and replacements.
+  `canonicalMutualFoldIdentityOfAgreements` accepts one such agreement for each
+  endpoint, casts endpoint typing fiber results to the exact canonical type
+  result, performs readiness-index casts without changing semantics, and builds
+  the outer canonical identity result.  The handler typechecks with no
+  unrestricted formation-result provider.  The remaining task is constructing
+  these fold agreements recursively for every typing derivation; once supplied,
+  Identity itself is complete.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
