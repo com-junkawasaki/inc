@@ -2295,6 +2295,57 @@ noncomputable def IncDepRawSemanticTypingSubstitutionResult.pair
         (firstResult.readiness.castFormation firstFormationEq)
         secondReadyRight }
 
+noncomputable def IncDepRawSemanticTypingSubstitutionResult.second
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {resultFormation : IncDepRawWellFormed target
+      (codomain.instantiate (.first pair))}
+    (substitution : IncDepRawSubstitution source target)
+    (domainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := domainFormation) substitution)
+    (codomainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := codomainFormation) (substitution.lift domain))
+    (resultResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := resultFormation) substitution)
+    (pairResult : IncDepRawSemanticTypingSubstitutionResult
+      (term := pair) (type := .sigma domain codomain)
+      (formation := IncDepRawWellFormed.sigma domainFormation
+        codomainFormation) substitution) :
+    IncDepRawSemanticTypingSubstitutionResult
+      (term := .second pair)
+      (type := codomain.instantiate (.first pair))
+      (formation := resultFormation) substitution := by
+  let typeEq := IncDepRawType.instantiate_substitute codomain (.first pair)
+    substitution.term
+  let constructedTyping := IncDepRawHasType.secondRule
+    pairResult.substitutedTyping
+  let substitutedTyping := constructedTyping.castType typeEq.symm
+  let sigmaResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := IncDepRawWellFormed.sigma domainFormation codomainFormation)
+      substitution :=
+    { substitutedFormation := .sigma domainResult.substitutedFormation
+        codomainResult.substitutedFormation
+      formation_eq := by
+        rw [domainResult.formation_eq, codomainResult.formation_eq]
+        exact (IncDepRawWellFormed.substitute_sigma domainFormation
+          codomainFormation substitution).symm
+      readiness := .sigma domainResult.readiness codomainResult.readiness }
+  let pairFormationEq := pairResult.formationResult.formation_eq.trans
+    sigmaResult.formation_eq.symm
+  let constructedReady := IncDepRawCoherentTypingDispatchReady.secondRule
+    domainResult.readiness codomainResult.readiness
+    (resultResult.readiness.castType typeEq)
+    (pairResult.readiness.castFormation pairFormationEq)
+  let returnedReady := constructedReady.castType typeEq.symm
+  exact
+    { formationResult := resultResult
+      substitutedTyping := substitutedTyping
+      readiness := returnedReady.castFormation
+        (IncDepRawWellFormed.castType_symm
+          resultResult.substitutedFormation typeEq) }
+
 /-- A syntactic substitution equipped with the exact readiness evidence needed
 at the Variable branch.  Its replacement may be any well-typed term, not only
 a variable, so ordinary `.varRule` readiness is insufficient. -/

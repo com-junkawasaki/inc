@@ -2721,10 +2721,13 @@ The derivation-independent layer is now active:
 coherent-readiness preservation without equating proof objects chosen by two
 compilers.  Its dependent Apply constructor is proved sorry-free using only the
 `instantiate_substitute` type equation and synchronized casts.  Thus the new
-semantic route now covers Apply and Pair, 2/3 of the previously blocked
-constructors.  Pair transports its dependent second component and readiness
-certificate with the same `instantiate_substitute` equality.  Second remains
-before this layer can replace the legacy 5/8 bookkeeping globally.
+semantic route now covers Apply, Pair, and Second, all 3/3 of the previously
+blocked constructors.  Pair transports its dependent second component and
+readiness certificate with the same `instantiate_substitute` equality; Second
+transports both its Sigma premise formation and dependent result.  Together
+with `toSemantic` for the five existing strong constructors, constructor-level
+semantic substitution coverage is now 8/8.  The next task is packaging these
+combinators into one total structural preservation theorem.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo
