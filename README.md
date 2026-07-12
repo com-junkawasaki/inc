@@ -1399,6 +1399,13 @@ It currently establishes:
   the two public hypothesis families into exactly the same internal type.  The
   recursor body can now be defined once with no knowledge of whether alignment
   came from legacy weak laws or relational assembly coherence.
+  The common formation projection is now implemented as
+  `recursivelyGeneratedFormationFoldOfInputs`, supplying all 13 shared handlers
+  to the readiness recursor through `RecursiveFoldInputs`.  The
+  `...FormationFoldOfAssembly` wrapper proves that assembly-only hypotheses can
+  already construct the full recursive formation fold without any weak-law
+  record.  The matching common typing projection is the remaining half before
+  the assembly-only anchored dispatcher can be exposed.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

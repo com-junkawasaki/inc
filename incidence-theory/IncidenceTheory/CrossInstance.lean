@@ -17872,6 +17872,72 @@ def IncDepRawCanonicalProviderFreeMutualFoldHypotheses.toPreservationCore
   rebaseProvider := rebaseProvider
 
 noncomputable def
+    IncDepRawSubstitutionFiberModel.recursivelyGeneratedFormationFoldOfInputs
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (inputs : IncDepRawCanonicalRecursiveFoldInputs.{u} model)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentFormationDispatchReady formation) :
+    IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      inputs.variableProvider ready :=
+  IncDepRawCoherentFormationDispatchReady.rec
+    (motive_1 := fun _ ready =>
+      IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+        inputs.variableProvider ready)
+    (motive_2 := fun _ _ ready =>
+      IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+        inputs.variableProvider ready)
+    (model.recursivelyGeneratedFormationBase inputs.variableProvider)
+    (model.recursivelyGeneratedFormationUnit inputs.variableProvider)
+    (fun _ _ domain codomain =>
+      model.recursivelyGeneratedFormationPi inputs.variableProvider domain
+        codomain)
+    (fun _ _ domain codomain =>
+      model.recursivelyGeneratedFormationSigma inputs.variableProvider domain
+        codomain)
+    (fun _ _ _ typeOutput leftOutput rightOutput =>
+      model.recursivelyGeneratedIdentity inputs.variableProvider
+        inputs.readinessAlignment inputs.agreementProvider typeOutput leftOutput
+        rightOutput)
+    (fun _ typeOutput =>
+      inputs.variableProvider.recursivelyGeneratedTypingVariable model
+        typeOutput)
+    (model.recursivelyGeneratedTypingUnit inputs.variableProvider)
+    (fun _ _ domain body =>
+      model.recursivelyGeneratedTypingLambda inputs.variableProvider domain body)
+    (fun _ _ _ _ _ domain codomain result function argument =>
+      model.recursivelyGeneratedTypingApply inputs.variableProvider
+        inputs.agreementProvider inputs.instantiateAgreementProvider domain
+        codomain result function argument)
+    (fun _ _ _ _ _ domain codomain result first second =>
+      model.recursivelyGeneratedTypingPair inputs.variableProvider
+        inputs.agreementProvider inputs.instantiateAgreementProvider domain
+        codomain result first second)
+    (fun _ _ _ domain codomain pair =>
+      model.recursivelyGeneratedTypingFirst inputs.variableProvider
+        inputs.agreementProvider domain codomain pair)
+    (fun _ _ _ _ domain codomain result pair =>
+      model.recursivelyGeneratedTypingSecond inputs.variableProvider
+        inputs.agreementProvider inputs.instantiateAgreementProvider domain
+        codomain result pair)
+    (fun _ _ typeOutput termOutput =>
+      model.recursivelyGeneratedRefl inputs.variableProvider
+        inputs.readinessAlignment inputs.agreementProvider typeOutput termOutput)
+    ready
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.recursivelyGeneratedFormationFoldOfAssembly
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalProviderFreeAssemblyHypotheses.{u} model)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentFormationDispatchReady formation) :
+    IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      hypotheses.variableProvider ready :=
+  model.recursivelyGeneratedFormationFoldOfInputs (.ofAssembly hypotheses)
+    ready
+
+noncomputable def
     IncDepRawSubstitutionFiberModel.recursivelyGeneratedFormationFold
     (model : IncDepRawSubstitutionFiberModel.{u})
     (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
