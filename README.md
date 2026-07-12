@@ -2801,6 +2801,9 @@ Apply/Pair/Second use synchronized `instantiate_substitute` casts; and
 Identity/Refl need no proof-alignment hypothesis.  This closes the previously
 conditional structural substitution-preservation boundary for the dependent
 raw calculus at normalized readiness level.
+Public facade methods on coherent formation/typing readiness now project to
+`DispatchReady` and invoke this total theorem directly, so clients do not need
+to manually traverse the normalized layer.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

@@ -8285,6 +8285,31 @@ mutual
           readiness := .reflRule typeResult.readiness termResult.readiness }
 end
 
+noncomputable def
+    IncDepRawCoherentFormationDispatchReady.substituteNormalized
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed target type}
+    (ready : IncDepRawCoherentFormationDispatchReady formation)
+    (substitution : IncDepRawNormalizedReadinessPreservingSubstitution
+      source target) :
+    IncDepRawNormalizedFormationSubstitutionResult
+      (source := source) (target := target) (type := type)
+      substitution.term :=
+  ready.toDispatchReady.substituteNormalized substitution
+
+noncomputable def
+    IncDepRawCoherentTypingDispatchReady.substituteNormalized
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType target term type}
+    {formation : IncDepRawWellFormed target type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation)
+    (substitution : IncDepRawNormalizedReadinessPreservingSubstitution
+      source target) :
+    IncDepRawNormalizedTypingSubstitutionResult
+      (source := source) (target := target) (term := term) (type := type)
+      substitution.term :=
+  ready.toDispatchReady.substituteNormalized substitution
+
 structure IncDepRawStrictTypingDispatchReady
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} (typing : IncDepRawHasType context term type)
