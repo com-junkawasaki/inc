@@ -7825,6 +7825,23 @@ def IncDepRawCoherentTypingDispatchReady.formationReady
   | .secondRule _ _ resultReady _ => resultReady
   | .reflRule typeReady termReady => .identity typeReady termReady termReady
 
+structure IncDepRawFullySemanticReadinessRenamingProvider where
+  renameFormation : ∀ {source target : List IncDepRawType}
+    {type : IncDepRawType} {formation : IncDepRawWellFormed source type},
+    IncDepRawCoherentFormationDispatchReady formation →
+    (renameMap : IncDepRawRenaming source target) →
+    IncDepRawFullySemanticFormationRenamingResult
+      (type := type) renameMap
+  typing : ∀ {source target : List IncDepRawType}
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    {typing : IncDepRawHasType source term type}
+    {formation : IncDepRawWellFormed source type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation)
+    (renameMap : IncDepRawRenaming source target),
+    IncDepRawFullySemanticTypingRenamingResult
+      (term := term) renameMap
+      (renameFormation ready.formationReady renameMap)
+
 structure IncDepRawStrictTypingDispatchReady
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} (typing : IncDepRawHasType context term type)

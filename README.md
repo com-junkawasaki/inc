@@ -2762,6 +2762,12 @@ Identity/Refl share one aligned renamed formation.  Fully semantic renaming
 therefore has constructor-level coverage for every formation and typing rule.
 The remaining lift work is no longer a missing rule, but packaging these rules
 as a total mutual recursion while preserving shared formation alignment.
+That alignment obligation is now represented by the checked interface
+`IncDepRawFullySemanticReadinessRenamingProvider`.  Its formation field chooses
+the total renamed formation first; its typing field is indexed by exactly that
+choice.  This rules out the invalid approach of rewriting readiness equality
+while leaving dependent typing indices unchanged.  Constructing the canonical
+provider is the remaining total-renaming proof before lift.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo
