@@ -1279,6 +1279,12 @@ cycle 38–41 で以下の3極構造が判明した:
   generated/complete packagesは介さない。残handlersはIdentity、Apply、Pair、First、Second、
   Reflで、Identity/Reflのgeneral実装は既にあり、4 dependent typing枝は確立済みrecursive
   agreement整列patternの移植だけが残る。
+  Apply/Pair/First/Secondの4枝もrecursive normal formへ移植済みである。Applyは
+  function/argumentをrecursive Pi/domainへ、Pairは両componentをdomain/resultへ、
+  First/Secondはpairをrecursive Sigmaへ整列し、instantiate agreementとscoped retarget
+  provenanceを保持する。Identity/Reflと合わせfinal motiveを返す全13 handlersがchecked。
+  残constructionはmutual readiness recursorへの配線とanchored dispatcher/witness projection
+  だけである。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

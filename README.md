@@ -1260,6 +1260,13 @@ It currently establishes:
   are Identity, Apply, Pair, First, Second, and Refl; the exact/general Identity
   and Refl implementations already exist, while the four dependent typing
   handlers require only the established recursive agreement alignment pattern.
+  Those four handlers are now ported.  Apply aligns its function and argument
+  to recursive Pi/domain outputs; Pair aligns both components to recursive
+  domain/result outputs; First and Second align their pair to a recursive Sigma
+  output.  Scoped retarget provenance and instantiate agreement are retained.
+  Together with recursive Identity and Refl, all 13 final-motive handlers are
+  checked.  The remaining construction is wiring them into the mutual readiness
+  recursor and projecting the anchored dispatcher and witness.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
