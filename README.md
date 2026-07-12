@@ -1278,6 +1278,12 @@ It currently establishes:
   and strict substitution preservation from the five scoped hypotheses alone.
   The former `...OfPathProvider` bridge remains only as compatibility evidence;
   it is no longer the only inhabitant construction.
+  Client-facing preservation entry points now expose this construction directly.
+  `providerFreeCanonicalLawfulPreservation` returns the lawful mutual fold,
+  `providerFreeCanonicalStrictPreservation` returns the strict substitution
+  dispatcher, and `providerFreeCanonicalPreservation_pathAgreement` states the
+  formation/typing coherence theorem for arbitrary coherent derivations.  None
+  of these APIs accepts or reconstructs the former unrestricted path provider.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

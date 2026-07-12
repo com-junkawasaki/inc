@@ -1292,6 +1292,10 @@ cycle 38–41 で以下の3極構造が判明した:
   `providerFreeMutualFoldWitness`は旧path providerなしで直接inhabitされ、対応Nonempty theorem
   も無条件である。既存`.lawful`/`.strict`から5 scoped hypothesesだけでcanonical lawful/strict
   substitution preservationを得る。旧`...OfPathProvider`は互換bridgeとしてのみ残る。
+  利用側APIとして`providerFreeCanonicalLawfulPreservation`、
+  `providerFreeCanonicalStrictPreservation`、任意coherent derivation上の
+  `providerFreeCanonicalPreservation_pathAgreement`も公開した。いずれも旧unrestricted path
+  providerを引数に取らず再構成もしない。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

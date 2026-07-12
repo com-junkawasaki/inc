@@ -17526,6 +17526,40 @@ noncomputable def
     IncDepRawStrictMutualSubstitutionDispatcher :=
   witness.lawful.strict
 
+noncomputable def
+    IncDepRawSubstitutionFiberModel.providerFreeCanonicalLawfulPreservation
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
+      model) :
+    IncDepRawCanonicalLawfulMutualFold.{u} :=
+  (model.providerFreeMutualFoldWitness hypotheses).lawful
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.providerFreeCanonicalStrictPreservation
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
+      model) :
+    IncDepRawStrictMutualSubstitutionDispatcher :=
+  (model.providerFreeMutualFoldWitness hypotheses).strict
+
+theorem
+    IncDepRawSubstitutionFiberModel.providerFreeCanonicalPreservation_pathAgreement
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
+      model)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (formationReady : IncDepRawCoherentFormationDispatchReady formation)
+    (typingReady : IncDepRawCoherentTypingDispatchReady typing formation) :
+    IncDepRawCanonicalFormationFoldAgreement
+      (model.providerFreeCanonicalLawfulPreservation hypotheses
+        |>.dispatcher.formation formationReady).fold
+      (model.providerFreeCanonicalLawfulPreservation hypotheses
+        |>.dispatcher.typing typingReady).formation :=
+  (model.providerFreeCanonicalLawfulPreservation hypotheses).lawful.pathAgreement
+    formationReady typingReady
+
 theorem IncDepRawCanonicalLawfulMutualFold.pathAgreement
     (fold : IncDepRawCanonicalLawfulMutualFold.{u})
     {context : List IncDepRawType} {term : IncDepRawTerm}
