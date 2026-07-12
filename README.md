@@ -1175,6 +1175,14 @@ It currently establishes:
   scoped instantiate-agreement input.  Both retarget provenance proofs are
   retained by the output certificate, raising provider-free typing coverage to
   5/8 without introducing a global path-agreement provider.
+  Pair and Second are now checked by the same mechanism.  Pair independently
+  aligns its first and second terms to the generated domain and instantiated
+  result formations, then returns the generated Sigma formation.  Second aligns
+  its pair to that generated Sigma and preserves the separately generated
+  instantiated result formation.  Both branches retain the scoped instantiate
+  agreement and all retarget provenance.  Provider-free typing coverage is now
+  7/8; Refl is the only remaining typing constructor and shares its unresolved
+  mutual dependency with Identity formation.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

@@ -15501,6 +15501,68 @@ inductive IncDepRawCanonicalAnchoredTypingFoldOutput.Generated
           domainReady codomainReady resultReady functionReady argumentReady
           domainOutput codomainOutput resultOutput functionOutput
           argumentOutput).output
+  | pair {context : List IncDepRawType} {domain codomain : IncDepRawType}
+      {first second : IncDepRawTerm}
+      {domainFormation : IncDepRawWellFormed context domain}
+      {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+      {resultFormation : IncDepRawWellFormed context
+        (codomain.instantiate first)}
+      {firstTyping : IncDepRawHasType context first domain}
+      {secondTyping : IncDepRawHasType context second
+        (codomain.instantiate first)}
+      {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+      {codomainReady :
+        IncDepRawCoherentFormationDispatchReady codomainFormation}
+      {resultReady : IncDepRawCoherentFormationDispatchReady resultFormation}
+      {firstReady : IncDepRawCoherentTypingDispatchReady firstTyping
+        domainFormation}
+      {secondReady : IncDepRawCoherentTypingDispatchReady secondTyping
+        resultFormation}
+      (instantiateAgreementProvider :
+        IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
+      (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
+      (codomainOutput : IncDepRawCanonicalFormationFoldOutput codomainReady)
+      (resultOutput : IncDepRawCanonicalFormationFoldOutput resultReady)
+      (firstOutput : IncDepRawCanonicalAnchoredTypingFoldOutput firstReady
+        domainOutput)
+      (secondOutput : IncDepRawCanonicalAnchoredTypingFoldOutput secondReady
+        resultOutput) :
+      Generated model variableProvider domainOutput firstOutput →
+      Generated model variableProvider resultOutput secondOutput →
+      Generated model variableProvider
+        (model.canonicalFormationFoldOutputSigma domainReady codomainReady
+          domainOutput codomainOutput)
+        (model.anchoredTypingFoldResultPairExact instantiateAgreementProvider
+          domainReady codomainReady resultReady firstReady secondReady
+          domainOutput codomainOutput resultOutput firstOutput secondOutput).output
+  | second {context : List IncDepRawType} {domain codomain : IncDepRawType}
+      {pairTerm : IncDepRawTerm}
+      {domainFormation : IncDepRawWellFormed context domain}
+      {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+      {resultFormation : IncDepRawWellFormed context
+        (codomain.instantiate (.first pairTerm))}
+      {pairTyping : IncDepRawHasType context pairTerm (.sigma domain codomain)}
+      {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+      {codomainReady :
+        IncDepRawCoherentFormationDispatchReady codomainFormation}
+      {resultReady : IncDepRawCoherentFormationDispatchReady resultFormation}
+      {pairReady : IncDepRawCoherentTypingDispatchReady pairTyping
+        (.sigma domainFormation codomainFormation)}
+      (instantiateAgreementProvider :
+        IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
+      (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
+      (codomainOutput : IncDepRawCanonicalFormationFoldOutput codomainReady)
+      (resultOutput : IncDepRawCanonicalFormationFoldOutput resultReady)
+      (pairOutput : IncDepRawCanonicalAnchoredTypingFoldOutput pairReady
+        (model.canonicalFormationFoldOutputSigma domainReady codomainReady
+          domainOutput codomainOutput)) :
+      Generated model variableProvider
+        (model.canonicalFormationFoldOutputSigma domainReady codomainReady
+          domainOutput codomainOutput) pairOutput →
+      Generated model variableProvider resultOutput
+        (model.anchoredTypingFoldResultSecondExact instantiateAgreementProvider
+          domainReady codomainReady resultReady pairReady domainOutput
+          codomainOutput resultOutput pairOutput).output
 
 /-- A formation output packaged with evidence that it was produced solely by
 the canonical syntax-directed constructors.  This is the formation motive used
@@ -15766,6 +15828,112 @@ noncomputable def IncDepRawSubstitutionFiberModel.generatedTypingOutputApply
           functionAgreement function.generated)
         (.retarget argument.formation.output domain.output argument.output
           argumentAgreement argument.generated) }
+
+noncomputable def IncDepRawSubstitutionFiberModel.generatedTypingOutputPair
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (dependentAgreement :
+      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (instantiateAgreementProvider :
+      IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {first second : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {resultFormation : IncDepRawWellFormed context
+      (codomain.instantiate first)}
+    {firstTyping : IncDepRawHasType context first domain}
+    {secondTyping : IncDepRawHasType context second
+      (codomain.instantiate first)}
+    {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+    {codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation}
+    {resultReady : IncDepRawCoherentFormationDispatchReady resultFormation}
+    {firstReady : IncDepRawCoherentTypingDispatchReady firstTyping
+      domainFormation}
+    {secondReady : IncDepRawCoherentTypingDispatchReady secondTyping
+      resultFormation}
+    (domain :
+      IncDepRawCanonicalGeneratedFormationFoldOutput model domainReady)
+    (codomain :
+      IncDepRawCanonicalGeneratedFormationFoldOutput model codomainReady)
+    (result :
+      IncDepRawCanonicalGeneratedFormationFoldOutput model resultReady)
+    (first : IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput model
+      variableProvider firstReady)
+    (second : IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput model
+      variableProvider secondReady) :
+    IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput model variableProvider
+      (.pairRule domainReady codomainReady resultReady firstReady secondReady) := by
+  let firstAgreement : IncDepRawCanonicalFormationFoldAgreement
+      domain.output.fold first.formation.output.fold :=
+    domain.generated.agreementAcrossReady dependentAgreement readinessAlignment
+      first.formation.generated
+  let secondAgreement : IncDepRawCanonicalFormationFoldAgreement
+      result.output.fold second.formation.output.fold :=
+    result.generated.agreementAcrossReady dependentAgreement readinessAlignment
+      second.formation.generated
+  let alignedFirst := first.output.retargetFormation domain.output firstAgreement
+  let alignedSecond := second.output.retargetFormation result.output
+    secondAgreement
+  exact
+    { formation := model.generatedFormationSigma domain codomain
+      output := (model.anchoredTypingFoldResultPairExact
+        instantiateAgreementProvider domainReady codomainReady resultReady
+        firstReady secondReady domain.output codomain.output result.output
+        alignedFirst alignedSecond).output
+      generated := .pair instantiateAgreementProvider domain.output
+        codomain.output result.output alignedFirst alignedSecond
+        (.retarget first.formation.output domain.output first.output
+          firstAgreement first.generated)
+        (.retarget second.formation.output result.output second.output
+          secondAgreement second.generated) }
+
+noncomputable def IncDepRawSubstitutionFiberModel.generatedTypingOutputSecond
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (dependentAgreement :
+      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (instantiateAgreementProvider :
+      IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pairTerm : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {resultFormation : IncDepRawWellFormed context
+      (codomain.instantiate (.first pairTerm))}
+    {pairTyping : IncDepRawHasType context pairTerm (.sigma domain codomain)}
+    {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+    {codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation}
+    {resultReady : IncDepRawCoherentFormationDispatchReady resultFormation}
+    {pairReady : IncDepRawCoherentTypingDispatchReady pairTyping
+      (.sigma domainFormation codomainFormation)}
+    (domain :
+      IncDepRawCanonicalGeneratedFormationFoldOutput model domainReady)
+    (codomain :
+      IncDepRawCanonicalGeneratedFormationFoldOutput model codomainReady)
+    (result :
+      IncDepRawCanonicalGeneratedFormationFoldOutput model resultReady)
+    (pair : IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput model
+      variableProvider pairReady) :
+    IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput model variableProvider
+      (.secondRule domainReady codomainReady resultReady pairReady) := by
+  let sigma := model.generatedFormationSigma domain codomain
+  let pairAgreement : IncDepRawCanonicalFormationFoldAgreement
+      sigma.output.fold pair.formation.output.fold :=
+    sigma.generated.agreementAcrossReady dependentAgreement readinessAlignment
+      pair.formation.generated
+  let alignedPair := pair.output.retargetFormation sigma.output pairAgreement
+  exact
+    { formation := result
+      output := (model.anchoredTypingFoldResultSecondExact
+        instantiateAgreementProvider domainReady codomainReady resultReady
+        pairReady domain.output codomain.output result.output alignedPair).output
+      generated := .second instantiateAgreementProvider domain.output
+        codomain.output result.output alignedPair
+        (.retarget pair.formation.output sigma.output pair.output pairAgreement
+          pair.generated) }
 
 structure IncDepRawCanonicalAnchoredMutualFoldDispatcher.ReadinessLawful
     (anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u}) : Prop where
