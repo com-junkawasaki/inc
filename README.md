@@ -838,6 +838,19 @@ It currently establishes:
   Refl—therefore have provenance-aware checked builders.  The remaining step is
   recursor-level wiring: define mutual motives that return these wrappers and
   replace the old unrestricted rebase provider at recursive alignment sites.
+  The provenance-aware recursor now has executable motives and its first four
+  formation handlers.  `IncDepRawSomeCanonicalStrictFormationSubstitutionDispatchResult`
+  and its typing analogue existentially package the canonical result because
+  that result depends on recursive outputs.  The new canonical formation and
+  typing fold motives return these packages.  `canonicalMutualFoldBase` and
+  `canonicalMutualFoldUnitFormation` establish the leaves, while
+  `canonicalMutualFoldPi` and `canonicalMutualFoldSigma` open the recursive
+  domain package, build the lifted semantic context/replacements, open the
+  codomain package, and return the corresponding provenance-aware constructor.
+  These four handlers require no global rebase or result-equality provider.
+  Identity is the remaining formation handler because its endpoint typing
+  results must first be aligned to the canonical type result using scoped
+  provenance.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

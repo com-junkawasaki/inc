@@ -9984,6 +9984,43 @@ structure IncDepRawCanonicalStrictFormationSubstitutionDispatchResult
   provenance : IncDepRawCanonicalFormationFiberResult canonical
     dispatchResult.formationResult
 
+structure IncDepRawSomeCanonicalStrictFormationSubstitutionDispatchResult
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    (targetReady : IncDepRawCoherentFormationDispatchReady targetFormation)
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) where
+  canonical : IncDepRawFormationSubstitutionFiberResult
+    (targetFormation := targetFormation) substitutionResult
+  result : IncDepRawCanonicalStrictFormationSubstitutionDispatchResult
+    targetReady canonical
+
+structure IncDepRawSomeCanonicalStrictTypingSubstitutionDispatchResult
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {targetFormationReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    (targetReady : IncDepRawStrictTypingDispatchReady targetTyping
+      targetFormationReady)
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) where
+  canonical : IncDepRawFormationSubstitutionFiberResult
+    (targetFormation := targetFormation) substitutionResult
+  result : IncDepRawCanonicalStrictTypingSubstitutionDispatchResult
+    targetReady canonical
+
 structure IncDepRawFormationSubstitutionFiberRebaseProvider where
   provide : ∀
     {source target : List IncDepRawType} {type : IncDepRawType}
@@ -12397,6 +12434,43 @@ abbrev IncDepRawStrictTypingSubstitutionFoldMotive
     IncDepRawStrictTypingSubstitutionDispatchResult
       (IncDepRawStrictTypingDispatchReady.ofCoherent ready) substitutionResult
 
+abbrev IncDepRawCanonicalFormationSubstitutionFoldMotive
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    (ready : IncDepRawCoherentFormationDispatchReady targetFormation) :=
+  ∀ {source : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult},
+    IncDepRawContextSemanticTree targetResult →
+    IncDepRawSubstitutionReplacementSemanticResult substitutionResult →
+    IncDepRawSomeCanonicalStrictFormationSubstitutionDispatchResult
+      ready substitutionResult
+
+abbrev IncDepRawCanonicalTypingSubstitutionFoldMotive
+    {target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    (ready : IncDepRawCoherentTypingDispatchReady targetTyping
+      targetFormation) :=
+  ∀ {source : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult},
+    IncDepRawContextSemanticTree targetResult →
+    IncDepRawSubstitutionReplacementSemanticResult substitutionResult →
+    IncDepRawSomeCanonicalStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.ofCoherent ready) substitutionResult
+
 def IncDepRawSubstitutionFiberModel.mutualFoldBase
     (model : IncDepRawSubstitutionFiberModel.{u})
     {context : List IncDepRawType} {index : Nat} :
@@ -12411,6 +12485,27 @@ def IncDepRawSubstitutionFiberModel.mutualFoldUnitFormation
     IncDepRawStrictFormationSubstitutionFoldMotive
       (IncDepRawCoherentFormationDispatchReady.unit (context := context)) :=
   fun _ _ => model.dispatchStrictUnitFormation _
+
+def IncDepRawSubstitutionFiberModel.canonicalMutualFoldBase
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {index : Nat} :
+    IncDepRawCanonicalFormationSubstitutionFoldMotive
+      (IncDepRawCoherentFormationDispatchReady.base
+        (context := context) (index := index)) :=
+  fun _ _ =>
+    let result := model.dispatchCanonicalBaseFormation _
+    { canonical := model.base _
+      result := result }
+
+def IncDepRawSubstitutionFiberModel.canonicalMutualFoldUnitFormation
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} :
+    IncDepRawCanonicalFormationSubstitutionFoldMotive
+      (IncDepRawCoherentFormationDispatchReady.unit (context := context)) :=
+  fun _ _ =>
+    let result := model.dispatchCanonicalUnitFormation _
+    { canonical := model.unit _
+      result := result }
 
 noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldPi
     (model : IncDepRawSubstitutionFiberModel.{u})
@@ -12449,6 +12544,54 @@ noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldSigma
     let liftedReplacements := replacements.liftResult domainResult.formationResult
     let codomainResult := codomainIH extendedTree liftedReplacements
     model.dispatchStrictSigmaFormation domainResult codomainResult
+
+noncomputable def IncDepRawSubstitutionFiberModel.canonicalMutualFoldPi
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (domainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive domainReady)
+    (codomainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive codomainReady) :
+    IncDepRawCanonicalFormationSubstitutionFoldMotive
+      (IncDepRawCoherentFormationDispatchReady.pi domainReady codomainReady) :=
+  fun targetTree replacements =>
+    let domain := domainIH targetTree replacements
+    let domainResult := domain.result.dispatchResult
+    let extendedTree := IncDepRawContextSemanticTree.extend targetTree
+      domainResult.formationResult.targetFormationResult
+    let liftedReplacements := replacements.liftResult domainResult.formationResult
+    let codomain := codomainIH extendedTree liftedReplacements
+    let codomainResult := codomain.result.dispatchResult
+    let result := model.dispatchCanonicalPiFormation domainResult codomainResult
+    { canonical := model.pi domainResult.formationResult
+        codomainResult.formationResult
+      result := result }
+
+noncomputable def IncDepRawSubstitutionFiberModel.canonicalMutualFoldSigma
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (domainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive domainReady)
+    (codomainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive codomainReady) :
+    IncDepRawCanonicalFormationSubstitutionFoldMotive
+      (IncDepRawCoherentFormationDispatchReady.sigma domainReady codomainReady) :=
+  fun targetTree replacements =>
+    let domain := domainIH targetTree replacements
+    let domainResult := domain.result.dispatchResult
+    let extendedTree := IncDepRawContextSemanticTree.extend targetTree
+      domainResult.formationResult.targetFormationResult
+    let liftedReplacements := replacements.liftResult domainResult.formationResult
+    let codomain := codomainIH extendedTree liftedReplacements
+    let codomainResult := codomain.result.dispatchResult
+    let result := model.dispatchCanonicalSigmaFormation domainResult codomainResult
+    { canonical := model.sigma domainResult.formationResult
+        codomainResult.formationResult
+      result := result }
 
 noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldIdentity
     (model : IncDepRawSubstitutionFiberModel.{u})
