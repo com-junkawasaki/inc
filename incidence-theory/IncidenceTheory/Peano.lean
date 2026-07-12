@@ -250,6 +250,23 @@ def natResonanceSpec : FunctionalResonanceSpec natIncidence where
     intro i j k resonant
     exact resonant
 
+def natAssociativeResonanceSpec : AssociativeResonanceSpec natIncidence where
+  reassociate := by
+    intro i j k out
+    constructor
+    · rintro ⟨ij, hij, hout⟩
+      have hijEq : i + j = ij := by simpa [natIncidence] using hij
+      subst ij
+      refine ⟨j + k, ?_, ?_⟩
+      · simp [natIncidence]
+      · simpa [natIncidence, Nat.add_assoc] using hout
+    · rintro ⟨jk, hjk, hout⟩
+      have hjkEq : j + k = jk := by simpa [natIncidence] using hjk
+      subst jk
+      refine ⟨i + j, ?_, ?_⟩
+      · simp [natIncidence]
+      · simpa [natIncidence, Nat.add_assoc] using hout
+
 theorem natQuotientResonanceCongruent :
     QuotientResonanceCongruent natIncidence := by
   intro i₁ i₂ j₁ j₂ k₁ k₂ hi hj hk

@@ -69,3 +69,7 @@ case where the selector is complete and resonance has no unselected modes.
 - On bisimulation quotients, `quotientResonance` means that some representatives
   resonate. Exact recovery on chosen representatives requires
   `QuotientResonanceCongruent`, extensionality in both inputs and the output.
+- `AssociativeResonanceSpec` compares existentially reachable output modes from
+  `(i resonance j) resonance k` and `i resonance (j resonance k)`. It does not
+  privilege a selected intermediate mode. The law holds for Peano resonance and
+  is closed under products.

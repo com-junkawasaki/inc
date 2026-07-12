@@ -1082,6 +1082,21 @@ structure FunctionalResonanceSpec {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) : Type u extends ResonanceSpec inc where
   selected_complete : ∀ {i j k}, inc.resonance i j k → inc.glue i j = some k
 
+/- Relational associativity compares the complete sets of modes reachable by
+the two binary parenthesizations.  It does not choose intermediate modes. -/
+structure AssociativeResonanceSpec {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) where
+  reassociate : ∀ {i j k out},
+    (∃ ij, inc.resonance i j ij ∧ inc.resonance ij k out) ↔
+    (∃ jk, inc.resonance j k jk ∧ inc.resonance i jk out)
+
+theorem resonance_reassociate {I R T : Type u} [DecidableEq I]
+    {inc : Incidence I R T} (spec : AssociativeResonanceSpec inc)
+    {i j k out : I} :
+    (∃ ij, inc.resonance i j ij ∧ inc.resonance ij k out) ↔
+    (∃ jk, inc.resonance j k jk ∧ inc.resonance i jk out) :=
+  spec.reassociate
+
 theorem resonance_of_selected {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) {i j k : I} (selected : inc.glue i j = some k) :
     inc.resonance i j k :=

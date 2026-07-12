@@ -159,6 +159,28 @@ def resonanceProdSpec {I1 R1 T1 I2 R2 T2 : Type u}
     rcases second.type_compatible resonant.2 with ⟨hij2, hki2⟩
     exact ⟨Prod.ext hij1 hij2, Prod.ext hki1 hki2⟩
 
+def associativeResonanceProdSpec
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (first : AssociativeResonanceSpec inc1)
+    (second : AssociativeResonanceSpec inc2) :
+    AssociativeResonanceSpec (incidenceProd inc1 inc2) where
+  reassociate := by
+    intro i j k out
+    constructor
+    · rintro ⟨ij, hij, hout⟩
+      rcases (first.reassociate).mp ⟨ij.1, hij.1, hout.1⟩ with
+        ⟨jk1, hjk1, hi1⟩
+      rcases (second.reassociate).mp ⟨ij.2, hij.2, hout.2⟩ with
+        ⟨jk2, hjk2, hi2⟩
+      exact ⟨(jk1, jk2), ⟨hjk1, hjk2⟩, ⟨hi1, hi2⟩⟩
+    · rintro ⟨jk, hjk, hout⟩
+      rcases (first.reassociate).mpr ⟨jk.1, hjk.1, hout.1⟩ with
+        ⟨ij1, hij1, ho1⟩
+      rcases (second.reassociate).mpr ⟨jk.2, hjk.2, hout.2⟩ with
+        ⟨ij2, hij2, ho2⟩
+      exact ⟨(ij1, ij2), ⟨hij1, hij2⟩, ⟨ho1, ho2⟩⟩
+
 /- Product projections preserve every admitted resonance mode, and the
 diagonal duplicates a mode componentwise. -/
 def incidenceProdFirstResonanceHom
