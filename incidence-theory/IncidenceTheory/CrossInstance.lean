@@ -7842,6 +7842,27 @@ structure IncDepRawFullySemanticReadinessRenamingProvider where
       (term := term) renameMap
       (renameFormation ready.formationReady renameMap)
 
+/-- Canonical renaming target whose typing readiness no longer carries a
+formation proof object in its index. -/
+structure IncDepRawNormalizedFormationRenamingResult
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    (renameMap : IncDepRawRenaming source target) where
+  renamedFormation : IncDepRawWellFormed target (type.rename renameMap.index)
+  readiness : IncDepRawFormationDispatchReady renamedFormation
+
+/-- Typing half of normalized renaming.  `IncDepRawTypingDispatchReady` is
+indexed only by the typing derivation, eliminating the false global formation
+alignment obligation. -/
+structure IncDepRawNormalizedTypingRenamingResult
+    {source target : List IncDepRawType}
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    (renameMap : IncDepRawRenaming source target) where
+  formationResult : IncDepRawNormalizedFormationRenamingResult
+    (type := type) renameMap
+  renamedTyping : IncDepRawHasType target (term.rename renameMap.index)
+    (type.rename renameMap.index)
+  readiness : IncDepRawTypingDispatchReady renamedTyping
+
 structure IncDepRawStrictTypingDispatchReady
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} (typing : IncDepRawHasType context term type)
