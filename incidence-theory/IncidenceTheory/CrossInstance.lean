@@ -14723,6 +14723,60 @@ structure IncDepRawCanonicalDependentFormationFoldAgreementProvider
         (IncDepRawCanonicalFoldAgreement.retargetFormation typeAgreement
           rightAgreement))
 
+structure IncDepRawCanonicalMutualFoldDispatcher where
+  formation : ∀
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentFormationDispatchReady formation),
+    IncDepRawCanonicalFormationFoldOutput ready
+
+  typing : ∀
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation),
+    IncDepRawCanonicalTypingFoldOutput ready
+
+noncomputable def IncDepRawCanonicalMutualFoldDispatcher.strict
+    (dispatcher : IncDepRawCanonicalMutualFoldDispatcher.{u}) :
+    IncDepRawStrictMutualSubstitutionDispatcher where
+  formation :=
+    { dispatch := fun ready targetTree replacements =>
+        (dispatcher.formation ready).fold targetTree replacements
+          |>.result.dispatchResult }
+  typing :=
+    { dispatch := fun ready targetTree replacements =>
+        (dispatcher.typing ready).typing targetTree replacements
+          |>.typing.result.dispatchResult }
+
+noncomputable def IncDepRawCanonicalMutualFoldDispatcher.preserveFormation
+    (dispatcher : IncDepRawCanonicalMutualFoldDispatcher.{u})
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentFormationDispatchReady formation) :
+    IncDepRawCanonicalFormationSubstitutionFoldMotive ready :=
+  (dispatcher.formation ready).fold
+
+noncomputable def IncDepRawCanonicalMutualFoldDispatcher.preserveTyping
+    (dispatcher : IncDepRawCanonicalMutualFoldDispatcher.{u})
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation) :
+    IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive ready :=
+  (dispatcher.typing ready).typing
+
+theorem IncDepRawCanonicalMutualFoldDispatcher.preserveTyping_agrees
+    (dispatcher : IncDepRawCanonicalMutualFoldDispatcher.{u})
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation) :
+    IncDepRawCanonicalFoldAgreement
+      (dispatcher.typing ready).formation
+      (dispatcher.preserveTyping ready) :=
+  (dispatcher.typing ready).agreement
+
 noncomputable def IncDepRawSubstitutionFiberModel.preserveFormation
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)

@@ -1012,6 +1012,14 @@ It currently establishes:
   canonical instantiate motive.  The remaining step is the final mutual
   recursor assembly that generates formation-path agreements through the scoped
   providers and feeds these eight checked bundle handlers.
+  The public endpoint of that assembly is now fixed as
+  `IncDepRawCanonicalMutualFoldDispatcher`.  An inhabitant returns formation and
+  typing bundles for every coherent readiness tree.  Its projections expose
+  canonical formation preservation, aligned typing preservation, their local
+  agreement theorem, and an `IncDepRawStrictMutualSubstitutionDispatcher` for
+  compatibility with the existing API.  Consequently the remaining task is
+  inhabiting this one interface by mutual recursion, not redesigning the
+  preservation theorem or its consumers.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

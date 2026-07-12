@@ -413,6 +413,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - Apply/Pair/Second bundle constructorsもcheckedとなり、全8 typing rulesが`IncDepRawCanonicalTypingFoldOutput`を返す。Applyはfunction/argumentをPi/domain
   pathsへ、Pairは二componentsをdomain/instantiated-result pathsへretargetする。Secondは対応First bundleを内部生成し、そのagreementをcanonical instantiate
   motiveのargumentへ再利用する。残件はscoped providersからformation-path agreementsを再帰生成し、この8 handlersへ渡すfinal mutual recursor組立てである。
+- final assemblyの公開先を`IncDepRawCanonicalMutualFoldDispatcher`として固定した。inhabitantは全coherent readiness treeへformation/typing bundlesを返し、
+  canonical formation preservation、aligned typing preservation、local agreement theorem、既存互換の`IncDepRawStrictMutualSubstitutionDispatcher`を
+  projectionする。残件は保存定理/APIの再設計でなく、この単一interfaceをmutual recursionでinhabitすることだけになった。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
