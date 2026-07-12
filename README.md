@@ -1364,6 +1364,15 @@ It currently establishes:
   Thus the recursive agreement layer no longer intrinsically needs the two weak
   dependent/Identity providers; migrating the final dispatcher to these stronger
   assembly components is now an API rewiring task.
+  The readiness-crossing version of this assembly-only agreement is now checked
+  as `agreementAcrossReadyOfAssembly`.  Strong inputs are collected in
+  `ProviderFreeAssemblyNaturalityLaws` and
+  `ProviderFreeAssemblyHypotheses`: variable/readiness are reused from existing
+  preservation, while the naturality fragment contains instantiate agreement,
+  dependent assembly coherence, and generated Identity assembly coherence.
+  These records contain neither legacy weak dependent/Identity providers nor an
+  unrestricted path provider.  They are now the target inputs for the alternate
+  final dispatcher.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

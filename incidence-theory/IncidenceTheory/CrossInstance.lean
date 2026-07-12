@@ -16188,6 +16188,28 @@ theorem
   (firstGenerated.relationalAgreement assembly identityAssembly secondGenerated)
     |>.toHeterogeneousDiagonal.toWeakOfSameReady
 
+theorem
+    IncDepRawCanonicalFormationFoldOutput.RecursivelyGenerated.agreementAcrossReadyOfAssembly
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (assembly : IncDepRawCanonicalDependentAssemblyCoherenceProvider model)
+    (identityAssembly :
+      IncDepRawCanonicalGeneratedIdentityAssemblyCoherenceProvider model)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {firstReady secondReady :
+      IncDepRawCoherentFormationDispatchReady formation}
+    {first : IncDepRawCanonicalFormationFoldOutput.{u} firstReady}
+    {second : IncDepRawCanonicalFormationFoldOutput.{u} secondReady}
+    (firstGenerated : first.RecursivelyGenerated model variableProvider)
+    (secondGenerated : second.RecursivelyGenerated model variableProvider) :
+    IncDepRawCanonicalFormationFoldAgreement first.fold second.fold := by
+  let readyEq := readinessAlignment.alignFormation secondReady firstReady
+  cases readyEq
+  exact firstGenerated.agreementOfAssembly assembly identityAssembly
+    secondGenerated
+
 theorem IncDepRawCanonicalFormationFoldOutput.RecursivelyGenerated.castReady
     {model : IncDepRawSubstitutionFiberModel.{u}}
     {variableProvider : IncDepRawVariableSubstitutionProvider}
@@ -17681,6 +17703,32 @@ structure IncDepRawCanonicalProviderFreeNaturalityLaws
     IncDepRawCanonicalDependentFormationFoldAgreementProvider.{u} model
   generatedIdentityAgreementProvider :
     IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider.{u} model
+
+/-- Strong naturality laws used by the relational recursive agreement route. -/
+structure IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws
+    (model : IncDepRawSubstitutionFiberModel.{u}) where
+  instantiateAgreementProvider :
+    IncDepRawCanonicalInstantiateFoldAgreementProvider.{u}
+  dependentAssemblyCoherenceProvider :
+    IncDepRawCanonicalDependentAssemblyCoherenceProvider.{u} model
+  generatedIdentityAssemblyCoherenceProvider :
+    IncDepRawCanonicalGeneratedIdentityAssemblyCoherenceProvider.{u} model
+
+structure IncDepRawCanonicalProviderFreeAssemblyHypotheses
+    (model : IncDepRawSubstitutionFiberModel.{u}) where
+  variableProvider : IncDepRawVariableSubstitutionProvider
+  readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider
+  naturality : IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.{u} model
+
+def IncDepRawCanonicalProviderFreeAssemblyHypotheses.ofPreservation
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (preservation : IncDepRawCanonicalSubstitutionPreservationHypotheses)
+    (naturality :
+      IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.{u} model) :
+    IncDepRawCanonicalProviderFreeAssemblyHypotheses.{u} model where
+  variableProvider := preservation.variableProvider
+  readinessAlignment := preservation.readinessProvider
+  naturality := naturality
 
 structure IncDepRawCanonicalInstantiateNaturalModel
     (model : IncDepRawSubstitutionFiberModel.{u}) where
