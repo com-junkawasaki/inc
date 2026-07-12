@@ -383,6 +383,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - Apply枝も閉じた。dispatchの実formationはcanonical instantiate family、existential packageが公開するcanonicalは独立result IHとし、
   fold-local instantiate equalityから両層を結ぶprovenanceを構成する。global rebaseなしでapplication resultとresult formation IHが一致し、
   constructor-level agreementの残りはSecondのみとなった。
+- 最後のSecond枝も閉じた。Sigma pair agreementからsemantic first projectionを導出し、それをcanonical instantiate motiveのargumentとして、
+  dependent result familyを独立result IHへ同じfold-local provenance chainで接続する。これで全8 typing constructorsにaligned canonical handlerと
+  fold-agreement constructorが揃った。残件はagreement（instantiate agreementを含む）を生成する単一mutual recursionとtotal dispatcherの公開である。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

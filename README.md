@@ -941,7 +941,14 @@ It currently establishes:
   independently recursive result IH canonical.  The fold-local instantiate
   equality supplies exactly the provenance connecting those two layers, so the
   application result agrees with the result formation IH without global rebase.
-  Second is the final constructor-level agreement branch.
+  Second, the final constructor-level agreement branch, is now checked.  It
+  derives the semantic first projection from the Sigma pair agreement, uses that
+  projection as the argument of the canonical instantiate motive, and connects
+  the resulting dependent family to the independently recursive result IH with
+  the same fold-local provenance chain.  All eight typing constructors now have
+  aligned canonical handlers and fold-agreement constructors.  The remaining
+  integration step is one mutual recursion that generates these agreements
+  (including instantiate agreements) and exposes the total dispatcher.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
