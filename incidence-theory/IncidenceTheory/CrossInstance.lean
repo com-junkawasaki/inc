@@ -15836,6 +15836,35 @@ structure IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput
   output : IncDepRawCanonicalFormationFoldOutput.{u} ready
   recursivelyGenerated : output.RecursivelyGenerated model variableProvider
 
+theorem IncDepRawCanonicalFormationFoldOutput.Generated.toRecursivelyGenerated
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentFormationDispatchReady formation}
+    {output : IncDepRawCanonicalFormationFoldOutput.{u} ready}
+    (generated : output.Generated model) :
+    output.RecursivelyGenerated model variableProvider := by
+  induction generated with
+  | base => exact .base
+  | unit => exact .unit
+  | pi domain codomain _ _ domainIH codomainIH =>
+      exact .pi domain codomain domainIH codomainIH
+  | sigma domain codomain _ _ domainIH codomainIH =>
+      exact .sigma domain codomain domainIH codomainIH
+
+structure IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation) where
+  formation : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+    variableProvider ready.formationReady
+  output : IncDepRawCanonicalAnchoredTypingFoldOutput.{u} ready formation.output
+  generated : output.Generated model variableProvider
+
 theorem IncDepRawCanonicalFormationFoldOutput.CompletelyGenerated.agreement
     {model : IncDepRawSubstitutionFiberModel.{u}}
     {variableProvider : IncDepRawVariableSubstitutionProvider}
@@ -16385,6 +16414,122 @@ def IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput.complete
   formation := output.formation.complete
   output := output.output
   generated := output.generated
+
+def IncDepRawCanonicalGeneratedFormationFoldOutput.recursive
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentFormationDispatchReady formation}
+    (output : IncDepRawCanonicalGeneratedFormationFoldOutput model ready) :
+    IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider ready where
+  output := output.output
+  recursivelyGenerated := output.generated.toRecursivelyGenerated
+
+def IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput.recursive
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentTypingDispatchReady typing formation}
+    (output : IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput model
+      variableProvider ready) :
+    IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+      variableProvider ready where
+  formation := output.formation.recursive
+  output := output.output
+  generated := output.generated
+
+noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedIdentity
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (dependentAgreement :
+      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
+    (identityAgreement :
+      IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider model)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {leftTyping : IncDepRawHasType context left type}
+    {rightTyping : IncDepRawHasType context right type}
+    {typeReady : IncDepRawCoherentFormationDispatchReady typeFormation}
+    {leftReady : IncDepRawCoherentTypingDispatchReady leftTyping typeFormation}
+    {rightReady : IncDepRawCoherentTypingDispatchReady rightTyping typeFormation}
+    (typeOutput : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput
+      model variableProvider typeReady)
+    (leftOutput :
+      IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+        variableProvider leftReady)
+    (rightOutput :
+      IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+        variableProvider rightReady) :
+    IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider (.identity typeReady leftReady rightReady) := by
+  let leftAgreement : IncDepRawCanonicalFormationFoldAgreement
+      typeOutput.output.fold leftOutput.formation.output.fold :=
+    typeOutput.recursivelyGenerated.agreementAcrossReady dependentAgreement
+      identityAgreement readinessAlignment
+      leftOutput.formation.recursivelyGenerated
+  let rightAgreement : IncDepRawCanonicalFormationFoldAgreement
+      typeOutput.output.fold rightOutput.formation.output.fold :=
+    typeOutput.recursivelyGenerated.agreementAcrossReady dependentAgreement
+      identityAgreement readinessAlignment
+      rightOutput.formation.recursivelyGenerated
+  let alignedLeft := leftOutput.output.retargetFormation typeOutput.output
+    leftAgreement
+  let alignedRight := rightOutput.output.retargetFormation typeOutput.output
+    rightAgreement
+  exact
+    { output := model.canonicalFormationFoldOutputIdentityExact readinessAlignment
+        typeReady leftReady rightReady typeOutput.output alignedLeft alignedRight
+      recursivelyGenerated := .identity readinessAlignment typeOutput.output
+        alignedLeft alignedRight typeOutput.recursivelyGenerated
+        (.retarget leftOutput.formation.output typeOutput.output leftOutput.output
+          leftAgreement leftOutput.generated)
+        (.retarget rightOutput.formation.output typeOutput.output
+          rightOutput.output rightAgreement rightOutput.generated) }
+
+noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedRefl
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (dependentAgreement :
+      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
+    (identityAgreement :
+      IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider model)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {term : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {termTyping : IncDepRawHasType context term type}
+    {typeReady : IncDepRawCoherentFormationDispatchReady typeFormation}
+    {termReady : IncDepRawCoherentTypingDispatchReady termTyping typeFormation}
+    (typeOutput : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput
+      model variableProvider typeReady)
+    (termOutput :
+      IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+        variableProvider termReady) :
+    IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+      variableProvider (.reflRule typeReady termReady) := by
+  let termAgreement : IncDepRawCanonicalFormationFoldAgreement
+      typeOutput.output.fold termOutput.formation.output.fold :=
+    typeOutput.recursivelyGenerated.agreementAcrossReady dependentAgreement
+      identityAgreement readinessAlignment
+      termOutput.formation.recursivelyGenerated
+  let alignedTerm := termOutput.output.retargetFormation typeOutput.output
+    termAgreement
+  let identityFormation := model.recursivelyGeneratedIdentity variableProvider
+    readinessAlignment dependentAgreement identityAgreement typeOutput termOutput
+    termOutput
+  exact
+    { formation := identityFormation
+      output := (model.anchoredTypingFoldResultReflExact readinessAlignment
+        typeReady termReady typeOutput.output alignedTerm).output
+      generated := .refl readinessAlignment typeOutput.output alignedTerm
+        (.retarget termOutput.formation.output typeOutput.output
+          termOutput.output termAgreement termOutput.generated) }
 
 noncomputable def IncDepRawSubstitutionFiberModel.completelyGeneratedIdentity
     (model : IncDepRawSubstitutionFiberModel.{u})

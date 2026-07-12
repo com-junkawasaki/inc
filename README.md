@@ -1243,6 +1243,15 @@ It currently establishes:
   `RecursivelyGeneratedFormationFoldOutput` package is now the formation motive
   for the final recursor.  The next step is to replace the typing package's
   temporary complete-formation field with this recursive-normal-form package.
+  The typing motive now uses that normal form directly as
+  `RecursivelyGeneratedAnchoredTypingFoldOutput`.  Ordinary generated formation
+  evidence converts structurally to recursive evidence, so the existing seven
+  non-Refl typing package builders are reusable without semantic reconstruction.
+  New recursive-normal-form Identity and Refl handlers align endpoint packages
+  with `RecursivelyGenerated.agreementAcrossReady`, preserve retarget
+  provenance, and return recursive formation packages.  Consequently nested
+  Identity formations remain closed through both the formation and typing
+  motives; the two motive types needed by the final recursor are now available.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
