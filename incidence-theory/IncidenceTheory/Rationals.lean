@@ -837,6 +837,40 @@ theorem rationalMul_positive {left right : IncRational}
   have strict := rationalLT_mul_right_of_positive leftPositive rightPositive
   simpa [rationalMul_zero_left] using strict
 
+theorem rationalMul_positive_reflect_right {left right : IncRational}
+    (leftPositive : rationalLT (rationalOfInteger 0) left)
+    (productPositive :
+      rationalLT (rationalOfInteger 0) (rationalMul left right)) :
+    rationalLT (rationalOfInteger 0) right := by
+  revert leftPositive productPositive
+  refine Quotient.inductionOn₂ left right ?_
+  intro leftRep rightRep leftPositive productPositive
+  have leftNumeratorPositive : 0 < leftRep.numerator := by
+    have cross := (rational_mk_lt_iff
+      (rationalRepresentative 0 1 (by omega)) leftRep).mp leftPositive
+    change 0 * leftRep.denominator < leftRep.numerator * 1 at cross
+    simpa using cross
+  have productNumeratorPositive :
+      0 < leftRep.numerator * rightRep.numerator := by
+    have cross := (rational_mk_lt_iff
+      (rationalRepresentative 0 1 (by omega)) (leftRep.mul rightRep)).mp
+      productPositive
+    change 0 * (leftRep.denominator * rightRep.denominator) <
+      (leftRep.numerator * rightRep.numerator) * 1 at cross
+    simpa using cross
+  apply (rational_mk_lt_iff _ _).mpr
+  change 0 * rightRep.denominator < rightRep.numerator * 1
+  simpa using Int.pos_of_mul_pos_right productNumeratorPositive
+    leftNumeratorPositive
+
+theorem rationalMul_positive_reflect_left {left right : IncRational}
+    (rightPositive : rationalLT (rationalOfInteger 0) right)
+    (productPositive :
+      rationalLT (rationalOfInteger 0) (rationalMul left right)) :
+    rationalLT (rationalOfInteger 0) left := by
+  apply rationalMul_positive_reflect_right rightPositive
+  simpa [rationalMul_comm] using productPositive
+
 theorem rationalLT_mul_of_positive
     {left left' right right' : IncRational}
     (leftStrict : rationalLT left left')

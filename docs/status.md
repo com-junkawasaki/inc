@@ -174,8 +174,9 @@ Checked constructions include:
   an explicit Archimedean finite-step theorem and minimal boundary-exit
   construction provide the approximation needed by the general inverse proof;
   the nonnegative cone is bundled and closed under a well-formed cut product;
-  this product is commutative, absorbs zero, and is monotone in both inputs,
-  based on checked strict multiplication monotonicity for positive rationals;
+  this product is a commutative monoid with principal one, absorbs zero, and is
+  monotone in both inputs, based on checked strict multiplication monotonicity
+  and positivity reflection for positive rationals;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets
@@ -186,7 +187,7 @@ Checked constructions include:
 
 Major remaining areas include a canonical reduced-fraction boundary and
 computational reciprocal selector, extension of nonnegative cut multiplication
-to signed reals, multiplicative unit/associativity/distribution and field laws,
+to signed reals, distribution and field laws,
 real analysis, broader algebra, and a larger categorical library. Rational
 incidence is now observationally faithful:
 zero has an empty boundary and every nonzero rational has a one-step boundary

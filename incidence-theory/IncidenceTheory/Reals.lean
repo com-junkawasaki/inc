@@ -756,6 +756,13 @@ structure NonnegativeReal where
   value : IncReal
   nonnegative : realLE realZero value
 
+theorem NonnegativeReal.ext {left right : NonnegativeReal}
+    (equal : left.value = right.value) : left = right := by
+  cases left
+  cases right
+  cases equal
+  rfl
+
 theorem NonnegativeReal.negative_mem (value : NonnegativeReal)
     {rational : IncRational}
     (negative : rationalLT rational (rationalOfInteger 0)) :
@@ -862,9 +869,18 @@ theorem nonnegativeRealMul_comm (left right : NonnegativeReal) :
       exact Or.inr ⟨leftValue, rightValue, leftMember, rightMember,
         leftPositive, rightPositive, by simpa [rationalMul_comm] using below⟩
 
+theorem nonnegativeRealMul_comm_bundle (left right : NonnegativeReal) :
+    nonnegativeRealMul left right = nonnegativeRealMul right left :=
+  NonnegativeReal.ext (nonnegativeRealMul_comm left right)
+
 def nonnegativeZero : NonnegativeReal where
   value := realZero
   nonnegative := realLE_refl realZero
+
+def nonnegativeOne : NonnegativeReal where
+  value := rationalToReal (rationalOfInteger 1)
+  nonnegative := (rationalToReal_le_iff _ _).mpr
+    ((rationalOfInteger_le_iff 0 1).mpr (by omega))
 
 theorem nonnegativeRealMul_zero_left (value : NonnegativeReal) :
     (nonnegativeRealMul nonnegativeZero value).value = realZero := by
@@ -883,6 +899,172 @@ theorem nonnegativeRealMul_zero_left (value : NonnegativeReal) :
 theorem nonnegativeRealMul_zero_right (value : NonnegativeReal) :
     (nonnegativeRealMul value nonnegativeZero).value = realZero := by
   rw [nonnegativeRealMul_comm, nonnegativeRealMul_zero_left]
+
+theorem nonnegativeRealMul_one_right (value : NonnegativeReal) :
+    (nonnegativeRealMul value nonnegativeOne).value = value.value := by
+  apply IncReal.ext
+  intro rational
+  constructor
+  · intro member
+    rcases member with negative | generated
+    · exact value.negative_mem negative
+    · obtain ⟨valueMember, oneMember, inValue, belowOne,
+          valuePositive, onePositive, belowProduct⟩ := generated
+      have productBelowValue :
+          rationalLT (rationalMul valueMember oneMember) valueMember := by
+        have multiplied := rationalLT_mul_left_of_positive belowOne valuePositive
+        simpa [rationalMul_one_right] using multiplied
+      exact value.value.downward inValue
+        (rationalLT_trans belowProduct productBelowValue)
+  · intro inValue
+    by_cases negative : rationalLT rational (rationalOfInteger 0)
+    · exact Or.inl negative
+    · have zeroLE : rationalLE (rationalOfInteger 0) rational := by
+        rcases rationalLE_total (rationalOfInteger 0) rational with ordered | reverse
+        · exact ordered
+        · by_cases equal : rational = rationalOfInteger 0
+          · subst rational
+            exact rationalLE_refl _
+          · exact False.elim (negative ⟨reverse, equal⟩)
+      obtain ⟨larger, largerMember, rationalLarger⟩ := value.value.rounded inValue
+      have largerPositive : rationalLT (rationalOfInteger 0) larger :=
+        rationalLT_of_le_of_lt zeroLE rationalLarger
+      obtain ⟨middle, rationalMiddle, middleLarger⟩ :=
+        rationalLT_dense rationalLarger
+      have middlePositive : rationalLT (rationalOfInteger 0) middle :=
+        rationalLT_of_le_of_lt zeroLE rationalMiddle
+      have largerNonzero : larger ≠ rationalOfInteger 0 := fun equal => by
+        subst larger
+        exact rationalLT_irrefl _ largerPositive
+      obtain ⟨inverse, inverseLaw⟩ :=
+        rational_nonzero_has_mul_inverse largerNonzero
+      have inversePositive : rationalLT (rationalOfInteger 0) inverse := by
+        apply rationalMul_positive_reflect_right largerPositive
+        rw [inverseLaw]
+        exact rational_zero_lt_one
+      let oneMember := rationalMul middle inverse
+      have oneMemberPositive : rationalLT (rationalOfInteger 0) oneMember :=
+        rationalMul_positive middlePositive inversePositive
+      have oneMemberBelowOne :
+          rationalLT oneMember (rationalOfInteger 1) := by
+        have multiplied := rationalLT_mul_right_of_positive middleLarger inversePositive
+        rw [inverseLaw] at multiplied
+        exact multiplied
+      have productRestore : rationalMul larger oneMember = middle := by
+        calc
+          rationalMul larger (rationalMul middle inverse) =
+              rationalMul (rationalMul larger middle) inverse :=
+            (rationalMul_assoc larger middle inverse).symm
+          _ = rationalMul (rationalMul middle larger) inverse := by
+            rw [rationalMul_comm larger middle]
+          _ = rationalMul middle (rationalMul larger inverse) :=
+            rationalMul_assoc middle larger inverse
+          _ = rationalMul middle (rationalOfInteger 1) := by rw [inverseLaw]
+          _ = middle := rationalMul_one_right middle
+      exact Or.inr ⟨larger, oneMember, largerMember, oneMemberBelowOne,
+        largerPositive, oneMemberPositive, by
+          rw [productRestore]
+          exact rationalMiddle⟩
+
+theorem nonnegativeRealMul_one_left (value : NonnegativeReal) :
+    (nonnegativeRealMul nonnegativeOne value).value = value.value := by
+  rw [nonnegativeRealMul_comm, nonnegativeRealMul_one_right]
+
+theorem nonnegativeRealMul_assoc_forward
+    (first second third : NonnegativeReal) :
+    realLE (nonnegativeRealMul (nonnegativeRealMul first second) third).value
+      (nonnegativeRealMul first (nonnegativeRealMul second third)).value := by
+  intro rational member
+  by_cases rationalNegative : rationalLT rational (rationalOfInteger 0)
+  · exact Or.inl rationalNegative
+  · rcases member with negative | generated
+    · exact False.elim (rationalNegative negative)
+    · obtain ⟨firstSecondValue, thirdValue, firstSecondMember, thirdMember,
+          firstSecondPositive, thirdPositive, rationalBelow⟩ := generated
+      rcases firstSecondMember with firstSecondNegative | firstSecondGenerated
+      · exact False.elim
+          ((rationalLT_asymm firstSecondPositive) firstSecondNegative)
+      · obtain ⟨firstValue, secondValue, firstMember, secondMember,
+            firstPositive, secondPositive, firstSecondBelow⟩ :=
+          firstSecondGenerated
+        have rationalBelowExpanded : rationalLT rational
+            (rationalMul firstValue (rationalMul secondValue thirdValue)) := by
+          have expanded := rationalLT_mul_right_of_positive
+            firstSecondBelow thirdPositive
+          exact rationalLT_trans rationalBelow (by
+            simpa [rationalMul_assoc] using expanded)
+        have firstNonzero : firstValue ≠ rationalOfInteger 0 := fun equal => by
+          subst firstValue
+          exact rationalLT_irrefl _ firstPositive
+        obtain ⟨inverse, inverseLaw⟩ :=
+          rational_nonzero_has_mul_inverse firstNonzero
+        have inversePositive : rationalLT (rationalOfInteger 0) inverse := by
+          apply rationalMul_positive_reflect_right firstPositive
+          rw [inverseLaw]
+          exact rational_zero_lt_one
+        let translated := rationalMul rational inverse
+        have rationalNonnegative : rationalLE (rationalOfInteger 0) rational := by
+          rcases rationalLE_total (rationalOfInteger 0) rational with ordered | reverse
+          · exact ordered
+          · by_cases equal : rational = rationalOfInteger 0
+            · subst rational
+              exact rationalLE_refl _
+            · exact False.elim (rationalNegative ⟨reverse, equal⟩)
+        have translatedNonnegative :
+            rationalLE (rationalOfInteger 0) translated :=
+          rationalMul_nonnegative rationalNonnegative inversePositive.1
+        have translatedBelow : rationalLT translated
+            (rationalMul secondValue thirdValue) := by
+          have multiplied := rationalLT_mul_right_of_positive
+            rationalBelowExpanded inversePositive
+          have restore : rationalMul
+              (rationalMul firstValue (rationalMul secondValue thirdValue))
+              inverse = rationalMul secondValue thirdValue := by
+            calc
+              _ = rationalMul (rationalMul secondValue thirdValue)
+                  (rationalMul firstValue inverse) := by
+                rw [rationalMul_comm firstValue
+                  (rationalMul secondValue thirdValue)]
+                exact rationalMul_assoc
+                  (rationalMul secondValue thirdValue) firstValue inverse
+              _ = rationalMul (rationalMul secondValue thirdValue)
+                  (rationalOfInteger 1) := by rw [inverseLaw]
+              _ = _ := rationalMul_one_right _
+          rw [restore] at multiplied
+          exact multiplied
+        obtain ⟨secondThirdValue, translatedMiddle, middleBelow⟩ :=
+          rationalLT_dense translatedBelow
+        have secondThirdPositive :
+            rationalLT (rationalOfInteger 0) secondThirdValue :=
+          rationalLT_of_le_of_lt translatedNonnegative translatedMiddle
+        have secondThirdMember :
+            (nonnegativeRealMul second third).value.lower secondThirdValue :=
+          Or.inr ⟨secondValue, thirdValue, secondMember, thirdMember,
+            secondPositive, thirdPositive, middleBelow⟩
+        have restoredLeft :
+            rationalMul firstValue translated = rational := by
+          calc
+            _ = rationalMul rational (rationalMul firstValue inverse) := by
+              rw [← rationalMul_assoc firstValue rational inverse,
+                rationalMul_comm firstValue rational,
+                rationalMul_assoc rational firstValue inverse]
+            _ = rationalMul rational (rationalOfInteger 1) := by rw [inverseLaw]
+            _ = rational := rationalMul_one_right _
+        have finalBelow := rationalLT_mul_left_of_positive
+          translatedMiddle firstPositive
+        rw [restoredLeft] at finalBelow
+        exact Or.inr ⟨firstValue, secondThirdValue, firstMember,
+          secondThirdMember, firstPositive, secondThirdPositive, finalBelow⟩
+
+theorem nonnegativeRealMul_assoc
+    (first second third : NonnegativeReal) :
+    nonnegativeRealMul (nonnegativeRealMul first second) third =
+      nonnegativeRealMul first (nonnegativeRealMul second third) := by
+  apply NonnegativeReal.ext
+  apply realLE_antisymm
+  · exact nonnegativeRealMul_assoc_forward first second third
+  · have reverse := nonnegativeRealMul_assoc_forward third second first
+    simpa [nonnegativeRealMul_comm_bundle] using reverse
 
 theorem nonnegativeRealMul_monotone_left
     {left left' right : NonnegativeReal}
