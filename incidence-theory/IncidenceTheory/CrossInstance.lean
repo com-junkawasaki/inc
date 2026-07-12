@@ -15322,6 +15322,58 @@ theorem IncDepRawCanonicalFormationFoldOutput.Generated.agreement
           (domainIH rightDomainGenerated)
           (codomainIH rightCodomainGenerated)
 
+/-- Syntax-directed provenance for an anchored typing output, indexed directly
+by the exact formation output to which the typing output is anchored.  Unlike
+the earlier result wrapper, this index is definitionally the recursive
+formation motive and therefore composes through dependent typing rules. -/
+inductive IncDepRawCanonicalAnchoredTypingFoldOutput.Generated
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider) : ∀
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentTypingDispatchReady typing formation}
+    (formationOutput : IncDepRawCanonicalFormationFoldOutput.{u}
+      ready.formationReady),
+    IncDepRawCanonicalAnchoredTypingFoldOutput.{u} ready formationOutput → Prop
+  | variable {context : List IncDepRawType} {position : Nat}
+      {type : IncDepRawType} {lookup : IncDepRawLookup context position type}
+      {typeFormation : IncDepRawWellFormed context type}
+      {typeReady : IncDepRawCoherentFormationDispatchReady typeFormation}
+      (typeOutput : IncDepRawCanonicalFormationFoldOutput typeReady) :
+      Generated model variableProvider
+        (ready := .varRule (lookup := lookup) typeReady) typeOutput
+        (variableProvider.anchoredTypingFoldResultVariable
+          (lookup := lookup) typeReady typeOutput).output
+  | unit {context : List IncDepRawType} :
+      Generated model variableProvider
+        (ready := .unitRule (context := context))
+        (model.anchoredTypingFoldResultUnit
+          (context := context)).formationOutput
+        (model.anchoredTypingFoldResultUnit (context := context)).output
+  | lambda {context : List IncDepRawType} {domain codomain : IncDepRawType}
+      {body : IncDepRawTerm}
+      {domainFormation : IncDepRawWellFormed context domain}
+      {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+      {bodyTyping : IncDepRawHasType (domain :: context) body codomain}
+      {domainReady :
+        IncDepRawCoherentFormationDispatchReady domainFormation}
+      {bodyReady : IncDepRawCoherentTypingDispatchReady bodyTyping
+        codomainFormation}
+      (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
+      (bodyFormationOutput : IncDepRawCanonicalFormationFoldOutput
+        bodyReady.formationReady)
+      (bodyOutput : IncDepRawCanonicalAnchoredTypingFoldOutput bodyReady
+        bodyFormationOutput) :
+      Generated model variableProvider (ready := bodyReady)
+        bodyFormationOutput bodyOutput →
+      Generated model variableProvider
+        (ready := .lambdaRule domainReady bodyReady)
+        (model.canonicalFormationFoldOutputPi domainReady bodyReady.formationReady
+          domainOutput bodyFormationOutput)
+        (model.anchoredTypingFoldResultLambdaExact domainReady bodyReady
+          domainOutput bodyFormationOutput bodyOutput).output
+
 /-- A formation output packaged with evidence that it was produced solely by
 the canonical syntax-directed constructors.  This is the formation motive used
 by the provider-free mutual recursion. -/
@@ -15343,6 +15395,21 @@ structure IncDepRawCanonicalGeneratedAnchoredTypingFoldResult
     (ready : IncDepRawCoherentTypingDispatchReady typing formation) where
   result : IncDepRawCanonicalAnchoredTypingFoldResult.{u} ready
   generated : result.Generated model variableProvider
+
+/-- The exact provider-free typing motive: a generated formation package and
+an anchored typing output carrying syntax-directed provenance at that very
+formation output. -/
+structure IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation) where
+  formation : IncDepRawCanonicalGeneratedFormationFoldOutput model
+    ready.formationReady
+  output : IncDepRawCanonicalAnchoredTypingFoldOutput.{u} ready formation.output
+  generated : output.Generated model variableProvider
 
 def IncDepRawSubstitutionFiberModel.generatedFormationBase
     (model : IncDepRawSubstitutionFiberModel.{u})
@@ -15417,6 +15484,55 @@ def IncDepRawSubstitutionFiberModel.generatedTypingUnit
       (.unitRule (context := context)) where
   result := model.anchoredTypingFoldResultUnit
   generated := .unit
+
+noncomputable def IncDepRawVariableSubstitutionProvider.generatedTypingOutputVariable
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {typeFormation : IncDepRawWellFormed context type}
+    {typeReady : IncDepRawCoherentFormationDispatchReady typeFormation}
+    (typeOutput :
+      IncDepRawCanonicalGeneratedFormationFoldOutput model typeReady) :
+    IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput model variableProvider
+      (.varRule (lookup := lookup) typeReady) where
+  formation := typeOutput
+  output := (variableProvider.anchoredTypingFoldResultVariable typeReady
+    typeOutput.output).output
+  generated := .variable typeOutput.output
+
+def IncDepRawSubstitutionFiberModel.generatedTypingOutputUnit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} :
+    IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput model variableProvider
+      (.unitRule (context := context)) where
+  formation := model.generatedFormationUnit
+  output := (model.anchoredTypingFoldResultUnit (context := context)).output
+  generated := .unit
+
+noncomputable def IncDepRawSubstitutionFiberModel.generatedTypingOutputLambda
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {body : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {bodyTyping : IncDepRawHasType (domain :: context) body codomain}
+    {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+    {bodyReady : IncDepRawCoherentTypingDispatchReady bodyTyping
+      codomainFormation}
+    (domain :
+      IncDepRawCanonicalGeneratedFormationFoldOutput model domainReady)
+    (body : IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput model
+      variableProvider bodyReady) :
+    IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput model variableProvider
+      (.lambdaRule domainReady bodyReady) where
+  formation := model.generatedFormationPi domain body.formation
+  output := (model.anchoredTypingFoldResultLambdaExact domainReady bodyReady
+    domain.output body.formation.output body.output).output
+  generated := .lambda domain.output body.formation.output body.output
+    body.generated
 
 structure IncDepRawCanonicalAnchoredMutualFoldDispatcher.ReadinessLawful
     (anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u}) : Prop where

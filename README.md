@@ -1151,6 +1151,14 @@ It currently establishes:
   typing Variable/Unit.  This removes the need to project an output and later
   reconstruct which indexed certificate belongs to it when the final mutual
   recursor is assembled.
+  Typing provenance is now also indexed directly by the exact generated
+  formation output through `AnchoredTypingFoldOutput.Generated`.  Its checked
+  constructors cover Variable, Unit, and recursively Lambda.  The corresponding
+  `GeneratedAnchoredTypingFoldOutput` motive packages (1) the generated result
+  formation, (2) the typing output anchored to precisely that formation, and
+  (3) its syntax-directed provenance.  This exact index removes the readiness
+  proof mismatch exposed by the older result wrapper and is the motive needed
+  by the remaining dependent typing constructors.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

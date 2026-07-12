@@ -1211,6 +1211,11 @@ cycle 38–41 で以下の3極構造が判明した:
   `GeneratedAnchoredTypingFoldResult`としてpackage化済みで、各outputと同じreadiness
   index上のprovenance証明を一体で保持する。Base/Unit/Pi/SigmaおよびVariable/Unitの
   package constructorもcheckedであり、最終recursorでindex付き証明を再構成する必要はない。
+  typing側はさらに`AnchoredTypingFoldOutput.Generated`でexact formation outputへ直接
+  indexする設計へ進み、Variable/Unit/Lambdaの3枝がcheckedとなった。対応する
+  `GeneratedAnchoredTypingFoldOutput` motiveは生成formation package、そこへanchorされた
+  typing output、syntax-directed provenanceを同一indexで保持する。旧result wrapperで
+  発生したreadiness proofのずれを避け、残るdependent typing枝へそのまま渡せる。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。
