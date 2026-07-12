@@ -1273,6 +1273,12 @@ cycle 38–41 で以下の3極構造が判明した:
   `agreementAcrossReady`でendpoint packagesを整列し、retarget provenanceとrecursive
   formationを保持する。nested Identityはformation/typing両motiveで閉じ、final recursorに
   必要な二つのmotive型が揃った。
+  final motiveを直接返すhandlersはformation Base/Unit/Pi/Sigmaとtyping
+  Variable/Unit/Lambdaの7枝までcheckedとなった。Pi/Sigmaはrecursive-normal-form childrenを
+  合成し、Lambdaはbody provenanceを保持しながらrecursive Pi formationを返す。temporary
+  generated/complete packagesは介さない。残handlersはIdentity、Apply、Pair、First、Second、
+  Reflで、Identity/Reflのgeneral実装は既にあり、4 dependent typing枝は確立済みrecursive
+  agreement整列patternの移植だけが残る。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

@@ -15865,6 +15865,114 @@ structure IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput
   output : IncDepRawCanonicalAnchoredTypingFoldOutput.{u} ready formation.output
   generated : output.Generated model variableProvider
 
+def IncDepRawSubstitutionFiberModel.recursivelyGeneratedFormationBase
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {index : Nat} :
+    IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider (.base (context := context) (index := index)) where
+  output := model.canonicalFormationFoldOutputBase
+  recursivelyGenerated := .base
+
+def IncDepRawSubstitutionFiberModel.recursivelyGeneratedFormationUnit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} :
+    IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider (.unit (context := context)) where
+  output := model.canonicalFormationFoldOutputUnit
+  recursivelyGenerated := .unit
+
+noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedFormationPi
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+    {codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation}
+    (domain : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider domainReady)
+    (codomain : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider codomainReady) :
+    IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider (.pi domainReady codomainReady) where
+  output := model.canonicalFormationFoldOutputPi domainReady codomainReady
+    domain.output codomain.output
+  recursivelyGenerated := .pi domain.output codomain.output
+    domain.recursivelyGenerated codomain.recursivelyGenerated
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.recursivelyGeneratedFormationSigma
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+    {codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation}
+    (domain : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider domainReady)
+    (codomain : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider codomainReady) :
+    IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider (.sigma domainReady codomainReady) where
+  output := model.canonicalFormationFoldOutputSigma domainReady codomainReady
+    domain.output codomain.output
+  recursivelyGenerated := .sigma domain.output codomain.output
+    domain.recursivelyGenerated codomain.recursivelyGenerated
+
+noncomputable def
+    IncDepRawVariableSubstitutionProvider.recursivelyGeneratedTypingVariable
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {typeFormation : IncDepRawWellFormed context type}
+    {typeReady : IncDepRawCoherentFormationDispatchReady typeFormation}
+    (typeOutput : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput
+      model variableProvider typeReady) :
+    IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+      variableProvider (.varRule (lookup := lookup) typeReady) where
+  formation := typeOutput
+  output := (variableProvider.anchoredTypingFoldResultVariable typeReady
+    typeOutput.output).output
+  generated := .variable typeOutput.output
+
+def IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingUnit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} :
+    IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+      variableProvider (.unitRule (context := context)) where
+  formation := model.recursivelyGeneratedFormationUnit variableProvider
+  output := (model.anchoredTypingFoldResultUnit (context := context)).output
+  generated := .unit
+
+noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingLambda
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {body : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {bodyTyping : IncDepRawHasType (domain :: context) body codomain}
+    {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+    {bodyReady : IncDepRawCoherentTypingDispatchReady bodyTyping
+      codomainFormation}
+    (domain : IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+      variableProvider domainReady)
+    (body : IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+      variableProvider bodyReady) :
+    IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+      variableProvider (.lambdaRule domainReady bodyReady) where
+  formation := model.recursivelyGeneratedFormationPi variableProvider domain
+    body.formation
+  output := (model.anchoredTypingFoldResultLambdaExact domainReady bodyReady
+    domain.output body.formation.output body.output).output
+  generated := .lambda domain.output body.formation.output body.output
+    body.generated
+
 theorem IncDepRawCanonicalFormationFoldOutput.CompletelyGenerated.agreement
     {model : IncDepRawSubstitutionFiberModel.{u}}
     {variableProvider : IncDepRawVariableSubstitutionProvider}

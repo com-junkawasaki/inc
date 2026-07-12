@@ -1252,6 +1252,14 @@ It currently establishes:
   provenance, and return recursive formation packages.  Consequently nested
   Identity formations remain closed through both the formation and typing
   motives; the two motive types needed by the final recursor are now available.
+  Final-motive handlers now directly cover formation Base, Unit, Pi, and Sigma
+  plus typing Variable, Unit, and Lambda.  Pi/Sigma compose recursive-normal-form
+  child packages, and Lambda returns a recursive Pi formation while retaining
+  the body's typing provenance.  These seven handlers no longer pass through
+  the temporary generated/complete packages.  The remaining recursor handlers
+  are Identity, Apply, Pair, First, Second, and Refl; the exact/general Identity
+  and Refl implementations already exist, while the four dependent typing
+  handlers require only the established recursive agreement alignment pattern.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
