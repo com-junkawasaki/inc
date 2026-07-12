@@ -2721,8 +2721,10 @@ The derivation-independent layer is now active:
 coherent-readiness preservation without equating proof objects chosen by two
 compilers.  Its dependent Apply constructor is proved sorry-free using only the
 `instantiate_substitute` type equation and synchronized casts.  Thus the new
-semantic route covers 1/3 of the previously blocked constructors; Pair and
-Second remain before it can replace the legacy 5/8 bookkeeping globally.
+semantic route now covers Apply and Pair, 2/3 of the previously blocked
+constructors.  Pair transports its dependent second component and readiness
+certificate with the same `instantiate_substitute` equality.  Second remains
+before this layer can replace the legacy 5/8 bookkeeping globally.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo
