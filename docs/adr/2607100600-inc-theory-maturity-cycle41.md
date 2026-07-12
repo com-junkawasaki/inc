@@ -1200,9 +1200,13 @@ cycle 38–41 で以下の3極構造が判明した:
   `incidenceBoundary_semantics_not_complete`という反例もある。残件は追加条件の下で
   Incidence固有観測がどの論理fragmentを完全に捉えるかの分類である。
 - **依存型保存定理のprovider実現性が残る**: Pi/Sigma/Identity raw calculus、semantic
-  substitution、formation/typing相互保存foldは完成した。canonical版でもvariable
-  replacement、coherent readiness alignment、general fiber rebaseの3仮定が残り、
-  これらを具体semantic modelで構成するか、より強いcanonicality条件から導出する必要がある。
+  substitution、formation/typing相互保存foldは完成した。過強なgeneral fiber rebaseは
+  provider-free anchored設計から除去済みである。生成output certificateはformationの
+  Base/Unit/Pi/SigmaとtypingのVariable/Unitまで実装され、Pi/Sigmaの生成結果一意性も
+  scoped dependent agreementから再帰的に証明済みである。残件はIdentityでformationと
+  typing certificateを相互化し、残る6 typing枝を加えてanchored dispatcherを直接構成
+  することである。最終interfaceに残す意味論入力はvariable replacement、coherent
+  readiness alignment、scoped instantiate agreementである。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

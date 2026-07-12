@@ -1133,6 +1133,16 @@ It currently establishes:
   specification: supplying the former path provider reproduces the implemented
   anchored/lawful/strict pipeline.  The only missing argument in the final
   theorem is literally that provider parameter.
+  Generated-output certificates now begin the direct construction that removes
+  that parameter.  Formation Base and Unit certificates are canonical leaves;
+  Pi and Sigma certificates compose certificates for their domain and codomain.
+  `Generated.agreement` proves any two such generated formation outputs agree,
+  recursively invoking only the scoped dependent-formation agreement laws for
+  Pi and Sigma.  Variable and Unit typing results have matching anchored
+  certificates.  Identity formation is the remaining point at which these two
+  certificate families must become genuinely mutual; after that mutualization,
+  the six composite typing certificates and the anchored dispatcher can be
+  assembled without an unrestricted path-agreement provider.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

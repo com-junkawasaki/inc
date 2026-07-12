@@ -15228,6 +15228,100 @@ noncomputable def IncDepRawCanonicalAnchoredMutualFoldDispatcher.dispatcher
   formation := anchored.formation
   typing := fun ready => (anchored.typing ready).toTypingFoldOutput
 
+inductive IncDepRawCanonicalFormationFoldOutput.Generated
+    (model : IncDepRawSubstitutionFiberModel.{u}) : ∀
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentFormationDispatchReady formation},
+    IncDepRawCanonicalFormationFoldOutput.{u} ready → Prop
+  | base {context : List IncDepRawType} {index : Nat} :
+      Generated model
+        (model.canonicalFormationFoldOutputBase
+          (context := context) (index := index))
+  | unit {context : List IncDepRawType} :
+      Generated model
+        (model.canonicalFormationFoldOutputUnit (context := context))
+  | pi {context : List IncDepRawType} {domain codomain : IncDepRawType}
+      {domainFormation : IncDepRawWellFormed context domain}
+      {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+      {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+      {codomainReady :
+        IncDepRawCoherentFormationDispatchReady codomainFormation}
+      (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
+      (codomainOutput : IncDepRawCanonicalFormationFoldOutput codomainReady) :
+      Generated model domainOutput →
+      Generated model codomainOutput →
+      Generated model
+        (model.canonicalFormationFoldOutputPi domainReady codomainReady
+          domainOutput codomainOutput)
+  | sigma {context : List IncDepRawType} {domain codomain : IncDepRawType}
+      {domainFormation : IncDepRawWellFormed context domain}
+      {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+      {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+      {codomainReady :
+        IncDepRawCoherentFormationDispatchReady codomainFormation}
+      (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
+      (codomainOutput : IncDepRawCanonicalFormationFoldOutput codomainReady) :
+      Generated model domainOutput →
+      Generated model codomainOutput →
+      Generated model
+        (model.canonicalFormationFoldOutputSigma domainReady codomainReady
+          domainOutput codomainOutput)
+
+inductive IncDepRawCanonicalAnchoredTypingFoldResult.Generated
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider) : ∀
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentTypingDispatchReady typing formation},
+    IncDepRawCanonicalAnchoredTypingFoldResult.{u} ready → Prop
+  | variable {context : List IncDepRawType} {position : Nat}
+      {type : IncDepRawType} {lookup : IncDepRawLookup context position type}
+      {typeFormation : IncDepRawWellFormed context type}
+      {typeReady : IncDepRawCoherentFormationDispatchReady typeFormation}
+      (typeOutput : IncDepRawCanonicalFormationFoldOutput typeReady) :
+      IncDepRawCanonicalFormationFoldOutput.Generated model typeOutput →
+      Generated model variableProvider
+        (variableProvider.anchoredTypingFoldResultVariable
+          (lookup := lookup) typeReady typeOutput)
+  | unit {context : List IncDepRawType} :
+      Generated model variableProvider
+        (model.anchoredTypingFoldResultUnit (context := context))
+
+theorem IncDepRawCanonicalFormationFoldOutput.Generated.agreement
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (dependentAgreement :
+      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentFormationDispatchReady formation}
+    {left right : IncDepRawCanonicalFormationFoldOutput.{u} ready}
+    (leftGenerated : left.Generated model)
+    (rightGenerated : right.Generated model) :
+    IncDepRawCanonicalFormationFoldAgreement left.fold right.fold := by
+  induction leftGenerated with
+  | base =>
+      cases rightGenerated
+      exact .refl _
+  | unit =>
+      cases rightGenerated
+      exact .refl _
+  | pi leftDomain leftCodomain _ _ domainIH codomainIH =>
+      cases rightGenerated with
+      | pi rightDomain rightCodomain rightDomainGenerated
+          rightCodomainGenerated =>
+        exact dependentAgreement.pi _ _ _ _ _ _
+          (domainIH rightDomainGenerated)
+          (codomainIH rightCodomainGenerated)
+  | sigma leftDomain leftCodomain _ _ domainIH codomainIH =>
+      cases rightGenerated with
+      | sigma rightDomain rightCodomain rightDomainGenerated
+          rightCodomainGenerated =>
+        exact dependentAgreement.sigma _ _ _ _ _ _
+          (domainIH rightDomainGenerated)
+          (codomainIH rightCodomainGenerated)
+
 structure IncDepRawCanonicalAnchoredMutualFoldDispatcher.ReadinessLawful
     (anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u}) : Prop where
   formationAgreement : ∀
