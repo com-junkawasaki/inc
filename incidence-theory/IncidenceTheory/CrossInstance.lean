@@ -17820,6 +17820,68 @@ structure IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel
     (model : IncDepRawSubstitutionFiberModel.{u}) where
   law : IncDepRawCanonicalGeneratedIdentityAssemblyCoherenceProvider.{u} model
 
+def IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.ofComponents
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (instantiate : IncDepRawCanonicalInstantiateNaturalModel.{u} model)
+    (dependent : IncDepRawCanonicalDependentAssemblyNaturalModel.{u} model)
+    (identity :
+      IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel.{u} model) :
+    IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.{u} model where
+  instantiateAgreementProvider := instantiate.law
+  dependentAssemblyCoherenceProvider := dependent.law
+  generatedIdentityAssemblyCoherenceProvider := identity.law
+
+def IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.instantiateComponent
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (laws : IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.{u} model) :
+    IncDepRawCanonicalInstantiateNaturalModel.{u} model where
+  law := laws.instantiateAgreementProvider
+
+def IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.dependentComponent
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (laws : IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.{u} model) :
+    IncDepRawCanonicalDependentAssemblyNaturalModel.{u} model where
+  law := laws.dependentAssemblyCoherenceProvider
+
+def IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.identityComponent
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (laws : IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.{u} model) :
+    IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel.{u} model where
+  law := laws.generatedIdentityAssemblyCoherenceProvider
+
+@[simp] theorem
+    IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.ofComponents_instantiate
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (instantiate : IncDepRawCanonicalInstantiateNaturalModel.{u} model)
+    (dependent : IncDepRawCanonicalDependentAssemblyNaturalModel.{u} model)
+    (identity :
+      IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel.{u} model) :
+    (IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.ofComponents
+      instantiate dependent identity).instantiateComponent = instantiate := by
+  rfl
+
+@[simp] theorem
+    IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.ofComponents_dependent
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (instantiate : IncDepRawCanonicalInstantiateNaturalModel.{u} model)
+    (dependent : IncDepRawCanonicalDependentAssemblyNaturalModel.{u} model)
+    (identity :
+      IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel.{u} model) :
+    (IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.ofComponents
+      instantiate dependent identity).dependentComponent = dependent := by
+  rfl
+
+@[simp] theorem
+    IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.ofComponents_identity
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (instantiate : IncDepRawCanonicalInstantiateNaturalModel.{u} model)
+    (dependent : IncDepRawCanonicalDependentAssemblyNaturalModel.{u} model)
+    (identity :
+      IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel.{u} model) :
+    (IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.ofComponents
+      instantiate dependent identity).identityComponent = identity := by
+  rfl
+
 def IncDepRawCanonicalProviderFreeNaturalityLaws.ofComponents
     {model : IncDepRawSubstitutionFiberModel.{u}}
     (instantiate : IncDepRawCanonicalInstantiateNaturalModel.{u} model)
@@ -18359,6 +18421,18 @@ structure IncDepRawProviderFreeLawfulSubstitutionFiberModel where
 structure IncDepRawAssemblyLawfulSubstitutionFiberModel where
   model : IncDepRawSubstitutionFiberModel.{u}
   assemblyLaws : IncDepRawCanonicalProviderFreeAssemblyHypotheses.{u} model
+
+def IncDepRawAssemblyLawfulSubstitutionFiberModel.ofComponents
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (preservation : IncDepRawCanonicalSubstitutionPreservationHypotheses)
+    (instantiate : IncDepRawCanonicalInstantiateNaturalModel.{u} model)
+    (dependent : IncDepRawCanonicalDependentAssemblyNaturalModel.{u} model)
+    (identity :
+      IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel.{u} model) :
+    IncDepRawAssemblyLawfulSubstitutionFiberModel.{u} where
+  model := model
+  assemblyLaws := .ofPreservation preservation
+    (.ofComponents instantiate dependent identity)
 
 noncomputable def IncDepRawAssemblyLawfulSubstitutionFiberModel.witness
     (model : IncDepRawAssemblyLawfulSubstitutionFiberModel.{u}) :

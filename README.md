@@ -1420,6 +1420,14 @@ It currently establishes:
   `IncDepRawLawfulSubstitutionFiberModel` upgrades through `.toAssemblyLawful`
   after supplying only the three strong naturality laws.  This is the concrete
   model completion target for the strong route.
+  Strong naturality is now fully componentized as well.
+  `ProviderFreeAssemblyNaturalityLaws.ofComponents` assembles the independently
+  proved instantiate, dependent-assembly, and Identity-assembly model laws; the
+  three inverse projections and checked round-trip theorems preserve each
+  component definitionally.  `AssemblyLawfulSubstitutionFiberModel.ofComponents`
+  combines those pieces with the existing preservation core in one call.  A
+  concrete model can therefore land each law separately and becomes fully
+  usable immediately when the third component is supplied.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
