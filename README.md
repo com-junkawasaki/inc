@@ -2804,6 +2804,12 @@ raw calculus at normalized readiness level.
 Public facade methods on coherent formation/typing readiness now project to
 `DispatchReady` and invoke this total theorem directly, so clients do not need
 to manually traverse the normalized layer.
+The construction is exercised unconditionally by
+`incDepRawEmptyNormalizedIdentitySubstitution`: lookup preservation is vacuous
+in the empty context, and `preserveClosed` produces normalized formation and
+typing preservation for every closed coherent judgment.  Thus the total
+theorem has a concrete, hypothesis-free closed-fragment instantiation rather
+than only a conditional interface.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

@@ -8310,6 +8310,30 @@ noncomputable def
       substitution.term :=
   ready.toDispatchReady.substituteNormalized substitution
 
+def incDepRawEmptyNormalizedIdentitySubstitution :
+    IncDepRawNormalizedReadinessPreservingSubstitution [] [] where
+  term := IncDepRawTerm.var
+  preservesNormalized := by
+    intro position type lookup
+    cases lookup
+
+noncomputable def IncDepRawCoherentFormationDispatchReady.preserveClosed
+    {type : IncDepRawType} {formation : IncDepRawWellFormed [] type}
+    (ready : IncDepRawCoherentFormationDispatchReady formation) :
+    IncDepRawNormalizedFormationSubstitutionResult
+      (source := []) (target := []) (type := type) IncDepRawTerm.var :=
+  ready.substituteNormalized incDepRawEmptyNormalizedIdentitySubstitution
+
+noncomputable def IncDepRawCoherentTypingDispatchReady.preserveClosed
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    {typing : IncDepRawHasType [] term type}
+    {formation : IncDepRawWellFormed [] type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation) :
+    IncDepRawNormalizedTypingSubstitutionResult
+      (source := []) (target := []) (term := term) (type := type)
+      IncDepRawTerm.var :=
+  ready.substituteNormalized incDepRawEmptyNormalizedIdentitySubstitution
+
 structure IncDepRawStrictTypingDispatchReady
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} (typing : IncDepRawHasType context term type)
