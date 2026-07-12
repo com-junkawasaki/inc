@@ -15338,6 +15338,98 @@ structure IncDepRawCanonicalDependentFormationFoldAgreementProvider
         (IncDepRawCanonicalFoldAgreement.retargetFormation typeAgreement
           rightAgreement))
 
+/-- Transport-coherent dependent constructor laws.  These preserve relational
+agreement across the environment extension performed by Pi and Sigma. -/
+structure IncDepRawCanonicalDependentAssemblyCoherenceProvider
+    (model : IncDepRawSubstitutionFiberModel.{u}) where
+  pi : ∀
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (leftDomain rightDomain :
+      IncDepRawCanonicalFormationSubstitutionFoldMotive.{u} domainReady)
+    (leftCodomain rightCodomain :
+      IncDepRawCanonicalFormationSubstitutionFoldMotive.{u} codomainReady),
+    IncDepRawCanonicalRelationalFormationFoldAgreement leftDomain rightDomain →
+    IncDepRawCanonicalRelationalFormationFoldAgreement leftCodomain
+      rightCodomain →
+    IncDepRawCanonicalRelationalFormationFoldAgreement
+      (model.canonicalMutualFoldPi domainReady codomainReady leftDomain
+        leftCodomain)
+      (model.canonicalMutualFoldPi domainReady codomainReady rightDomain
+        rightCodomain)
+
+  sigma : ∀
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (leftDomain rightDomain :
+      IncDepRawCanonicalFormationSubstitutionFoldMotive.{u} domainReady)
+    (leftCodomain rightCodomain :
+      IncDepRawCanonicalFormationSubstitutionFoldMotive.{u} codomainReady),
+    IncDepRawCanonicalRelationalFormationFoldAgreement leftDomain rightDomain →
+    IncDepRawCanonicalRelationalFormationFoldAgreement leftCodomain
+      rightCodomain →
+    IncDepRawCanonicalRelationalFormationFoldAgreement
+      (model.canonicalMutualFoldSigma domainReady codomainReady leftDomain
+        leftCodomain)
+      (model.canonicalMutualFoldSigma domainReady codomainReady rightDomain
+        rightCodomain)
+
+theorem IncDepRawCanonicalDependentAssemblyCoherenceProvider.piWeak
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (provider : IncDepRawCanonicalDependentAssemblyCoherenceProvider model)
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (leftDomain rightDomain :
+      IncDepRawCanonicalFormationSubstitutionFoldMotive.{u} domainReady)
+    (leftCodomain rightCodomain :
+      IncDepRawCanonicalFormationSubstitutionFoldMotive.{u} codomainReady)
+    (domainAgreement : IncDepRawCanonicalRelationalFormationFoldAgreement
+      leftDomain rightDomain)
+    (codomainAgreement : IncDepRawCanonicalRelationalFormationFoldAgreement
+      leftCodomain rightCodomain) :
+    IncDepRawCanonicalFormationFoldAgreement
+      (model.canonicalMutualFoldPi domainReady codomainReady leftDomain
+        leftCodomain)
+      (model.canonicalMutualFoldPi domainReady codomainReady rightDomain
+        rightCodomain) :=
+  (provider.pi domainReady codomainReady leftDomain rightDomain leftCodomain
+    rightCodomain domainAgreement codomainAgreement)
+    |>.toHeterogeneousDiagonal.toWeakOfSameReady
+
+theorem IncDepRawCanonicalDependentAssemblyCoherenceProvider.sigmaWeak
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (provider : IncDepRawCanonicalDependentAssemblyCoherenceProvider model)
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (leftDomain rightDomain :
+      IncDepRawCanonicalFormationSubstitutionFoldMotive.{u} domainReady)
+    (leftCodomain rightCodomain :
+      IncDepRawCanonicalFormationSubstitutionFoldMotive.{u} codomainReady)
+    (domainAgreement : IncDepRawCanonicalRelationalFormationFoldAgreement
+      leftDomain rightDomain)
+    (codomainAgreement : IncDepRawCanonicalRelationalFormationFoldAgreement
+      leftCodomain rightCodomain) :
+    IncDepRawCanonicalFormationFoldAgreement
+      (model.canonicalMutualFoldSigma domainReady codomainReady leftDomain
+        leftCodomain)
+      (model.canonicalMutualFoldSigma domainReady codomainReady rightDomain
+        rightCodomain) :=
+  (provider.sigma domainReady codomainReady leftDomain rightDomain leftCodomain
+    rightCodomain domainAgreement codomainAgreement)
+    |>.toHeterogeneousDiagonal.toWeakOfSameReady
+
 structure IncDepRawCanonicalMutualFoldDispatcher where
   formation : ∀
     {context : List IncDepRawType} {type : IncDepRawType}

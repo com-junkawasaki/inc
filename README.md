@@ -1338,6 +1338,13 @@ It currently establishes:
   are essential: tree/replacement HEq alone does not allow dependent elimination
   because their type families need not be injective.  This relation is now the
   candidate invariant for a generic Pi/Sigma congruence proof.
+  `DependentAssemblyCoherenceProvider` now states the corresponding constructor
+  law at exactly this relational level: Pi and Sigma must preserve relational
+  agreement through context extension.  Its checked `piWeak` and `sigmaWeak`
+  bridges recover the existing canonical formation agreement by diagonalizing
+  the relational result through HEq/strong equality.  This separates two tasks
+  cleanly: recursive certificates should produce relational child agreement,
+  while a model proves only that its dependent constructors preserve it.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
