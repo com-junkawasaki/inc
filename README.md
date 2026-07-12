@@ -1284,6 +1284,15 @@ It currently establishes:
   dispatcher, and `providerFreeCanonicalPreservation_pathAgreement` states the
   formation/typing coherence theorem for arbitrary coherent derivations.  None
   of these APIs accepts or reconstructs the former unrestricted path provider.
+  `IncDepRawProviderFreeLawfulSubstitutionFiberModel` now packages a semantic
+  model with exactly those five scoped laws.  Its `.witness`,
+  `.lawfulPreservation`, `.strictPreservation`, and `.pathAgreement` projections
+  make the final theorem available without repeatedly threading the hypotheses.
+  The Unit-base model is not declared lawful merely because its primitive base
+  carrier is `ULift Unit`: dependent Pi/Sigma/Identity families introduce
+  function and dependent-pair semantics whose naturality still requires proof.
+  A concrete inhabitant must discharge those five fields rather than relying on
+  an unsound blanket subsingleton assumption.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

@@ -17560,6 +17560,45 @@ theorem
   (model.providerFreeCanonicalLawfulPreservation hypotheses).lawful.pathAgreement
     formationReady typingReady
 
+/-- A semantic model carrying exactly the scoped laws needed by the
+path-provider-free canonical preservation theorem. -/
+structure IncDepRawProviderFreeLawfulSubstitutionFiberModel where
+  model : IncDepRawSubstitutionFiberModel.{u}
+  scopedLaws : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u} model
+
+noncomputable def
+    IncDepRawProviderFreeLawfulSubstitutionFiberModel.witness
+    (model : IncDepRawProviderFreeLawfulSubstitutionFiberModel.{u}) :
+    IncDepRawCanonicalProviderFreeMutualFoldWitness model.model
+      model.scopedLaws :=
+  model.model.providerFreeMutualFoldWitness model.scopedLaws
+
+noncomputable def
+    IncDepRawProviderFreeLawfulSubstitutionFiberModel.lawfulPreservation
+    (model : IncDepRawProviderFreeLawfulSubstitutionFiberModel.{u}) :
+    IncDepRawCanonicalLawfulMutualFold.{u} :=
+  model.model.providerFreeCanonicalLawfulPreservation model.scopedLaws
+
+noncomputable def
+    IncDepRawProviderFreeLawfulSubstitutionFiberModel.strictPreservation
+    (model : IncDepRawProviderFreeLawfulSubstitutionFiberModel.{u}) :
+    IncDepRawStrictMutualSubstitutionDispatcher :=
+  model.model.providerFreeCanonicalStrictPreservation model.scopedLaws
+
+theorem
+    IncDepRawProviderFreeLawfulSubstitutionFiberModel.pathAgreement
+    (model : IncDepRawProviderFreeLawfulSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (formationReady : IncDepRawCoherentFormationDispatchReady formation)
+    (typingReady : IncDepRawCoherentTypingDispatchReady typing formation) :
+    IncDepRawCanonicalFormationFoldAgreement
+      (model.lawfulPreservation.dispatcher.formation formationReady).fold
+      (model.lawfulPreservation.dispatcher.typing typingReady).formation :=
+  model.model.providerFreeCanonicalPreservation_pathAgreement model.scopedLaws
+    formationReady typingReady
+
 theorem IncDepRawCanonicalLawfulMutualFold.pathAgreement
     (fold : IncDepRawCanonicalLawfulMutualFold.{u})
     {context : List IncDepRawType} {term : IncDepRawTerm}

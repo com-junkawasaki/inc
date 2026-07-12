@@ -1296,6 +1296,12 @@ cycle 38–41 で以下の3極構造が判明した:
   `providerFreeCanonicalStrictPreservation`、任意coherent derivation上の
   `providerFreeCanonicalPreservation_pathAgreement`も公開した。いずれも旧unrestricted path
   providerを引数に取らず再構成もしない。
+  5 scoped lawsをsemantic modelと一体化する
+  `IncDepRawProviderFreeLawfulSubstitutionFiberModel`を追加し、`.witness`、
+  `.lawfulPreservation`、`.strictPreservation`、`.pathAgreement`を公開した。Unit-base modelは
+  primitive base carrierが`ULift Unit`でもdependent Pi/Sigma/Identity semanticsが関数・依存対
+  を導入するため、それだけでlawfulとは宣言しない。具体inhabitantはblanket subsingleton
+  仮定でなく5 fieldsを実際に証明する必要がある。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。
