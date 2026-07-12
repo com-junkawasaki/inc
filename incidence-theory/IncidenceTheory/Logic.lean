@@ -6074,4 +6074,66 @@ theorem bool_not_kripke_entails_of_not_derives
     ¬ KripkeEntails.{0, 0} context formula :=
   not_kripke_entails_of_not_derives_of_enumeration boolFormulaEnumeration hnot
 
+/- Resonance enters the existing propositional logic as structured atoms.  This
+keeps the complete propositional calculus unchanged while giving incidence
+models a canonical internal interpretation. -/
+structure ResonanceAtom (I : Type u) where
+  left : I
+  right : I
+  mode : I
+
+def resonanceValuation {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) : ResonanceAtom I → Prop
+  | ⟨i, j, k⟩ => inc.resonance i j k
+
+def resonanceFormula {I : Type u} (i j k : I) : Formula (ResonanceAtom I) :=
+  .atom ⟨i, j, k⟩
+
+@[simp] theorem satisfies_resonanceFormula
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) (i j k : I) :
+    Satisfies (resonanceValuation inc) (resonanceFormula i j k) ↔
+      inc.resonance i j k :=
+  Iff.rfl
+
+def resonanceSymmetryFormula {I : Type u} (i j k : I) :
+    Formula (ResonanceAtom I) :=
+  .imp (resonanceFormula i j k) (resonanceFormula j i k)
+
+theorem resonanceSymmetryFormula_valid
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (symmetric : ∀ {i j k}, inc.resonance i j k → inc.resonance j i k)
+    (i j k : I) :
+    Satisfies (resonanceValuation inc) (resonanceSymmetryFormula i j k) :=
+  symmetric
+
+theorem resonanceUnitFormula_valid
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (unitLeft : ∀ i, inc.resonance inc.unit i i) (i : I) :
+    Satisfies (resonanceValuation inc)
+      (resonanceFormula inc.unit i i) :=
+  unitLeft i
+
+def resonanceAtomMap {I J : Type u} (map : I → J) :
+    ResonanceAtom I → ResonanceAtom J
+  | ⟨i, j, k⟩ => ⟨map i, map j, map k⟩
+
+theorem resonanceFormula_map
+    {I J : Type u} (map : I → J) (i j k : I) :
+    (resonanceFormula i j k).map (resonanceAtomMap map) =
+      resonanceFormula (map i) (map j) (map k) :=
+  rfl
+
+theorem resonanceFormula_preserved
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (map : I → J)
+    (preserves : ∀ {i j k}, source.resonance i j k →
+      target.resonance (map i) (map j) (map k))
+    {i j k : I}
+    (satisfied : Satisfies (resonanceValuation source)
+      (resonanceFormula i j k)) :
+    Satisfies (resonanceValuation target)
+      ((resonanceFormula i j k).map (resonanceAtomMap map)) := by
+  exact preserves satisfied
+
 end IncidenceCore

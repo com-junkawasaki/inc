@@ -10,6 +10,7 @@ research chronology.
 | Resonance-preserving translations | `IncidenceTheory.lean` (`ResonantBehavioralTranslation`) | [resonance ADR](../adr/2607121930-resonance-as-central-primitive.md) |
 | Resonance on bisimulation quotients | `IncidenceTheory.lean`, `Peano.lean` | [resonance ADR](../adr/2607121930-resonance-as-central-primitive.md) |
 | Relational associativity and product preservation | `IncidenceTheory.lean`, `Peano.lean`, `Product.lean` | [resonance ADR](../adr/2607121930-resonance-as-central-primitive.md) |
+| Resonance internal-logic atoms and semantic laws | `Logic.lean`, `Coherent.lean` | [resonance ADR](../adr/2607121930-resonance-as-central-primitive.md) |
 | Concrete models | `GraphModel.lean`, `Cycle.lean` | [history](../history/post-cycle-41.md) |
 | Bisimulation and faithfulness | `IncidenceTheory.lean`, `CrossInstance.lean` | [completion audit](../inc-proof-completion-audit.md) |
 | Internal logic | `Logic.lean` | [status](../status.md) |

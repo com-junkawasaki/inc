@@ -73,3 +73,8 @@ case where the selector is complete and resonance has no unselected modes.
   `(i resonance j) resonance k` and `i resonance (j resonance k)`. It does not
   privilege a selected intermediate mode. The law holds for Peano resonance and
   is closed under products.
+- Internal logic represents a physical statement as the structured atom
+  `ResonanceAtom ⟨i, j, k⟩`. Its canonical valuation is exactly
+  `resonance i j k`; symmetry, vacuum/unit, and homomorphic transport therefore
+  become checked semantic laws without changing the complete propositional
+  calculus.

@@ -32,6 +32,11 @@ belong in [`adr/`](adr/).
 - `AssociativeResonanceSpec` states relational associativity as equality of the
   modes reachable through either parenthesization. Peano addition satisfies it,
   and `incidenceProd` preserves it componentwise.
+- The internal propositional logic now has structured `ResonanceAtom` triples,
+  interpreted by `resonanceValuation`. Symmetry and unit laws are semantically
+  valid formulas, and resonance homomorphisms preserve atomic formulas. The
+  bridge to `ResonanceSpec` lives in the coherent layer to avoid a core/logic
+  dependency cycle.
 - The incidence core and bisimulation equivalence are formalized in Lean.
 - Concrete finite, graph, natural-number, pair, path, cycle, and simplex models
   witness non-vacuity of the implemented fragments.

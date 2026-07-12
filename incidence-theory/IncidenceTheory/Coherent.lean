@@ -11,6 +11,28 @@ import IncidenceTheory.Logic
 
 namespace IncidenceCore
 
+theorem ResonanceSpec.symmetryFormula_valid
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (spec : ResonanceSpec inc) (i j k : I) :
+    Satisfies (resonanceValuation inc) (resonanceSymmetryFormula i j k) :=
+  resonanceSymmetryFormula_valid spec.symmetric i j k
+
+theorem ResonanceSpec.unitFormula_valid
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (spec : ResonanceSpec inc) (i : I) :
+    Satisfies (resonanceValuation inc) (resonanceFormula inc.unit i i) :=
+  resonanceUnitFormula_valid spec.unit_left i
+
+theorem ResonanceHomomorphism.preservesFormula
+    {I J R₁ R₂ T₁ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (hom : ResonanceHomomorphism source target) {i j k : I}
+    (satisfied : Satisfies (resonanceValuation source)
+      (resonanceFormula i j k)) :
+    Satisfies (resonanceValuation target)
+      ((resonanceFormula i j k).map (resonanceAtomMap hom.toFun)) :=
+  resonanceFormula_preserved hom.toFun hom.preserves satisfied
+
 universe u
 
 structure CoherentIncidence (I R T : Type u) [DecidableEq I] where
