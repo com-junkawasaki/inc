@@ -19163,6 +19163,89 @@ structure IncDepRawCanonicalScopedRelationalNaturalityLaws
   identity :
     IncDepRawCanonicalGeneratedIdentityAssemblyCoherenceProvider.{u} model
 
+structure IncDepRawCanonicalScopedInstantiateNaturalModel
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider) where
+  law : IncDepRawCanonicalRecursiveInstantiateAgreementProvider model
+    variableProvider
+
+def IncDepRawCanonicalScopedRelationalNaturalityLaws.ofComponents
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (instantiate : IncDepRawCanonicalScopedInstantiateNaturalModel model
+      variableProvider)
+    (dependent : IncDepRawCanonicalDependentAssemblyNaturalModel.{u} model)
+    (identity :
+      IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel.{u} model) :
+    IncDepRawCanonicalScopedRelationalNaturalityLaws.{u} model
+      variableProvider where
+  instantiate := instantiate.law
+  dependent := dependent.law
+  identity := identity.law
+
+def IncDepRawCanonicalScopedRelationalNaturalityLaws.instantiateComponent
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (laws : IncDepRawCanonicalScopedRelationalNaturalityLaws.{u} model
+      variableProvider) :
+    IncDepRawCanonicalScopedInstantiateNaturalModel model variableProvider where
+  law := laws.instantiate
+
+def IncDepRawCanonicalScopedRelationalNaturalityLaws.dependentComponent
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (laws : IncDepRawCanonicalScopedRelationalNaturalityLaws.{u} model
+      variableProvider) :
+    IncDepRawCanonicalDependentAssemblyNaturalModel.{u} model where
+  law := laws.dependent
+
+def IncDepRawCanonicalScopedRelationalNaturalityLaws.identityComponent
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (laws : IncDepRawCanonicalScopedRelationalNaturalityLaws.{u} model
+      variableProvider) :
+    IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel.{u} model where
+  law := laws.identity
+
+@[simp] theorem
+    IncDepRawCanonicalScopedRelationalNaturalityLaws.ofComponents_instantiate
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (instantiate : IncDepRawCanonicalScopedInstantiateNaturalModel model
+      variableProvider)
+    (dependent : IncDepRawCanonicalDependentAssemblyNaturalModel.{u} model)
+    (identity :
+      IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel.{u} model) :
+    (IncDepRawCanonicalScopedRelationalNaturalityLaws.ofComponents instantiate
+      dependent identity).instantiateComponent = instantiate := by
+  rfl
+
+@[simp] theorem
+    IncDepRawCanonicalScopedRelationalNaturalityLaws.ofComponents_dependent
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (instantiate : IncDepRawCanonicalScopedInstantiateNaturalModel model
+      variableProvider)
+    (dependent : IncDepRawCanonicalDependentAssemblyNaturalModel.{u} model)
+    (identity :
+      IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel.{u} model) :
+    (IncDepRawCanonicalScopedRelationalNaturalityLaws.ofComponents instantiate
+      dependent identity).dependentComponent = dependent := by
+  rfl
+
+@[simp] theorem
+    IncDepRawCanonicalScopedRelationalNaturalityLaws.ofComponents_identity
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (instantiate : IncDepRawCanonicalScopedInstantiateNaturalModel model
+      variableProvider)
+    (dependent : IncDepRawCanonicalDependentAssemblyNaturalModel.{u} model)
+    (identity :
+      IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel.{u} model) :
+    (IncDepRawCanonicalScopedRelationalNaturalityLaws.ofComponents instantiate
+      dependent identity).identityComponent = identity := by
+  rfl
+
 def IncDepRawCanonicalScopedRelationalNaturalityLaws.ofGlobal
     {model : IncDepRawSubstitutionFiberModel.{u}}
     {variableProvider : IncDepRawVariableSubstitutionProvider}
@@ -19842,7 +19925,7 @@ structure IncDepRawUnitRelationalCompletion.Stage1 where
 
 structure IncDepRawUnitRelationalCompletion.Stage2 extends
     IncDepRawUnitRelationalCompletion.Stage1 where
-  instantiate : IncDepRawCanonicalRecursiveInstantiateAgreementProvider
+  instantiate : IncDepRawCanonicalScopedInstantiateNaturalModel
     incDepRawUnitSubstitutionFiberModel variableProvider
 
 structure IncDepRawUnitRelationalCompletion.Stage3 extends
@@ -19852,7 +19935,7 @@ structure IncDepRawUnitRelationalCompletion.Stage3 extends
 
 def IncDepRawUnitRelationalCompletion.Stage1.withInstantiate
     (stage : IncDepRawUnitRelationalCompletion.Stage1)
-    (instantiate : IncDepRawCanonicalRecursiveInstantiateAgreementProvider
+    (instantiate : IncDepRawCanonicalScopedInstantiateNaturalModel
       incDepRawUnitSubstitutionFiberModel stage.variableProvider) :
     IncDepRawUnitRelationalCompletion.Stage2 where
   toStage1 := stage
@@ -19874,10 +19957,7 @@ def IncDepRawUnitRelationalCompletion.Stage3.complete
   preservation :=
     { variableProvider := stage.variableProvider
       readinessAlignment := stage.readinessAlignment }
-  relationalLaws :=
-    { instantiate := stage.instantiate
-      dependent := stage.dependent.law
-      identity := identity.law }
+  relationalLaws := .ofComponents stage.instantiate stage.dependent identity
 
 def IncDepRawUnitRelationalCompletion.toLawfulModel
     (completion : IncDepRawUnitRelationalCompletion) :

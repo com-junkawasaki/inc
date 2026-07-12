@@ -2660,6 +2660,12 @@ Both the scoped lawful model and `IncDepRawUnitRelationalCompletion` now expose
 their path-agreement theorem directly alongside lawful and strict
 preservation, so inhabiting the Unit target yields the complete public
 preservation API without converting back through the legacy assembly bundle.
+Scoped instantiation is now a first-class component,
+`IncDepRawCanonicalScopedInstantiateNaturalModel`.  The scoped relational law
+bundle has component assembly/projection functions and checked beta laws, and
+Unit Stage2 consumes this component directly.  Instantiation, dependent
+assembly, and generated identity can therefore be proved independently and
+combined without unpacking raw provider records.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

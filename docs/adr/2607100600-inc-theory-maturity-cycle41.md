@@ -1467,6 +1467,10 @@ cycle 38–41 で以下の3極構造が判明した:
   scoped lawful modelとUnit completionの両方にpath-agreement theoremも直接追加した。
   よってUnit targetのinhabitantはlegacy assembly bundleへ戻ることなくlawful/strict/pathの
   完全な公開保存APIを与える。
+  scoped instantiate lawは`IncDepRawCanonicalScopedInstantiateNaturalModel`として
+  first-class component化され、scoped relational bundleに3 componentsの組立・射影・β則を
+  追加した。Unit Stage2もこのcomponentを直接受け取るため、instantiate/dependent/identityを
+  独立に証明してraw provider recordを展開せず合成できる。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。
