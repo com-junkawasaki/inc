@@ -419,6 +419,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - formation側bundle constructorsも完成した。Base/Unit/Pi/Sigmaはcanonical foldsを直接packageし、Identityは両endpoint typing bundlesを選択type pathへ
   retargetしてformation outputを構成する。typing 8枝と合わせ、mutual readiness recursorが要求する全13 handlersがfinal dispatcher output型で揃った。
   残るのは独立経路で到達したpremises間のpath-agreement argumentsを再帰生成する工程だけである。
+- conditional total constructionを完成した。`canonicalFormationFold`/`canonicalTypingFold`はLeanのmutual readiness recursorsへ全13 bundle handlersを渡し、
+  `canonicalMutualFoldDispatcher`が両projectionをpackageする。scoped instantiate/path-agreement providersの下で
+  `IncDepRawCanonicalMutualFoldDispatcher`の実inhabitantとなり、canonical preservationとstrict dispatcherを直ちに導出する。唯一の残証明は
+  path-agreement providerを仮定せず、既に隔離したdependent Pi/Sigma/Identity congruence lawsから構成することである。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

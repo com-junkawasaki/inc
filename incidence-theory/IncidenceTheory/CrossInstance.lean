@@ -14812,6 +14812,185 @@ structure IncDepRawCanonicalMutualFoldDispatcher where
     (ready : IncDepRawCoherentTypingDispatchReady typing formation),
     IncDepRawCanonicalTypingFoldOutput ready
 
+structure IncDepRawCanonicalFoldPathAgreementProvider where
+  align : ∀
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (formationReady : IncDepRawCoherentFormationDispatchReady formation)
+    (typingReady : IncDepRawCoherentTypingDispatchReady typing formation)
+    (formationOutput : IncDepRawCanonicalFormationFoldOutput.{u}
+      formationReady)
+    (typingOutput : IncDepRawCanonicalTypingFoldOutput.{u} typingReady),
+    IncDepRawCanonicalFormationFoldAgreement formationOutput.fold
+      typingOutput.formation
+
+def IncDepRawCanonicalFoldPathAgreementProvider.dispatch
+    (provider : IncDepRawCanonicalFoldPathAgreementProvider.{u})
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (formationReady : IncDepRawCoherentFormationDispatchReady formation)
+    (typingReady : IncDepRawCoherentTypingDispatchReady typing formation)
+    (formationOutput : IncDepRawCanonicalFormationFoldOutput.{u}
+      formationReady)
+    (typingOutput : IncDepRawCanonicalTypingFoldOutput.{u} typingReady) :
+    IncDepRawCanonicalFormationFoldAgreement formationOutput.fold
+      typingOutput.formation :=
+  provider.align formationReady typingReady formationOutput typingOutput
+
+noncomputable def IncDepRawSubstitutionFiberModel.canonicalFormationFold
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (instantiateAgreementProvider :
+      IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
+    (pathAgreementProvider : IncDepRawCanonicalFoldPathAgreementProvider.{u})
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentFormationDispatchReady formation) :
+    IncDepRawCanonicalFormationFoldOutput ready :=
+  IncDepRawCoherentFormationDispatchReady.rec
+    (motive_1 := fun _ ready => IncDepRawCanonicalFormationFoldOutput ready)
+    (motive_2 := fun _ _ ready => IncDepRawCanonicalTypingFoldOutput ready)
+    model.canonicalFormationFoldOutputBase
+    model.canonicalFormationFoldOutputUnit
+    model.canonicalFormationFoldOutputPi
+    model.canonicalFormationFoldOutputSigma
+    (fun typeReady leftReady rightReady typeOutput leftOutput rightOutput =>
+      model.canonicalFormationFoldOutputIdentity readinessAlignment typeReady
+        leftReady rightReady typeOutput leftOutput rightOutput
+        (pathAgreementProvider.dispatch typeReady leftReady typeOutput leftOutput)
+        (pathAgreementProvider.dispatch typeReady rightReady typeOutput
+          rightOutput))
+    (fun typeReady typeOutput =>
+      variableProvider.canonicalTypingFoldOutputVariable typeReady typeOutput)
+    model.canonicalTypingFoldOutputUnit
+    (model.canonicalTypingFoldOutputLambda readinessAlignment)
+    (fun domainReady codomainReady resultReady functionReady argumentReady
+        domainOutput codomainOutput resultOutput functionOutput argumentOutput =>
+      let piOutput := model.canonicalFormationFoldOutputPi domainReady
+        codomainReady domainOutput codomainOutput
+      model.canonicalTypingFoldOutputApply instantiateAgreementProvider
+        domainReady codomainReady resultReady functionReady argumentReady
+        domainOutput codomainOutput resultOutput functionOutput argumentOutput
+        (pathAgreementProvider.dispatch _ functionReady piOutput functionOutput)
+        (pathAgreementProvider.dispatch domainReady argumentReady domainOutput
+          argumentOutput))
+    (fun domainReady codomainReady resultReady firstReady secondReady
+        domainOutput codomainOutput resultOutput firstOutput secondOutput =>
+      model.canonicalTypingFoldOutputPair instantiateAgreementProvider
+        domainReady codomainReady resultReady firstReady secondReady domainOutput
+        codomainOutput resultOutput firstOutput secondOutput
+        (pathAgreementProvider.dispatch domainReady firstReady domainOutput
+          firstOutput)
+        (pathAgreementProvider.dispatch resultReady secondReady resultOutput
+          secondOutput))
+    (fun domainReady codomainReady pairReady domainOutput codomainOutput
+        pairOutput =>
+      let sigmaOutput := model.canonicalFormationFoldOutputSigma domainReady
+        codomainReady domainOutput codomainOutput
+      model.canonicalTypingFoldOutputFirst domainReady codomainReady pairReady
+        domainOutput codomainOutput pairOutput
+        (pathAgreementProvider.dispatch _ pairReady sigmaOutput pairOutput))
+    (fun domainReady codomainReady resultReady pairReady domainOutput
+        codomainOutput resultOutput pairOutput =>
+      let sigmaOutput := model.canonicalFormationFoldOutputSigma domainReady
+        codomainReady domainOutput codomainOutput
+      model.canonicalTypingFoldOutputSecond instantiateAgreementProvider
+        domainReady codomainReady resultReady pairReady domainOutput
+        codomainOutput resultOutput pairOutput
+        (pathAgreementProvider.dispatch _ pairReady sigmaOutput pairOutput))
+    (fun typeReady termReady typeOutput termOutput =>
+      model.canonicalTypingFoldOutputRefl readinessAlignment typeReady termReady
+        typeOutput termOutput
+        (pathAgreementProvider.dispatch typeReady termReady typeOutput
+          termOutput))
+    ready
+
+noncomputable def IncDepRawSubstitutionFiberModel.canonicalTypingFold
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (instantiateAgreementProvider :
+      IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
+    (pathAgreementProvider : IncDepRawCanonicalFoldPathAgreementProvider.{u})
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation) :
+    IncDepRawCanonicalTypingFoldOutput ready :=
+  IncDepRawCoherentTypingDispatchReady.rec
+    (motive_1 := fun _ ready => IncDepRawCanonicalFormationFoldOutput ready)
+    (motive_2 := fun _ _ ready => IncDepRawCanonicalTypingFoldOutput ready)
+    model.canonicalFormationFoldOutputBase
+    model.canonicalFormationFoldOutputUnit
+    model.canonicalFormationFoldOutputPi
+    model.canonicalFormationFoldOutputSigma
+    (fun typeReady leftReady rightReady typeOutput leftOutput rightOutput =>
+      model.canonicalFormationFoldOutputIdentity readinessAlignment typeReady
+        leftReady rightReady typeOutput leftOutput rightOutput
+        (pathAgreementProvider.dispatch typeReady leftReady typeOutput leftOutput)
+        (pathAgreementProvider.dispatch typeReady rightReady typeOutput
+          rightOutput))
+    (fun typeReady typeOutput =>
+      variableProvider.canonicalTypingFoldOutputVariable typeReady typeOutput)
+    model.canonicalTypingFoldOutputUnit
+    (model.canonicalTypingFoldOutputLambda readinessAlignment)
+    (fun domainReady codomainReady resultReady functionReady argumentReady
+        domainOutput codomainOutput resultOutput functionOutput argumentOutput =>
+      let piOutput := model.canonicalFormationFoldOutputPi domainReady
+        codomainReady domainOutput codomainOutput
+      model.canonicalTypingFoldOutputApply instantiateAgreementProvider
+        domainReady codomainReady resultReady functionReady argumentReady
+        domainOutput codomainOutput resultOutput functionOutput argumentOutput
+        (pathAgreementProvider.dispatch _ functionReady piOutput functionOutput)
+        (pathAgreementProvider.dispatch domainReady argumentReady domainOutput
+          argumentOutput))
+    (fun domainReady codomainReady resultReady firstReady secondReady
+        domainOutput codomainOutput resultOutput firstOutput secondOutput =>
+      model.canonicalTypingFoldOutputPair instantiateAgreementProvider
+        domainReady codomainReady resultReady firstReady secondReady domainOutput
+        codomainOutput resultOutput firstOutput secondOutput
+        (pathAgreementProvider.dispatch domainReady firstReady domainOutput
+          firstOutput)
+        (pathAgreementProvider.dispatch resultReady secondReady resultOutput
+          secondOutput))
+    (fun domainReady codomainReady pairReady domainOutput codomainOutput
+        pairOutput =>
+      let sigmaOutput := model.canonicalFormationFoldOutputSigma domainReady
+        codomainReady domainOutput codomainOutput
+      model.canonicalTypingFoldOutputFirst domainReady codomainReady pairReady
+        domainOutput codomainOutput pairOutput
+        (pathAgreementProvider.dispatch _ pairReady sigmaOutput pairOutput))
+    (fun domainReady codomainReady resultReady pairReady domainOutput
+        codomainOutput resultOutput pairOutput =>
+      let sigmaOutput := model.canonicalFormationFoldOutputSigma domainReady
+        codomainReady domainOutput codomainOutput
+      model.canonicalTypingFoldOutputSecond instantiateAgreementProvider
+        domainReady codomainReady resultReady pairReady domainOutput
+        codomainOutput resultOutput pairOutput
+        (pathAgreementProvider.dispatch _ pairReady sigmaOutput pairOutput))
+    (fun typeReady termReady typeOutput termOutput =>
+      model.canonicalTypingFoldOutputRefl readinessAlignment typeReady termReady
+        typeOutput termOutput
+        (pathAgreementProvider.dispatch typeReady termReady typeOutput
+          termOutput))
+    ready
+
+noncomputable def IncDepRawSubstitutionFiberModel.canonicalMutualFoldDispatcher
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (instantiateAgreementProvider :
+      IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
+    (pathAgreementProvider : IncDepRawCanonicalFoldPathAgreementProvider.{u}) :
+    IncDepRawCanonicalMutualFoldDispatcher.{u} where
+  formation := model.canonicalFormationFold variableProvider readinessAlignment
+    instantiateAgreementProvider pathAgreementProvider
+  typing := model.canonicalTypingFold variableProvider readinessAlignment
+    instantiateAgreementProvider pathAgreementProvider
+
 noncomputable def IncDepRawCanonicalMutualFoldDispatcher.strict
     (dispatcher : IncDepRawCanonicalMutualFoldDispatcher.{u}) :
     IncDepRawStrictMutualSubstitutionDispatcher where

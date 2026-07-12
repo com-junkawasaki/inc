@@ -1027,6 +1027,15 @@ It currently establishes:
   handlers required by the mutual readiness recursor now exist at the final
   dispatcher output types.  Only the recursive production of the path-agreement
   arguments between independently reached premises remains.
+  The conditional total construction is now checked.
+  `canonicalFormationFold` and `canonicalTypingFold` apply all thirteen bundle
+  handlers through Lean's mutual readiness recursors, and
+  `canonicalMutualFoldDispatcher` packages both projections.  Given the scoped
+  instantiate-agreement and path-agreement providers, it is an actual inhabitant
+  of `IncDepRawCanonicalMutualFoldDispatcher`, hence immediately yields the
+  canonical preservation and strict-dispatch projections above.  The sole
+  remaining proof is constructing the path-agreement provider from the already
+  isolated dependent Pi/Sigma/Identity congruence laws rather than assuming it.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
