@@ -2673,6 +2673,14 @@ are closed, for every substitution-fiber model, by the sorry-free lemmas
 `recursiveInstantiateAgreementUnit`; both are definitional relational
 reflexivity.  Pi, Sigma, and Identity remain and require recursive composition
 of their component agreements.
+That recursion needs readiness substitution as well as syntactic substitution.
+A direct attempt exposed a dependent-index issue: Variable, Apply, Pair, and
+Second use propositional rewrites in `HasType.substitute`, so their readiness
+is not definitionally indexed by the legacy derivation.  The new
+`IncDepRawFormationReadinessSubstitutionResult` and
+`IncDepRawTypingReadinessSubstitutionResult` retain the constructed derivation,
+its equality to the legacy substitution, and its readiness together.  Base and
+Unit formation plus Unit typing constructors are already inhabited.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

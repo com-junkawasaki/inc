@@ -1980,6 +1980,70 @@ noncomputable def IncDepRawWellFormed.instantiate
   exact codomainFormation.substitute
     (IncDepRawSubstitution.instantiate argumentTyping)
 
+/-- A readiness-preserving substitution result keeps the constructed
+derivation explicit.  The equality field records its relation to the legacy
+`WellFormed.substitute` derivation, avoiding a false definitional-equality
+assumption in dependent typing branches. -/
+structure IncDepRawFormationReadinessSubstitutionResult
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed target type}
+    (substitution : IncDepRawSubstitution source target) where
+  substitutedFormation :
+    IncDepRawWellFormed source (type.substitute substitution.term)
+  formation_eq : substitutedFormation = formation.substitute substitution
+  readiness :
+    IncDepRawCoherentFormationDispatchReady substitutedFormation
+
+/-- Typing counterpart of `IncDepRawFormationReadinessSubstitutionResult`.
+Both derivation transports are data, so Apply/Pair/Second rewrites do not have
+to be mistaken for definitional equalities. -/
+structure IncDepRawTypingReadinessSubstitutionResult
+    {source target : List IncDepRawType}
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    {typing : IncDepRawHasType target term type}
+    {formation : IncDepRawWellFormed target type}
+    (substitution : IncDepRawSubstitution source target) where
+  formationResult :
+    IncDepRawFormationReadinessSubstitutionResult
+      (formation := formation) substitution
+  substitutedTyping : IncDepRawHasType source
+    (term.substitute substitution.term) (type.substitute substitution.term)
+  typing_eq : substitutedTyping = typing.substitute substitution
+  readiness : IncDepRawCoherentTypingDispatchReady substitutedTyping
+    formationResult.substitutedFormation
+
+def IncDepRawFormationReadinessSubstitutionResult.base
+    {source target : List IncDepRawType} {index : Nat}
+    (substitution : IncDepRawSubstitution source target) :
+    IncDepRawFormationReadinessSubstitutionResult
+      (formation := IncDepRawWellFormed.base (context := target) (index := index))
+      substitution where
+  substitutedFormation := .base
+  formation_eq := rfl
+  readiness := .base
+
+def IncDepRawFormationReadinessSubstitutionResult.unit
+    {source target : List IncDepRawType}
+    (substitution : IncDepRawSubstitution source target) :
+    IncDepRawFormationReadinessSubstitutionResult
+      (formation := IncDepRawWellFormed.unit (context := target))
+      substitution where
+  substitutedFormation := .unit
+  formation_eq := rfl
+  readiness := .unit
+
+def IncDepRawTypingReadinessSubstitutionResult.unit
+    {source target : List IncDepRawType}
+    (substitution : IncDepRawSubstitution source target) :
+    IncDepRawTypingReadinessSubstitutionResult
+      (typing := IncDepRawHasType.unitRule (context := target))
+      (formation := IncDepRawWellFormed.unit (context := target))
+      substitution where
+  formationResult := .unit substitution
+  substitutedTyping := .unitRule
+  typing_eq := rfl
+  readiness := .unitRule
+
 inductive IncDepRawContext.WellFormed : List IncDepRawType → Type
   | empty : WellFormed []
   | extend {context type} :
