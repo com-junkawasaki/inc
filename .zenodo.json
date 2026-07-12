@@ -4,7 +4,8 @@
   "creators": [
     { "name": "Junkawasaki" }
   ],
-  "description": "A proposed fourth foundational framework for mathematics and computation where relations (incidences) are the sole primitives. This repository contains the theory overview, Lean4 formalization scaffold, and project roadmap as defined in story.jsonnet.",
+  "description": "A Lean 4 formalization of incidence structures as a foundational framework for mathematics and computation. The checked development includes bisimulation and faithfulness, concrete consistency models, translation preservation and reflection, propositional internal-logic soundness and completeness, dependent Pi/Sigma/Identity syntax and semantics, total normalized renaming and substitution preservation, and reconstructions of Peano naturals, hereditary finite sets, pairs, trees, paths, simplices, products, sums, and conditional quotients.",
+  "version": "260712",
   "license": "Apache-2.0",
   "access_right": "open",
   "language": "eng",
@@ -14,15 +15,16 @@
     "Lean4",
     "category theory",
     "type theory",
-    "set theory"
+    "set theory",
+    "bisimulation",
+    "formal verification",
+    "dependent type theory"
   ],
   "related_identifiers": [
     {
-      "identifier": "https://github.com/junkawasaki/theory-of-incidence",
+      "identifier": "https://github.com/com-junkawasaki/inc",
       "relation": "isSupplementTo",
       "resource_type": "software"
     }
   ]
 }
-
-
