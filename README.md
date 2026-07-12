@@ -2680,7 +2680,12 @@ is not definitionally indexed by the legacy derivation.  The new
 `IncDepRawFormationReadinessSubstitutionResult` and
 `IncDepRawTypingReadinessSubstitutionResult` retain the constructed derivation,
 its equality to the legacy substitution, and its readiness together.  Base and
-Unit formation plus Unit typing constructors are already inhabited.
+Unit formation plus Unit typing constructors were the first inhabitants.  The
+formation side is now complete: Pi and Sigma compose the domain result with a
+lifted-substitution codomain result, while Identity locally casts both endpoint
+typing readiness certificates onto the shared substituted type formation.
+All five formation constructors therefore preserve coherent readiness without
+assuming derivation equality is definitional.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

@@ -1971,6 +1971,41 @@ mutual
           (termTyping.substitute substitution)
 end
 
+theorem IncDepRawWellFormed.substitute_pi
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    (domainFormation : IncDepRawWellFormed target domain)
+    (codomainFormation : IncDepRawWellFormed (domain :: target) codomain)
+    (substitution : IncDepRawSubstitution source target) :
+    (IncDepRawWellFormed.pi domainFormation codomainFormation).substitute
+        substitution =
+      IncDepRawWellFormed.pi (domainFormation.substitute substitution)
+        (codomainFormation.substitute (substitution.lift domain)) := by
+  rw [IncDepRawWellFormed.substitute]
+
+theorem IncDepRawWellFormed.substitute_sigma
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    (domainFormation : IncDepRawWellFormed target domain)
+    (codomainFormation : IncDepRawWellFormed (domain :: target) codomain)
+    (substitution : IncDepRawSubstitution source target) :
+    (IncDepRawWellFormed.sigma domainFormation codomainFormation).substitute
+        substitution =
+      IncDepRawWellFormed.sigma (domainFormation.substitute substitution)
+        (codomainFormation.substitute (substitution.lift domain)) := by
+  rw [IncDepRawWellFormed.substitute]
+
+theorem IncDepRawWellFormed.substitute_identity
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    (typeFormation : IncDepRawWellFormed target type)
+    (leftTyping : IncDepRawHasType target left type)
+    (rightTyping : IncDepRawHasType target right type)
+    (substitution : IncDepRawSubstitution source target) :
+    (IncDepRawWellFormed.identity typeFormation leftTyping rightTyping).substitute
+        substitution =
+      IncDepRawWellFormed.identity (typeFormation.substitute substitution)
+        (leftTyping.substitute substitution) (rightTyping.substitute substitution) := by
+  rw [IncDepRawWellFormed.substitute]
+
 noncomputable def IncDepRawWellFormed.instantiate
     {context : List IncDepRawType} {domain codomain : IncDepRawType}
     {argument : IncDepRawTerm}
@@ -2012,6 +2047,25 @@ structure IncDepRawTypingReadinessSubstitutionResult
   readiness : IncDepRawCoherentTypingDispatchReady substitutedTyping
     formationResult.substitutedFormation
 
+def IncDepRawCoherentFormationDispatchReady.castFormation
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {first second : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentFormationDispatchReady first)
+    (formationEq : first = second) :
+    IncDepRawCoherentFormationDispatchReady second := by
+  cases formationEq
+  exact ready
+
+def IncDepRawCoherentTypingDispatchReady.castFormation
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {first second : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing first)
+    (formationEq : first = second) :
+    IncDepRawCoherentTypingDispatchReady typing second := by
+  cases formationEq
+  exact ready
+
 def IncDepRawFormationReadinessSubstitutionResult.base
     {source target : List IncDepRawType} {index : Nat}
     (substitution : IncDepRawSubstitution source target) :
@@ -2031,6 +2085,77 @@ def IncDepRawFormationReadinessSubstitutionResult.unit
   substitutedFormation := .unit
   formation_eq := rfl
   readiness := .unit
+
+def IncDepRawFormationReadinessSubstitutionResult.pi
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    (substitution : IncDepRawSubstitution source target)
+    (domainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := domainFormation) substitution)
+    (codomainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := codomainFormation) (substitution.lift domain)) :
+    IncDepRawFormationReadinessSubstitutionResult
+      (formation := IncDepRawWellFormed.pi domainFormation codomainFormation)
+      substitution where
+  substitutedFormation := .pi domainResult.substitutedFormation
+    codomainResult.substitutedFormation
+  formation_eq := by
+    rw [domainResult.formation_eq, codomainResult.formation_eq]
+    exact (IncDepRawWellFormed.substitute_pi domainFormation codomainFormation
+      substitution).symm
+  readiness := .pi domainResult.readiness codomainResult.readiness
+
+def IncDepRawFormationReadinessSubstitutionResult.sigma
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    (substitution : IncDepRawSubstitution source target)
+    (domainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := domainFormation) substitution)
+    (codomainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := codomainFormation) (substitution.lift domain)) :
+    IncDepRawFormationReadinessSubstitutionResult
+      (formation := IncDepRawWellFormed.sigma domainFormation codomainFormation)
+      substitution where
+  substitutedFormation := .sigma domainResult.substitutedFormation
+    codomainResult.substitutedFormation
+  formation_eq := by
+    rw [domainResult.formation_eq, codomainResult.formation_eq]
+    exact (IncDepRawWellFormed.substitute_sigma domainFormation
+      codomainFormation substitution).symm
+  readiness := .sigma domainResult.readiness codomainResult.readiness
+
+def IncDepRawFormationReadinessSubstitutionResult.identity
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed target type}
+    {leftTyping : IncDepRawHasType target left type}
+    {rightTyping : IncDepRawHasType target right type}
+    (substitution : IncDepRawSubstitution source target)
+    (typeResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := typeFormation) substitution)
+    (leftResult : IncDepRawTypingReadinessSubstitutionResult
+      (typing := leftTyping) (formation := typeFormation) substitution)
+    (rightResult : IncDepRawTypingReadinessSubstitutionResult
+      (typing := rightTyping) (formation := typeFormation) substitution) :
+    IncDepRawFormationReadinessSubstitutionResult
+      (formation := IncDepRawWellFormed.identity typeFormation leftTyping
+        rightTyping) substitution where
+  substitutedFormation := .identity typeResult.substitutedFormation
+    leftResult.substitutedTyping rightResult.substitutedTyping
+  formation_eq := by
+    rw [typeResult.formation_eq, leftResult.typing_eq, rightResult.typing_eq]
+    exact (IncDepRawWellFormed.substitute_identity typeFormation leftTyping
+      rightTyping substitution).symm
+  readiness :=
+    let leftFormationEq := leftResult.formationResult.formation_eq.trans
+      typeResult.formation_eq.symm
+    let rightFormationEq := rightResult.formationResult.formation_eq.trans
+      typeResult.formation_eq.symm
+    .identity typeResult.readiness
+      (leftResult.readiness.castFormation leftFormationEq)
+      (rightResult.readiness.castFormation rightFormationEq)
 
 def IncDepRawTypingReadinessSubstitutionResult.unit
     {source target : List IncDepRawType}
