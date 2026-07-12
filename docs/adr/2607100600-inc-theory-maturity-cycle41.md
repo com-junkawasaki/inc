@@ -351,6 +351,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `rebase`はnatural rebaseを、`typingResultAligned`はtyping fiber resultのexact formation-IH resultへのcastを導出する。これは不可能なglobal rebase providerの
   直接置換で、任意semantic inhabitantsへ量化せず、無関係なUnit/Bool interpretationのequivalenceも要求しない。残recursor作業は6dependent branchesで
   このlocal agreementを構成することに正確に限定された。
+- typing foldが不変条件をintrinsicに保持するよう強化した。`IncDepRawAlignedCanonicalTypingFoldResult`は対応するprovenance-aware formation package、typing
+  package、local agreementを持ち、aligned typing fold motiveがこれを返す。`alignedCanonicalMutualFoldVariable`はformation IHを再利用し、
+  `alignedCanonicalMutualFoldTypingUnit`は一致するunit packagesを生成し、`alignedCanonicalMutualFoldLambda`は非自明な再帰caseとしてbody agreementでbody
+  typing semanticsをexact body formation resultへcastした後、その同一resultからouter Pi formation/typing packagesを構築してnew agreementを`rfl`で閉じる。
+  これはglobal rebaseの単なる代替interfaceでなく、recursion内部で実行可能な置換である。Apply/Pair/projections/Identity/Reflはaligned typing IHを直接消費できる。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

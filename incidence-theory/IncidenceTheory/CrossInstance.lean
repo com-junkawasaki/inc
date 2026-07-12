@@ -10044,6 +10044,25 @@ structure IncDepRawCanonicalFormationTypingAgreement
       typingReady substitutionResult) : Prop where
   canonical_eq : typing.canonical = formation.canonical
 
+structure IncDepRawAlignedCanonicalTypingFoldResult
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    (ready : IncDepRawCoherentTypingDispatchReady targetTyping targetFormation)
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) where
+  formation : IncDepRawSomeCanonicalStrictFormationSubstitutionDispatchResult
+    ready.formationReady substitutionResult
+  typing : IncDepRawSomeCanonicalStrictTypingSubstitutionDispatchResult
+    (IncDepRawStrictTypingDispatchReady.ofCoherent ready) substitutionResult
+  agreement : IncDepRawCanonicalFormationTypingAgreement formation typing
+
 theorem IncDepRawCanonicalFormationTypingAgreement.result_eq
     {source target : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType}
@@ -12576,6 +12595,25 @@ abbrev IncDepRawCanonicalTypingSubstitutionFoldMotive
     IncDepRawSomeCanonicalStrictTypingSubstitutionDispatchResult
       (IncDepRawStrictTypingDispatchReady.ofCoherent ready) substitutionResult
 
+abbrev IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive
+    {target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    (ready : IncDepRawCoherentTypingDispatchReady targetTyping
+      targetFormation) :=
+  ∀ {source : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult},
+    IncDepRawContextSemanticTree targetResult →
+    IncDepRawSubstitutionReplacementSemanticResult substitutionResult →
+    IncDepRawAlignedCanonicalTypingFoldResult ready substitutionResult
+
 def IncDepRawSubstitutionFiberModel.mutualFoldBase
     (model : IncDepRawSubstitutionFiberModel.{u})
     {context : List IncDepRawType} {index : Nat} :
@@ -12776,6 +12814,30 @@ noncomputable def
     { canonical := typeResult.canonical
       result := result }
 
+noncomputable def
+    IncDepRawVariableSubstitutionProvider.alignedCanonicalMutualFoldVariable
+    (provider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {typeFormation : IncDepRawWellFormed context type}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (typeIH : IncDepRawCanonicalFormationSubstitutionFoldMotive typeReady) :
+    IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive
+      (IncDepRawCoherentTypingDispatchReady.varRule (lookup := lookup)
+        typeReady) :=
+  fun targetTree replacements =>
+    let formation := typeIH targetTree replacements
+    let typingResult := provider.dispatchCanonicalVariable targetTree
+      formation.result replacements
+    let typing : IncDepRawSomeCanonicalStrictTypingSubstitutionDispatchResult
+        (IncDepRawStrictTypingDispatchReady.varRule
+          (lookup := lookup) typeReady) _ :=
+      { canonical := formation.canonical
+        result := typingResult }
+    { formation := formation
+      typing := typing
+      agreement := { canonical_eq := rfl } }
+
 def IncDepRawSubstitutionFiberModel.canonicalMutualFoldTypingUnit
     (model : IncDepRawSubstitutionFiberModel.{u})
     {context : List IncDepRawType} :
@@ -12785,6 +12847,26 @@ def IncDepRawSubstitutionFiberModel.canonicalMutualFoldTypingUnit
     let result := model.dispatchCanonicalTypingUnit _
     { canonical := model.unit _
       result := result }
+
+def IncDepRawSubstitutionFiberModel.alignedCanonicalMutualFoldTypingUnit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} :
+    IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive
+      (IncDepRawCoherentTypingDispatchReady.unitRule (context := context)) :=
+  fun _ _ =>
+    let formationResult := model.dispatchCanonicalUnitFormation _
+    let formation : IncDepRawSomeCanonicalStrictFormationSubstitutionDispatchResult
+        (IncDepRawCoherentFormationDispatchReady.unit (context := context)) _ :=
+      { canonical := model.unit _
+        result := formationResult }
+    let typingResult := model.dispatchCanonicalTypingUnit _
+    let typing : IncDepRawSomeCanonicalStrictTypingSubstitutionDispatchResult
+        (IncDepRawStrictTypingDispatchReady.unitRule (context := context)) _ :=
+      { canonical := model.unit _
+        result := typingResult }
+    { formation := formation
+      typing := typing
+      agreement := { canonical_eq := rfl } }
 
 noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldLambda
     (model : IncDepRawSubstitutionFiberModel.{u})
@@ -12842,6 +12924,54 @@ noncomputable def IncDepRawSubstitutionFiberModel.canonicalMutualFoldLambda
     { canonical := model.pi domainResult.formationResult
         bodyResult.formationResult
       result := result }
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.alignedCanonicalMutualFoldLambda
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {body : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {bodyTyping : IncDepRawHasType (domain :: context) body codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (bodyReady : IncDepRawCoherentTypingDispatchReady bodyTyping
+      codomainFormation)
+    (domainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive domainReady)
+    (bodyIH : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive bodyReady) :
+    IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive
+      (IncDepRawCoherentTypingDispatchReady.lambdaRule domainReady bodyReady) :=
+  fun targetTree replacements =>
+    let domain := domainIH targetTree replacements
+    let domainResult := domain.result.dispatchResult
+    let extendedTree := IncDepRawContextSemanticTree.extend targetTree
+      domainResult.formationResult.targetFormationResult
+    let liftedReplacements := replacements.liftResult domainResult.formationResult
+    let body := bodyIH extendedTree liftedReplacements
+    let bodyFormation := body.formation.result.dispatchResult
+    let strictBody := IncDepRawStrictTypingDispatchReady.ofCoherent bodyReady
+    let bodyTyping : IncDepRawStrictTypingSubstitutionDispatchResult
+        strictBody domainResult.formationResult.liftSubstitution :=
+      { formationResult := bodyFormation.formationResult
+        typingResult := body.agreement.typingResultAligned }
+    let formationResult := model.dispatchCanonicalPiFormation domainResult
+      bodyFormation
+    let formation : IncDepRawSomeCanonicalStrictFormationSubstitutionDispatchResult
+        (IncDepRawCoherentFormationDispatchReady.pi domainReady
+          bodyReady.formationReady) _ :=
+      { canonical := model.pi domainResult.formationResult
+          bodyFormation.formationResult
+        result := formationResult }
+    let typingResult := model.dispatchCanonicalLambda domainReady
+      bodyReady.formationReady strictBody domainResult.formationResult bodyTyping
+    let typing : IncDepRawSomeCanonicalStrictTypingSubstitutionDispatchResult
+        (IncDepRawStrictTypingDispatchReady.lambdaRule domainReady
+          bodyReady.formationReady strictBody) _ :=
+      { canonical := model.pi domainResult.formationResult
+          bodyFormation.formationResult
+        result := typingResult }
+    { formation := formation
+      typing := typing
+      agreement := { canonical_eq := rfl } }
 
 noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldRefl
     (model : IncDepRawSubstitutionFiberModel.{u})

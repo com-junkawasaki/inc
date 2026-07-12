@@ -876,6 +876,18 @@ It currently establishes:
   unrelated Unit and Bool interpretations to be equivalent.  Remaining recursor
   work is now precisely the construction of these local agreements in the six
   dependent branches.
+  The typing fold now carries that invariant intrinsically.
+  `IncDepRawAlignedCanonicalTypingFoldResult` contains the corresponding
+  provenance-aware formation package, the typing package, and their local
+  agreement; the aligned typing fold motive returns this structure.
+  `alignedCanonicalMutualFoldVariable` reuses its formation IH,
+  `alignedCanonicalMutualFoldTypingUnit` constructs matching unit packages, and
+  `alignedCanonicalMutualFoldLambda` demonstrates the nontrivial recursive case:
+  it uses the body agreement to cast body typing semantics to the exact body
+  formation result, then builds both outer Pi packages from that same result, so
+  the new agreement is `rfl`.  This is an executable replacement of global
+  rebase inside recursion, not merely a proposed interface.  Apply, Pair,
+  projections, Identity, and Refl can now consume aligned typing IHs directly.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
