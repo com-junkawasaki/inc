@@ -126,6 +126,12 @@ instantiate/substitute equalities with synchronized casts.
   `natIncidence ⊕ cycleIncidenceFixed` is the concrete witness. The remaining
   sum obstruction is relational associativity/unit creation, not quotient
   descent under these separation hypotheses.
+- `UnitReflectingResonanceSpec` now names the missing associativity-side law:
+  a resonance producing the unit must have a unit input. Peano addition
+  satisfies it; the multi-valued finite model provably does not. This exactly
+  classifies the models used by the positive direction and the checked sum
+  associativity counterexample. A generic conditional sum-associativity proof
+  still requires the full tagged intermediate-mode case analysis.
 - Pushout preservation and generic boundary-square-zero are conditional on the
   categorical or linear hypotheses in their declarations.
 - Translation completeness is proved only for the stated fragments and

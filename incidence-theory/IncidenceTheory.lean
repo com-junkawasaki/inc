@@ -1090,6 +1090,14 @@ structure AssociativeResonanceSpec {I R T : Type u} [DecidableEq I]
     (∃ ij, inc.resonance i j ij ∧ inc.resonance ij k out) ↔
     (∃ jk, inc.resonance j k jk ∧ inc.resonance i jk out)
 
+/- A unit-reflecting resonance cannot create the vacuum from two non-vacuum
+inputs. This is the exact missing law exposed by the sum associativity
+counterexample. -/
+structure UnitReflectingResonanceSpec {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) where
+  reflects : ∀ {i j}, inc.resonance i j inc.unit →
+    i = inc.unit ∨ j = inc.unit
+
 theorem resonance_reassociate {I R T : Type u} [DecidableEq I]
     {inc : Incidence I R T} (spec : AssociativeResonanceSpec inc)
     {i j k out : I} :

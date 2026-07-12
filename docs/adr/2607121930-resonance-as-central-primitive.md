@@ -118,3 +118,7 @@ case where the selector is complete and resonance has no unselected modes.
   every bisimulation class a singleton and hence makes any resonance relation
   quotient-congruent. Combined with the existing leafless-side faithfulness
   theorem, this yields a positive sum result for `Nat ⊕ cycleIncidenceFixed`.
+- The other required condition is formalized as
+  `UnitReflectingResonanceSpec`: the vacuum cannot emerge from two non-vacuum
+  inputs. Nat resonance satisfies it, whereas the finite all-mode resonance
+  refutes it at `(root, root, leaf)`.

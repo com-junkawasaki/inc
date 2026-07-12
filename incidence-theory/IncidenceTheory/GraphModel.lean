@@ -181,6 +181,14 @@ theorem finiteIncidence_not_functionalResonance :
     (k := FiniteIncidence.leaf) True.intro
   simp [finiteIncidence, finiteGlue] at selected
 
+theorem finiteIncidence_not_unitReflectingResonance :
+    ¬ Nonempty (UnitReflectingResonanceSpec finiteIncidence) := by
+  rintro ⟨reflecting⟩
+  have reflected := reflecting.reflects
+    (i := FiniteIncidence.root) (j := FiniteIncidence.root) True.intro
+  rcases reflected with impossible | impossible <;>
+    simp [finiteIncidence] at impossible
+
 /- A checked, nondegenerate model certificate for the data and laws of the
    incidence core.  It records that the carrier is inhabited and that the
    model has a genuine boundary endpoint, so the witness is not the vacuous

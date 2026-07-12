@@ -267,6 +267,14 @@ def natAssociativeResonanceSpec : AssociativeResonanceSpec natIncidence where
       · simp [natIncidence]
       · simpa [natIncidence, Nat.add_assoc] using hout
 
+def natUnitReflectingResonanceSpec :
+    UnitReflectingResonanceSpec natIncidence where
+  reflects := by
+    intro i j resonant
+    simp [natIncidence] at resonant
+    change i = 0 ∨ j = 0
+    omega
+
 theorem natQuotientResonanceCongruent :
     QuotientResonanceCongruent natIncidence := by
   intro i₁ i₂ j₁ j₂ k₁ k₂ hi hj hk
