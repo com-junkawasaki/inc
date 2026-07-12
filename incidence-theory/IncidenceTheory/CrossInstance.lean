@@ -13189,6 +13189,67 @@ noncomputable def
             model.pi domainResult.formationResult codomainResult)
           bodyResultEq }
 
+noncomputable def
+    IncDepRawSubstitutionFiberModel.alignedCanonicalMutualFoldRefl
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {term : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {termTyping : IncDepRawHasType context term type}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (termReady : IncDepRawCoherentTypingDispatchReady termTyping typeFormation)
+    (typeIH : IncDepRawCanonicalFormationSubstitutionFoldMotive typeReady)
+    (termIH : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive termReady)
+    (termAgreement : IncDepRawCanonicalFoldAgreement typeIH termIH) :
+    IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive
+      (IncDepRawCoherentTypingDispatchReady.reflRule typeReady termReady) :=
+  fun targetTree replacements =>
+    let formation := model.canonicalMutualFoldIdentityOfAgreements
+      readinessAlignment typeReady termReady termReady typeIH termIH termIH
+      termAgreement termAgreement targetTree replacements
+    let typeResult := typeIH targetTree replacements
+    let termResult :=
+      (termAgreement.agree targetTree replacements).typingResultAligned
+    let canonical := model.identity
+      typeResult.result.dispatchResult.formationResult termResult termResult
+    let targetReady := IncDepRawStrictTypingDispatchReady.ofCoherent
+      (IncDepRawCoherentTypingDispatchReady.reflRule typeReady termReady)
+    let typingResult : IncDepRawStrictTypingSubstitutionDispatchResult
+        targetReady _ :=
+      { formationResult := canonical
+        typingResult := model.refl
+          typeResult.result.dispatchResult.formationResult termResult }
+    let typing : IncDepRawSomeCanonicalStrictTypingSubstitutionDispatchResult
+        targetReady _ :=
+      { canonical := canonical
+        result :=
+          { dispatchResult := typingResult
+            formationProvenance := .canonical _ } }
+    { formation := formation
+      typing := typing
+      agreement := { canonical_eq := rfl } }
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.canonicalFoldAgreementRefl
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {term : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {termTyping : IncDepRawHasType context term type}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (termReady : IncDepRawCoherentTypingDispatchReady termTyping typeFormation)
+    (typeIH : IncDepRawCanonicalFormationSubstitutionFoldMotive typeReady)
+    (termIH : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive termReady)
+    (termAgreement : IncDepRawCanonicalFoldAgreement typeIH termIH) :
+    IncDepRawCanonicalFoldAgreement
+      (model.canonicalMutualFoldIdentityOfAgreements readinessAlignment typeReady
+        termReady termReady typeIH termIH termIH termAgreement termAgreement)
+      (model.alignedCanonicalMutualFoldRefl readinessAlignment typeReady termReady
+        typeIH termIH termAgreement) where
+  agree := fun _ _ => { canonical_eq := rfl }
+
 noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldRefl
     (model : IncDepRawSubstitutionFiberModel.{u})
     (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)

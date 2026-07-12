@@ -915,8 +915,11 @@ It currently establishes:
   on both sides, and Lambda derives codomain-result equality by chaining the
   aligned body's local agreement with the provenance of both independently
   computed formation packages.  Thus Lambda does not assume a global semantic
-  equality provider.  The remaining agreement constructors are Apply, Pair,
-  First, Second, and Refl, followed by their assembly into the mutual dispatcher.
+  equality provider.  Refl is now checked as well: it feeds the same local
+  type/term agreement into both endpoints of the canonical Identity formation,
+  then constructs semantic reflexivity in that exact family.  The remaining
+  agreement constructors are Apply, Pair, First, and Second, followed by their
+  assembly into the mutual dispatcher.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
