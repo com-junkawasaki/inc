@@ -1237,6 +1237,12 @@ cycle 38–41 で以下の3極構造が判明した:
   anchored endpointsを共有する。constructor-level coverageはformation 5/5、typing 8/8。
   残件はこのcomplete closureをfinal structural recursorの二motiveへpackage化し、anchored
   dispatcherをprojectionする工程である。
+  complete recursor motiveは`CompletelyGeneratedFormationFoldOutput`と
+  `CompletelyGeneratedAnchoredTypingFoldOutput`としてpackage化された。通常のgenerated
+  packageはoutputを再構成せず昇格でき、exact-indexのIdentity/Refl constructorはformation
+  completenessとtyping provenanceを同時に保持する。残るrecursor obligationは、独立に
+  再帰されたendpoint packagesをunderlying type packageへ整列してexact builderへ渡す
+  complete-agreement補題に限定された。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

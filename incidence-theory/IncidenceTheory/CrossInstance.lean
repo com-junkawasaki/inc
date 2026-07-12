@@ -15640,6 +15640,80 @@ inductive IncDepRawCanonicalFormationFoldOutput.CompletelyGenerated
         (model.canonicalFormationFoldOutputIdentityExact readinessAlignment
           typeReady leftReady rightReady typeOutput leftOutput rightOutput)
 
+structure IncDepRawCanonicalCompletelyGeneratedFormationFoldOutput
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentFormationDispatchReady formation) where
+  output : IncDepRawCanonicalFormationFoldOutput.{u} ready
+  completelyGenerated : output.CompletelyGenerated model variableProvider
+
+structure IncDepRawCanonicalCompletelyGeneratedAnchoredTypingFoldOutput
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation) where
+  formation : IncDepRawCanonicalCompletelyGeneratedFormationFoldOutput model
+    variableProvider ready.formationReady
+  output : IncDepRawCanonicalAnchoredTypingFoldOutput.{u} ready formation.output
+  generated : output.Generated model variableProvider
+
+noncomputable def IncDepRawSubstitutionFiberModel.completelyGeneratedIdentityExact
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {leftTyping : IncDepRawHasType context left type}
+    {rightTyping : IncDepRawHasType context right type}
+    {typeReady : IncDepRawCoherentFormationDispatchReady typeFormation}
+    {leftReady : IncDepRawCoherentTypingDispatchReady leftTyping typeFormation}
+    {rightReady : IncDepRawCoherentTypingDispatchReady rightTyping typeFormation}
+    (typeOutput : IncDepRawCanonicalCompletelyGeneratedFormationFoldOutput model
+      variableProvider typeReady)
+    (leftOutput : IncDepRawCanonicalAnchoredTypingFoldOutput leftReady
+      typeOutput.output)
+    (rightOutput : IncDepRawCanonicalAnchoredTypingFoldOutput rightReady
+      typeOutput.output)
+    (leftGenerated : leftOutput.Generated model variableProvider)
+    (rightGenerated : rightOutput.Generated model variableProvider) :
+    IncDepRawCanonicalCompletelyGeneratedFormationFoldOutput model
+      variableProvider (.identity typeReady leftReady rightReady) where
+  output := model.canonicalFormationFoldOutputIdentityExact readinessAlignment
+    typeReady leftReady rightReady typeOutput.output leftOutput rightOutput
+  completelyGenerated := .identity readinessAlignment typeOutput.output
+    leftOutput rightOutput typeOutput.completelyGenerated leftGenerated
+    rightGenerated
+
+noncomputable def IncDepRawSubstitutionFiberModel.completelyGeneratedReflExact
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {term : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {termTyping : IncDepRawHasType context term type}
+    {typeReady : IncDepRawCoherentFormationDispatchReady typeFormation}
+    {termReady : IncDepRawCoherentTypingDispatchReady termTyping typeFormation}
+    (typeOutput : IncDepRawCanonicalCompletelyGeneratedFormationFoldOutput model
+      variableProvider typeReady)
+    (termOutput : IncDepRawCanonicalAnchoredTypingFoldOutput termReady
+      typeOutput.output)
+    (termGenerated : termOutput.Generated model variableProvider) :
+    IncDepRawCanonicalCompletelyGeneratedAnchoredTypingFoldOutput model
+      variableProvider (.reflRule typeReady termReady) where
+  formation := model.completelyGeneratedIdentityExact variableProvider
+    readinessAlignment typeOutput termOutput termOutput termGenerated
+    termGenerated
+  output := (model.anchoredTypingFoldResultReflExact readinessAlignment
+    typeReady termReady typeOutput.output termOutput).output
+  generated := .refl readinessAlignment typeOutput.output termOutput
+    termGenerated
+
 
 /-- A formation output packaged with evidence that it was produced solely by
 the canonical syntax-directed constructors.  This is the formation motive used
@@ -16011,6 +16085,33 @@ noncomputable def IncDepRawSubstitutionFiberModel.generatedTypingOutputSecond
         codomain.output result.output alignedPair
         (.retarget pair.formation.output sigma.output pair.output pairAgreement
           pair.generated) }
+
+def IncDepRawCanonicalGeneratedFormationFoldOutput.complete
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentFormationDispatchReady formation}
+    (output : IncDepRawCanonicalGeneratedFormationFoldOutput model ready) :
+    IncDepRawCanonicalCompletelyGeneratedFormationFoldOutput model
+      variableProvider ready where
+  output := output.output
+  completelyGenerated := .ordinary output.output output.generated
+
+def IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput.complete
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentTypingDispatchReady typing formation}
+    (output : IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput model
+      variableProvider ready) :
+    IncDepRawCanonicalCompletelyGeneratedAnchoredTypingFoldOutput model
+      variableProvider ready where
+  formation := output.formation.complete
+  output := output.output
+  generated := output.generated
 
 structure IncDepRawCanonicalAnchoredMutualFoldDispatcher.ReadinessLawful
     (anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u}) : Prop where

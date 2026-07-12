@@ -1193,6 +1193,15 @@ It currently establishes:
   provider-free certificates therefore cover formation 5/5 and typing 8/8.
   The remaining work is packaging this complete closure as the two motives of
   the final structural recursor and projecting its anchored dispatcher.
+  Those complete motives are now explicit packages:
+  `CompletelyGeneratedFormationFoldOutput` and
+  `CompletelyGeneratedAnchoredTypingFoldOutput`.  Every ordinary generated
+  package lifts into them without rebuilding its output.  Exact-index
+  `completelyGeneratedIdentityExact` and `completelyGeneratedReflExact`
+  construct the final two branches and preserve both formation completeness and
+  typing provenance.  The remaining recursor obligation is now specifically
+  the complete-agreement lemma that aligns independently recursive endpoint
+  packages to the underlying type package before invoking these exact builders.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
