@@ -1,0 +1,25 @@
+# Proof map
+
+Use this index to navigate the checked development by subject rather than by
+research chronology.
+
+| Subject | Primary Lean source | Supporting documentation |
+|---|---|---|
+| Incidence axioms and core | `IncidenceTheory.lean`, `Axioms/` | [status](../status.md) |
+| Concrete models | `GraphModel.lean`, `Cycle.lean` | [history](../history/post-cycle-41.md) |
+| Bisimulation and faithfulness | `IncidenceTheory.lean`, `CrossInstance.lean` | [completion audit](../inc-proof-completion-audit.md) |
+| Internal logic | `Logic.lean` | [status](../status.md) |
+| Natural numbers and HF sets | `Peano.lean`, `HFSets.lean` | [history](../history/post-cycle-41.md) |
+| Pairs and trees | `Pairs.lean`, `Tree.lean` | [history](../history/post-cycle-41.md) |
+| Paths and simplices | `PathComplex.lean`, `Simplex.lean` | [history](../history/post-cycle-41.md) |
+| Product, sum, quotient | `Product.lean`, `Sum.lean`, `Quotient.lean` | [cycle-41 ADR](../adr/2607100600-inc-theory-maturity-cycle41.md) |
+| Dependent calculus | `CrossInstance.lean` | [completion audit](../inc-proof-completion-audit.md) |
+| Normalized structural preservation | `CrossInstance.lean` | [status](../status.md#structural-preservation-completion) |
+
+## Reading order
+
+1. Start with the root [README](../../README.md).
+2. Read the [authoritative status](../status.md).
+3. Use this table to locate the relevant Lean declarations.
+4. Consult the [detailed history](../history/post-cycle-41.md) only when the
+   development chronology or negative findings are needed.
