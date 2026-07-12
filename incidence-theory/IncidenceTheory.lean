@@ -1090,6 +1090,14 @@ structure AssociativeResonanceSpec {I R T : Type u} [DecidableEq I]
     (∃ ij, inc.resonance i j ij ∧ inc.resonance ij k out) ↔
     (∃ jk, inc.resonance j k jk ∧ inc.resonance i jk out)
 
+/- A functional associative resonance becomes an additive group when every
+mode has a specified inverse resonating with it at the vacuum. -/
+structure AdditiveGroupResonanceSpec {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T)
+    extends FunctionalResonanceSpec inc, AssociativeResonanceSpec inc where
+  inverse : I → I
+  inverse_mode : ∀ i, inc.resonance i (inverse i) inc.unit
+
 /- A unit-reflecting resonance cannot create the vacuum from two non-vacuum
 inputs. This is the exact missing law exposed by the sum associativity
 counterexample. -/

@@ -174,7 +174,9 @@ case where the selector is complete and resonance has no unselected modes.
   is quotient-congruent and instantiates normalized dependent completion.
 - Cut negation is defined by reflected complement witnesses. It is a valid cut,
   involutive, exactly order-reversing, agrees with rational negation on
-  principal cuts, and proves the additive inverse law for every principal cut.
-  Extending that last law to arbitrary cuts is isolated to the remaining
-  Archimedean boundary-approximation lemma; it is not claimed from involution
-  alone.
+  principal cuts, and proves the additive inverse law for every cut. The key
+  approximation is constructive at the proof level: positive rational steps
+  eventually cross any target; a minimal exit index brackets every cut by one
+  step. `AdditiveGroupResonanceSpec` packages functional associative resonance
+  with a selected inverse mode and is instantiated by integers, rationals, and
+  Dedekind reals.

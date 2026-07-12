@@ -170,8 +170,9 @@ Checked constructions include:
   cut addition is well formed, associative, commutative, monotone, and has the
   principal zero as identity, while the rational embedding preserves addition;
   cut negation is well formed, involutive, reverses order exactly, preserves
-  principal rational negation, and supplies additive inverses for all principal
-  rational cuts;
+  principal rational negation, and supplies additive inverses for every cut;
+  an explicit Archimedean finite-step theorem and minimal boundary-exit
+  construction provide the approximation needed by the general inverse proof;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets
@@ -181,9 +182,7 @@ Checked constructions include:
 - propositional logic and a dependent Pi/Sigma/Identity fragment
 
 Major remaining areas include a canonical reduced-fraction boundary and
-computational reciprocal selector, the Archimedean boundary-approximation lemma
-needed to extend principal additive inverses to every Dedekind cut,
-multiplication and field laws,
+computational reciprocal selector, Dedekind multiplication and field laws,
 real analysis, broader algebra, and a larger categorical library. Rational
 incidence is now observationally faithful:
 zero has an empty boundary and every nonzero rational has a one-step boundary

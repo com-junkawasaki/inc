@@ -406,6 +406,117 @@ theorem realAdd_neg_principal (value : IncRational) :
   rw [realNeg_rationalToReal, realAdd_rationalToReal, rationalAdd_neg]
   rfl
 
+theorem nat_exists_minimal {predicate : Nat → Prop}
+    (existsPredicate : ∃ count, predicate count) :
+    ∃ count, predicate count ∧
+      ∀ earlier, earlier < count → ¬ predicate earlier := by
+  obtain ⟨witness, witnessProperty⟩ := existsPredicate
+  have minimalFrom : ∀ count, predicate count →
+      ∃ least, predicate least ∧
+        ∀ earlier, earlier < least → ¬ predicate earlier := by
+    intro count
+    induction count using Nat.strongRecOn with
+    | _ count induction =>
+      intro countProperty
+      by_cases earlierExists :
+          ∃ earlier, earlier < count ∧ predicate earlier
+      · obtain ⟨earlier, earlierLess, earlierProperty⟩ := earlierExists
+        exact induction earlier earlierLess earlierProperty
+      · exact ⟨count, countProperty, fun earlier earlierLess earlierProperty =>
+          earlierExists ⟨earlier, earlierLess, earlierProperty⟩⟩
+  exact minimalFrom witness witnessProperty
+
+theorem IncReal.boundary_approximation (value : IncReal) {step : IncRational}
+    (stepPositive : rationalLT (rationalOfInteger 0) step) :
+    ∃ inside outside,
+      value.lower inside ∧ ¬ value.lower outside ∧
+        outside = rationalAdd inside step := by
+  obtain ⟨start, startMember⟩ := value.inhabited
+  obtain ⟨target, targetNotMember⟩ := value.proper
+  obtain ⟨eventualCount, targetBelow⟩ :=
+    rational_archimedean_steps (start := start) (target := target) stepPositive
+  have exitExists : ∃ count, ¬ value.lower (rationalStepValue start step count) := by
+    refine ⟨eventualCount, ?_⟩
+    intro eventualMember
+    exact targetNotMember (value.downward eventualMember targetBelow)
+  obtain ⟨firstExit, firstExitProperty, exitMinimal⟩ :=
+    nat_exists_minimal exitExists
+  cases firstExit with
+  | zero =>
+      exact False.elim (firstExitProperty (by
+        simpa [rationalStepValue_zero] using startMember))
+  | succ previous =>
+      have previousMember :
+          value.lower (rationalStepValue start step previous) := by
+        apply Classical.byContradiction
+        intro previousNotMember
+        exact (exitMinimal previous (Nat.lt_succ_self previous)) previousNotMember
+      refine ⟨rationalStepValue start step previous,
+        rationalStepValue start step (previous + 1), previousMember, ?_, ?_⟩
+      · simpa using firstExitProperty
+      · exact rationalStepValue_succ start step previous
+
+theorem realAdd_neg (value : IncReal) :
+    realAdd value (realNeg value) = realZero := by
+  apply realLE_antisymm
+  · intro rational member
+    obtain ⟨inside, negMember, insideMember, negMemberProof, rationalBelow⟩ := member
+    obtain ⟨outside, outsideNotMember, negBelowOutside⟩ := negMemberProof
+    have insideBelowOutside :=
+      value.lt_of_lower_of_not_lower insideMember outsideNotMember
+    have insideNegBelow :
+        rationalLT (rationalAdd inside negMember)
+          (rationalAdd inside (rationalNeg outside)) :=
+      rationalLT_add_left inside negBelowOutside
+    have insideOutsideBelowZero :
+        rationalLT (rationalAdd inside (rationalNeg outside))
+          (rationalOfInteger 0) := by
+      have shifted := rationalLT_add_right (rationalNeg outside)
+        insideBelowOutside
+      simpa [rationalAdd_neg] using shifted
+    exact rationalLT_trans rationalBelow
+      (rationalLT_trans insideNegBelow insideOutsideBelowZero)
+  · intro rational rationalBelowZero
+    have zeroBelowNegRational :
+        rationalLT (rationalOfInteger 0) (rationalNeg rational) := by
+      have reversed := rationalLT_neg_reverse rationalBelowZero
+      simpa [rationalNeg_zero, rationalNeg_neg] using reversed
+    obtain ⟨step, zeroBelowStep, stepBelowNegRational⟩ :=
+      rationalLT_dense zeroBelowNegRational
+    obtain ⟨inside, outside, insideMember, outsideNotMember, outsideStep⟩ :=
+      value.boundary_approximation zeroBelowStep
+    have rationalBelowNegStep : rationalLT rational (rationalNeg step) := by
+      have reversed := rationalLT_neg_reverse stepBelowNegRational
+      simpa [rationalNeg_neg] using reversed
+    have insideNegOutsideEq :
+        rationalAdd inside (rationalNeg outside) = rationalNeg step := by
+      rw [outsideStep, rationalNeg_add, ← rationalAdd_assoc,
+        rationalAdd_neg, rationalAdd_zero_left]
+    have rationalBelowInsideNegOutside :
+        rationalLT rational (rationalAdd inside (rationalNeg outside)) := by
+      rw [insideNegOutsideEq]
+      exact rationalBelowNegStep
+    let translated := rationalAdd rational (rationalNeg inside)
+    have translatedRestore : rationalAdd translated inside = rational := by
+      exact rationalAdd_sub_cancel rational inside
+    have translatedBelowNegOutside :
+        rationalLT translated (rationalNeg outside) := by
+      apply rationalLT_add_cancel_right inside
+      rw [translatedRestore, rationalAdd_comm (rationalNeg outside) inside]
+      exact rationalBelowInsideNegOutside
+    obtain ⟨negInside, translatedNegInside, negInsideBelow⟩ :=
+      rationalLT_dense translatedBelowNegOutside
+    have negInsideMember : (realNeg value).lower negInside :=
+      ⟨outside, outsideNotMember, negInsideBelow⟩
+    refine ⟨inside, negInside, insideMember, negInsideMember, ?_⟩
+    have shifted := rationalLT_add_right inside translatedNegInside
+    rw [translatedRestore, rationalAdd_comm negInside inside] at shifted
+    exact shifted
+
+theorem realAdd_neg_left (value : IncReal) :
+    realAdd (realNeg value) value = realZero := by
+  rw [realAdd_comm, realAdd_neg]
+
 noncomputable instance : DecidableEq IncReal :=
   Classical.typeDecidableEq IncReal
 
@@ -490,6 +601,15 @@ noncomputable def realAssociativeResonanceSpec :
       refine ⟨realAdd first second, ?_, ?_⟩
       · simp [realIncidence]
       · simpa [realIncidence, realAdd_assoc] using outMode
+
+noncomputable def realAdditiveGroupResonanceSpec :
+    AdditiveGroupResonanceSpec realIncidence where
+  toFunctionalResonanceSpec := realResonanceSpec
+  toAssociativeResonanceSpec := realAssociativeResonanceSpec
+  inverse := realNeg
+  inverse_mode := by
+    intro value
+    simpa [realIncidence] using realAdd_neg value
 
 theorem realBoundary_extensional :
     ∀ left right,

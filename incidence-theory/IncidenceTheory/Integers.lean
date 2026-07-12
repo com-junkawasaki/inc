@@ -265,6 +265,13 @@ def integerAssociativeResonanceSpec :
       · simp [integerIncidence]
       · simpa [integerIncidence, Int.add_assoc] using hout
 
+def integerAdditiveGroupResonanceSpec :
+    AdditiveGroupResonanceSpec integerIncidence where
+  toFunctionalResonanceSpec := integerResonanceSpec
+  toAssociativeResonanceSpec := integerAssociativeResonanceSpec
+  inverse := fun value => -value
+  inverse_mode := by intro value; simp [integerIncidence]; omega
+
 def integerMultiplicativeResonance (i j k : Int) : Prop :=
   i * j = k
 

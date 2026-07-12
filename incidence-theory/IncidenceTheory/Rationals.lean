@@ -279,6 +279,22 @@ theorem rationalNeg_zero :
   simp [RationalRepresentative.Equivalent, RationalRepresentative.neg,
     rationalRepresentative]
 
+theorem rationalNeg_add (left right : IncRational) :
+    rationalNeg (rationalAdd left right) =
+      rationalAdd (rationalNeg left) (rationalNeg right) := by
+  refine Quotient.inductionOn₂ left right ?_
+  intro leftRep rightRep
+  apply Quotient.sound
+  simp only [RationalRepresentative.add, RationalRepresentative.neg]
+  change
+    (-(leftRep.numerator * rightRep.denominator +
+      rightRep.numerator * leftRep.denominator)) *
+        (leftRep.denominator * rightRep.denominator) =
+      ((-leftRep.numerator) * rightRep.denominator +
+        (-rightRep.numerator) * leftRep.denominator) *
+          (leftRep.denominator * rightRep.denominator)
+  rw [Int.neg_add, Int.neg_mul, Int.neg_mul]
+
 theorem rationalMul_comm (left right : IncRational) :
     rationalMul left right = rationalMul right left := by
   refine Quotient.inductionOn₂ left right ?_
@@ -745,6 +761,134 @@ theorem rationalLT_add_cancel_left {left right : IncRational}
   rw [rationalAdd_comm offset left, rationalAdd_comm offset right] at strict
   exact rationalLT_add_cancel_right offset strict
 
+def rationalNatScale (count : Nat) (value : IncRational) : IncRational :=
+  rationalMul (rationalOfInteger (Int.ofNat count)) value
+
+theorem rationalMul_zero_left (value : IncRational) :
+    rationalMul (rationalOfInteger 0) value = rationalOfInteger 0 := by
+  refine Quotient.inductionOn value ?_
+  intro representative
+  apply Quotient.sound
+  change (0 * representative.numerator) * 1 =
+    0 * (1 * representative.denominator)
+  simp
+
+theorem rationalMul_zero_right (value : IncRational) :
+    rationalMul value (rationalOfInteger 0) = rationalOfInteger 0 := by
+  rw [rationalMul_comm, rationalMul_zero_left]
+
+theorem rationalOfInteger_add (left right : Int) :
+    rationalOfInteger (left + right) =
+      rationalAdd (rationalOfInteger left) (rationalOfInteger right) := by
+  apply Quotient.sound
+  change (left + right) * (1 * 1) =
+    (left * 1 + right * 1) * 1
+  simp
+
+theorem rationalNatScale_zero (value : IncRational) :
+    rationalNatScale 0 value = rationalOfInteger 0 := by
+  exact rationalMul_zero_left value
+
+theorem rationalNatScale_succ (count : Nat) (value : IncRational) :
+    rationalNatScale (count + 1) value =
+      rationalAdd (rationalNatScale count value) value := by
+  have castSucc : Int.ofNat (count + 1) = Int.ofNat count + 1 := by simp
+  calc
+    rationalNatScale (count + 1) value =
+        rationalMul (rationalAdd (rationalOfInteger (Int.ofNat count))
+          (rationalOfInteger 1)) value := by
+            rw [rationalNatScale, castSucc, rationalOfInteger_add]
+    _ = rationalMul value (rationalAdd (rationalOfInteger (Int.ofNat count))
+          (rationalOfInteger 1)) := rationalMul_comm _ _
+    _ = rationalAdd
+          (rationalMul value (rationalOfInteger (Int.ofNat count)))
+          (rationalMul value (rationalOfInteger 1)) :=
+      rationalMul_add _ _ _
+    _ = rationalAdd (rationalNatScale count value) value := by
+      rw [rationalMul_comm value (rationalOfInteger (Int.ofNat count)),
+        rationalMul_one_right]
+      rfl
+
+def rationalStepValue (start step : IncRational) (count : Nat) : IncRational :=
+  rationalAdd start (rationalNatScale count step)
+
+theorem rationalStepValue_zero (start step : IncRational) :
+    rationalStepValue start step 0 = start := by
+  simp [rationalStepValue, rationalNatScale_zero, rationalAdd_zero_right]
+
+theorem rationalStepValue_succ (start step : IncRational) (count : Nat) :
+    rationalStepValue start step (count + 1) =
+      rationalAdd (rationalStepValue start step count) step := by
+  simp [rationalStepValue, rationalNatScale_succ, rationalAdd_assoc]
+
+theorem int_exists_nat_mul_gt (difference coefficient : Int)
+    (coefficientPositive : 0 < coefficient) :
+    ∃ count : Nat, difference < (Int.ofNat count) * coefficient := by
+  cases difference with
+  | ofNat value =>
+      refine ⟨value + 1, ?_⟩
+      have coefficientOne : (1 : Int) ≤ coefficient := by omega
+      have countNonnegative : (0 : Int) ≤ Int.ofNat (value + 1) :=
+        Int.ofNat_zero_le _
+      have countBelowProduct := Int.mul_le_mul_of_nonneg_left
+        coefficientOne countNonnegative
+      have valueBelowCount : (Int.ofNat value) < Int.ofNat (value + 1) := by
+        exact Int.ofNat_lt.mpr (by omega)
+      have countBelow : Int.ofNat (value + 1) ≤
+          Int.ofNat (value + 1) * coefficient := by
+        simpa using countBelowProduct
+      exact Int.lt_of_lt_of_le valueBelowCount countBelow
+  | negSucc value =>
+      exact ⟨0, by simp⟩
+
+theorem rational_archimedean_steps {start target step : IncRational}
+    (stepPositive : rationalLT (rationalOfInteger 0) step) :
+    ∃ count : Nat,
+      rationalLT target (rationalAdd start (rationalNatScale count step)) := by
+  revert stepPositive
+  refine Quotient.inductionOn₃ start target step ?_
+  intro startRep targetRep stepRep stepPositive
+  have stepNumeratorPositive : 0 < stepRep.numerator := by
+    have cross := (rational_mk_lt_iff
+      (rationalRepresentative 0 1 (by omega)) stepRep).mp stepPositive
+    change 0 * stepRep.denominator < stepRep.numerator * 1 at cross
+    simpa using cross
+  let difference := targetRep.numerator * startRep.denominator *
+      stepRep.denominator -
+    startRep.numerator * stepRep.denominator * targetRep.denominator
+  let coefficient := stepRep.numerator * startRep.denominator *
+    targetRep.denominator
+  have coefficientPositive : 0 < coefficient := by
+    exact Int.mul_pos
+      (Int.mul_pos stepNumeratorPositive startRep.denominator_pos)
+      targetRep.denominator_pos
+  obtain ⟨count, countLarge⟩ :=
+    int_exists_nat_mul_gt difference coefficient coefficientPositive
+  refine ⟨count, ?_⟩
+  apply (rational_mk_lt_iff _ _).mpr
+  change
+    targetRep.numerator *
+        (startRep.denominator * (1 * stepRep.denominator)) <
+      (startRep.numerator * (1 * stepRep.denominator) +
+        ((Int.ofNat count) * stepRep.numerator) * startRep.denominator) *
+          targetRep.denominator
+  have shifted := Int.add_lt_add_right countLarge
+    (startRep.numerator * stepRep.denominator * targetRep.denominator)
+  calc
+    targetRep.numerator *
+        (startRep.denominator * (1 * stepRep.denominator)) =
+      difference +
+        startRep.numerator * stepRep.denominator * targetRep.denominator := by
+          simp [difference]
+          ac_rfl
+    _ < (Int.ofNat count) * coefficient +
+        startRep.numerator * stepRep.denominator * targetRep.denominator := shifted
+    _ = (startRep.numerator * (1 * stepRep.denominator) +
+        ((Int.ofNat count) * stepRep.numerator) * startRep.denominator) *
+          targetRep.denominator := by
+            simp [coefficient, Int.add_mul]
+            ac_rfl
+
 noncomputable instance : DecidableEq IncRational :=
   Classical.typeDecidableEq IncRational
 
@@ -832,6 +976,15 @@ noncomputable def rationalAssociativeResonanceSpec :
       refine ⟨rationalAdd i j, ?_, ?_⟩
       · simp [rationalIncidence]
       · simpa [rationalIncidence, rationalAdd_assoc] using hout
+
+noncomputable def rationalAdditiveGroupResonanceSpec :
+    AdditiveGroupResonanceSpec rationalIncidence where
+  toFunctionalResonanceSpec := rationalResonanceSpec
+  toAssociativeResonanceSpec := rationalAssociativeResonanceSpec
+  inverse := rationalNeg
+  inverse_mode := by
+    intro value
+    simpa [rationalIncidence] using rationalAdd_neg value
 
 noncomputable def rationalDistributiveResonanceSpec :
     DistributiveResonanceSpec rationalIncidence where
