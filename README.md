@@ -2716,6 +2716,13 @@ index.  Consequently the completion path must preserve semantics independently
 of the particular typing derivation, rather than postulating that all typing
 derivations are equal.  This also fixes the foundation roadmap: semantic
 preservation precedes global completeness and broader mathematics imports.
+The derivation-independent layer is now active:
+`IncDepRawSemanticTypingSubstitutionResult` states formation, typing, and
+coherent-readiness preservation without equating proof objects chosen by two
+compilers.  Its dependent Apply constructor is proved sorry-free using only the
+`instantiate_substitute` type equation and synchronized casts.  Thus the new
+semantic route covers 1/3 of the previously blocked constructors; Pair and
+Second remain before it can replace the legacy 5/8 bookkeeping globally.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

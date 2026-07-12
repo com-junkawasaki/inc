@@ -2077,6 +2077,23 @@ structure IncDepRawTypingReadinessSubstitutionResult
   readiness : IncDepRawCoherentTypingDispatchReady substitutedTyping
     formationResult.substitutedFormation
 
+/-- Substitution preservation stated independently of the legacy compiler's
+chosen derivation.  This is the semantic result needed by completeness: it
+retains the substituted judgment and coherent readiness, but deliberately does
+not identify its proof object with `IncDepRawHasType.substitute`. -/
+structure IncDepRawSemanticTypingSubstitutionResult
+    {source target : List IncDepRawType}
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed target type}
+    (substitution : IncDepRawSubstitution source target) where
+  formationResult :
+    IncDepRawFormationReadinessSubstitutionResult
+      (formation := formation) substitution
+  substitutedTyping : IncDepRawHasType source
+    (term.substitute substitution.term) (type.substitute substitution.term)
+  readiness : IncDepRawCoherentTypingDispatchReady substitutedTyping
+    formationResult.substitutedFormation
+
 def IncDepRawCoherentFormationDispatchReady.castFormation
     {context : List IncDepRawType} {type : IncDepRawType}
     {first second : IncDepRawWellFormed context type}
@@ -2154,6 +2171,77 @@ theorem IncDepRawWellFormed.castType_symm
     (formation.castType typeEq).castType typeEq.symm = formation := by
   cases typeEq
   rfl
+
+def IncDepRawTypingReadinessSubstitutionResult.toSemantic
+    {source target : List IncDepRawType}
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    {typing : IncDepRawHasType target term type}
+    {formation : IncDepRawWellFormed target type}
+    {substitution : IncDepRawSubstitution source target}
+    (result : IncDepRawTypingReadinessSubstitutionResult
+      (typing := typing) (formation := formation) substitution) :
+    IncDepRawSemanticTypingSubstitutionResult
+      (term := term) (type := type) (formation := formation) substitution where
+  formationResult := result.formationResult
+  substitutedTyping := result.substitutedTyping
+  readiness := result.readiness
+
+noncomputable def IncDepRawSemanticTypingSubstitutionResult.apply
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {function argument : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {resultFormation : IncDepRawWellFormed target
+      (codomain.instantiate argument)}
+    (substitution : IncDepRawSubstitution source target)
+    (domainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := domainFormation) substitution)
+    (codomainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := codomainFormation) (substitution.lift domain))
+    (resultResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := resultFormation) substitution)
+    (functionResult : IncDepRawSemanticTypingSubstitutionResult
+      (term := function) (type := .pi domain codomain)
+      (formation := IncDepRawWellFormed.pi domainFormation codomainFormation)
+      substitution)
+    (argumentResult : IncDepRawSemanticTypingSubstitutionResult
+      (term := argument) (type := domain) (formation := domainFormation)
+      substitution) :
+    IncDepRawSemanticTypingSubstitutionResult
+      (term := .apply function argument)
+      (type := codomain.instantiate argument)
+      (formation := resultFormation) substitution := by
+  let typeEq := IncDepRawType.instantiate_substitute codomain argument
+    substitution.term
+  let constructedTyping := IncDepRawHasType.applyRule
+    functionResult.substitutedTyping argumentResult.substitutedTyping
+  let substitutedTyping := constructedTyping.castType typeEq.symm
+  let piResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := IncDepRawWellFormed.pi domainFormation codomainFormation)
+      substitution :=
+    { substitutedFormation := .pi domainResult.substitutedFormation
+        codomainResult.substitutedFormation
+      formation_eq := by
+        rw [domainResult.formation_eq, codomainResult.formation_eq]
+        exact (IncDepRawWellFormed.substitute_pi domainFormation
+          codomainFormation substitution).symm
+      readiness := .pi domainResult.readiness codomainResult.readiness }
+  let functionFormationEq := functionResult.formationResult.formation_eq.trans
+    piResult.formation_eq.symm
+  let argumentFormationEq := argumentResult.formationResult.formation_eq.trans
+    domainResult.formation_eq.symm
+  let resultReadyRight := resultResult.readiness.castType typeEq
+  let constructedReady := IncDepRawCoherentTypingDispatchReady.applyRule
+    domainResult.readiness codomainResult.readiness resultReadyRight
+    (functionResult.readiness.castFormation functionFormationEq)
+    (argumentResult.readiness.castFormation argumentFormationEq)
+  let returnedReady := constructedReady.castType typeEq.symm
+  exact
+    { formationResult := resultResult
+      substitutedTyping := substitutedTyping
+      readiness := returnedReady.castFormation
+        (IncDepRawWellFormed.castType_symm
+          resultResult.substitutedFormation typeEq) }
 
 /-- A syntactic substitution equipped with the exact readiness evidence needed
 at the Variable branch.  Its replacement may be any well-typed term, not only

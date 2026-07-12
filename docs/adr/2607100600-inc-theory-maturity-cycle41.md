@@ -1506,6 +1506,10 @@ cycle 38–41 で以下の3極構造が判明した:
   なおderivation proof-irrelevanceによる迂回も採用しない。dependent lookupはweakening前の
   型を保持し、異なる元型がrename後に同じ添字へ到達し得るため、一般のtyping derivationを
   `Subsingleton`とする根拠がない。完成経路は導出同一性ではなく導出非依存な意味論保存を先に示す。
+  この方針を`IncDepRawSemanticTypingSubstitutionResult`として実装し、formation・typing・coherent
+  readinessを保持しつつlegacy compilerのproof objectとの等式を要求しない層を追加した。
+  dependent Applyは`instantiate_substitute`と同期castだけでsorry-freeに閉じ、旧来詰まり3枝の
+  1/3を意味論経路で解消した。次はPairとSecondを同じ層へ移す。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。
