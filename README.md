@@ -919,7 +919,11 @@ It currently establishes:
   type/term agreement into both endpoints of the canonical Identity formation,
   then constructs semantic reflexivity in that exact family.  The remaining
   agreement constructors are Apply, Pair, First, and Second, followed by their
-  assembly into the mutual dispatcher.
+  assembly into the mutual dispatcher.  First is now checked too: the Sigma
+  pair agreement supplies the exact semantic pair fiber, while the domain
+  formation package and its provenance are reused unchanged as the projection's
+  result family.  Only the instantiate-dependent Apply, Pair, and Second
+  agreement branches remain before dispatcher assembly.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

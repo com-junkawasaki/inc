@@ -13250,6 +13250,78 @@ noncomputable def
         typeIH termIH termAgreement) where
   agree := fun _ _ => { canonical_eq := rfl }
 
+noncomputable def
+    IncDepRawSubstitutionFiberModel.alignedCanonicalMutualFoldFirst
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (pairReady : IncDepRawCoherentTypingDispatchReady pairTyping
+      (IncDepRawWellFormed.sigma domainFormation codomainFormation))
+    (domainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive domainReady)
+    (codomainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive codomainReady)
+    (pairIH : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive pairReady)
+    (pairAgreement : IncDepRawCanonicalFoldAgreement
+      (model.canonicalMutualFoldSigma domainReady codomainReady domainIH
+        codomainIH) pairIH) :
+    IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive
+      (IncDepRawCoherentTypingDispatchReady.firstRule domainReady codomainReady
+        pairReady) :=
+  fun targetTree replacements =>
+    let domain := domainIH targetTree replacements
+    let domainResult := domain.result.dispatchResult
+    let extendedTree := IncDepRawContextSemanticTree.extend targetTree
+      domainResult.formationResult.targetFormationResult
+    let liftedReplacements := replacements.liftResult
+      domainResult.formationResult
+    let codomain := codomainIH extendedTree liftedReplacements
+    let pairResult :=
+      (pairAgreement.agree targetTree replacements).typingResultAligned
+    let targetReady := IncDepRawStrictTypingDispatchReady.ofCoherent
+      (IncDepRawCoherentTypingDispatchReady.firstRule domainReady codomainReady
+        pairReady)
+    let dispatchResult : IncDepRawStrictTypingSubstitutionDispatchResult
+        targetReady _ :=
+      { formationResult := domainResult.formationResult
+        typingResult := model.first domainResult.formationResult
+          codomain.result.dispatchResult.formationResult pairResult }
+    let typing : IncDepRawSomeCanonicalStrictTypingSubstitutionDispatchResult
+        targetReady _ :=
+      { canonical := domain.canonical
+        result :=
+          { dispatchResult := dispatchResult
+            formationProvenance := domain.result.provenance } }
+    { formation := domain
+      typing := typing
+      agreement := { canonical_eq := rfl } }
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.canonicalFoldAgreementFirst
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (pairReady : IncDepRawCoherentTypingDispatchReady pairTyping
+      (IncDepRawWellFormed.sigma domainFormation codomainFormation))
+    (domainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive domainReady)
+    (codomainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive codomainReady)
+    (pairIH : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive pairReady)
+    (pairAgreement : IncDepRawCanonicalFoldAgreement
+      (model.canonicalMutualFoldSigma domainReady codomainReady domainIH
+        codomainIH) pairIH) :
+    IncDepRawCanonicalFoldAgreement domainIH
+      (model.alignedCanonicalMutualFoldFirst domainReady codomainReady pairReady
+        domainIH codomainIH pairIH pairAgreement) where
+  agree := fun _ _ => { canonical_eq := rfl }
+
 noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldRefl
     (model : IncDepRawSubstitutionFiberModel.{u})
     (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)

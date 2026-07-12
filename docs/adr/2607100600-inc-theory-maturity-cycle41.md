@@ -372,6 +372,8 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   global semantic equality/rebase providerを仮定しない。
 - Reflのaligned canonical handlerとfold agreementも閉じた。同じlocal type/term agreementをcanonical Identity formationの両endpointへ渡し、
   そのexact family上でsemantic reflexivityを構成する。残るagreement枝はApply/Pair/First/Secondであり、その後mutual dispatcherへ組み立てる。
+- First枝も閉じた。Sigma pairのfold agreementからexact semantic pair fiberを取得し、domain formation packageとprovenanceを変更せず
+  第一射影のresult familyへ再利用する。残るagreement枝はinstantiate依存のApply/Pair/Secondの3枝である。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
