@@ -286,6 +286,17 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   coherent readinessが各recursive branchのexact result formationをすでに保持するため、全semantic-readiness derivationからformationを再構成するfieldと
   accessorを削除した。`withUnitBase`も実際に使われるPi/Sigma coherenceだけを保存する。具体substitution-fiber modelのcore dataはbase interpretationと
   dependent Pi/Sigma transport coherenceに縮まり、弱いunindexed semantic-readiness syntaxからformation evidenceを復元する不要な課題は消滅した。
+- dependent Sigma coherenceをmodel dataから除去した。一般定理`sigmaBackward_forward`と`sigmaForward_backward`をSigma extensionality、HEq、
+  `cast_heq`、underlying fiber inverse lawsで証明し、非自明な`Eq.mp` transportsを処理した。これらから
+  `IncDependentSigmaFiberEquiv.ofDependent`と`IncDepRawSigmaSubstitutionCoherence.canonical`を構成し、全`model.sigmaCoherence`利用箇所を
+  canonical proofへ置換してfieldを削除した。Unit-base normalization後のsubstitution-fiber modelに残るsemantic datumはgeneral dependent-Pi
+  application coherenceだけである。
+- 最後のcore fieldだったPi coherenceも除去した。一般定理`piBackward_forward`、`piForward_backward`をfunction extensionalityとHEq/castで、
+  `piForward_apply_source`を同じtransport手法で証明した。`IncDependentPiApplicationFiberEquiv.ofDependent`と
+  `IncDepRawPiSubstitutionCoherence.canonical`を構成し、全`model.piCoherence`利用箇所をcanonical theoremへ置換した。
+  `IncDepRawSubstitutionFiberModel`は`baseModel`だけを持つ構造となり、`incDepRawUnitSubstitutionFiberModel`は条件付きshellではない完全な具体
+  substitution-fiber modelである。`withUnitBase_eq_unit`は全universe-zero modelがこれへnormalizeすることも示す。fully lawful modelへの残件は
+  semantic Pi/Sigma model構成ではなく、variable substitution、readiness alignment、formation rebase/equalityというcanonical preservation-law layerだけである。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

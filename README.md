@@ -727,6 +727,30 @@ It currently establishes:
   longer has to reconstruct formation evidence from the weaker, unindexed
   semantic-readiness syntax; its core data is exactly a base interpretation plus
   dependent Pi and Sigma transport coherence.
+  Dependent Sigma coherence is now no longer model data.  The two general
+  theorems `sigmaBackward_forward` and `sigmaForward_backward` use Sigma
+  extensionality, heterogeneous equality, `cast_heq`, and the underlying fiber
+  inverse laws to discharge the nontrivial `Eq.mp` transports.  They assemble
+  `IncDependentSigmaFiberEquiv.ofDependent`, and
+  `IncDepRawSigmaSubstitutionCoherence.canonical` supplies every raw
+  substitution instance.  All previous `model.sigmaCoherence` consumers now use
+  that canonical proof, and the field has been deleted.  After Unit-base
+  normalization, the substitution-fiber model's only remaining semantic datum
+  is therefore general dependent-Pi application coherence.
+  That last core field is now gone too.  General
+  `piBackward_forward` and `piForward_backward` theorems combine function
+  extensionality with the same HEq/cast argument, and
+  `piForward_apply_source` proves application compatibility.  They build
+  `IncDependentPiApplicationFiberEquiv.ofDependent` and the raw
+  `IncDepRawPiSubstitutionCoherence.canonical`; every former
+  `model.piCoherence` use now selects this theorem.  Consequently
+  `IncDepRawSubstitutionFiberModel` contains only `baseModel`.  The explicit
+  `incDepRawUnitSubstitutionFiberModel` is therefore a complete concrete
+  substitution-fiber model, not a conditional shell, and
+  `withUnitBase_eq_unit` proves that every universe-zero model normalizes to it.
+  The remaining work for a fully lawful model is now exclusively the canonical
+  preservation-law layer (variable substitution, readiness alignment, and
+  formation rebase/equality), not construction of the semantic Pi/Sigma model.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

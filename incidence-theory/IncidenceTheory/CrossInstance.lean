@@ -3531,6 +3531,60 @@ theorem IncDependentFiberEquiv.piForward_eq_of_pointwise
     rfl
   exact transport_section (domainEquiv.forward_backward targetValue)
 
+theorem IncDependentFiberEquiv.piBackward_forward
+    {sourceDomain targetDomain : Type u}
+    {domainEquiv : IncFiberEquiv sourceDomain targetDomain}
+    {sourceCodomain : sourceDomain → Type u}
+    {targetCodomain : targetDomain → Type u}
+    (dependentEquiv : IncDependentFiberEquiv domainEquiv
+      sourceCodomain targetCodomain)
+    (function : (value : sourceDomain) → sourceCodomain value) :
+    dependentEquiv.piBackward (dependentEquiv.piForward function) = function := by
+  funext first
+  apply eq_of_heq
+  apply HEq.trans ?_
+    (heq_of_eq ((dependentEquiv.codomainEquiv first).backward_forward
+      (function first)))
+  simp only [IncDependentFiberEquiv.piBackward,
+    IncDependentFiberEquiv.piForward]
+  congr
+  all_goals try exact domainEquiv.backward_forward first
+  apply eq_of_heq
+  apply HEq.trans (cast_heq _ _) ?_
+  congr
+  all_goals exact domainEquiv.backward_forward first
+
+theorem IncDependentFiberEquiv.piForward_backward
+    {sourceDomain targetDomain : Type u}
+    {domainEquiv : IncFiberEquiv sourceDomain targetDomain}
+    {sourceCodomain : sourceDomain → Type u}
+    {targetCodomain : targetDomain → Type u}
+    (dependentEquiv : IncDependentFiberEquiv domainEquiv
+      sourceCodomain targetCodomain)
+    (function : (value : targetDomain) → targetCodomain value) :
+    dependentEquiv.piForward (dependentEquiv.piBackward function) = function := by
+  apply dependentEquiv.piForward_eq_of_pointwise
+  intro sourceValue
+  exact (dependentEquiv.codomainEquiv sourceValue).forward_backward _
+
+theorem IncDependentFiberEquiv.piForward_apply_source
+    {sourceDomain targetDomain : Type u}
+    {domainEquiv : IncFiberEquiv sourceDomain targetDomain}
+    {sourceCodomain : sourceDomain → Type u}
+    {targetCodomain : targetDomain → Type u}
+    (dependentEquiv : IncDependentFiberEquiv domainEquiv
+      sourceCodomain targetCodomain)
+    (function : (value : sourceDomain) → sourceCodomain value)
+    (argument : sourceDomain) :
+    (dependentEquiv.codomainEquiv argument).forward (function argument) =
+      dependentEquiv.piForward function (domainEquiv.forward argument) := by
+  apply eq_of_heq
+  apply HEq.symm
+  simp only [IncDependentFiberEquiv.piForward]
+  apply HEq.trans (cast_heq _ _) ?_
+  congr
+  all_goals exact domainEquiv.backward_forward argument
+
 theorem IncDependentFiberEquiv.piForward_apply_transport
     {sourceDomain targetDomain : Type u}
     {domainEquiv : IncFiberEquiv sourceDomain targetDomain}
@@ -3599,6 +3653,20 @@ structure IncDependentPiApplicationFiberEquiv
       dependentEquiv.piForward sourceFunction
         (domainEquiv.forward sourceArgument)
 
+def IncDependentPiApplicationFiberEquiv.ofDependent
+    {sourceDomain targetDomain : Type u}
+    {domainEquiv : IncFiberEquiv sourceDomain targetDomain}
+    {sourceCodomain : sourceDomain → Type u}
+    {targetCodomain : targetDomain → Type u}
+    (dependentEquiv : IncDependentFiberEquiv domainEquiv
+      sourceCodomain targetCodomain) :
+    IncDependentPiApplicationFiberEquiv domainEquiv
+      sourceCodomain targetCodomain where
+  dependentEquiv := dependentEquiv
+  backward_forward := dependentEquiv.piBackward_forward
+  forward_backward := dependentEquiv.piForward_backward
+  forward_apply := dependentEquiv.piForward_apply_source
+
 def IncDependentPiApplicationFiberEquiv.identity
     {domain : Type u} (codomain : domain → Type u) :
     IncDependentPiApplicationFiberEquiv (IncFiberEquiv.identity domain)
@@ -3642,6 +3710,45 @@ def IncDependentFiberEquiv.sigmaBackward
     ⟨sourceValue, (dependentEquiv.codomainEquiv sourceValue).backward
       (Eq.mp (congrArg targetCodomain
         (domainEquiv.forward_backward value.1).symm) value.2)⟩
+
+theorem IncDependentFiberEquiv.sigmaBackward_forward
+    {sourceDomain targetDomain : Type u}
+    {domainEquiv : IncFiberEquiv sourceDomain targetDomain}
+    {sourceCodomain : sourceDomain → Type u}
+    {targetCodomain : targetDomain → Type u}
+    (dependentEquiv : IncDependentFiberEquiv domainEquiv
+      sourceCodomain targetCodomain)
+    (value : Sigma sourceCodomain) :
+    dependentEquiv.sigmaBackward (dependentEquiv.sigmaForward value) = value := by
+  cases value with
+  | mk first second =>
+      apply Sigma.ext (domainEquiv.backward_forward first)
+      apply HEq.trans ?_
+        (heq_of_eq ((dependentEquiv.codomainEquiv first).backward_forward second))
+      simp only [IncDependentFiberEquiv.sigmaForward,
+        IncDependentFiberEquiv.sigmaBackward]
+      congr
+      all_goals try exact domainEquiv.backward_forward first
+      exact cast_heq _ _
+
+theorem IncDependentFiberEquiv.sigmaForward_backward
+    {sourceDomain targetDomain : Type u}
+    {domainEquiv : IncFiberEquiv sourceDomain targetDomain}
+    {sourceCodomain : sourceDomain → Type u}
+    {targetCodomain : targetDomain → Type u}
+    (dependentEquiv : IncDependentFiberEquiv domainEquiv
+      sourceCodomain targetCodomain)
+    (value : Sigma targetCodomain) :
+    dependentEquiv.sigmaForward (dependentEquiv.sigmaBackward value) = value := by
+  cases value with
+  | mk first second =>
+      apply Sigma.ext (domainEquiv.forward_backward first)
+      simp only [IncDependentFiberEquiv.sigmaForward,
+        IncDependentFiberEquiv.sigmaBackward]
+      apply HEq.trans
+        (heq_of_eq ((dependentEquiv.codomainEquiv
+          (domainEquiv.backward first)).forward_backward _))
+      exact cast_heq _ _
 
 theorem IncDependentFiberEquiv.sigmaForward_pair
     {sourceDomain targetDomain : Type u}
@@ -3729,6 +3836,18 @@ structure IncDependentSigmaFiberEquiv
     dependentEquiv.sigmaBackward (dependentEquiv.sigmaForward value) = value
   forward_backward : ∀ value,
     dependentEquiv.sigmaForward (dependentEquiv.sigmaBackward value) = value
+
+def IncDependentSigmaFiberEquiv.ofDependent
+    {sourceDomain targetDomain : Type u}
+    {domainEquiv : IncFiberEquiv sourceDomain targetDomain}
+    {sourceCodomain : sourceDomain → Type u}
+    {targetCodomain : targetDomain → Type u}
+    (dependentEquiv : IncDependentFiberEquiv domainEquiv
+      sourceCodomain targetCodomain) :
+    IncDependentSigmaFiberEquiv domainEquiv sourceCodomain targetCodomain where
+  dependentEquiv := dependentEquiv
+  backward_forward := dependentEquiv.sigmaBackward_forward
+  forward_backward := dependentEquiv.sigmaForward_backward
 
 def IncDependentSigmaFiberEquiv.identity
     {domain : Type u} (codomain : domain → Type u) :
@@ -5439,6 +5558,33 @@ structure IncDepRawPiSubstitutionCoherence
         ((domainResult.semanticFiberEquivalence.fiberEquiv assignment).forward
           sourceArgument)
 
+noncomputable def IncDepRawPiSubstitutionCoherence.canonical
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (codomainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := codomainFormation)
+      domainResult.liftSubstitution) :
+    IncDepRawPiSubstitutionCoherence domainResult codomainResult where
+  backward_forward := fun assignment =>
+    (IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
+      domainResult codomainResult assignment).piBackward_forward
+  forward_backward := fun assignment =>
+    (IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
+      domainResult codomainResult assignment).piForward_backward
+  forward_apply := fun assignment =>
+    (IncDepRawPiFormationSubstitutionFiberResult.dependentEquiv
+      domainResult codomainResult assignment).piForward_apply_source
+
 noncomputable def IncDepRawPiFormationSubstitutionFiberResult.ofApplicationCoherence
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
     {substitution : IncDepRawSubstitution source target}
@@ -5713,6 +5859,30 @@ structure IncDepRawSigmaSubstitutionCoherence
       ((IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
         domainResult codomainResult assignment).sigmaBackward value) = value
 
+noncomputable def IncDepRawSigmaSubstitutionCoherence.canonical
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (domainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := domainFormation) substitutionResult)
+    (codomainResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := codomainFormation)
+      domainResult.liftSubstitution) :
+    IncDepRawSigmaSubstitutionCoherence domainResult codomainResult where
+  backward_forward := fun assignment =>
+    (IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
+      domainResult codomainResult assignment).sigmaBackward_forward
+  forward_backward := fun assignment =>
+    (IncDepRawSigmaFormationSubstitutionFiberResult.dependentEquiv
+      domainResult codomainResult assignment).sigmaForward_backward
+
 noncomputable def IncDepRawSigmaFormationSubstitutionFiberResult.ofCoherence
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
     {substitution : IncDepRawSubstitution source target}
@@ -5743,40 +5913,6 @@ noncomputable def IncDepRawSigmaFormationSubstitutionFiberResult.ofCoherence
 
 structure IncDepRawSubstitutionFiberModel where
   baseModel : Nat → Type u
-  piCoherence : ∀
-    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
-    {substitution : IncDepRawSubstitution source target}
-    {domainFormation : IncDepRawWellFormed target domain}
-    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
-    {sourceWellFormed : IncDepRawContext.WellFormed source}
-    {targetWellFormed : IncDepRawContext.WellFormed target}
-    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
-    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
-    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
-      sourceResult targetResult}
-    (domainResult : IncDepRawFormationSubstitutionFiberResult
-      (targetFormation := domainFormation) substitutionResult)
-    (codomainResult : IncDepRawFormationSubstitutionFiberResult
-      (targetFormation := codomainFormation)
-      domainResult.liftSubstitution),
-    IncDepRawPiSubstitutionCoherence domainResult codomainResult
-  sigmaCoherence : ∀
-    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
-    {substitution : IncDepRawSubstitution source target}
-    {domainFormation : IncDepRawWellFormed target domain}
-    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
-    {sourceWellFormed : IncDepRawContext.WellFormed source}
-    {targetWellFormed : IncDepRawContext.WellFormed target}
-    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
-    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
-    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
-      sourceResult targetResult}
-    (domainResult : IncDepRawFormationSubstitutionFiberResult
-      (targetFormation := domainFormation) substitutionResult)
-    (codomainResult : IncDepRawFormationSubstitutionFiberResult
-      (targetFormation := codomainFormation)
-      domainResult.liftSubstitution),
-    IncDepRawSigmaSubstitutionCoherence domainResult codomainResult
 
 def IncDepRawSubstitutionFiberModel.base
     (model : IncDepRawSubstitutionFiberModel.{u})
@@ -5808,7 +5944,7 @@ def IncDepRawSubstitutionFiberModel.unit
   IncDepRawFormationSubstitutionFiberResult.unit substitutionResult
 
 noncomputable def IncDepRawSubstitutionFiberModel.pi
-    (model : IncDepRawSubstitutionFiberModel.{u})
+    (_model : IncDepRawSubstitutionFiberModel.{u})
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
     {substitution : IncDepRawSubstitution source target}
     {domainFormation : IncDepRawWellFormed target domain}
@@ -5828,7 +5964,8 @@ noncomputable def IncDepRawSubstitutionFiberModel.pi
       (targetFormation := IncDepRawWellFormed.pi domainFormation codomainFormation)
       substitutionResult :=
   (IncDepRawPiFormationSubstitutionFiberResult.ofApplicationCoherence
-    domainResult codomainResult (model.piCoherence domainResult codomainResult))
+    domainResult codomainResult (IncDepRawPiSubstitutionCoherence.canonical
+      domainResult codomainResult))
       |>.toFormationFiberResult
 
 noncomputable def IncDepRawSigmaFormationSubstitutionFiberResult.ofCodomainCoherence
@@ -5966,7 +6103,7 @@ noncomputable def IncDepRawFormationSubstitutionFiberResult.sigmaCoherent
     domainResult codomainResult coherence).toFormationFiberResult
 
 noncomputable def IncDepRawSubstitutionFiberModel.sigma
-    (model : IncDepRawSubstitutionFiberModel.{u})
+    (_model : IncDepRawSubstitutionFiberModel.{u})
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
     {substitution : IncDepRawSubstitution source target}
     {domainFormation : IncDepRawWellFormed target domain}
@@ -5986,7 +6123,8 @@ noncomputable def IncDepRawSubstitutionFiberModel.sigma
       (targetFormation := IncDepRawWellFormed.sigma domainFormation codomainFormation)
       substitutionResult :=
   IncDepRawFormationSubstitutionFiberResult.sigmaCoherent domainResult
-    codomainResult (model.sigmaCoherence domainResult codomainResult)
+    codomainResult (IncDepRawSigmaSubstitutionCoherence.canonical
+      domainResult codomainResult)
 
 inductive IncDepRawNonIdentityFormationReady :
     {context : List IncDepRawType} → {type : IncDepRawType} →
@@ -8380,7 +8518,7 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.lambda
         ⟨assignment, sourceValue⟩)
 
 noncomputable def IncDepRawSubstitutionFiberModel.lambda
-    (model : IncDepRawSubstitutionFiberModel.{u})
+    (_model : IncDepRawSubstitutionFiberModel.{u})
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
     {body : IncDepRawTerm}
     {substitution : IncDepRawSubstitution source target}
@@ -8400,7 +8538,8 @@ noncomputable def IncDepRawSubstitutionFiberModel.lambda
       domainResult.liftSubstitution)
     (bodyResult : IncDepRawTypingSubstitutionFiberResult
       (targetTyping := bodyTyping) codomainResult) :
-    let coherence := model.piCoherence domainResult codomainResult
+    let coherence := IncDepRawPiSubstitutionCoherence.canonical
+      domainResult codomainResult
     let piResult :=
       IncDepRawPiFormationSubstitutionFiberResult.ofApplicationCoherence
         domainResult codomainResult coherence
@@ -8408,7 +8547,8 @@ noncomputable def IncDepRawSubstitutionFiberModel.lambda
       (targetTyping := IncDepRawHasType.lambdaRule domainFormation bodyTyping)
       piResult.toFormationFiberResult :=
   IncDepRawTypingSubstitutionFiberResult.lambda domainResult codomainResult
-    (model.piCoherence domainResult codomainResult) bodyResult
+    (IncDepRawPiSubstitutionCoherence.canonical
+      domainResult codomainResult) bodyResult
 
 noncomputable def IncDepRawTypingSubstitutionFiberResult.apply
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
@@ -8478,7 +8618,7 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.apply
     (congrFun argumentResult.semanticTerm_coherence assignment)
 
 noncomputable def IncDepRawSubstitutionFiberModel.apply
-    (model : IncDepRawSubstitutionFiberModel.{u})
+    (_model : IncDepRawSubstitutionFiberModel.{u})
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
     {function argument : IncDepRawTerm}
     {substitution : IncDepRawSubstitution source target}
@@ -8503,7 +8643,8 @@ noncomputable def IncDepRawSubstitutionFiberModel.apply
       (targetTyping := functionTyping)
       (IncDepRawPiFormationSubstitutionFiberResult.ofApplicationCoherence
         domainResult codomainResult
-        (model.piCoherence domainResult codomainResult)).toFormationFiberResult)
+        (IncDepRawPiSubstitutionCoherence.canonical
+          domainResult codomainResult)).toFormationFiberResult)
     (argumentResult : IncDepRawTypingSubstitutionFiberResult
       (targetTyping := argumentTyping) domainResult) :
     IncDepRawTypingSubstitutionFiberResult
@@ -8514,7 +8655,8 @@ noncomputable def IncDepRawSubstitutionFiberModel.apply
         argumentResult.targetTermResult.semanticTerm
         argumentResult.semanticTerm_coherence) :=
   IncDepRawTypingSubstitutionFiberResult.apply instantiatedFormation
-    domainResult codomainResult (model.piCoherence domainResult codomainResult)
+    domainResult codomainResult (IncDepRawPiSubstitutionCoherence.canonical
+      domainResult codomainResult)
     functionResult argumentResult
 
 noncomputable def IncDepRawSubstitutionFiberModel.applyRebased
@@ -8703,7 +8845,7 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.pair
       firstCoherence secondCoherence
 
 noncomputable def IncDepRawSubstitutionFiberModel.pair
-    (model : IncDepRawSubstitutionFiberModel.{u})
+    (_model : IncDepRawSubstitutionFiberModel.{u})
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
     {first second : IncDepRawTerm}
     {substitution : IncDepRawSubstitution source target}
@@ -8737,9 +8879,11 @@ noncomputable def IncDepRawSubstitutionFiberModel.pair
       (targetTyping := IncDepRawHasType.pairRule firstTyping secondTyping)
       (IncDepRawSigmaFormationSubstitutionFiberResult.ofCoherence
         domainResult codomainResult
-        (model.sigmaCoherence domainResult codomainResult)).toFormationFiberResult :=
+        (IncDepRawSigmaSubstitutionCoherence.canonical
+          domainResult codomainResult)).toFormationFiberResult :=
   IncDepRawTypingSubstitutionFiberResult.pair instantiatedFormation
-    domainResult codomainResult (model.sigmaCoherence domainResult codomainResult)
+    domainResult codomainResult (IncDepRawSigmaSubstitutionCoherence.canonical
+      domainResult codomainResult)
     firstResult secondResult
 
 noncomputable def IncDepRawSubstitutionFiberModel.pairRebased
@@ -8858,7 +9002,7 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.first
     exact firstCoherence
 
 noncomputable def IncDepRawSubstitutionFiberModel.first
-    (model : IncDepRawSubstitutionFiberModel.{u})
+    (_model : IncDepRawSubstitutionFiberModel.{u})
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
     {pair : IncDepRawTerm}
     {substitution : IncDepRawSubstitution source target}
@@ -8880,11 +9024,13 @@ noncomputable def IncDepRawSubstitutionFiberModel.first
       (targetTyping := pairTyping)
       (IncDepRawSigmaFormationSubstitutionFiberResult.ofCoherence
         domainResult codomainResult
-        (model.sigmaCoherence domainResult codomainResult)).toFormationFiberResult) :
+        (IncDepRawSigmaSubstitutionCoherence.canonical
+          domainResult codomainResult)).toFormationFiberResult) :
     IncDepRawTypingSubstitutionFiberResult
       (targetTyping := IncDepRawHasType.firstRule pairTyping) domainResult :=
   IncDepRawTypingSubstitutionFiberResult.first domainResult codomainResult
-    (model.sigmaCoherence domainResult codomainResult) pairResult
+    (IncDepRawSigmaSubstitutionCoherence.canonical
+      domainResult codomainResult) pairResult
 
 noncomputable def IncDepRawTypingSubstitutionFiberResult.second
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
@@ -8970,7 +9116,7 @@ noncomputable def IncDepRawTypingSubstitutionFiberResult.second
       (congrFun pairResult.semanticTerm_coherence assignment)
 
 noncomputable def IncDepRawSubstitutionFiberModel.second
-    (model : IncDepRawSubstitutionFiberModel.{u})
+    (_model : IncDepRawSubstitutionFiberModel.{u})
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
     {pair : IncDepRawTerm}
     {substitution : IncDepRawSubstitution source target}
@@ -8994,7 +9140,8 @@ noncomputable def IncDepRawSubstitutionFiberModel.second
       (targetTyping := pairTyping)
       (IncDepRawSigmaFormationSubstitutionFiberResult.ofCoherence
         domainResult codomainResult
-        (model.sigmaCoherence domainResult codomainResult)).toFormationFiberResult) :
+        (IncDepRawSigmaSubstitutionCoherence.canonical
+          domainResult codomainResult)).toFormationFiberResult) :
     let firstCoherence :
         domainResult.semanticFiberEquivalence.transport
             (IncSigmaTerm.first pairResult.sourceTermResult.semanticTerm) =
@@ -9013,7 +9160,8 @@ noncomputable def IncDepRawSubstitutionFiberModel.second
       (targetTyping := IncDepRawHasType.secondRule pairTyping)
       instantiatedResult :=
   IncDepRawTypingSubstitutionFiberResult.second instantiatedFormation
-    domainResult codomainResult (model.sigmaCoherence domainResult codomainResult)
+    domainResult codomainResult (IncDepRawSigmaSubstitutionCoherence.canonical
+      domainResult codomainResult)
     pairResult
 
 noncomputable def IncDepRawSubstitutionFiberModel.secondRebased
@@ -12450,11 +12598,18 @@ structure IncDepRawLawfulSubstitutionFiberModel extends
   canonicalLaws : IncDepRawCanonicalSubstitutionPreservationHypotheses
 
 def IncDepRawSubstitutionFiberModel.withUnitBase
-    (model : IncDepRawSubstitutionFiberModel.{u}) :
+    (_model : IncDepRawSubstitutionFiberModel.{u}) :
     IncDepRawSubstitutionFiberModel.{u} where
   baseModel := fun _ => ULift Unit
-  piCoherence := model.piCoherence
-  sigmaCoherence := model.sigmaCoherence
+
+def incDepRawUnitSubstitutionFiberModel :
+    IncDepRawSubstitutionFiberModel where
+  baseModel := fun _ => ULift Unit
+
+theorem IncDepRawSubstitutionFiberModel.withUnitBase_eq_unit
+    (model : IncDepRawSubstitutionFiberModel.{0}) :
+    model.withUnitBase = incDepRawUnitSubstitutionFiberModel := by
+  rfl
 
 @[simp] theorem IncDepRawSubstitutionFiberModel.withUnitBase_baseModel
     (model : IncDepRawSubstitutionFiberModel.{u}) (index : Nat) :
