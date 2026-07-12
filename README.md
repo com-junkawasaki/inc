@@ -2649,6 +2649,13 @@ dispatcher level.  The lawful, strict, and path-agreement projections of
 `IncDepRawRelationalLawfulSubstitutionFiberModel` now use this scoped route
 directly; conversion to the older assembly-lawful bundle remains only as a
 compatibility API.
+The concrete Unit target now uses
+`IncDepRawCanonicalScopedRelationalNaturalityLaws` and
+`IncDepRawScopedRelationalLawfulSubstitutionFiberModel` directly.  Its Stage2
+obligation is the generated-package instantiate provider, not the legacy law
+over arbitrary folds, and `IncDepRawUnitRelationalCompletion.toLawfulModel`
+returns the scoped lawful model.  Thus the exact completion target no longer
+contains the over-quantified global instantiate premise.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

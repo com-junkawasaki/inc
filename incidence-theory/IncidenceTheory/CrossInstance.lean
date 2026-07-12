@@ -19152,6 +19152,61 @@ structure IncDepRawRelationalLawfulSubstitutionFiberModel where
   relationalLaws :
     IncDepRawCanonicalProviderFreeRelationalNaturalityLaws.{u} model
 
+/-- Relational naturality with instantiation restricted to recursively
+generated packages. -/
+structure IncDepRawCanonicalScopedRelationalNaturalityLaws
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider) where
+  instantiate : IncDepRawCanonicalRecursiveInstantiateAgreementProvider model
+    variableProvider
+  dependent : IncDepRawCanonicalDependentAssemblyCoherenceProvider.{u} model
+  identity :
+    IncDepRawCanonicalGeneratedIdentityAssemblyCoherenceProvider.{u} model
+
+def IncDepRawCanonicalScopedRelationalNaturalityLaws.ofGlobal
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (laws : IncDepRawCanonicalProviderFreeRelationalNaturalityLaws.{u} model) :
+    IncDepRawCanonicalScopedRelationalNaturalityLaws.{u} model
+      variableProvider where
+  instantiate := .ofGlobal laws.instantiateAssemblyCoherenceProvider
+  dependent := laws.dependentAssemblyCoherenceProvider
+  identity := laws.generatedIdentityAssemblyCoherenceProvider
+
+structure IncDepRawScopedRelationalLawfulSubstitutionFiberModel where
+  model : IncDepRawSubstitutionFiberModel.{u}
+  preservation : IncDepRawCanonicalRecursivePreservationCore
+  relationalLaws : IncDepRawCanonicalScopedRelationalNaturalityLaws.{u} model
+    preservation.variableProvider
+
+def IncDepRawScopedRelationalLawfulSubstitutionFiberModel.scopedInputs
+    (model : IncDepRawScopedRelationalLawfulSubstitutionFiberModel.{u}) :
+    IncDepRawCanonicalScopedRecursiveFoldInputs.{u} model.model where
+  variableProvider := model.preservation.variableProvider
+  readinessAlignment := model.preservation.readinessAlignment
+  instantiateAgreementProvider := model.relationalLaws.instantiate
+  agreementProvider := .ofAssembly model.relationalLaws.dependent
+    model.relationalLaws.identity model.preservation.readinessAlignment
+
+noncomputable def
+    IncDepRawScopedRelationalLawfulSubstitutionFiberModel.lawfulPreservation
+    (model : IncDepRawScopedRelationalLawfulSubstitutionFiberModel.{u}) :
+    IncDepRawCanonicalLawfulMutualFold.{u} :=
+  model.model.scopedCanonicalLawfulPreservation model.scopedInputs
+
+noncomputable def
+    IncDepRawScopedRelationalLawfulSubstitutionFiberModel.strictPreservation
+    (model : IncDepRawScopedRelationalLawfulSubstitutionFiberModel.{u}) :
+    IncDepRawStrictMutualSubstitutionDispatcher :=
+  model.model.scopedCanonicalStrictPreservation model.scopedInputs
+
+def IncDepRawRelationalLawfulSubstitutionFiberModel.toScoped
+    (model : IncDepRawRelationalLawfulSubstitutionFiberModel.{u}) :
+    IncDepRawScopedRelationalLawfulSubstitutionFiberModel.{u} where
+  model := model.model
+  preservation := model.preservation
+  relationalLaws := .ofGlobal model.relationalLaws
+
 def IncDepRawRelationalLawfulSubstitutionFiberModel.toAssemblyLawful
     (model : IncDepRawRelationalLawfulSubstitutionFiberModel.{u}) :
     IncDepRawAssemblyLawfulSubstitutionFiberModel.{u} where
@@ -19765,9 +19820,8 @@ an unconditional canonical preservation model.  Keeping the relational laws
 here avoids discarding their stronger assembly-level statements. -/
 structure IncDepRawUnitRelationalCompletion where
   preservation : IncDepRawCanonicalRecursivePreservationCore
-  relationalLaws :
-    IncDepRawCanonicalProviderFreeRelationalNaturalityLaws
-      incDepRawUnitSubstitutionFiberModel
+  relationalLaws : IncDepRawCanonicalScopedRelationalNaturalityLaws
+    incDepRawUnitSubstitutionFiberModel preservation.variableProvider
 
 structure IncDepRawUnitRelationalCompletion.Stage1 where
   variableProvider : IncDepRawVariableSubstitutionProvider
@@ -19775,8 +19829,8 @@ structure IncDepRawUnitRelationalCompletion.Stage1 where
 
 structure IncDepRawUnitRelationalCompletion.Stage2 extends
     IncDepRawUnitRelationalCompletion.Stage1 where
-  instantiate : IncDepRawCanonicalInstantiateAssemblyNaturalModel
-    incDepRawUnitSubstitutionFiberModel
+  instantiate : IncDepRawCanonicalRecursiveInstantiateAgreementProvider
+    incDepRawUnitSubstitutionFiberModel variableProvider
 
 structure IncDepRawUnitRelationalCompletion.Stage3 extends
     IncDepRawUnitRelationalCompletion.Stage2 where
@@ -19785,8 +19839,8 @@ structure IncDepRawUnitRelationalCompletion.Stage3 extends
 
 def IncDepRawUnitRelationalCompletion.Stage1.withInstantiate
     (stage : IncDepRawUnitRelationalCompletion.Stage1)
-    (instantiate : IncDepRawCanonicalInstantiateAssemblyNaturalModel
-      incDepRawUnitSubstitutionFiberModel) :
+    (instantiate : IncDepRawCanonicalRecursiveInstantiateAgreementProvider
+      incDepRawUnitSubstitutionFiberModel stage.variableProvider) :
     IncDepRawUnitRelationalCompletion.Stage2 where
   toStage1 := stage
   instantiate := instantiate
@@ -19807,11 +19861,14 @@ def IncDepRawUnitRelationalCompletion.Stage3.complete
   preservation :=
     { variableProvider := stage.variableProvider
       readinessAlignment := stage.readinessAlignment }
-  relationalLaws := .ofComponents stage.instantiate stage.dependent identity
+  relationalLaws :=
+    { instantiate := stage.instantiate
+      dependent := stage.dependent.law
+      identity := identity.law }
 
 def IncDepRawUnitRelationalCompletion.toLawfulModel
     (completion : IncDepRawUnitRelationalCompletion) :
-    IncDepRawRelationalLawfulSubstitutionFiberModel where
+    IncDepRawScopedRelationalLawfulSubstitutionFiberModel where
   model := incDepRawUnitSubstitutionFiberModel
   preservation := completion.preservation
   relationalLaws := completion.relationalLaws
