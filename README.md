@@ -1168,6 +1168,13 @@ It currently establishes:
   output is aligned to the freshly generated canonical Sigma formation and the
   result remains generated.  Provider-free typing coverage is therefore now
   Variable, Unit, Lambda, and First (4/8).
+  Apply now uses the same scoped alignment twice: the recursively generated
+  function is retargeted to the newly generated Pi formation and the argument
+  to the generated domain formation.  The exact anchored Apply handler then
+  consumes those outputs together with the generated result formation and the
+  scoped instantiate-agreement input.  Both retarget provenance proofs are
+  retained by the output certificate, raising provider-free typing coverage to
+  5/8 without introducing a global path-agreement provider.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
