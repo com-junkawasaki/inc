@@ -402,6 +402,8 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   total recursionのscoped inputsはinstantiate naturalityとdependent-extension naturalityの二つで、どちらも任意semantic equality/rebase権限を持たない。
 - dependent providerをIdentity formationにも拡張した。type-path agreementで両endpoint typing agreementsを第二type pathへretargetし、二つのcanonical Identity
   foldsを比較する。反射的なBase/Unitと合わせ、Pi/Sigma/Identity fieldsがmutual path-congruence recursionに必要なformation全constructorを覆う。
+- formation fold agreementsの`refl`/`symm`/`trans`を証明した。Base/Unit pathsは反射で閉じ、provider由来dependent agreementsの向きを調整し、
+  親子pathsを推移で連鎖してから`retargetFormation`でtyping agreementを移せる。final mutual outputのformation-path fieldに必要な代数則が揃った。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

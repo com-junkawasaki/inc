@@ -983,6 +983,12 @@ It currently establishes:
   after which the provider compares the two canonical Identity folds.  Together
   with reflexive Base/Unit cases, its Pi, Sigma, and Identity fields cover every
   formation constructor needed by the mutual path-congruence recursion.
+  Formation fold agreements now form an explicit equivalence calculus:
+  `refl`, `symm`, and `trans` are checked.  Base and Unit paths close by
+  reflexivity, provider-produced dependent agreements can be reoriented, and
+  parent/child paths can be chained before `retargetFormation` moves the typing
+  agreement.  These are the algebraic operations required by the final mutual
+  output's formation-path field.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

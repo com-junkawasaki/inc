@@ -12731,6 +12731,37 @@ structure IncDepRawCanonicalFormationFoldAgreement
     (leftIH targetTree replacements).canonical =
       (rightIH targetTree replacements).canonical
 
+def IncDepRawCanonicalFormationFoldAgreement.refl
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    {ready : IncDepRawCoherentFormationDispatchReady targetFormation}
+    (formationIH : IncDepRawCanonicalFormationSubstitutionFoldMotive ready) :
+    IncDepRawCanonicalFormationFoldAgreement formationIH formationIH where
+  agree := fun _ _ => rfl
+
+def IncDepRawCanonicalFormationFoldAgreement.symm
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    {ready : IncDepRawCoherentFormationDispatchReady targetFormation}
+    {leftIH rightIH : IncDepRawCanonicalFormationSubstitutionFoldMotive ready}
+    (agreement : IncDepRawCanonicalFormationFoldAgreement leftIH rightIH) :
+    IncDepRawCanonicalFormationFoldAgreement rightIH leftIH where
+  agree := fun targetTree replacements =>
+    (agreement.agree targetTree replacements).symm
+
+def IncDepRawCanonicalFormationFoldAgreement.trans
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    {ready : IncDepRawCoherentFormationDispatchReady targetFormation}
+    {firstIH secondIH thirdIH :
+      IncDepRawCanonicalFormationSubstitutionFoldMotive ready}
+    (firstAgreement : IncDepRawCanonicalFormationFoldAgreement firstIH secondIH)
+    (secondAgreement : IncDepRawCanonicalFormationFoldAgreement secondIH thirdIH) :
+    IncDepRawCanonicalFormationFoldAgreement firstIH thirdIH where
+  agree := fun targetTree replacements =>
+    (firstAgreement.agree targetTree replacements).trans
+      (secondAgreement.agree targetTree replacements)
+
 def IncDepRawCanonicalFoldAgreement.retargetFormation
     {target : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType}
