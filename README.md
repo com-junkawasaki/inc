@@ -2614,6 +2614,14 @@ readiness alignment), `Stage2` (instantiate relational naturality), and
 `Stage3` (dependent relational naturality); supplying generated-identity
 naturality to `Stage3.complete` produces the final completion.  This staging
 lets each genuine law be proved independently without placeholder axioms.
+The alignment contract is now characterized directly: any readiness provider
+induces `Subsingleton` instances for both formation and typing readiness at
+each fixed derivation.  It must therefore be supplied only where that scoped
+uniqueness is justified; it cannot be replaced by blanket proof irrelevance.
+The instantiate component is under the same audit: its legacy provider ranges
+over arbitrary fold results, while the recursive dispatcher only consumes it
+for recursively generated results.  Narrowing that quantifier is the next
+provider-inhabitation step.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

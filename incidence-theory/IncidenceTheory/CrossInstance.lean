@@ -1719,6 +1719,21 @@ def IncDepRawCoherentReadinessAlignmentProvider.alignTyping
     first = second :=
   provider.typingAlignment first second
 
+def IncDepRawCoherentReadinessAlignmentProvider.formationSubsingleton
+    (provider : IncDepRawCoherentReadinessAlignmentProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type} :
+    Subsingleton (IncDepRawCoherentFormationDispatchReady formation) where
+  allEq := provider.formationAlignment
+
+def IncDepRawCoherentReadinessAlignmentProvider.typingSubsingleton
+    (provider : IncDepRawCoherentReadinessAlignmentProvider)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type} :
+    Subsingleton (IncDepRawCoherentTypingDispatchReady typing formation) where
+  allEq := provider.typingAlignment
+
 mutual
   noncomputable def IncDepRawWellFormed.rename
       {source target : List IncDepRawType} {type : IncDepRawType}
