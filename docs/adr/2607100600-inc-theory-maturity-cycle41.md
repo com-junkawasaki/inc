@@ -356,6 +356,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `alignedCanonicalMutualFoldTypingUnit`は一致するunit packagesを生成し、`alignedCanonicalMutualFoldLambda`は非自明な再帰caseとしてbody agreementでbody
   typing semanticsをexact body formation resultへcastした後、その同一resultからouter Pi formation/typing packagesを構築してnew agreementを`rfl`で閉じる。
   これはglobal rebaseの単なる代替interfaceでなく、recursion内部で実行可能な置換である。Apply/Pair/projections/Identity/Reflはaligned typing IHを直接消費できる。
+- 残branch向けreadiness-index transportをprovenance-safeにした。
+  `IncDepRawCanonicalStrictFormationSubstitutionDispatchResult.castReady`とexistential-package版はreadiness indexだけを変更しcanonical result/provenanceを保存する。
+  local formation/typing agreementの`castFormationReady`も同じcanonical equalityをindex change越しに保持する。したがってproof-index reconciliationに残る
+  readiness alignment providerはsemantic rebase権限を持たず、fiber result変更や任意interpretation導入はできない。Identity/Reflの残課題はreadiness index整列後、
+  二recursive pathsが計算したcanonical outputsの等式だけを証明することである。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

@@ -10354,6 +10354,76 @@ def IncDepRawStrictFormationSubstitutionDispatchResult.castReady
   cases readinessEq
   exact result
 
+def IncDepRawCanonicalStrictFormationSubstitutionDispatchResult.castReady
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {firstReady secondReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {canonical : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult}
+    (result : IncDepRawCanonicalStrictFormationSubstitutionDispatchResult
+      firstReady canonical)
+    (readinessEq : firstReady = secondReady) :
+    IncDepRawCanonicalStrictFormationSubstitutionDispatchResult
+      secondReady canonical := by
+  cases readinessEq
+  exact result
+
+def IncDepRawSomeCanonicalStrictFormationSubstitutionDispatchResult.castReady
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetFormation : IncDepRawWellFormed target type}
+    {firstReady secondReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (result : IncDepRawSomeCanonicalStrictFormationSubstitutionDispatchResult
+      firstReady substitutionResult)
+    (readinessEq : firstReady = secondReady) :
+    IncDepRawSomeCanonicalStrictFormationSubstitutionDispatchResult
+      secondReady substitutionResult where
+  canonical := result.canonical
+  result := result.result.castReady readinessEq
+
+def IncDepRawCanonicalFormationTypingAgreement.castFormationReady
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {firstFormationReady secondFormationReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    {typingFormationReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    {typingReady : IncDepRawStrictTypingDispatchReady targetTyping
+      typingFormationReady}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {formation : IncDepRawSomeCanonicalStrictFormationSubstitutionDispatchResult
+      firstFormationReady substitutionResult}
+    {typing : IncDepRawSomeCanonicalStrictTypingSubstitutionDispatchResult
+      typingReady substitutionResult}
+    (agreement : IncDepRawCanonicalFormationTypingAgreement formation typing)
+    (readinessEq : firstFormationReady = secondFormationReady) :
+    IncDepRawCanonicalFormationTypingAgreement
+      (formation.castReady readinessEq) typing where
+  canonical_eq := agreement.canonical_eq
+
 def IncDepRawStrictTypingSubstitutionDispatchResult.toDispatchResult
     {source target : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType}

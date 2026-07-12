@@ -888,6 +888,17 @@ It currently establishes:
   the new agreement is `rfl`.  This is an executable replacement of global
   rebase inside recursion, not merely a proposed interface.  Apply, Pair,
   projections, Identity, and Refl can now consume aligned typing IHs directly.
+  Readiness-index transport for those remaining branches is now provenance-safe.
+  `IncDepRawCanonicalStrictFormationSubstitutionDispatchResult.castReady` and
+  the corresponding existential-package operation change only the readiness
+  index, preserving the canonical result and provenance.  The local
+  formation/typing agreement has `castFormationReady`, which carries the same
+  canonical equality across that index change.  Hence the existing readiness
+  alignment provider, where still needed for proof-index reconciliation, no
+  longer grants any semantic rebase power: it cannot change a fiber result or
+  introduce an arbitrary interpretation.  The remaining Identity/Refl issue is
+  solely proving equality of the canonical outputs computed by two recursive
+  paths after their readiness indices have been aligned.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
