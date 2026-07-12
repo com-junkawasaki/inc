@@ -2186,6 +2186,81 @@ def IncDepRawTypingReadinessSubstitutionResult.toSemantic
   substitutedTyping := result.substitutedTyping
   readiness := result.readiness
 
+def IncDepRawSemanticTypingSubstitutionResult.unit
+    {source target : List IncDepRawType}
+    (substitution : IncDepRawSubstitution source target) :
+    IncDepRawSemanticTypingSubstitutionResult
+      (term := .unit) (type := .unit) (formation := .unit)
+      substitution where
+  formationResult :=
+    { substitutedFormation := .unit
+      formation_eq := rfl
+      readiness := .unit }
+  substitutedTyping := .unitRule
+  readiness := .unitRule
+
+def IncDepRawSemanticTypingSubstitutionResult.lambda
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {body : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    (substitution : IncDepRawSubstitution source target)
+    (domainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := domainFormation) substitution)
+    (bodyResult : IncDepRawSemanticTypingSubstitutionResult
+      (term := body) (type := codomain) (formation := codomainFormation)
+      (substitution.lift domain)) :
+    IncDepRawSemanticTypingSubstitutionResult
+      (term := .lambda domain body) (type := .pi domain codomain)
+      (formation := .pi domainFormation codomainFormation) substitution where
+  formationResult :=
+    { substitutedFormation := .pi domainResult.substitutedFormation
+        bodyResult.formationResult.substitutedFormation
+      formation_eq := by
+        rw [domainResult.formation_eq,
+          bodyResult.formationResult.formation_eq]
+        exact (IncDepRawWellFormed.substitute_pi domainFormation
+          codomainFormation substitution).symm
+      readiness := .pi domainResult.readiness
+        bodyResult.formationResult.readiness }
+  substitutedTyping := .lambdaRule domainResult.substitutedFormation
+    bodyResult.substitutedTyping
+  readiness := .lambdaRule domainResult.readiness bodyResult.readiness
+
+def IncDepRawSemanticTypingSubstitutionResult.first
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    (substitution : IncDepRawSubstitution source target)
+    (domainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := domainFormation) substitution)
+    (codomainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := codomainFormation) (substitution.lift domain))
+    (pairResult : IncDepRawSemanticTypingSubstitutionResult
+      (term := pair) (type := .sigma domain codomain)
+      (formation := .sigma domainFormation codomainFormation) substitution) :
+    IncDepRawSemanticTypingSubstitutionResult
+      (term := .first pair) (type := domain)
+      (formation := domainFormation) substitution := by
+  let sigmaResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := IncDepRawWellFormed.sigma domainFormation codomainFormation)
+      substitution :=
+    { substitutedFormation := .sigma domainResult.substitutedFormation
+        codomainResult.substitutedFormation
+      formation_eq := by
+        rw [domainResult.formation_eq, codomainResult.formation_eq]
+        exact (IncDepRawWellFormed.substitute_sigma domainFormation
+          codomainFormation substitution).symm
+      readiness := .sigma domainResult.readiness codomainResult.readiness }
+  exact
+    { formationResult := domainResult
+      substitutedTyping := .firstRule pairResult.substitutedTyping
+      readiness := .firstRule domainResult.readiness codomainResult.readiness
+        (pairResult.readiness.castFormation
+          (pairResult.formationResult.formation_eq.trans
+            sigmaResult.formation_eq.symm)) }
+
 noncomputable def IncDepRawSemanticTypingSubstitutionResult.apply
     {source target : List IncDepRawType} {domain codomain : IncDepRawType}
     {function argument : IncDepRawTerm}

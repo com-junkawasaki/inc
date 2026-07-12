@@ -1511,8 +1511,10 @@ cycle 38–41 で以下の3極構造が判明した:
   dependent Apply・Pair・Secondは`instantiate_substitute`と同期castだけでsorry-freeに閉じ、
   旧来詰まり3枝の3/3を意味論経路で解消した。Pairのdependent second component、Secondの
   Sigma premise formationとdependent resultも同期transportする。既存5枝の`toSemantic`射影と
-  合わせconstructor-level semantic substitution coverageは8/8である。次はこれらを単一の
-  total structural preservation theoremへpackageする。
+  合わせ全8規則をsemantic層へ射影できる。ただし射影はstrongな再帰前提を保持するため、これだけで
+  semantic-only structural recursionが閉じたとはしない。Unit・Lambda・Firstにもnative semantic
+  combinatorを追加し、Apply・Pair・Secondと合わせ6枝をsemantic-only化した。total theorem前の
+  残りinterfaceはVariable/liftとIdentity/Refl formationである。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

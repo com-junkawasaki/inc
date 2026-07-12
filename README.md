@@ -2725,9 +2725,12 @@ semantic route now covers Apply, Pair, and Second, all 3/3 of the previously
 blocked constructors.  Pair transports its dependent second component and
 readiness certificate with the same `instantiate_substitute` equality; Second
 transports both its Sigma premise formation and dependent result.  Together
-with `toSemantic` for the five existing strong constructors, constructor-level
-semantic substitution coverage is now 8/8.  The next task is packaging these
-combinators into one total structural preservation theorem.
+with `toSemantic` for the five existing strong constructors, all 8/8 rules can
+be projected into the semantic layer.  This alone is not yet a semantic-only
+structural recursion, because a projection retains strong recursive premises.
+Unit, Lambda, and First now also have native semantic-only combinators, joining
+Apply, Pair, and Second.  Variable/lift and Identity/Refl formation are the two
+remaining recursive interfaces before one total preservation theorem.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo
