@@ -12777,6 +12777,65 @@ def IncDepRawCanonicalStrongFormationFoldAgreement.refl
     IncDepRawCanonicalStrongFormationFoldAgreement formationIH formationIH where
   agree := fun _ _ => rfl
 
+/-- Heterogeneous fold agreement keeps dependent readiness/result indices in
+the relation instead of requiring them to be definitionally identical. -/
+structure IncDepRawCanonicalHeterogeneousFormationFoldAgreement
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    {leftReady rightReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    (leftIH : IncDepRawCanonicalFormationSubstitutionFoldMotive leftReady)
+    (rightIH : IncDepRawCanonicalFormationSubstitutionFoldMotive rightReady) :
+    Prop where
+  agree : ∀ {source : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult),
+    HEq (leftIH targetTree replacements) (rightIH targetTree replacements)
+
+theorem IncDepRawCanonicalStrongFormationFoldAgreement.toHeterogeneous
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    {ready : IncDepRawCoherentFormationDispatchReady targetFormation}
+    {leftIH rightIH :
+      IncDepRawCanonicalFormationSubstitutionFoldMotive ready}
+    (agreement :
+      IncDepRawCanonicalStrongFormationFoldAgreement leftIH rightIH) :
+    IncDepRawCanonicalHeterogeneousFormationFoldAgreement leftIH rightIH where
+  agree := fun targetTree replacements =>
+    heq_of_eq (agreement.agree targetTree replacements)
+
+theorem
+    IncDepRawCanonicalHeterogeneousFormationFoldAgreement.toStrongOfSameReady
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    {ready : IncDepRawCoherentFormationDispatchReady targetFormation}
+    {leftIH rightIH :
+      IncDepRawCanonicalFormationSubstitutionFoldMotive ready}
+    (agreement :
+      IncDepRawCanonicalHeterogeneousFormationFoldAgreement leftIH rightIH) :
+    IncDepRawCanonicalStrongFormationFoldAgreement leftIH rightIH where
+  agree := fun targetTree replacements =>
+    eq_of_heq (agreement.agree targetTree replacements)
+
+theorem IncDepRawCanonicalHeterogeneousFormationFoldAgreement.toWeakOfSameReady
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    {ready : IncDepRawCoherentFormationDispatchReady targetFormation}
+    {leftIH rightIH :
+      IncDepRawCanonicalFormationSubstitutionFoldMotive ready}
+    (agreement :
+      IncDepRawCanonicalHeterogeneousFormationFoldAgreement leftIH rightIH) :
+    IncDepRawCanonicalFormationFoldAgreement leftIH rightIH :=
+  agreement.toStrongOfSameReady.toWeak
+
 def IncDepRawCanonicalFormationFoldAgreement.refl
     {target : List IncDepRawType} {type : IncDepRawType}
     {targetFormation : IncDepRawWellFormed target type}

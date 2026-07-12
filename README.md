@@ -1321,6 +1321,14 @@ It currently establishes:
   Therefore a successful generic derivation would need a heterogeneous/
   transport-coherent invariant (or explicit model coherence), not merely a
   stronger homogeneous equality of returned packages.
+  `HeterogeneousFormationFoldAgreement` now formalizes the HEq layer and has
+  checked bridges from strong agreement and back to strong/weak agreement at a
+  common readiness index.  Testing Pi congruence against this layer shows that
+  HEq of returned packages alone is still insufficient: the codomain agreement
+  must relate evaluations at a pair of extended trees/replacements connected by
+  the domain transport, rather than quantify only over one definitionally shared
+  input.  The next generic invariant must therefore be relational in its inputs,
+  not merely heterogeneous in its outputs.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

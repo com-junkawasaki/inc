@@ -1320,6 +1320,12 @@ cycle 38–41 で以下の3極構造が判明した:
   extended tree/lifted replacementsの型がdomain resultへ依存するためdependent index equationが
   残り、通常equality eliminationはLeanに拒否される。generic導出には単なるhomogeneous package
   equalityでなくHEq/transport-coherent invariant、または明示model coherenceが必要である。
+  `HeterogeneousFormationFoldAgreement`でHEq layerとstrongからのbridge、同一readinessでの
+  strong/weakへの逆bridgeをcheckedした。しかしPi congruence試行では返り値HEqだけでも同じ
+  dependent elimination障害が残った。codomain agreementは単一のdefinitionally shared input
+  でなく、domain transportで結ばれた二つのextended tree/replacements上の評価を関係付ける
+  必要がある。次のgeneric invariantはoutputだけheterogeneousでなくinput-relationalでなければ
+  ならない。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。
