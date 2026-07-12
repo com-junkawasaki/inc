@@ -2686,6 +2686,12 @@ lifted-substitution codomain result, while Identity locally casts both endpoint
 typing readiness certificates onto the shared substituted type formation.
 All five formation constructors therefore preserve coherent readiness without
 assuming derivation equality is definitional.
+Typing readiness substitution now covers Unit, Lambda, Refl, and First.  Lambda
+composes a lifted body package, while Refl and First derive the exact local
+formation cast from the child packages' equalities to their shared canonical
+substitution.  Coverage is 4/8; Variable, Apply, Pair, and Second are the
+remaining branches whose typing derivations contain explicit substitution
+rewrites.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

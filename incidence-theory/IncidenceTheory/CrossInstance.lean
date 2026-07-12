@@ -2006,6 +2006,36 @@ theorem IncDepRawWellFormed.substitute_identity
         (leftTyping.substitute substitution) (rightTyping.substitute substitution) := by
   rw [IncDepRawWellFormed.substitute]
 
+theorem IncDepRawHasType.substitute_lambda
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {body : IncDepRawTerm}
+    (domainFormation : IncDepRawWellFormed target domain)
+    (bodyTyping : IncDepRawHasType (domain :: target) body codomain)
+    (substitution : IncDepRawSubstitution source target) :
+    (IncDepRawHasType.lambdaRule domainFormation bodyTyping).substitute
+        substitution =
+      IncDepRawHasType.lambdaRule (domainFormation.substitute substitution)
+        (bodyTyping.substitute (substitution.lift domain)) := by
+  rfl
+
+theorem IncDepRawHasType.substitute_refl
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {term : IncDepRawTerm}
+    (termTyping : IncDepRawHasType target term type)
+    (substitution : IncDepRawSubstitution source target) :
+    (IncDepRawHasType.reflRule termTyping).substitute substitution =
+      IncDepRawHasType.reflRule (termTyping.substitute substitution) := by
+  rfl
+
+theorem IncDepRawHasType.substitute_first
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    (pairTyping : IncDepRawHasType target pair (.sigma domain codomain))
+    (substitution : IncDepRawSubstitution source target) :
+    (IncDepRawHasType.firstRule pairTyping).substitute substitution =
+      IncDepRawHasType.firstRule (pairTyping.substitute substitution) := by
+  rfl
+
 noncomputable def IncDepRawWellFormed.instantiate
     {context : List IncDepRawType} {domain codomain : IncDepRawType}
     {argument : IncDepRawTerm}
@@ -2168,6 +2198,86 @@ def IncDepRawTypingReadinessSubstitutionResult.unit
   substitutedTyping := .unitRule
   typing_eq := rfl
   readiness := .unitRule
+
+def IncDepRawTypingReadinessSubstitutionResult.lambda
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {body : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {bodyTyping : IncDepRawHasType (domain :: target) body codomain}
+    (substitution : IncDepRawSubstitution source target)
+    (domainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := domainFormation) substitution)
+    (bodyResult : IncDepRawTypingReadinessSubstitutionResult
+      (typing := bodyTyping) (formation := codomainFormation)
+      (substitution.lift domain)) :
+    IncDepRawTypingReadinessSubstitutionResult
+      (typing := IncDepRawHasType.lambdaRule domainFormation bodyTyping)
+      (formation := IncDepRawWellFormed.pi domainFormation codomainFormation)
+      substitution where
+  formationResult := .pi substitution domainResult bodyResult.formationResult
+  substitutedTyping := .lambdaRule domainResult.substitutedFormation
+    bodyResult.substitutedTyping
+  typing_eq := by
+    rw [domainResult.formation_eq, bodyResult.typing_eq]
+    exact (IncDepRawHasType.substitute_lambda domainFormation bodyTyping
+      substitution).symm
+  readiness := .lambdaRule domainResult.readiness bodyResult.readiness
+
+def IncDepRawTypingReadinessSubstitutionResult.refl
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    {term : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed target type}
+    {termTyping : IncDepRawHasType target term type}
+    (substitution : IncDepRawSubstitution source target)
+    (typeResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := typeFormation) substitution)
+    (termResult : IncDepRawTypingReadinessSubstitutionResult
+      (typing := termTyping) (formation := typeFormation) substitution) :
+    IncDepRawTypingReadinessSubstitutionResult
+      (typing := IncDepRawHasType.reflRule termTyping)
+      (formation := IncDepRawWellFormed.identity typeFormation termTyping
+        termTyping) substitution where
+  formationResult := .identity substitution typeResult termResult termResult
+  substitutedTyping := .reflRule termResult.substitutedTyping
+  typing_eq := by
+    rw [termResult.typing_eq]
+    exact (IncDepRawHasType.substitute_refl termTyping substitution).symm
+  readiness := .reflRule typeResult.readiness
+    (termResult.readiness.castFormation
+      (termResult.formationResult.formation_eq.trans
+        typeResult.formation_eq.symm))
+
+def IncDepRawTypingReadinessSubstitutionResult.first
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {pairTyping : IncDepRawHasType target pair (.sigma domain codomain)}
+    (substitution : IncDepRawSubstitution source target)
+    (domainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := domainFormation) substitution)
+    (codomainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := codomainFormation) (substitution.lift domain))
+    (pairResult : IncDepRawTypingReadinessSubstitutionResult
+      (typing := pairTyping)
+      (formation := IncDepRawWellFormed.sigma domainFormation codomainFormation)
+      substitution) :
+    IncDepRawTypingReadinessSubstitutionResult
+      (typing := IncDepRawHasType.firstRule pairTyping)
+      (formation := domainFormation) substitution where
+  formationResult := domainResult
+  substitutedTyping := .firstRule pairResult.substitutedTyping
+  typing_eq := by
+    rw [pairResult.typing_eq]
+    exact (IncDepRawHasType.substitute_first pairTyping substitution).symm
+  readiness :=
+    let sigmaResult := IncDepRawFormationReadinessSubstitutionResult.sigma
+      substitution domainResult codomainResult
+    let pairFormationEq := pairResult.formationResult.formation_eq.trans
+      sigmaResult.formation_eq.symm
+    .firstRule domainResult.readiness codomainResult.readiness
+      (pairResult.readiness.castFormation pairFormationEq)
 
 inductive IncDepRawContext.WellFormed : List IncDepRawType → Type
   | empty : WellFormed []
