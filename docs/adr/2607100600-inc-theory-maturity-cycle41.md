@@ -1356,6 +1356,12 @@ cycle 38–41 で以下の3極構造が判明した:
   `.toAssembly`だけが既存typing constructors用のweak diagonalizationを行う。
   `AssemblyHypotheses.ofRelational`と`AssemblyLawful...ofRelational`がuniform strong law bundleから
   end-to-end APIへの経路を公開する。
+  uniform relational bundleもweak instantiate型へ戻らずcomponent化した。
+  `InstantiateAssemblyNaturalModel`と既存dependent/Identity assembly componentsを
+  `RelationalNaturalityLaws.ofComponents`で合成・projectionできる。`RelationalStage1`は
+  preservationとrelational instantiate coherence、`.withDependent`で`RelationalStage2`、
+  `.complete`でIdentity assembly coherenceを加えassembly-lawful modelを返す。具体モデルは
+  legacy weak naturality recordを一度も構築せずend-to-end開発できる。
   Identity closureもcheckedとなった。`GeneratedIdentityAssemblyCoherenceProvider`は二つの
   generated Identity formationsのrelational preservationを述べ、legacy weak Identity lawへ
   projectionする。`RecursivelyGenerated.relationalAgreement`はdependent assembly coherenceと

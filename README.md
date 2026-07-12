@@ -1444,6 +1444,15 @@ It currently establishes:
   `AssemblyHypotheses.ofRelational` and
   `AssemblyLawfulSubstitutionFiberModel.ofRelational` expose the end-to-end path
   from this uniform strong law bundle.
+  The uniform relational bundle is now componentized without falling back to
+  weak instantiate types.  `InstantiateAssemblyNaturalModel`, the existing
+  dependent/Identity assembly components, and
+  `RelationalNaturalityLaws.ofComponents` provide assembly/projection APIs.
+  `RelationalStage1` stores preservation plus relational instantiate coherence,
+  `.withDependent` forms `RelationalStage2`, and `.complete` adds Identity
+  assembly coherence and produces the assembly-lawful model.  A concrete model
+  can therefore be developed end to end without ever constructing a legacy weak
+  naturality record.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

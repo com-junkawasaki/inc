@@ -17872,6 +17872,10 @@ structure IncDepRawCanonicalInstantiateNaturalModel
     (model : IncDepRawSubstitutionFiberModel.{u}) where
   law : IncDepRawCanonicalInstantiateFoldAgreementProvider.{u}
 
+structure IncDepRawCanonicalInstantiateAssemblyNaturalModel
+    (model : IncDepRawSubstitutionFiberModel.{u}) where
+  law : IncDepRawCanonicalInstantiateAssemblyCoherenceProvider.{u}
+
 structure IncDepRawCanonicalDependentFormationNaturalModel
     (model : IncDepRawSubstitutionFiberModel.{u}) where
   law : IncDepRawCanonicalDependentFormationFoldAgreementProvider.{u} model
@@ -17887,6 +17891,35 @@ structure IncDepRawCanonicalGeneratedIdentityNaturalModel
 structure IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel
     (model : IncDepRawSubstitutionFiberModel.{u}) where
   law : IncDepRawCanonicalGeneratedIdentityAssemblyCoherenceProvider.{u} model
+
+def IncDepRawCanonicalProviderFreeRelationalNaturalityLaws.ofComponents
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (instantiate : IncDepRawCanonicalInstantiateAssemblyNaturalModel.{u} model)
+    (dependent : IncDepRawCanonicalDependentAssemblyNaturalModel.{u} model)
+    (identity :
+      IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel.{u} model) :
+    IncDepRawCanonicalProviderFreeRelationalNaturalityLaws.{u} model where
+  instantiateAssemblyCoherenceProvider := instantiate.law
+  dependentAssemblyCoherenceProvider := dependent.law
+  generatedIdentityAssemblyCoherenceProvider := identity.law
+
+def IncDepRawCanonicalProviderFreeRelationalNaturalityLaws.instantiateComponent
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (laws : IncDepRawCanonicalProviderFreeRelationalNaturalityLaws.{u} model) :
+    IncDepRawCanonicalInstantiateAssemblyNaturalModel.{u} model where
+  law := laws.instantiateAssemblyCoherenceProvider
+
+def IncDepRawCanonicalProviderFreeRelationalNaturalityLaws.dependentComponent
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (laws : IncDepRawCanonicalProviderFreeRelationalNaturalityLaws.{u} model) :
+    IncDepRawCanonicalDependentAssemblyNaturalModel.{u} model where
+  law := laws.dependentAssemblyCoherenceProvider
+
+def IncDepRawCanonicalProviderFreeRelationalNaturalityLaws.identityComponent
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (laws : IncDepRawCanonicalProviderFreeRelationalNaturalityLaws.{u} model) :
+    IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel.{u} model where
+  law := laws.generatedIdentityAssemblyCoherenceProvider
 
 def IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.ofComponents
     {model : IncDepRawSubstitutionFiberModel.{u}}
@@ -18499,12 +18532,31 @@ structure IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage2 extends
     IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage1.{u} where
   dependent : IncDepRawCanonicalDependentAssemblyNaturalModel.{u} model
 
+structure IncDepRawAssemblyLawfulSubstitutionFiberModel.RelationalStage1 where
+  model : IncDepRawSubstitutionFiberModel.{u}
+  preservation : IncDepRawCanonicalSubstitutionPreservationHypotheses
+  instantiate : IncDepRawCanonicalInstantiateAssemblyNaturalModel.{u} model
+
+structure IncDepRawAssemblyLawfulSubstitutionFiberModel.RelationalStage2 extends
+    IncDepRawAssemblyLawfulSubstitutionFiberModel.RelationalStage1.{u} where
+  dependent : IncDepRawCanonicalDependentAssemblyNaturalModel.{u} model
+
 def IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage1.withDependent
     (stage : IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage1.{u})
     (dependent :
       IncDepRawCanonicalDependentAssemblyNaturalModel.{u} stage.model) :
     IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage2.{u} where
   toStage1 := stage
+  dependent := dependent
+
+def
+    IncDepRawAssemblyLawfulSubstitutionFiberModel.RelationalStage1.withDependent
+    (stage :
+      IncDepRawAssemblyLawfulSubstitutionFiberModel.RelationalStage1.{u})
+    (dependent :
+      IncDepRawCanonicalDependentAssemblyNaturalModel.{u} stage.model) :
+    IncDepRawAssemblyLawfulSubstitutionFiberModel.RelationalStage2.{u} where
+  toRelationalStage1 := stage
   dependent := dependent
 
 def IncDepRawAssemblyLawfulSubstitutionFiberModel.ofComponents
@@ -18527,6 +18579,16 @@ def IncDepRawAssemblyLawfulSubstitutionFiberModel.ofRelational
     IncDepRawAssemblyLawfulSubstitutionFiberModel.{u} where
   model := model
   assemblyLaws := .ofRelational preservation naturality
+
+def
+    IncDepRawAssemblyLawfulSubstitutionFiberModel.RelationalStage2.complete
+    (stage :
+      IncDepRawAssemblyLawfulSubstitutionFiberModel.RelationalStage2.{u})
+    (identity : IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel.{u}
+      stage.model) :
+    IncDepRawAssemblyLawfulSubstitutionFiberModel.{u} :=
+  .ofRelational stage.model stage.preservation
+    (.ofComponents stage.instantiate stage.dependent identity)
 
 def IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage2.complete
     (stage : IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage2.{u})
