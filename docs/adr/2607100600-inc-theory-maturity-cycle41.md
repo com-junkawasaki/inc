@@ -325,6 +325,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `dispatchCanonicalTypingUnit`は両方をcanonical生成し、`dispatchCanonicalVariable`はformation fold由来のprovenance付きresultを消費してlookup dispatch後も
   exact witnessを保持するため、variable handlerは無関係なsemantic familyを導入できない。generic `withFormationProvenance`はformation provenanceが既知なら
   任意の既存strict typing resultを昇格でき、lambda/apply/pair/projections/reflはchecked buildersを再利用してsemantic proof重複を避けられる。
+- result formationがdirect canonical constructorとなるcomposite typing 3casesも統合した。`dispatchCanonicalLambda`はdomain/body results由来のPi formationを、
+  `dispatchProvenancedPairCanonical`はdomain/codomain results由来のSigma formationを、`dispatchCanonicalRefl`はterm result由来のidentity formationを記録する。
+  各caseは既存strict builderへterm semanticsを委譲し、`rfl`のformation-provenance witnessだけを追加する。Unit/Variableと合わせ8typing constructors中5つが
+  provenance付きresultを生成する。Apply/First/Secondはresult formationをrecursive premiseから選択またはinstantiateするため、新outer witnessでなくincoming
+  provenanceを伝播する実装が残る。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

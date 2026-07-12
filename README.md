@@ -815,6 +815,18 @@ It currently establishes:
   strict typing result once its formation provenance is known, allowing lambda,
   apply, pair, projections, and reflexivity to reuse their checked builders
   rather than duplicate semantic proofs.
+  The three composite typing constructors whose result formation is a direct
+  canonical constructor are now integrated too.
+  `dispatchCanonicalLambda` records the Pi formation built from the domain and
+  body results, `dispatchProvenancedPairCanonical` records the Sigma formation
+  built from domain/codomain results, and `dispatchCanonicalRefl` records the
+  identity formation built from the term result.  Each delegates term semantics
+  to the existing strict builder and adds an `rfl` formation-provenance witness.
+  Together with Unit and Variable, five of the eight typing constructors now
+  produce provenance-carrying results.  Apply, First, and Second remain because
+  their result formation is selected from, or instantiated from, a recursive
+  premise and therefore must propagate an incoming provenance witness rather
+  than create a fresh outer constructor witness.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
