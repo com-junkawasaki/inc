@@ -14300,6 +14300,71 @@ structure IncDepRawCanonicalTypingFoldOutput
   typing : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive ready
   agreement : IncDepRawCanonicalFoldAgreement formation typing
 
+def IncDepRawCanonicalTypingFoldOutput.retargetFormation
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentTypingDispatchReady typing formation}
+    (output : IncDepRawCanonicalTypingFoldOutput ready)
+    (newFormation : IncDepRawCanonicalFormationSubstitutionFoldMotive
+      ready.formationReady)
+    (formationAgreement : IncDepRawCanonicalFormationFoldAgreement newFormation
+      output.formation) :
+    IncDepRawCanonicalTypingFoldOutput ready where
+  formation := newFormation
+  typing := output.typing
+  agreement := IncDepRawCanonicalFoldAgreement.retargetFormation
+    formationAgreement output.agreement
+
+noncomputable def
+    IncDepRawVariableSubstitutionProvider.canonicalTypingFoldOutputVariable
+    (provider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {typeFormation : IncDepRawWellFormed context type}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (typeOutput : IncDepRawCanonicalFormationFoldOutput typeReady) :
+    IncDepRawCanonicalTypingFoldOutput
+      (IncDepRawCoherentTypingDispatchReady.varRule (lookup := lookup)
+        typeReady) where
+  formation := typeOutput.fold
+  typing := provider.alignedCanonicalMutualFoldVariable
+    (lookup := lookup) typeReady typeOutput.fold
+  agreement := provider.canonicalFoldAgreementVariable
+    (lookup := lookup) typeReady typeOutput.fold
+
+def IncDepRawSubstitutionFiberModel.canonicalTypingFoldOutputUnit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} :
+    IncDepRawCanonicalTypingFoldOutput
+      (IncDepRawCoherentTypingDispatchReady.unitRule (context := context)) where
+  formation := model.canonicalMutualFoldUnitFormation (context := context)
+  typing := model.alignedCanonicalMutualFoldTypingUnit (context := context)
+  agreement := model.canonicalFoldAgreementTypingUnit (context := context)
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.canonicalTypingFoldOutputLambda
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {body : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {bodyTyping : IncDepRawHasType (domain :: context) body codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (bodyReady : IncDepRawCoherentTypingDispatchReady bodyTyping
+      codomainFormation)
+    (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
+    (bodyOutput : IncDepRawCanonicalTypingFoldOutput bodyReady) :
+    IncDepRawCanonicalTypingFoldOutput
+      (IncDepRawCoherentTypingDispatchReady.lambdaRule domainReady bodyReady) where
+  formation := model.canonicalMutualFoldPi domainReady bodyReady.formationReady
+    domainOutput.fold bodyOutput.formation
+  typing := model.alignedCanonicalMutualFoldLambda domainReady bodyReady
+    domainOutput.fold bodyOutput.typing
+  agreement := model.canonicalFoldAgreementLambda domainReady bodyReady
+    domainOutput.fold bodyOutput.formation bodyOutput.typing
+    bodyOutput.agreement
+
 structure IncDepRawCanonicalDependentFormationFoldAgreementProvider
     (model : IncDepRawSubstitutionFiberModel.{u}) where
   pi : ∀

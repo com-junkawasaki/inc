@@ -989,6 +989,14 @@ It currently establishes:
   parent/child paths can be chained before `retargetFormation` moves the typing
   agreement.  These are the algebraic operations required by the final mutual
   output's formation-path field.
+  Retargeting is now lifted to the bundle level by
+  `IncDepRawCanonicalTypingFoldOutput.retargetFormation`, which preserves the
+  aligned typing motive while replacing its formation motive and rebuilding the
+  agreement.  Bundle constructors for Variable, Unit, and Lambda are checked;
+  Lambda composes the domain formation output with the body bundle's own
+  formation path, returning its Pi formation, aligned typing result, and
+  agreement together.  These are the first three handlers in the final recursor
+  at the exact output type it will expose.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

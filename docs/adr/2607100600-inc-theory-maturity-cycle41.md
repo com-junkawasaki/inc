@@ -404,6 +404,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   foldsを比較する。反射的なBase/Unitと合わせ、Pi/Sigma/Identity fieldsがmutual path-congruence recursionに必要なformation全constructorを覆う。
 - formation fold agreementsの`refl`/`symm`/`trans`を証明した。Base/Unit pathsは反射で閉じ、provider由来dependent agreementsの向きを調整し、
   親子pathsを推移で連鎖してから`retargetFormation`でtyping agreementを移せる。final mutual outputのformation-path fieldに必要な代数則が揃った。
+- `IncDepRawCanonicalTypingFoldOutput.retargetFormation`でretargetをbundle全体へ持ち上げ、aligned typing motiveを保持したままformation motiveとagreementを
+  置換できる。Variable/Unit/Lambdaのbundle constructorsもchecked。Lambdaはdomain formation outputとbody bundle自身のformation pathをPiへ合成し、
+  formation/aligned typing/agreementを同時に返す。final recursorが公開するexact output型で最初の3 handlersが完成した。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
