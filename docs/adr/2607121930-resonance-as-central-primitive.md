@@ -145,9 +145,11 @@ case where the selector is complete and resonance has no unselected modes.
   `FieldResonanceSpec` adds nontriviality and additive/multiplicative inverse
   mode existence without imposing a global inverse selector. Rationals
   instantiate it, and their inverse modes prove left and right multiplication
-  cancellation. Their first incidence
-  presentation intentionally has
-  empty boundaries, so a checked negative theorem shows that all rationals are
-  bisimilar. Canonical signed numerator/denominator observations are therefore
-  required before rational resonance can descend faithfully to the
-  observational quotient.
+  cancellation. Rational incidence now observes each nonzero value by a
+  value-indexed role on a one-step boundary to zero. A two-level rank proves
+  well-foundedness, boundary matching reflects role equality, and
+  `rationalIncidence_approxBisim_iff` establishes full faithfulness. Rational
+  resonance consequently descends to observational classes and supplies an
+  `IncDepRawNormalizedResonanceCompletion`. Replacing the value-indexed role by
+  a canonical reduced numerator/denominator observation remains a refinement,
+  not a prerequisite for semantic faithfulness.

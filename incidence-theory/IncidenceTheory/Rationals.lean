@@ -357,24 +357,60 @@ theorem rationalMul_cancel_right {factor left right : IncRational}
   apply rationalMul_cancel_left factorNonzero
   simpa [rationalMul_comm] using equal
 
-inductive RationalRole where
-  | fraction
-deriving DecidableEq, Repr
-
 noncomputable instance : DecidableEq IncRational :=
   Classical.typeDecidableEq IncRational
 
+inductive RationalRole where
+  | observe : IncRational → RationalRole
+
+noncomputable instance : DecidableEq RationalRole :=
+  Classical.typeDecidableEq RationalRole
+
+noncomputable def rationalEndpoint (value : IncRational) :
+    Endpoint IncRational RationalRole :=
+  { i := rationalOfInteger 0
+    role := .observe value
+    sign := .neg
+    mult := 1
+    mult_pos := by omega }
+
+noncomputable def rationalBoundary (value : IncRational) :
+    Boundary IncRational RationalRole :=
+  if value = rationalOfInteger 0 then [] else [rationalEndpoint value]
+
+noncomputable def rationalRank (value : IncRational) : Nat :=
+  if value = rationalOfInteger 0 then 0 else 1
+
+theorem rationalBoundary_decreases :
+    ∀ value endpoint, endpoint ∈ rationalBoundary value →
+      rationalRank endpoint.i < rationalRank value := by
+  intro value endpoint member
+  by_cases zero : value = rationalOfInteger 0
+  · simp [rationalBoundary, zero] at member
+  · have endpointEq : endpoint = rationalEndpoint value := by
+      simpa [rationalBoundary, zero] using member
+    subst endpoint
+    simp [rationalEndpoint, rationalRank, zero]
+
 noncomputable def rationalIncidence :
     Incidence IncRational RationalRole GraphType where
-  boundary := fun _ => []
+  boundary := rationalBoundary
   typeFunc := fun _ => GraphType.unit
   glue := fun left right => some (rationalAdd left right)
   unit := rationalOfInteger 0
   guards := Guards.permissive IncRational
-  type_consistent := fun _ _ member => by simp at member
-  sign_rules := by intro _ _ member; simp at member
-  multiplicities := by intro _ _ member; simp at member
-  well_founded := by simp
+  type_consistent := fun _ _ _ => rfl
+  sign_rules := by intro _ endpoint _; cases endpoint.sign <;> simp
+  multiplicities := fun _ endpoint _ => endpoint.mult_pos
+  well_founded := by
+    intro value ⟨endpoint, member, equal⟩
+    by_cases zero : value = rationalOfInteger 0
+    · simp [rationalBoundary, zero] at member
+    · have endpointEq : endpoint = rationalEndpoint value := by
+        simpa [rationalBoundary, zero] using member
+      subst endpoint
+      simp [rationalEndpoint] at equal
+      exact zero equal.symm
   unit_left := fun i => congrArg some (rationalAdd_zero_left i)
   unit_right := fun i => congrArg some (rationalAdd_zero_right i)
   type_preserve := by intro i j k allowed selected; rfl
@@ -463,20 +499,50 @@ theorem rationalIncidence_half_resonance :
     rationalIncidence.resonance half half (rationalOfInteger 1) := by
   simpa [rationalIncidence] using rational_half_add_half
 
-/-- The first rational incidence presentation deliberately has no boundary
-observations.  Consequently its algebraic carrier is correct, but its
-bisimulation quotient collapses every rational to one class. -/
-theorem rationalIncidence_all_bisimilar (left right : IncRational) :
-    approxBisim rationalIncidence left right := by
-  refine ⟨fun _ _ => True, ?_, trivial⟩
-  intro i j _
-  refine ⟨rfl, ?_, ?_⟩ <;> simp [rationalIncidence]
+theorem rationalBoundary_extensional :
+    ∀ left right,
+      rationalIncidence.typeFunc left = rationalIncidence.typeFunc right →
+      boundaryMatched rationalIncidence (· = ·) left right →
+      left = right := by
+  intro left right _ matched
+  by_cases leftZero : left = rationalOfInteger 0
+  · subst left
+    by_cases rightZero : right = rationalOfInteger 0
+    · exact rightZero.symm
+    · exfalso
+      obtain ⟨candidate, member, _, _⟩ := matched.2
+        (rationalEndpoint right) (by
+          simp [rationalIncidence, rationalBoundary, rightZero])
+      change candidate ∈ rationalBoundary (rationalOfInteger 0) at member
+      simp [rationalBoundary] at member
+  · by_cases rightZero : right = rationalOfInteger 0
+    · subst right
+      obtain ⟨candidate, member, _, _⟩ := matched.1
+        (rationalEndpoint left) (by
+          simp [rationalIncidence, rationalBoundary, leftZero])
+      change candidate ∈ rationalBoundary (rationalOfInteger 0) at member
+      simp [rationalBoundary] at member
+    · obtain ⟨candidate, member, compatible, _⟩ := matched.1
+        (rationalEndpoint left) (by
+          simp [rationalIncidence, rationalBoundary, leftZero])
+      have candidateEq : candidate = rationalEndpoint right := by
+        simpa [rationalIncidence, rationalBoundary, rightZero] using member
+      subst candidate
+      simpa [boundaryCompatible, rationalEndpoint] using compatible.1
 
-theorem rationalIncidence_not_bisimulationFaithful :
-    ¬ CompletenessTheory.BisimulationFaithful rationalIncidence := by
-  intro faithful
-  exact rational_zero_ne_one
-    (faithful (rationalIncidence_all_bisimilar
-      (rationalOfInteger 0) (rationalOfInteger 1)))
+theorem rationalIncidence_approxBisim_iff (left right : IncRational) :
+    approxBisim rationalIncidence left right ↔ left = right := by
+  constructor
+  · rintro ⟨relation, bisimulation, related⟩
+    exact incidence_bisim_faithful rationalIncidence rationalRank
+      rationalBoundary_decreases rationalBoundary_extensional
+      bisimulation left right related
+  · rintro rfl
+    exact approxBisim_refl rationalIncidence left
+
+theorem rationalQuotientResonanceCongruent :
+    QuotientResonanceCongruent rationalIncidence :=
+  quotientResonanceCongruent_of_faithful rationalIncidence
+    rationalIncidence_approxBisim_iff
 
 end IncidenceCore

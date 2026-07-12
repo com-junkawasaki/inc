@@ -24,7 +24,7 @@ kept under [`docs/`](docs/).
 | Dependent raw calculus | Pi, Sigma, Identity, reduction and semantics checked |
 | Structural rename/substitution preservation | Complete; certificate inhabited |
 | Quotient theory | Conditional general theory plus concrete simplex quotient |
-| Existing mathematics | Peano, integers, rational quotient algebra, HF sets, pairs, trees, paths, simplices, product, sum, quotient |
+| Existing mathematics | Peano, integers, faithful rational field, HF sets, pairs, trees, paths, simplices, product, sum, quotient |
 | Unit-fiber relational semantics | Legacy alignment-dependent API being replaced |
 | Integer/rational/analysis reconstruction | Integers and relational rational field checked; analysis open |
 

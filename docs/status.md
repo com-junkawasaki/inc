@@ -164,14 +164,16 @@ Checked constructions include:
 - products, sums, and conditional quotients
 - propositional logic and a dependent Pi/Sigma/Identity fragment
 
-Major remaining areas include a faithful rational boundary presentation, a
-canonical computational reciprocal selector, broader algebra, real analysis,
-and a larger categorical
-library. The initial rational incidence uses empty boundaries, and the checked
-`rationalIncidence_all_bisimilar` and
-`rationalIncidence_not_bisimulationFaithful` theorems explicitly show that its
-observational quotient collapses; the fraction quotient algebra itself does
-not. Integer bisimulation faithfulness is complete:
+Major remaining areas include a canonical reduced-fraction boundary and
+computational reciprocal selector, broader algebra, real analysis, and a larger
+categorical library. Rational incidence is now observationally faithful:
+zero has an empty boundary and every nonzero rational has a one-step boundary
+to zero carrying a value-indexed observation role. The checked rank decrease,
+boundary extensionality, and `rationalIncidence_approxBisim_iff` prove that
+bisimulation is exactly equality. Thus rational resonance is quotient-congruent
+and instantiates `IncDepRawNormalizedResonanceCompletion`. This role-indexed
+presentation is faithful but is not yet a canonical reduced numerator/
+denominator presentation. Integer bisimulation faithfulness is complete:
 indexed signed boundary roles give boundary extensionality, and
 `integerIncidence_approxBisim_iff` proves observational equivalence is exactly
 equality. Consequently integer resonance descends to the bisimulation quotient
