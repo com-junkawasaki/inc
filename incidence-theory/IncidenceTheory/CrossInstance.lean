@@ -15278,6 +15278,18 @@ theorem
                   replacements).canonical :=
               congrArg (fun package => package.canonical) packageEq }
 
+theorem IncDepRawCanonicalAnchoredMutualFoldDispatcher.readinessStable
+    (anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u})
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider) :
+    anchored.ReadinessStable readinessAlignment where
+  formation_eq := by
+    intro context type formation firstReady secondReady
+    let readyEq := readinessAlignment.alignFormation firstReady secondReady
+    change (anchored.formation firstReady).castReady readyEq =
+      anchored.formation secondReady
+    cases readyEq
+    rfl
+
 theorem
     IncDepRawCanonicalAnchoredMutualFoldDispatcher.dispatcher_lawful_of_readiness
     (anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u})
@@ -15294,6 +15306,14 @@ noncomputable def
     IncDepRawCanonicalLawfulMutualFold.{u} where
   dispatcher := anchored.dispatcher
   lawful := anchored.dispatcher_lawful_of_readiness readinessLawful
+
+noncomputable def
+    IncDepRawCanonicalAnchoredMutualFoldDispatcher.toLawfulMutualFoldCanonical
+    (anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u})
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider) :
+    IncDepRawCanonicalLawfulMutualFold.{u} :=
+  anchored.toLawfulMutualFold
+    (anchored.readinessStable readinessAlignment).toLawful
 
 def IncDepRawCanonicalFoldPathAgreementProvider.dispatch
     (provider : IncDepRawCanonicalFoldPathAgreementProvider.{u})

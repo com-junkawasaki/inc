@@ -455,6 +455,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - 計算的十分条件`ReadinessStable`を追加した。readiness equalityに沿ってformation outputをcastした値がtarget readinessでの評価と等しいことを要求する。
   `castReady_canonical`はcastがcanonical resultを保存すると証明し、`ReadinessStable.toLawful`がfold-local readiness agreementを導出する。
   残るreadiness theoremは新semantic lawでなく、final formation recursionがproof-index castsと可換であることの構造帰納法である。
+- readiness theoremを一般に閉じた。任意anchored dispatcherについてreadiness equalityを消去するとcasted output equationは`rfl`へ還元され、
+  `readinessStable`は追加model hypothesisを要しない。`toLawfulMutualFoldCanonical`はreadiness alignmentだけで任意anchored dispatcherをlawful mutual foldへ
+  昇格する。残件はanchored dispatcher本体の構造再帰だけに再縮約された。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

@@ -1107,6 +1107,12 @@ It currently establishes:
   `ReadinessStable.toLawful` derives the fold-local readiness agreement.  Thus
   the remaining readiness theorem is a structural proof that the final
   formation recursion commutes with proof-index casts, not a new semantic law.
+  That structural theorem is now closed generically.  For any anchored
+  dispatcher, eliminating the readiness equality reduces the casted output
+  equation to reflexivity, so `readinessStable` requires no additional model
+  hypothesis.  `toLawfulMutualFoldCanonical` consequently promotes every
+  anchored dispatcher to a lawful mutual fold using only readiness alignment.
+  The sole remaining construction is the anchored dispatcher itself.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
