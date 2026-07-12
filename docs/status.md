@@ -42,6 +42,12 @@ belong in [`adr/`](adr/).
   consistency/satisfiability equivalence, and canonical countermodels. This is
   propositional completeness over resonance atoms; completeness for only the
   physically lawful valuations remains a separate theory-extension problem.
+- That finite theory-extension problem is now solved for the complete concrete
+  diagram: `finiteResonanceDiagram` lists all eight physical triples,
+  characterizes exactly the all-resonant valuations, is satisfied by the actual
+  incidence, and has relative Kripke completeness plus diagram-respecting
+  canonical countermodels. A generic completeness theorem for arbitrary
+  `ResonanceSpec` models remains open.
 - The incidence core and bisimulation equivalence are formalized in Lean.
 - Concrete finite, graph, natural-number, pair, path, cycle, and simplex models
   witness non-vacuity of the implemented fragments.

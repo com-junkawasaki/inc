@@ -706,6 +706,59 @@ theorem finiteResonance_canonical_countermodel_of_not_derives
   canonical_countermodel_of_not_derives_of_enumeration
     finiteResonanceAtomCoding.formulaEnumeration hnot
 
+def finiteResonanceDiagram :
+    List (Formula (ResonanceAtom FiniteIncidence)) :=
+  [resonanceFormula .leaf .leaf .leaf,
+   resonanceFormula .leaf .leaf .root,
+   resonanceFormula .leaf .root .leaf,
+   resonanceFormula .leaf .root .root,
+   resonanceFormula .root .leaf .leaf,
+   resonanceFormula .root .leaf .root,
+   resonanceFormula .root .root .leaf,
+   resonanceFormula .root .root .root]
+
+theorem finiteResonanceDiagram_characterizes
+    (valuation : ResonanceAtom FiniteIncidence → Prop) :
+    ContextSatisfies valuation finiteResonanceDiagram ↔
+      ∀ atom, valuation atom := by
+  constructor
+  · intro satisfies atom
+    rcases atom with ⟨left, right, mode⟩
+    cases left <;> cases right <;> cases mode
+    all_goals
+      change Satisfies valuation (resonanceFormula _ _ _)
+      apply satisfies
+      simp [finiteResonanceDiagram, resonanceFormula]
+  · intro allTrue formula member
+    simp only [finiteResonanceDiagram, List.mem_cons, List.not_mem_nil,
+      or_false] at member
+    rcases member with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+    all_goals exact allTrue _
+
+theorem finiteResonanceDiagram_physical :
+    ContextSatisfies (resonanceValuation finiteIncidence)
+      finiteResonanceDiagram := by
+  rw [finiteResonanceDiagram_characterizes]
+  intro atom
+  trivial
+
+theorem finitePhysicalResonance_kripke_complete
+    (formula : Formula (ResonanceAtom FiniteIncidence)) :
+    KripkeEntails.{0, 0} finiteResonanceDiagram formula ↔
+      Derives finiteResonanceDiagram formula :=
+  finiteResonance_kripke_entails_iff_derives finiteResonanceDiagram formula
+
+theorem finitePhysicalResonance_countermodel_of_not_derives
+    {formula : Formula (ResonanceAtom FiniteIncidence)}
+    (hnot : ¬ Derives finiteResonanceDiagram formula) :
+    ∃ theory : PrimeTheory (ResonanceAtom FiniteIncidence),
+      KripkeContextForces
+          (canonicalKripkeModel (ResonanceAtom FiniteIncidence)) theory
+          finiteResonanceDiagram ∧
+        ¬ KripkeForces
+          (canonicalKripkeModel (ResonanceAtom FiniteIncidence)) theory formula :=
+  finiteResonance_canonical_countermodel_of_not_derives hnot
+
 noncomputable def finiteIncidenceFormulaDecode : Nat → Formula FiniteIncidence :=
   fun code => (boolFormulaDecode code).map boolToFiniteIncidence
 

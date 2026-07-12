@@ -12,6 +12,7 @@ research chronology.
 | Relational associativity and product preservation | `IncidenceTheory.lean`, `Peano.lean`, `Product.lean` | [resonance ADR](../adr/2607121930-resonance-as-central-primitive.md) |
 | Resonance internal-logic atoms and semantic laws | `Logic.lean`, `Coherent.lean` | [resonance ADR](../adr/2607121930-resonance-as-central-primitive.md) |
 | Finite resonance-language completeness and countermodels | `GraphModel.lean` | [resonance ADR](../adr/2607121930-resonance-as-central-primitive.md) |
+| Finite physical resonance diagram and relative completeness | `GraphModel.lean` (`finiteResonanceDiagram`) | [status](../status.md#checked-foundations) |
 | Normalized dependent resonance completion | `CrossInstance.lean`, `GraphModel.lean` (`IncDepRawNormalizedResonanceCompletion`) | [status](../status.md#conditional-or-unfinished-layers) |
 | Concrete models | `GraphModel.lean`, `Cycle.lean` | [history](../history/post-cycle-41.md) |
 | Bisimulation and faithfulness | `IncidenceTheory.lean`, `CrossInstance.lean` | [completion audit](../inc-proof-completion-audit.md) |

@@ -93,3 +93,7 @@ case where the selector is complete and resonance has no unselected modes.
   quantify over arbitrary atom valuations; restricting completeness to
   valuations satisfying physical resonance laws requires an axiomatized theory
   extension.
+- For the two-point multi-valued model, that extension is explicit:
+  `finiteResonanceDiagram` is the finite physical theory of all eight triples.
+  The physical valuation satisfies it, it characterizes all-resonant
+  valuations, and completeness/countermodels are checked relative to it.
