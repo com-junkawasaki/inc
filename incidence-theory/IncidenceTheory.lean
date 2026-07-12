@@ -1116,6 +1116,17 @@ structure DistributiveResonanceSpec {I R T : Type u} [DecidableEq I]
     (∃ ij ik, multiply i j ij ∧ multiply i k ik ∧
       inc.resonance ij ik out)
 
+/- A field-level relational algebra adds additive inverse modes,
+nontriviality, and a multiplicative inverse mode for every non-vacuum input.
+No global inverse selector is required: existence belongs to the resonance
+relation itself. -/
+structure FieldResonanceSpec {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) extends DistributiveResonanceSpec inc where
+  zero_ne_one : inc.unit ≠ one
+  additive_inverse : ∀ i, ∃ inverse, inc.resonance i inverse inc.unit
+  multiplicative_inverse : ∀ {i}, i ≠ inc.unit →
+    ∃ inverse, multiply i inverse one
+
 theorem resonance_reassociate {I R T : Type u} [DecidableEq I]
     {inc : Incidence I R T} (spec : AssociativeResonanceSpec inc)
     {i j k out : I} :

@@ -141,7 +141,11 @@ case where the selector is complete and resonance has no unselected modes.
   the lifted addition gives a functional associative resonance and embeds the
   integers injectively. Quotient negation supplies additive inverses, while
   multiplication is commutative, unital, associative, and distributive and is
-  packaged as `rationalDistributiveResonanceSpec`. Its first incidence
+  packaged as `rationalDistributiveResonanceSpec`. The relational
+  `FieldResonanceSpec` adds nontriviality and additive/multiplicative inverse
+  mode existence without imposing a global inverse selector. Rationals
+  instantiate it, and their inverse modes prove left and right multiplication
+  cancellation. Their first incidence
   presentation intentionally has
   empty boundaries, so a checked negative theorem shows that all rationals are
   bisimilar. Canonical signed numerator/denominator observations are therefore

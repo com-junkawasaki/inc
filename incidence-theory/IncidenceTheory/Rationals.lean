@@ -295,6 +295,68 @@ theorem rationalMul_add (first second third : IncRational) :
   simp only [Int.mul_add, Int.add_mul]
   ac_rfl
 
+theorem rational_nonzero_has_mul_inverse {value : IncRational}
+    (nonzero : value ≠ rationalOfInteger 0) :
+    ∃ inverse, rationalMulResonance value inverse (rationalOfInteger 1) := by
+  refine Quotient.inductionOn value ?_ nonzero
+  intro representative representativeNonzero
+  have numeratorNonzero : representative.numerator ≠ 0 := by
+    intro numeratorZero
+    apply representativeNonzero
+    apply Quotient.sound
+    change representative.numerator * 1 = 0 * representative.denominator
+    simp [numeratorZero]
+  by_cases positive : 0 < representative.numerator
+  · let inverseRepresentative : RationalRepresentative :=
+      rationalRepresentative representative.denominator
+        representative.numerator positive
+    refine ⟨Quotient.mk rationalRepresentativeSetoid inverseRepresentative, ?_⟩
+    apply Quotient.sound
+    change
+      (representative.numerator * representative.denominator) * 1 =
+        1 * (representative.denominator * representative.numerator)
+    ac_rfl
+  · have negative : representative.numerator < 0 := by omega
+    have inverseDenominatorPositive : 0 < -representative.numerator := by omega
+    let inverseRepresentative : RationalRepresentative :=
+      rationalRepresentative (-representative.denominator)
+        (-representative.numerator) inverseDenominatorPositive
+    refine ⟨Quotient.mk rationalRepresentativeSetoid inverseRepresentative, ?_⟩
+    apply Quotient.sound
+    change
+      (representative.numerator * -representative.denominator) * 1 =
+        1 * (representative.denominator * -representative.numerator)
+    simp only [Int.mul_one, Int.one_mul, Int.mul_neg]
+    congr 1
+    ac_rfl
+
+theorem rationalMul_cancel_left {factor left right : IncRational}
+    (factorNonzero : factor ≠ rationalOfInteger 0)
+    (equal : rationalMul factor left = rationalMul factor right) :
+    left = right := by
+  obtain ⟨inverse, inverseLaw⟩ :=
+    rational_nonzero_has_mul_inverse factorNonzero
+  have inverseLaw' : rationalMul inverse factor = rationalOfInteger 1 := by
+    simpa [rationalMulResonance, rationalMul_comm] using inverseLaw
+  calc
+    left = rationalMul (rationalOfInteger 1) left :=
+      (rationalMul_one_left left).symm
+    _ = rationalMul (rationalMul inverse factor) left := by rw [inverseLaw']
+    _ = rationalMul inverse (rationalMul factor left) :=
+      rationalMul_assoc inverse factor left
+    _ = rationalMul inverse (rationalMul factor right) := by rw [equal]
+    _ = rationalMul (rationalMul inverse factor) right :=
+      (rationalMul_assoc inverse factor right).symm
+    _ = rationalMul (rationalOfInteger 1) right := by rw [inverseLaw']
+    _ = right := rationalMul_one_left right
+
+theorem rationalMul_cancel_right {factor left right : IncRational}
+    (factorNonzero : factor ≠ rationalOfInteger 0)
+    (equal : rationalMul left factor = rationalMul right factor) :
+    left = right := by
+  apply rationalMul_cancel_left factorNonzero
+  simpa [rationalMul_comm] using equal
+
 inductive RationalRole where
   | fraction
 deriving DecidableEq, Repr
@@ -382,6 +444,18 @@ noncomputable def rationalDistributiveResonanceSpec :
       refine ⟨rationalAdd j k, ?_, ?_⟩
       · simp [rationalIncidence]
       · simpa [rationalIncidence, rationalMulResonance, rationalMul_add] using hout
+
+noncomputable def rationalFieldResonanceSpec :
+    FieldResonanceSpec rationalIncidence where
+  toDistributiveResonanceSpec := rationalDistributiveResonanceSpec
+  zero_ne_one := rational_zero_ne_one
+  additive_inverse := by
+    intro value
+    refine ⟨rationalNeg value, ?_⟩
+    simpa [rationalIncidence] using rationalAdd_neg value
+  multiplicative_inverse := by
+    intro value nonzero
+    exact rational_nonzero_has_mul_inverse nonzero
 
 theorem rationalIncidence_half_resonance :
     let half := Quotient.mk rationalRepresentativeSetoid
