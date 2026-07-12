@@ -504,6 +504,127 @@ theorem rationalMul_nonnegative {left right : IncRational}
     (leftRep.numerator * rightRep.numerator) * 1
   simpa using Int.mul_nonneg leftNumerator rightNumerator
 
+def rationalLT (left right : IncRational) : Prop :=
+  rationalLE left right ∧ left ≠ right
+
+theorem rational_mk_lt_iff (left right : RationalRepresentative) :
+    rationalLT
+        (Quotient.mk rationalRepresentativeSetoid left)
+        (Quotient.mk rationalRepresentativeSetoid right) ↔
+      left.numerator * right.denominator <
+        right.numerator * left.denominator := by
+  constructor
+  · rintro ⟨ordered, distinct⟩
+    have crossDistinct :
+        left.numerator * right.denominator ≠
+          right.numerator * left.denominator := by
+      intro equal
+      exact distinct (Quotient.sound equal)
+    exact Int.lt_iff_le_and_ne.mpr ⟨ordered, crossDistinct⟩
+  · intro strict
+    refine ⟨Int.le_of_lt strict, ?_⟩
+    intro equal
+    exact (Int.ne_of_lt strict) (Quotient.exact equal)
+
+theorem rationalLT_irrefl (value : IncRational) : ¬ rationalLT value value := by
+  intro strict
+  exact strict.2 rfl
+
+theorem rationalLT_trans {first second third : IncRational}
+    (firstSecond : rationalLT first second)
+    (secondThird : rationalLT second third) : rationalLT first third := by
+  refine ⟨rationalLE_trans firstSecond.1 secondThird.1, ?_⟩
+  intro firstThird
+  subst third
+  have secondFirst : rationalLE second first := secondThird.1
+  exact firstSecond.2 (rationalLE_antisymm firstSecond.1 secondFirst)
+
+theorem rationalLT_asymm {left right : IncRational}
+    (strict : rationalLT left right) : ¬ rationalLT right left := by
+  intro reverse
+  exact strict.2 (rationalLE_antisymm strict.1 reverse.1)
+
+theorem rationalLT_trichotomy (left right : IncRational) :
+    rationalLT left right ∨ left = right ∨ rationalLT right left := by
+  rcases rationalLE_total left right with ordered | reverse
+  · by_cases equal : left = right
+    · exact Or.inr (Or.inl equal)
+    · exact Or.inl ⟨ordered, equal⟩
+  · by_cases equal : left = right
+    · exact Or.inr (Or.inl equal)
+    · exact Or.inr (Or.inr ⟨reverse, fun rightLeft => equal rightLeft.symm⟩)
+
+theorem rationalLT_dense {left right : IncRational}
+    (strict : rationalLT left right) :
+    ∃ middle, rationalLT left middle ∧ rationalLT middle right := by
+  revert strict
+  refine Quotient.inductionOn₂ left right ?_
+  intro leftRep rightRep strict
+  have crossStrict :
+      leftRep.numerator * rightRep.denominator <
+        rightRep.numerator * leftRep.denominator :=
+    (rational_mk_lt_iff leftRep rightRep).mp strict
+  have denominatorPositive :
+      0 < (2 : Int) * leftRep.denominator * rightRep.denominator :=
+    Int.mul_pos (Int.mul_pos (by omega) leftRep.denominator_pos)
+      rightRep.denominator_pos
+  let middleRep := rationalRepresentative
+    (leftRep.numerator * rightRep.denominator +
+      rightRep.numerator * leftRep.denominator)
+    ((2 : Int) * leftRep.denominator * rightRep.denominator)
+    denominatorPositive
+  refine ⟨Quotient.mk rationalRepresentativeSetoid middleRep, ?_, ?_⟩
+  · apply (rational_mk_lt_iff leftRep middleRep).mpr
+    have added := Int.add_lt_add_left crossStrict
+      (leftRep.numerator * rightRep.denominator)
+    have scaled := Int.mul_lt_mul_of_pos_right added leftRep.denominator_pos
+    change
+      leftRep.numerator *
+          ((2 : Int) * leftRep.denominator * rightRep.denominator) <
+        (leftRep.numerator * rightRep.denominator +
+          rightRep.numerator * leftRep.denominator) * leftRep.denominator
+    calc
+      _ = ((leftRep.numerator * rightRep.denominator) +
+          (leftRep.numerator * rightRep.denominator)) *
+            leftRep.denominator := by
+              rw [← Int.two_mul]
+              ac_rfl
+      _ < ((leftRep.numerator * rightRep.denominator) +
+          (rightRep.numerator * leftRep.denominator)) *
+            leftRep.denominator := scaled
+  · apply (rational_mk_lt_iff middleRep rightRep).mpr
+    have added := Int.add_lt_add_right crossStrict
+      (rightRep.numerator * leftRep.denominator)
+    have scaled := Int.mul_lt_mul_of_pos_right added rightRep.denominator_pos
+    change
+      (leftRep.numerator * rightRep.denominator +
+          rightRep.numerator * leftRep.denominator) * rightRep.denominator <
+        rightRep.numerator *
+          ((2 : Int) * leftRep.denominator * rightRep.denominator)
+    calc
+      _ < ((rightRep.numerator * leftRep.denominator) +
+          (rightRep.numerator * leftRep.denominator)) *
+            rightRep.denominator := scaled
+      _ = _ := by
+        rw [← Int.two_mul]
+        ac_rfl
+
+theorem rational_add_neg_one_lt (value : IncRational) :
+    rationalLT (rationalAdd value (rationalOfInteger (-1))) value := by
+  refine Quotient.inductionOn value ?_
+  intro representative
+  apply (rational_mk_lt_iff _ _).mpr
+  change
+    (representative.numerator * 1 + (-1) * representative.denominator) *
+        representative.denominator <
+      representative.numerator *
+        (representative.denominator * 1)
+  have decreased : representative.numerator - representative.denominator <
+      representative.numerator := by
+    have positive := representative.denominator_pos
+    omega
+  simpa using Int.mul_lt_mul_of_pos_right decreased representative.denominator_pos
+
 noncomputable instance : DecidableEq IncRational :=
   Classical.typeDecidableEq IncRational
 

@@ -162,6 +162,9 @@ Checked constructions include:
   antisymmetric, transitive, and total, exactly preserves integer order,
   is translation-monotone under addition, and has a multiplicatively closed
   nonnegative cone
+- Dedekind real carriers as inhabited, proper, downward-closed, rounded lower
+  rational cuts; rational principal cuts are well formed and the rational-to-
+  real embedding is injective, using the checked density of rational order
 - hereditary finite sets
 - ordered pairs and trees
 - paths, cycles, and simplices
@@ -169,8 +172,9 @@ Checked constructions include:
 - propositional logic and a dependent Pi/Sigma/Identity fragment
 
 Major remaining areas include a canonical reduced-fraction boundary and
-computational reciprocal selector, broader algebra, real analysis, and a larger
-categorical library. Rational incidence is now observationally faithful:
+computational reciprocal selector, Dedekind-cut arithmetic/order/completeness,
+real analysis, broader algebra, and a larger categorical library. Rational
+incidence is now observationally faithful:
 zero has an empty boundary and every nonzero rational has a one-step boundary
 to zero carrying a value-indexed observation role. The checked rank decrease,
 boundary extensionality, and `rationalIncidence_approxBisim_iff` prove that

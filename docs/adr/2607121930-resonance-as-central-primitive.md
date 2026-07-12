@@ -158,3 +158,9 @@ case where the selector is complete and resonance has no unselected modes.
   closure of the nonnegative cone under multiplicative resonance. Rational
   cross-multiplication order is representative-independent, instantiates this
   specification, and reflects the ordinary integer order along the embedding.
+- The first real-completion layer uses Dedekind cuts over that dense rational
+  order. `IncReal` requires a nonempty proper lower set with downward closure
+  and no greatest element. Principal rational cuts satisfy these conditions,
+  and rational density proves their embedding into `IncReal` injective. Cut
+  arithmetic, least-upper-bound completeness, and real analysis remain the
+  next layer rather than being inferred from the carrier alone.
