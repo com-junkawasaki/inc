@@ -461,6 +461,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - anchored fixed-point APIをscoped inputs下でend-to-end接続した。`canonicalAnchoredMutualFoldDispatcher`が同一readiness indexで両recursive projectionsを
   anchorし、`canonicalLawfulMutualFold`が一般readiness-stability theoremでlawful packageへ昇格する。hypotheses record版constructorも追加。
   ordinary/anchored/lawful/strict preservation projectionsはすべてcheckedとなり、無条件化は外部path-agreement provider除去だけになった。
+- provider-free最終定理targetをLean型として固定した。`IncDepRawCanonicalProviderFreeMutualFoldHypotheses`はvariable/readiness/instantiate inputsだけを保持し、
+  path providerを含まない。`IncDepRawCanonicalProviderFreeMutualFoldWitness`がanchored dispatcherを格納し、`.lawful`/`.strict` projectionsがlawful canonicalと
+  strict preservationを自動導出する。残証明はこの単一witness型のinhabitationである。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

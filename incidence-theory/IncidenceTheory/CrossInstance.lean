@@ -15540,6 +15540,26 @@ structure IncDepRawCanonicalMutualFoldHypotheses where
     IncDepRawCanonicalInstantiateFoldAgreementProvider.{u}
   pathAgreementProvider : IncDepRawCanonicalFoldPathAgreementProvider.{u}
 
+structure IncDepRawCanonicalProviderFreeMutualFoldHypotheses where
+  variableProvider : IncDepRawVariableSubstitutionProvider
+  readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider
+  instantiateAgreementProvider :
+    IncDepRawCanonicalInstantiateFoldAgreementProvider.{u}
+
+structure IncDepRawCanonicalProviderFreeMutualFoldWitness
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (_hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u}) where
+  anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u}
+
+noncomputable def
+    IncDepRawCanonicalProviderFreeMutualFoldWitness.lawful
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u}}
+    (witness : IncDepRawCanonicalProviderFreeMutualFoldWitness model hypotheses) :
+    IncDepRawCanonicalLawfulMutualFold.{u} :=
+  witness.anchored.toLawfulMutualFoldCanonical
+    hypotheses.readinessAlignment
+
 noncomputable def
     IncDepRawSubstitutionFiberModel.canonicalMutualFoldDispatcherOfHypotheses
     (model : IncDepRawSubstitutionFiberModel.{u})
@@ -15584,6 +15604,14 @@ noncomputable def IncDepRawCanonicalLawfulMutualFold.strict
     (fold : IncDepRawCanonicalLawfulMutualFold.{u}) :
     IncDepRawStrictMutualSubstitutionDispatcher :=
   fold.dispatcher.strict
+
+noncomputable def
+    IncDepRawCanonicalProviderFreeMutualFoldWitness.strict
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u}}
+    (witness : IncDepRawCanonicalProviderFreeMutualFoldWitness model hypotheses) :
+    IncDepRawStrictMutualSubstitutionDispatcher :=
+  witness.lawful.strict
 
 theorem IncDepRawCanonicalLawfulMutualFold.pathAgreement
     (fold : IncDepRawCanonicalLawfulMutualFold.{u})

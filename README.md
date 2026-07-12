@@ -1120,6 +1120,13 @@ It currently establishes:
   record has a matching anchored constructor.  Ordinary, anchored, lawful, and
   strict preservation projections are therefore all checked; unconditional
   completion is now solely removal of the external path-agreement provider.
+  The exact provider-free theorem target is now a Lean type.
+  `IncDepRawCanonicalProviderFreeMutualFoldHypotheses` retains only variable,
+  readiness, and instantiate inputs; no path provider is present.
+  `IncDepRawCanonicalProviderFreeMutualFoldWitness` stores the anchored
+  dispatcher, and its `.lawful` and `.strict` projections derive lawful
+  canonical and strict preservation automatically.  The remaining proof is the
+  inhabitation of this single witness type.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
