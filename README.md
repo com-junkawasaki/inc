@@ -2705,6 +2705,11 @@ the corresponding coherent-readiness casts transport their certificates in
 lockstep.  Reflexive beta laws are proved.  These primitives match the
 `Eq.mp` shape used by Apply/Pair/Second substitution without unfolding the
 large mutual equation compiler.
+Transported Apply/Pair/Second prototypes confirm the cast shape, but their
+`typing_eq := rfl` still forces expansion of the legacy mutual recursor during
+a clean build and is therefore not accepted as a stable proof.  The remaining
+task is an opaque, constructor-specific equation theorem whose checking does
+not replay that expansion.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

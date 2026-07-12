@@ -2147,6 +2147,14 @@ def IncDepRawCoherentTypingDispatchReady.castType
     typing.castType rfl = typing := by
   rfl
 
+theorem IncDepRawWellFormed.castType_symm
+    {context : List IncDepRawType} {first second : IncDepRawType}
+    (formation : IncDepRawWellFormed context first)
+    (typeEq : first = second) :
+    (formation.castType typeEq).castType typeEq.symm = formation := by
+  cases typeEq
+  rfl
+
 /-- A syntactic substitution equipped with the exact readiness evidence needed
 at the Variable branch.  Its replacement may be any well-typed term, not only
 a variable, so ordinary `.varRule` readiness is insufficient. -/
@@ -2481,6 +2489,162 @@ noncomputable def IncDepRawTypingReadinessSubstitutionResult.second
     exact .secondRule domainResult.readiness codomainResult.readiness
       resultResult.readiness
       (pairResult.readiness.castFormation pairFormationEq)
+-/
+
+/- The transported Apply/Pair/Second prototypes were intentionally removed:
+their final `typing_eq := rfl` replayed the legacy mutual recursor during a
+clean build.  README and the cycle-41 ADR record the required opaque equation
+lemma that will replace them. -/
+/-
+noncomputable def
+    IncDepRawTypingReadinessSubstitutionResult.applyTransported
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {function argument : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {resultFormation : IncDepRawWellFormed target
+      (codomain.instantiate argument)}
+    {functionTyping : IncDepRawHasType target function (.pi domain codomain)}
+    {argumentTyping : IncDepRawHasType target argument domain}
+    (substitution : IncDepRawSubstitution source target)
+    (domainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := domainFormation) substitution)
+    (codomainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := codomainFormation) (substitution.lift domain))
+    (resultResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := resultFormation) substitution)
+    (functionResult : IncDepRawTypingReadinessSubstitutionResult
+      (typing := functionTyping)
+      (formation := IncDepRawWellFormed.pi domainFormation codomainFormation)
+      substitution)
+    (argumentResult : IncDepRawTypingReadinessSubstitutionResult
+      (typing := argumentTyping) (formation := domainFormation) substitution) :
+    IncDepRawTypingReadinessSubstitutionResult
+      (typing := IncDepRawHasType.applyRule functionTyping argumentTyping)
+      (formation := resultFormation) substitution := by
+  let typeEq := IncDepRawType.instantiate_substitute codomain argument
+    substitution.term
+  let functionTypingResult := functionResult.substitutedTyping
+  let argumentTypingResult := argumentResult.substitutedTyping
+  let constructedTyping := IncDepRawHasType.applyRule functionTypingResult
+    argumentTypingResult
+  let substitutedTyping := constructedTyping.castType typeEq.symm
+  let piResult := IncDepRawFormationReadinessSubstitutionResult.pi substitution
+    domainResult codomainResult
+  let functionFormationEq := functionResult.formationResult.formation_eq.trans
+    piResult.formation_eq.symm
+  let argumentFormationEq := argumentResult.formationResult.formation_eq.trans
+    domainResult.formation_eq.symm
+  let resultReadyRight := resultResult.readiness.castType typeEq
+  let constructedReady := IncDepRawCoherentTypingDispatchReady.applyRule
+    domainResult.readiness codomainResult.readiness resultReadyRight
+    (functionResult.readiness.castFormation functionFormationEq)
+    (argumentResult.readiness.castFormation argumentFormationEq)
+  let returnedReady := constructedReady.castType typeEq.symm
+  refine
+    { formationResult := resultResult
+      substitutedTyping := substitutedTyping
+      typing_eq := ?_
+      readiness := ?_ }
+  · rfl
+  · exact returnedReady.castFormation
+      (IncDepRawWellFormed.castType_symm
+        resultResult.substitutedFormation typeEq)
+
+noncomputable def
+    IncDepRawTypingReadinessSubstitutionResult.pairTransported
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {first second : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {resultFormation : IncDepRawWellFormed target
+      (codomain.instantiate first)}
+    {firstTyping : IncDepRawHasType target first domain}
+    {secondTyping : IncDepRawHasType target second
+      (codomain.instantiate first)}
+    (substitution : IncDepRawSubstitution source target)
+    (domainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := domainFormation) substitution)
+    (codomainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := codomainFormation) (substitution.lift domain))
+    (resultResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := resultFormation) substitution)
+    (firstResult : IncDepRawTypingReadinessSubstitutionResult
+      (typing := firstTyping) (formation := domainFormation) substitution)
+    (secondResult : IncDepRawTypingReadinessSubstitutionResult
+      (typing := secondTyping) (formation := resultFormation) substitution) :
+    IncDepRawTypingReadinessSubstitutionResult
+      (typing := IncDepRawHasType.pairRule firstTyping secondTyping)
+      (formation := IncDepRawWellFormed.sigma domainFormation codomainFormation)
+      substitution := by
+  let typeEq := IncDepRawType.instantiate_substitute codomain first
+    substitution.term
+  let secondTypingRight := secondResult.substitutedTyping.castType typeEq
+  let resultReadyRight := resultResult.readiness.castType typeEq
+  let firstFormationEq := firstResult.formationResult.formation_eq.trans
+    domainResult.formation_eq.symm
+  let secondFormationEq := secondResult.formationResult.formation_eq.trans
+    resultResult.formation_eq.symm
+  let secondReadyLeft := secondResult.readiness.castFormation secondFormationEq
+  let secondReadyRight := secondReadyLeft.castType typeEq
+  let substitutedTyping := IncDepRawHasType.pairRule
+    firstResult.substitutedTyping secondTypingRight
+  refine
+    { formationResult := .sigma substitution domainResult codomainResult
+      substitutedTyping := substitutedTyping
+      typing_eq := ?_
+      readiness := .pairRule domainResult.readiness codomainResult.readiness
+        resultReadyRight
+        (firstResult.readiness.castFormation firstFormationEq)
+        secondReadyRight }
+  rfl
+
+noncomputable def
+    IncDepRawTypingReadinessSubstitutionResult.secondTransported
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed target domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: target) codomain}
+    {resultFormation : IncDepRawWellFormed target
+      (codomain.instantiate (.first pair))}
+    {pairTyping : IncDepRawHasType target pair (.sigma domain codomain)}
+    (substitution : IncDepRawSubstitution source target)
+    (domainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := domainFormation) substitution)
+    (codomainResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := codomainFormation) (substitution.lift domain))
+    (resultResult : IncDepRawFormationReadinessSubstitutionResult
+      (formation := resultFormation) substitution)
+    (pairResult : IncDepRawTypingReadinessSubstitutionResult
+      (typing := pairTyping)
+      (formation := IncDepRawWellFormed.sigma domainFormation codomainFormation)
+      substitution) :
+    IncDepRawTypingReadinessSubstitutionResult
+      (typing := IncDepRawHasType.secondRule pairTyping)
+      (formation := resultFormation) substitution := by
+  let typeEq := IncDepRawType.instantiate_substitute codomain (.first pair)
+    substitution.term
+  let constructedTyping := IncDepRawHasType.secondRule
+    pairResult.substitutedTyping
+  let substitutedTyping := constructedTyping.castType typeEq.symm
+  let sigmaResult := IncDepRawFormationReadinessSubstitutionResult.sigma
+    substitution domainResult codomainResult
+  let pairFormationEq := pairResult.formationResult.formation_eq.trans
+    sigmaResult.formation_eq.symm
+  let resultReadyRight := resultResult.readiness.castType typeEq
+  let constructedReady := IncDepRawCoherentTypingDispatchReady.secondRule
+    domainResult.readiness codomainResult.readiness resultReadyRight
+    (pairResult.readiness.castFormation pairFormationEq)
+  let returnedReady := constructedReady.castType typeEq.symm
+  refine
+    { formationResult := resultResult
+      substitutedTyping := substitutedTyping
+      typing_eq := ?_
+      readiness := ?_ }
+  · rfl
+  · exact returnedReady.castFormation
+      (IncDepRawWellFormed.castType_symm
+        resultResult.substitutedFormation typeEq)
 -/
 
 inductive IncDepRawContext.WellFormed : List IncDepRawType → Type

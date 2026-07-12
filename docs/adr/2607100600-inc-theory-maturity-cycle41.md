@@ -1500,6 +1500,9 @@ cycle 38–41 で以下の3極構造が判明した:
   `IncDepRawHasType.castType`と、それらに同期するformation/typing readiness castsを追加し、
   reflexive β則を証明した。これはApply/Pair/Second substitutionが生成する`Eq.mp`の形に一致し、
   巨大なmutual equation compilerをunfoldせずconstructor-level transportを行える。
+  transported Apply/Pair/Second prototypesでcast形自体は確認したが、`typing_eq := rfl`の検査が
+  clean build時にlegacy mutual recursorを再展開するためstable proofとして採用しない。残件は
+  展開を再生せずcheckできるopaqueなconstructor-specific equation theoremである。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。
