@@ -7863,6 +7863,34 @@ structure IncDepRawNormalizedTypingRenamingResult
     (type.rename renameMap.index)
   readiness : IncDepRawTypingDispatchReady renamedTyping
 
+structure IncDepRawNormalizedFormationSubstitutionResult
+    {source target : List IncDepRawType} {type : IncDepRawType}
+    (substitution : IncDepRawSubstitution source target) where
+  substitutedFormation :
+    IncDepRawWellFormed source (type.substitute substitution.term)
+  readiness : IncDepRawFormationDispatchReady substitutedFormation
+
+structure IncDepRawNormalizedTypingSubstitutionResult
+    {source target : List IncDepRawType}
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    (substitution : IncDepRawSubstitution source target) where
+  formationResult : IncDepRawNormalizedFormationSubstitutionResult
+    (type := type) substitution
+  substitutedTyping : IncDepRawHasType source
+    (term.substitute substitution.term) (type.substitute substitution.term)
+  readiness : IncDepRawTypingDispatchReady substitutedTyping
+
+/-- A substitution whose replacement at every lookup already carries normalized
+typing/formation readiness.  Unlike the coherent predecessor, this interface
+does not quantify over a caller-chosen formation proof object. -/
+structure IncDepRawNormalizedReadinessPreservingSubstitution
+    (source target : List IncDepRawType) extends
+    IncDepRawSubstitution source target where
+  preservesNormalized : ∀ {position : Nat} {type : IncDepRawType},
+    IncDepRawLookup target position type →
+    IncDepRawNormalizedTypingSubstitutionResult
+      (term := .var position) (type := type) toIncDepRawSubstitution
+
 def IncDepRawFormationDispatchReady.castType
     {context : List IncDepRawType} {first second : IncDepRawType}
     {formation : IncDepRawWellFormed context first}
