@@ -169,6 +169,9 @@ Checked constructions include:
   nonempty upper-bounded family has a least upper bound given by union of cuts;
   cut addition is well formed, associative, commutative, monotone, and has the
   principal zero as identity, while the rational embedding preserves addition;
+  cut negation is well formed, involutive, reverses order exactly, preserves
+  principal rational negation, and supplies additive inverses for all principal
+  rational cuts;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets
@@ -178,7 +181,8 @@ Checked constructions include:
 - propositional logic and a dependent Pi/Sigma/Identity fragment
 
 Major remaining areas include a canonical reduced-fraction boundary and
-computational reciprocal selector, Dedekind-cut additive inverses,
+computational reciprocal selector, the Archimedean boundary-approximation lemma
+needed to extend principal additive inverses to every Dedekind cut,
 multiplication and field laws,
 real analysis, broader algebra, and a larger categorical library. Rational
 incidence is now observationally faithful:

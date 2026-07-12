@@ -262,6 +262,23 @@ theorem rationalAdd_add_neg_cancel (left right : IncRational) :
     rationalAdd (rationalAdd left right) (rationalNeg right) = left := by
   rw [rationalAdd_assoc, rationalAdd_neg, rationalAdd_zero_right]
 
+theorem rationalNeg_neg (value : IncRational) :
+    rationalNeg (rationalNeg value) = value := by
+  refine Quotient.inductionOn value ?_
+  intro representative
+  apply Quotient.sound
+  show RationalRepresentative.Equivalent representative.neg.neg representative
+  simp [RationalRepresentative.Equivalent, RationalRepresentative.neg]
+
+theorem rationalNeg_zero :
+    rationalNeg (rationalOfInteger 0) = rationalOfInteger 0 := by
+  apply Quotient.sound
+  show RationalRepresentative.Equivalent
+    (rationalRepresentative 0 1 (by omega)).neg
+    (rationalRepresentative 0 1 (by omega))
+  simp [RationalRepresentative.Equivalent, RationalRepresentative.neg,
+    rationalRepresentative]
+
 theorem rationalMul_comm (left right : IncRational) :
     rationalMul left right = rationalMul right left := by
   refine Quotient.inductionOn₂ left right ?_
@@ -520,6 +537,26 @@ theorem rationalMul_nonnegative {left right : IncRational}
 def rationalLT (left right : IncRational) : Prop :=
   rationalLE left right ∧ left ≠ right
 
+theorem rationalLE_neg_reverse {left right : IncRational}
+    (ordered : rationalLE left right) :
+    rationalLE (rationalNeg right) (rationalNeg left) := by
+  revert ordered
+  refine Quotient.inductionOn₂ left right ?_
+  intro leftRep rightRep ordered
+  change (-rightRep.numerator) * leftRep.denominator ≤
+    (-leftRep.numerator) * rightRep.denominator
+  rw [Int.neg_mul, Int.neg_mul]
+  exact Int.neg_le_neg ordered
+
+theorem rationalLT_neg_reverse {left right : IncRational}
+    (strict : rationalLT left right) :
+    rationalLT (rationalNeg right) (rationalNeg left) := by
+  refine ⟨rationalLE_neg_reverse strict.1, ?_⟩
+  intro equal
+  apply strict.2
+  have := congrArg rationalNeg equal
+  simpa [rationalNeg_neg] using this.symm
+
 theorem rational_mk_lt_iff (left right : RationalRepresentative) :
     rationalLT
         (Quotient.mk rationalRepresentativeSetoid left)
@@ -551,6 +588,14 @@ theorem rationalLT_trans {first second third : IncRational}
   subst third
   have secondFirst : rationalLE second first := secondThird.1
   exact firstSecond.2 (rationalLE_antisymm firstSecond.1 secondFirst)
+
+theorem rationalLT_of_lt_of_le {first second third : IncRational}
+    (firstSecond : rationalLT first second)
+    (secondThird : rationalLE second third) : rationalLT first third := by
+  refine ⟨rationalLE_trans firstSecond.1 secondThird, ?_⟩
+  intro firstThird
+  subst third
+  exact firstSecond.2 (rationalLE_antisymm firstSecond.1 secondThird)
 
 theorem rationalLT_asymm {left right : IncRational}
     (strict : rationalLT left right) : ¬ rationalLT right left := by

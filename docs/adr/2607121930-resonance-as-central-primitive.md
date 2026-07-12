@@ -172,3 +172,9 @@ case where the selector is complete and resonance has no unselected modes.
   addition, and has the principal zero as unit. A faithful value-observed
   `realIncidence` selects this addition as its central resonance; its resonance
   is quotient-congruent and instantiates normalized dependent completion.
+- Cut negation is defined by reflected complement witnesses. It is a valid cut,
+  involutive, exactly order-reversing, agrees with rational negation on
+  principal cuts, and proves the additive inverse law for every principal cut.
+  Extending that last law to arbitrary cuts is isolated to the remaining
+  Archimedean boundary-approximation lemma; it is not claimed from involution
+  alone.

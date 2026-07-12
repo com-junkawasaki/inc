@@ -315,6 +315,97 @@ theorem realAdd_assoc (first second third : IncReal) :
   · have reverse := realAdd_assoc_forward third second first
     simpa [realAdd_comm] using reverse
 
+/-- Negation of a lower cut uses the complement reflected through rational
+zero, with strict rounding built into the existential witness. -/
+def realNeg (value : IncReal) : IncReal where
+  lower := fun rational => ∃ outside, ¬ value.lower outside ∧
+    rationalLT rational (rationalNeg outside)
+  inhabited := by
+    obtain ⟨outside, notMember⟩ := value.proper
+    exact ⟨rationalAdd (rationalNeg outside) (rationalOfInteger (-1)),
+      outside, notMember, rational_add_neg_one_lt _⟩
+  proper := by
+    obtain ⟨memberValue, member⟩ := value.inhabited
+    refine ⟨rationalNeg memberValue, ?_⟩
+    rintro ⟨outside, notMember, below⟩
+    have outsideBelowMember : rationalLT outside memberValue := by
+      have reversed := rationalLT_neg_reverse below
+      simpa [rationalNeg_neg] using reversed
+    exact notMember (value.downward member outsideBelowMember)
+  downward := by
+    intro smaller rational member smallerRational
+    obtain ⟨outside, notMember, below⟩ := member
+    exact ⟨outside, notMember, rationalLT_trans smallerRational below⟩
+  rounded := by
+    intro rational member
+    obtain ⟨outside, notMember, below⟩ := member
+    obtain ⟨middle, rationalMiddle, middleBelow⟩ := rationalLT_dense below
+    exact ⟨middle, ⟨outside, notMember, middleBelow⟩, rationalMiddle⟩
+
+theorem realNeg_rationalToReal (value : IncRational) :
+    realNeg (rationalToReal value) = rationalToReal (rationalNeg value) := by
+  apply IncReal.ext
+  intro rational
+  constructor
+  · rintro ⟨outside, notBelow, rationalBelow⟩
+    have valueOutside : rationalLE value outside := by
+      rcases rationalLE_total value outside with ordered | reverse
+      · exact ordered
+      · by_cases equal : outside = value
+        · subst outside
+          exact rationalLE_refl value
+        · exact False.elim (notBelow ⟨reverse, equal⟩)
+    exact rationalLT_of_lt_of_le rationalBelow
+      (rationalLE_neg_reverse valueOutside)
+  · intro rationalBelow
+    exact ⟨value, rationalLT_irrefl value, rationalBelow⟩
+
+theorem realNeg_order_reverse {left right : IncReal}
+    (ordered : realLE left right) : realLE (realNeg right) (realNeg left) := by
+  intro rational member
+  obtain ⟨outside, notRight, below⟩ := member
+  exact ⟨outside, fun leftMember => notRight (ordered outside leftMember), below⟩
+
+theorem realNeg_neg (value : IncReal) : realNeg (realNeg value) = value := by
+  apply IncReal.ext
+  intro rational
+  constructor
+  · rintro ⟨outside, notNegMember, rationalBelow⟩
+    apply Classical.byContradiction
+    intro notMember
+    have outsideBelowNegRational :
+        rationalLT outside (rationalNeg rational) := by
+      have reversed := rationalLT_neg_reverse rationalBelow
+      simpa [rationalNeg_neg] using reversed
+    exact notNegMember ⟨rational, notMember, outsideBelowNegRational⟩
+  · intro member
+    obtain ⟨larger, largerMember, rationalLarger⟩ := value.rounded member
+    refine ⟨rationalNeg larger, ?_, ?_⟩
+    · rintro ⟨outside, notMember, negLargerBelow⟩
+      have outsideBelowLarger : rationalLT outside larger := by
+        have reversed := rationalLT_neg_reverse negLargerBelow
+        simpa [rationalNeg_neg] using reversed
+      exact notMember (value.downward largerMember outsideBelowLarger)
+    · simpa [rationalNeg_neg] using rationalLarger
+
+theorem realNeg_zero : realNeg realZero = realZero := by
+  simpa [realZero, rationalNeg_zero] using
+    realNeg_rationalToReal (rationalOfInteger 0)
+
+theorem realNeg_order_iff (left right : IncReal) :
+    realLE (realNeg right) (realNeg left) ↔ realLE left right := by
+  constructor
+  · intro ordered
+    have reversed := realNeg_order_reverse ordered
+    simpa [realNeg_neg] using reversed
+  · exact realNeg_order_reverse
+
+theorem realAdd_neg_principal (value : IncRational) :
+    realAdd (rationalToReal value) (realNeg (rationalToReal value)) =
+      realZero := by
+  rw [realNeg_rationalToReal, realAdd_rationalToReal, rationalAdd_neg]
+  rfl
+
 noncomputable instance : DecidableEq IncReal :=
   Classical.typeDecidableEq IncReal
 
