@@ -949,7 +949,7 @@ It currently establishes:
   aligned canonical handlers and fold-agreement constructors.  The remaining
   integration step is one mutual recursion that generates these agreements
   (including instantiate agreements) and exposes the total dispatcher.
-  The only non-structural input to that recursion now has an exact interface:
+  The instantiate-specific non-structural input to that recursion has an exact interface:
   `IncDepRawCanonicalInstantiateFoldAgreementProvider`.  It does not compare
   arbitrary semantic fibers.  For the same domain, codomain, argument, and
   recursive IHs, it identifies only the raw result-formation canonical output
@@ -971,6 +971,13 @@ It currently establishes:
   canonical equalities.  It performs no fiber transport or semantic rebase and
   is the primitive used to reconnect independently recursive Identity/Refl,
   function, argument, and pair premises to their parent formation IHs.
+  Attempting to derive the parent Pi agreement exposed the second and final
+  dependent boundary: equality of domain fiber results changes the types of the
+  extended semantic tree and lifted replacements on which codomain IHs run.
+  `IncDepRawCanonicalDependentFormationFoldAgreementProvider` isolates precisely
+  this transport naturality for Pi and Sigma.  The total recursion therefore has
+  two scoped inputs—instantiate naturality and dependent-extension naturality—
+  neither of which grants arbitrary semantic equality or rebase.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

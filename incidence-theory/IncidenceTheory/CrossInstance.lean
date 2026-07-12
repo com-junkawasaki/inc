@@ -14269,6 +14269,48 @@ structure IncDepRawCanonicalTypingFoldOutput
   typing : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive ready
   agreement : IncDepRawCanonicalFoldAgreement formation typing
 
+structure IncDepRawCanonicalDependentFormationFoldAgreementProvider
+    (model : IncDepRawSubstitutionFiberModel.{u}) where
+  pi : ∀
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (leftDomainIH rightDomainIH :
+      IncDepRawCanonicalFormationSubstitutionFoldMotive.{u} domainReady)
+    (leftCodomainIH rightCodomainIH :
+      IncDepRawCanonicalFormationSubstitutionFoldMotive.{u} codomainReady)
+    (_domainAgreement : IncDepRawCanonicalFormationFoldAgreement leftDomainIH
+      rightDomainIH)
+    (_codomainAgreement : IncDepRawCanonicalFormationFoldAgreement leftCodomainIH
+      rightCodomainIH),
+    IncDepRawCanonicalFormationFoldAgreement
+      (model.canonicalMutualFoldPi domainReady codomainReady leftDomainIH
+        leftCodomainIH)
+      (model.canonicalMutualFoldPi domainReady codomainReady rightDomainIH
+        rightCodomainIH)
+
+  sigma : ∀
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (leftDomainIH rightDomainIH :
+      IncDepRawCanonicalFormationSubstitutionFoldMotive.{u} domainReady)
+    (leftCodomainIH rightCodomainIH :
+      IncDepRawCanonicalFormationSubstitutionFoldMotive.{u} codomainReady)
+    (_domainAgreement : IncDepRawCanonicalFormationFoldAgreement leftDomainIH
+      rightDomainIH)
+    (_codomainAgreement : IncDepRawCanonicalFormationFoldAgreement leftCodomainIH
+      rightCodomainIH),
+    IncDepRawCanonicalFormationFoldAgreement
+      (model.canonicalMutualFoldSigma domainReady codomainReady leftDomainIH
+        leftCodomainIH)
+      (model.canonicalMutualFoldSigma domainReady codomainReady rightDomainIH
+        rightCodomainIH)
+
 noncomputable def IncDepRawSubstitutionFiberModel.preserveFormation
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)

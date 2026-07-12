@@ -386,7 +386,7 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - 最後のSecond枝も閉じた。Sigma pair agreementからsemantic first projectionを導出し、それをcanonical instantiate motiveのargumentとして、
   dependent result familyを独立result IHへ同じfold-local provenance chainで接続する。これで全8 typing constructorsにaligned canonical handlerと
   fold-agreement constructorが揃った。残件はagreement（instantiate agreementを含む）を生成する単一mutual recursionとtotal dispatcherの公開である。
-- mutual recursionに残る唯一の非構造入力を`IncDepRawCanonicalInstantiateFoldAgreementProvider`として固定した。これは任意semantic fibersを比較せず、
+- mutual recursionに残るinstantiate固有の非構造入力を`IncDepRawCanonicalInstantiateFoldAgreementProvider`として固定した。これは任意semantic fibersを比較せず、
   同じdomain/codomain/argumentと再帰IHに対し、raw result-formation canonical outputと
   `IncDepRawCanonicalInstantiateSubstitutionFoldMotive`だけを同定する。Apply/Pair/Secondがこのsubstitution-naturality obligationを共有し、
   他のconstructor agreementsはすべて構造的に生成できる。
@@ -397,6 +397,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - `IncDepRawCanonicalFoldAgreement.retargetFormation`でこのfieldの消費側を実装した。二formation pathsのfold-local agreementを受け、既存typing agreementを
   canonical equalityの推移だけで一方のpathから他方へ移す。fiber transport/semantic rebaseは行わず、Identity/Reflおよびfunction/argument/pair premisesを
   親formation IHへ再接続する基本操作となる。
+- parent Pi agreementの導出試行から第二の依存境界を特定した。domain fiber resultの等式はcodomain IHが走るextended semantic treeとlifted replacementsの
+  型自体を変更する。`IncDepRawCanonicalDependentFormationFoldAgreementProvider`はPi/Sigmaにおけるこのtransport naturalityだけを隔離する。
+  total recursionのscoped inputsはinstantiate naturalityとdependent-extension naturalityの二つで、どちらも任意semantic equality/rebase権限を持たない。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
