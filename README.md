@@ -1127,6 +1127,12 @@ It currently establishes:
   dispatcher, and its `.lawful` and `.strict` projections derive lawful
   canonical and strict preservation automatically.  The remaining proof is the
   inhabitation of this single witness type.
+  The old conditional implementation now maps into this exact target via
+  `providerFreeMutualFoldWitnessOfPathProvider`; the corresponding `Nonempty`
+  theorem is checked as well.  Thus the witness is not a disconnected
+  specification: supplying the former path provider reproduces the implemented
+  anchored/lawful/strict pipeline.  The only missing argument in the final
+  theorem is literally that provider parameter.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

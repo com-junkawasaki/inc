@@ -15552,6 +15552,24 @@ structure IncDepRawCanonicalProviderFreeMutualFoldWitness
   anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u}
 
 noncomputable def
+    IncDepRawSubstitutionFiberModel.providerFreeMutualFoldWitnessOfPathProvider
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u})
+    (pathAgreementProvider : IncDepRawCanonicalFoldPathAgreementProvider.{u}) :
+    IncDepRawCanonicalProviderFreeMutualFoldWitness model hypotheses where
+  anchored := model.canonicalAnchoredMutualFoldDispatcher
+    hypotheses.variableProvider hypotheses.readinessAlignment
+    hypotheses.instantiateAgreementProvider pathAgreementProvider
+
+theorem IncDepRawSubstitutionFiberModel.providerFreeMutualFoldWitness_nonempty
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u})
+    (pathProvider : Nonempty IncDepRawCanonicalFoldPathAgreementProvider.{u}) :
+    Nonempty (IncDepRawCanonicalProviderFreeMutualFoldWitness model hypotheses) :=
+  ⟨model.providerFreeMutualFoldWitnessOfPathProvider hypotheses
+    (Classical.choice pathProvider)⟩
+
+noncomputable def
     IncDepRawCanonicalProviderFreeMutualFoldWitness.lawful
     {model : IncDepRawSubstitutionFiberModel.{u}}
     {hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u}}

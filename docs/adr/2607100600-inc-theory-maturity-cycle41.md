@@ -464,6 +464,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - provider-free最終定理targetをLean型として固定した。`IncDepRawCanonicalProviderFreeMutualFoldHypotheses`はvariable/readiness/instantiate inputsだけを保持し、
   path providerを含まない。`IncDepRawCanonicalProviderFreeMutualFoldWitness`がanchored dispatcherを格納し、`.lawful`/`.strict` projectionsがlawful canonicalと
   strict preservationを自動導出する。残証明はこの単一witness型のinhabitationである。
+- 旧conditional implementationからexact provider-free targetへの`providerFreeMutualFoldWitnessOfPathProvider` bridgeと対応`Nonempty` theoremを証明した。
+  witnessは孤立specificationでなく、旧path providerを供給すれば実装済みanchored/lawful/strict pipelineを再現する。final theoremで欠ける引数は文字通り
+  このprovider parameterだけである。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
