@@ -2778,6 +2778,13 @@ Therefore unconditional basic preservation requires canonical normalization
 that removes formation proof objects from the readiness index (or maps them to
 one chosen normal form).  Threading the old hypothesis through the new renamer
 would only reproduce the current conditional boundary.
+The normalized route now has an unconditional total mutual renamer:
+`IncDepRawFormationDispatchReady.renameNormalized` and
+`IncDepRawTypingDispatchReady.renameNormalized` cover every formation and
+typing constructor.  Dependent Apply/Pair/Second use `instantiate_rename` and
+synchronized casts.  Because typing readiness is no longer formation-indexed,
+the theorem requires no alignment provider.  This is the renaming theorem
+needed by the older-variable branch of substitution lift.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

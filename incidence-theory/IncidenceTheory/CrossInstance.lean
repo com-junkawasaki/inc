@@ -7863,6 +7863,168 @@ structure IncDepRawNormalizedTypingRenamingResult
     (type.rename renameMap.index)
   readiness : IncDepRawTypingDispatchReady renamedTyping
 
+def IncDepRawFormationDispatchReady.castType
+    {context : List IncDepRawType} {first second : IncDepRawType}
+    {formation : IncDepRawWellFormed context first}
+    (ready : IncDepRawFormationDispatchReady formation)
+    (typeEq : first = second) :
+    IncDepRawFormationDispatchReady (formation.castType typeEq) := by
+  cases typeEq
+  exact ready
+
+def IncDepRawTypingDispatchReady.castType
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {first second : IncDepRawType}
+    {typing : IncDepRawHasType context term first}
+    (ready : IncDepRawTypingDispatchReady typing)
+    (typeEq : first = second) :
+    IncDepRawTypingDispatchReady (typing.castType typeEq) := by
+  cases typeEq
+  exact ready
+
+mutual
+  noncomputable def IncDepRawFormationDispatchReady.renameNormalized
+      {source target : List IncDepRawType} {type : IncDepRawType}
+      {formation : IncDepRawWellFormed source type}
+      (ready : IncDepRawFormationDispatchReady formation)
+      (renameMap : IncDepRawRenaming source target) :
+      IncDepRawNormalizedFormationRenamingResult
+        (type := type) renameMap :=
+    match ready with
+    | .base =>
+        { renamedFormation := .base
+          readiness := .base }
+    | .unit =>
+        { renamedFormation := .unit
+          readiness := .unit }
+    | .pi domainReady codomainReady =>
+        let domainResult := domainReady.renameNormalized renameMap
+        let codomainResult := codomainReady.renameNormalized (renameMap.lift _)
+        { renamedFormation := .pi domainResult.renamedFormation
+            codomainResult.renamedFormation
+          readiness := .pi domainResult.readiness codomainResult.readiness }
+    | .sigma domainReady codomainReady =>
+        let domainResult := domainReady.renameNormalized renameMap
+        let codomainResult := codomainReady.renameNormalized (renameMap.lift _)
+        { renamedFormation := .sigma domainResult.renamedFormation
+            codomainResult.renamedFormation
+          readiness := .sigma domainResult.readiness codomainResult.readiness }
+    | .identity typeReady leftReady rightReady =>
+        let typeResult := typeReady.renameNormalized renameMap
+        let leftResult := leftReady.renameNormalized renameMap
+        let rightResult := rightReady.renameNormalized renameMap
+        { renamedFormation := .identity typeResult.renamedFormation
+            leftResult.renamedTyping rightResult.renamedTyping
+          readiness := .identity typeResult.readiness leftResult.readiness
+            rightResult.readiness }
+
+  noncomputable def IncDepRawTypingDispatchReady.renameNormalized
+      {source target : List IncDepRawType} {term : IncDepRawTerm}
+      {type : IncDepRawType} {typing : IncDepRawHasType source term type}
+      (ready : IncDepRawTypingDispatchReady typing)
+      (renameMap : IncDepRawRenaming source target) :
+      IncDepRawNormalizedTypingRenamingResult
+        (term := term) (type := type) renameMap :=
+    match ready with
+    | @IncDepRawTypingDispatchReady.varRule _ _ _ lookup _ typeReady =>
+        let typeResult := typeReady.renameNormalized renameMap
+        { formationResult := typeResult
+          renamedTyping := .varRule (renameMap.preserves lookup)
+          readiness := .varRule typeResult.readiness }
+    | .unitRule =>
+        { formationResult :=
+            { renamedFormation := .unit
+              readiness := .unit }
+          renamedTyping := .unitRule
+          readiness := .unitRule }
+    | .lambdaRule domainReady codomainReady bodyReady =>
+        let domainResult := domainReady.renameNormalized renameMap
+        let codomainResult := codomainReady.renameNormalized (renameMap.lift _)
+        let bodyResult := bodyReady.renameNormalized (renameMap.lift _)
+        { formationResult :=
+            { renamedFormation := .pi domainResult.renamedFormation
+                codomainResult.renamedFormation
+              readiness := .pi domainResult.readiness codomainResult.readiness }
+          renamedTyping := .lambdaRule domainResult.renamedFormation
+            bodyResult.renamedTyping
+          readiness := .lambdaRule domainResult.readiness
+            codomainResult.readiness bodyResult.readiness }
+    | @IncDepRawTypingDispatchReady.applyRule _ domain codomain _ argument _ _ _ _ _ domainReady
+        codomainReady resultReady functionReady argumentReady => by
+        let domainResult := domainReady.renameNormalized renameMap
+        let codomainResult := codomainReady.renameNormalized (renameMap.lift _)
+        let resultResult := resultReady.renameNormalized renameMap
+        let functionResult := functionReady.renameNormalized renameMap
+        let argumentResult := argumentReady.renameNormalized renameMap
+        let typeEq := IncDepRawType.instantiate_rename codomain argument
+          renameMap.index
+        let constructedTyping := IncDepRawHasType.applyRule
+          functionResult.renamedTyping argumentResult.renamedTyping
+        exact
+          { formationResult := resultResult
+            renamedTyping := constructedTyping.castType typeEq.symm
+            readiness :=
+              (IncDepRawTypingDispatchReady.applyRule domainResult.readiness
+                codomainResult.readiness (resultResult.readiness.castType typeEq)
+                functionResult.readiness argumentResult.readiness).castType
+                  typeEq.symm }
+    | @IncDepRawTypingDispatchReady.pairRule _ domain codomain first _ _ _ _ _ _ domainReady codomainReady
+        resultReady firstReady secondReady => by
+        let domainResult := domainReady.renameNormalized renameMap
+        let codomainResult := codomainReady.renameNormalized (renameMap.lift _)
+        let resultResult := resultReady.renameNormalized renameMap
+        let firstResult := firstReady.renameNormalized renameMap
+        let secondResult := secondReady.renameNormalized renameMap
+        let typeEq := IncDepRawType.instantiate_rename codomain first
+          renameMap.index
+        exact
+          { formationResult :=
+              { renamedFormation := .sigma domainResult.renamedFormation
+                  codomainResult.renamedFormation
+                readiness := .sigma domainResult.readiness
+                  codomainResult.readiness }
+            renamedTyping := .pairRule firstResult.renamedTyping
+              (secondResult.renamedTyping.castType typeEq)
+            readiness := .pairRule domainResult.readiness
+              codomainResult.readiness (resultResult.readiness.castType typeEq)
+              firstResult.readiness (secondResult.readiness.castType typeEq) }
+    | .firstRule domainReady codomainReady pairReady =>
+        let domainResult := domainReady.renameNormalized renameMap
+        let codomainResult := codomainReady.renameNormalized (renameMap.lift _)
+        let pairResult := pairReady.renameNormalized renameMap
+        { formationResult := domainResult
+          renamedTyping := .firstRule pairResult.renamedTyping
+          readiness := .firstRule domainResult.readiness codomainResult.readiness
+            pairResult.readiness }
+    | @IncDepRawTypingDispatchReady.secondRule _ domain codomain pair _ _ _ _ domainReady codomainReady
+        resultReady pairReady => by
+        let domainResult := domainReady.renameNormalized renameMap
+        let codomainResult := codomainReady.renameNormalized (renameMap.lift _)
+        let resultResult := resultReady.renameNormalized renameMap
+        let pairResult := pairReady.renameNormalized renameMap
+        let typeEq := IncDepRawType.instantiate_rename codomain (.first pair)
+          renameMap.index
+        let constructedTyping := IncDepRawHasType.secondRule
+          pairResult.renamedTyping
+        exact
+          { formationResult := resultResult
+            renamedTyping := constructedTyping.castType typeEq.symm
+            readiness :=
+              (IncDepRawTypingDispatchReady.secondRule domainResult.readiness
+                codomainResult.readiness (resultResult.readiness.castType typeEq)
+                pairResult.readiness).castType typeEq.symm }
+    | .reflRule typeReady termReady =>
+        let typeResult := typeReady.renameNormalized renameMap
+        let termResult := termReady.renameNormalized renameMap
+        { formationResult :=
+            { renamedFormation := .identity typeResult.renamedFormation
+                termResult.renamedTyping termResult.renamedTyping
+              readiness := .identity typeResult.readiness termResult.readiness
+                termResult.readiness }
+          renamedTyping := .reflRule termResult.renamedTyping
+          readiness := .reflRule typeResult.readiness termResult.readiness }
+end
+
 structure IncDepRawStrictTypingDispatchReady
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} (typing : IncDepRawHasType context term type)
