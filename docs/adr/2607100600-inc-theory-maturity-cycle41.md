@@ -346,6 +346,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   formationをpackageする。いずれもreadiness alignment/rebase不要である。4formation handlersと合わせ13 mutual branches中7つがprovenance-scoped foldで実行可能。
   残branchは中心不変条件を明示する：recursive typing canonical resultを対応する独立formation IH canonical resultと同定してから、Apply/Pair/projections/
   Identity/Reflが消費する必要がある。
+- 中心不変条件をchecked local APIとして形式化した。`IncDepRawCanonicalFormationTypingAgreement formation typing`は一つのgenerated formation packageと
+  generated typing packageのexistential canonical outputsが一致することだけを表す。`result_eq`は両provenanceを合成してactual fiber result equalityを、
+  `rebase`はnatural rebaseを、`typingResultAligned`はtyping fiber resultのexact formation-IH resultへのcastを導出する。これは不可能なglobal rebase providerの
+  直接置換で、任意semantic inhabitantsへ量化せず、無関係なUnit/Bool interpretationのequivalenceも要求しない。残recursor作業は6dependent branchesで
+  このlocal agreementを構成することに正確に限定された。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

@@ -10021,6 +10021,84 @@ structure IncDepRawSomeCanonicalStrictTypingSubstitutionDispatchResult
   result : IncDepRawCanonicalStrictTypingSubstitutionDispatchResult
     targetReady canonical
 
+structure IncDepRawCanonicalFormationTypingAgreement
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {formationReady : IncDepRawCoherentFormationDispatchReady targetFormation}
+    {typingFormationReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    {typingReady : IncDepRawStrictTypingDispatchReady targetTyping
+      typingFormationReady}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (formation : IncDepRawSomeCanonicalStrictFormationSubstitutionDispatchResult
+      formationReady substitutionResult)
+    (typing : IncDepRawSomeCanonicalStrictTypingSubstitutionDispatchResult
+      typingReady substitutionResult) : Prop where
+  canonical_eq : typing.canonical = formation.canonical
+
+theorem IncDepRawCanonicalFormationTypingAgreement.result_eq
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {formationReady : IncDepRawCoherentFormationDispatchReady targetFormation}
+    {typingFormationReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    {typingReady : IncDepRawStrictTypingDispatchReady targetTyping
+      typingFormationReady}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {formation : IncDepRawSomeCanonicalStrictFormationSubstitutionDispatchResult
+      formationReady substitutionResult}
+    {typing : IncDepRawSomeCanonicalStrictTypingSubstitutionDispatchResult
+      typingReady substitutionResult}
+    (agreement : IncDepRawCanonicalFormationTypingAgreement formation typing) :
+    typing.result.dispatchResult.formationResult =
+      formation.result.dispatchResult.formationResult :=
+  typing.result.formationProvenance.eq_canonical.trans
+    (agreement.canonical_eq.trans
+      formation.result.provenance.eq_canonical.symm)
+
+def IncDepRawCanonicalFormationTypingAgreement.rebase
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {formationReady : IncDepRawCoherentFormationDispatchReady targetFormation}
+    {typingFormationReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    {typingReady : IncDepRawStrictTypingDispatchReady targetTyping
+      typingFormationReady}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {formation : IncDepRawSomeCanonicalStrictFormationSubstitutionDispatchResult
+      formationReady substitutionResult}
+    {typing : IncDepRawSomeCanonicalStrictTypingSubstitutionDispatchResult
+      typingReady substitutionResult}
+    (agreement : IncDepRawCanonicalFormationTypingAgreement formation typing) :
+    IncDepRawFormationSubstitutionFiberRebase
+      typing.result.dispatchResult.formationResult
+      formation.result.dispatchResult.formationResult :=
+  IncDepRawFormationSubstitutionFiberRebase.ofEq agreement.result_eq
+
 structure IncDepRawFormationSubstitutionFiberRebaseProvider where
   provide : ∀
     {source target : List IncDepRawType} {type : IncDepRawType}
@@ -10332,6 +10410,33 @@ def IncDepRawTypingSubstitutionFiberResult.castFormation
       (targetTyping := targetTyping) right := by
   cases alignment
   exact result
+
+def IncDepRawCanonicalFormationTypingAgreement.typingResultAligned
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {formationReady : IncDepRawCoherentFormationDispatchReady targetFormation}
+    {typingFormationReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    {typingReady : IncDepRawStrictTypingDispatchReady targetTyping
+      typingFormationReady}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {formation : IncDepRawSomeCanonicalStrictFormationSubstitutionDispatchResult
+      formationReady substitutionResult}
+    {typing : IncDepRawSomeCanonicalStrictTypingSubstitutionDispatchResult
+      typingReady substitutionResult}
+    (agreement : IncDepRawCanonicalFormationTypingAgreement formation typing) :
+    IncDepRawTypingSubstitutionFiberResult
+      (targetTyping := targetTyping)
+      formation.result.dispatchResult.formationResult :=
+  typing.result.dispatchResult.typingResult.castFormation agreement.result_eq
 
 def IncDepRawTypingSubstitutionDispatchResult.typingResultAligned
     {source target : List IncDepRawType} {term : IncDepRawTerm}

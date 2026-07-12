@@ -864,6 +864,18 @@ It currently establishes:
   canonical results must be identified with the corresponding independently
   computed formation IH canonical result before Apply, Pair, projections,
   Identity, and Refl can consume them.
+  That central invariant now has a checked local API.
+  `IncDepRawCanonicalFormationTypingAgreement formation typing` states only that
+  the existential canonical outputs of one generated formation package and one
+  generated typing package coincide.  From this scoped statement,
+  `result_eq` derives equality of the actual fiber results by composing their
+  provenance proofs, `rebase` constructs the natural rebase, and
+  `typingResultAligned` casts the typing fiber result to the exact formation-IH
+  result.  This is the direct replacement for the impossible global rebase
+  provider: it neither quantifies over arbitrary semantic inhabitants nor asks
+  unrelated Unit and Bool interpretations to be equivalent.  Remaining recursor
+  work is now precisely the construction of these local agreements in the six
+  dependent branches.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
