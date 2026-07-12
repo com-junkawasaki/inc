@@ -15151,8 +15151,8 @@ structure IncDepRawCanonicalMutualFoldDispatcher where
   typing : ∀
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} {typing : IncDepRawHasType context term type}
-    {formation : IncDepRawWellFormed context type}
-    (ready : IncDepRawCoherentTypingDispatchReady typing formation),
+    {typeFormation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing typeFormation),
     IncDepRawCanonicalTypingFoldOutput ready
 
 structure IncDepRawCanonicalFoldPathAgreementProvider where
@@ -15183,6 +15183,55 @@ structure IncDepRawCanonicalMutualFoldDispatcher.Lawful
 structure IncDepRawCanonicalLawfulMutualFold where
   dispatcher : IncDepRawCanonicalMutualFoldDispatcher.{u}
   lawful : dispatcher.Lawful
+
+structure IncDepRawCanonicalAnchoredMutualFoldDispatcher where
+  formation : ∀
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentFormationDispatchReady formation),
+    IncDepRawCanonicalFormationFoldOutput.{u} ready
+
+  typing : ∀
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {typeFormation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing typeFormation),
+    IncDepRawCanonicalAnchoredTypingFoldOutput.{u} ready
+      (formation ready.formationReady)
+
+noncomputable def IncDepRawCanonicalAnchoredMutualFoldDispatcher.dispatcher
+    (anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u}) :
+    IncDepRawCanonicalMutualFoldDispatcher.{u} where
+  formation := anchored.formation
+  typing := fun ready => (anchored.typing ready).toTypingFoldOutput
+
+structure IncDepRawCanonicalAnchoredMutualFoldDispatcher.ReadinessLawful
+    (anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u}) : Prop where
+  formationAgreement : ∀
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (firstReady secondReady :
+      IncDepRawCoherentFormationDispatchReady formation),
+    IncDepRawCanonicalFormationFoldAgreement
+      (anchored.formation firstReady).fold
+      (anchored.formation secondReady).fold
+
+theorem
+    IncDepRawCanonicalAnchoredMutualFoldDispatcher.dispatcher_lawful_of_readiness
+    (anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u})
+    (readinessLawful : anchored.ReadinessLawful) :
+    anchored.dispatcher.Lawful where
+  pathAgreement := fun formationReady typingReady =>
+    readinessLawful.formationAgreement formationReady
+      typingReady.formationReady
+
+noncomputable def
+    IncDepRawCanonicalAnchoredMutualFoldDispatcher.toLawfulMutualFold
+    (anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u})
+    (readinessLawful : anchored.ReadinessLawful) :
+    IncDepRawCanonicalLawfulMutualFold.{u} where
+  dispatcher := anchored.dispatcher
+  lawful := anchored.dispatcher_lawful_of_readiness readinessLawful
 
 def IncDepRawCanonicalFoldPathAgreementProvider.dispatch
     (provider : IncDepRawCanonicalFoldPathAgreementProvider.{u})

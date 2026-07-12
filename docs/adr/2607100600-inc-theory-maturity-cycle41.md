@@ -448,6 +448,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `IncDepRawCanonicalAnchoredTypingFoldResult`を返す。Applyはfunction/argument anchors、Pairはfirst/second anchorsを消費し、Secondはanchored First resultを
   内部生成・再利用する。dependent branchesに残る自然性入力はscoped instantiate-agreement providerだけで、final direct mutual recursionはformation 5枝と
   anchored typing 8枝を接続するだけになった。
+- Leanではmutual declarationの第二関数dependent result型から第一関数を参照できないため、provider-free fixed pointを
+  `IncDepRawCanonicalAnchoredMutualFoldDispatcher`として表現した。後続`typing` fieldは先行`formation` fieldのexact outputへ直接依存し、public dispatcherへの
+  変換もchecked。残るlawはformation評価がcoherent-readiness proof選択に依存しない`ReadinessLawful`だけで、これがあれば`toLawfulMutualFold`がfully lawful
+  packageを返す。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

@@ -1092,6 +1092,14 @@ It currently establishes:
   The only remaining naturality input in these dependent branches is the scoped
   instantiate-agreement provider.  The final direct mutual recursion now only
   has to connect the five formation handlers to these eight anchored handlers.
+  Lean does not allow the second function in a mutual declaration to mention the
+  first function in its dependent result type, so the provider-free fixed point
+  is now represented by `IncDepRawCanonicalAnchoredMutualFoldDispatcher`: its
+  later `typing` field can depend on its earlier `formation` field directly.
+  Conversion to the public dispatcher is checked.  The precise remaining law is
+  `ReadinessLawful`, asserting only that formation evaluation is insensitive to
+  the choice of coherent-readiness proof.  With that law,
+  `toLawfulMutualFold` produces the fully lawful package.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
