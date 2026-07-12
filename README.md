@@ -2768,6 +2768,12 @@ the total renamed formation first; its typing field is indexed by exactly that
 choice.  This rules out the invalid approach of rewriting readiness equality
 while leaving dependent typing indices unchanged.  Constructing the canonical
 provider is the remaining total-renaming proof before lift.
+An implementation audit exposed one prerequisite above it: the existing
+`IncDepRawCoherentReadinessAlignmentProvider` has no canonical inhabitant in
+the checked development; later canonical folds accept it as a hypothesis.
+Therefore unconditional basic preservation must first prove coherent readiness
+alignment itself.  Threading the same hypothesis through the new renamer would
+only reproduce the current conditional boundary.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo
