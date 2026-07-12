@@ -2609,6 +2609,11 @@ so a concrete unconditional preservation theorem is not claimed yet.
 In particular, this scoped core deliberately omits the legacy global fiber
 rebase field: the library proves that no such provider exists in general, and
 the provider-free recursive theorem does not consume it.
+The Unit obligation is also exposed as `Stage1` (variable replacement and
+readiness alignment), `Stage2` (instantiate relational naturality), and
+`Stage3` (dependent relational naturality); supplying generated-identity
+naturality to `Stage3.complete` produces the final completion.  This staging
+lets each genuine law be proved independently without placeholder axioms.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

@@ -19160,6 +19160,46 @@ structure IncDepRawUnitRelationalCompletion where
     IncDepRawCanonicalProviderFreeRelationalNaturalityLaws
       incDepRawUnitSubstitutionFiberModel
 
+structure IncDepRawUnitRelationalCompletion.Stage1 where
+  variableProvider : IncDepRawVariableSubstitutionProvider
+  readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider
+
+structure IncDepRawUnitRelationalCompletion.Stage2 extends
+    IncDepRawUnitRelationalCompletion.Stage1 where
+  instantiate : IncDepRawCanonicalInstantiateAssemblyNaturalModel
+    incDepRawUnitSubstitutionFiberModel
+
+structure IncDepRawUnitRelationalCompletion.Stage3 extends
+    IncDepRawUnitRelationalCompletion.Stage2 where
+  dependent : IncDepRawCanonicalDependentAssemblyNaturalModel
+    incDepRawUnitSubstitutionFiberModel
+
+def IncDepRawUnitRelationalCompletion.Stage1.withInstantiate
+    (stage : IncDepRawUnitRelationalCompletion.Stage1)
+    (instantiate : IncDepRawCanonicalInstantiateAssemblyNaturalModel
+      incDepRawUnitSubstitutionFiberModel) :
+    IncDepRawUnitRelationalCompletion.Stage2 where
+  toStage1 := stage
+  instantiate := instantiate
+
+def IncDepRawUnitRelationalCompletion.Stage2.withDependent
+    (stage : IncDepRawUnitRelationalCompletion.Stage2)
+    (dependent : IncDepRawCanonicalDependentAssemblyNaturalModel
+      incDepRawUnitSubstitutionFiberModel) :
+    IncDepRawUnitRelationalCompletion.Stage3 where
+  toStage2 := stage
+  dependent := dependent
+
+def IncDepRawUnitRelationalCompletion.Stage3.complete
+    (stage : IncDepRawUnitRelationalCompletion.Stage3)
+    (identity : IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel
+      incDepRawUnitSubstitutionFiberModel) :
+    IncDepRawUnitRelationalCompletion where
+  preservation :=
+    { variableProvider := stage.variableProvider
+      readinessAlignment := stage.readinessAlignment }
+  relationalLaws := .ofComponents stage.instantiate stage.dependent identity
+
 def IncDepRawUnitRelationalCompletion.toLawfulModel
     (completion : IncDepRawUnitRelationalCompletion) :
     IncDepRawRelationalLawfulSubstitutionFiberModel where

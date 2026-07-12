@@ -1426,6 +1426,11 @@ cycle 38–41 で以下の3極構造が判明した:
   global fiber rebaseは一般に存在しないことが既に反証済みで、provider-free foldも使用しないため、
   completionから除外した。現在の残件は
   recursor構築ではなく、このUnit completionを実際にinhabitすることである。
+  completionはさらに`Stage1`（variable/readiness）、`Stage2`（instantiate）、
+  `Stage3`（dependent）、最後のgenerated-identity lawという順に分解され、各lawを
+  独立に証明して`Stage3.complete`で合成できる。readiness certificateは一般には単なる
+  proof-irrelevant値ではなく、instantiateで異なるderivation indexが合流し得るため、
+  無条件の全域一意性を仮定せずscoped alignmentとして残している。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。
