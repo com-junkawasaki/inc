@@ -15322,6 +15322,64 @@ theorem IncDepRawCanonicalFormationFoldOutput.Generated.agreement
           (domainIH rightDomainGenerated)
           (codomainIH rightCodomainGenerated)
 
+theorem IncDepRawCanonicalFormationFoldOutput.Generated.castReady
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {firstReady secondReady :
+      IncDepRawCoherentFormationDispatchReady formation}
+    {output : IncDepRawCanonicalFormationFoldOutput.{u} firstReady}
+    (generated : output.Generated model)
+    (readyEq : firstReady = secondReady) :
+    (output.castReady readyEq).Generated model := by
+  cases readyEq
+  exact generated
+
+theorem IncDepRawCanonicalFormationFoldOutput.Generated.agreementAcrossReady
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (dependentAgreement :
+      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {leftReady rightReady :
+      IncDepRawCoherentFormationDispatchReady formation}
+    {left : IncDepRawCanonicalFormationFoldOutput.{u} leftReady}
+    {right : IncDepRawCanonicalFormationFoldOutput.{u} rightReady}
+    (leftGenerated : left.Generated model)
+    (rightGenerated : right.Generated model) :
+    IncDepRawCanonicalFormationFoldAgreement left.fold right.fold := by
+  let readyEq := readinessAlignment.alignFormation rightReady leftReady
+  let castRight := right.castReady readyEq
+  let castGenerated := rightGenerated.castReady readyEq
+  let sameReady := leftGenerated.agreement dependentAgreement castGenerated
+  exact
+    { agree := by
+        intro source substitution sourceWellFormed targetWellFormed sourceResult
+          targetResult substitutionResult targetTree replacements
+        calc
+          (left.fold targetTree replacements).canonical =
+              (castRight.fold targetTree replacements).canonical :=
+            sameReady.agree targetTree replacements
+          _ = (right.fold targetTree replacements).canonical :=
+            (right.castReady_canonical readyEq targetTree replacements).symm }
+
+def IncDepRawCanonicalAnchoredTypingFoldOutput.retargetFormation
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentTypingDispatchReady typing formation}
+    {oldReady newReady : IncDepRawCoherentFormationDispatchReady formation}
+    {oldFormation : IncDepRawCanonicalFormationFoldOutput oldReady}
+    (output : IncDepRawCanonicalAnchoredTypingFoldOutput ready oldFormation)
+    (newFormation : IncDepRawCanonicalFormationFoldOutput newReady)
+    (formationAgreement : IncDepRawCanonicalFormationFoldAgreement
+      newFormation.fold oldFormation.fold) :
+    IncDepRawCanonicalAnchoredTypingFoldOutput ready newFormation where
+  typing := output.typing
+  agreement := IncDepRawCanonicalFoldAgreement.retargetFormation
+    formationAgreement output.agreement
+
 /-- Syntax-directed provenance for an anchored typing output, indexed directly
 by the exact formation output to which the typing output is anchored.  Unlike
 the earlier result wrapper, this index is definitionally the recursive
@@ -15333,8 +15391,9 @@ inductive IncDepRawCanonicalAnchoredTypingFoldOutput.Generated
     {type : IncDepRawType} {typing : IncDepRawHasType context term type}
     {formation : IncDepRawWellFormed context type}
     {ready : IncDepRawCoherentTypingDispatchReady typing formation}
+    {formationReady : IncDepRawCoherentFormationDispatchReady formation}
     (formationOutput : IncDepRawCanonicalFormationFoldOutput.{u}
-      ready.formationReady),
+      formationReady),
     IncDepRawCanonicalAnchoredTypingFoldOutput.{u} ready formationOutput → Prop
   | variable {context : List IncDepRawType} {position : Nat}
       {type : IncDepRawType} {lookup : IncDepRawLookup context position type}
@@ -15373,6 +15432,40 @@ inductive IncDepRawCanonicalAnchoredTypingFoldOutput.Generated
           domainOutput bodyFormationOutput)
         (model.anchoredTypingFoldResultLambdaExact domainReady bodyReady
           domainOutput bodyFormationOutput bodyOutput).output
+  | retarget {context : List IncDepRawType} {term : IncDepRawTerm}
+      {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+      {formation : IncDepRawWellFormed context type}
+      {ready : IncDepRawCoherentTypingDispatchReady typing formation}
+      {oldReady newReady : IncDepRawCoherentFormationDispatchReady formation}
+      (oldFormation : IncDepRawCanonicalFormationFoldOutput oldReady)
+      (newFormation : IncDepRawCanonicalFormationFoldOutput newReady)
+      (output : IncDepRawCanonicalAnchoredTypingFoldOutput ready oldFormation)
+      (agreement : IncDepRawCanonicalFormationFoldAgreement newFormation.fold
+        oldFormation.fold) :
+      Generated model variableProvider (ready := ready) oldFormation output →
+      Generated model variableProvider (ready := ready) newFormation
+        (output.retargetFormation newFormation agreement)
+  | first {context : List IncDepRawType} {domain codomain : IncDepRawType}
+      {pair : IncDepRawTerm}
+      {domainFormation : IncDepRawWellFormed context domain}
+      {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+      {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)}
+      {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+      {codomainReady :
+        IncDepRawCoherentFormationDispatchReady codomainFormation}
+      {pairReady : IncDepRawCoherentTypingDispatchReady pairTyping
+        (.sigma domainFormation codomainFormation)}
+      (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
+      (codomainOutput : IncDepRawCanonicalFormationFoldOutput codomainReady)
+      (pairOutput : IncDepRawCanonicalAnchoredTypingFoldOutput pairReady
+        (model.canonicalFormationFoldOutputSigma domainReady codomainReady
+          domainOutput codomainOutput)) :
+      Generated model variableProvider
+        (model.canonicalFormationFoldOutputSigma domainReady codomainReady
+          domainOutput codomainOutput) pairOutput →
+      Generated model variableProvider domainOutput
+        (model.anchoredTypingFoldResultFirstExact domainReady codomainReady
+          pairReady domainOutput codomainOutput pairOutput).output
 
 /-- A formation output packaged with evidence that it was produced solely by
 the canonical syntax-directed constructors.  This is the formation motive used
@@ -15533,6 +15626,44 @@ noncomputable def IncDepRawSubstitutionFiberModel.generatedTypingOutputLambda
     domain.output body.formation.output body.output).output
   generated := .lambda domain.output body.formation.output body.output
     body.generated
+
+noncomputable def IncDepRawSubstitutionFiberModel.generatedTypingOutputFirst
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (dependentAgreement :
+      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {pairTyping : IncDepRawHasType context pair (.sigma domain codomain)}
+    {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+    {codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation}
+    {pairReady : IncDepRawCoherentTypingDispatchReady pairTyping
+      (.sigma domainFormation codomainFormation)}
+    (domain :
+      IncDepRawCanonicalGeneratedFormationFoldOutput model domainReady)
+    (codomain :
+      IncDepRawCanonicalGeneratedFormationFoldOutput model codomainReady)
+    (pair : IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput model
+      variableProvider pairReady) :
+    IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput model variableProvider
+      (.firstRule domainReady codomainReady pairReady) := by
+  let sigma := model.generatedFormationSigma domain codomain
+  let sigmaAgreement : IncDepRawCanonicalFormationFoldAgreement
+      sigma.output.fold pair.formation.output.fold :=
+    sigma.generated.agreementAcrossReady dependentAgreement readinessAlignment
+      pair.formation.generated
+  let alignedPair := pair.output.retargetFormation sigma.output
+    sigmaAgreement
+  exact
+    { formation := domain
+      output := (model.anchoredTypingFoldResultFirstExact domainReady codomainReady
+      pairReady domain.output codomain.output alignedPair).output
+      generated := .first domain.output codomain.output alignedPair
+        (.retarget pair.formation.output sigma.output pair.output sigmaAgreement
+          pair.generated) }
 
 structure IncDepRawCanonicalAnchoredMutualFoldDispatcher.ReadinessLawful
     (anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u}) : Prop where

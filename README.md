@@ -1159,6 +1159,15 @@ It currently establishes:
   (3) its syntax-directed provenance.  This exact index removes the readiness
   proof mismatch exposed by the older result wrapper and is the motive needed
   by the remaining dependent typing constructors.
+  Generated formation uniqueness now also crosses propositionally equal
+  readiness witnesses via `Generated.agreementAcrossReady`; the proof casts one
+  generated output, applies structural uniqueness, and discharges the cast with
+  the canonical-result transport theorem.  Anchored typing outputs have a
+  provenance-preserving scoped `retarget` constructor.  Using these two pieces,
+  the First projection is checked end to end: its recursively generated pair
+  output is aligned to the freshly generated canonical Sigma formation and the
+  result remains generated.  Provider-free typing coverage is therefore now
+  Variable, Unit, Lambda, and First (4/8).
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
