@@ -827,6 +827,17 @@ It currently establishes:
   their result formation is selected from, or instantiated from, a recursive
   premise and therefore must propagate an incoming provenance witness rather
   than create a fresh outer constructor witness.
+  Those final three cases are now complete.  `dispatchProvenancedFirst` consumes
+  the provenance-carrying domain formation result and transfers the identical
+  witness to the projection result.  `dispatchProvenancedApplyCanonical` fixes
+  its formation result to the canonical codomain instantiation along the
+  argument semantics, and `dispatchProvenancedSecondCanonical` does the same
+  along the semantic first projection; both witnesses are `rfl` because the
+  existing canonical builders already return those exact results.  All eight
+  typing constructors—Variable, Unit, Lambda, Apply, Pair, First, Second, and
+  Refl—therefore have provenance-aware checked builders.  The remaining step is
+  recursor-level wiring: define mutual motives that return these wrappers and
+  replace the old unrestricted rebase provider at recursive alignment sites.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

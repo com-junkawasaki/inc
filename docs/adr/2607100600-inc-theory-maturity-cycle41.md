@@ -330,6 +330,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   各caseは既存strict builderへterm semanticsを委譲し、`rfl`のformation-provenance witnessだけを追加する。Unit/Variableと合わせ8typing constructors中5つが
   provenance付きresultを生成する。Apply/First/Secondはresult formationをrecursive premiseから選択またはinstantiateするため、新outer witnessでなくincoming
   provenanceを伝播する実装が残る。
+- 最後の3typing casesを完了した。`dispatchProvenancedFirst`はprovenance付きdomain formation resultを消費して同一witnessをprojection resultへ移す。
+  `dispatchProvenancedApplyCanonical`はargument semanticsによるcanonical codomain instantiationを、`dispatchProvenancedSecondCanonical`はsemantic first
+  projectionによる同instantiationをformation resultとして固定し、既存canonical builderがexact resultを返すため両provenanceは`rfl`である。
+  Variable/Unit/Lambda/Apply/Pair/First/Second/Reflの全8typing constructorsにprovenance-aware checked builderが揃った。残件はwrapperを返すmutual motivesを
+  recursorへ配線し、recursive alignment sitesの旧unrestricted rebase providerをscoped provenance rebaseへ置換することに限定された。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
