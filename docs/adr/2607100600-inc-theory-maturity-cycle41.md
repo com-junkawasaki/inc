@@ -320,6 +320,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `dispatchCanonicalIdentityFormation`が全5readiness constructorsを覆い、checked strict dispatcherを再利用しつつprovenanceはdefinitionally `rfl`である。
   既存APIを壊さずnew mutual foldでgenerated-result uniquenessを利用できる。次はtyping wrapper（特にvariable lookup）を統合し、recursive foldのbroad rebase callsを
   scoped provenance rebaseへ置換する。
+- typing provenance integrationをmutual recursionへの任意result流入を決める二leafから開始した。
+  `IncDepRawCanonicalStrictTypingSubstitutionDispatchResult`がstrict typing resultとそのformation result provenanceを束ねる。
+  `dispatchCanonicalTypingUnit`は両方をcanonical生成し、`dispatchCanonicalVariable`はformation fold由来のprovenance付きresultを消費してlookup dispatch後も
+  exact witnessを保持するため、variable handlerは無関係なsemantic familyを導入できない。generic `withFormationProvenance`はformation provenanceが既知なら
+  任意の既存strict typing resultを昇格でき、lambda/apply/pair/projections/reflはchecked buildersを再利用してsemantic proof重複を避けられる。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

@@ -9902,6 +9902,56 @@ structure IncDepRawStrictTypingSubstitutionDispatchResult
   typingResult : IncDepRawTypingSubstitutionFiberResult
     (targetTyping := targetTyping) formationResult
 
+structure IncDepRawCanonicalStrictTypingSubstitutionDispatchResult
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {targetFormationReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    (targetReady : IncDepRawStrictTypingDispatchReady targetTyping
+      targetFormationReady)
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (canonical : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult) where
+  dispatchResult : IncDepRawStrictTypingSubstitutionDispatchResult
+    targetReady substitutionResult
+  formationProvenance : IncDepRawCanonicalFormationFiberResult canonical
+    dispatchResult.formationResult
+
+def IncDepRawStrictTypingSubstitutionDispatchResult.withFormationProvenance
+    {source target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {targetFormationReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    {targetReady : IncDepRawStrictTypingDispatchReady targetTyping
+      targetFormationReady}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {canonical : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := targetFormation) substitutionResult}
+    (result : IncDepRawStrictTypingSubstitutionDispatchResult
+      targetReady substitutionResult)
+    (provenance : IncDepRawCanonicalFormationFiberResult canonical
+      result.formationResult) :
+    IncDepRawCanonicalStrictTypingSubstitutionDispatchResult
+      targetReady canonical where
+  dispatchResult := result
+  formationProvenance := provenance
+
 structure IncDepRawStrictFormationSubstitutionDispatchResult
     {source target : List IncDepRawType} {type : IncDepRawType}
     {substitution : IncDepRawSubstitution source target}
@@ -10480,6 +10530,22 @@ def IncDepRawSubstitutionFiberModel.dispatchStrictUnit
   formationResult := model.unit substitutionResult
   typingResult := model.typingUnit substitutionResult
 
+def IncDepRawSubstitutionFiberModel.dispatchCanonicalTypingUnit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {source target : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    (substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult) :
+    IncDepRawCanonicalStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.unitRule (context := target))
+      (model.unit substitutionResult) where
+  dispatchResult := model.dispatchStrictUnit substitutionResult
+  formationProvenance := .canonical _
+
 def IncDepRawSubstitutionFiberModel.dispatchStrictBaseFormation
     (model : IncDepRawSubstitutionFiberModel.{u})
     {source target : List IncDepRawType} {index : Nat}
@@ -10751,6 +10817,35 @@ noncomputable def IncDepRawVariableSubstitutionProvider.dispatchStrictVariable
   formationResult := typeResult
   typingResult := provider.dispatch typeReady.toDispatchReady targetTree typeResult
     replacements
+
+noncomputable def
+    IncDepRawVariableSubstitutionProvider.dispatchCanonicalVariable
+    (provider : IncDepRawVariableSubstitutionProvider)
+    {source target : List IncDepRawType} {position : Nat}
+    {type : IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {lookup : IncDepRawLookup target position type}
+    {typeFormation : IncDepRawWellFormed target type}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    {typeReady : IncDepRawCoherentFormationDispatchReady typeFormation}
+    {canonicalTypeResult : IncDepRawFormationSubstitutionFiberResult
+      (targetFormation := typeFormation) substitutionResult}
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (typeResult : IncDepRawCanonicalStrictFormationSubstitutionDispatchResult
+      typeReady canonicalTypeResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult) :
+    IncDepRawCanonicalStrictTypingSubstitutionDispatchResult
+      (IncDepRawStrictTypingDispatchReady.varRule
+        (lookup := lookup) typeReady) canonicalTypeResult where
+  dispatchResult := provider.dispatchStrictVariable typeReady targetTree
+    typeResult.dispatchResult.formationResult replacements
+  formationProvenance := typeResult.provenance
 
 noncomputable def IncDepRawSubstitutionFiberModel.dispatchRefl
     (model : IncDepRawSubstitutionFiberModel.{u})

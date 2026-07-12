@@ -803,6 +803,18 @@ It currently establishes:
   uniqueness available to a new mutual fold.  The next integration layer is the
   typing wrapper—especially variable lookup—followed by replacing broad rebase
   calls in the recursive fold with the scoped provenance rebase.
+  Typing provenance integration has begun at the two leaves that determine
+  whether arbitrary results can enter the mutual recursion.
+  `IncDepRawCanonicalStrictTypingSubstitutionDispatchResult` pairs a strict
+  typing result with provenance for its formation result.
+  `dispatchCanonicalTypingUnit` creates both components canonically, while
+  `dispatchCanonicalVariable` consumes a provenance-carrying formation result
+  from the formation fold and preserves that exact witness through lookup
+  dispatch.  Thus the variable handler cannot substitute an unrelated semantic
+  family.  The generic `withFormationProvenance` constructor lifts any existing
+  strict typing result once its formation provenance is known, allowing lambda,
+  apply, pair, projections, and reflexivity to reuse their checked builders
+  rather than duplicate semantic proofs.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
