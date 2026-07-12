@@ -48,6 +48,12 @@ belong in [`adr/`](adr/).
   incidence, and has relative Kripke completeness plus diagram-respecting
   canonical countermodels. A generic completeness theorem for arbitrary
   `ResonanceSpec` models remains open.
+- `FiniteResonancePresentation` now generalizes the diagram construction to
+  any explicitly finite decidable resonance: true triples become positive
+  atoms and false triples become negated atoms. Its diagram characterizes the
+  physical valuation exactly. `FinitePhysicalResonanceLogic` combines such a
+  presentation with atom coding and supplies relative Kripke completeness and
+  canonical countermodels. The two-point model instantiates this generic API.
 - The incidence core and bisimulation equivalence are formalized in Lean.
 - Concrete finite, graph, natural-number, pair, path, cycle, and simplex models
   witness non-vacuity of the implemented fragments.

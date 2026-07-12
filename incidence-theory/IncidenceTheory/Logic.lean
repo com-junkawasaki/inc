@@ -6136,4 +6136,86 @@ theorem resonanceFormula_preserved
       ((resonanceFormula i j k).map (resonanceAtomMap map)) := by
   exact preserves satisfied
 
+structure FiniteResonancePresentation
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) where
+  atoms : List (ResonanceAtom I)
+  exhaustive : ∀ atom, atom ∈ atoms
+  decidableResonance : DecidablePred (resonanceValuation inc)
+
+def FiniteResonancePresentation.literal
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (presentation : FiniteResonancePresentation inc)
+    (atom : ResonanceAtom I) : Formula (ResonanceAtom I) :=
+  letI : Decidable (resonanceValuation inc atom) :=
+    presentation.decidableResonance atom
+  if resonanceValuation inc atom then .atom atom else Formula.neg (.atom atom)
+
+def FiniteResonancePresentation.diagram
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (presentation : FiniteResonancePresentation inc) :
+    List (Formula (ResonanceAtom I)) :=
+  presentation.atoms.map presentation.literal
+
+theorem FiniteResonancePresentation.physical_satisfies
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (presentation : FiniteResonancePresentation inc) :
+    ContextSatisfies (resonanceValuation inc) presentation.diagram := by
+  intro formula member
+  rcases List.mem_map.mp member with ⟨atom, atomMember, rfl⟩
+  simp only [FiniteResonancePresentation.literal]
+  split
+  · assumption
+  · exact fun resonant => False.elim (by contradiction)
+
+theorem FiniteResonancePresentation.characterizes
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (presentation : FiniteResonancePresentation inc)
+    (valuation : ResonanceAtom I → Prop) :
+    ContextSatisfies valuation presentation.diagram ↔
+      ∀ atom, valuation atom ↔ resonanceValuation inc atom := by
+  constructor
+  · intro satisfies atom
+    have member : presentation.literal atom ∈ presentation.diagram :=
+      List.mem_map.mpr ⟨atom, presentation.exhaustive atom, rfl⟩
+    have literalTrue := satisfies _ member
+    simp only [FiniteResonancePresentation.literal] at literalTrue
+    split at literalTrue
+    · exact ⟨fun _ => by assumption, fun _ => literalTrue⟩
+    · exact ⟨fun valuationTrue => False.elim (literalTrue valuationTrue),
+        fun resonanceTrue => False.elim (by contradiction)⟩
+  · intro agrees formula member
+    rcases List.mem_map.mp member with ⟨atom, atomMember, rfl⟩
+    simp only [FiniteResonancePresentation.literal]
+    split
+    · exact (agrees atom).mpr (by assumption)
+    · intro valuationTrue
+      exact False.elim (by
+        have := (agrees atom).mp valuationTrue
+        contradiction)
+
+structure FinitePhysicalResonanceLogic
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) where
+  presentation : FiniteResonancePresentation inc
+  coding : CountableAtomCoding (ResonanceAtom I)
+
+theorem FinitePhysicalResonanceLogic.kripke_complete
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (logic : FinitePhysicalResonanceLogic inc)
+    (formula : Formula (ResonanceAtom I)) :
+    KripkeEntails.{u, u} logic.presentation.diagram formula ↔
+      Derives logic.presentation.diagram formula :=
+  logic.coding.kripke_complete _ _
+
+theorem FinitePhysicalResonanceLogic.countermodel_of_not_derives
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (logic : FinitePhysicalResonanceLogic inc)
+    {formula : Formula (ResonanceAtom I)}
+    (hnot : ¬ Derives logic.presentation.diagram formula) :
+    ∃ theory : PrimeTheory (ResonanceAtom I),
+      KripkeContextForces (canonicalKripkeModel (ResonanceAtom I)) theory
+          logic.presentation.diagram ∧
+        ¬ KripkeForces (canonicalKripkeModel (ResonanceAtom I)) theory formula :=
+  canonical_countermodel_of_not_derives_of_enumeration
+    logic.coding.formulaEnumeration hnot
+
 end IncidenceCore

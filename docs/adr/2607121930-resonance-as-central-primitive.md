@@ -97,3 +97,7 @@ case where the selector is complete and resonance has no unselected modes.
   `finiteResonanceDiagram` is the finite physical theory of all eight triples.
   The physical valuation satisfies it, it characterizes all-resonant
   valuations, and completeness/countermodels are checked relative to it.
+- More generally, `FiniteResonancePresentation` generates a complete signed
+  diagram from an exhaustive finite triple list and a decision procedure.
+  `FinitePhysicalResonanceLogic` proves relative completeness for every such
+  presentation with countably coded atoms.

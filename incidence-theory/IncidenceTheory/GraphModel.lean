@@ -717,6 +717,30 @@ def finiteResonanceDiagram :
    resonanceFormula .root .root .leaf,
    resonanceFormula .root .root .root]
 
+def finiteResonancePresentation :
+    FiniteResonancePresentation finiteIncidence where
+  atoms :=
+    [⟨.leaf, .leaf, .leaf⟩, ⟨.leaf, .leaf, .root⟩,
+     ⟨.leaf, .root, .leaf⟩, ⟨.leaf, .root, .root⟩,
+     ⟨.root, .leaf, .leaf⟩, ⟨.root, .leaf, .root⟩,
+     ⟨.root, .root, .leaf⟩, ⟨.root, .root, .root⟩]
+  exhaustive := by
+    rintro ⟨left, right, mode⟩
+    cases left <;> cases right <;> cases mode <;> simp
+  decidableResonance := fun _ => isTrue True.intro
+
+noncomputable def finitePhysicalResonanceLogic :
+    FinitePhysicalResonanceLogic finiteIncidence where
+  presentation := finiteResonancePresentation
+  coding := finiteResonanceAtomCoding
+
+theorem finiteResonancePresentation_diagram_eq :
+    finiteResonancePresentation.diagram = finiteResonanceDiagram := by
+  simp [FiniteResonancePresentation.diagram,
+    FiniteResonancePresentation.literal, finiteResonancePresentation,
+    resonanceValuation, resonanceFormula, finiteIncidence,
+    finiteResonanceDiagram]
+
 theorem finiteResonanceDiagram_characterizes
     (valuation : ResonanceAtom FiniteIncidence → Prop) :
     ContextSatisfies valuation finiteResonanceDiagram ↔
