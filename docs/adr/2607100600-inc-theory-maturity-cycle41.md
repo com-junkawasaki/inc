@@ -1372,6 +1372,10 @@ cycle 38–41 で以下の3極構造が判明した:
   `ofWeak`を供給する。final-motive handlersはlegacy dependent-formation/generated-Identity
   weak provider型を一切参照しない。assembly-only dispatcherは`ofAssembly`を渡して全13
   handlersを再利用でき、残るのはrecursor input bundle/wiringだけである。
+  共通`RecursiveFoldInputs`を追加し、variable replacement、readiness alignment、instantiate
+  agreement、抽象recursive agreement serviceを保持する。`ofWeak`/`ofAssembly`が二つのpublic
+  hypothesis familiesを同一内部型へnormalizeするため、recursor本体はalignmentがlegacy weak
+  laws由来かrelational assembly coherence由来かを知らず一度だけ定義できる。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

@@ -1393,6 +1393,12 @@ It currently establishes:
   provider types anymore.  The assembly-only dispatcher can therefore reuse all
   13 handlers by supplying `ofAssembly`; only the recursor input bundle/wiring
   remains.
+  `RecursiveFoldInputs` now provides that common bundle: variable replacement,
+  readiness alignment, instantiate agreement, and the abstract recursive
+  agreement service.  `RecursiveFoldInputs.ofWeak` and `.ofAssembly` normalize
+  the two public hypothesis families into exactly the same internal type.  The
+  recursor body can now be defined once with no knowledge of whether alignment
+  came from legacy weak laws or relational assembly coherence.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

@@ -17765,6 +17765,41 @@ def IncDepRawCanonicalProviderFreeAssemblyHypotheses.ofPreservation
   readinessAlignment := preservation.readinessProvider
   naturality := naturality
 
+/-- Common internal inputs for the single recursive fold implementation. -/
+structure IncDepRawCanonicalRecursiveFoldInputs
+    (model : IncDepRawSubstitutionFiberModel.{u}) where
+  variableProvider : IncDepRawVariableSubstitutionProvider
+  readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider
+  instantiateAgreementProvider :
+    IncDepRawCanonicalInstantiateFoldAgreementProvider.{u}
+  agreementProvider : IncDepRawCanonicalRecursiveGeneratedAgreementProvider
+    model variableProvider
+
+def IncDepRawCanonicalRecursiveFoldInputs.ofWeak
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
+      model) :
+    IncDepRawCanonicalRecursiveFoldInputs.{u} model where
+  variableProvider := hypotheses.variableProvider
+  readinessAlignment := hypotheses.readinessAlignment
+  instantiateAgreementProvider := hypotheses.instantiateAgreementProvider
+  agreementProvider := .ofWeak
+    hypotheses.dependentFormationAgreementProvider
+    hypotheses.generatedIdentityAgreementProvider hypotheses.readinessAlignment
+
+def IncDepRawCanonicalRecursiveFoldInputs.ofAssembly
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (hypotheses : IncDepRawCanonicalProviderFreeAssemblyHypotheses.{u} model) :
+    IncDepRawCanonicalRecursiveFoldInputs.{u} model where
+  variableProvider := hypotheses.variableProvider
+  readinessAlignment := hypotheses.readinessAlignment
+  instantiateAgreementProvider :=
+    hypotheses.naturality.instantiateAgreementProvider
+  agreementProvider := .ofAssembly
+    hypotheses.naturality.dependentAssemblyCoherenceProvider
+    hypotheses.naturality.generatedIdentityAssemblyCoherenceProvider
+    hypotheses.readinessAlignment
+
 structure IncDepRawCanonicalInstantiateNaturalModel
     (model : IncDepRawSubstitutionFiberModel.{u}) where
   law : IncDepRawCanonicalInstantiateFoldAgreementProvider.{u}
