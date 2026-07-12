@@ -1225,6 +1225,15 @@ It currently establishes:
   agreement.  “Provider-free” here means free of the former unrestricted
   arbitrary-output path provider; it does not mean that dependent semantic
   naturality laws have been silently derived.
+  General (not merely exact-index) complete Identity and Refl handlers are now
+  checked.  Each compares the independently recursive endpoint formation with
+  the chosen underlying type via complete agreement across readiness, retargets
+  the anchored endpoint output with a provenance certificate, and invokes the
+  exact builder.  Thus no caller of the final recursor must manually align
+  Identity endpoints.  Before assembling that recursor, the complete formation
+  closure must be normalized from its current “ordinary output or Identity”
+  presentation to explicit Base/Unit/Pi/Sigma/Identity constructors so that an
+  Identity formation may itself occur recursively inside a later Pi or Sigma.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

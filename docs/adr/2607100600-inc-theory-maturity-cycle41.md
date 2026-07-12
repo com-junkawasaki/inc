@@ -1255,6 +1255,12 @@ cycle 38–41 で以下の3極構造が判明した:
   alignment、instantiate agreement、dependent Pi/Sigma agreement、generated Identity
   agreementの5つを明示する。ここでprovider-freeとは旧arbitrary-output path providerを
   除去した意味であり、dependent semantic naturalityまで無仮定という意味ではない。
+  exact-indexに限定しないgeneral Identity/Refl handlersもcheckedとなった。独立再帰した
+  endpoint formationをcomplete agreement across readinessでunderlying typeへ比較し、
+  provenance付きretarget後にexact builderへ渡す。最終recursor利用側でendpoint整列を
+  再実装する必要はない。recursor組立て前の残件は、現在の「ordinaryまたはIdentity」
+  closureを明示的Base/Unit/Pi/Sigma/Identity closureへ正規化し、Identityを後続Pi/Sigmaの
+  内側にも再帰出現可能にすることである。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

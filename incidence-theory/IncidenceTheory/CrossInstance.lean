@@ -16223,6 +16223,86 @@ def IncDepRawCanonicalGeneratedAnchoredTypingFoldOutput.complete
   output := output.output
   generated := output.generated
 
+noncomputable def IncDepRawSubstitutionFiberModel.completelyGeneratedIdentity
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (dependentAgreement :
+      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
+    (identityAgreement :
+      IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider model)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {leftTyping : IncDepRawHasType context left type}
+    {rightTyping : IncDepRawHasType context right type}
+    {typeReady : IncDepRawCoherentFormationDispatchReady typeFormation}
+    {leftReady : IncDepRawCoherentTypingDispatchReady leftTyping typeFormation}
+    {rightReady : IncDepRawCoherentTypingDispatchReady rightTyping typeFormation}
+    (typeOutput : IncDepRawCanonicalCompletelyGeneratedFormationFoldOutput model
+      variableProvider typeReady)
+    (leftOutput :
+      IncDepRawCanonicalCompletelyGeneratedAnchoredTypingFoldOutput model
+        variableProvider leftReady)
+    (rightOutput :
+      IncDepRawCanonicalCompletelyGeneratedAnchoredTypingFoldOutput model
+        variableProvider rightReady) :
+    IncDepRawCanonicalCompletelyGeneratedFormationFoldOutput model
+      variableProvider (.identity typeReady leftReady rightReady) := by
+  let leftAgreement : IncDepRawCanonicalFormationFoldAgreement
+      typeOutput.output.fold leftOutput.formation.output.fold :=
+    typeOutput.completelyGenerated.agreementAcrossReady dependentAgreement
+      identityAgreement readinessAlignment
+      leftOutput.formation.completelyGenerated
+  let rightAgreement : IncDepRawCanonicalFormationFoldAgreement
+      typeOutput.output.fold rightOutput.formation.output.fold :=
+    typeOutput.completelyGenerated.agreementAcrossReady dependentAgreement
+      identityAgreement readinessAlignment
+      rightOutput.formation.completelyGenerated
+  let alignedLeft := leftOutput.output.retargetFormation typeOutput.output
+    leftAgreement
+  let alignedRight := rightOutput.output.retargetFormation typeOutput.output
+    rightAgreement
+  exact model.completelyGeneratedIdentityExact variableProvider
+    readinessAlignment typeOutput alignedLeft alignedRight
+    (.retarget leftOutput.formation.output typeOutput.output leftOutput.output
+      leftAgreement leftOutput.generated)
+    (.retarget rightOutput.formation.output typeOutput.output rightOutput.output
+      rightAgreement rightOutput.generated)
+
+noncomputable def IncDepRawSubstitutionFiberModel.completelyGeneratedRefl
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    (dependentAgreement :
+      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
+    (identityAgreement :
+      IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider model)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {term : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {termTyping : IncDepRawHasType context term type}
+    {typeReady : IncDepRawCoherentFormationDispatchReady typeFormation}
+    {termReady : IncDepRawCoherentTypingDispatchReady termTyping typeFormation}
+    (typeOutput : IncDepRawCanonicalCompletelyGeneratedFormationFoldOutput model
+      variableProvider typeReady)
+    (termOutput :
+      IncDepRawCanonicalCompletelyGeneratedAnchoredTypingFoldOutput model
+        variableProvider termReady) :
+    IncDepRawCanonicalCompletelyGeneratedAnchoredTypingFoldOutput model
+      variableProvider (.reflRule typeReady termReady) := by
+  let termAgreement : IncDepRawCanonicalFormationFoldAgreement
+      typeOutput.output.fold termOutput.formation.output.fold :=
+    typeOutput.completelyGenerated.agreementAcrossReady dependentAgreement
+      identityAgreement readinessAlignment
+      termOutput.formation.completelyGenerated
+  let alignedTerm := termOutput.output.retargetFormation typeOutput.output
+    termAgreement
+  exact model.completelyGeneratedReflExact variableProvider readinessAlignment
+    typeOutput alignedTerm
+    (.retarget termOutput.formation.output typeOutput.output termOutput.output
+      termAgreement termOutput.generated)
+
 structure IncDepRawCanonicalAnchoredMutualFoldDispatcher.ReadinessLawful
     (anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u}) : Prop where
   formationAgreement : ∀
