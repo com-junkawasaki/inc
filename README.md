@@ -1004,6 +1004,14 @@ It currently establishes:
   Refl are also checked: each retargets its child typing bundle to the parent
   formation path and then invokes the already-proved constructor handler.  Five
   of eight typing rules now operate entirely at bundle level.
+  Apply, Pair, and Second now complete the bundle layer, so all eight typing
+  rules return `IncDepRawCanonicalTypingFoldOutput`.  Apply retargets function
+  and argument bundles to Pi and domain paths; Pair retargets its two components
+  to domain and instantiated-result paths.  Second internally constructs the
+  corresponding First bundle and reuses its agreement as the argument of the
+  canonical instantiate motive.  The remaining step is the final mutual
+  recursor assembly that generates formation-path agreements through the scoped
+  providers and feeds these eight checked bundle handlers.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

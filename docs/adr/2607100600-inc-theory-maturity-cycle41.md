@@ -410,6 +410,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - formation agreementsを左右別coherent-readiness proof indicesへ一般化した。canonical fiber型は共通のままで、`castReady`と`castReadyAgreement`は
   proof indexだけを変更する。Lambda body pathを安全にnormalizeでき、First/Reflのbundle constructorsもcheckedとなった。両者は子typing bundleを
   親formation pathへretargetして既証明constructor handlerを呼ぶ。全8 typing rules中5枝がbundle levelで完成した。
+- Apply/Pair/Second bundle constructorsもcheckedとなり、全8 typing rulesが`IncDepRawCanonicalTypingFoldOutput`を返す。Applyはfunction/argumentをPi/domain
+  pathsへ、Pairは二componentsをdomain/instantiated-result pathsへretargetする。Secondは対応First bundleを内部生成し、そのagreementをcanonical instantiate
+  motiveのargumentへ再利用する。残件はscoped providersからformation-path agreementsを再帰生成し、この8 handlersへ渡すfinal mutual recursor組立てである。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
