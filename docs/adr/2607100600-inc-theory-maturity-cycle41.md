@@ -1338,6 +1338,13 @@ cycle 38–41 で以下の3極構造が判明した:
   diagonalizeして既存canonical formation agreementを回収する。recursive certificateは
   relational child agreementを生成し、modelはdependent constructorがそれを保存することだけを
   証明する、という責務分離が明確になった。
+  通常generated formation certificatesからrelational agreementを再帰生成する theoremも
+  checkedとなった。Base/Unitはrelational reflexivity、Pi/Sigmaは再帰child relationsへ
+  assembly-coherence lawsを適用する。`Generated.agreementOfAssembly`はこれをdiagonalizeして
+  旧dependent-formation providerなしにpublic weak agreementを回収する。
+  `DependentAssemblyNaturalModel`をlegacy weak componentと並べて公開した。残closureは
+  generated Identityのrelational lawであり、その後recursive formations全深度でstrong routeを
+  利用できる。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

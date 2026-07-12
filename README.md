@@ -1345,6 +1345,15 @@ It currently establishes:
   the relational result through HEq/strong equality.  This separates two tasks
   cleanly: recursive certificates should produce relational child agreement,
   while a model proves only that its dependent constructors preserve it.
+  Ordinary generated formation certificates now produce this relational
+  agreement recursively.  Base and Unit use relational reflexivity; Pi and
+  Sigma invoke the assembly-coherence laws on recursively obtained child
+  relations.  `Generated.agreementOfAssembly` then diagonalizes the result back
+  to the public weak agreement without the old dependent-formation provider.
+  `DependentAssemblyNaturalModel` exposes this stronger model component beside
+  the legacy weak component.  The remaining closure step is the corresponding
+  relational law for generated Identity, after which recursively generated
+  formations can use the stronger route at arbitrary depth.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

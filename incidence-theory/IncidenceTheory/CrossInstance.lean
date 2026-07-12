@@ -15588,6 +15588,50 @@ theorem IncDepRawCanonicalFormationFoldOutput.Generated.agreement
           (domainIH rightDomainGenerated)
           (codomainIH rightCodomainGenerated)
 
+theorem
+    IncDepRawCanonicalFormationFoldOutput.Generated.relationalAgreement
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (assembly : IncDepRawCanonicalDependentAssemblyCoherenceProvider model)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentFormationDispatchReady formation}
+    {left right : IncDepRawCanonicalFormationFoldOutput.{u} ready}
+    (leftGenerated : left.Generated model)
+    (rightGenerated : right.Generated model) :
+    IncDepRawCanonicalRelationalFormationFoldAgreement left.fold right.fold := by
+  induction leftGenerated with
+  | base =>
+      cases rightGenerated
+      exact .refl _
+  | unit =>
+      cases rightGenerated
+      exact .refl _
+  | pi leftDomain leftCodomain _ _ domainIH codomainIH =>
+      cases rightGenerated with
+      | pi rightDomain rightCodomain rightDomainGenerated
+          rightCodomainGenerated =>
+        exact assembly.pi _ _ _ _ _ _ (domainIH rightDomainGenerated)
+          (codomainIH rightCodomainGenerated)
+  | sigma leftDomain leftCodomain _ _ domainIH codomainIH =>
+      cases rightGenerated with
+      | sigma rightDomain rightCodomain rightDomainGenerated
+          rightCodomainGenerated =>
+        exact assembly.sigma _ _ _ _ _ _ (domainIH rightDomainGenerated)
+          (codomainIH rightCodomainGenerated)
+
+theorem IncDepRawCanonicalFormationFoldOutput.Generated.agreementOfAssembly
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (assembly : IncDepRawCanonicalDependentAssemblyCoherenceProvider model)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentFormationDispatchReady formation}
+    {left right : IncDepRawCanonicalFormationFoldOutput.{u} ready}
+    (leftGenerated : left.Generated model)
+    (rightGenerated : right.Generated model) :
+    IncDepRawCanonicalFormationFoldAgreement left.fold right.fold :=
+  (leftGenerated.relationalAgreement assembly rightGenerated)
+    |>.toHeterogeneousDiagonal.toWeakOfSameReady
+
 theorem IncDepRawCanonicalFormationFoldOutput.Generated.castReady
     {model : IncDepRawSubstitutionFiberModel.{u}}
     {context : List IncDepRawType} {type : IncDepRawType}
@@ -17547,6 +17591,10 @@ structure IncDepRawCanonicalInstantiateNaturalModel
 structure IncDepRawCanonicalDependentFormationNaturalModel
     (model : IncDepRawSubstitutionFiberModel.{u}) where
   law : IncDepRawCanonicalDependentFormationFoldAgreementProvider.{u} model
+
+structure IncDepRawCanonicalDependentAssemblyNaturalModel
+    (model : IncDepRawSubstitutionFiberModel.{u}) where
+  law : IncDepRawCanonicalDependentAssemblyCoherenceProvider.{u} model
 
 structure IncDepRawCanonicalGeneratedIdentityNaturalModel
     (model : IncDepRawSubstitutionFiberModel.{u}) where
