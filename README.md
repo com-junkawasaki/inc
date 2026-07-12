@@ -2699,6 +2699,12 @@ typing constructor coverage is therefore 5/8.  Direct equation normalization
 for Apply, Pair, and Second typechecks incrementally but is deliberately not
 accepted: it exceeds the clean-build elaboration budget.  Those three branches
 need explicit lightweight transport lemmas before the mutual recursor is tied.
+The shared transport layer is now checked.  `IncDepRawWellFormed.castType` and
+`IncDepRawHasType.castType` move both derivation kinds along one type equality;
+the corresponding coherent-readiness casts transport their certificates in
+lockstep.  Reflexive beta laws are proved.  These primitives match the
+`Eq.mp` shape used by Apply/Pair/Second substitution without unfolding the
+large mutual equation compiler.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

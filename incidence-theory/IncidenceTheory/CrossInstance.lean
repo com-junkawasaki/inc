@@ -2096,6 +2096,57 @@ def IncDepRawCoherentTypingDispatchReady.castFormation
   cases formationEq
   exact ready
 
+def IncDepRawWellFormed.castType
+    {context : List IncDepRawType} {first second : IncDepRawType}
+    (formation : IncDepRawWellFormed context first)
+    (typeEq : first = second) :
+    IncDepRawWellFormed context second := by
+  cases typeEq
+  exact formation
+
+def IncDepRawHasType.castType
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {first second : IncDepRawType}
+    (typing : IncDepRawHasType context term first)
+    (typeEq : first = second) :
+    IncDepRawHasType context term second := by
+  cases typeEq
+  exact typing
+
+def IncDepRawCoherentFormationDispatchReady.castType
+    {context : List IncDepRawType} {first second : IncDepRawType}
+    {formation : IncDepRawWellFormed context first}
+    (ready : IncDepRawCoherentFormationDispatchReady formation)
+    (typeEq : first = second) :
+    IncDepRawCoherentFormationDispatchReady (formation.castType typeEq) := by
+  cases typeEq
+  exact ready
+
+def IncDepRawCoherentTypingDispatchReady.castType
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {first second : IncDepRawType}
+    {typing : IncDepRawHasType context term first}
+    {formation : IncDepRawWellFormed context first}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation)
+    (typeEq : first = second) :
+    IncDepRawCoherentTypingDispatchReady (typing.castType typeEq)
+      (formation.castType typeEq) := by
+  cases typeEq
+  exact ready
+
+@[simp] theorem IncDepRawWellFormed.castType_rfl
+    {context : List IncDepRawType} {type : IncDepRawType}
+    (formation : IncDepRawWellFormed context type) :
+    formation.castType rfl = formation := by
+  rfl
+
+@[simp] theorem IncDepRawHasType.castType_rfl
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    (typing : IncDepRawHasType context term type) :
+    typing.castType rfl = typing := by
+  rfl
+
 /-- A syntactic substitution equipped with the exact readiness evidence needed
 at the Variable branch.  Its replacement may be any well-typed term, not only
 a variable, so ordinary `.varRule` readiness is insufficient. -/
