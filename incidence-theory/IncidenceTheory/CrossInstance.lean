@@ -19200,6 +19200,19 @@ noncomputable def
     IncDepRawStrictMutualSubstitutionDispatcher :=
   model.model.scopedCanonicalStrictPreservation model.scopedInputs
 
+theorem
+    IncDepRawScopedRelationalLawfulSubstitutionFiberModel.pathAgreement
+    (model : IncDepRawScopedRelationalLawfulSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (formationReady : IncDepRawCoherentFormationDispatchReady formation)
+    (typingReady : IncDepRawCoherentTypingDispatchReady typing formation) :
+    IncDepRawCanonicalFormationFoldAgreement
+      (model.lawfulPreservation.dispatcher.formation formationReady).fold
+      (model.lawfulPreservation.dispatcher.typing typingReady).formation :=
+  model.lawfulPreservation.lawful.pathAgreement formationReady typingReady
+
 def IncDepRawRelationalLawfulSubstitutionFiberModel.toScoped
     (model : IncDepRawRelationalLawfulSubstitutionFiberModel.{u}) :
     IncDepRawScopedRelationalLawfulSubstitutionFiberModel.{u} where
@@ -19882,6 +19895,18 @@ noncomputable def IncDepRawUnitRelationalCompletion.strictPreservation
     (completion : IncDepRawUnitRelationalCompletion) :
     IncDepRawStrictMutualSubstitutionDispatcher :=
   completion.toLawfulModel.strictPreservation
+
+theorem IncDepRawUnitRelationalCompletion.pathAgreement
+    (completion : IncDepRawUnitRelationalCompletion)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (formationReady : IncDepRawCoherentFormationDispatchReady formation)
+    (typingReady : IncDepRawCoherentTypingDispatchReady typing formation) :
+    IncDepRawCanonicalFormationFoldAgreement
+      (completion.lawfulPreservation.dispatcher.formation formationReady).fold
+      (completion.lawfulPreservation.dispatcher.typing typingReady).formation :=
+  completion.toLawfulModel.pathAgreement formationReady typingReady
 
 theorem IncDepRawSubstitutionFiberModel.withUnitBase_eq_unit
     (model : IncDepRawSubstitutionFiberModel.{0}) :

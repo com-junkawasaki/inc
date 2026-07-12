@@ -2656,6 +2656,10 @@ obligation is the generated-package instantiate provider, not the legacy law
 over arbitrary folds, and `IncDepRawUnitRelationalCompletion.toLawfulModel`
 returns the scoped lawful model.  Thus the exact completion target no longer
 contains the over-quantified global instantiate premise.
+Both the scoped lawful model and `IncDepRawUnitRelationalCompletion` now expose
+their path-agreement theorem directly alongside lawful and strict
+preservation, so inhabiting the Unit target yields the complete public
+preservation API without converting back through the legacy assembly bundle.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo
