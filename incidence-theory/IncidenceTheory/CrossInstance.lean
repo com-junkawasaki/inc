@@ -13249,6 +13249,64 @@ noncomputable def
         { dispatchResult := { formationResult := canonical }
           provenance := .canonical _ } }
 
+structure IncDepRawCanonicalInstantiateFoldAgreementProvider where
+  provide : ∀
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {argument : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {resultFormation : IncDepRawWellFormed context
+      (codomain.instantiate argument)}
+    {argumentTyping : IncDepRawHasType context argument domain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (resultReady : IncDepRawCoherentFormationDispatchReady resultFormation)
+    (argumentReady : IncDepRawCoherentTypingDispatchReady argumentTyping
+      domainFormation)
+    (domainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive.{u}
+      domainReady)
+    (codomainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive.{u}
+      codomainReady)
+    (resultIH : IncDepRawCanonicalFormationSubstitutionFoldMotive.{u}
+      resultReady)
+    (argumentIH : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive.{u}
+      argumentReady)
+    (argumentAgreement : IncDepRawCanonicalFoldAgreement domainIH argumentIH),
+    IncDepRawCanonicalFormationFoldAgreement resultIH
+      (IncDepRawCanonicalInstantiateSubstitutionFoldMotive domainReady
+        codomainReady resultReady argumentReady domainIH codomainIH argumentIH
+        argumentAgreement)
+
+def IncDepRawCanonicalInstantiateFoldAgreementProvider.dispatch
+    (provider : IncDepRawCanonicalInstantiateFoldAgreementProvider.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {argument : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {resultFormation : IncDepRawWellFormed context
+      (codomain.instantiate argument)}
+    {argumentTyping : IncDepRawHasType context argument domain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (resultReady : IncDepRawCoherentFormationDispatchReady resultFormation)
+    (argumentReady : IncDepRawCoherentTypingDispatchReady argumentTyping
+      domainFormation)
+    (domainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive.{u}
+      domainReady)
+    (codomainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive.{u}
+      codomainReady)
+    (resultIH : IncDepRawCanonicalFormationSubstitutionFoldMotive.{u}
+      resultReady)
+    (argumentIH : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive.{u}
+      argumentReady)
+    (argumentAgreement : IncDepRawCanonicalFoldAgreement domainIH argumentIH) :
+    IncDepRawCanonicalFormationFoldAgreement resultIH
+      (IncDepRawCanonicalInstantiateSubstitutionFoldMotive domainReady
+        codomainReady resultReady argumentReady domainIH codomainIH argumentIH
+        argumentAgreement) :=
+  provider.provide domainReady codomainReady resultReady argumentReady domainIH
+    codomainIH resultIH argumentIH argumentAgreement
+
 noncomputable def
     IncDepRawSubstitutionFiberModel.alignedCanonicalMutualFoldRefl
     (model : IncDepRawSubstitutionFiberModel.{u})

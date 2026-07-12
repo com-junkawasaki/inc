@@ -949,6 +949,13 @@ It currently establishes:
   aligned canonical handlers and fold-agreement constructors.  The remaining
   integration step is one mutual recursion that generates these agreements
   (including instantiate agreements) and exposes the total dispatcher.
+  The only non-structural input to that recursion now has an exact interface:
+  `IncDepRawCanonicalInstantiateFoldAgreementProvider`.  It does not compare
+  arbitrary semantic fibers.  For the same domain, codomain, argument, and
+  recursive IHs, it identifies only the raw result-formation canonical output
+  with `IncDepRawCanonicalInstantiateSubstitutionFoldMotive`.  Apply, Pair, and
+  Second share this one substitution-naturality obligation; every other
+  constructor agreement is generated structurally.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
