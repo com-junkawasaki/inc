@@ -1230,6 +1230,13 @@ cycle 38–41 で以下の3極構造が判明した:
   別途生成されたinstantiate resultを保持する。instantiate agreementと全provenanceは
   certificate内に残る。typing coverageは7/8で、残るReflはIdentity formationと同じ
   formation/typing相互依存点である。
+  この最終循環もclosedとなった。Reflを既存の再帰typing provenanceへ追加し、そのterm
+  provenanceを消費する。formation側は`CompletelyGenerated` closureを追加し、通常の
+  Base/Unit/Pi/Sigma certificateをそのまま埋め込み、Identityだけがcompletely generated
+  underlying typeと生成left/right endpoint typingsを消費する。ReflとIdentityは同じexact
+  anchored endpointsを共有する。constructor-level coverageはformation 5/5、typing 8/8。
+  残件はこのcomplete closureをfinal structural recursorの二motiveへpackage化し、anchored
+  dispatcherをprojectionする工程である。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

@@ -1183,6 +1183,16 @@ It currently establishes:
   agreement and all retarget provenance.  Provider-free typing coverage is now
   7/8; Refl is the only remaining typing constructor and shares its unresolved
   mutual dependency with Identity formation.
+  That final dependency is now closed without reimplementing the seven ordinary
+  branches.  Refl extends the already recursive anchored typing provenance and
+  consumes the generated provenance of its term.  Formation provenance then
+  gains a `CompletelyGenerated` closure: ordinary Base/Unit/Pi/Sigma outputs are
+  embedded unchanged, while Identity consumes a completely generated underlying
+  type and generated left/right endpoint typings.  The exact Identity formation
+  builder shares the same anchored endpoints used by Refl.  Constructor-level
+  provider-free certificates therefore cover formation 5/5 and typing 8/8.
+  The remaining work is packaging this complete closure as the two motives of
+  the final structural recursor and projecting its anchored dispatcher.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

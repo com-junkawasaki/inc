@@ -15563,6 +15563,83 @@ inductive IncDepRawCanonicalAnchoredTypingFoldOutput.Generated
         (model.anchoredTypingFoldResultSecondExact instantiateAgreementProvider
           domainReady codomainReady resultReady pairReady domainOutput
           codomainOutput resultOutput pairOutput).output
+  | refl {context : List IncDepRawType} {type : IncDepRawType}
+      {term : IncDepRawTerm}
+      {typeFormation : IncDepRawWellFormed context type}
+      {termTyping : IncDepRawHasType context term type}
+      {typeReady : IncDepRawCoherentFormationDispatchReady typeFormation}
+      {termReady : IncDepRawCoherentTypingDispatchReady termTyping
+        typeFormation}
+      (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+      (typeOutput : IncDepRawCanonicalFormationFoldOutput typeReady)
+      (termOutput : IncDepRawCanonicalAnchoredTypingFoldOutput termReady
+        typeOutput) :
+      Generated model variableProvider typeOutput termOutput →
+      Generated model variableProvider
+        (model.anchoredTypingFoldResultReflExact readinessAlignment typeReady
+          termReady typeOutput termOutput).formationOutput
+        (model.anchoredTypingFoldResultReflExact readinessAlignment typeReady
+          termReady typeOutput termOutput).output
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.canonicalFormationFoldOutputIdentityExact
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {leftTyping : IncDepRawHasType context left type}
+    {rightTyping : IncDepRawHasType context right type}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (leftReady : IncDepRawCoherentTypingDispatchReady leftTyping typeFormation)
+    (rightReady : IncDepRawCoherentTypingDispatchReady rightTyping typeFormation)
+    (typeOutput : IncDepRawCanonicalFormationFoldOutput typeReady)
+    (leftOutput : IncDepRawCanonicalAnchoredTypingFoldOutput leftReady typeOutput)
+    (rightOutput : IncDepRawCanonicalAnchoredTypingFoldOutput rightReady
+      typeOutput) :
+    IncDepRawCanonicalFormationFoldOutput
+      (.identity typeReady leftReady rightReady) where
+  fold := model.canonicalMutualFoldIdentityOfAgreements readinessAlignment
+    typeReady leftReady rightReady typeOutput.fold leftOutput.typing
+    rightOutput.typing leftOutput.agreement rightOutput.agreement
+
+/-- Formation provenance closed under Identity.  Endpoint typing provenance is
+already fully recursive (including Refl), so this final closure can be defined
+without duplicating the seven ordinary formation/typing constructors. -/
+inductive IncDepRawCanonicalFormationFoldOutput.CompletelyGenerated
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider) : ∀
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentFormationDispatchReady formation},
+    IncDepRawCanonicalFormationFoldOutput.{u} ready → Prop
+  | ordinary {context : List IncDepRawType} {type : IncDepRawType}
+      {formation : IncDepRawWellFormed context type}
+      {ready : IncDepRawCoherentFormationDispatchReady formation}
+      (output : IncDepRawCanonicalFormationFoldOutput ready) :
+      output.Generated model → CompletelyGenerated model variableProvider output
+  | identity {context : List IncDepRawType} {type : IncDepRawType}
+      {left right : IncDepRawTerm}
+      {typeFormation : IncDepRawWellFormed context type}
+      {leftTyping : IncDepRawHasType context left type}
+      {rightTyping : IncDepRawHasType context right type}
+      {typeReady : IncDepRawCoherentFormationDispatchReady typeFormation}
+      {leftReady : IncDepRawCoherentTypingDispatchReady leftTyping typeFormation}
+      {rightReady : IncDepRawCoherentTypingDispatchReady rightTyping
+        typeFormation}
+      (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+      (typeOutput : IncDepRawCanonicalFormationFoldOutput typeReady)
+      (leftOutput : IncDepRawCanonicalAnchoredTypingFoldOutput leftReady
+        typeOutput)
+      (rightOutput : IncDepRawCanonicalAnchoredTypingFoldOutput rightReady
+        typeOutput) :
+      CompletelyGenerated model variableProvider typeOutput →
+      leftOutput.Generated model variableProvider →
+      rightOutput.Generated model variableProvider →
+      CompletelyGenerated model variableProvider
+        (model.canonicalFormationFoldOutputIdentityExact readinessAlignment
+          typeReady leftReady rightReady typeOutput leftOutput rightOutput)
+
 
 /-- A formation output packaged with evidence that it was produced solely by
 the canonical syntax-directed constructors.  This is the formation motive used
