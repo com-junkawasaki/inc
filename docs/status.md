@@ -153,16 +153,19 @@ Checked constructions include:
   ring-style resonance
 - rationals as positive-denominator integer fractions modulo cross
   multiplication, with an injective integer embedding and quotient-respecting
-  addition and multiplication; additive resonance is commutative, unital, and
-  associative, and concrete half addition/multiplication examples are checked
+  addition, negation, and multiplication; additive resonance is commutative,
+  unital, associative, and has inverses, multiplication is commutative, unital,
+  associative, and distributes over addition, and concrete half
+  addition/multiplication examples are checked
 - hereditary finite sets
 - ordered pairs and trees
 - paths, cycles, and simplices
 - products, sums, and conditional quotients
 - propositional logic and a dependent Pi/Sigma/Identity fragment
 
-Major remaining areas include a faithful rational boundary presentation, full
-rational field laws, broader algebra, real analysis, and a larger categorical
+Major remaining areas include a faithful rational boundary presentation,
+nonzero rational reciprocals and field cancellation, broader algebra, real
+analysis, and a larger categorical
 library. The initial rational incidence uses empty boundaries, and the checked
 `rationalIncidence_all_bisimilar` and
 `rationalIncidence_not_bisimulationFaithful` theorems explicitly show that its

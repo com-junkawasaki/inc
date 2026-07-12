@@ -139,7 +139,10 @@ case where the selector is complete and resonance has no unselected modes.
 - Rational reconstruction now quotients positive-denominator integer fractions
   by cross multiplication. Addition and multiplication respect that relation;
   the lifted addition gives a functional associative resonance and embeds the
-  integers injectively. Its first incidence presentation intentionally has
+  integers injectively. Quotient negation supplies additive inverses, while
+  multiplication is commutative, unital, associative, and distributive and is
+  packaged as `rationalDistributiveResonanceSpec`. Its first incidence
+  presentation intentionally has
   empty boundaries, so a checked negative theorem shows that all rationals are
   bisimilar. Canonical signed numerator/denominator observations are therefore
   required before rational resonance can descend faithfully to the

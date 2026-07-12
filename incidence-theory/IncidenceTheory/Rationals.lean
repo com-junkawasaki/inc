@@ -88,6 +88,20 @@ def RationalRepresentative.mul
     denominator := left.denominator * right.denominator
     denominator_pos := Int.mul_pos left.denominator_pos right.denominator_pos }
 
+def RationalRepresentative.neg
+    (value : RationalRepresentative) : RationalRepresentative :=
+  { numerator := -value.numerator
+    denominator := value.denominator
+    denominator_pos := value.denominator_pos }
+
+theorem rationalNeg_respects {left right : RationalRepresentative}
+    (equivalent : left.Equivalent right) :
+    left.neg.Equivalent right.neg := by
+  change (-left.numerator) * right.denominator =
+    (-right.numerator) * left.denominator
+  rw [Int.neg_mul, Int.neg_mul]
+  exact congrArg Neg.neg equivalent
+
 theorem rationalMul_respects
     {left left' right right' : RationalRepresentative}
     (leftEq : left.Equivalent left') (rightEq : right.Equivalent right') :
@@ -148,6 +162,11 @@ def rationalMul : IncRational → IncRational → IncRational :=
       intro left right left' right' leftEq rightEq
       exact Quotient.sound (rationalMul_respects leftEq rightEq))
 
+def rationalNeg : IncRational → IncRational :=
+  Quotient.lift
+    (fun value => Quotient.mk rationalRepresentativeSetoid value.neg)
+    (fun _ _ equivalent => Quotient.sound (rationalNeg_respects equivalent))
+
 def rationalAddResonance (left right mode : IncRational) : Prop :=
   rationalAdd left right = mode
 
@@ -204,6 +223,21 @@ theorem rationalAdd_zero_right (value : IncRational) :
     rationalAdd value (rationalOfInteger 0) = value := by
   rw [rationalAdd_comm, rationalAdd_zero_left]
 
+theorem rationalAdd_neg (value : IncRational) :
+    rationalAdd value (rationalNeg value) = rationalOfInteger 0 := by
+  refine Quotient.inductionOn value ?_
+  intro representative
+  apply Quotient.sound
+  change
+    (representative.numerator * representative.denominator +
+        -representative.numerator * representative.denominator) * 1 =
+      0 * (representative.denominator * representative.denominator)
+  rw [← Int.add_mul]
+  have cancel : representative.numerator + -representative.numerator = 0 :=
+    by omega
+  rw [cancel]
+  simp
+
 theorem rationalAdd_assoc (first second third : IncRational) :
     rationalAdd (rationalAdd first second) third =
       rationalAdd first (rationalAdd second third) := by
@@ -213,6 +247,52 @@ theorem rationalAdd_assoc (first second third : IncRational) :
   intro thirdRep
   apply Quotient.sound
   simp only [RationalRepresentative.add, Int.add_mul]
+  ac_rfl
+
+theorem rationalMul_comm (left right : IncRational) :
+    rationalMul left right = rationalMul right left := by
+  refine Quotient.inductionOn₂ left right ?_
+  intro leftRep rightRep
+  apply Quotient.sound
+  simp only [RationalRepresentative.mul]
+  ac_rfl
+
+theorem rationalMul_one_left (value : IncRational) :
+    rationalMul (rationalOfInteger 1) value = value := by
+  refine Quotient.inductionOn value ?_
+  intro representative
+  apply Quotient.sound
+  change
+    (1 * representative.numerator) * representative.denominator =
+      representative.numerator * (1 * representative.denominator)
+  simp
+
+theorem rationalMul_one_right (value : IncRational) :
+    rationalMul value (rationalOfInteger 1) = value := by
+  rw [rationalMul_comm, rationalMul_one_left]
+
+theorem rationalMul_assoc (first second third : IncRational) :
+    rationalMul (rationalMul first second) third =
+      rationalMul first (rationalMul second third) := by
+  refine Quotient.inductionOn₂ first second ?_
+  intro firstRep secondRep
+  refine Quotient.inductionOn third ?_
+  intro thirdRep
+  apply Quotient.sound
+  simp only [RationalRepresentative.mul]
+  ac_rfl
+
+theorem rationalMul_add (first second third : IncRational) :
+    rationalMul first (rationalAdd second third) =
+      rationalAdd (rationalMul first second) (rationalMul first third) := by
+  refine Quotient.inductionOn₂ first second ?_
+  intro firstRep secondRep
+  refine Quotient.inductionOn third ?_
+  intro thirdRep
+  apply Quotient.sound
+  simp only [RationalRepresentative.add, RationalRepresentative.mul]
+  change _ = _
+  simp only [Int.mul_add, Int.add_mul]
   ac_rfl
 
 inductive RationalRole where
@@ -266,6 +346,42 @@ noncomputable def rationalAssociativeResonanceSpec :
       refine ⟨rationalAdd i j, ?_, ?_⟩
       · simp [rationalIncidence]
       · simpa [rationalIncidence, rationalAdd_assoc] using hout
+
+noncomputable def rationalDistributiveResonanceSpec :
+    DistributiveResonanceSpec rationalIncidence where
+  one := rationalOfInteger 1
+  multiply := rationalMulResonance
+  symmetric := by
+    intro i j k multiplied
+    simpa [rationalMulResonance, rationalMul_comm] using multiplied
+  unit_left := by intro i; exact rationalMul_one_left i
+  unit_right := by intro i; exact rationalMul_one_right i
+  associative := by
+    intro i j k out
+    constructor
+    · rintro ⟨ij, hij, hout⟩
+      subst ij
+      refine ⟨rationalMul j k, rfl, ?_⟩
+      simpa [rationalMulResonance, rationalMul_assoc] using hout
+    · rintro ⟨jk, hjk, hout⟩
+      subst jk
+      refine ⟨rationalMul i j, rfl, ?_⟩
+      simpa [rationalMulResonance, rationalMul_assoc] using hout
+  distributes := by
+    intro i j k out
+    constructor
+    · rintro ⟨jk, hjk, hout⟩
+      have hjkEq : rationalAdd j k = jk := by
+        simpa [rationalIncidence] using hjk
+      subst jk
+      refine ⟨rationalMul i j, rationalMul i k, rfl, rfl, ?_⟩
+      simpa [rationalIncidence, rationalMulResonance, rationalMul_add] using hout
+    · rintro ⟨ij, ik, hij, hik, hout⟩
+      subst ij
+      subst ik
+      refine ⟨rationalAdd j k, ?_, ?_⟩
+      · simp [rationalIncidence]
+      · simpa [rationalIncidence, rationalMulResonance, rationalMul_add] using hout
 
 theorem rationalIncidence_half_resonance :
     let half := Quotient.mk rationalRepresentativeSetoid
