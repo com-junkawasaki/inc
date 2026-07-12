@@ -778,6 +778,19 @@ It currently establishes:
   base and unit cases of the replacement for the impossible global provider;
   the same provenance discipline must now be propagated through Pi, Sigma,
   identity, and the mutual typing fold.
+  That propagation now covers every formation constructor.  The generic
+  `IncDepRawCanonicalFormationFiberResult canonical result` records equality to
+  any fixed canonical output and supplies constructor-independent `canonical`,
+  `unique`, and `rebase` operations.  `IncDepRawCanonicalPiFormationFiberResult`
+  and `IncDepRawCanonicalSigmaFormationFiberResult` fix their output to
+  `model.pi`/`model.sigma` applied to the chosen domain and codomain results;
+  `IncDepRawCanonicalIdentityFormationFiberResult` similarly fixes the output
+  to `model.identity` applied to the chosen type and endpoint typing results.
+  Together with the base/unit predicates, all five formation cases now have a
+  provenance-scoped equality/rebase route.  The remaining integration work is
+  to make the mutual dispatcher return these provenance witnesses alongside its
+  formation and typing results, so recursive calls compare generated outputs
+  rather than arbitrary semantic inhabitants.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

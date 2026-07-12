@@ -308,6 +308,12 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   canonical constructorがpredicateをinhabitする。各`unique` theoremはprovenance付きresult同士の等式を証明するため、任意Unit/Bool counterexampleはAPIへ入れない。
   `IncDepRawFormationSubstitutionFiberRebase.ofEq`がscoped equalityをnatural rebaseへ変換する。これで不可能なglobal providerを置き換えるbase/unit casesが成立し、
   次は同じprovenance disciplineをPi、Sigma、identity、mutual typing foldへ伝播する。
+- provenance propagationを全formation constructorsへ拡張した。共通`IncDepRawCanonicalFormationFiberResult canonical result`が固定canonical outputとの
+  equalityを保持し、constructor-independentな`canonical`、`unique`、`rebase`を提供する。
+  `IncDepRawCanonicalPiFormationFiberResult`/`IncDepRawCanonicalSigmaFormationFiberResult`は選択済みdomain/codomain resultsへ
+  `model.pi`/`model.sigma`を適用したoutputを固定し、`IncDepRawCanonicalIdentityFormationFiberResult`はtype/endpoint typing resultsへの
+  `model.identity` outputを固定する。base/unitと合わせ全5formation casesにscoped equality/rebase routeが成立した。残るintegrationはmutual dispatcherが
+  formation/typing resultと同時にprovenance witnessを返し、recursive callsが任意semantic inhabitantでなくgenerated outputsを比較するようにすることである。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
