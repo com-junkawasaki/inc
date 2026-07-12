@@ -1329,6 +1329,15 @@ It currently establishes:
   the domain transport, rather than quantify only over one definitionally shared
   input.  The next generic invariant must therefore be relational in its inputs,
   not merely heterogeneous in its outputs.
+  `RelationalFormationFoldAgreement` now implements that input-relational
+  shape.  It compares two evaluations with independently indexed source/target
+  semantic results, substitution results, context trees, and replacement
+  packages, requiring HEq evidence at every layer before relating the outputs.
+  Reflexivity and the diagonal projection to heterogeneous output agreement are
+  checked.  The extra HEq premises for semantic context and substitution results
+  are essential: tree/replacement HEq alone does not allow dependent elimination
+  because their type families need not be injective.  This relation is now the
+  candidate invariant for a generic Pi/Sigma congruence proof.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

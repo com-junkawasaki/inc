@@ -1326,6 +1326,12 @@ cycle 38–41 で以下の3極構造が判明した:
   でなく、domain transportで結ばれた二つのextended tree/replacements上の評価を関係付ける
   必要がある。次のgeneric invariantはoutputだけheterogeneousでなくinput-relationalでなければ
   ならない。
+  `RelationalFormationFoldAgreement`でこのinput-relational shapeを実装した。左右独立に
+  indexされたsource/target semantic results、substitution results、context trees、replacement
+  packagesを比較し、各層のHEqからoutput HEqを要求する。reflexivityとheterogeneous output
+  agreementへのdiagonal projectionはchecked。semantic context/substitution resultsのHEqも
+  必須で、tree/replacement HEqだけでは型族の非injectivityによりdependent eliminationできない。
+  このrelationがgeneric Pi/Sigma congruenceの候補invariantとなる。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

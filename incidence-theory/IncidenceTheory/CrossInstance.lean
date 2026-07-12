@@ -12836,6 +12836,77 @@ theorem IncDepRawCanonicalHeterogeneousFormationFoldAgreement.toWeakOfSameReady
     IncDepRawCanonicalFormationFoldAgreement leftIH rightIH :=
   agreement.toStrongOfSameReady.toWeak
 
+/-- Relational fold agreement permits the two folds to be evaluated in
+heterogeneously equal semantic environments.  This is the transport-aware
+shape required by dependent codomain recursion. -/
+structure IncDepRawCanonicalRelationalFormationFoldAgreement
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    {leftReady rightReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    (leftIH : IncDepRawCanonicalFormationSubstitutionFoldMotive leftReady)
+    (rightIH : IncDepRawCanonicalFormationSubstitutionFoldMotive rightReady) :
+    Prop where
+  relate : ∀ {source : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {leftSourceResult rightSourceResult :
+      IncDepRawContextSemanticResult sourceWellFormed}
+    {leftTargetResult rightTargetResult :
+      IncDepRawContextSemanticResult targetWellFormed}
+    {leftSubstitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      leftSourceResult leftTargetResult}
+    {rightSubstitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      rightSourceResult rightTargetResult}
+    (leftTree : IncDepRawContextSemanticTree leftTargetResult)
+    (rightTree : IncDepRawContextSemanticTree rightTargetResult)
+    (leftReplacements : IncDepRawSubstitutionReplacementSemanticResult
+      leftSubstitutionResult)
+    (rightReplacements : IncDepRawSubstitutionReplacementSemanticResult
+      rightSubstitutionResult),
+    HEq leftSourceResult rightSourceResult →
+    HEq leftTargetResult rightTargetResult →
+    HEq leftSubstitutionResult rightSubstitutionResult →
+    HEq leftTree rightTree →
+    HEq leftReplacements rightReplacements →
+    HEq (leftIH leftTree leftReplacements)
+      (rightIH rightTree rightReplacements)
+
+def IncDepRawCanonicalRelationalFormationFoldAgreement.refl
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    {ready : IncDepRawCoherentFormationDispatchReady targetFormation}
+    (formationIH : IncDepRawCanonicalFormationSubstitutionFoldMotive ready) :
+    IncDepRawCanonicalRelationalFormationFoldAgreement formationIH formationIH where
+  relate := by
+    intro source substitution sourceWellFormed targetWellFormed leftSourceResult
+      rightSourceResult leftTargetResult rightTargetResult
+      leftSubstitutionResult rightSubstitutionResult leftTree rightTree
+      leftReplacements rightReplacements sourceEq targetEq substitutionEq treeEq
+      replacementsEq
+    cases sourceEq
+    cases targetEq
+    cases substitutionEq
+    cases treeEq
+    cases replacementsEq
+    rfl
+
+theorem
+    IncDepRawCanonicalRelationalFormationFoldAgreement.toHeterogeneousDiagonal
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    {leftReady rightReady :
+      IncDepRawCoherentFormationDispatchReady targetFormation}
+    {leftIH : IncDepRawCanonicalFormationSubstitutionFoldMotive leftReady}
+    {rightIH : IncDepRawCanonicalFormationSubstitutionFoldMotive rightReady}
+    (agreement :
+      IncDepRawCanonicalRelationalFormationFoldAgreement leftIH rightIH) :
+    IncDepRawCanonicalHeterogeneousFormationFoldAgreement leftIH rightIH where
+  agree := fun targetTree replacements =>
+    agreement.relate targetTree targetTree replacements replacements (HEq.refl _)
+      (HEq.refl _) (HEq.refl _) (HEq.refl _) (HEq.refl _)
+
 def IncDepRawCanonicalFormationFoldAgreement.refl
     {target : List IncDepRawType} {type : IncDepRawType}
     {targetFormation : IncDepRawWellFormed target type}
