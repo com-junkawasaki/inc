@@ -250,6 +250,25 @@ def natResonanceSpec : FunctionalResonanceSpec natIncidence where
     intro i j k resonant
     exact resonant
 
+theorem natQuotientResonanceCongruent :
+    QuotientResonanceCongruent natIncidence := by
+  intro i₁ i₂ j₁ j₂ k₁ k₂ hi hj hk
+  have hiEq := (natIncidence_approxBisim_iff i₁ i₂).mp hi
+  have hjEq := (natIncidence_approxBisim_iff j₁ j₂).mp hj
+  have hkEq := (natIncidence_approxBisim_iff k₁ k₂).mp hk
+  subst i₂
+  subst j₂
+  subst k₂
+  rfl
+
+theorem natQuotientResonance_mk_iff (i j k : Nat) :
+    quotientResonance natIncidence
+      (Quotient.mk (approxBisimSetoid natIncidence) i)
+      (Quotient.mk (approxBisimSetoid natIncidence) j)
+      (Quotient.mk (approxBisimSetoid natIncidence) k) ↔
+      natIncidence.resonance i j k :=
+  quotientResonance_mk_iff natQuotientResonanceCongruent
+
 /- Research cycle 5 (co-scientist step, see RESEARCH_LOG.md): T5
    ("translation preserves structure") was never given real content in
    this repo -- `TranslationPreservation.inc_to_set` (root file) maps

@@ -25,6 +25,10 @@ belong in [`adr/`](adr/).
   existing boundary-shape and bisimulation translation API. Its identity,
   composition, unit laws, and associativity are checked;
   `ResonantBehavioralEmbedding` additionally reflects resonance.
+- `quotientResonance` defines the induced existential relation on bisimulation
+  classes. `QuotientResonanceCongruent` is the exact three-coordinate
+  extensionality condition yielding the representative theorem
+  `quotientResonance_mk_iff`; the Peano model satisfies it non-vacuously.
 - The incidence core and bisimulation equivalence are formalized in Lean.
 - Concrete finite, graph, natural-number, pair, path, cycle, and simplex models
   witness non-vacuity of the implemented fragments.

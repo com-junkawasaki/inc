@@ -1173,6 +1173,49 @@ structure BisimulationResonanceSpec {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) where
   respects : ResonanceRespects inc (approxBisim inc)
 
+/- Extensionality in all three positions is exactly the condition under which
+resonance descends without ambiguity to bisimulation classes. -/
+def QuotientResonanceCongruent {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) : Prop :=
+  ∀ {i₁ i₂ j₁ j₂ k₁ k₂},
+    approxBisim inc i₁ i₂ → approxBisim inc j₁ j₂ →
+    approxBisim inc k₁ k₂ →
+    (inc.resonance i₁ j₁ k₁ ↔ inc.resonance i₂ j₂ k₂)
+
+def quotientResonance {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) :
+    IncidenceQuotient inc → IncidenceQuotient inc →
+      IncidenceQuotient inc → Prop :=
+  fun qi qj qk => ∃ i j k,
+    Quotient.mk (approxBisimSetoid inc) i = qi ∧
+    Quotient.mk (approxBisimSetoid inc) j = qj ∧
+    Quotient.mk (approxBisimSetoid inc) k = qk ∧
+    inc.resonance i j k
+
+theorem quotientResonance_of_resonance
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {i j k : I} (resonant : inc.resonance i j k) :
+    quotientResonance inc
+      (Quotient.mk (approxBisimSetoid inc) i)
+      (Quotient.mk (approxBisimSetoid inc) j)
+      (Quotient.mk (approxBisimSetoid inc) k) :=
+  ⟨i, j, k, rfl, rfl, rfl, resonant⟩
+
+theorem quotientResonance_mk_iff
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (congruent : QuotientResonanceCongruent inc) {i j k : I} :
+    quotientResonance inc
+      (Quotient.mk (approxBisimSetoid inc) i)
+      (Quotient.mk (approxBisimSetoid inc) j)
+      (Quotient.mk (approxBisimSetoid inc) k) ↔ inc.resonance i j k := by
+  constructor
+  · rintro ⟨i', j', k', hi, hj, hk, resonant⟩
+    have hi' : approxBisim inc i' i := Quotient.exact hi
+    have hj' : approxBisim inc j' j := Quotient.exact hj
+    have hk' : approxBisim inc k' k := Quotient.exact hk
+    exact (congruent hi' hj' hk').mp resonant
+  · exact quotientResonance_of_resonance
+
 structure ResonanceHomomorphism
     {I J R₁ R₂ T₁ T₂ : Type u} [DecidableEq I] [DecidableEq J]
     (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂) where

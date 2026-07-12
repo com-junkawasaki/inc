@@ -66,3 +66,6 @@ case where the selector is complete and resonance has no unselected modes.
 - `ResonantBehavioralTranslation` is the combined translation interface: it
   preserves boundary shape, bisimulation, and every resonance triple.
   `ResonantBehavioralEmbedding` strengthens it by reflecting resonance.
+- On bisimulation quotients, `quotientResonance` means that some representatives
+  resonate. Exact recovery on chosen representatives requires
+  `QuotientResonanceCongruent`, extensionality in both inputs and the output.
