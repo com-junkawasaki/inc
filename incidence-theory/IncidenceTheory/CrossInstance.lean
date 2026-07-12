@@ -1,4 +1,5 @@
 import IncidenceTheory.Peano
+import IncidenceTheory.Integers
 import IncidenceTheory.Pairs
 import IncidenceTheory.PathComplex
 import IncidenceTheory.Product
@@ -8416,6 +8417,13 @@ noncomputable def finiteIncDepRawNormalizedResonanceCompletion :
   resonance := finiteResonanceSpec
   associative := finiteAssociativeResonanceSpec
   quotientCongruent := finiteQuotientResonanceCongruent
+
+noncomputable def integerIncDepRawNormalizedResonanceCompletion :
+    IncDepRawNormalizedResonanceCompletion integerIncidence where
+  structural := incDepRawNormalizedBasicPreservation
+  resonance := integerResonanceSpec.toResonanceSpec
+  associative := integerAssociativeResonanceSpec
+  quotientCongruent := integerQuotientResonanceCongruent
 
 noncomputable def natFiniteProdNormalizedResonanceCompletion :
     IncDepRawNormalizedResonanceCompletion

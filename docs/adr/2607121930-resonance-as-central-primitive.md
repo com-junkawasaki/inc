@@ -128,4 +128,6 @@ case where the selector is complete and resonance has no unselected modes.
   inverse at the vacuum, so the model provably refutes unit reflection while
   supporting a genuine group-level interaction absent from naturals.
   Positive and negative predecessor roles are observationally distinct;
-  `+1 ≉ -1` is formally refuted by a boundary-role mismatch theorem.
+  their indexed tags make the whole model faithful, not merely `+1 ≉ -1`.
+  Integer resonance is therefore quotient-congruent and instantiates
+  `IncDepRawNormalizedResonanceCompletion`.

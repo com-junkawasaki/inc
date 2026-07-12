@@ -153,11 +153,11 @@ Checked constructions include:
 - propositional logic and a dependent Pi/Sigma/Identity fragment
 
 Major remaining areas include rationals, broader algebra, real analysis, and a
-larger categorical library. Integer bisimulation faithfulness is not yet
-exported as a global theorem, although its boundary roles distinguish positive
-and negative directions and its rank decrease is checked. In particular,
-`integerIncidence_one_not_bisim_negOne` proves `+1` and `-1` are not
-bisimilar, so the signed-role design prevents the first nontrivial collapse.
+larger categorical library. Integer bisimulation faithfulness is complete:
+indexed signed boundary roles give boundary extensionality, and
+`integerIncidence_approxBisim_iff` proves observational equivalence is exactly
+equality. Consequently integer resonance descends to the bisimulation quotient
+and supplies a complete normalized dependent resonance completion.
 
 ## Verification evidence
 
