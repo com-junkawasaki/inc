@@ -161,6 +161,8 @@ case where the selector is complete and resonance has no unselected modes.
 - The first real-completion layer uses Dedekind cuts over that dense rational
   order. `IncReal` requires a nonempty proper lower set with downward closure
   and no greatest element. Principal rational cuts satisfy these conditions,
-  and rational density proves their embedding into `IncReal` injective. Cut
-  arithmetic, least-upper-bound completeness, and real analysis remain the
-  next layer rather than being inferred from the carrier alone.
+  and rational density proves their embedding into `IncReal` injective and
+  order-exact. Inclusion of lower cuts is a total order. The union of any
+  nonempty upper-bounded family is again a cut and is proved to be its least
+  upper bound, establishing Dedekind completeness. Cut arithmetic and real
+  analysis remain the next layer rather than being inferred from completeness.

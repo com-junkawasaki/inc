@@ -163,8 +163,10 @@ Checked constructions include:
   is translation-monotone under addition, and has a multiplicatively closed
   nonnegative cone
 - Dedekind real carriers as inhabited, proper, downward-closed, rounded lower
-  rational cuts; rational principal cuts are well formed and the rational-to-
-  real embedding is injective, using the checked density of rational order
+  rational cuts; cut inclusion is a total order, rational principal cuts are
+  well formed, and the rational-to-real embedding is injective and exactly
+  preserves/reflects order, using the checked density of rational order; every
+  nonempty upper-bounded family has a least upper bound given by union of cuts
 - hereditary finite sets
 - ordered pairs and trees
 - paths, cycles, and simplices
@@ -172,7 +174,7 @@ Checked constructions include:
 - propositional logic and a dependent Pi/Sigma/Identity fragment
 
 Major remaining areas include a canonical reduced-fraction boundary and
-computational reciprocal selector, Dedekind-cut arithmetic/order/completeness,
+computational reciprocal selector, Dedekind-cut arithmetic and field laws,
 real analysis, broader algebra, and a larger categorical library. Rational
 incidence is now observationally faithful:
 zero has an empty boundary and every nonzero rational has a one-step boundary
