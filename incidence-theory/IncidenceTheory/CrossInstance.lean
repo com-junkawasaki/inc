@@ -18356,6 +18356,37 @@ structure IncDepRawProviderFreeLawfulSubstitutionFiberModel where
   model : IncDepRawSubstitutionFiberModel.{u}
   scopedLaws : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u} model
 
+structure IncDepRawAssemblyLawfulSubstitutionFiberModel where
+  model : IncDepRawSubstitutionFiberModel.{u}
+  assemblyLaws : IncDepRawCanonicalProviderFreeAssemblyHypotheses.{u} model
+
+noncomputable def IncDepRawAssemblyLawfulSubstitutionFiberModel.witness
+    (model : IncDepRawAssemblyLawfulSubstitutionFiberModel.{u}) :
+    IncDepRawCanonicalAssemblyMutualFoldWitness model.model model.assemblyLaws :=
+  model.model.assemblyMutualFoldWitness model.assemblyLaws
+
+noncomputable def IncDepRawAssemblyLawfulSubstitutionFiberModel.lawfulPreservation
+    (model : IncDepRawAssemblyLawfulSubstitutionFiberModel.{u}) :
+    IncDepRawCanonicalLawfulMutualFold.{u} :=
+  model.witness.lawful
+
+noncomputable def IncDepRawAssemblyLawfulSubstitutionFiberModel.strictPreservation
+    (model : IncDepRawAssemblyLawfulSubstitutionFiberModel.{u}) :
+    IncDepRawStrictMutualSubstitutionDispatcher :=
+  model.witness.strict
+
+theorem IncDepRawAssemblyLawfulSubstitutionFiberModel.pathAgreement
+    (model : IncDepRawAssemblyLawfulSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (formationReady : IncDepRawCoherentFormationDispatchReady formation)
+    (typingReady : IncDepRawCoherentTypingDispatchReady typing formation) :
+    IncDepRawCanonicalFormationFoldAgreement
+      (model.lawfulPreservation.dispatcher.formation formationReady).fold
+      (model.lawfulPreservation.dispatcher.typing typingReady).formation :=
+  model.lawfulPreservation.lawful.pathAgreement formationReady typingReady
+
 noncomputable def
     IncDepRawProviderFreeLawfulSubstitutionFiberModel.witness
     (model : IncDepRawProviderFreeLawfulSubstitutionFiberModel.{u}) :
@@ -18805,6 +18836,14 @@ def IncDepRawLawfulSubstitutionFiberModel.toProviderFree
     IncDepRawProviderFreeLawfulSubstitutionFiberModel.{u} where
   model := model.toIncDepRawSubstitutionFiberModel
   scopedLaws := .ofPreservation model.canonicalLaws naturality
+
+def IncDepRawLawfulSubstitutionFiberModel.toAssemblyLawful
+    (model : IncDepRawLawfulSubstitutionFiberModel.{u})
+    (naturality : IncDepRawCanonicalProviderFreeAssemblyNaturalityLaws.{u}
+      model.toIncDepRawSubstitutionFiberModel) :
+    IncDepRawAssemblyLawfulSubstitutionFiberModel.{u} where
+  model := model.toIncDepRawSubstitutionFiberModel
+  assemblyLaws := .ofPreservation model.canonicalLaws naturality
 
 def IncDepRawSubstitutionFiberModel.withUnitBase
     (_model : IncDepRawSubstitutionFiberModel.{u}) :

@@ -1414,6 +1414,12 @@ It currently establishes:
   `AssemblyMutualFoldWitness` is directly inhabited and has lawful and strict
   projections.  The alternate strong route is therefore end-to-end: it uses no
   legacy weak dependent/Identity provider and no unrestricted path provider.
+  `IncDepRawAssemblyLawfulSubstitutionFiberModel` now packages a semantic model
+  with these strong assembly hypotheses.  Its witness, lawful preservation,
+  strict preservation, and path-agreement projections are checked.  An existing
+  `IncDepRawLawfulSubstitutionFiberModel` upgrades through `.toAssemblyLawful`
+  after supplying only the three strong naturality laws.  This is the concrete
+  model completion target for the strong route.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
