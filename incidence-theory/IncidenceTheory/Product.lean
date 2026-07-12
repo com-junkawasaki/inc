@@ -159,6 +159,28 @@ def resonanceProdSpec {I1 R1 T1 I2 R2 T2 : Type u}
     rcases second.type_compatible resonant.2 with ⟨hij2, hki2⟩
     exact ⟨Prod.ext hij1 hij2, Prod.ext hki1 hki2⟩
 
+/- Product projections preserve every admitted resonance mode, and the
+diagonal duplicates a mode componentwise. -/
+def incidenceProdFirstResonanceHom
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) :
+    ResonanceHomomorphism (incidenceProd inc1 inc2) inc1 where
+  toFun := Prod.fst
+  preserves := fun resonant => resonant.1
+
+def incidenceProdSecondResonanceHom
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) :
+    ResonanceHomomorphism (incidenceProd inc1 inc2) inc2 where
+  toFun := Prod.snd
+  preserves := fun resonant => resonant.2
+
+def incidenceProdDiagonalResonanceHom
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    ResonanceHomomorphism inc (incidenceProd inc inc) where
+  toFun := fun i => (i, i)
+  preserves := fun resonant => ⟨resonant, resonant⟩
+
 noncomputable def countablyPresentedIncidenceProd
     {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
     (left : CountablyPresentedIncidence I1 R1 T1)

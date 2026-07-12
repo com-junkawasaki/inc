@@ -17,6 +17,10 @@ belong in [`adr/`](adr/).
 - `finiteIncidence` is a concrete multi-valued symmetric resonance model;
   `natIncidence` is a concrete symmetric functional resonance model; products
   preserve resonance componentwise.
+- `ResonanceRespects` expresses back-and-forth relational congruence, while
+  `BisimulationResonanceSpec` specializes it to observational equivalence.
+  `ResonanceHomomorphism` has checked identity and composition operations;
+  product projections and the diagonal are concrete homomorphisms.
 - The incidence core and bisimulation equivalence are formalized in Lean.
 - Concrete finite, graph, natural-number, pair, path, cycle, and simplex models
   witness non-vacuity of the implemented fragments.

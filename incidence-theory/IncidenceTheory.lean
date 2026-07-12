@@ -1156,7 +1156,59 @@ theorem glue_associative_when_allowed {I R T : Type u} [DecidableEq I]
 def GlueRespects {I R T : Type u} [DecidableEq I] (inc : Incidence I R T)
     (rel : I → I → Prop) : Prop :=
   ∀ {i₁ i₂ j₁ j₂ k₁ k₂ : I}, rel i₁ i₂ → rel j₁ j₂ →
-    inc.glue i₁ j₁ = some k₁ → inc.glue i₂ j₂ = some k₂ → rel k₁ k₂
+     inc.glue i₁ j₁ = some k₁ → inc.glue i₂ j₂ = some k₂ → rel k₁ k₂
+
+/- Relational congruence for resonance.  This is stronger and more natural
+than selector congruence: any mode of related inputs must be matchable by a
+related mode, in both directions. -/
+def ResonanceRespects {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (rel : I → I → Prop) : Prop :=
+  ∀ {i₁ i₂ j₁ j₂ : I}, rel i₁ i₂ → rel j₁ j₂ →
+    (∀ {k₁}, inc.resonance i₁ j₁ k₁ →
+      ∃ k₂, inc.resonance i₂ j₂ k₂ ∧ rel k₁ k₂) ∧
+    (∀ {k₂}, inc.resonance i₂ j₂ k₂ →
+      ∃ k₁, inc.resonance i₁ j₁ k₁ ∧ rel k₁ k₂)
+
+structure BisimulationResonanceSpec {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) where
+  respects : ResonanceRespects inc (approxBisim inc)
+
+structure ResonanceHomomorphism
+    {I J R₁ R₂ T₁ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂) where
+  toFun : I → J
+  preserves : ∀ {i j k}, source.resonance i j k →
+    target.resonance (toFun i) (toFun j) (toFun k)
+
+def ResonanceHomomorphism.identity
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    ResonanceHomomorphism inc inc where
+  toFun := id
+  preserves := fun resonant => resonant
+
+def ResonanceHomomorphism.comp
+    {I J K R₁ R₂ R₃ T₁ T₂ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (right : ResonanceHomomorphism second third)
+    (left : ResonanceHomomorphism first second) :
+    ResonanceHomomorphism first third where
+  toFun := right.toFun ∘ left.toFun
+  preserves := fun resonant => right.preserves (left.preserves resonant)
+
+@[simp] theorem ResonanceHomomorphism.identity_apply
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) (i : I) :
+    (ResonanceHomomorphism.identity inc).toFun i = i := rfl
+
+@[simp] theorem ResonanceHomomorphism.comp_apply
+    {I J K R₁ R₂ R₃ T₁ T₂ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (right : ResonanceHomomorphism second third)
+    (left : ResonanceHomomorphism first second) (i : I) :
+    (right.comp left).toFun i = right.toFun (left.toFun i) := rfl
 
 theorem approxBisim_congruent_under_glue {I R T : Type u} [DecidableEq I]
     {inc : Incidence I R T} (hrespect : GlueRespects inc (approxBisim inc))

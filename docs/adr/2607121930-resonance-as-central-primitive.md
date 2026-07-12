@@ -44,6 +44,11 @@ case where the selector is complete and resonance has no unselected modes.
   `root`.
 - `incidenceProd` defines resonance componentwise and preserves
   `ResonanceSpec`.
+- `ResonanceRespects` requires modes of related inputs to be matchable in both
+  directions; `BisimulationResonanceSpec` applies this to `approxBisim`.
+- `ResonanceHomomorphism` preserves every resonant triple and is closed under
+  identity and composition. Product projections and the diagonal supply
+  nontrivial structural examples.
 
 ## Consequences
 
@@ -55,3 +60,6 @@ case where the selector is complete and resonance has no unselected modes.
 - Strict associativity of the selector is not promoted to a universal physical
   law. Higher resonance coherence may instead be stated relationally or up to
   bisimulation.
+- Translation and quotient APIs should use `ResonanceHomomorphism` and
+  `ResonanceRespects` when their claims concern the interaction itself;
+  selector equations remain appropriate only for executable choices.

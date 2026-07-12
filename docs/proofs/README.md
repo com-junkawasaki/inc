@@ -6,7 +6,7 @@ research chronology.
 | Subject | Primary Lean source | Supporting documentation |
 |---|---|---|
 | Incidence axioms and core | `IncidenceTheory.lean`, `Axioms/` | [status](../status.md) |
-| Resonance relation and laws | `Axioms.lean`, `IncidenceTheory.lean`, `GraphModel.lean`, `Peano.lean`, `Product.lean` | [resonance ADR](../adr/2607121930-resonance-as-central-primitive.md) |
+| Resonance relation, laws, congruence, and homomorphisms | `Axioms.lean`, `IncidenceTheory.lean`, `GraphModel.lean`, `Peano.lean`, `Product.lean` | [resonance ADR](../adr/2607121930-resonance-as-central-primitive.md) |
 | Concrete models | `GraphModel.lean`, `Cycle.lean` | [history](../history/post-cycle-41.md) |
 | Bisimulation and faithfulness | `IncidenceTheory.lean`, `CrossInstance.lean` | [completion audit](../inc-proof-completion-audit.md) |
 | Internal logic | `Logic.lean` | [status](../status.md) |
