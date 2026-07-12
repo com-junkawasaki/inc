@@ -910,6 +910,13 @@ It currently establishes:
   unrestricted formation-result provider.  The remaining task is constructing
   these fold agreements recursively for every typing derivation; once supplied,
   Identity itself is complete.
+  The first recursive agreement constructors are now checked.  Variable reuses
+  its formation IH definitionally, Unit generates the same canonical unit family
+  on both sides, and Lambda derives codomain-result equality by chaining the
+  aligned body's local agreement with the provenance of both independently
+  computed formation packages.  Thus Lambda does not assume a global semantic
+  equality provider.  The remaining agreement constructors are Apply, Pair,
+  First, Second, and Refl, followed by their assembly into the mutual dispatcher.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

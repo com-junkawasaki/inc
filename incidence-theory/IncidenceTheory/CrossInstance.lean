@@ -12983,6 +12983,19 @@ noncomputable def
       typing := typing
       agreement := { canonical_eq := rfl } }
 
+noncomputable def
+    IncDepRawVariableSubstitutionProvider.canonicalFoldAgreementVariable
+    (provider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {typeFormation : IncDepRawWellFormed context type}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (typeIH : IncDepRawCanonicalFormationSubstitutionFoldMotive typeReady) :
+    IncDepRawCanonicalFoldAgreement typeIH
+      (provider.alignedCanonicalMutualFoldVariable
+        (lookup := lookup) typeReady typeIH) where
+  agree := fun _ _ => { canonical_eq := rfl }
+
 def IncDepRawSubstitutionFiberModel.canonicalMutualFoldTypingUnit
     (model : IncDepRawSubstitutionFiberModel.{u})
     {context : List IncDepRawType} :
@@ -13012,6 +13025,14 @@ def IncDepRawSubstitutionFiberModel.alignedCanonicalMutualFoldTypingUnit
     { formation := formation
       typing := typing
       agreement := { canonical_eq := rfl } }
+
+def IncDepRawSubstitutionFiberModel.canonicalFoldAgreementTypingUnit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} :
+    IncDepRawCanonicalFoldAgreement
+      (model.canonicalMutualFoldUnitFormation (context := context))
+      (model.alignedCanonicalMutualFoldTypingUnit (context := context)) where
+  agree := fun _ _ => { canonical_eq := rfl }
 
 noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldLambda
     (model : IncDepRawSubstitutionFiberModel.{u})
@@ -13117,6 +13138,56 @@ noncomputable def
     { formation := formation
       typing := typing
       agreement := { canonical_eq := rfl } }
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.canonicalFoldAgreementLambda
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {body : IncDepRawTerm}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {bodyTyping : IncDepRawHasType (domain :: context) body codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (bodyReady : IncDepRawCoherentTypingDispatchReady bodyTyping
+      codomainFormation)
+    (domainIH : IncDepRawCanonicalFormationSubstitutionFoldMotive domainReady)
+    (bodyFormationIH : IncDepRawCanonicalFormationSubstitutionFoldMotive
+      bodyReady.formationReady)
+    (bodyIH : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive bodyReady)
+    (bodyAgreement : IncDepRawCanonicalFoldAgreement bodyFormationIH bodyIH) :
+    IncDepRawCanonicalFoldAgreement
+      (model.canonicalMutualFoldPi domainReady bodyReady.formationReady domainIH
+        bodyFormationIH)
+      (model.alignedCanonicalMutualFoldLambda domainReady bodyReady domainIH
+        bodyIH) where
+  agree := by
+    intro source substitution sourceWellFormed targetWellFormed sourceResult
+      targetResult substitutionResult targetTree replacements
+    let domainResult := (domainIH targetTree replacements).result.dispatchResult
+    let extendedTree := IncDepRawContextSemanticTree.extend targetTree
+      domainResult.formationResult.targetFormationResult
+    let liftedReplacements := replacements.liftResult
+      domainResult.formationResult
+    let alignedBody := bodyIH extendedTree liftedReplacements
+    let formedBody := bodyFormationIH extendedTree liftedReplacements
+    have bodyResultEq :
+        alignedBody.formation.result.dispatchResult.formationResult =
+          formedBody.result.dispatchResult.formationResult := by
+      calc
+        alignedBody.formation.result.dispatchResult.formationResult =
+            alignedBody.formation.canonical :=
+          alignedBody.formation.result.provenance.eq_canonical
+        _ = alignedBody.typing.canonical :=
+          alignedBody.agreement.canonical_eq.symm
+        _ = formedBody.canonical :=
+          (bodyAgreement.agree extendedTree liftedReplacements).canonical_eq
+        _ = formedBody.result.dispatchResult.formationResult :=
+          formedBody.result.provenance.eq_canonical.symm
+    exact
+      { canonical_eq := congrArg
+          (fun codomainResult =>
+            model.pi domainResult.formationResult codomainResult)
+          bodyResultEq }
 
 noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldRefl
     (model : IncDepRawSubstitutionFiberModel.{u})

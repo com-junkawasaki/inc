@@ -366,6 +366,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `canonicalMutualFoldIdentityOfAgreements`は両endpointのlocal agreementを受け、endpoint typing fiber resultsをexact canonical type resultへcastし、semanticを
   変えないreadiness-index castsを行い、outer canonical identity resultを構築する。unrestricted formation-result providerなしでhandlerがtypecheckした。
   残件は全typing derivationについてfold agreementsを再帰構成することであり、それが供給されればIdentity branch自体は完了である。
+- fold agreementの再帰生成を開始し、Variable/Unit/Lambdaの3枝をsorry-freeで閉じた。
+  Variableはformation IHをdefinitionally共有し、Unitは両側で同一canonical unit familyを生成する。
+  Lambdaはaligned bodyのlocal agreementと、独立に計算された二つのformation packageのprovenanceを連鎖してcodomain-result equalityを導出するため、
+  global semantic equality/rebase providerを仮定しない。残るagreement枝はApply/Pair/First/Second/Reflであり、その後mutual dispatcherへ組み立てる。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
