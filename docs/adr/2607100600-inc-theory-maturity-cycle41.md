@@ -441,6 +441,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - provider-free anchored handlersのVariable/Unitをchecked。両者は再帰供給またはcanonical formation outputへdefinitionally anchorされ、path provider不要。
   formation outputのreadiness-only castも追加した。Lambda liftの試行から次のexact obligationは、Pi congruence providerがeta-expanded conversionでなく
   transparent codomain projectionsを消費することと判明し、未証明Lambdaコードは残していない。
+- exact anchored handlersのLambda/First/Reflもcheckedとなり、leaf 2枝と合わせprovider-free anchored coverageは5/8。Pi/domain/Identity formation outputと
+  typing agreementを同じfold expressionsから構成するためanchorは後付け仮定でなく構造的である。通常bundle段階と異なり、final fixed pointが必要とする
+  formation output object自体を各resultが保持する。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

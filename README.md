@@ -1078,6 +1078,13 @@ It currently establishes:
   obligation: the Pi congruence provider must consume transparent codomain
   projections rather than eta-expanded conversions; no unproved Lambda code is
   retained.
+  Exact anchored handlers are now checked for Lambda, First, and Refl as well as
+  the two leaves.  They construct their Pi, domain, or Identity formation output
+  and their typing agreement from the same fold expressions, so the anchor is
+  structural rather than supplied afterward.  Provider-free anchored coverage
+  is therefore five of eight typing rules; unlike the earlier ordinary bundles,
+  these results retain the formation output object needed by the final fixed
+  point directly.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
