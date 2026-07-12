@@ -1071,6 +1071,13 @@ It currently establishes:
   `toAnchoredResult`.  The next recursor motive can therefore be stated without
   referring to an external formation function or path provider in its result
   type; every parent receives the exact child formation output as recursive data.
+  Provider-free anchored handlers are now checked for Variable and Unit.  Both
+  anchor definitionally to their recursively supplied or canonical formation
+  output, so no path provider is involved.  Formation outputs also support a
+  readiness-only cast.  The attempted Lambda lift identified its exact next
+  obligation: the Pi congruence provider must consume transparent codomain
+  projections rather than eta-expanded conversions; no unproved Lambda code is
+  retained.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

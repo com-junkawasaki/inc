@@ -14293,6 +14293,17 @@ structure IncDepRawCanonicalFormationFoldOutput
     (ready : IncDepRawCoherentFormationDispatchReady formation) where
   fold : IncDepRawCanonicalFormationSubstitutionFoldMotive ready
 
+def IncDepRawCanonicalFormationFoldOutput.castReady
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {firstReady secondReady :
+      IncDepRawCoherentFormationDispatchReady formation}
+    (output : IncDepRawCanonicalFormationFoldOutput firstReady)
+    (readyEq : firstReady = secondReady) :
+    IncDepRawCanonicalFormationFoldOutput secondReady := by
+  cases readyEq
+  exact output
+
 def IncDepRawSubstitutionFiberModel.canonicalFormationFoldOutputBase
     (model : IncDepRawSubstitutionFiberModel.{u})
     {context : List IncDepRawType} {index : Nat} :
@@ -14444,6 +14455,7 @@ def IncDepRawCanonicalTypingFoldOutput.toAnchoredResult
   formationOutput := formationOutput
   output := output.anchor formationOutput pathAgreement
 
+
 def IncDepRawCanonicalTypingFoldOutput.retargetFormation
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} {typing : IncDepRawHasType context term type}
@@ -14540,6 +14552,31 @@ noncomputable def
       (IncDepRawCanonicalFoldAgreement.retargetFormation
         (IncDepRawCanonicalFormationSubstitutionFoldMotive.castReadyAgreement
           bodyOutput.formation bodyReadyEq) bodyOutput.agreement) }
+
+noncomputable def
+    IncDepRawVariableSubstitutionProvider.anchoredTypingFoldResultVariable
+    (provider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {typeFormation : IncDepRawWellFormed context type}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (typeOutput : IncDepRawCanonicalFormationFoldOutput typeReady) :
+    IncDepRawCanonicalAnchoredTypingFoldResult
+      (IncDepRawCoherentTypingDispatchReady.varRule (lookup := lookup)
+        typeReady) :=
+  let output := provider.canonicalTypingFoldOutputVariable
+    (lookup := lookup) typeReady typeOutput
+  output.toAnchoredResult typeOutput { agree := fun _ _ => rfl }
+
+def IncDepRawSubstitutionFiberModel.anchoredTypingFoldResultUnit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} :
+    IncDepRawCanonicalAnchoredTypingFoldResult
+      (IncDepRawCoherentTypingDispatchReady.unitRule (context := context)) :=
+  let formationOutput := model.canonicalFormationFoldOutputUnit
+    (context := context)
+  let output := model.canonicalTypingFoldOutputUnit (context := context)
+  output.toAnchoredResult formationOutput { agree := fun _ _ => rfl }
 
 noncomputable def
     IncDepRawSubstitutionFiberModel.canonicalTypingFoldOutputFirst

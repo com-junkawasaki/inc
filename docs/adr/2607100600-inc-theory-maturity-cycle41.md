@@ -438,6 +438,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - `IncDepRawCanonicalAnchoredTypingFoldResult`でtyping側mutual motiveを閉じた。formation output本体と、それへanchorされたtyping outputを同時保持し、
   `toAnchoredResult`を含む通常bundleとの相互変換がchecked。次のrecursor motiveはresult型から外部formation関数/path providerを参照せず、
   各親枝がexact child formation outputを再帰dataとして受け取れる。
+- provider-free anchored handlersのVariable/Unitをchecked。両者は再帰供給またはcanonical formation outputへdefinitionally anchorされ、path provider不要。
+  formation outputのreadiness-only castも追加した。Lambda liftの試行から次のexact obligationは、Pi congruence providerがeta-expanded conversionでなく
+  transparent codomain projectionsを消費することと判明し、未証明Lambdaコードは残していない。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
