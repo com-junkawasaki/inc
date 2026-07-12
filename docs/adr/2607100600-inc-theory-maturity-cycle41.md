@@ -429,6 +429,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - 外部path providerの広いcall signatureと、本質的に必要な性質を分離した。`IncDepRawCanonicalMutualFoldDispatcher.Lawful`は生成dispatcher自身の
   formation/typing projectionsが共有raw formation上で一致することだけを要求する。`canonicalMutualFoldDispatcher_lawful`はconditional constructionが
   この内在lawを満たすと証明する。無条件化は任意user-authored outputsの等式ではなく、このlawful mutual fixed pointの構成問題である。
+- `IncDepRawCanonicalLawfulMutualFold`でdispatcherと内在lawを一体化した。`canonicalLawfulMutualFoldOfHypotheses`がscoped hypotheses下でpackageを構成し、
+  `.strict`/`.pathAgreement`により利用側は外部path providerを保持・再利用せずstrict preservationとcoherenceを得る。残る無条件定理は
+  path-provider fieldなしでこのpackageを構成することに正確に一致する。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

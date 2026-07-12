@@ -14837,6 +14837,10 @@ structure IncDepRawCanonicalMutualFoldDispatcher.Lawful
       (dispatcher.formation formationReady).fold
       (dispatcher.typing typingReady).formation
 
+structure IncDepRawCanonicalLawfulMutualFold where
+  dispatcher : IncDepRawCanonicalMutualFoldDispatcher.{u}
+  lawful : dispatcher.Lawful
+
 def IncDepRawCanonicalFoldPathAgreementProvider.dispatch
     (provider : IncDepRawCanonicalFoldPathAgreementProvider.{u})
     {context : List IncDepRawType} {term : IncDepRawTerm}
@@ -15037,6 +15041,16 @@ noncomputable def
     hypotheses.readinessAlignment hypotheses.instantiateAgreementProvider
     hypotheses.pathAgreementProvider
 
+noncomputable def
+    IncDepRawSubstitutionFiberModel.canonicalLawfulMutualFoldOfHypotheses
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalMutualFoldHypotheses.{u}) :
+    IncDepRawCanonicalLawfulMutualFold.{u} where
+  dispatcher := model.canonicalMutualFoldDispatcherOfHypotheses hypotheses
+  lawful := model.canonicalMutualFoldDispatcher_lawful
+    hypotheses.variableProvider hypotheses.readinessAlignment
+    hypotheses.instantiateAgreementProvider hypotheses.pathAgreementProvider
+
 noncomputable def IncDepRawCanonicalMutualFoldDispatcher.strict
     (dispatcher : IncDepRawCanonicalMutualFoldDispatcher.{u}) :
     IncDepRawStrictMutualSubstitutionDispatcher where
@@ -15048,6 +15062,23 @@ noncomputable def IncDepRawCanonicalMutualFoldDispatcher.strict
     { dispatch := fun ready targetTree replacements =>
         (dispatcher.typing ready).typing targetTree replacements
           |>.typing.result.dispatchResult }
+
+noncomputable def IncDepRawCanonicalLawfulMutualFold.strict
+    (fold : IncDepRawCanonicalLawfulMutualFold.{u}) :
+    IncDepRawStrictMutualSubstitutionDispatcher :=
+  fold.dispatcher.strict
+
+theorem IncDepRawCanonicalLawfulMutualFold.pathAgreement
+    (fold : IncDepRawCanonicalLawfulMutualFold.{u})
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (formationReady : IncDepRawCoherentFormationDispatchReady formation)
+    (typingReady : IncDepRawCoherentTypingDispatchReady typing formation) :
+    IncDepRawCanonicalFormationFoldAgreement
+      (fold.dispatcher.formation formationReady).fold
+      (fold.dispatcher.typing typingReady).formation :=
+  fold.lawful.pathAgreement formationReady typingReady
 
 noncomputable def
     IncDepRawSubstitutionFiberModel.strictPreservationOfCanonicalFoldHypotheses

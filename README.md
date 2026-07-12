@@ -1050,6 +1050,13 @@ It currently establishes:
   the conditional construction satisfies this intrinsic law.  Unconditional
   completion is therefore the construction of this lawful mutual fixed point,
   rather than a claim that arbitrary user-authored fold outputs are equal.
+  `IncDepRawCanonicalLawfulMutualFold` now packages that fixed-point shape as a
+  first-class result: a dispatcher and its intrinsic law are stored together.
+  `canonicalLawfulMutualFoldOfHypotheses` constructs the package under the scoped
+  hypotheses, while `.strict` and `.pathAgreement` let consumers obtain strict
+  preservation and coherence without retaining or reusing the external path
+  provider.  The remaining unconditional theorem is precisely construction of
+  this package without the path-provider field.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
