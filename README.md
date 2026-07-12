@@ -2594,6 +2594,18 @@ Pointwise boundary equality transports this balance condition and its
 zero-sum Laplacian consequences between incidence models.
 They are not unconditional theorems in the present Lean core.
 
+For the dependent raw Pi/Sigma/Identity calculus, canonical mutual
+substitution preservation now covers every formation and typing constructor
+and exposes lawful and strict dispatchers with path agreement.
+`IncDepRawRelationalLawfulSubstitutionFiberModel` packages a semantic model,
+the preservation core, and the three strong relational naturality laws
+(instantiation, dependent assembly, and generated identity) without first
+weakening those laws.  The exact remaining obligation for the concrete
+Unit-fiber model is represented by `IncDepRawUnitRelationalCompletion`; an
+inhabitant projects directly to lawful and strict preservation.  The target
+type and projections are checked, but the completion is not yet inhabited,
+so a concrete unconditional preservation theorem is not claimed yet.
+
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo
 bisimilarity and a sound, idempotent normalization.  The finite incidence

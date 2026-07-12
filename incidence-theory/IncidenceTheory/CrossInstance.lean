@@ -18523,6 +18523,18 @@ structure IncDepRawAssemblyLawfulSubstitutionFiberModel where
   model : IncDepRawSubstitutionFiberModel.{u}
   assemblyLaws : IncDepRawCanonicalProviderFreeAssemblyHypotheses.{u} model
 
+structure IncDepRawRelationalLawfulSubstitutionFiberModel where
+  model : IncDepRawSubstitutionFiberModel.{u}
+  preservation : IncDepRawCanonicalSubstitutionPreservationHypotheses
+  relationalLaws :
+    IncDepRawCanonicalProviderFreeRelationalNaturalityLaws.{u} model
+
+def IncDepRawRelationalLawfulSubstitutionFiberModel.toAssemblyLawful
+    (model : IncDepRawRelationalLawfulSubstitutionFiberModel.{u}) :
+    IncDepRawAssemblyLawfulSubstitutionFiberModel.{u} where
+  model := model.model
+  assemblyLaws := .ofRelational model.preservation model.relationalLaws
+
 structure IncDepRawAssemblyLawfulSubstitutionFiberModel.Stage1 where
   model : IncDepRawSubstitutionFiberModel.{u}
   preservation : IncDepRawCanonicalSubstitutionPreservationHypotheses
@@ -18624,6 +18636,30 @@ theorem IncDepRawAssemblyLawfulSubstitutionFiberModel.pathAgreement
       (model.lawfulPreservation.dispatcher.formation formationReady).fold
       (model.lawfulPreservation.dispatcher.typing typingReady).formation :=
   model.lawfulPreservation.lawful.pathAgreement formationReady typingReady
+
+noncomputable def
+    IncDepRawRelationalLawfulSubstitutionFiberModel.lawfulPreservation
+    (model : IncDepRawRelationalLawfulSubstitutionFiberModel.{u}) :
+    IncDepRawCanonicalLawfulMutualFold.{u} :=
+  model.toAssemblyLawful.lawfulPreservation
+
+noncomputable def
+    IncDepRawRelationalLawfulSubstitutionFiberModel.strictPreservation
+    (model : IncDepRawRelationalLawfulSubstitutionFiberModel.{u}) :
+    IncDepRawStrictMutualSubstitutionDispatcher :=
+  model.toAssemblyLawful.strictPreservation
+
+theorem IncDepRawRelationalLawfulSubstitutionFiberModel.pathAgreement
+    (model : IncDepRawRelationalLawfulSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (formationReady : IncDepRawCoherentFormationDispatchReady formation)
+    (typingReady : IncDepRawCoherentTypingDispatchReady typing formation) :
+    IncDepRawCanonicalFormationFoldAgreement
+      (model.lawfulPreservation.dispatcher.formation formationReady).fold
+      (model.lawfulPreservation.dispatcher.typing typingReady).formation :=
+  model.toAssemblyLawful.pathAgreement formationReady typingReady
 
 noncomputable def
     IncDepRawProviderFreeLawfulSubstitutionFiberModel.witness
@@ -19091,6 +19127,32 @@ def IncDepRawSubstitutionFiberModel.withUnitBase
 def incDepRawUnitSubstitutionFiberModel :
     IncDepRawSubstitutionFiberModel where
   baseModel := fun _ => ULift Unit
+
+/-- The exact remaining data needed to turn the concrete Unit-fiber model into
+an unconditional canonical preservation model.  Keeping the relational laws
+here avoids discarding their stronger assembly-level statements. -/
+structure IncDepRawUnitRelationalCompletion where
+  preservation : IncDepRawCanonicalSubstitutionPreservationHypotheses
+  relationalLaws :
+    IncDepRawCanonicalProviderFreeRelationalNaturalityLaws
+      incDepRawUnitSubstitutionFiberModel
+
+def IncDepRawUnitRelationalCompletion.toLawfulModel
+    (completion : IncDepRawUnitRelationalCompletion) :
+    IncDepRawRelationalLawfulSubstitutionFiberModel where
+  model := incDepRawUnitSubstitutionFiberModel
+  preservation := completion.preservation
+  relationalLaws := completion.relationalLaws
+
+noncomputable def IncDepRawUnitRelationalCompletion.lawfulPreservation
+    (completion : IncDepRawUnitRelationalCompletion) :
+    IncDepRawCanonicalLawfulMutualFold :=
+  completion.toLawfulModel.lawfulPreservation
+
+noncomputable def IncDepRawUnitRelationalCompletion.strictPreservation
+    (completion : IncDepRawUnitRelationalCompletion) :
+    IncDepRawStrictMutualSubstitutionDispatcher :=
+  completion.toLawfulModel.strictPreservation
 
 theorem IncDepRawSubstitutionFiberModel.withUnitBase_eq_unit
     (model : IncDepRawSubstitutionFiberModel.{0}) :
