@@ -30,6 +30,7 @@ research chronology.
 | Dedekind-real total order, rational embedding, and LUB completeness | `Rationals.lean`, `Reals.lean` | [status](../status.md#existing-mathematics-reconstruction) |
 | Faithful Dedekind additive resonance and normalized completion | `Reals.lean`, `CrossInstance.lean` | [resonance ADR](../adr/2607121930-resonance-as-central-primitive.md) |
 | Archimedean boundary approximation and Dedekind additive group | `IncidenceTheory.lean`, `Rationals.lean`, `Reals.lean` | [status](../status.md#existing-mathematics-reconstruction) |
+| Nonnegative Dedekind cut multiplication | `Rationals.lean`, `Reals.lean` | [status](../status.md#existing-mathematics-reconstruction) |
 | Pairs and trees | `Pairs.lean`, `Tree.lean` | [history](../history/post-cycle-41.md) |
 | Paths and simplices | `PathComplex.lean`, `Simplex.lean` | [history](../history/post-cycle-41.md) |
 | Product, sum, quotient | `Product.lean`, `Sum.lean`, `Quotient.lean` | [cycle-41 ADR](../adr/2607100600-inc-theory-maturity-cycle41.md) |

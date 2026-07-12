@@ -613,6 +613,14 @@ theorem rationalLT_of_lt_of_le {first second third : IncRational}
   subst third
   exact firstSecond.2 (rationalLE_antisymm firstSecond.1 secondThird)
 
+theorem rationalLT_of_le_of_lt {first second third : IncRational}
+    (firstSecond : rationalLE first second)
+    (secondThird : rationalLT second third) : rationalLT first third := by
+  refine ⟨rationalLE_trans firstSecond secondThird.1, ?_⟩
+  intro firstThird
+  subst third
+  exact secondThird.2 (rationalLE_antisymm secondThird.1 firstSecond)
+
 theorem rationalLT_asymm {left right : IncRational}
     (strict : rationalLT left right) : ¬ rationalLT right left := by
   intro reverse
@@ -699,6 +707,11 @@ theorem rational_add_neg_one_lt (value : IncRational) :
     omega
   simpa using Int.mul_lt_mul_of_pos_right decreased representative.denominator_pos
 
+theorem rational_zero_lt_one :
+    rationalLT (rationalOfInteger 0) (rationalOfInteger 1) := by
+  apply (rational_mk_lt_iff _ _).mpr
+  decide
+
 theorem rationalLT_add_left (offset : IncRational) {left right : IncRational}
     (strict : rationalLT left right) :
     rationalLT (rationalAdd offset left) (rationalAdd offset right) := by
@@ -739,6 +752,11 @@ theorem rationalLT_add_right (offset : IncRational) {left right : IncRational}
     rationalLT (rationalAdd left offset) (rationalAdd right offset) := by
   simpa [rationalAdd_comm] using rationalLT_add_left offset strict
 
+theorem rational_lt_add_one (value : IncRational) :
+    rationalLT value (rationalAdd value (rationalOfInteger 1)) := by
+  have shifted := rationalLT_add_left value rational_zero_lt_one
+  simpa [rationalAdd_zero_right] using shifted
+
 theorem rationalLT_add {left left' right right' : IncRational}
     (leftStrict : rationalLT left left')
     (rightStrict : rationalLT right right') :
@@ -776,6 +794,59 @@ theorem rationalMul_zero_left (value : IncRational) :
 theorem rationalMul_zero_right (value : IncRational) :
     rationalMul value (rationalOfInteger 0) = rationalOfInteger 0 := by
   rw [rationalMul_comm, rationalMul_zero_left]
+
+theorem rationalLT_mul_right_of_positive {left right factor : IncRational}
+    (strict : rationalLT left right)
+    (factorPositive : rationalLT (rationalOfInteger 0) factor) :
+    rationalLT (rationalMul left factor) (rationalMul right factor) := by
+  revert strict factorPositive
+  refine Quotient.inductionOn₃ left right factor ?_
+  intro leftRep rightRep factorRep strict factorPositive
+  have crossStrict := (rational_mk_lt_iff leftRep rightRep).mp strict
+  have factorNumeratorPositive : 0 < factorRep.numerator := by
+    have positiveCross := (rational_mk_lt_iff
+      (rationalRepresentative 0 1 (by omega)) factorRep).mp factorPositive
+    change 0 * factorRep.denominator < factorRep.numerator * 1 at positiveCross
+    simpa using positiveCross
+  apply (rational_mk_lt_iff _ _).mpr
+  have scaled := Int.mul_lt_mul_of_pos_right crossStrict
+    (Int.mul_pos factorNumeratorPositive factorRep.denominator_pos)
+  change
+    (leftRep.numerator * factorRep.numerator) *
+        (rightRep.denominator * factorRep.denominator) <
+      (rightRep.numerator * factorRep.numerator) *
+        (leftRep.denominator * factorRep.denominator)
+  calc
+    _ = (leftRep.numerator * rightRep.denominator) *
+        (factorRep.numerator * factorRep.denominator) := by ac_rfl
+    _ < (rightRep.numerator * leftRep.denominator) *
+        (factorRep.numerator * factorRep.denominator) := scaled
+    _ = _ := by ac_rfl
+
+theorem rationalLT_mul_left_of_positive {left right factor : IncRational}
+    (strict : rationalLT left right)
+    (factorPositive : rationalLT (rationalOfInteger 0) factor) :
+    rationalLT (rationalMul factor left) (rationalMul factor right) := by
+  simpa [rationalMul_comm] using
+    rationalLT_mul_right_of_positive strict factorPositive
+
+theorem rationalMul_positive {left right : IncRational}
+    (leftPositive : rationalLT (rationalOfInteger 0) left)
+    (rightPositive : rationalLT (rationalOfInteger 0) right) :
+    rationalLT (rationalOfInteger 0) (rationalMul left right) := by
+  have strict := rationalLT_mul_right_of_positive leftPositive rightPositive
+  simpa [rationalMul_zero_left] using strict
+
+theorem rationalLT_mul_of_positive
+    {left left' right right' : IncRational}
+    (leftStrict : rationalLT left left')
+    (rightStrict : rationalLT right right')
+    (rightPositive : rationalLT (rationalOfInteger 0) right)
+    (leftPrimePositive : rationalLT (rationalOfInteger 0) left') :
+    rationalLT (rationalMul left right) (rationalMul left' right') := by
+  exact rationalLT_trans
+    (rationalLT_mul_right_of_positive leftStrict rightPositive)
+    (rationalLT_mul_left_of_positive rightStrict leftPrimePositive)
 
 theorem rationalOfInteger_add (left right : Int) :
     rationalOfInteger (left + right) =
