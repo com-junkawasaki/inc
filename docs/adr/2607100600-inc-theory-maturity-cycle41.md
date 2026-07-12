@@ -1530,6 +1530,9 @@ cycle 38–41 で以下の3極構造が判明した:
   derivationとcoherent readinessを組で保持し、legacy mutual renamerとのproof equalityを要求しない。
   Base/Unit formationとVariable/Unit typingのleaf casesをsorry-freeに証明した。残りはdependent
   composite constructorsを同じrenaming層へ追加することである。
+  Pi/Sigma formationとLambda/First typingもfully semantic renameへ追加した。domain/codomain
+  resultをtyping constructorと直接共有するためformation proof castもlegacy renaming equationも
+  不要である。残るrenaming constructorはApply・Pair・Second・Identity/Reflである。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

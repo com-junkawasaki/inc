@@ -2752,6 +2752,10 @@ the renamed derivation and coherent readiness together without identifying it
 with the legacy mutual renamer.  Base/Unit formation and Variable/Unit typing
 constructors are proved.  These are the leaf cases of the structural renaming
 theorem needed for lift; the dependent composite constructors remain.
+Pi/Sigma formation and Lambda/First typing now join those leaf cases.  Their
+domain/codomain results are shared directly by the typing constructor, so no
+formation-proof cast or legacy renaming equation is needed.  The remaining
+renaming constructors are Apply, Pair, Second, and Identity/Refl.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

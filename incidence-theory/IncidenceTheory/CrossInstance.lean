@@ -2220,6 +2220,32 @@ def IncDepRawFullySemanticFormationRenamingResult.unit
   renamedFormation := .unit
   readiness := .unit
 
+def IncDepRawFullySemanticFormationRenamingResult.pi
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    (renameMap : IncDepRawRenaming source target)
+    (domainResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := domain) renameMap)
+    (codomainResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := codomain) (renameMap.lift domain)) :
+    IncDepRawFullySemanticFormationRenamingResult
+      (type := .pi domain codomain) renameMap where
+  renamedFormation := .pi domainResult.renamedFormation
+    codomainResult.renamedFormation
+  readiness := .pi domainResult.readiness codomainResult.readiness
+
+def IncDepRawFullySemanticFormationRenamingResult.sigma
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    (renameMap : IncDepRawRenaming source target)
+    (domainResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := domain) renameMap)
+    (codomainResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := codomain) (renameMap.lift domain)) :
+    IncDepRawFullySemanticFormationRenamingResult
+      (type := .sigma domain codomain) renameMap where
+  renamedFormation := .sigma domainResult.renamedFormation
+    codomainResult.renamedFormation
+  readiness := .sigma domainResult.readiness codomainResult.readiness
+
 def IncDepRawFullySemanticTypingRenamingResult.variable
     {source target : List IncDepRawType} {position : Nat}
     {type : IncDepRawType} {lookup : IncDepRawLookup source position type}
@@ -2238,6 +2264,41 @@ def IncDepRawFullySemanticTypingRenamingResult.unit
       (term := .unit) renameMap (.unit renameMap) where
   renamedTyping := .unitRule
   readiness := .unitRule
+
+def IncDepRawFullySemanticTypingRenamingResult.lambda
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {body : IncDepRawTerm}
+    (renameMap : IncDepRawRenaming source target)
+    (domainResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := domain) renameMap)
+    (codomainResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := codomain) (renameMap.lift domain))
+    (bodyResult : IncDepRawFullySemanticTypingRenamingResult
+      (term := body) (renameMap.lift domain)
+      codomainResult) :
+    IncDepRawFullySemanticTypingRenamingResult
+      (term := .lambda domain body) renameMap
+      (.pi renameMap domainResult codomainResult) where
+  renamedTyping := .lambdaRule domainResult.renamedFormation
+    bodyResult.renamedTyping
+  readiness := .lambdaRule domainResult.readiness bodyResult.readiness
+
+def IncDepRawFullySemanticTypingRenamingResult.first
+    {source target : List IncDepRawType} {domain codomain : IncDepRawType}
+    {pair : IncDepRawTerm}
+    (renameMap : IncDepRawRenaming source target)
+    (domainResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := domain) renameMap)
+    (codomainResult : IncDepRawFullySemanticFormationRenamingResult
+      (type := codomain) (renameMap.lift domain))
+    (pairResult : IncDepRawFullySemanticTypingRenamingResult
+      (term := pair) renameMap
+      (.sigma renameMap domainResult codomainResult)) :
+    IncDepRawFullySemanticTypingRenamingResult
+      (term := .first pair) renameMap domainResult where
+  renamedTyping := .firstRule pairResult.renamedTyping
+  readiness := .firstRule domainResult.readiness codomainResult.readiness
+    pairResult.readiness
 
 def IncDepRawCoherentFormationDispatchReady.castFormation
     {context : List IncDepRawType} {type : IncDepRawType}
