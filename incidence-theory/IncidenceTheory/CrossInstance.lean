@@ -14231,6 +14231,22 @@ noncomputable def IncDepRawSubstitutionFiberModel.mutualFoldSecondCanonical
       alignedPair.typingResult
     result.castReady (strictAlignment.alignment _ _)
 
+structure IncDepRawCanonicalFormationFoldOutput
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentFormationDispatchReady formation) where
+  fold : IncDepRawCanonicalFormationSubstitutionFoldMotive ready
+
+structure IncDepRawCanonicalTypingFoldOutput
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation) where
+  formation : IncDepRawCanonicalFormationSubstitutionFoldMotive
+    ready.formationReady
+  typing : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive ready
+  agreement : IncDepRawCanonicalFoldAgreement formation typing
+
 noncomputable def IncDepRawSubstitutionFiberModel.preserveFormation
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)

@@ -956,6 +956,15 @@ It currently establishes:
   with `IncDepRawCanonicalInstantiateSubstitutionFoldMotive`.  Apply, Pair, and
   Second share this one substitution-naturality obligation; every other
   constructor agreement is generated structurally.
+  The mutual-recursion outputs are now packaged as
+  `IncDepRawCanonicalFormationFoldOutput` and
+  `IncDepRawCanonicalTypingFoldOutput`; the latter keeps its formation motive,
+  aligned typing motive, and local agreement inseparable.  A direct recursor
+  assembly also exposed one final invariant: when the same formation is reached
+  through a parent formation premise and a child typing premise, those two
+  independently recursive formation motives need a fold-local formation
+  agreement.  This is an index-sharing obligation, not semantic rebase, and is
+  the next field required by the total mutual output.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

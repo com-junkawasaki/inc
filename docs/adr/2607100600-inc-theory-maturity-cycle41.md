@@ -390,6 +390,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   同じdomain/codomain/argumentと再帰IHに対し、raw result-formation canonical outputと
   `IncDepRawCanonicalInstantiateSubstitutionFoldMotive`だけを同定する。Apply/Pair/Secondがこのsubstitution-naturality obligationを共有し、
   他のconstructor agreementsはすべて構造的に生成できる。
+- mutual recursionの出力を`IncDepRawCanonicalFormationFoldOutput`と`IncDepRawCanonicalTypingFoldOutput`へpackageした。後者はformation motive、
+  aligned typing motive、local agreementを不可分に保持する。direct recursor組立てにより最後の不変条件も判明した：同一formationへ親formation premiseと
+  子typing premiseから独立に到達する場合、その二formation motives間のfold-local formation agreementが必要である。これはsemantic rebaseではなく
+  index-sharing obligationであり、total mutual outputに追加すべき次のfieldである。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
