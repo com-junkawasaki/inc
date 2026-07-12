@@ -1354,6 +1354,16 @@ It currently establishes:
   the legacy weak component.  The remaining closure step is the corresponding
   relational law for generated Identity, after which recursively generated
   formations can use the stronger route at arbitrary depth.
+  That Identity closure is now checked.
+  `GeneratedIdentityAssemblyCoherenceProvider` states relational preservation
+  for two generated Identity formations and projects to the legacy weak Identity
+  law.  `RecursivelyGenerated.relationalAgreement` combines it with dependent
+  assembly coherence over all five formation constructors, including nested
+  Identity under Pi/Sigma; `agreementOfAssembly` recovers the public weak result.
+  `GeneratedIdentityAssemblyNaturalModel` exposes the stronger Identity component.
+  Thus the recursive agreement layer no longer intrinsically needs the two weak
+  dependent/Identity providers; migrating the final dispatcher to these stronger
+  assembly components is now an API rewiring task.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

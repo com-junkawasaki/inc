@@ -15983,6 +15983,48 @@ structure IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider
         typeReady leftReady rightReady secondTypeOutput secondLeft
         secondRight).fold
 
+/-- Relational preservation law for two syntax-directed Identity formations. -/
+structure IncDepRawCanonicalGeneratedIdentityAssemblyCoherenceProvider
+    (model : IncDepRawSubstitutionFiberModel.{u}) where
+  identity : ∀
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {leftTyping : IncDepRawHasType context left type}
+    {rightTyping : IncDepRawHasType context right type}
+    (firstReadinessAlignment secondReadinessAlignment :
+      IncDepRawCoherentReadinessAlignmentProvider)
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (leftReady : IncDepRawCoherentTypingDispatchReady leftTyping typeFormation)
+    (rightReady : IncDepRawCoherentTypingDispatchReady rightTyping typeFormation)
+    (firstTypeOutput secondTypeOutput :
+      IncDepRawCanonicalFormationFoldOutput.{u} typeReady)
+    (firstLeft : IncDepRawCanonicalAnchoredTypingFoldOutput.{u} leftReady
+      firstTypeOutput)
+    (firstRight : IncDepRawCanonicalAnchoredTypingFoldOutput.{u} rightReady
+      firstTypeOutput)
+    (secondLeft : IncDepRawCanonicalAnchoredTypingFoldOutput.{u} leftReady
+      secondTypeOutput)
+    (secondRight : IncDepRawCanonicalAnchoredTypingFoldOutput.{u} rightReady
+      secondTypeOutput),
+    IncDepRawCanonicalRelationalFormationFoldAgreement
+      (model.canonicalFormationFoldOutputIdentityExact firstReadinessAlignment
+        typeReady leftReady rightReady firstTypeOutput firstLeft firstRight).fold
+      (model.canonicalFormationFoldOutputIdentityExact secondReadinessAlignment
+        typeReady leftReady rightReady secondTypeOutput secondLeft
+        secondRight).fold
+
+def IncDepRawCanonicalGeneratedIdentityAssemblyCoherenceProvider.toWeak
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (provider :
+      IncDepRawCanonicalGeneratedIdentityAssemblyCoherenceProvider model) :
+    IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider model where
+  identity := fun firstAlignment secondAlignment typeReady leftReady rightReady
+      firstType secondType firstLeft firstRight secondLeft secondRight =>
+    (provider.identity firstAlignment secondAlignment typeReady leftReady
+      rightReady firstType secondType firstLeft firstRight secondLeft secondRight)
+      |>.toHeterogeneousDiagonal.toWeakOfSameReady
+
 /-- Normal-form formation provenance used by the final recursor.  Unlike the
 temporary complete closure, Pi and Sigma recurse over this same predicate, so
 Identity formations may occur at arbitrary depth. -/
@@ -16089,6 +16131,62 @@ theorem
       | identity secondAlignment secondType secondLeft secondRight _ _ _ =>
         exact identityAgreement.identity firstAlignment secondAlignment _ _ _
           firstType secondType firstLeft firstRight secondLeft secondRight
+
+theorem
+    IncDepRawCanonicalFormationFoldOutput.RecursivelyGenerated.relationalAgreement
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (assembly : IncDepRawCanonicalDependentAssemblyCoherenceProvider model)
+    (identityAssembly :
+      IncDepRawCanonicalGeneratedIdentityAssemblyCoherenceProvider model)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentFormationDispatchReady formation}
+    {first second : IncDepRawCanonicalFormationFoldOutput.{u} ready}
+    (firstGenerated : first.RecursivelyGenerated model variableProvider)
+    (secondGenerated : second.RecursivelyGenerated model variableProvider) :
+    IncDepRawCanonicalRelationalFormationFoldAgreement first.fold second.fold := by
+  induction firstGenerated with
+  | base =>
+      cases secondGenerated
+      exact .refl _
+  | unit =>
+      cases secondGenerated
+      exact .refl _
+  | pi firstDomain firstCodomain _ _ domainIH codomainIH =>
+      cases secondGenerated with
+      | pi secondDomain secondCodomain secondDomainGenerated
+          secondCodomainGenerated =>
+        exact assembly.pi _ _ _ _ _ _ (domainIH secondDomainGenerated)
+          (codomainIH secondCodomainGenerated)
+  | sigma firstDomain firstCodomain _ _ domainIH codomainIH =>
+      cases secondGenerated with
+      | sigma secondDomain secondCodomain secondDomainGenerated
+          secondCodomainGenerated =>
+        exact assembly.sigma _ _ _ _ _ _ (domainIH secondDomainGenerated)
+          (codomainIH secondCodomainGenerated)
+  | identity firstAlignment firstType firstLeft firstRight _ _ _ =>
+      cases secondGenerated with
+      | identity secondAlignment secondType secondLeft secondRight _ _ _ =>
+        exact identityAssembly.identity firstAlignment secondAlignment _ _ _
+          firstType secondType firstLeft firstRight secondLeft secondRight
+
+theorem
+    IncDepRawCanonicalFormationFoldOutput.RecursivelyGenerated.agreementOfAssembly
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (assembly : IncDepRawCanonicalDependentAssemblyCoherenceProvider model)
+    (identityAssembly :
+      IncDepRawCanonicalGeneratedIdentityAssemblyCoherenceProvider model)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentFormationDispatchReady formation}
+    {first second : IncDepRawCanonicalFormationFoldOutput.{u} ready}
+    (firstGenerated : first.RecursivelyGenerated model variableProvider)
+    (secondGenerated : second.RecursivelyGenerated model variableProvider) :
+    IncDepRawCanonicalFormationFoldAgreement first.fold second.fold :=
+  (firstGenerated.relationalAgreement assembly identityAssembly secondGenerated)
+    |>.toHeterogeneousDiagonal.toWeakOfSameReady
 
 theorem IncDepRawCanonicalFormationFoldOutput.RecursivelyGenerated.castReady
     {model : IncDepRawSubstitutionFiberModel.{u}}
@@ -17599,6 +17697,10 @@ structure IncDepRawCanonicalDependentAssemblyNaturalModel
 structure IncDepRawCanonicalGeneratedIdentityNaturalModel
     (model : IncDepRawSubstitutionFiberModel.{u}) where
   law : IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider.{u} model
+
+structure IncDepRawCanonicalGeneratedIdentityAssemblyNaturalModel
+    (model : IncDepRawSubstitutionFiberModel.{u}) where
+  law : IncDepRawCanonicalGeneratedIdentityAssemblyCoherenceProvider.{u} model
 
 def IncDepRawCanonicalProviderFreeNaturalityLaws.ofComponents
     {model : IncDepRawSubstitutionFiberModel.{u}}
