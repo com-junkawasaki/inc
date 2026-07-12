@@ -965,6 +965,12 @@ It currently establishes:
   independently recursive formation motives need a fold-local formation
   agreement.  This is an index-sharing obligation, not semantic rebase, and is
   the next field required by the total mutual output.
+  `IncDepRawCanonicalFoldAgreement.retargetFormation` now consumes exactly that
+  field.  Given a fold-local agreement between two formation paths, it moves an
+  existing typing agreement from one path to the other by transitivity of their
+  canonical equalities.  It performs no fiber transport or semantic rebase and
+  is the primitive used to reconnect independently recursive Identity/Refl,
+  function, argument, and pair premises to their parent formation IHs.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

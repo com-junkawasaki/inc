@@ -12731,6 +12731,28 @@ structure IncDepRawCanonicalFormationFoldAgreement
     (leftIH targetTree replacements).canonical =
       (rightIH targetTree replacements).canonical
 
+def IncDepRawCanonicalFoldAgreement.retargetFormation
+    {target : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType}
+    {targetTyping : IncDepRawHasType target term type}
+    {targetFormation : IncDepRawWellFormed target type}
+    {formationReady : IncDepRawCoherentFormationDispatchReady targetFormation}
+    {typingReady : IncDepRawCoherentTypingDispatchReady targetTyping
+      targetFormation}
+    {leftIH : IncDepRawCanonicalFormationSubstitutionFoldMotive formationReady}
+    {rightIH : IncDepRawCanonicalFormationSubstitutionFoldMotive formationReady}
+    {typingIH : IncDepRawAlignedCanonicalTypingSubstitutionFoldMotive typingReady}
+    (formationAgreement : IncDepRawCanonicalFormationFoldAgreement leftIH rightIH)
+    (typingAgreement : IncDepRawCanonicalFoldAgreement rightIH typingIH) :
+    IncDepRawCanonicalFoldAgreement leftIH typingIH where
+  agree := by
+    intro source substitution sourceWellFormed targetWellFormed sourceResult
+      targetResult substitutionResult targetTree replacements
+    exact
+      { canonical_eq :=
+          (typingAgreement.agree targetTree replacements).canonical_eq.trans
+            (formationAgreement.agree targetTree replacements).symm }
+
 def IncDepRawSubstitutionFiberModel.mutualFoldBase
     (model : IncDepRawSubstitutionFiberModel.{u})
     {context : List IncDepRawType} {index : Nat} :

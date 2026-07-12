@@ -394,6 +394,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   aligned typing motive、local agreementを不可分に保持する。direct recursor組立てにより最後の不変条件も判明した：同一formationへ親formation premiseと
   子typing premiseから独立に到達する場合、その二formation motives間のfold-local formation agreementが必要である。これはsemantic rebaseではなく
   index-sharing obligationであり、total mutual outputに追加すべき次のfieldである。
+- `IncDepRawCanonicalFoldAgreement.retargetFormation`でこのfieldの消費側を実装した。二formation pathsのfold-local agreementを受け、既存typing agreementを
+  canonical equalityの推移だけで一方のpathから他方へ移す。fiber transport/semantic rebaseは行わず、Identity/Reflおよびfunction/argument/pair premisesを
+  親formation IHへ再接続する基本操作となる。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
