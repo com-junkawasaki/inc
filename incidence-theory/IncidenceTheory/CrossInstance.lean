@@ -17274,6 +17274,46 @@ structure IncDepRawCanonicalProviderFreeNaturalityLaws
   generatedIdentityAgreementProvider :
     IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider.{u} model
 
+structure IncDepRawCanonicalInstantiateNaturalModel
+    (model : IncDepRawSubstitutionFiberModel.{u}) where
+  law : IncDepRawCanonicalInstantiateFoldAgreementProvider.{u}
+
+structure IncDepRawCanonicalDependentFormationNaturalModel
+    (model : IncDepRawSubstitutionFiberModel.{u}) where
+  law : IncDepRawCanonicalDependentFormationFoldAgreementProvider.{u} model
+
+structure IncDepRawCanonicalGeneratedIdentityNaturalModel
+    (model : IncDepRawSubstitutionFiberModel.{u}) where
+  law : IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider.{u} model
+
+def IncDepRawCanonicalProviderFreeNaturalityLaws.ofComponents
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (instantiate : IncDepRawCanonicalInstantiateNaturalModel.{u} model)
+    (dependent : IncDepRawCanonicalDependentFormationNaturalModel.{u} model)
+    (identity : IncDepRawCanonicalGeneratedIdentityNaturalModel.{u} model) :
+    IncDepRawCanonicalProviderFreeNaturalityLaws.{u} model where
+  instantiateAgreementProvider := instantiate.law
+  dependentFormationAgreementProvider := dependent.law
+  generatedIdentityAgreementProvider := identity.law
+
+def IncDepRawCanonicalProviderFreeNaturalityLaws.instantiateComponent
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (laws : IncDepRawCanonicalProviderFreeNaturalityLaws.{u} model) :
+    IncDepRawCanonicalInstantiateNaturalModel.{u} model where
+  law := laws.instantiateAgreementProvider
+
+def IncDepRawCanonicalProviderFreeNaturalityLaws.dependentComponent
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (laws : IncDepRawCanonicalProviderFreeNaturalityLaws.{u} model) :
+    IncDepRawCanonicalDependentFormationNaturalModel.{u} model where
+  law := laws.dependentFormationAgreementProvider
+
+def IncDepRawCanonicalProviderFreeNaturalityLaws.identityComponent
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    (laws : IncDepRawCanonicalProviderFreeNaturalityLaws.{u} model) :
+    IncDepRawCanonicalGeneratedIdentityNaturalModel.{u} model where
+  law := laws.generatedIdentityAgreementProvider
+
 def IncDepRawCanonicalProviderFreeMutualFoldHypotheses.ofPreservation
     {model : IncDepRawSubstitutionFiberModel.{u}}
     (preservation : IncDepRawCanonicalSubstitutionPreservationHypotheses)

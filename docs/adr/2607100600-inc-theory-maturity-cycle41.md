@@ -1308,6 +1308,12 @@ cycle 38–41 で以下の3極構造が判明した:
   replacement/readiness alignmentを再利用し、`toPreservationCore`はrebase lawがある場合の
   逆core projectionを与える。既存lawful modelは`.toProviderFree`へ3-law fragmentだけで
   upgradeできるため、具体モデル残件は5独立証明ではなく3自然性証明である。
+  3-law fragmentは個別検証可能な`InstantiateNaturalModel`、
+  `DependentFormationNaturalModel`、`GeneratedIdentityNaturalModel`へさらに分割し、
+  `ofComponents`と逆projectionsを追加した。canonical Pi/Sigmaを展開するとcodomain foldは
+  domainの完全formation resultから構成したextended tree上で走る一方、child agreementは
+  canonical output equalityしか与えない。従って現invariantからPi/Sigma naturalityをmodel
+  一般には導出できず、model lawとして証明するかagreement invariantを強化する必要がある。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

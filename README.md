@@ -1303,6 +1303,15 @@ It currently establishes:
   upgraded with `.toProviderFree` by supplying only this three-law naturality
   fragment.  Concrete-model work is therefore no longer counted as five
   independent proofs.
+  The three-law fragment is also split into separately checkable model
+  components: `InstantiateNaturalModel`, `DependentFormationNaturalModel`, and
+  `GeneratedIdentityNaturalModel`.  `NaturalityLaws.ofComponents` assembles them,
+  and the inverse component projections are provided.  This split is semantically
+  necessary: expanding canonical Pi/Sigma shows that the codomain fold runs on
+  an extended context tree built from the domain's full formation result, while
+  child fold agreement equates only canonical outputs.  Hence Pi/Sigma
+  naturality is not derivable generically from the present child agreement and
+  must be proved by a model law (or by strengthening the agreement invariant).
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
