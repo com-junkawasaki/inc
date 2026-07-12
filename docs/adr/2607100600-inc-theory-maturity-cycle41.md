@@ -1207,6 +1207,10 @@ cycle 38–41 で以下の3極構造が判明した:
   typing certificateを相互化し、残る6 typing枝を加えてanchored dispatcherを直接構成
   することである。最終interfaceに残す意味論入力はvariable replacement、coherent
   readiness alignment、scoped instantiate agreementである。
+  相互recursor用のdependent motiveは`GeneratedFormationFoldOutput`と
+  `GeneratedAnchoredTypingFoldResult`としてpackage化済みで、各outputと同じreadiness
+  index上のprovenance証明を一体で保持する。Base/Unit/Pi/SigmaおよびVariable/Unitの
+  package constructorもcheckedであり、最終recursorでindex付き証明を再構成する必要はない。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

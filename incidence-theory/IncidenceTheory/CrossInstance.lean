@@ -15322,6 +15322,102 @@ theorem IncDepRawCanonicalFormationFoldOutput.Generated.agreement
           (domainIH rightDomainGenerated)
           (codomainIH rightCodomainGenerated)
 
+/-- A formation output packaged with evidence that it was produced solely by
+the canonical syntax-directed constructors.  This is the formation motive used
+by the provider-free mutual recursion. -/
+structure IncDepRawCanonicalGeneratedFormationFoldOutput
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentFormationDispatchReady formation) where
+  output : IncDepRawCanonicalFormationFoldOutput.{u} ready
+  generated : output.Generated model
+
+/-- An anchored typing result packaged with its syntax-directed provenance. -/
+structure IncDepRawCanonicalGeneratedAnchoredTypingFoldResult
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation) where
+  result : IncDepRawCanonicalAnchoredTypingFoldResult.{u} ready
+  generated : result.Generated model variableProvider
+
+def IncDepRawSubstitutionFiberModel.generatedFormationBase
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {index : Nat} :
+    IncDepRawCanonicalGeneratedFormationFoldOutput model
+      (.base (context := context) (index := index)) where
+  output := model.canonicalFormationFoldOutputBase
+  generated := .base
+
+def IncDepRawSubstitutionFiberModel.generatedFormationUnit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} :
+    IncDepRawCanonicalGeneratedFormationFoldOutput model
+      (.unit (context := context)) where
+  output := model.canonicalFormationFoldOutputUnit
+  generated := .unit
+
+noncomputable def IncDepRawSubstitutionFiberModel.generatedFormationPi
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+    {codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation}
+    (domain : IncDepRawCanonicalGeneratedFormationFoldOutput model domainReady)
+    (codomain :
+      IncDepRawCanonicalGeneratedFormationFoldOutput model codomainReady) :
+    IncDepRawCanonicalGeneratedFormationFoldOutput model
+      (.pi domainReady codomainReady) where
+  output := model.canonicalFormationFoldOutputPi domainReady codomainReady
+    domain.output codomain.output
+  generated := .pi domain.output codomain.output domain.generated
+    codomain.generated
+
+noncomputable def IncDepRawSubstitutionFiberModel.generatedFormationSigma
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    {domainReady : IncDepRawCoherentFormationDispatchReady domainFormation}
+    {codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation}
+    (domain : IncDepRawCanonicalGeneratedFormationFoldOutput model domainReady)
+    (codomain :
+      IncDepRawCanonicalGeneratedFormationFoldOutput model codomainReady) :
+    IncDepRawCanonicalGeneratedFormationFoldOutput model
+      (.sigma domainReady codomainReady) where
+  output := model.canonicalFormationFoldOutputSigma domainReady codomainReady
+    domain.output codomain.output
+  generated := .sigma domain.output codomain.output domain.generated
+    codomain.generated
+
+noncomputable def IncDepRawVariableSubstitutionProvider.generatedTypingVariable
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {position : Nat} {type : IncDepRawType}
+    {lookup : IncDepRawLookup context position type}
+    {typeFormation : IncDepRawWellFormed context type}
+    {typeReady : IncDepRawCoherentFormationDispatchReady typeFormation}
+    (typeOutput :
+      IncDepRawCanonicalGeneratedFormationFoldOutput model typeReady) :
+    IncDepRawCanonicalGeneratedAnchoredTypingFoldResult model variableProvider
+      (.varRule (lookup := lookup) typeReady) where
+  result := variableProvider.anchoredTypingFoldResultVariable typeReady
+    typeOutput.output
+  generated := .variable typeOutput.output typeOutput.generated
+
+def IncDepRawSubstitutionFiberModel.generatedTypingUnit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (variableProvider : IncDepRawVariableSubstitutionProvider)
+    {context : List IncDepRawType} :
+    IncDepRawCanonicalGeneratedAnchoredTypingFoldResult model variableProvider
+      (.unitRule (context := context)) where
+  result := model.anchoredTypingFoldResultUnit
+  generated := .unit
+
 structure IncDepRawCanonicalAnchoredMutualFoldDispatcher.ReadinessLawful
     (anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u}) : Prop where
   formationAgreement : ∀

@@ -1143,6 +1143,14 @@ It currently establishes:
   certificate families must become genuinely mutual; after that mutualization,
   the six composite typing certificates and the anchored dispatcher can be
   assembled without an unrestricted path-agreement provider.
+  The recursive motives are now packaged explicitly as
+  `IncDepRawCanonicalGeneratedFormationFoldOutput` and
+  `IncDepRawCanonicalGeneratedAnchoredTypingFoldResult`: each stores the output
+  together with its generated-provenance proof at the same dependent readiness
+  index.  Checked package constructors cover formation Base/Unit/Pi/Sigma and
+  typing Variable/Unit.  This removes the need to project an output and later
+  reconstruct which indexed certificate belongs to it when the final mutual
+  recursor is assembled.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
