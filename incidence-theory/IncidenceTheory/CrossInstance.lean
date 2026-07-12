@@ -12733,6 +12733,50 @@ structure IncDepRawCanonicalFormationFoldAgreement
     (leftIH targetTree replacements).canonical =
       (rightIH targetTree replacements).canonical
 
+/-- Strong fold agreement preserves the complete canonical dispatch package,
+not only its selected canonical formation result.  This is the invariant needed
+to transport the extended context tree in dependent Pi/Sigma recursion. -/
+structure IncDepRawCanonicalStrongFormationFoldAgreement
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    {ready : IncDepRawCoherentFormationDispatchReady targetFormation}
+    (leftIH : IncDepRawCanonicalFormationSubstitutionFoldMotive ready)
+    (rightIH : IncDepRawCanonicalFormationSubstitutionFoldMotive ready) :
+    Prop where
+  agree : ∀ {source : List IncDepRawType}
+    {substitution : IncDepRawSubstitution source target}
+    {sourceWellFormed : IncDepRawContext.WellFormed source}
+    {targetWellFormed : IncDepRawContext.WellFormed target}
+    {sourceResult : IncDepRawContextSemanticResult sourceWellFormed}
+    {targetResult : IncDepRawContextSemanticResult targetWellFormed}
+    {substitutionResult : IncDepRawSubstitutionSemanticResult substitution
+      sourceResult targetResult}
+    (targetTree : IncDepRawContextSemanticTree targetResult)
+    (replacements : IncDepRawSubstitutionReplacementSemanticResult
+      substitutionResult),
+    leftIH targetTree replacements = rightIH targetTree replacements
+
+theorem IncDepRawCanonicalStrongFormationFoldAgreement.toWeak
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    {ready : IncDepRawCoherentFormationDispatchReady targetFormation}
+    {leftIH : IncDepRawCanonicalFormationSubstitutionFoldMotive ready}
+    {rightIH : IncDepRawCanonicalFormationSubstitutionFoldMotive ready}
+    (agreement :
+      IncDepRawCanonicalStrongFormationFoldAgreement leftIH rightIH) :
+    IncDepRawCanonicalFormationFoldAgreement leftIH rightIH where
+  agree := fun targetTree replacements =>
+    congrArg (fun output => output.canonical)
+      (agreement.agree targetTree replacements)
+
+def IncDepRawCanonicalStrongFormationFoldAgreement.refl
+    {target : List IncDepRawType} {type : IncDepRawType}
+    {targetFormation : IncDepRawWellFormed target type}
+    {ready : IncDepRawCoherentFormationDispatchReady targetFormation}
+    (formationIH : IncDepRawCanonicalFormationSubstitutionFoldMotive ready) :
+    IncDepRawCanonicalStrongFormationFoldAgreement formationIH formationIH where
+  agree := fun _ _ => rfl
+
 def IncDepRawCanonicalFormationFoldAgreement.refl
     {target : List IncDepRawType} {type : IncDepRawType}
     {targetFormation : IncDepRawWellFormed target type}

@@ -1314,6 +1314,12 @@ cycle 38–41 で以下の3極構造が判明した:
   domainの完全formation resultから構成したextended tree上で走る一方、child agreementは
   canonical output equalityしか与えない。従って現invariantからPi/Sigma naturalityをmodel
   一般には導出できず、model lawとして証明するかagreement invariantを強化する必要がある。
+  第一段の強化として完全canonical dispatch packageを等置する
+  `StrongFormationFoldAgreement`を形式化し、既存weak agreementへのprojectionを証明した。
+  しかしこれでもPi/Sigma congruenceは自動化できない。domain package equalityを消去しても
+  extended tree/lifted replacementsの型がdomain resultへ依存するためdependent index equationが
+  残り、通常equality eliminationはLeanに拒否される。generic導出には単なるhomogeneous package
+  equalityでなくHEq/transport-coherent invariant、または明示model coherenceが必要である。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

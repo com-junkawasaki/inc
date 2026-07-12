@@ -1312,6 +1312,15 @@ It currently establishes:
   child fold agreement equates only canonical outputs.  Hence Pi/Sigma
   naturality is not derivable generically from the present child agreement and
   must be proved by a model law (or by strengthening the agreement invariant).
+  A first strengthening is now formalized as
+  `StrongFormationFoldAgreement`, which equates the complete canonical dispatch
+  package and projects canonically to the existing weak agreement.  This still
+  does not make Pi/Sigma congruence automatic: eliminating the domain package
+  equality leaves dependent index equations for the extended tree and lifted
+  replacements.  Lean correctly rejects plain equality elimination there.
+  Therefore a successful generic derivation would need a heterogeneous/
+  transport-coherent invariant (or explicit model coherence), not merely a
+  stronger homogeneous equality of returned packages.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
