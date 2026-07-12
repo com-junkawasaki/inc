@@ -707,6 +707,16 @@ It currently establishes:
   dependent `Eq.mp` transport naturality is required, so the current
   Pi/Sigma-coherence fields must not be reported as redundant until those
   transport equations are proved.
+  The identity-transport case is now fully concrete rather than assumed.
+  `IncFiberEquiv.identity` and `IncDependentFiberEquiv.identity` give literal
+  identity equivalences, and `IncDependentPiApplicationFiberEquiv.identity`
+  proves both function round trips plus application compatibility, while
+  `IncDependentSigmaFiberEquiv.identity` proves both dependent-pair round trips.
+  All laws reduce by `rfl`.  Thus the coherence interfaces are inhabited and
+  computational for identity substitution—the case used by the certified
+  interpreter.  What remains for a substitution-complete concrete model is the
+  genuinely non-identity reindexing/transport case, not the basic Pi/Sigma
+  constructors themselves.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

@@ -277,6 +277,11 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   raw base indexの解釈選択はconsistency上の残件ではなく、本質的な具体モデル課題はdependent transport coherenceとglobal
   variable/alignment/rebase lawsに限定される。dependent Sigma round tripをfiber inverse lawsだけから導出する試行では、dependent `Eq.mp` transportの
   naturalityが別途必要と判明したため、Pi/Sigma coherence fieldsを未証明のまま冗長とは扱わない。
+- identity-transport caseは具体化した。`IncFiberEquiv.identity`と`IncDependentFiberEquiv.identity`から、
+  `IncDependentPiApplicationFiberEquiv.identity`がfunctionの両round tripとapplication compatibilityを、
+  `IncDependentSigmaFiberEquiv.identity`がdependent pairの両round tripを与え、全lawは`rfl`で閉じる。certified interpreterが使う
+  identity substitutionについてcoherence interfaceはcomputationalにinhabitedであり、substitution-complete concrete modelに残るのは
+  genuinely non-identityなreindexing/transport caseである。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

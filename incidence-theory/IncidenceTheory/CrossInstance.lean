@@ -3222,6 +3222,12 @@ structure IncFiberEquiv (source target : Type u) where
   backward_forward : ∀ value, backward (forward value) = value
   forward_backward : ∀ value, forward (backward value) = value
 
+def IncFiberEquiv.identity (fiber : Type u) : IncFiberEquiv fiber fiber where
+  forward := id
+  backward := id
+  backward_forward := fun _ => rfl
+  forward_backward := fun _ => rfl
+
 def IncFiberEquiv.ofEq {source target : Type u}
     (coherence : source = target) : IncFiberEquiv source target := by
   cases coherence
@@ -3435,6 +3441,12 @@ structure IncDependentFiberEquiv
     IncFiberEquiv (sourceCodomain sourceValue)
       (targetCodomain (domainEquiv.forward sourceValue))
 
+def IncDependentFiberEquiv.identity
+    {domain : Type u} (codomain : domain → Type u) :
+    IncDependentFiberEquiv (IncFiberEquiv.identity domain)
+      codomain codomain where
+  codomainEquiv := fun value => IncFiberEquiv.identity (codomain value)
+
 def IncDependentFiberEquiv.piForward
     {sourceDomain targetDomain : Type u}
     {domainEquiv : IncFiberEquiv sourceDomain targetDomain}
@@ -3587,6 +3599,15 @@ structure IncDependentPiApplicationFiberEquiv
       dependentEquiv.piForward sourceFunction
         (domainEquiv.forward sourceArgument)
 
+def IncDependentPiApplicationFiberEquiv.identity
+    {domain : Type u} (codomain : domain → Type u) :
+    IncDependentPiApplicationFiberEquiv (IncFiberEquiv.identity domain)
+      codomain codomain where
+  dependentEquiv := IncDependentFiberEquiv.identity codomain
+  backward_forward := fun _ => rfl
+  forward_backward := fun _ => rfl
+  forward_apply := fun _ _ => rfl
+
 def IncDependentPiApplicationFiberEquiv.toPiFiberEquiv
     {sourceDomain targetDomain : Type u}
     {domainEquiv : IncFiberEquiv sourceDomain targetDomain}
@@ -3708,6 +3729,14 @@ structure IncDependentSigmaFiberEquiv
     dependentEquiv.sigmaBackward (dependentEquiv.sigmaForward value) = value
   forward_backward : ∀ value,
     dependentEquiv.sigmaForward (dependentEquiv.sigmaBackward value) = value
+
+def IncDependentSigmaFiberEquiv.identity
+    {domain : Type u} (codomain : domain → Type u) :
+    IncDependentSigmaFiberEquiv (IncFiberEquiv.identity domain)
+      codomain codomain where
+  dependentEquiv := IncDependentFiberEquiv.identity codomain
+  backward_forward := fun _ => rfl
+  forward_backward := fun _ => rfl
 
 def IncDependentSigmaFiberEquiv.toFiberEquiv
     {sourceDomain targetDomain : Type u}
