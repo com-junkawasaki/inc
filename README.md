@@ -717,6 +717,16 @@ It currently establishes:
   interpreter.  What remains for a substitution-complete concrete model is the
   genuinely non-identity reindexing/transport case, not the basic Pi/Sigma
   constructors themselves.
+  A model audit then removed a larger apparent obligation entirely.
+  `IncDepRawSubstitutionFiberModel.typingFormation` quantified over every
+  semantic-readiness derivation, but its accessor and field had no consumers in
+  either preservation implementation.  Coherent readiness already carries the
+  exact result formation used by every recursive branch.  The unused field and
+  accessor are deleted, and `withUnitBase` now preserves only the genuinely used
+  Pi/Sigma coherence data.  Consequently a concrete substitution-fiber model no
+  longer has to reconstruct formation evidence from the weaker, unindexed
+  semantic-readiness syntax; its core data is exactly a base interpretation plus
+  dependent Pi and Sigma transport coherence.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

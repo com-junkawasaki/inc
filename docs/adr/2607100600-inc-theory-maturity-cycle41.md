@@ -282,6 +282,10 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `IncDependentSigmaFiberEquiv.identity`がdependent pairの両round tripを与え、全lawは`rfl`で閉じる。certified interpreterが使う
   identity substitutionについてcoherence interfaceはcomputationalにinhabitedであり、substitution-complete concrete modelに残るのは
   genuinely non-identityなreindexing/transport caseである。
+- model-field auditで`IncDepRawSubstitutionFiberModel.typingFormation`がlegacy/canonical preservationのどちらにも使用されていないことを確認した。
+  coherent readinessが各recursive branchのexact result formationをすでに保持するため、全semantic-readiness derivationからformationを再構成するfieldと
+  accessorを削除した。`withUnitBase`も実際に使われるPi/Sigma coherenceだけを保存する。具体substitution-fiber modelのcore dataはbase interpretationと
+  dependent Pi/Sigma transport coherenceに縮まり、弱いunindexed semantic-readiness syntaxからformation evidenceを復元する不要な課題は消滅した。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term
