@@ -114,3 +114,7 @@ case where the selector is complete and resonance has no unselected modes.
   may identify leaves across sides while resonance remains side-sensitive.
   Both failures have checked finite/Nat counterexamples. Any positive closure
   theorem must assume unit reflection and cross-side observational separation.
+- Observational separation has a reusable sufficient form: faithfulness makes
+  every bisimulation class a singleton and hence makes any resonance relation
+  quotient-congruent. Combined with the existing leafless-side faithfulness
+  theorem, this yields a positive sum result for `Nat ⊕ cycleIncidenceFixed`.

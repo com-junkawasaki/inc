@@ -1197,6 +1197,19 @@ def QuotientResonanceCongruent {I R T : Type u} [DecidableEq I]
     approxBisim inc k₁ k₂ →
     (inc.resonance i₁ j₁ k₁ ↔ inc.resonance i₂ j₂ k₂)
 
+theorem quotientResonanceCongruent_of_faithful
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T)
+    (faithful : ∀ x y, approxBisim inc x y ↔ x = y) :
+    QuotientResonanceCongruent inc := by
+  intro i₁ i₂ j₁ j₂ k₁ k₂ hi hj hk
+  have hiEq := (faithful i₁ i₂).mp hi
+  have hjEq := (faithful j₁ j₂).mp hj
+  have hkEq := (faithful k₁ k₂).mp hk
+  subst i₂
+  subst j₂
+  subst k₂
+  rfl
+
 def quotientResonance {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) :
     IncidenceQuotient inc → IncidenceQuotient inc →

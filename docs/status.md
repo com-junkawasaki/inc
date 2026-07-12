@@ -120,6 +120,12 @@ instantiate/substitute equalities with synchronized casts.
   collapse erases the side information used by resonance. Sum completion
   therefore requires explicit unit-reflection and bisimulation-separation
   conditions; it is not an unconditional closure theorem.
+- A positive quotient result is now checked: every faithful incidence has
+  quotient-congruent resonance (`quotientResonanceCongruent_of_faithful`). Thus
+  a sum of faithful factors with a leafless side inherits quotient congruence;
+  `natIncidence ⊕ cycleIncidenceFixed` is the concrete witness. The remaining
+  sum obstruction is relational associativity/unit creation, not quotient
+  descent under these separation hypotheses.
 - Pushout preservation and generic boundary-square-zero are conditional on the
   categorical or linear hypotheses in their declarations.
 - Translation completeness is proved only for the stated fragments and

@@ -564,6 +564,25 @@ theorem incidenceSum_faithful_of_faithful_no_shared_leaves
         cases h
         exact approxBisim_refl _ _
 
+theorem incidenceSum_quotientResonanceCongruent_of_faithful_no_shared_leaves
+    {I1 R1 I2 R2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 GraphType) (inc2 : Incidence I2 R2 GraphType)
+    (hf1 : ∀ x y : I1, approxBisim inc1 x y ↔ x = y)
+    (hf2 : ∀ x y : I2, approxBisim inc2 x y ↔ x = y)
+    (hleafless2 : ∀ b, inc2.boundary b ≠ []) :
+    QuotientResonanceCongruent (incidenceSum inc1 inc2) :=
+  quotientResonanceCongruent_of_faithful _
+    (incidenceSum_faithful_of_faithful_no_shared_leaves
+      inc1 inc2 hf1 hf2 hleafless2)
+
+theorem natCycleSum_quotientResonanceCongruent :
+    QuotientResonanceCongruent
+      (incidenceSum natIncidence cycleIncidenceFixed) :=
+  incidenceSum_quotientResonanceCongruent_of_faithful_no_shared_leaves
+    natIncidence cycleIncidenceFixed natIncidence_approxBisim_iff
+    cycleIncidenceFixed_approxBisim_iff
+    (fun b => by cases b <;> simp [cycleIncidenceFixed, cycleBoundaryFixed])
+
 /- Concrete confirmation: `natIncidence ⊕ cycleIncidenceFixed` is fully
    faithful -- `cycleIncidenceFixed` (cycle 27) is the first instance in
    this project with NO leaves at all, so no cross-side collapse can
