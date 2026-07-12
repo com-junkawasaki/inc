@@ -17938,6 +17938,73 @@ noncomputable def
     ready
 
 noncomputable def
+    IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingFoldOfInputs
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (inputs : IncDepRawCanonicalRecursiveFoldInputs.{u} model)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation) :
+    IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+      inputs.variableProvider ready :=
+  IncDepRawCoherentTypingDispatchReady.rec
+    (motive_1 := fun _ ready =>
+      IncDepRawCanonicalRecursivelyGeneratedFormationFoldOutput model
+        inputs.variableProvider ready)
+    (motive_2 := fun _ _ ready =>
+      IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+        inputs.variableProvider ready)
+    (model.recursivelyGeneratedFormationBase inputs.variableProvider)
+    (model.recursivelyGeneratedFormationUnit inputs.variableProvider)
+    (fun _ _ domain codomain =>
+      model.recursivelyGeneratedFormationPi inputs.variableProvider domain
+        codomain)
+    (fun _ _ domain codomain =>
+      model.recursivelyGeneratedFormationSigma inputs.variableProvider domain
+        codomain)
+    (fun _ _ _ typeOutput leftOutput rightOutput =>
+      model.recursivelyGeneratedIdentity inputs.variableProvider
+        inputs.readinessAlignment inputs.agreementProvider typeOutput leftOutput
+        rightOutput)
+    (fun _ typeOutput =>
+      inputs.variableProvider.recursivelyGeneratedTypingVariable model
+        typeOutput)
+    (model.recursivelyGeneratedTypingUnit inputs.variableProvider)
+    (fun _ _ domain body =>
+      model.recursivelyGeneratedTypingLambda inputs.variableProvider domain body)
+    (fun _ _ _ _ _ domain codomain result function argument =>
+      model.recursivelyGeneratedTypingApply inputs.variableProvider
+        inputs.agreementProvider inputs.instantiateAgreementProvider domain
+        codomain result function argument)
+    (fun _ _ _ _ _ domain codomain result first second =>
+      model.recursivelyGeneratedTypingPair inputs.variableProvider
+        inputs.agreementProvider inputs.instantiateAgreementProvider domain
+        codomain result first second)
+    (fun _ _ _ domain codomain pair =>
+      model.recursivelyGeneratedTypingFirst inputs.variableProvider
+        inputs.agreementProvider domain codomain pair)
+    (fun _ _ _ _ domain codomain result pair =>
+      model.recursivelyGeneratedTypingSecond inputs.variableProvider
+        inputs.agreementProvider inputs.instantiateAgreementProvider domain
+        codomain result pair)
+    (fun _ _ typeOutput termOutput =>
+      model.recursivelyGeneratedRefl inputs.variableProvider
+        inputs.readinessAlignment inputs.agreementProvider typeOutput termOutput)
+    ready
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.recursivelyGeneratedTypingFoldOfAssembly
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalProviderFreeAssemblyHypotheses.{u} model)
+    {context : List IncDepRawType} {term : IncDepRawTerm}
+    {type : IncDepRawType} {typing : IncDepRawHasType context term type}
+    {formation : IncDepRawWellFormed context type}
+    (ready : IncDepRawCoherentTypingDispatchReady typing formation) :
+    IncDepRawCanonicalRecursivelyGeneratedAnchoredTypingFoldOutput model
+      hypotheses.variableProvider ready :=
+  model.recursivelyGeneratedTypingFoldOfInputs (.ofAssembly hypotheses) ready
+
+noncomputable def
     IncDepRawSubstitutionFiberModel.recursivelyGeneratedFormationFold
     (model : IncDepRawSubstitutionFiberModel.{u})
     (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
@@ -18099,11 +18166,49 @@ noncomputable def
         typingPackage.formation.recursivelyGenerated
     typingPackage.output.retargetFormation formationPackage.output agreement
 
+noncomputable def
+    IncDepRawSubstitutionFiberModel.assemblyAnchoredMutualFoldDispatcher
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalProviderFreeAssemblyHypotheses.{u} model) :
+    IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u} where
+  formation := fun ready =>
+    (model.recursivelyGeneratedFormationFoldOfAssembly hypotheses ready).output
+  typing := fun ready =>
+    let inputs := IncDepRawCanonicalRecursiveFoldInputs.ofAssembly hypotheses
+    let formationPackage := model.recursivelyGeneratedFormationFoldOfInputs
+      inputs ready.formationReady
+    let typingPackage := model.recursivelyGeneratedTypingFoldOfInputs inputs ready
+    let agreement : IncDepRawCanonicalFormationFoldAgreement
+        formationPackage.output.fold typingPackage.formation.output.fold :=
+      inputs.agreementProvider.align formationPackage.output
+        typingPackage.formation.output formationPackage.recursivelyGenerated
+        typingPackage.formation.recursivelyGenerated
+    typingPackage.output.retargetFormation formationPackage.output agreement
+
 structure IncDepRawCanonicalProviderFreeMutualFoldWitness
     (model : IncDepRawSubstitutionFiberModel.{u})
     (_hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
       model) where
   anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u}
+
+structure IncDepRawCanonicalAssemblyMutualFoldWitness
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (_hypotheses : IncDepRawCanonicalProviderFreeAssemblyHypotheses.{u}
+      model) where
+  anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u}
+
+noncomputable def IncDepRawSubstitutionFiberModel.assemblyMutualFoldWitness
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalProviderFreeAssemblyHypotheses.{u} model) :
+    IncDepRawCanonicalAssemblyMutualFoldWitness model hypotheses where
+  anchored := model.assemblyAnchoredMutualFoldDispatcher hypotheses
+
+noncomputable def IncDepRawCanonicalAssemblyMutualFoldWitness.lawful
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {hypotheses : IncDepRawCanonicalProviderFreeAssemblyHypotheses.{u} model}
+    (witness : IncDepRawCanonicalAssemblyMutualFoldWitness model hypotheses) :
+    IncDepRawCanonicalLawfulMutualFold.{u} :=
+  witness.anchored.toLawfulMutualFoldCanonical hypotheses.readinessAlignment
 
 noncomputable def
     IncDepRawSubstitutionFiberModel.providerFreeMutualFoldWitness
@@ -18201,6 +18306,13 @@ noncomputable def
     {hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
       model}
     (witness : IncDepRawCanonicalProviderFreeMutualFoldWitness model hypotheses) :
+    IncDepRawStrictMutualSubstitutionDispatcher :=
+  witness.lawful.strict
+
+noncomputable def IncDepRawCanonicalAssemblyMutualFoldWitness.strict
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {hypotheses : IncDepRawCanonicalProviderFreeAssemblyHypotheses.{u} model}
+    (witness : IncDepRawCanonicalAssemblyMutualFoldWitness model hypotheses) :
     IncDepRawStrictMutualSubstitutionDispatcher :=
   witness.lawful.strict
 

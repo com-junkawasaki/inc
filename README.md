@@ -1406,6 +1406,14 @@ It currently establishes:
   already construct the full recursive formation fold without any weak-law
   record.  The matching common typing projection is the remaining half before
   the assembly-only anchored dispatcher can be exposed.
+  The common typing projection and assembly wrapper are now checked as
+  `recursivelyGeneratedTypingFoldOfInputs` and `...OfAssembly`.  Together with
+  the common formation projection they construct
+  `assemblyAnchoredMutualFoldDispatcher`, including the final independent
+  formation/typing alignment through the assembly agreement service.
+  `AssemblyMutualFoldWitness` is directly inhabited and has lawful and strict
+  projections.  The alternate strong route is therefore end-to-end: it uses no
+  legacy weak dependent/Identity provider and no unrestricted path provider.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
