@@ -1243,6 +1243,13 @@ cycle 38–41 で以下の3極構造が判明した:
   completenessとtyping provenanceを同時に保持する。残るrecursor obligationは、独立に
   再帰されたendpoint packagesをunderlying type packageへ整列してexact builderへ渡す
   complete-agreement補題に限定された。
+  complete formation agreementは構造的に証明されたが、Identityで必要な自然性が既存
+  dependent-formation interfaceより厳密に一段広いことも判明した。既存lawはendpoint
+  semantic termsを固定してunderlying typeだけを変える。一方、独立再帰したIdentity枝は
+  endpoint terms自体も異なり得る。`GeneratedIdentityFoldAgreementProvider`は任意fiberで
+  なく二つの生成Identity outputsだけに量化してこの差分を表す。これとPi/Sigma agreement
+  から`CompletelyGenerated.agreement`がcheckedとなった。このlawはproof irrelevanceから
+  は導けないため、具体的にinhabitするかfinal hypothesesへ正直に含める必要がある。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

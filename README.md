@@ -1202,6 +1202,19 @@ It currently establishes:
   typing provenance.  The remaining recursor obligation is now specifically
   the complete-agreement lemma that aligns independently recursive endpoint
   packages to the underlying type package before invoking these exact builders.
+  Complete formation uniqueness is now proved structurally, and this proof
+  exposes one precise law that the earlier dependent-formation interface did
+  not contain.  Its Identity clause compares a fixed pair of endpoint semantic
+  terms while changing only the underlying type output; independently recursive
+  Identity branches may also produce different endpoint semantic terms.
+  `GeneratedIdentityFoldAgreementProvider` isolates exactly this latter
+  naturality, quantified only over two generated Identity outputs rather than
+  arbitrary semantic fibers.  Given it and the existing Pi/Sigma dependent
+  agreement laws, `CompletelyGenerated.agreement` covers ordinary/ordinary and
+  Identity/Identity cases, with mixed constructor cases eliminated by the
+  indexed syntax.  The final dispatcher can therefore use a strictly scoped
+  Identity law, but that law must still be inhabited or added honestly to the
+  final hypotheses; it is not derivable from proof irrelevance.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

@@ -15640,6 +15640,68 @@ inductive IncDepRawCanonicalFormationFoldOutput.CompletelyGenerated
         (model.canonicalFormationFoldOutputIdentityExact readinessAlignment
           typeReady leftReady rightReady typeOutput leftOutput rightOutput)
 
+/-- The exact remaining naturality law for independently generated Identity
+formations.  Unlike a global path provider, it is restricted to the two
+syntax-directed Identity outputs and their recursively generated endpoints. -/
+structure IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider
+    (model : IncDepRawSubstitutionFiberModel.{u}) where
+  identity : ∀
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {leftTyping : IncDepRawHasType context left type}
+    {rightTyping : IncDepRawHasType context right type}
+    (firstReadinessAlignment secondReadinessAlignment :
+      IncDepRawCoherentReadinessAlignmentProvider)
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (leftReady : IncDepRawCoherentTypingDispatchReady leftTyping typeFormation)
+    (rightReady : IncDepRawCoherentTypingDispatchReady rightTyping typeFormation)
+    (firstTypeOutput secondTypeOutput :
+      IncDepRawCanonicalFormationFoldOutput.{u} typeReady)
+    (firstLeft : IncDepRawCanonicalAnchoredTypingFoldOutput.{u} leftReady
+      firstTypeOutput)
+    (firstRight : IncDepRawCanonicalAnchoredTypingFoldOutput.{u} rightReady
+      firstTypeOutput)
+    (secondLeft : IncDepRawCanonicalAnchoredTypingFoldOutput.{u} leftReady
+      secondTypeOutput)
+    (secondRight : IncDepRawCanonicalAnchoredTypingFoldOutput.{u} rightReady
+      secondTypeOutput),
+    IncDepRawCanonicalFormationFoldAgreement
+      (model.canonicalFormationFoldOutputIdentityExact firstReadinessAlignment
+        typeReady leftReady rightReady firstTypeOutput firstLeft firstRight).fold
+      (model.canonicalFormationFoldOutputIdentityExact secondReadinessAlignment
+        typeReady leftReady rightReady secondTypeOutput secondLeft
+        secondRight).fold
+
+theorem IncDepRawCanonicalFormationFoldOutput.CompletelyGenerated.agreement
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (dependentAgreement :
+      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
+    (identityAgreement :
+      IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider model)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {ready : IncDepRawCoherentFormationDispatchReady formation}
+    {first second : IncDepRawCanonicalFormationFoldOutput.{u} ready}
+    (firstGenerated : first.CompletelyGenerated model variableProvider)
+    (secondGenerated : second.CompletelyGenerated model variableProvider) :
+    IncDepRawCanonicalFormationFoldAgreement first.fold second.fold := by
+  cases firstGenerated with
+  | ordinary _ firstOrdinary =>
+      cases secondGenerated with
+      | ordinary _ secondOrdinary =>
+        exact firstOrdinary.agreement dependentAgreement secondOrdinary
+      | identity _ _ _ _ secondTypeGenerated _ _ =>
+        cases firstOrdinary
+  | identity firstAlignment firstType firstLeft firstRight _ _ _ =>
+      cases secondGenerated with
+      | ordinary _ secondOrdinary =>
+        cases secondOrdinary
+      | identity secondAlignment secondType secondLeft secondRight _ _ _ =>
+        exact identityAgreement.identity firstAlignment secondAlignment _ _ _
+          firstType secondType firstLeft firstRight secondLeft secondRight
+
 structure IncDepRawCanonicalCompletelyGeneratedFormationFoldOutput
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)
