@@ -122,3 +122,8 @@ case where the selector is complete and resonance has no unselected modes.
   `UnitReflectingResonanceSpec`: the vacuum cannot emerge from two non-vacuum
   inputs. Nat resonance satisfies it, whereas the finite all-mode resonance
   refutes it at `(root, root, leaf)`.
+- Integer reconstruction provides a complementary algebraic model:
+  `integerIncidence` uses signed toward-zero boundary roles and addition as
+  functional associative resonance. Every value resonates with its additive
+  inverse at the vacuum, so the model provably refutes unit reflection while
+  supporting a genuine group-level interaction absent from naturals.

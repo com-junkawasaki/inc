@@ -144,14 +144,18 @@ instantiate/substitute equalities with synchronized casts.
 Checked constructions include:
 
 - Peano natural numbers
+- integers with signed predecessor boundaries, additive resonance, zero,
+  inverses, and relational associativity
 - hereditary finite sets
 - ordered pairs and trees
 - paths, cycles, and simplices
 - products, sums, and conditional quotients
 - propositional logic and a dependent Pi/Sigma/Identity fragment
 
-Major remaining areas include integers, rationals, broader algebra, real
-analysis, and a larger categorical library.
+Major remaining areas include rationals, broader algebra, real analysis, and a
+larger categorical library. Integer bisimulation faithfulness is not yet
+exported as a global theorem, although its boundary roles distinguish positive
+and negative directions and its rank decrease is checked.
 
 ## Verification evidence
 
