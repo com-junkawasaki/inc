@@ -78,3 +78,9 @@ case where the selector is complete and resonance has no unselected modes.
   `resonance i j k`; symmetry, vacuum/unit, and homomorphic transport therefore
   become checked semantic laws without changing the complete propositional
   calculus.
+- The dependent-calculus integration boundary is
+  `IncDepRawNormalizedResonanceCompletion`: normalized renaming/substitution
+  preservation is kept independent from legacy Unit-fiber proof-object
+  alignment, while the semantic carrier supplies resonance, relational
+  associativity, and quotient congruence. Peano resonance provides the first
+  complete instance.

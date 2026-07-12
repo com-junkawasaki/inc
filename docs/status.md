@@ -75,8 +75,13 @@ instantiate/substitute equalities with synchronized casts.
   `ResonantBehavioralTranslation` where their boundary and interaction laws
   genuinely agree; some historical glue homomorphisms do not meet this stronger
   specification.
-- The legacy `IncDepRawUnitRelationalCompletion` depends on coherent readiness
-  alignment. Its replacement should consume normalized readiness instead.
+- The legacy `IncDepRawUnitRelationalCompletion` still depends on coherent
+  readiness alignment for its Unit-fiber-specific relational naturality.
+  Structural preservation has now been separated from that condition:
+  `IncDepRawNormalizedResonanceCompletion` packages unconditional normalized
+  preservation with resonance, relational associativity, and quotient
+  congruence. A complete Nat instance is checked, and legacy certificates have
+  a compatibility bridge to the normalized structural theorem.
 - Pushout preservation and generic boundary-square-zero are conditional on the
   categorical or linear hypotheses in their declarations.
 - Translation completeness is proved only for the stated fragments and

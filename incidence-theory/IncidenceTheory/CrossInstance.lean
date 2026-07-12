@@ -8379,6 +8379,24 @@ noncomputable def incDepRawNormalizedBasicPreservation :
     ready.substituteNormalized substitution
   closedIdentity := incDepRawEmptyNormalizedIdentitySubstitution
 
+/-- Replacement semantic completion boundary. Structural preservation uses
+normalized readiness and no longer depends on the legacy Unit-fiber
+readiness-alignment provider. The semantic carrier separately supplies the
+central resonance laws and their descent to observational classes. -/
+structure IncDepRawNormalizedResonanceCompletion
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) where
+  structural : IncDepRawNormalizedBasicPreservation
+  resonance : ResonanceSpec inc
+  associative : AssociativeResonanceSpec inc
+  quotientCongruent : QuotientResonanceCongruent inc
+
+noncomputable def natIncDepRawNormalizedResonanceCompletion :
+    IncDepRawNormalizedResonanceCompletion natIncidence where
+  structural := incDepRawNormalizedBasicPreservation
+  resonance := natResonanceSpec.toResonanceSpec
+  associative := natAssociativeResonanceSpec
+  quotientCongruent := natQuotientResonanceCongruent
+
 structure IncDepRawStrictTypingDispatchReady
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} (typing : IncDepRawHasType context term type)
@@ -21810,6 +21828,14 @@ structure IncDepRawUnitRelationalCompletion where
   preservation : IncDepRawCanonicalRecursivePreservationCore
   relationalLaws : IncDepRawCanonicalScopedRelationalNaturalityLaws
     incDepRawUnitSubstitutionFiberModel preservation.variableProvider
+
+/-- Compatibility bridge: every legacy Unit-fiber completion can use the
+unconditional normalized structural theorem. No readiness-alignment data from
+the legacy certificate is needed for this result. -/
+noncomputable def IncDepRawUnitRelationalCompletion.normalizedStructural
+    (_completion : IncDepRawUnitRelationalCompletion) :
+    IncDepRawNormalizedBasicPreservation :=
+  incDepRawNormalizedBasicPreservation
 
 structure IncDepRawUnitRelationalCompletion.Stage1 where
   variableProvider : IncDepRawVariableSubstitutionProvider
