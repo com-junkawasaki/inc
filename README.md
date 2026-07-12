@@ -1020,6 +1020,13 @@ It currently establishes:
   compatibility with the existing API.  Consequently the remaining task is
   inhabiting this one interface by mutual recursion, not redesigning the
   preservation theorem or its consumers.
+  Formation-side bundle constructors are now complete too.  Base, Unit, Pi, and
+  Sigma package their canonical folds directly; Identity retargets both endpoint
+  typing bundles to the chosen type path before constructing its formation
+  output.  Together with the eight typing bundle constructors, all thirteen
+  handlers required by the mutual readiness recursor now exist at the final
+  dispatcher output types.  Only the recursive production of the path-agreement
+  arguments between independently reached premises remains.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

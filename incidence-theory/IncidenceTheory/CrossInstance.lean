@@ -14293,6 +14293,51 @@ structure IncDepRawCanonicalFormationFoldOutput
     (ready : IncDepRawCoherentFormationDispatchReady formation) where
   fold : IncDepRawCanonicalFormationSubstitutionFoldMotive ready
 
+def IncDepRawSubstitutionFiberModel.canonicalFormationFoldOutputBase
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {index : Nat} :
+    IncDepRawCanonicalFormationFoldOutput
+      (IncDepRawCoherentFormationDispatchReady.base
+        (context := context) (index := index)) where
+  fold := model.canonicalMutualFoldBase
+
+def IncDepRawSubstitutionFiberModel.canonicalFormationFoldOutputUnit
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} :
+    IncDepRawCanonicalFormationFoldOutput
+      (IncDepRawCoherentFormationDispatchReady.unit (context := context)) where
+  fold := model.canonicalMutualFoldUnitFormation
+
+noncomputable def IncDepRawSubstitutionFiberModel.canonicalFormationFoldOutputPi
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
+    (codomainOutput : IncDepRawCanonicalFormationFoldOutput codomainReady) :
+    IncDepRawCanonicalFormationFoldOutput
+      (IncDepRawCoherentFormationDispatchReady.pi domainReady codomainReady) where
+  fold := model.canonicalMutualFoldPi domainReady codomainReady domainOutput.fold
+    codomainOutput.fold
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.canonicalFormationFoldOutputSigma
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    {context : List IncDepRawType} {domain codomain : IncDepRawType}
+    {domainFormation : IncDepRawWellFormed context domain}
+    {codomainFormation : IncDepRawWellFormed (domain :: context) codomain}
+    (domainReady : IncDepRawCoherentFormationDispatchReady domainFormation)
+    (codomainReady : IncDepRawCoherentFormationDispatchReady codomainFormation)
+    (domainOutput : IncDepRawCanonicalFormationFoldOutput domainReady)
+    (codomainOutput : IncDepRawCanonicalFormationFoldOutput codomainReady) :
+    IncDepRawCanonicalFormationFoldOutput
+      (IncDepRawCoherentFormationDispatchReady.sigma domainReady
+        codomainReady) where
+  fold := model.canonicalMutualFoldSigma domainReady codomainReady
+    domainOutput.fold codomainOutput.fold
+
 def IncDepRawCanonicalFormationSubstitutionFoldMotive.castReady
     {target : List IncDepRawType} {type : IncDepRawType}
     {targetFormation : IncDepRawWellFormed target type}
@@ -14488,6 +14533,36 @@ noncomputable def
       termReady typeOutput.fold alignedTerm.typing alignedTerm.agreement
     agreement := model.canonicalFoldAgreementRefl readinessAlignment typeReady
       termReady typeOutput.fold alignedTerm.typing alignedTerm.agreement }
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.canonicalFormationFoldOutputIdentity
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {left right : IncDepRawTerm}
+    {typeFormation : IncDepRawWellFormed context type}
+    {leftTyping : IncDepRawHasType context left type}
+    {rightTyping : IncDepRawHasType context right type}
+    (typeReady : IncDepRawCoherentFormationDispatchReady typeFormation)
+    (leftReady : IncDepRawCoherentTypingDispatchReady leftTyping typeFormation)
+    (rightReady : IncDepRawCoherentTypingDispatchReady rightTyping typeFormation)
+    (typeOutput : IncDepRawCanonicalFormationFoldOutput typeReady)
+    (leftOutput : IncDepRawCanonicalTypingFoldOutput leftReady)
+    (rightOutput : IncDepRawCanonicalTypingFoldOutput rightReady)
+    (leftPathAgreement : IncDepRawCanonicalFormationFoldAgreement typeOutput.fold
+      leftOutput.formation)
+    (rightPathAgreement : IncDepRawCanonicalFormationFoldAgreement typeOutput.fold
+      rightOutput.formation) :
+    IncDepRawCanonicalFormationFoldOutput
+      (IncDepRawCoherentFormationDispatchReady.identity typeReady leftReady
+        rightReady) :=
+  let alignedLeft := leftOutput.retargetFormation typeOutput.fold
+    leftPathAgreement
+  let alignedRight := rightOutput.retargetFormation typeOutput.fold
+    rightPathAgreement
+  { fold := model.canonicalMutualFoldIdentityOfAgreements readinessAlignment
+      typeReady leftReady rightReady typeOutput.fold alignedLeft.typing
+      alignedRight.typing alignedLeft.agreement alignedRight.agreement }
 
 noncomputable def
     IncDepRawSubstitutionFiberModel.canonicalTypingFoldOutputApply
