@@ -1380,6 +1380,12 @@ It currently establishes:
   internally.  Refactoring handlers to consume this service will switch the
   final dispatcher to the strong route without duplicating the six handlers that
   align recursive formation outputs.
+  Identity and Refl now consume this agreement service directly.  The existing
+  weak-law recursor is preserved by constructing `ofWeak` at its handler sites,
+  so the refactor changes no public behavior while removing direct weak-provider
+  coupling from those two handlers.  Apply, Pair, First, and Second remain to be
+  switched to the same service before an assembly-only recursor can reuse the
+  full handler set.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

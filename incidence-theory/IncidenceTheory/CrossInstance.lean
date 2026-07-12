@@ -17260,10 +17260,9 @@ noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedIdentity
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)
     (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
-    (dependentAgreement :
-      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
-    (identityAgreement :
-      IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider model)
+    (agreementProvider :
+      IncDepRawCanonicalRecursiveGeneratedAgreementProvider model
+        variableProvider)
     {context : List IncDepRawType} {type : IncDepRawType}
     {left right : IncDepRawTerm}
     {typeFormation : IncDepRawWellFormed context type}
@@ -17284,14 +17283,12 @@ noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedIdentity
       variableProvider (.identity typeReady leftReady rightReady) := by
   let leftAgreement : IncDepRawCanonicalFormationFoldAgreement
       typeOutput.output.fold leftOutput.formation.output.fold :=
-    typeOutput.recursivelyGenerated.agreementAcrossReady dependentAgreement
-      identityAgreement readinessAlignment
-      leftOutput.formation.recursivelyGenerated
+    agreementProvider.align typeOutput.output leftOutput.formation.output
+      typeOutput.recursivelyGenerated leftOutput.formation.recursivelyGenerated
   let rightAgreement : IncDepRawCanonicalFormationFoldAgreement
       typeOutput.output.fold rightOutput.formation.output.fold :=
-    typeOutput.recursivelyGenerated.agreementAcrossReady dependentAgreement
-      identityAgreement readinessAlignment
-      rightOutput.formation.recursivelyGenerated
+    agreementProvider.align typeOutput.output rightOutput.formation.output
+      typeOutput.recursivelyGenerated rightOutput.formation.recursivelyGenerated
   let alignedLeft := leftOutput.output.retargetFormation typeOutput.output
     leftAgreement
   let alignedRight := rightOutput.output.retargetFormation typeOutput.output
@@ -17310,10 +17307,9 @@ noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedRefl
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)
     (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
-    (dependentAgreement :
-      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
-    (identityAgreement :
-      IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider model)
+    (agreementProvider :
+      IncDepRawCanonicalRecursiveGeneratedAgreementProvider model
+        variableProvider)
     {context : List IncDepRawType} {type : IncDepRawType}
     {term : IncDepRawTerm}
     {typeFormation : IncDepRawWellFormed context type}
@@ -17329,14 +17325,12 @@ noncomputable def IncDepRawSubstitutionFiberModel.recursivelyGeneratedRefl
       variableProvider (.reflRule typeReady termReady) := by
   let termAgreement : IncDepRawCanonicalFormationFoldAgreement
       typeOutput.output.fold termOutput.formation.output.fold :=
-    typeOutput.recursivelyGenerated.agreementAcrossReady dependentAgreement
-      identityAgreement readinessAlignment
-      termOutput.formation.recursivelyGenerated
+    agreementProvider.align typeOutput.output termOutput.formation.output
+      typeOutput.recursivelyGenerated termOutput.formation.recursivelyGenerated
   let alignedTerm := termOutput.output.retargetFormation typeOutput.output
     termAgreement
   let identityFormation := model.recursivelyGeneratedIdentity variableProvider
-    readinessAlignment dependentAgreement identityAgreement typeOutput termOutput
-    termOutput
+    readinessAlignment agreementProvider typeOutput termOutput termOutput
   exact
     { formation := identityFormation
       output := (model.anchoredTypingFoldResultReflExact readinessAlignment
@@ -17884,8 +17878,9 @@ noncomputable def
     (fun _ _ _ typeOutput leftOutput rightOutput =>
       model.recursivelyGeneratedIdentity hypotheses.variableProvider
         hypotheses.readinessAlignment
-        hypotheses.dependentFormationAgreementProvider
-        hypotheses.generatedIdentityAgreementProvider typeOutput leftOutput
+        (.ofWeak hypotheses.dependentFormationAgreementProvider
+          hypotheses.generatedIdentityAgreementProvider
+          hypotheses.readinessAlignment) typeOutput leftOutput
         rightOutput)
     (fun _ typeOutput =>
       hypotheses.variableProvider.recursivelyGeneratedTypingVariable model
@@ -17920,8 +17915,9 @@ noncomputable def
     (fun _ _ typeOutput termOutput =>
       model.recursivelyGeneratedRefl hypotheses.variableProvider
         hypotheses.readinessAlignment
-        hypotheses.dependentFormationAgreementProvider
-        hypotheses.generatedIdentityAgreementProvider typeOutput termOutput)
+        (.ofWeak hypotheses.dependentFormationAgreementProvider
+          hypotheses.generatedIdentityAgreementProvider
+          hypotheses.readinessAlignment) typeOutput termOutput)
     ready
 
 noncomputable def
@@ -17953,8 +17949,9 @@ noncomputable def
     (fun _ _ _ typeOutput leftOutput rightOutput =>
       model.recursivelyGeneratedIdentity hypotheses.variableProvider
         hypotheses.readinessAlignment
-        hypotheses.dependentFormationAgreementProvider
-        hypotheses.generatedIdentityAgreementProvider typeOutput leftOutput
+        (.ofWeak hypotheses.dependentFormationAgreementProvider
+          hypotheses.generatedIdentityAgreementProvider
+          hypotheses.readinessAlignment) typeOutput leftOutput
         rightOutput)
     (fun _ typeOutput =>
       hypotheses.variableProvider.recursivelyGeneratedTypingVariable model
@@ -17989,8 +17986,9 @@ noncomputable def
     (fun _ _ typeOutput termOutput =>
       model.recursivelyGeneratedRefl hypotheses.variableProvider
         hypotheses.readinessAlignment
-        hypotheses.dependentFormationAgreementProvider
-        hypotheses.generatedIdentityAgreementProvider typeOutput termOutput)
+        (.ofWeak hypotheses.dependentFormationAgreementProvider
+          hypotheses.generatedIdentityAgreementProvider
+          hypotheses.readinessAlignment) typeOutput termOutput)
     ready
 
 noncomputable def
