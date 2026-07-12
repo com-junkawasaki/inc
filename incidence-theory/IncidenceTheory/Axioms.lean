@@ -19,8 +19,23 @@ structure Incidence (I R T : Type u) [DecidableEq I] where
   boundary        : I → Boundary I R
   typeFunc        : I → T
 
-  -- Gluing from A6-A8
+  -- A selected resonance mode, retained as a computable compatibility layer.
   glue            : I → I → Option I
+
+  -- Resonance is the relational primitive: `resonance i j k` says that `k`
+  -- is a mode emerging from the interaction of `i` and `j`.  Existing
+  -- functional models default to the graph relation of `glue`, while new
+  -- models may admit several modes for the same pair.
+  resonance       : I → I → I → Prop :=
+    fun i j k => glue i j = some k
+
+  -- Every mode selected by the compatibility operation is a genuine
+  -- resonance.  The converse is intentionally absent: resonance may be
+  -- multi-valued even when the selector chooses at most one mode.
+  selected_resonates : ∀ {i j k}, glue i j = some k → resonance i j k := by
+    intro i j k selected
+    exact selected
+
   unit            : I
 
   -- Guards from A9-A13

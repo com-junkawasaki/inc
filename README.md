@@ -4,6 +4,11 @@
 translations, internal logic, dependent raw syntax, and selected mathematical
 constructions.
 
+Its central interaction primitive is the ternary relation
+`resonance i j k`: incidences `i` and `j` resonate with emergent mode `k`.
+Resonance may be multi-valued. `selectedMode i j` is only a computable choice
+of one mode and preserves compatibility with the historical `glue` API.
+
 The root README is intentionally a short dashboard. Detailed proof history is
 kept under [`docs/`](docs/).
 
@@ -12,6 +17,7 @@ kept under [`docs/`](docs/).
 | Area | Status |
 |---|---|
 | Incidence core and bisimulation | Checked |
+| Ternary resonance primitive | Checked; symmetric physical law is `ResonanceSpec` |
 | Concrete consistency models | Checked |
 | Translation preservation/reflection | Checked under explicit hypotheses |
 | Propositional internal logic | Soundness and completeness checked |

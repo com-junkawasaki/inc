@@ -112,7 +112,11 @@ theorem finiteBoundary_decreases :
 def finiteIncidence : Incidence FiniteIncidence GraphRole GraphType where
   boundary := finiteBoundary
   typeFunc := fun _ => GraphType.unit
+  resonance := fun _ _ _ => True
   glue := finiteGlue
+  selected_resonates := by
+    intro i j k selected
+    trivial
   unit := .leaf
   guards := Guards.permissive FiniteIncidence
   type_consistent := fun _ _ _ => rfl
@@ -129,6 +133,30 @@ def finiteIncidence : Incidence FiniteIncidence GraphRole GraphType where
   unit_left := by intro i; cases i <;> rfl
   unit_right := by intro i; cases i <;> rfl
   type_preserve := by intro i j k hallow hglue; rfl
+
+def finiteResonanceSpec : ResonanceSpec finiteIncidence where
+  symmetric := by
+    intro i j k resonant
+    trivial
+  unit_left := by
+    intro i
+    trivial
+  unit_right := by
+    intro i
+    trivial
+  type_compatible := by
+    intro i j k resonant
+    exact ⟨rfl, rfl⟩
+
+theorem finiteIncidence_resonance_multivalued :
+    finiteIncidence.resonance .root .root .leaf ∧
+      finiteIncidence.resonance .root .root .root := by
+  exact ⟨True.intro, True.intro⟩
+
+theorem finiteIncidence_selector_chooses_one_mode :
+    finiteIncidence.glue .root .root = some .root ∧
+      finiteIncidence.glue .root .root ≠ some .leaf := by
+  decide
 
 /- A checked, nondegenerate model certificate for the data and laws of the
    incidence core.  It records that the carrier is inhabited and that the

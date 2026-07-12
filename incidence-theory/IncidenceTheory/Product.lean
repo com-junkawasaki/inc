@@ -56,6 +56,13 @@ def prodGlue {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
     | some k1, some k2 => some (k1, k2)
     | _, _ => none
 
+def prodResonance {I1 R1 T1 I2 R2 T2 : Type u}
+    [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) :
+    (I1 × I2) → (I1 × I2) → (I1 × I2) → Prop
+  | (i1, i2), (j1, j2), (k1, k2) =>
+      inc1.resonance i1 j1 k1 ∧ inc2.resonance i2 j2 k2
+
 /- The product's guards only allow gluing when *both* components'
    guards allow it -- not unconditionally permissive -- so that
    `type_preserve` can genuinely delegate to `inc1`/`inc2`'s own
@@ -70,7 +77,20 @@ def incidenceProd {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
   Incidence (I1 × I2) (R1 ⊕ R2) (T1 × T2) where
   boundary := prodBoundary inc1 inc2
   typeFunc := fun (i1, i2) => (inc1.typeFunc i1, inc2.typeFunc i2)
+  resonance := prodResonance inc1 inc2
   glue := prodGlue inc1 inc2
+  selected_resonates := by
+    intro i j k selected
+    rcases i with ⟨i1, i2⟩
+    rcases j with ⟨j1, j2⟩
+    rcases k with ⟨k1, k2⟩
+    simp only [prodGlue] at selected
+    split at selected <;> try contradiction
+    next first second firstEq secondEq =>
+      simp only [Option.some.injEq, Prod.mk.injEq] at selected
+      rcases selected with ⟨rfl, rfl⟩
+      exact ⟨inc1.selected_resonates firstEq,
+        inc2.selected_resonates secondEq⟩
   unit := (inc1.unit, inc2.unit)
   guards := prodGuards inc1 inc2
   boundaryMatrix := fun _ _ => 0
@@ -118,6 +138,26 @@ def incidenceProd {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
     subst hk1eq; subst hk2eq
     simp [inc1.type_preserve (i:=i1) (j:=j1) (k:=k1') hallow.1 hk1,
       inc2.type_preserve (i:=i2) (j:=j2) (k:=k2') hallow.2 hk2]
+
+def resonanceProdSpec {I1 R1 T1 I2 R2 T2 : Type u}
+    [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (first : ResonanceSpec inc1) (second : ResonanceSpec inc2) :
+    ResonanceSpec (incidenceProd inc1 inc2) where
+  symmetric := by
+    intro i j k resonant
+    exact ⟨first.symmetric resonant.1, second.symmetric resonant.2⟩
+  unit_left := by
+    intro i
+    exact ⟨first.unit_left i.1, second.unit_left i.2⟩
+  unit_right := by
+    intro i
+    exact ⟨first.unit_right i.1, second.unit_right i.2⟩
+  type_compatible := by
+    intro i j k resonant
+    rcases first.type_compatible resonant.1 with ⟨hij1, hki1⟩
+    rcases second.type_compatible resonant.2 with ⟨hij2, hki2⟩
+    exact ⟨Prod.ext hij1 hij2, Prod.ext hki1 hki2⟩
 
 noncomputable def countablyPresentedIncidenceProd
     {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]

@@ -231,6 +231,25 @@ def natGluingSpec : GluingSpec natIncidence :=
       omega
   }
 
+/- Addition is a concrete symmetric, functional resonance: `k` is a mode of
+`i` and `j` exactly when `k = i + j`. -/
+def natResonanceSpec : FunctionalResonanceSpec natIncidence where
+  symmetric := by
+    intro i j k resonant
+    simpa [natIncidence, Nat.add_comm] using resonant
+  unit_left := by
+    intro i
+    simp [natIncidence]
+  unit_right := by
+    intro i
+    simp [natIncidence]
+  type_compatible := by
+    intro i j k resonant
+    exact ⟨rfl, rfl⟩
+  selected_complete := by
+    intro i j k resonant
+    exact resonant
+
 /- Research cycle 5 (co-scientist step, see RESEARCH_LOG.md): T5
    ("translation preserves structure") was never given real content in
    this repo -- `TranslationPreservation.inc_to_set` (root file) maps

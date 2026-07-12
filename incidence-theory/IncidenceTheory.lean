@@ -1066,7 +1066,57 @@ theorem linear_completeness {I R T : Type u} [DecidableEq I]
     {i j : I} (h : sameLinearObservations inc idx i j) : approxBisim inc i j :=
   spec.complete h
 
-/- A gluing specification supplies the additional laws needed for gluing proofs. -/
+/- Resonance is the central relational interaction.  Unlike the compatibility
+selector `glue`, it may relate one pair to several emergent modes. -/
+structure ResonanceSpec {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) where
+  symmetric : ∀ {i j k}, inc.resonance i j k → inc.resonance j i k
+  unit_left : ∀ i, inc.resonance inc.unit i i
+  unit_right : ∀ i, inc.resonance i inc.unit i
+  type_compatible : ∀ {i j k}, inc.resonance i j k →
+    inc.typeFunc i = inc.typeFunc j ∧ inc.typeFunc k = inc.typeFunc i
+
+/- A functional resonance identifies every relational mode with the mode
+selected by the legacy/computational compatibility operation. -/
+structure FunctionalResonanceSpec {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) : Type u extends ResonanceSpec inc where
+  selected_complete : ∀ {i j k}, inc.resonance i j k → inc.glue i j = some k
+
+theorem resonance_of_selected {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) {i j k : I} (selected : inc.glue i j = some k) :
+    inc.resonance i j k :=
+  inc.selected_resonates selected
+
+/-- Computable choice of at most one resonance mode.  The relation
+`Incidence.resonance` is authoritative; this selector exists for algorithms
+and compatibility with the original `glue` API. -/
+def Incidence.selectedMode {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (i j : I) : Option I :=
+  inc.glue i j
+
+theorem selectedMode_resonates {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) {i j k : I}
+    (selected : inc.selectedMode i j = some k) : inc.resonance i j k :=
+  inc.selected_resonates selected
+
+theorem resonance_left_unit {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (i : I) : inc.resonance inc.unit i i :=
+  inc.selected_resonates (inc.unit_left i)
+
+theorem resonance_right_unit {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (i : I) : inc.resonance i inc.unit i :=
+  inc.selected_resonates (inc.unit_right i)
+
+theorem selected_resonance_preserves_type
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T)
+    {i j k : I} (allowed : inc.guards.allow i j = true)
+    (selected : inc.glue i j = some k) :
+    inc.typeFunc k = inc.typeFunc i :=
+  inc.type_preserve allowed selected
+
+/- A gluing specification supplies the additional laws needed for the
+computable resonance selector.  New relational developments should prefer
+`ResonanceSpec`; this structure remains the compatibility API. -/
 structure GluingSpec {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) where
   unit_ok : ∀ i, inc.glue i inc.unit = some i ∧ inc.glue inc.unit i = some i
   type_preserve : ∀ {i j k}, inc.guards.allow i j = true →

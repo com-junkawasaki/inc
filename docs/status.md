@@ -6,6 +6,17 @@ belong in [`adr/`](adr/).
 
 ## Checked foundations
 
+- `Incidence.resonance : I → I → I → Prop` is the central relational
+  interaction: `resonance i j k` means that `k` is an emergent mode of `i` and
+  `j`. It may be multi-valued.
+- `Incidence.selectedMode` is the computable compatibility selector backed by
+  the historical `glue` field. Every selected mode is proved resonant.
+- `ResonanceSpec` supplies physical symmetry, unit modes, and symmetric type
+  compatibility. `FunctionalResonanceSpec` additionally states that the
+  selector enumerates every mode.
+- `finiteIncidence` is a concrete multi-valued symmetric resonance model;
+  `natIncidence` is a concrete symmetric functional resonance model; products
+  preserve resonance componentwise.
 - The incidence core and bisimulation equivalence are formalized in Lean.
 - Concrete finite, graph, natural-number, pair, path, cycle, and simplex models
   witness non-vacuity of the implemented fragments.
@@ -37,6 +48,9 @@ instantiate/substitute equalities with synchronized casts.
 
 ## Conditional or unfinished layers
 
+- Most historical models currently use the default functional resonance
+  induced by `glue`. Their public APIs will migrate incrementally to relational
+  resonance and `selectedMode` terminology.
 - The legacy `IncDepRawUnitRelationalCompletion` depends on coherent readiness
   alignment. Its replacement should consume normalized readiness instead.
 - Pushout preservation and generic boundary-square-zero are conditional on the
