@@ -2734,6 +2734,12 @@ an arbitrary well-typed replacement is obtained from
 `IncDepRawReadinessPreservingSubstitution` and projected without reopening the
 legacy equation compiler.  The remaining recursive interfaces before one total
 preservation theorem are readiness-preserving lift and Identity/Refl formation.
+The lift audit further splits its obligation precisely.  The newest lookup is
+a variable and can be reconstructed directly, but an older lookup evaluates to
+the original substitution's arbitrary replacement term renamed into the
+extended source context.  Hence lift closure depends on a general theorem that
+coherent formation/typing readiness is preserved by weakening renaming; a
+variable-only cast lemma would be insufficient.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo

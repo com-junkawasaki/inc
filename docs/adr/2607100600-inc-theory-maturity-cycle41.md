@@ -1517,6 +1517,10 @@ cycle 38–41 で以下の3極構造が判明した:
   readiness-preserving substitutionが供給する任意replacementをsemantic層へ射影するnative
   constructorを得た。total theorem前の残りinterfaceはreadiness-preserving liftと
   Identity/Refl formationである。
+  liftのlookup場合分けにより依存関係をさらに特定した。newest lookupは直接varRuleで閉じるが、
+  older lookupは元substitutionの任意replacement termをextended source contextへweakening rename
+  した導出になる。従ってlift閉包にはcoherent formation/typing readinessの一般rename保存定理が
+  必要であり、variable専用castだけでは不足する。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。
