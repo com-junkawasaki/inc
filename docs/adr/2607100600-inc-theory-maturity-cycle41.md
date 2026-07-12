@@ -461,8 +461,8 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
 - anchored fixed-point APIをscoped inputs下でend-to-end接続した。`canonicalAnchoredMutualFoldDispatcher`が同一readiness indexで両recursive projectionsを
   anchorし、`canonicalLawfulMutualFold`が一般readiness-stability theoremでlawful packageへ昇格する。hypotheses record版constructorも追加。
   ordinary/anchored/lawful/strict preservation projectionsはすべてcheckedとなり、無条件化は外部path-agreement provider除去だけになった。
-- provider-free最終定理targetをLean型として固定した。`IncDepRawCanonicalProviderFreeMutualFoldHypotheses`はvariable/readiness/instantiate inputsだけを保持し、
-  path providerを含まない。`IncDepRawCanonicalProviderFreeMutualFoldWitness`がanchored dispatcherを格納し、`.lawful`/`.strict` projectionsがlawful canonicalと
+- provider-free最終定理targetをLean型として固定した。`IncDepRawCanonicalProviderFreeMutualFoldHypotheses`はunrestricted path providerを含まない。
+  `IncDepRawCanonicalProviderFreeMutualFoldWitness`がanchored dispatcherを格納し、`.lawful`/`.strict` projectionsがlawful canonicalと
   strict preservationを自動導出する。残証明はこの単一witness型のinhabitationである。
 - 旧conditional implementationからexact provider-free targetへの`providerFreeMutualFoldWitnessOfPathProvider` bridgeと対応`Nonempty` theoremを証明した。
   witnessは孤立specificationでなく、旧path providerを供給すれば実装済みanchored/lawful/strict pipelineを再現する。final theoremで欠ける引数は文字通り
@@ -1250,6 +1250,11 @@ cycle 38–41 で以下の3極構造が判明した:
   なく二つの生成Identity outputsだけに量化してこの差分を表す。これとPi/Sigma agreement
   から`CompletelyGenerated.agreement`がcheckedとなった。このlawはproof irrelevanceから
   は導けないため、具体的にinhabitするかfinal hypothesesへ正直に含める必要がある。
+  complete agreementはreadiness証拠が異なる場合にもcanonical transportで拡張済みである。
+  final hypotheses recordはsemantic modelでindexされ、variable replacement、readiness
+  alignment、instantiate agreement、dependent Pi/Sigma agreement、generated Identity
+  agreementの5つを明示する。ここでprovider-freeとは旧arbitrary-output path providerを
+  除去した意味であり、dependent semantic naturalityまで無仮定という意味ではない。
 - **既存数学の再構成は部分的**: Peano自然数、HF集合、順序対、木、path/simplex、
   product/sum、quotient、命題論理、圏論的pushout仕様、依存型fragmentまでは構成済み。
   整数・有理数・解析・より広い代数/圏論ライブラリは未構成である。

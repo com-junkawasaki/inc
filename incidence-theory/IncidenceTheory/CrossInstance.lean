@@ -15702,6 +15702,54 @@ theorem IncDepRawCanonicalFormationFoldOutput.CompletelyGenerated.agreement
         exact identityAgreement.identity firstAlignment secondAlignment _ _ _
           firstType secondType firstLeft firstRight secondLeft secondRight
 
+theorem IncDepRawCanonicalFormationFoldOutput.CompletelyGenerated.castReady
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {firstReady secondReady :
+      IncDepRawCoherentFormationDispatchReady formation}
+    {output : IncDepRawCanonicalFormationFoldOutput.{u} firstReady}
+    (generated : output.CompletelyGenerated model variableProvider)
+    (readyEq : firstReady = secondReady) :
+    (output.castReady readyEq).CompletelyGenerated model variableProvider := by
+  cases readyEq
+  exact generated
+
+theorem
+    IncDepRawCanonicalFormationFoldOutput.CompletelyGenerated.agreementAcrossReady
+    {model : IncDepRawSubstitutionFiberModel.{u}}
+    {variableProvider : IncDepRawVariableSubstitutionProvider}
+    (dependentAgreement :
+      IncDepRawCanonicalDependentFormationFoldAgreementProvider model)
+    (identityAgreement :
+      IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider model)
+    (readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider)
+    {context : List IncDepRawType} {type : IncDepRawType}
+    {formation : IncDepRawWellFormed context type}
+    {firstReady secondReady :
+      IncDepRawCoherentFormationDispatchReady formation}
+    {first : IncDepRawCanonicalFormationFoldOutput.{u} firstReady}
+    {second : IncDepRawCanonicalFormationFoldOutput.{u} secondReady}
+    (firstGenerated : first.CompletelyGenerated model variableProvider)
+    (secondGenerated : second.CompletelyGenerated model variableProvider) :
+    IncDepRawCanonicalFormationFoldAgreement first.fold second.fold := by
+  let readyEq := readinessAlignment.alignFormation secondReady firstReady
+  let castSecond := second.castReady readyEq
+  let castGenerated := secondGenerated.castReady readyEq
+  let sameReady := firstGenerated.agreement dependentAgreement identityAgreement
+    castGenerated
+  exact
+    { agree := by
+        intro source substitution sourceWellFormed targetWellFormed sourceResult
+          targetResult substitutionResult targetTree replacements
+        calc
+          (first.fold targetTree replacements).canonical =
+              (castSecond.fold targetTree replacements).canonical :=
+            sameReady.agree targetTree replacements
+          _ = (second.fold targetTree replacements).canonical :=
+            (second.castReady_canonical readyEq targetTree replacements).symm }
+
 structure IncDepRawCanonicalCompletelyGeneratedFormationFoldOutput
     (model : IncDepRawSubstitutionFiberModel.{u})
     (variableProvider : IncDepRawVariableSubstitutionProvider)
@@ -16487,21 +16535,28 @@ structure IncDepRawCanonicalMutualFoldHypotheses where
     IncDepRawCanonicalInstantiateFoldAgreementProvider.{u}
   pathAgreementProvider : IncDepRawCanonicalFoldPathAgreementProvider.{u}
 
-structure IncDepRawCanonicalProviderFreeMutualFoldHypotheses where
+structure IncDepRawCanonicalProviderFreeMutualFoldHypotheses
+    (model : IncDepRawSubstitutionFiberModel.{u}) where
   variableProvider : IncDepRawVariableSubstitutionProvider
   readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider
   instantiateAgreementProvider :
     IncDepRawCanonicalInstantiateFoldAgreementProvider.{u}
+  dependentFormationAgreementProvider :
+    IncDepRawCanonicalDependentFormationFoldAgreementProvider.{u} model
+  generatedIdentityAgreementProvider :
+    IncDepRawCanonicalGeneratedIdentityFoldAgreementProvider.{u} model
 
 structure IncDepRawCanonicalProviderFreeMutualFoldWitness
     (model : IncDepRawSubstitutionFiberModel.{u})
-    (_hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u}) where
+    (_hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
+      model) where
   anchored : IncDepRawCanonicalAnchoredMutualFoldDispatcher.{u}
 
 noncomputable def
     IncDepRawSubstitutionFiberModel.providerFreeMutualFoldWitnessOfPathProvider
     (model : IncDepRawSubstitutionFiberModel.{u})
-    (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u})
+    (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
+      model)
     (pathAgreementProvider : IncDepRawCanonicalFoldPathAgreementProvider.{u}) :
     IncDepRawCanonicalProviderFreeMutualFoldWitness model hypotheses where
   anchored := model.canonicalAnchoredMutualFoldDispatcher
@@ -16510,7 +16565,8 @@ noncomputable def
 
 theorem IncDepRawSubstitutionFiberModel.providerFreeMutualFoldWitness_nonempty
     (model : IncDepRawSubstitutionFiberModel.{u})
-    (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u})
+    (hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
+      model)
     (pathProvider : Nonempty IncDepRawCanonicalFoldPathAgreementProvider.{u}) :
     Nonempty (IncDepRawCanonicalProviderFreeMutualFoldWitness model hypotheses) :=
   ⟨model.providerFreeMutualFoldWitnessOfPathProvider hypotheses
@@ -16519,7 +16575,8 @@ theorem IncDepRawSubstitutionFiberModel.providerFreeMutualFoldWitness_nonempty
 noncomputable def
     IncDepRawCanonicalProviderFreeMutualFoldWitness.lawful
     {model : IncDepRawSubstitutionFiberModel.{u}}
-    {hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u}}
+    {hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
+      model}
     (witness : IncDepRawCanonicalProviderFreeMutualFoldWitness model hypotheses) :
     IncDepRawCanonicalLawfulMutualFold.{u} :=
   witness.anchored.toLawfulMutualFoldCanonical
@@ -16573,7 +16630,8 @@ noncomputable def IncDepRawCanonicalLawfulMutualFold.strict
 noncomputable def
     IncDepRawCanonicalProviderFreeMutualFoldWitness.strict
     {model : IncDepRawSubstitutionFiberModel.{u}}
-    {hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u}}
+    {hypotheses : IncDepRawCanonicalProviderFreeMutualFoldHypotheses.{u, u}
+      model}
     (witness : IncDepRawCanonicalProviderFreeMutualFoldWitness model hypotheses) :
     IncDepRawStrictMutualSubstitutionDispatcher :=
   witness.lawful.strict

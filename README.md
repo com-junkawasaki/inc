@@ -1121,8 +1121,10 @@ It currently establishes:
   strict preservation projections are therefore all checked; unconditional
   completion is now solely removal of the external path-agreement provider.
   The exact provider-free theorem target is now a Lean type.
-  `IncDepRawCanonicalProviderFreeMutualFoldHypotheses` retains only variable,
-  readiness, and instantiate inputs; no path provider is present.
+  `IncDepRawCanonicalProviderFreeMutualFoldHypotheses` contains no unrestricted
+  path provider.  Its original variable, readiness, and instantiate inputs are
+  now joined by the model-indexed Pi/Sigma dependent-formation laws and the
+  generated-Identity law exposed by the complete-certificate proof.
   `IncDepRawCanonicalProviderFreeMutualFoldWitness` stores the anchored
   dispatcher, and its `.lawful` and `.strict` projections derive lawful
   canonical and strict preservation automatically.  The remaining proof is the
@@ -1215,6 +1217,14 @@ It currently establishes:
   indexed syntax.  The final dispatcher can therefore use a strictly scoped
   Identity law, but that law must still be inhabited or added honestly to the
   final hypotheses; it is not derivable from proof irrelevance.
+  Complete agreement now also crosses distinct readiness witnesses by canonical
+  transport, exactly as the ordinary generated agreement does.  The final
+  hypotheses record is consequently indexed by the semantic model and lists
+  all five scoped inputs explicitly: variable replacement, readiness alignment,
+  instantiate agreement, dependent Pi/Sigma agreement, and generated Identity
+  agreement.  “Provider-free” here means free of the former unrestricted
+  arbitrary-output path provider; it does not mean that dependent semantic
+  naturality laws have been silently derived.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results
