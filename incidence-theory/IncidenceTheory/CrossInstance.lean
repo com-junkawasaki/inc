@@ -8334,6 +8334,51 @@ noncomputable def IncDepRawCoherentTypingDispatchReady.preserveClosed
       IncDepRawTerm.var :=
   ready.substituteNormalized incDepRawEmptyNormalizedIdentitySubstitution
 
+/-- Machine-checkable completion certificate for the structural basic
+preservation layer: total renaming, total substitution (including lift), and a
+closed unconditional instance. -/
+structure IncDepRawNormalizedBasicPreservation where
+  renameFormation : ∀ {source target : List IncDepRawType}
+    {type : IncDepRawType} {formation : IncDepRawWellFormed source type},
+    IncDepRawFormationDispatchReady formation →
+    (renameMap : IncDepRawRenaming source target) →
+    IncDepRawNormalizedFormationRenamingResult
+      (type := type) renameMap
+  renameTyping : ∀ {source target : List IncDepRawType}
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    {typing : IncDepRawHasType source term type},
+    IncDepRawTypingDispatchReady typing →
+    (renameMap : IncDepRawRenaming source target) →
+    IncDepRawNormalizedTypingRenamingResult
+      (term := term) (type := type) renameMap
+  substituteFormation : ∀ {source target : List IncDepRawType}
+    {type : IncDepRawType} {formation : IncDepRawWellFormed target type},
+    IncDepRawFormationDispatchReady formation →
+    (substitution : IncDepRawNormalizedReadinessPreservingSubstitution
+      source target) →
+    IncDepRawNormalizedFormationSubstitutionResult
+      (source := source) (target := target) (type := type) substitution.term
+  substituteTyping : ∀ {source target : List IncDepRawType}
+    {term : IncDepRawTerm} {type : IncDepRawType}
+    {typing : IncDepRawHasType target term type},
+    IncDepRawTypingDispatchReady typing →
+    (substitution : IncDepRawNormalizedReadinessPreservingSubstitution
+      source target) →
+    IncDepRawNormalizedTypingSubstitutionResult
+      (source := source) (target := target) (term := term) (type := type)
+      substitution.term
+  closedIdentity : IncDepRawNormalizedReadinessPreservingSubstitution [] []
+
+noncomputable def incDepRawNormalizedBasicPreservation :
+    IncDepRawNormalizedBasicPreservation where
+  renameFormation := fun ready renameMap => ready.renameNormalized renameMap
+  renameTyping := fun ready renameMap => ready.renameNormalized renameMap
+  substituteFormation := fun ready substitution =>
+    ready.substituteNormalized substitution
+  substituteTyping := fun ready substitution =>
+    ready.substituteNormalized substitution
+  closedIdentity := incDepRawEmptyNormalizedIdentitySubstitution
+
 structure IncDepRawStrictTypingDispatchReady
     {context : List IncDepRawType} {term : IncDepRawTerm}
     {type : IncDepRawType} (typing : IncDepRawHasType context term type)

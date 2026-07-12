@@ -2810,6 +2810,14 @@ in the empty context, and `preserveClosed` produces normalized formation and
 typing preservation for every closed coherent judgment.  Thus the total
 theorem has a concrete, hypothesis-free closed-fragment instantiation rather
 than only a conditional interface.
+`IncDepRawNormalizedBasicPreservation` packages the exact structural-basic
+completion criterion: total formation/typing renaming, total formation/typing
+substitution (recursively using the proved lift), and the closed identity
+instance.  `incDepRawNormalizedBasicPreservation` inhabits this certificate
+without hypotheses.  Thus the dependent raw calculus's structural basic-
+preservation layer is mechanically complete.  This is distinct from the older
+Unit-fiber relational semantic completion, which still carries obsolete
+coherent-alignment assumptions.
 
 The former A11–A13 gap is now represented by the optional
 `BisimulationNormalizationSpec`: it records glue congruence modulo
