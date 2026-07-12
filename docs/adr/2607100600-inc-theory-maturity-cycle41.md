@@ -423,6 +423,9 @@ Lean ファイルは 28、`theorem` 宣言は約 1,670、`def`/`structure`/`inst
   `canonicalMutualFoldDispatcher`が両projectionをpackageする。scoped instantiate/path-agreement providersの下で
   `IncDepRawCanonicalMutualFoldDispatcher`の実inhabitantとなり、canonical preservationとstrict dispatcherを直ちに導出する。唯一の残証明は
   path-agreement providerを仮定せず、既に隔離したdependent Pi/Sigma/Identity congruence lawsから構成することである。
+- conditional theoremを利用可能なmodel APIへまとめた。`IncDepRawCanonicalMutualFoldHypotheses`がvariable/readiness/instantiate-agreement/path-agreement
+  inputsを集約し、`canonicalMutualFoldDispatcherOfHypotheses`がcanonical dispatcher、`strictPreservationOfCanonicalFoldHypotheses`が既存互換strict
+  preservation interfaceを一呼び出しで返す。条件付き保存定理はAPIとして完成し、無条件化の残件はprovider inhabitationと完全に一致する。
 - recursive interpreterのtype-formation foldをconstructor builderへ分解した。base typeは
   base model由来のconstant contextual family、unitはlifted unit、Pi/Sigmaはsemantic context
   extensionを跨ぐdomain/codomain resultの合成、identityはinterpreted typeと二semantic term

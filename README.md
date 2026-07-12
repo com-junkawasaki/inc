@@ -1036,6 +1036,13 @@ It currently establishes:
   canonical preservation and strict-dispatch projections above.  The sole
   remaining proof is constructing the path-agreement provider from the already
   isolated dependent Pi/Sigma/Identity congruence laws rather than assuming it.
+  The conditional theorem is now exposed as a usable model API.
+  `IncDepRawCanonicalMutualFoldHypotheses` collects the variable, readiness,
+  instantiate-agreement, and path-agreement inputs;
+  `canonicalMutualFoldDispatcherOfHypotheses` builds the canonical dispatcher,
+  while `strictPreservationOfCanonicalFoldHypotheses` projects the existing
+  strict preservation interface in one call.  Thus conditional preservation is
+  complete as an API; unconditional completion is exactly provider inhabitation.
   The type-formation half of that recursive fold now has compositional builders.
   Base types become constant contextual families supplied by a base model, unit
   becomes the lifted unit family, Pi and Sigma combine domain and codomain results

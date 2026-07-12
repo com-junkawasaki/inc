@@ -14991,6 +14991,22 @@ noncomputable def IncDepRawSubstitutionFiberModel.canonicalMutualFoldDispatcher
   typing := model.canonicalTypingFold variableProvider readinessAlignment
     instantiateAgreementProvider pathAgreementProvider
 
+structure IncDepRawCanonicalMutualFoldHypotheses where
+  variableProvider : IncDepRawVariableSubstitutionProvider
+  readinessAlignment : IncDepRawCoherentReadinessAlignmentProvider
+  instantiateAgreementProvider :
+    IncDepRawCanonicalInstantiateFoldAgreementProvider.{u}
+  pathAgreementProvider : IncDepRawCanonicalFoldPathAgreementProvider.{u}
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.canonicalMutualFoldDispatcherOfHypotheses
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalMutualFoldHypotheses.{u}) :
+    IncDepRawCanonicalMutualFoldDispatcher.{u} :=
+  model.canonicalMutualFoldDispatcher hypotheses.variableProvider
+    hypotheses.readinessAlignment hypotheses.instantiateAgreementProvider
+    hypotheses.pathAgreementProvider
+
 noncomputable def IncDepRawCanonicalMutualFoldDispatcher.strict
     (dispatcher : IncDepRawCanonicalMutualFoldDispatcher.{u}) :
     IncDepRawStrictMutualSubstitutionDispatcher where
@@ -15002,6 +15018,13 @@ noncomputable def IncDepRawCanonicalMutualFoldDispatcher.strict
     { dispatch := fun ready targetTree replacements =>
         (dispatcher.typing ready).typing targetTree replacements
           |>.typing.result.dispatchResult }
+
+noncomputable def
+    IncDepRawSubstitutionFiberModel.strictPreservationOfCanonicalFoldHypotheses
+    (model : IncDepRawSubstitutionFiberModel.{u})
+    (hypotheses : IncDepRawCanonicalMutualFoldHypotheses.{u}) :
+    IncDepRawStrictMutualSubstitutionDispatcher :=
+  (model.canonicalMutualFoldDispatcherOfHypotheses hypotheses).strict
 
 noncomputable def IncDepRawCanonicalMutualFoldDispatcher.preserveFormation
     (dispatcher : IncDepRawCanonicalMutualFoldDispatcher.{u})
