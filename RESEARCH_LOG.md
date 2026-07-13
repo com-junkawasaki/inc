@@ -7382,3 +7382,166 @@ full roadmap item 8 listing and this project's other open threads (cf. the
 `CompletenessTheory`/`TranslationPreservation` namespaces, L7074-9895, both
 untouched by cycles 60-66) rather than continuing to mine the same vein a
 sixth consecutive cycle.
+
+## Cycle 67
+
+**Hypothesis**: this is a deliberate cold-start pivot per cycle 66's own
+explicit recommendation: abandon the just-closed `Matrix`/`laplacian` thread
+entirely (its own five-cycle queue mechanism, cycles 62-66, had exhausted
+itself) and instead explore the `CompletenessTheory`/`TranslationPreservation`
+namespaces cycle 66 flagged as one of two untouched pivot targets, with no
+prior cycle having looked closely at what is actually inside them. No specific
+theorem was hypothesized in advance -- the task was to read the material in
+full first and identify, from its actual content, the most natural well-scoped
+next step, falling back to the OTHER pivot target (matrix rank/determinant/
+eigenvalues/inverse) only if this namespace turned out already complete with
+no visible next step.
+
+**Method**: grepped `IncidenceTheory.lean` and the whole `IncidenceTheory/`
+directory for `CompletenessTheory`/`TranslationPreservation`/`Translation`/
+`Completeness`/`Preservation`. Both namespaces turned out to be exactly where
+cycle 66 estimated (`CompletenessTheory` L7074-7792; `TranslationPreservation`
+L7796-9895 -- the file's own literal final line, L9897, is `end IncidenceCore`
+two lines after `end TranslationPreservation`, so this material is the tail of
+the file, not a stale estimate) -- read the entire ~2,820 lines in full (not
+grep snippets) via sequential `Read` calls of ~350-420 lines each, cross-
+referencing structure/theorem names with `grep -n` for anything defined
+elsewhere in the file that these namespaces call into (`IncCategory`,
+`IncCategoryEquivalence`, `IncFunctor`, `ResonanceHomomorphism`, `resonance`/
+`ResonanceSpec` family, all L1660-3803, predate cycle 60).
+
+`CompletenessTheory` (L7074-7792) formalizes: given an observation language
+(boundary-matrix + laplacian data per index) rich enough to contain an
+"indicator of `i`" observation for every `i`, agreement of all observations
+forces literal equality (`linear_completeness`, T4) -- and builds out the
+full quotient-equivalence machinery this implies (`LanguageObservationQuotient`,
+`indicatorCompleteLanguageQuotientEquivalence`, the `ObservationMapCollapses
+_iff_not_faithful` chain). It reads as fully closed: no `sorry`, no flagged
+future work, every structure that gets introduced (`LinearObservation`,
+`LinearObservationLanguage`, `AgreeOnLinearObservationLanguage`) has its
+natural closing theorem, and the namespace ends on its own stated headline
+result (`linear_completeness`) with nothing left dangling.
+
+`TranslationPreservation` (L7796-9895) formalizes translations between
+`Incidence` instances (T5: "translation preserves limits/colimits") at four
+increasingly strong levels, each with roughly the same API shape --
+`BoundaryShapeTranslation` (preserves/reflects nullary-vs-non-nullary boundary
+shape) ⊂ `BehavioralBoundaryShapeTranslation` (+ preserves bisimulation) ⊂
+`ResonantBehavioralTranslation` (+ preserves the ternary `resonance` relation),
+and in parallel a stronger `Embedding` variant (adds a reflects-direction
+obligation) and a strongest `Equivalence` variant (a hom/inv pair with
+mutual-inverse laws) at each of the first two levels. Cross-referencing what
+API each level actually has (not just what exists) surfaced a concrete,
+unambiguous gap: **`ResonantBehavioralEmbedding` (declared at what was then
+L8833, extending `ResonantBehavioralTranslation` with a `reflectsResonance`
+obligation) had ZERO further declarations anywhere in the file** (confirmed by
+`grep -c "ResonantBehavioralEmbedding" IncidenceTheory.lean` = 1, the
+declaration itself) -- unlike its three siblings, each of which has at least
+`.identity`/`.comp`: `BoundaryShapeEmbedding` (`.identity`, `.comp`, plus
+`.discreteFunctor_fullyFaithful`), `BehavioralBoundaryShapeEmbedding`
+(`.identity`, `.comp`, plus `.mapBisimulationQuotient_injective`), and its own
+parent `ResonantBehavioralTranslation` (`.identity`, `.comp`, `.ext`,
+`.identity_comp`, `.comp_identity`, `.comp_assoc`). Deeper still: at the
+`Equivalence` tier, `BoundaryShapeEquivalence` and
+`BehavioralBoundaryShapeEquivalence` both exist in full (each with `refl`/
+`symm`/`trans`/`ext`/monoid laws/`quotientEquivalence`/`toEmbedding`/a
+downcast to the tier below), but **`ResonantBehavioralEquivalence` was not
+declared at all** -- the strongest (resonance-preserving) translation notion
+had a `Translation` and now (before this cycle) an empty `Embedding`, but no
+`Equivalence`, leaving the hierarchy's top tier structurally incomplete in a
+way exactly analogous to what cycles 60-61 filled in for the `Matrix` layer
+(building out a parallel operation/law set that mirrors an existing sibling).
+
+Given this concrete, doubly-confirmed gap (an orphaned empty structure plus a
+missing top tier, both at the *strongest* level of an otherwise-complete
+four-level hierarchy), this was the chosen target over inventing a novel
+theorem: (1) gave `ResonantBehavioralEmbedding` the same `.identity`/`.comp`
+API its siblings have, plus one derived corollary (`.resonance_iff`,
+combining the existing `preservesResonance` field with the new obligation
+into an iff, mirroring how `BehavioralBoundaryShapeEmbedding` earns exactly
+one substantive corollary beyond identity/comp); (2) declared
+`ResonantBehavioralEquivalence` and built out its full API by direct
+structural analogy with `BehavioralBoundaryShapeEquivalence` (`ext`, `refl`,
+`symm`, `trans`, `refl_trans`, `trans_refl`, `trans_assoc`, `symm_symm`,
+`symm_trans_self`, `trans_symm_self`, `quotientEquivalence`, `toEmbedding`,
+and a `toBehavioralBoundaryShapeEquivalence` downcast matching the existing
+`BehavioralBoundaryShapeEquivalence.toBoundaryShapeEquivalence` downcast one
+tier down) -- every proof reuses pre-existing lemmas
+(`ResonantBehavioralTranslation.identity`/`.comp`/`.ext`/`.identity_comp`/
+`.comp_identity`/`.comp_assoc`, all already proved, plus
+`BehavioralBoundaryShapeTranslation.mapBisimulationQuotient` for the quotient
+map) with the same tactic scripts the Behavioral-tier proofs already use,
+type-checked against the resonance-level types rather than re-derived from
+scratch. All 17 new declarations placed additively, directly before
+`end TranslationPreservation` (originals byte-for-byte unchanged).
+
+**Result**: **all 17 new declarations type-check; `./verify.sh` (clean
+`lake clean` + `lake build`, example run, repo-wide `axiom`/`sorry`/`sorryAx`
+grep) passes end to end.** A scratch `lake env lean` check file (`open
+IncidenceCore.TranslationPreservation`, deleted after use per this project's
+established practice) confirmed `#print axioms` on all 17: 14 depend on no
+axioms at all (pure structural/definitional proofs), and exactly 3
+(`symm_trans_self`, `trans_symm_self`, `quotientEquivalence` -- all three
+routing through `Quotient.sound`/`Quotient.exact` on `IncidenceQuotient`)
+depend on `[Quot.sound]`, the same single axiom this project's Quotient-based
+proofs have used since long before this cycle. No `propext`, no new axiom of
+any kind.
+
+**Synthesis**: the cold-start exploration confirms cycle 66's own estimate
+was accurate (both namespaces at the stated line ranges, `CompletenessTheory`
+genuinely closed with its stated headline theorem already proved) and
+identifies precisely *why* `TranslationPreservation`'s "~85%" assessment (ADR
+`2607100600`, body L57-58, "翻訳・保存層") is not yet 100%: the hierarchy is
+complete at its two weaker tiers (`BoundaryShape*`, `BehavioralBoundaryShape*`,
+each with `Translation`/`Embedding`/`Equivalence` all present and API-complete)
+but was incomplete at its strongest tier (`ResonantBehavioral*`), which had a
+`Translation` but an empty `Embedding` and no `Equivalence` at all. This cycle
+closes that gap completely -- `ResonantBehavioral*` now has the identical
+`Translation`/`Embedding`/`Equivalence` API shape as its siblings, with every
+downcast (`Equivalence → Embedding`, `Equivalence → weaker Equivalence`)
+present, matching the pattern the other two tiers already established. This
+is a different KIND of contribution than cycles 45-66's audits/reductions of
+already-hand-proved theorems: it is net-new construction filling a structural
+gap in a hierarchy, the same kind of contribution cycles 60-61 made for the
+`Matrix` layer (building out a parallel operation/law set by analogy with an
+existing sibling, reusing lower-level machinery rather than deriving from
+scratch). It does not, by itself, complete roadmap item 7's stated remaining
+work (the ADR's own item 7 flags the still-missing piece as a *single
+universal interpretation theorem* connecting resonance-driven
+generation/composition to the internal-logic model and constructive real
+analysis -- a substantially larger undertaking that this cycle's API-parity
+work does not attempt), so per this project's conservative convention (cycles
+60-66: don't bump a roadmap percentage for one cycle's concrete-but-bounded
+progress) the ADR addendum below records the finding without moving item 7's
+85% figure.
+
+**Next hypothesis (cycle 68, not yet attempted)**: with `CompletenessTheory`
+confirmed closed and `TranslationPreservation`'s translation hierarchy now
+API-complete at all three tiers, two honest options remain, mirroring cycle
+66's own framing at the end of the `Matrix` thread. (a) A narrower
+continuation exists: `ResonantBehavioralEquivalence` (this cycle) mirrors
+`BehavioralBoundaryShapeEquivalence` but stops short of the `Behavioral` tier's
+full corollary set -- `BehavioralQuotientEquivalenceCriterion` (an embedding +
+essential-surjectivity packaging with its own `quotientEquivalence`,
+`identity`, `comp`, and bijectivity-iff theorems, L8938-9127) has no resonance-
+level analogue (`ResonantQuotientEquivalenceCriterion` does not exist), which
+would be the direct next parallel-construction step if this thread continues.
+(b) Per this cycle's own reading, the more honest recommendation given this
+is a cold-start pivot cycle with limited exploration budget spent per
+sub-area: read the ADR's item 7 in full detail (the "resonance-driven
+generation/composition ↔ internal-logic model ↔ constructive real analysis,
+one universal interpretation theorem" framing, body L48-50) against what the
+`*ResonanceSpec` framework already supplies -- declared once in
+`IncidenceTheory.lean` (L1660-1744: `ResonanceSpec`/`FunctionalResonanceSpec`/
+`AssociativeResonanceSpec`/`AdditiveGroupResonanceSpec`/
+`DistributiveResonanceSpec`/`FieldResonanceSpec`/`OrderedFieldResonanceSpec`)
+and concretely instantiated across `Integers.lean`/`Reals.lean`/
+`Rationals.lean`/`GraphModel.lean`/`Sum.lean`/`Product.lean` (confirmed present
+by `grep -l`, not yet individually read this cycle) -- to judge whether a
+genuine (if partial) step toward that "universal interpretation theorem" is
+now well-scoped, rather than continuing
+to build parallel API surface (option (a)) that, while genuine and honest
+work, is incremental in the same sense cycle 60's ADR addendum was careful
+not to overclaim. Either is legitimate; this cycle does not have enough
+additional exploration budget remaining to judge between them and leaves the
+choice, with this orientation, to cycle 68.

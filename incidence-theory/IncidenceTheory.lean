@@ -9892,6 +9892,226 @@ noncomputable def preserves_limits
     StrongFiniteLimitColimitPreservingFamily equivalence.forward :=
   equivalence.strongFiniteLimitColimitPreservingFamily
 
+/- `ResonantBehavioralEmbedding` was declared above (as the resonance-reflecting
+   strengthening of `ResonantBehavioralTranslation`) but, unlike its three
+   siblings in this hierarchy -- `BoundaryShapeEmbedding`,
+   `BehavioralBoundaryShapeEmbedding`, and its own parent
+   `ResonantBehavioralTranslation` -- it had no identity/composition API and no
+   derived corollary. This closes that gap. -/
+
+def ResonantBehavioralEmbedding.identity
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    ResonantBehavioralEmbedding inc inc where
+  toResonantBehavioralTranslation := ResonantBehavioralTranslation.identity inc
+  reflectsResonance := fun resonant => resonant
+
+def ResonantBehavioralEmbedding.comp
+    {I J K R₁ T₁ R₂ T₂ R₃ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (secondMap : ResonantBehavioralEmbedding second third)
+    (firstMap : ResonantBehavioralEmbedding first second) :
+    ResonantBehavioralEmbedding first third where
+  toResonantBehavioralTranslation :=
+    secondMap.toResonantBehavioralTranslation.comp
+      firstMap.toResonantBehavioralTranslation
+  reflectsResonance := fun resonant =>
+    firstMap.reflectsResonance (secondMap.reflectsResonance resonant)
+
+/- An embedding both preserves and reflects resonance, so along its map
+   resonance of the images is equivalent to resonance of the sources. -/
+theorem ResonantBehavioralEmbedding.resonance_iff
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (embedding : ResonantBehavioralEmbedding source target) {i j k : I} :
+    target.resonance (embedding.map i) (embedding.map j) (embedding.map k) ↔
+      source.resonance i j k :=
+  ⟨embedding.reflectsResonance, embedding.preservesResonance⟩
+
+/- The resonance-preserving analogue of `BehavioralBoundaryShapeEquivalence`: a
+   pair of mutually inverse `ResonantBehavioralTranslation`s. This is the
+   strongest translation-equivalence notion in the hierarchy built across this
+   namespace, and it was the one missing tier: `BoundaryShapeEquivalence` and
+   `BehavioralBoundaryShapeEquivalence` both already existed at the weaker
+   levels, and the resonance level already had a `Translation` and an
+   `Embedding`, but no `Equivalence` had been declared at all. -/
+structure ResonantBehavioralEquivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂) where
+  hom : ResonantBehavioralTranslation source target
+  inv : ResonantBehavioralTranslation target source
+  inv_hom : ∀ i, inv.map (hom.map i) = i
+  hom_inv : ∀ j, hom.map (inv.map j) = j
+
+theorem ResonantBehavioralEquivalence.ext
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    {first second : ResonantBehavioralEquivalence source target}
+    (homEq : first.hom = second.hom) (invEq : first.inv = second.inv) :
+    first = second := by
+  cases first
+  cases second
+  cases homEq
+  cases invEq
+  rfl
+
+def ResonantBehavioralEquivalence.refl
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    ResonantBehavioralEquivalence inc inc where
+  hom := ResonantBehavioralTranslation.identity inc
+  inv := ResonantBehavioralTranslation.identity inc
+  inv_hom := by intro i; rfl
+  hom_inv := by intro i; rfl
+
+def ResonantBehavioralEquivalence.symm
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : ResonantBehavioralEquivalence source target) :
+    ResonantBehavioralEquivalence target source where
+  hom := equivalence.inv
+  inv := equivalence.hom
+  inv_hom := equivalence.hom_inv
+  hom_inv := equivalence.inv_hom
+
+def ResonantBehavioralEquivalence.trans
+    {I J K R₁ T₁ R₂ T₂ R₃ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (secondEquivalence : ResonantBehavioralEquivalence second third)
+    (firstEquivalence : ResonantBehavioralEquivalence first second) :
+    ResonantBehavioralEquivalence first third where
+  hom := secondEquivalence.hom.comp firstEquivalence.hom
+  inv := firstEquivalence.inv.comp secondEquivalence.inv
+  inv_hom := by
+    intro i
+    change firstEquivalence.inv.map
+      (secondEquivalence.inv.map
+        (secondEquivalence.hom.map (firstEquivalence.hom.map i))) = i
+    rw [secondEquivalence.inv_hom, firstEquivalence.inv_hom]
+  hom_inv := by
+    intro k
+    change secondEquivalence.hom.map
+      (firstEquivalence.hom.map
+        (firstEquivalence.inv.map (secondEquivalence.inv.map k))) = k
+    rw [firstEquivalence.hom_inv, secondEquivalence.hom_inv]
+
+theorem ResonantBehavioralEquivalence.refl_trans
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : ResonantBehavioralEquivalence source target) :
+    equivalence.trans (ResonantBehavioralEquivalence.refl source) =
+      equivalence := by
+  apply ResonantBehavioralEquivalence.ext
+  · exact ResonantBehavioralTranslation.comp_identity equivalence.hom
+  · exact ResonantBehavioralTranslation.identity_comp equivalence.inv
+
+theorem ResonantBehavioralEquivalence.trans_refl
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : ResonantBehavioralEquivalence source target) :
+    (ResonantBehavioralEquivalence.refl target).trans equivalence =
+      equivalence := by
+  apply ResonantBehavioralEquivalence.ext
+  · exact ResonantBehavioralTranslation.identity_comp equivalence.hom
+  · exact ResonantBehavioralTranslation.comp_identity equivalence.inv
+
+theorem ResonantBehavioralEquivalence.trans_assoc
+    {I J K L R₁ T₁ R₂ T₂ R₃ T₃ R₄ T₄ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K] [DecidableEq L]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃} {fourth : Incidence L R₄ T₄}
+    (thirdEquivalence : ResonantBehavioralEquivalence third fourth)
+    (secondEquivalence : ResonantBehavioralEquivalence second third)
+    (firstEquivalence : ResonantBehavioralEquivalence first second) :
+    (thirdEquivalence.trans secondEquivalence).trans firstEquivalence =
+      thirdEquivalence.trans (secondEquivalence.trans firstEquivalence) := by
+  apply ResonantBehavioralEquivalence.ext
+  · exact ResonantBehavioralTranslation.comp_assoc
+      thirdEquivalence.hom secondEquivalence.hom firstEquivalence.hom
+  · exact (ResonantBehavioralTranslation.comp_assoc
+      firstEquivalence.inv secondEquivalence.inv thirdEquivalence.inv).symm
+
+theorem ResonantBehavioralEquivalence.symm_symm
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : ResonantBehavioralEquivalence source target) :
+    equivalence.symm.symm = equivalence := by
+  apply ResonantBehavioralEquivalence.ext <;> rfl
+
+theorem ResonantBehavioralEquivalence.symm_trans_self
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : ResonantBehavioralEquivalence source target) :
+    equivalence.symm.trans equivalence =
+      ResonantBehavioralEquivalence.refl source := by
+  apply ResonantBehavioralEquivalence.ext <;>
+    apply ResonantBehavioralTranslation.ext <;> funext value
+  · exact equivalence.inv_hom value
+  · exact equivalence.inv_hom value
+
+theorem ResonantBehavioralEquivalence.trans_symm_self
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : ResonantBehavioralEquivalence source target) :
+    equivalence.trans equivalence.symm =
+      ResonantBehavioralEquivalence.refl target := by
+  apply ResonantBehavioralEquivalence.ext <;>
+    apply ResonantBehavioralTranslation.ext <;> funext value
+  · exact equivalence.hom_inv value
+  · exact equivalence.hom_inv value
+
+def ResonantBehavioralEquivalence.quotientEquivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : ResonantBehavioralEquivalence source target) :
+    IncTypeEquivalence (IncidenceQuotient source) (IncidenceQuotient target) where
+  forward :=
+    equivalence.hom.toBehavioralBoundaryShapeTranslation.mapBisimulationQuotient
+  inverse :=
+    equivalence.inv.toBehavioralBoundaryShapeTranslation.mapBisimulationQuotient
+  inverse_forward := by
+    intro value
+    refine Quotient.inductionOn value ?_
+    intro representative
+    change Quotient.mk (approxBisimSetoid source)
+      (equivalence.inv.map (equivalence.hom.map representative)) =
+        Quotient.mk (approxBisimSetoid source) representative
+    rw [equivalence.inv_hom]
+  forward_inverse := by
+    intro value
+    refine Quotient.inductionOn value ?_
+    intro representative
+    change Quotient.mk (approxBisimSetoid target)
+      (equivalence.hom.map (equivalence.inv.map representative)) =
+        Quotient.mk (approxBisimSetoid target) representative
+    rw [equivalence.hom_inv]
+
+def ResonantBehavioralEquivalence.toEmbedding
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : ResonantBehavioralEquivalence source target) :
+    ResonantBehavioralEmbedding source target where
+  toResonantBehavioralTranslation := equivalence.hom
+  reflectsResonance := by
+    intro i j k resonant
+    have reflected := equivalence.inv.preservesResonance resonant
+    simpa [equivalence.inv_hom] using reflected
+
+/- Downcast to the weaker (bisimulation-only) equivalence notion, matching the
+   `BehavioralBoundaryShapeEquivalence.toBoundaryShapeEquivalence` downcast
+   already present one tier down in this hierarchy. -/
+def ResonantBehavioralEquivalence.toBehavioralBoundaryShapeEquivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (equivalence : ResonantBehavioralEquivalence source target) :
+    BehavioralBoundaryShapeEquivalence source target where
+  hom := equivalence.hom.toBehavioralBoundaryShapeTranslation
+  inv := equivalence.inv.toBehavioralBoundaryShapeTranslation
+  inv_hom := equivalence.inv_hom
+  hom_inv := equivalence.hom_inv
+
 end TranslationPreservation
 
 end IncidenceCore

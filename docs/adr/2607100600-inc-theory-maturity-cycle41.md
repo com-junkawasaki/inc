@@ -2351,3 +2351,85 @@ count_mul` 収束を行列引数をベクトルに特化して転用）を新設
 名前空間など）へ軸足を移すことを推奨として明記している——5サイクル
 連続で同一スレッドを掘り続けるより、cycle 67 では ADR 項目8全体の
 棚卸しから始めるべきという判断である。
+
+## 2026-07-14 追補（cycle 67: `TranslationPreservation` 翻訳階層の最強層
+——`ResonantBehavioralEmbedding`/`ResonantBehavioralEquivalence`——の API 完備化）
+
+本追補は `RESEARCH_LOG.md` cycle 67 の結果を反映する。cycle 66 自身の推奨
+どおり、`Matrix`/`laplacian` スレッド（cycle 62–66、5サイクルで使い果たし
+済み）から完全に軸足を移し、cycle 66 が挙げたもう一方の pivot 先——本文
+項目7（「incidence / resonance と内部論理・解析構造の統合」）および
+「翻訳・保存層」（本文57–58行目、約85%）に対応する `CompletenessTheory`/
+`TranslationPreservation` 名前空間（`IncidenceTheory.lean` L7074-9895、
+cycles 60–66 は未着手）を、事前の具体的仮説なしに初めて全文精読した。
+
+`CompletenessTheory`（L7074-7792）は精読の結果、既に閉じていることを
+確認した——`sorry` なし、今後の課題を示すコメントなし、導入される各構造
+（`LinearObservation`/`LinearObservationLanguage`/
+`AgreeOnLinearObservationLanguage`）が自らの締めくくり定理を持ち、名前空間
+自体が明言する headline 結果（`linear_completeness`, T4: 十分豊かな観測
+言語での全観測一致は文字通りの等号を強制する）で終わっている。
+
+`TranslationPreservation`（L7796-9895）の精読で、`Incidence` 間の翻訳を
+4段階の強さ——`BoundaryShapeTranslation`（境界形状の保存/反映）⊂
+`BehavioralBoundaryShapeTranslation`（+ bisimulation 保存）⊂
+`ResonantBehavioralTranslation`（+ 三項関係 `resonance` 保存）、各段に並行
+して `Embedding`（反映義務を追加）・`Equivalence`（hom/inv 相互逆の組）
+という強化版が存在する構造だと確認した上で、各層の実際の API を照合した
+結果、具体的な欠落を2つ発見した: (1) `ResonantBehavioralEmbedding`
+（当時 L8833 で宣言、`ResonantBehavioralTranslation` を拡張し
+`reflectsResonance` 義務を追加）には `.identity`/`.comp` を含む一切の
+追加宣言が存在しなかった——兄弟である `BoundaryShapeEmbedding`・
+`BehavioralBoundaryShapeEmbedding`・親の `ResonantBehavioralTranslation`
+自身は全て `.identity`/`.comp`（+ 追加の定理）を持つ。(2) `Equivalence`
+段では `BoundaryShapeEquivalence`・`BehavioralBoundaryShapeEquivalence` は
+共に `refl`/`symm`/`trans`/`ext`/モノイド則/`quotientEquivalence`/
+`toEmbedding`/一段弱い層への downcast まで全て揃っているのに対し、
+**`ResonantBehavioralEquivalence` は宣言すら存在しなかった**——翻訳階層の
+最強層（resonance 保存）だけが構造的に未完成のまま残っていた。
+
+この二重に確認された欠落（4段階中もっとも強い層の、空の `Embedding` と
+存在しない `Equivalence`）を対象に: `ResonantBehavioralEmbedding` へ
+`.identity`/`.comp`/`.resonance_iff`（preserves+reflects を組み合わせた
+iff）の3件、`ResonantBehavioralEquivalence` を新設し
+`BehavioralBoundaryShapeEquivalence` と構造的に1対1対応する形で `ext`/
+`refl`/`symm`/`trans`/`refl_trans`/`trans_refl`/`trans_assoc`/`symm_symm`/
+`symm_trans_self`/`trans_symm_self`/`quotientEquivalence`/`toEmbedding`/
+`toBehavioralBoundaryShapeEquivalence`（一段弱い層への downcast）の14件、
+計17件を全て新設・証明した。全証明は既存の
+`ResonantBehavioralTranslation.identity`/`.comp`/`.ext`/`.identity_comp`/
+`.comp_identity`/`.comp_assoc`（cycles 以前から証明済み）と
+`BehavioralBoundaryShapeTranslation.mapBisimulationQuotient` を再利用し、
+`Behavioral` 層の既存証明と同型のタクティクで型検査するのみで、新規の
+一般補題は一切追加していない。
+
+`./verify.sh`（`lake clean` を含む完全リビルド、実行例、`axiom`/`sorry`/
+`sorryAx` の全木 grep）はクリーンに通過した。scratch `lake env lean` 検査
+（`open IncidenceCore.TranslationPreservation`、使用後削除、cycles 60–66
+と同じ手順）で17件全ての `#print axioms` を確認: 14件は公理に一切依存せず、
+残り3件（`symm_trans_self`/`trans_symm_self`/`quotientEquivalence`、いずれも
+`IncidenceQuotient` 上の `Quotient.sound`/`Quotient.exact` 経由）は
+`[Quot.sound]` のみに依存する——本プロジェクトが Quotient 系証明で長年
+使用してきたのと同一の単一公理で、新規公理は皆無。
+
+これにより「翻訳・保存層」の内訳が明確になった: 弱い2層
+（`BoundaryShape*`/`BehavioralBoundaryShape*`）は `Translation`/
+`Embedding`/`Equivalence` が既に全て揃っていたが、最強層
+（`ResonantBehavioral*`）は `Translation` のみで `Embedding`/`Equivalence`
+が未完成だった、という非対称性がこの cycle の精読で初めて特定され、この
+cycle で解消された。ただし本文項目7が明示する残課題——「resonance を
+中心とする生成・合成が内部論理モデルと構成実数解析を一つの普遍的解釈
+定理で結ぶ」という単一の大きな未完了定理——には、この API 完備化work
+単体では到達しない（並行する既存兄弟構造の複製であり、新しい数学的
+内容を証明したわけではない）。したがって項目7の記述は「部分完了」の
+まま維持し、パーセンテージ（本文57–58行目、翻訳・保存層約85%）も
+本追補では動かさない——cycle 60・61 が確立した保守的判断（1 cycle 分の
+具体的だが限定的な前進を過大評価しない）を、`Matrix` 層だけでなく
+`TranslationPreservation` 層にも一貫して適用する。`RESEARCH_LOG.md`
+cycle 67 の Next hypothesis は、`BehavioralQuotientEquivalenceCriterion`
+（L8938-9127、embedding + essential-surjectivity のパッケージとその
+`quotientEquivalence`/`identity`/`comp`/全単射性 iff）に対応する
+resonance 層の類似構造（`ResonantQuotientEquivalenceCriterion`）が
+まだ存在しないという、同種の並行構築を続ける選択肢と、項目7の「普遍的
+解釈定理」そのものへ着手できるかを判定する選択肢の両方を、判断材料
+つきで cycle 68 に委ねている。
