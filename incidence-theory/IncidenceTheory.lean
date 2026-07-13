@@ -961,6 +961,68 @@ theorem mul_nil {m : Type u} {n : Type v} {p : Type w}
     (A : Matrix m n Int) (B : Matrix n p Int) :
     mul ([] : List n) A B = fun _ _ => 0 := rfl
 
+/- Cycle 65: a general matrix-VECTOR product, distinct from `mul` above
+   (matrix-matrix). Motivated by cycle 62(c)'s row/column-sum negative
+   category (`laplacian_rowSum_zero_of_boundaryRowBalanced`/`_columnSum_...`
+   below) and cycle 63/64's still-open fallback: those two theorems and
+   `GraphModel.finiteLApply` (`GraphModel.lean` L411-412, an ad hoc
+   `idx.foldl`-based matrix-vector application predating any general
+   vocabulary for it) are all instances of "sum a matrix row (or column)
+   against a vector," with no common name for that operation until now.
+   Sums over an explicit `idx : List n`, matching `mul`'s own style rather
+   than assuming a `Fintype`/`Finset` structure on `n`. -/
+def mulVec {m : Type u} {n : Type v} (idx : List n)
+    (A : Matrix m n Int) (v : n → Int) : m → Int :=
+  fun i => intListSum idx (fun k => A i k * v k)
+
+/- Linearity of `mulVec` in the vector argument. -/
+theorem mulVec_add {m : Type u} {n : Type v} (idx : List n)
+    (A : Matrix m n Int) (v w : n → Int) (i : m) :
+    mulVec idx A (fun k => v k + w k) i = mulVec idx A v i + mulVec idx A w i := by
+  show intListSum idx (fun k => A i k * (v k + w k)) =
+      intListSum idx (fun k => A i k * v k) + intListSum idx (fun k => A i k * w k)
+  rw [← intListSum_add]
+  congr 1
+  funext k
+  exact Int.mul_add (A i k) (v k) (w k)
+
+/- `mulVec` composes with `mul` the same way `mul` composes with itself
+   (`mul_assoc` above): applying `A * B` to `v` equals applying `A` to `B`
+   applied to `v` -- the associativity a matrix-vector product needs to be
+   a genuine instance of the same algebra as `mul`, not a disconnected
+   extra operation. As with `mul_assoc`, the middle-index sum for `A * B`
+   (`idxN : List n`) and the outer sum for `mulVec` (`idxP : List p`) may
+   range over different observation lists. Proved by the identical
+   `intListSum_mul_right`/`intListSum_comm`/`intListSum_mul_left` chain
+   `mul_assoc` uses, with `mul_assoc`'s third matrix argument specialized to
+   a vector. -/
+theorem mul_mulVec {m : Type u} {n : Type v} {p : Type w}
+    (idxN : List n) (idxP : List p)
+    (A : Matrix m n Int) (B : Matrix n p Int) (v : p → Int) :
+    mulVec idxP (mul idxN A B) v = mulVec idxN A (mulVec idxP B v) := by
+  funext i
+  show intListSum idxP (fun j => (intListSum idxN (fun k => A i k * B k j)) * v j) =
+      intListSum idxN (fun k => A i k * intListSum idxP (fun j => B k j * v j))
+  have step1 : ∀ j, (intListSum idxN (fun k => A i k * B k j)) * v j =
+      intListSum idxN (fun k => A i k * (B k j * v j)) := by
+    intro j
+    rw [intListSum_mul_right]
+    congr 1
+    funext k
+    exact Int.mul_assoc (A i k) (B k j) (v j)
+  calc
+    intListSum idxP (fun j => (intListSum idxN (fun k => A i k * B k j)) * v j)
+        = intListSum idxP (fun j => intListSum idxN (fun k => A i k * (B k j * v j))) := by
+          congr 1
+          funext j
+          exact step1 j
+    _ = intListSum idxN (fun k => intListSum idxP (fun j => A i k * (B k j * v j))) :=
+          intListSum_comm idxP idxN (fun j k => A i k * (B k j * v j))
+    _ = intListSum idxN (fun k => A i k * intListSum idxP (fun j => B k j * v j)) := by
+          congr 1
+          funext k
+          exact intListSum_mul_left (A i k) idxP (fun j => B k j * v j)
+
 end Matrix
 
 /- The concrete `A17` payoff: `IncidenceTheory/Axioms/A14_A17.lean` L16
@@ -998,6 +1060,28 @@ def laplacianColumnSum {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I) (column : I) : Int :=
   intListSum idx (fun row => laplacian inc idx row column)
 
+/- Cycle 65: `boundaryRowSum`/`laplacianRowSum` above are each `Matrix.mulVec`
+   against the all-ones vector, once the harmless `* 1` is simplified away --
+   the common shape cycle 62(c)/63/64's queue asked whether a matrix-vector
+   product abstraction would supply for the row/column-sum family. -/
+theorem boundaryRowSum_eq_mulVec_ones {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (row : I) :
+    boundaryRowSum inc idx row =
+      Matrix.mulVec idx (boundaryMatrix inc idx) (fun _ => 1) row := by
+  unfold boundaryRowSum Matrix.mulVec
+  congr 1
+  funext column
+  exact (Int.mul_one _).symm
+
+theorem laplacianRowSum_eq_mulVec_ones {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (row : I) :
+    laplacianRowSum inc idx row =
+      Matrix.mulVec idx (laplacian inc idx) (fun _ => 1) row := by
+  unfold laplacianRowSum Matrix.mulVec
+  congr 1
+  funext column
+  exact (Int.mul_one _).symm
+
 theorem laplacian_rowSum_zero_of_boundaryRowBalanced {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I) (hbalanced : BoundaryRowBalanced inc idx)
     (i : I) : laplacianRowSum inc idx i = 0 := by
@@ -1011,6 +1095,29 @@ theorem laplacian_rowSum_zero_of_boundaryRowBalanced {I R T : Type u} [Decidable
     exact hbalanced k hk
   rw [hrow]
   simp
+
+/- Cycle 65: does cycle 60's `laplacian_eq_transpose_mul_boundaryMatrix` plus
+   this cycle's `Matrix.mulVec`/`mul_mulVec` let this theorem be reproved
+   without `intListSum_gram_row_swap`'s bespoke double-sum-swap lemma?  Yes --
+   `laplacianRowSum inc idx i = mulVec idx (Bᵀ * B) ones i = mulVec idx Bᵀ
+   (mulVec idx B ones) i` by `mul_mulVec`, and `mulVec idx B ones k =
+   boundaryRowSum inc idx k` (`boundaryRowSum_eq_mulVec_ones` above) is exactly
+   `0` for every `k` the sum in `mulVec idx Bᵀ (...)` ranges over (`k ∈ idx`,
+   supplied by `hbalanced`), so every term of the resulting sum vanishes.
+   Original untouched, matching cycles 61-64's discipline. -/
+theorem laplacian_rowSum_zero_of_boundaryRowBalanced_via_matrix {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (hbalanced : BoundaryRowBalanced inc idx)
+    (i : I) : laplacianRowSum inc idx i = 0 := by
+  rw [laplacianRowSum_eq_mulVec_ones, laplacian_eq_transpose_mul_boundaryMatrix,
+      Matrix.mul_mulVec]
+  show intListSum idx (fun k => boundaryMatrix inc idx k i *
+      Matrix.mulVec idx (boundaryMatrix inc idx) (fun _ => 1) k) = 0
+  apply intListSum_eq_zero_of_mem
+  intro k hk
+  have hzero : Matrix.mulVec idx (boundaryMatrix inc idx) (fun _ => 1) k = 0 := by
+    rw [← boundaryRowSum_eq_mulVec_ones]
+    exact hbalanced k hk
+  rw [hzero, Int.mul_zero]
 
 /- `BᵀB` is symmetric independently of any extra incidence axioms. -/
 theorem laplacian_symmetric {I R T : Type u} [DecidableEq I]
@@ -1059,6 +1166,20 @@ theorem laplacian_columnSum_zero_of_boundaryRowBalanced {I R T : Type u} [Decida
     exact laplacian_symmetric inc idx row j
   rw [hrewrite]
   exact laplacian_rowSum_zero_of_boundaryRowBalanced inc idx hbalanced j
+
+/- Cycle 65: same reduction as `laplacian_rowSum_zero_of_boundaryRowBalanced_
+   via_matrix`, via the pre-existing symmetry argument, exactly mirroring how
+   the original above reduces to the original row-sum theorem. -/
+theorem laplacian_columnSum_zero_of_boundaryRowBalanced_via_matrix {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (hbalanced : BoundaryRowBalanced inc idx)
+    (j : I) : laplacianColumnSum inc idx j = 0 := by
+  unfold laplacianColumnSum
+  have hrewrite : (fun row => laplacian inc idx row j) =
+      (fun row => laplacian inc idx j row) := by
+    funext row
+    exact laplacian_symmetric inc idx row j
+  rw [hrewrite]
+  exact laplacian_rowSum_zero_of_boundaryRowBalanced_via_matrix inc idx hbalanced j
 
 /- Each diagonal entry of `BᵀB` is a finite sum of integer squares. -/
 theorem laplacian_diagonal_nonnegative {I R T : Type u} [DecidableEq I]

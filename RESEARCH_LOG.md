@@ -6933,3 +6933,202 @@ cycle's own `laplacian_of_empty_boundaries` finding: sweep the 3 `_congr`
 (inc-variation) and 7 ∂²/`Endpoint`-level theorems once more with the SAME
 "check the actual content, don't trust the textual bucket" discipline this
 cycle applied, in case another miscategorized theorem is hiding among them.
+
+## Cycle 65
+
+**Hypothesis**: cycle 64's own "Next hypothesis" queue named (a)/(b) as one
+combined thread -- this cycle takes it up as PRIMARY, per the orchestrating
+task's framing: does a general "matrix-vector product" abstraction, distinct
+from `Matrix.mul` (matrix-matrix), unify `laplacianRowSum`/`laplacianColumnSum`
+(`IncidenceTheory.lean`, cycle 62(c)'s category (iv)) and
+`GraphModel.finiteLApply` (L411-412, an ad hoc `idx.foldl`-based
+matrix-vector application predating any general vocabulary for it), and does
+building it let cycle 62(c)'s last 2 open "cross-index row/column summation"
+negatives -- `laplacian_rowSum_zero_of_boundaryRowBalanced`/
+`laplacian_columnSum_zero_of_boundaryRowBalanced` -- reduce to corollaries the
+way cycle 64's `mul_append` closed out the 8-theorem "idx-variation" bucket?
+
+**Method**: read, in full before writing anything: the complete `Matrix`
+section in both locations (`IncidenceTheory.lean` L824-1024ish, cycle 60/62/64's
+`add`/`mul`/`transpose`/`mul_assoc`/`mul_transpose_self_diag_nonneg`/
+`mul_append`/`mul_nil`; L6215-6276, cycle 61/62's reopened `IdxComplete`/
+`one`/`one_mul`/`mul_one`/`transpose_one`); `boundaryRowSum`/
+`BoundaryRowBalanced`/`laplacianRowSum`/`laplacianColumnSum`'s exact current
+definitions and both row/column-sum theorems' exact current proofs (confirmed
+verbatim against the file, not from cycle 62's summary alone); and
+`GraphModel.lean`'s `finiteIdx`/`finiteB`/`finiteL`/`finiteLApply` (L354-412).
+Confirmed the exact shapes: `boundaryRowSum inc idx row := intListSum idx (fun
+column => boundaryMatrix inc idx row column)`, `laplacianRowSum inc idx row :=
+intListSum idx (fun column => laplacian inc idx row column)`,
+`laplacianColumnSum inc idx column := intListSum idx (fun row => laplacian inc
+idx row column)` (note: this sums the FIRST index, i.e. it is `laplacianRowSum`
+of the TRANSPOSE, which is why the existing proof of
+`laplacian_columnSum_zero_of_boundaryRowBalanced` already reduces to
+`laplacian_rowSum_zero_of_boundaryRowBalanced` via `laplacian_symmetric`, not
+independently), and `finiteLApply x i := finiteIdx.foldl (fun total j => total
++ finiteL i j * x j) 0`. Worked out on paper that all three are literally
+"sum a matrix row against a vector, weighted": `boundaryRowSum`/
+`laplacianRowSum` are this operation applied to the all-ones vector (the `*
+column`/`* row` weight is implicitly 1, never written), and `finiteLApply` is
+the general form applied to an arbitrary vector `x` -- confirming cycle 63's
+own naming guess ("matrix applied to the all-ones vector, or more generally
+matrix-vector product") was exactly right, and that `finiteLApply` was ALREADY
+this operation, just without a name for it (the same pattern cycle 60 found
+for `laplacian`/`Bᵀ*B`). Decided the natural definition is `mulVec (idx : List
+n) (A : Matrix m n Int) (v : n → Int) : m → Int := fun i => intListSum idx (fun
+k => A i k * v k)` -- an explicit-`idx`-summed matrix-vector product mirroring
+`Matrix.mul`'s own style, NOT `Matrix m Unit Int` or any `Fintype`-based
+encoding (this project's index types carry no finiteness typeclass, exactly as
+`Matrix.mul` itself was scoped in cycle 60). Before attempting the reduction,
+worked out on paper whether `mulVec` needs an associativity law connecting it
+to `Matrix.mul` (`mulVec (mul A B) v = mulVec A (mulVec B v)`) to make the
+reduction go through: `laplacianRowSum inc idx i = mulVec idx (laplacian inc
+idx) ones i`, and `laplacian inc idx = Bᵀ * B` (`laplacian_eq_transpose_mul_
+boundaryMatrix`, cycle 60), so this needs `mulVec idx (mul idx Bᵀ B) ones =
+mulVec idx Bᵀ (mulVec idx B ones)` to peel the outer `Bᵀ` off and reduce the
+inner `mulVec idx B ones` to `boundaryRowSum`, exactly where `hbalanced`
+applies -- confirmed this associativity-style law is the genuine missing
+piece, not a restatement of something already provable by `rfl`, and that its
+proof should mirror `mul_assoc`'s existing `intListSum_mul_right`/
+`intListSum_comm`/`intListSum_mul_left` chain with the third matrix argument
+specialized to a vector (checked this specialization is sound before writing
+any Lean: `mul_assoc`'s proof never uses anything specific to its third
+argument's OWN two-index structure, only that it can be pulled out of/into a
+sum, which a one-index vector supports identically).
+
+**Result**: **both parts of the hypothesis confirmed, sorry-free, `./verify.sh`
+clean on the first `lake build` attempt with zero tactic-level fixes needed
+across all 9 new declarations -- a third consecutive cycle (after cycles 61/62)
+with no build-time surprises on a Matrix-layer extension, and this time the
+`mul_assoc`-style proof ported to `mulVec` with no adaptation beyond swapping
+one matrix argument for a vector.**
+
+- **The abstraction** (`IncidenceTheory.lean`, added to the FIRST `namespace
+  Matrix` block directly after `mul_nil`, since it needs nothing from the
+  reopened `IdxComplete`/`one` block): `Matrix.mulVec (idx : List n) (A :
+  Matrix m n Int) (v : n → Int) : m → Int := fun i => intListSum idx (fun k =>
+  A i k * v k)`, plus two basic laws -- `mulVec_add` (linearity in `v`:
+  `mulVec idx A (fun k => v k + w k) i = mulVec idx A v i + mulVec idx A w i`,
+  a direct `intListSum_add`/`Int.mul_add` reuse, four tactic lines, mirroring
+  `mul_add`'s own proof exactly) and `mul_mulVec` (`mulVec idxP (mul idxN A B)
+  v = mulVec idxN A (mulVec idxP B v)`, allowing different observation lists
+  for the matrix-product's middle sum vs. the outer vector sum, exactly as
+  `mul_assoc` allows for its three matrices -- proved by the identical
+  `intListSum_mul_right`/`Int.mul_assoc`/`intListSum_comm`/`intListSum_mul_left`
+  four-step chain `mul_assoc` uses, ported verbatim with the third matrix
+  argument's second index dropped).
+- **The `finiteLApply` connection** (`GraphModel.lean`, added directly after
+  `finiteLApply`'s definition): `finiteLApply_eq_mulVec (x) (i) : finiteLApply
+  x i = Matrix.mulVec finiteIdx finiteL x i := rfl` -- confirming, as Method
+  predicted, that `finiteLApply` was ALREADY `Matrix.mulVec finiteIdx finiteL`
+  under a different name, both sides reducing to the identical
+  `finiteIdx.foldl`/`intListSum` fold, so the connection is definitional (the
+  same "was already computing this, just unnamed" finding cycle 60 made for
+  `laplacian`/`Bᵀ*B`).
+- **The two reductions** (`IncidenceTheory.lean`, each placed directly after
+  its original, originals byte-for-byte unchanged): first, two small bridge
+  lemmas connecting `boundaryRowSum`/`laplacianRowSum` to `mulVec` against the
+  all-ones vector (`boundaryRowSum_eq_mulVec_ones`, `laplacianRowSum_eq_mulVec_
+  ones`, each a two-line `congr 1; funext; exact (Int.mul_one _).symm` undoing
+  the harmless `* 1`), placed directly before the row-sum theorems since both
+  are used by them. Then `laplacian_rowSum_zero_of_boundaryRowBalanced_via_
+  matrix`: `rw [laplacianRowSum_eq_mulVec_ones, laplacian_eq_transpose_mul_
+  boundaryMatrix, Matrix.mul_mulVec]` peels the goal down to `intListSum idx
+  (fun k => boundaryMatrix inc idx k i * mulVec idx (boundaryMatrix inc idx)
+  ones k) = 0`, then `intListSum_eq_zero_of_mem` closes it because every `k` the
+  sum ranges over is drawn from `idx` (satisfying `hbalanced`'s `k ∈ idx`
+  hypothesis exactly), and `mulVec idx (boundaryMatrix inc idx) ones k` is
+  literally `boundaryRowSum inc idx k = 0` by `hbalanced k hk` -- no
+  `intListSum_gram_row_swap` anywhere in this proof, unlike the original.
+  `laplacian_columnSum_zero_of_boundaryRowBalanced_via_matrix` is then a
+  one-line substitution of the row-sum reduction for its hand-proved
+  counterpart, inside the ORIGINAL's own symmetry-reduction proof (the
+  original already reduces column-sum to row-sum via `laplacian_symmetric`,
+  cycle 62's own analysis of this theorem's structure; only the final `exact`
+  changes).
+
+`#print axioms` (via a scratch `lake env lean` check file outside the project,
+deleted after use) on all 7 checkable new declarations (`Matrix.mulVec_add`,
+`Matrix.mul_mulVec`, `boundaryRowSum_eq_mulVec_ones`, `laplacianRowSum_eq_
+mulVec_ones`, `laplacian_rowSum_zero_of_boundaryRowBalanced_via_matrix`,
+`laplacian_columnSum_zero_of_boundaryRowBalanced_via_matrix`,
+`finiteLApply_eq_mulVec`; `Matrix.mulVec` itself is a def, not a theorem):
+every one needs only `[propext, Quot.sound]`, identical to the axiom sets
+cycles 60-64 already established for this file's `funext`-based `Matrix`-layer
+proofs (`finiteLApply_eq_mulVec`, despite being `rfl`, still reports
+`[propext, Quot.sound]` because `#print axioms` reports the FULL dependency
+closure through `finiteL`/`laplacian`/earlier `funext`-based lemmas, not just
+its own proof term -- consistent with how cycle 60's own `rfl`-proved
+`transpose_transpose`/`transpose_add` needed no axioms in isolation but
+callers built on `funext` do). No new axiom anywhere. Full `./verify.sh`
+(clean `lake clean` rebuild, example run, repo-wide `axiom`/`sorry`/`sorryAx`
+grep) passes end to end with all 9 new declarations present alongside every
+prior cycle's material, originals untouched.
+
+**Synthesis**: this cycle closes cycle 62(c)'s entire 22-theorem negative
+sweep, three cycles after it was opened: of the original 22, 1
+(`laplacian_diagonal_nonnegative`) reduced in cycle 62 itself, 4
+(`boundary_operator_square_zero`-family) got a conditional recast in cycle 63,
+8 (the "idx-variation" bucket) reduced in cycle 64, and now the last 2 (the
+"cross-index row/column summation" category) reduce here -- leaving only the 3
+`_congr` (inc-variation) and 7 ∂²/`Endpoint`-level (per-endpoint case
+structure) theorems from cycle 62(c)'s original taxonomy as the project's
+current, precisely delimited boundary of what the `Matrix`-layer (now
+including `mulVec`) does not reach; cycle 64's own "Next hypothesis" already
+flagged an audit-shaped alternative for exactly these two remaining
+categories, still open. Unlike cycle 62(c)'s row/column-sum category being
+originally reported as "not a corollary of pointwise add/mul/transpose/one
+laws even though their SUBJECT is a Matrix" -- true at the time, since no
+matrix-VECTOR operation existed -- this cycle shows that categorization was a
+statement about the LEMMA SET available then, not a permanent structural fact:
+once `mulVec` and its `mul`-interaction law exist, the "different finite-sum
+manipulation" cycle 62(c) pointed at (`intListSum_gram_row_swap`'s double-sum
+swap) is subsumed by the SAME `intListSum_comm`/`intListSum_mul_left`/`_right`
+machinery `mul_assoc` already used -- the row-sum reduction's proof needs no
+bespoke double-sum-swap lemma at all, only `mul_mulVec` (itself proved by the
+`mul_assoc` recipe) plus the pre-existing `intListSum_eq_zero_of_mem`. This is
+the cleanest illustration yet of this project's recurring finding (cycles 60,
+62(c), 64) that "does not currently reduce" and "cannot ever reduce" are
+different claims -- the `Matrix` layer's reach is a function of what general
+vocabulary has been built, not a fixed ceiling, and cycle 62(c)'s own honest
+negative report was calibrated correctly to what existed at the time rather
+than overclaiming a permanent boundary. The `finiteLApply` connection is a
+second, independent payoff of the SAME new abstraction (not merely a corollary
+of the row/column-sum reduction): it is the first time `GraphModel.lean`'s
+concrete matrix-vector application has been recognized as an instance of
+general vocabulary, mirroring cycle 62(b)'s "first concrete witness"
+significance for the unit laws. Per cycles 60-64's own precedent (ADR addendum
+for genuine new-construction progress on item 8, not for confirmatory-only
+results), this cycle warrants a further ADR addendum: `Matrix.mulVec`/
+`mulVec_add`/`mul_mulVec` are real new general-layer vocabulary (the first
+`Matrix`-layer fact about matrix-VECTOR rather than matrix-matrix
+multiplication), and closing cycle 62(c)'s entire 22-theorem sweep (the last 2
+of 22) is a meaningful completion, not merely an incremental corollary.
+
+**Next hypothesis (cycle 66, not yet attempted)**: with cycle 62(c)'s full
+22-theorem sweep now closed, two candidates remain, both flagged as open by
+cycle 64's own queue and untouched by this cycle: (a) an audit-shaped task in
+the spirit of cycle 63's "fifth axis" and cycle 64's own `laplacian_of_empty_
+boundaries` finding: sweep the 3 `_congr` (inc-variation:
+`boundaryMatrix_index_irrel`/`boundaryMatrix_congr`/`laplacian_congr`) and 7
+∂²/`Endpoint`-level (`boundaryMatrix_single_link`/`_eq_foldl`/`_ne_zero_
+witness`/`_eq_zero_of_leaf`/`_two_link`/`_three_link`, plus supporting lemmas)
+theorems once more with the SAME "check the actual content, don't trust the
+textual bucket" discipline cycle 64 applied to `laplacian_of_empty_boundaries`
+-- these are the project's last remaining Matrix-layer-adjacent theorems from
+cycle 62(c)'s original taxonomy never individually re-examined post-hoc,
+and cycle 64 showed textual-proximity miscategorization is a real, recurring
+risk worth checking rather than assuming exhausted. (b) `Matrix.mulVec` itself
+is new and comparatively thin (two laws): does it admit further natural laws
+symmetric to `Matrix.mul`'s own set -- e.g. `mulVec_zero`/an `IdxComplete`-style
+unit law connecting `Matrix.one` to `mulVec` (`mulVec idx one v = v` under
+`IdxComplete idx`, the vector analogue of `one_mul`/`mul_one`), or `mulVec`'s
+interaction with `transpose` (relevant to a possible general statement of
+"row-sum vs. column-sum via the transpose," which this cycle's two reductions
+each proved by a DIFFERENT route -- `mulVec_mul` directly for row-sum,
+`laplacian_symmetric` for column-sum -- rather than a single symmetric
+`mulVec`/`transpose` law that would unify both proofs into one shared lemma,
+an asymmetry this cycle did not attempt to close and left as found. (a) is a
+smaller audit; (b) grows the newest part of the library outward and would
+make the row/column-sum reduction's own asymmetry the object of study, similar
+in spirit to how cycle 61(a) followed cycle 60/61(b)'s reductions.

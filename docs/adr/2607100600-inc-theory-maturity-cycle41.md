@@ -2208,3 +2208,63 @@ cycle 65 以降の課題として残る（`RESEARCH_LOG.md` cycle 64 の Next hy
 記録済み）。項目8の記述は「部分完了」のまま維持し、パーセンテージ（本文59行目、
 40%/55–60%）も本追補では動かさない——cycle 60–63 追補と同じ保守的判断を一貫して
 適用する。
+
+## 2026-07-14 追補（cycle 65: 行列ベクトル積 `Matrix.mulVec` の新設——
+`laplacianRowSum`/`ColumnSum`/`GraphModel.finiteLApply` の統一、および
+cycle 62(c) 「行/列総和」残り2件負例の解消）
+
+本追補は `RESEARCH_LOG.md` cycle 65 の結果を反映する。cycle 64 が自ら次サイクル
+の候補として挙げた、cycle 62 のフォールバック(c)（行列ベクトル積の一般化）を
+主対象として取り組んだ。
+
+新設した一般演算は `Matrix.mulVec (idx : List n) (A : Matrix m n Int) (v : n →
+Int) : m → Int := fun i => intListSum idx (fun k => A i k * v k)`——`Matrix.mul`
+（行列×行列）とは別の、行列×ベクトルの積。`Matrix.mul` 自身と同じく明示的な
+`idx : List n` で総和し、`Fintype`/`Finset` を仮定しない。基本法則2件を証明した:
+`mulVec_add`（`v` に関する線形性）と `mul_mulVec`（`mulVec idxP (mul idxN A B) v
+= mulVec idxN A (mulVec idxP B v)` ——`mul_assoc` と同一の
+`intListSum_mul_right`/`intListSum_comm`/`intListSum_mul_left` 連鎖を、第三引数の
+行列をベクトルに特化してそのまま転用、新規の帰納法は不要）。
+
+読解の結果、`GraphModel.finiteLApply`（L411-412、`finiteIdx.foldl (fun total j
+=> total + finiteL i j * x j) 0`）は既にこの演算そのものであることが判明した
+（cycle 60 が `laplacian = Bᵀ*B` について見出した「名前がないまま既に計算して
+いた」構図の再現）——`finiteLApply_eq_mulVec : finiteLApply x i = Matrix.mulVec
+finiteIdx finiteL x i := rfl` で接続、両辺が同一の `foldl`/`intListSum` に展開
+されるため定義的に等しい。同様に `boundaryRowSum`/`laplacianRowSum`（各々
+`intListSum idx (fun column => ... row column)`）は全1ベクトルに対する
+`mulVec` であることも確認し、`boundaryRowSum_eq_mulVec_ones`/
+`laplacianRowSum_eq_mulVec_ones`（`* 1` を外すだけの2行）で接続した。
+
+この接続を用いて、cycle 62(c) が「行/列総和」として最後まで未解消のまま残して
+いた2件——`laplacian_rowSum_zero_of_boundaryRowBalanced`/`laplacian_columnSum_
+zero_of_boundaryRowBalanced`（cycle 62(c) 時点では「`intListSum_gram_row_swap`
+という特殊な二重和交換を要する、`Matrix` 層のpointwise法則には還元されない
+操作」と分類されていた）——を `_via_matrix` 系として簡約した（原証明は保持）。
+row-sum側は `laplacianRowSum_eq_mulVec_ones` → `laplacian_eq_transpose_mul_
+boundaryMatrix` → `Matrix.mul_mulVec` の3段書き換えで `intListSum_gram_row_
+swap` を一切使わずに `intListSum_eq_zero_of_mem`（既存語彙）だけで閉じる証明に
+到達し、column-sum側は原証明と同じ対称性経由の還元（`laplacian_symmetric`）で
+row-sum側の新証明を呼ぶだけの1行差し替えとなった。
+
+これにより cycle 62(c) が特定した「idx 可変」（cycle 64 で解消）に続き「行/列
+総和」系統2件も解消し、同 cycle が当初特定した22件の負例スイープ全体
+（+4件の ∂²=0 条件付き再定式化、cycle 63）が3サイクルにわたって完全に閉じた
+ことになる。残るのは (ii) `Incidence` 合同（`boundaryMatrix_congr` 系列3件）・
+(iv) `Endpoint`/`Sign` 単位の場合分け（`boundaryMatrix_two_link` 系列7件）の
+2系統・計10件のみ。cycle 62(c) 自身がこの2件を「`Matrix` 層のpointwise法則
+には還元されない」と正しく報告していた点は、その時点で存在した語彙に対しては
+事実だったが恒久的な構造的上限ではなかった——`mulVec`/`mul_mulVec` という新規
+語彙を追加すれば同じ `intListSum_comm`/`intListSum_mul_left` 系の機構で閉じる
+ことが分かった、という cycle 60/62(c)/64 で繰り返し確認されてきたパターン
+（「現在還元しない」と「絶対に還元できない」は別の主張である）の、これまでで
+最も明確な一例である。
+
+ただし依然として: (a) 階数・行列式・固有値・逆行列は未着手、(b) 抽象代数・
+位相・測度論は cycle 60 追補時点の記述から変化なし、(c) 上記残り10件（`_congr`
+系3件・∂²/`Endpoint`系7件）を埋める一般語彙は cycle 66 以降の課題として残る
+（`RESEARCH_LOG.md` cycle 65 の Next hypothesis に記録済み。cycle 64 の
+「fifth axis」的監査——テキスト上の近接ではなく内容を個別に再点検する——が
+まだ適用されていない最後の2系統でもある）。項目8の記述は「部分完了」のまま
+維持し、パーセンテージ（本文59行目、40%/55–60%）も本追補では動かさない——
+cycle 60–64 追補と同じ保守的判断を一貫して適用する。

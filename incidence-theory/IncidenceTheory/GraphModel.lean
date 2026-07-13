@@ -411,6 +411,16 @@ theorem finiteB_mul_one :
 def finiteLApply (x : FiniteIncidence → Int) (i : FiniteIncidence) : Int :=
   finiteIdx.foldl (fun total j => total + finiteL i j * x j) 0
 
+/- Cycle 65: `finiteLApply` is, definitionally, `Matrix.mulVec` applied to
+   `finiteL` against the same `finiteIdx` observation list -- it already WAS
+   a matrix-vector product (cycle 63/64's own framing), just without the
+   general vocabulary to say so, mirroring cycle 60's
+   `laplacian_eq_transpose_mul_boundaryMatrix` finding that `laplacian` was
+   already, silently, `Bᵀ B`. Both sides unfold to the identical
+   `finiteIdx.foldl`/`intListSum` expression, so the proof is `rfl`. -/
+theorem finiteLApply_eq_mulVec (x : FiniteIncidence → Int) (i : FiniteIncidence) :
+    finiteLApply x i = Matrix.mulVec finiteIdx finiteL x i := rfl
+
 theorem finiteLApply_leaf (x : FiniteIncidence → Int) :
     finiteLApply x .leaf = x .leaf := by
   simp [finiteLApply, finiteIdx, finiteL, laplacian, boundaryMatrix,
