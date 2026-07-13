@@ -190,7 +190,9 @@ Checked constructions include:
   nonnegative product or its additive negation, providing the case interface
   for signed arithmetic; negation exchanges positive/negative parts and changes
   either product sign, and all eight sign cases reduce signed associativity to
-  the checked nonnegative associativity law;
+  the checked nonnegative associativity law; distributivity is lifted for
+  same-sign summands with either factor sign, while additive cancellation and
+  difference-rearrangement laws prepare the remaining mixed-sign case;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets

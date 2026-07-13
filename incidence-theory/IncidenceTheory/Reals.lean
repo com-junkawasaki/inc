@@ -537,6 +537,12 @@ theorem realAdd_cancel_right (left right offset : IncReal)
   apply realAdd_cancel_left offset
   simpa [realAdd_comm] using equal
 
+theorem real_eq_add_neg_of_add_eq {left offset result : IncReal}
+    (equal : realAdd left offset = result) :
+    left = realAdd result (realNeg offset) := by
+  apply realAdd_cancel_right left (realAdd result (realNeg offset)) offset
+  rw [equal, realAdd_assoc, realAdd_neg_left, realAdd_zero_right]
+
 theorem realNeg_add (left right : IncReal) :
     realNeg (realAdd left right) =
       realAdd (realNeg left) (realNeg right) := by
@@ -552,6 +558,21 @@ theorem realNeg_add (left right : IncReal) :
             realAdd_comm right (realNeg left),
             realAdd_assoc (realNeg left), ← realAdd_assoc left]
     _ = realZero := by rw [realAdd_neg, realAdd_neg, realAdd_zero_left]
+
+theorem realNeg_eq_add_neg_of_add_eq {left offset result : IncReal}
+    (equal : realAdd left offset = result) :
+    realNeg offset = realAdd left (realNeg result) := by
+  apply realAdd_cancel_right (realNeg offset)
+    (realAdd left (realNeg result)) offset
+  rw [realAdd_neg_left]
+  symm
+  calc
+    realAdd (realAdd left (realNeg result)) offset =
+        realAdd (realAdd left offset) (realNeg result) := by
+      rw [realAdd_assoc, realAdd_comm (realNeg result) offset,
+        ← realAdd_assoc]
+    _ = realAdd result (realNeg result) := by rw [equal]
+    _ = realZero := realAdd_neg result
 
 noncomputable instance : DecidableEq IncReal :=
   Classical.typeDecidableEq IncReal
@@ -1660,6 +1681,7 @@ theorem realMul_assoc (first second third : IncReal) :
         simp only [realMul_neg_right]
         exact congrArg realNeg
           (realMul_assoc_nonnegative firstPart secondPart thirdPart)
+
     · let secondPart := realNegativePart second
       have secondEq : second = realNeg secondPart.value := by
         exact real_eq_neg_negativePart second secondNonnegative
@@ -1707,6 +1729,50 @@ theorem realMul_assoc (first second third : IncReal) :
         simp only [realMul_neg_right, realMul_neg_left, realNeg_neg]
         exact congrArg realNeg
           (realMul_assoc_nonnegative firstPart secondPart thirdPart)
+
+theorem realMul_add_nonnegative
+    (factor left right : NonnegativeReal) :
+    realMul factor.value (realAdd left.value right.value) =
+      realAdd (realMul factor.value left.value)
+        (realMul factor.value right.value) := by
+  change realMul factor.value (nonnegativeRealAdd left right).value =
+    realAdd (realMul factor.value left.value)
+      (realMul factor.value right.value)
+  rw [realMul_of_nonnegative factor.value
+      (nonnegativeRealAdd left right).value factor.nonnegative
+      (nonnegativeRealAdd left right).nonnegative,
+    realMul_of_nonnegative factor.value left.value
+      factor.nonnegative left.nonnegative,
+    realMul_of_nonnegative factor.value right.value
+      factor.nonnegative right.nonnegative]
+  exact congrArg NonnegativeReal.value
+    (nonnegativeRealMul_add factor left right)
+
+theorem realMul_add_neg_factor_nonnegative
+    (factor left right : NonnegativeReal) :
+    realMul (realNeg factor.value) (realAdd left.value right.value) =
+      realAdd (realMul (realNeg factor.value) left.value)
+        (realMul (realNeg factor.value) right.value) := by
+  rw [realMul_neg_left, realMul_neg_left, realMul_neg_left,
+    realMul_add_nonnegative, realNeg_add]
+
+theorem realMul_add_negated_nonnegative
+    (factor left right : NonnegativeReal) :
+    realMul factor.value
+        (realAdd (realNeg left.value) (realNeg right.value)) =
+      realAdd (realMul factor.value (realNeg left.value))
+        (realMul factor.value (realNeg right.value)) := by
+  rw [← realNeg_add, realMul_neg_right, realMul_neg_right,
+    realMul_neg_right, realMul_add_nonnegative, realNeg_add]
+
+theorem realMul_add_all_negated_nonnegative
+    (factor left right : NonnegativeReal) :
+    realMul (realNeg factor.value)
+        (realAdd (realNeg left.value) (realNeg right.value)) =
+      realAdd (realMul (realNeg factor.value) (realNeg left.value))
+        (realMul (realNeg factor.value) (realNeg right.value)) := by
+  rw [realMul_neg_left, realMul_neg_left, realMul_neg_left,
+    realMul_add_negated_nonnegative, realNeg_add]
 
 theorem realMul_of_nonnegative_not_nonnegative
     (left right : IncReal)

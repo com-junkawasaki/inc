@@ -195,7 +195,9 @@ case where the selector is complete and resonance has no unselected modes.
   exact restriction to nonnegative multiplication, and reduction of all four
   sign quadrants to nonnegative multiplication or its negation are checked.
   Negation swaps the two canonical parts and flips either product input, so all
-  eight sign cases prove signed associativity from nonnegative associativity. Signed
+  eight sign cases prove signed associativity from nonnegative associativity.
+  Distribution is checked for same-sign summands under either factor sign;
+  cancellation and difference rearrangement isolate the remaining mixed case. Signed
   distributivity, and inverse laws remain subsequent obligations.
 
 ### Non-normative physical intuition
