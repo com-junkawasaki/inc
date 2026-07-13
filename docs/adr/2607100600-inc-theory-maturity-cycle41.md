@@ -2518,3 +2518,66 @@ project 内で最も豊かな `*ResonanceSpec` インスタンス）への同種
 `*ResonanceSpec` ブロックのヘッダのみ確認）の両方を、cycle 67 が
 まだ手つかずのまま残した `ResonantQuotientEquivalenceCriterion`
 フォールバックと共に cycle 69 に委ねている。
+
+## 2026-07-14 追補（cycle 69: `rationalIncidence` を内部論理層へ接続——
+`Nat`/`Int`/`Rational` の直接可算符号化ルートを完全に閉じる）
+
+本追補は `RESEARCH_LOG.md` cycle 69 の結果を反映する。cycle 68 が自ら
+主候補として推した選択肢 (a) ——`rationalIncidence`（`Rationals.lean`）
+を内部論理層へ接続する——に取り組んだ。まず carrier を仮定せず全文
+精読して確認: `RationalRepresentative`（`numerator`/`denominator : Int`、
+`denominator_pos : 0 < denominator` の素の structure）を
+`RationalRepresentative.Equivalent`（交差乗算による同値関係）で割った
+`IncRational := Quotient rationalRepresentativeSetoid` が carrier——
+cycle 68 自身の見立て通りであることを確認した。
+
+構築は二段階: (1) `RationalRepresentative` レベルでの
+`CountableAtomCoding`——numerator は cycle 68 の `integerCode`/
+`integerDecode`、denominator は既存の `diagonalPair`/`diagonalIndex`/
+`diagonalRemainder` で対にした「分母−1」を `Nat` として符号化し、
+「対の第二成分+1」として復号（これは decode が常に total かつ正——
+`integerDecode` 経由の対称的符号化だと分母側が非正の `Int` に復号され
+うるため、これを意図的に避けた）。(2) この段階を、cycle 39 の
+`quotOut`（`Quotient.lean`、`Classical.choose (Quotient.exists_rep q)`
+——この project に `mathlib` 依存が無く核 Lean 自身の `Quotient.out` が
+直接使えないための代替）と同じ構成で quotient 越しに持ち上げ、
+`IncRational` 全体への `CountableAtomCoding` を得た。最終的に
+`rationalCountablyPresentedIncidence : CountablyPresentedIncidence
+IncRational RationalRole GraphType` と、`Peano.lean`/`Integers.lean` と
+全く同じ2つの系（`_internalLogic_complete`/
+`_internalLogic_consistent_iff_model`）を `Rationals.lean` に追加した
+（既存部分はバイト単位で不変）。
+
+新規12宣言は初回の `lake build` で全て型検査を通過し、`./verify.sh`
+（完全リビルド、実行例、`axiom`/`sorry`/`sorryAx` の全木 grep）はクリーンに
+通過した。scratch `lake env lean` 検査（使用後削除）で `#print axioms` を
+確認: 純粋な representative レベルの符号化は無公理、quotient を経由する
+部分（`IncRational.outRepresentative_spec`/`rationalDecode_code`/
+`rationalAtomCoding`/`rationalCountablyPresentedIncidence`/最終2定理）は
+`[propext, Classical.choice, Quot.sound]`——cycle 68 の `Int` bridge、
+および `natIncidence` の既存 bridge と同一で、新規公理は皆無（3例目の
+確認）。
+
+これにより: **project 内で可算な3つの `*ResonanceSpec` インスタンス
+（`Nat`/`Int`/`Rational`）全てが内部論理層へ接続された**——
+`rationalIncidence` は `FieldResonanceSpec`/`OrderedFieldResonanceSpec`
+を備える、project 中最も豊かなインスタンスであり、かつ quotient carrier
+上に構築された初めての `CountableAtomCoding` である。cycle 68 が
+「より手間がかかる」と見積もった quotient の壁は、新しい証明論的道具を
+要さず、(a) representative レベルの符号化と (b) `quotOut` 式の持ち上げ、
+という2段合成に綺麗に収まった。`Real` は cycle 68 で恒久的に除外済みの
+ため、項目7の「resonance ↔内部論理」という一辺は、`CountablyPresentedIncidence`
+を直接使う経路が可能な全インスタンスについて完結した——残る道は
+`Real` への間接的な橋（cycle 68 の選択肢 (b)、未着手）のみである。
+とはいえ項目7が明示する単一の普遍的解釈定理（resonance ↔内部論理↔
+構成実数解析を一つに結ぶ）そのものには遠く及ばないため、cycle 60-68
+の保守的規律どおり、項目7の記述（「部分完了」）とパーセンテージ
+（本文57–58行目、incidence/resonance 約90%・内部論理約90%）は本追補
+では動かさない。`RESEARCH_LOG.md` cycle 69 の Next hypothesis は、
+cycle 68 の選択肢 (b)（`Reals.lean` 自身の構成を全文精読し、離散/有理
+近似構造経由の間接的な橋の可能性を探る、今回も未着手のまま2サイクル
+持ち越し）を主軸としつつ、quotient 越しの `CountableAtomCoding` 持ち上げ
+を `CountableAtomCoding.sum`/`.prod` と並ぶ一般コンビネータとして再利用
+可能にする小さな副次選択肢、および cycle 67 がまだ手つかずのまま残した
+`ResonantQuotientEquivalenceCriterion` フォールバックを、cycle 70 に
+委ねている。

@@ -7709,3 +7709,175 @@ proves tractable in one cycle, cycle 67's still-unclaimed option (a)
 (`ResonantQuotientEquivalenceCriterion` by direct analogy with
 `BehavioralQuotientEquivalenceCriterion`) remains available as a
 concretely well-scoped fallback.
+
+## Cycle 69
+
+**Hypothesis**: per cycle 68's option (a) (its own recommended primary
+thread, "concretely scoped but more involved" than the `Int` case just
+closed), extend the internal-logic bridge
+(`CountablyPresentedIncidence`/Kripke soundness-completeness) to
+`rationalIncidence` (`Rationals.lean`) -- the last countable-but
+unconnected `*ResonanceSpec` instance in the project
+(`FieldResonanceSpec`/`OrderedFieldResonanceSpec`, strictly richer than
+`Int`'s `AdditiveGroupResonanceSpec`/`DistributiveResonanceSpec`) -- by
+building a `CountableAtomCoding` for whatever `rationalIncidence`'s actual
+carrier turns out to be, reusing cycle 68's `integerCode`/`integerDecode`
+and the existing `diagonalPair`/`diagonalIndex`/`diagonalRemainder`
+pairing, plus a `Quotient.out`-style representative-choice step if the
+carrier is confirmed to be a quotient.
+
+**Method**: read `Rationals.lean` in full (1494 lines, before this
+cycle) to confirm the carrier precisely rather than assume cycle 68's
+characterization. Confirmed: `RationalRepresentative` (L6-9) is a plain
+structure -- `numerator : Int`, `denominator : Int`,
+`denominator_pos : 0 < denominator` -- and `IncRational` (L47) is
+`Quotient rationalRepresentativeSetoid`, the quotient of
+`RationalRepresentative` by cross-multiplication equality
+(`RationalRepresentative.Equivalent`, L11-14). `rationalIncidence`
+(L1308-1329) is `Incidence IncRational RationalRole GraphType`, confirming
+cycle 68's characterization exactly. Re-read `Integers.lean`'s cycle-68
+section (L371-426) in full as the template (`integerCode`/`integerDecode`/
+`integerDecode_integerCode`/`integerAtomCoding`/
+`integerCountablyPresentedIncidence` plus the two derived theorems) and
+`Peano.lean`'s original `natCountablyPresentedIncidence` (L66-73) as the
+base case. Grepped `Logic.lean` for `diagonalPair` and found its exact
+signature at L4988-5010 (`diagonalPair : Nat → Nat → Nat`,
+`diagonalIndex`/`diagonalRemainder : Nat → Nat`, with
+`diagonalIndex_pair`/`diagonalRemainder_pair` roundtrip lemmas -- already
+used by `CountableAtomCoding.prod`, L5155-5166), and confirmed this
+project's established substitute for core Lean's unavailable
+`Quotient.out` is cycle 39's `quotOut` pattern (`Quotient.lean` L139-147:
+`Classical.choose (Quotient.exists_rep q)`), not a real `Quotient.out`
+call.
+
+Before writing any proof, worked out on paper why a naive symmetric
+coding (encode both numerator AND denominator via `integerCode`/
+`integerDecode`, paired by `diagonalPair`) would break totality of
+`decode`: `RationalRepresentative.decode` must produce a *valid* (positive-
+denominator) representative for *every* `Nat` input, not just for inputs
+that happen to come from `code` -- and `integerDecode` surjects onto all
+of `Int`, including zero and negatives, so decoding an arbitrary paired
+component back through `integerDecode` can yield a non-positive
+denominator (concretely: pairing component `1` decodes via
+`integerDecode` to `Int.negSucc 0 = -1`). The fix used: encode the
+denominator not via `integerCode`/`integerDecode` at all, but as
+"denominator − 1, as a `Nat`" on the coding side and "paired `Nat`
+component + 1, cast back to `Int`" on the decoding side -- since a `Nat`
+cast to `Int` is always `≥ 0`, decoded denominators are always `≥ 1 > 0`
+unconditionally, for every possible `Nat` input, with no side condition
+needed. Confirmed the arithmetic identity this requires
+(`((z - 1).toNat + 1 : Nat) : Int) = z` for `0 < z`) actually discharges
+via `omega`, but only when written with the `(_ : Nat) : Int` coercion
+form -- a scratch check (`lake env lean`, deleted after use) found `omega`
+treats `Int.ofNat n` and `(n : Int)` as syntactically different atoms
+despite `Int.ofNat n = (n : Int)` holding by `rfl`, and fails on the
+`Int.ofNat` form while succeeding on the coercion form; this shaped every
+subsequent definition to use `(_ : Nat) : Int` casts, not raw `Int.ofNat`.
+Separately, a scratch check found that rewriting the dependent
+`denominator` field of a `RationalRepresentative` structure literal via
+plain `rw` hits Lean's "motive is not type correct" failure (since
+`denominator_pos`'s type mentions `denominator`) -- worked around by
+proving a small `rationalRepresentative_ext` helper first (two
+representatives are equal if their numerator and denominator agree, via
+`obtain`-destructuring both sides into fresh local variables before
+`subst`, where `subst` (unlike `rw` on a literal) handles the dependent
+`denominator_pos` field transport automatically) and routing the main
+round-trip proof through it instead of direct field rewriting.
+
+Built, in order, directly before `end IncidenceCore` in `Rationals.lean`:
+(1) `rationalRepresentativeCode`/`rationalRepresentativeDecode`/
+`rationalRepresentative_ext`/`rationalRepresentativeDecode_code` --
+`CountableAtomCoding RationalRepresentative` at the representative level,
+not yet the quotient; (2) `rationalRepresentativeAtomCoding` packaging
+that as a `CountableAtomCoding`; (3) `IncRational.outRepresentative`/
+`IncRational.outRepresentative_spec` -- the `quotOut`-style canonical
+representative choice for `rationalRepresentativeSetoid`, built the same
+way cycle 39's `quotOut` was (`Classical.choose (Quotient.exists_rep ·)`),
+just specialized to this setoid rather than to `approxBisimSetoid`; (4)
+`rationalCode`/`rationalDecode`/`rationalDecode_code` composing (1)-(3)
+into a full `CountableAtomCoding IncRational`; (5)
+`rationalAtomCoding`/`rationalCountablyPresentedIncidence` and the two
+corollary theorems `rationalIncidence_internalLogic_complete`/
+`rationalIncidence_internalLogic_consistent_iff_model`, mirroring
+`integerIncidence`'s and `natIncidence`'s exact pattern.
+
+**Result**: **all 12 new declarations type-check on the first `lake
+build` attempt (no iteration needed after the two scratch checks above
+resolved the `omega`/coercion and dependent-`rw` issues in isolation
+first); `./verify.sh` (clean `lake clean` + `lake build`, example run,
+repo-wide `axiom`/`sorry`/`sorryAx` grep) passes end to end.** A scratch
+`lake env lean` check file (`import IncidenceTheory.Rationals`, deleted
+after use, per this project's established practice) confirmed `#print
+axioms` on all 11 substantive declarations: the pure representative-level
+coding (`rationalRepresentativeCode`, `rationalRepresentative_ext`)
+depends on no axioms at all; `rationalRepresentativeDecode`/
+`rationalRepresentativeDecode_code`/`rationalRepresentativeAtomCoding`
+depend on `[propext, Quot.sound]` (no `Classical.choice` -- consistent
+with cycle 68's finding that the *representative*-level coding needs none);
+everything touching the quotient
+(`IncRational.outRepresentative_spec`/`rationalDecode_code`/
+`rationalAtomCoding`/`rationalCountablyPresentedIncidence`/both final
+theorems) depends on exactly `[propext, Classical.choice, Quot.sound]` --
+identical to cycle 68's `Int` bridge and to `natIncidence`'s pre-existing
+bridge, confirming (a third time now, across `Nat`/`Int`/`Rational`) that
+this internal-logic layer introduces no axiom commitment beyond this
+project's long-standing three.
+
+**Synthesis**: this closes the primary thread cycle 68 queued: **all
+three countable `*ResonanceSpec` instances in the project
+(`Nat`/`Int`/`Rational`) are now connected to the internal-logic layer**,
+with `rationalIncidence` -- the richest instance of all
+(`FieldResonanceSpec`/`OrderedFieldResonanceSpec`) -- now bridged via the
+project's first `CountableAtomCoding` built over a genuine quotient
+carrier, not just a plain inductive type. The technical content beyond a
+mechanical repeat of cycle 68's pattern is real but was successfully
+contained: the quotient-carrier obstacle cycle 68 flagged as "more
+involved" resolved cleanly into a two-layer composition
+(`RationalRepresentative`-level coding, then a `quotOut`-style lift)
+rather than requiring any new proof-theoretic machinery, and the two
+genuine wrinkles encountered (an `omega`/`Int.ofNat`-vs-coercion
+normalization gap, and a dependent-field `rw` motive failure) were both
+resolved by small, previously-established techniques (explicit coercion
+forms; cycle 39's `obtain`+`subst` idiom for dependent structure fields)
+rather than by inventing new proof strategy -- consistent with this
+project's broader pattern that "more involved" scoping estimates from a
+prior cycle tend to be technically real but tractable within one cycle
+once attacked directly, not a sign the task needs further splitting.
+With `Nat`/`Int`/`Rational` all closed and `Real` permanently ruled out
+(cycle 68), item 7's "resonance ↔ internal logic" leg is now complete for
+every instance where it is mathematically possible directly via
+`CountablyPresentedIncidence` -- the *only* remaining avenue on that leg
+is an indirect bridge for `Real` through some weaker-than-
+`CountableAtomCoding` notion (cycle 68's option (b), still unattempted).
+This is real, checked progress that completes a specific sub-thread
+item 7 names, but it is still not item 7's single universal
+interpretation theorem connecting resonance-driven generation/composition
+to internal logic *and* constructive real analysis uniformly -- per this
+project's cycle 60-68 conservative convention, the ADR addendum below
+records the finding without moving item 7's existing percentage figures.
+
+**Next hypothesis (cycle 70, not yet attempted)**: with the direct
+`CountableAtomCoding` route now closed off for every instance where it is
+possible (`Nat`/`Int`/`Rational` done, `Real` permanently excluded), the
+remaining thread on this leg is cycle 68's option (b), carried forward
+unattempted for two cycles now: read `Reals.lean`'s own construction of
+`realIncidence` in full (not just its `*ResonanceSpec` block headers, the
+depth this project has read it to so far) to determine its actual
+discrete/rational-approximating representation (Dedekind cuts, Cauchy
+sequences, or something else), and judge whether that representation
+supplies -- or could be made to supply -- some weaker-than-
+`CountableAtomCoding` indirect bridge to the internal-logic layer (e.g. a
+`CountableAtomCoding` on the approximating/index structure itself,
+connecting to `realIncidence` indirectly rather than directly coding
+`Real`). This is explicitly exploratory, not concretely pre-scoped the
+way this cycle's task was: the prerequisite full read may reveal the
+indirect bridge is well-scoped, or that it is itself out of reach for a
+single cycle (in which case cycle 67's still-unclaimed
+`ResonantQuotientEquivalenceCriterion` fallback, queued three cycles
+running now, becomes the more concretely scoped choice). Separately,
+now that a quotient carrier has been bridged once (`IncRational`), a
+reusable generic combinator ("lift any `CountableAtomCoding A` through a
+`Quotient s : Setoid A` via a `quotOut`-style choice, analogous to the
+existing `CountableAtomCoding.sum`/`.prod` combinators in `Logic.lean`")
+is a smaller, well-scoped side option if the `Real` thread proves
+unready to attempt yet again.

@@ -1491,4 +1491,149 @@ theorem rationalQuotientResonanceCongruent :
   quotientResonanceCongruent_of_faithful rationalIncidence
     rationalIncidence_approxBisim_iff
 
+/- Research cycle 69 (see RESEARCH_LOG.md): cycle 68 connected
+`integerIncidence` to the internal-logic (`CountablyPresentedIncidence`/
+Kripke soundness-completeness) layer via a genuinely non-identity
+`CountableAtomCoding Int` and flagged `rationalIncidence` -- the richest
+`*ResonanceSpec` instance in the project (`FieldResonanceSpec`/
+`OrderedFieldResonanceSpec`, strictly more than `Int`'s) -- as the natural
+next target, since its carrier `IncRational := Quotient
+rationalRepresentativeSetoid` needs a coding routed through
+`RationalRepresentative`'s `Int` numerator/denominator pair plus a
+`Quotient.out`-based representative-choice step (this project has no
+`mathlib` dependency, so `Quotient.out` itself is unavailable; cycle 39's
+`quotOut` in `Quotient.lean` established the substitute built directly
+from core `Quotient.exists_rep` via `Classical.choose`). This cycle builds
+exactly that bridge: first a `CountableAtomCoding RationalRepresentative`
+(coding numerator via cycle 68's `integerCode`/`integerDecode` and the
+positive denominator via the existing `Nat × Nat → Nat` pairing
+`diagonalPair`/`diagonalIndex`/`diagonalRemainder`, `Logic.lean`
+L4988-5010 -- reconstructing the denominator as "paired natural number
++ 1" so `decode` is total and always positive regardless of which `Nat`
+is supplied, sidestepping any need to decode through `integerDecode` on
+the denominator side, which would not preserve positivity for arbitrary
+inputs), then lifting it through the quotient via a representative-choice
+function analogous to cycle 39's `quotOut`, giving
+`CountableAtomCoding IncRational` and finally
+`rationalCountablyPresentedIncidence : CountablyPresentedIncidence
+IncRational RationalRole GraphType`, mirroring `integerCountablyPresentedIncidence`
+(`Integers.lean`) and `natCountablyPresentedIncidence` (`Peano.lean`)
+exactly. -/
+
+/-- Coding of a fraction representative into `Nat`: the numerator via
+cycle 68's zig-zag `Int ↔ Nat` coding, the (always positive) denominator
+via its predecessor as a `Nat`, paired by `diagonalPair`. -/
+def rationalRepresentativeCode (value : RationalRepresentative) : Nat :=
+  diagonalPair (integerCode value.numerator) ((value.denominator - 1).toNat)
+
+/-- Inverse of `rationalRepresentativeCode`. Unlike a hypothetical coding
+that decoded the denominator through `integerDecode` (which ranges over
+all of `Int`, including non-positive values), this reconstructs the
+denominator as "second paired component + 1" -- always a positive `Int`,
+however the `Nat` argument was formed, so `decode` needs no side
+condition to be total. -/
+def rationalRepresentativeDecode (code : Nat) : RationalRepresentative where
+  numerator := integerDecode (diagonalIndex code)
+  denominator := ((diagonalRemainder code + 1 : Nat) : Int)
+  denominator_pos := by omega
+
+/-- Structure-equality helper for `RationalRepresentative`: since
+`denominator_pos` is a `Prop`, two representatives with the same
+numerator and denominator are equal regardless of which positivity proof
+each carries (proof irrelevance). Isolating this avoids the "motive is
+not type correct" failure a direct `rw` on the dependent `denominator`
+field would hit inside `rationalRepresentativeDecode_code` below. -/
+theorem rationalRepresentative_ext {left right : RationalRepresentative}
+    (numeratorEq : left.numerator = right.numerator)
+    (denominatorEq : left.denominator = right.denominator) : left = right := by
+  obtain ⟨leftNumerator, leftDenominator, leftPos⟩ := left
+  obtain ⟨rightNumerator, rightDenominator, rightPos⟩ := right
+  simp only at numeratorEq denominatorEq
+  subst numeratorEq
+  subst denominatorEq
+  rfl
+
+theorem rationalRepresentativeDecode_code (value : RationalRepresentative) :
+    rationalRepresentativeDecode (rationalRepresentativeCode value) = value := by
+  apply rationalRepresentative_ext
+  · simp [rationalRepresentativeDecode, rationalRepresentativeCode,
+      diagonalIndex_pair, integerDecode_integerCode]
+  · have hrem : diagonalRemainder (rationalRepresentativeCode value) =
+        (value.denominator - 1).toNat := by
+      simp [rationalRepresentativeCode, diagonalRemainder_pair]
+    have hpos := value.denominator_pos
+    simp only [rationalRepresentativeDecode]
+    rw [hrem]
+    omega
+
+/-- `Int` numerator/denominator representatives, coded into `Nat`. -/
+def rationalRepresentativeAtomCoding : CountableAtomCoding RationalRepresentative where
+  decode := rationalRepresentativeDecode
+  code := rationalRepresentativeCode
+  decode_code := rationalRepresentativeDecode_code
+
+/-- A `Classical.choice`-based canonical representative of an `IncRational`
+class -- the direct analogue, for `rationalRepresentativeSetoid`, of cycle
+39's `quotOut` (`Quotient.lean`) built for `approxBisimSetoid`. This
+project has no `mathlib` dependency, so core Lean's own `Quotient.out` is
+not directly usable notation here, but core's `Quotient.exists_rep`
+already supplies the same underlying existence fact `Quotient.out` is
+built from upstream. -/
+noncomputable def IncRational.outRepresentative (value : IncRational) :
+    RationalRepresentative :=
+  Classical.choose (Quotient.exists_rep value)
+
+theorem IncRational.outRepresentative_spec (value : IncRational) :
+    Quotient.mk rationalRepresentativeSetoid value.outRepresentative = value :=
+  Classical.choose_spec (Quotient.exists_rep value)
+
+/-- `IncRational`'s coding into `Nat`: pick a canonical representative via
+`outRepresentative`, then code that representative via
+`rationalRepresentativeCode`. -/
+noncomputable def rationalCode (value : IncRational) : Nat :=
+  rationalRepresentativeCode value.outRepresentative
+
+/-- Inverse of `rationalCode`: decode the `Nat` back into a representative,
+then take its quotient class. -/
+noncomputable def rationalDecode (code : Nat) : IncRational :=
+  Quotient.mk rationalRepresentativeSetoid (rationalRepresentativeDecode code)
+
+theorem rationalDecode_code (value : IncRational) :
+    rationalDecode (rationalCode value) = value := by
+  unfold rationalDecode rationalCode
+  rw [rationalRepresentativeDecode_code]
+  exact value.outRepresentative_spec
+
+/-- `IncRational`'s countable-atom presentation, built by composing
+`rationalRepresentativeAtomCoding` with the `Quotient.exists_rep`-based
+representative choice above -- the project's second genuinely non-identity
+`CountableAtomCoding` instantiation (after cycle 68's `Int` case) and its
+first built over a quotient carrier. -/
+noncomputable def rationalAtomCoding : CountableAtomCoding IncRational where
+  decode := rationalDecode
+  code := rationalCode
+  decode_code := rationalDecode_code
+
+/-- The bridge this cycle builds: `rationalIncidence` -- the richest
+`*ResonanceSpec`-equipped concrete instance in the project
+(`FieldResonanceSpec`/`OrderedFieldResonanceSpec`) -- paired with its
+countable-atom presentation, making the generic Kripke
+soundness/completeness machinery (`IncidenceTheory/Logic.lean`) applicable
+to it exactly as it already is to `natIncidence` (`Peano.lean`) and
+`integerIncidence` (`Integers.lean`). -/
+noncomputable def rationalCountablyPresentedIncidence :
+    CountablyPresentedIncidence IncRational RationalRole GraphType where
+  incidence := rationalIncidence
+  atoms := rationalAtomCoding
+
+theorem rationalIncidence_internalLogic_complete
+    (context : List (Formula IncRational)) (formula : Formula IncRational) :
+    KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
+  rationalCountablyPresentedIncidence.internalLogic_complete context formula
+
+theorem rationalIncidence_internalLogic_consistent_iff_model
+    (context : List (Formula IncRational)) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context :=
+  rationalCountablyPresentedIncidence.internalLogic_consistent_iff_model context
+
 end IncidenceCore
