@@ -1996,6 +1996,79 @@ theorem realMul_zero_right (value : IncReal) :
     realMul value realZero = realZero := by
   rw [realMul_comm, realMul_zero_left]
 
+theorem realNeg_ne_zero {value : IncReal} (nonzero : value ≠ realZero) :
+    realNeg value ≠ realZero := by
+  intro negZero
+  apply nonzero
+  have restored := congrArg realNeg negZero
+  simpa [realNeg_neg, realNeg_zero] using restored
+
+theorem realNegativePart_ne_zero {value : IncReal}
+    (notNonnegative : ¬ realLE realZero value)
+    (nonzero : value ≠ realZero) :
+    (realNegativePart value).value ≠ realZero := by
+  rw [realNegativePart_of_not_nonnegative value notNonnegative]
+  exact realNeg_ne_zero nonzero
+
+theorem realMul_ne_zero {left right : IncReal}
+    (leftNonzero : left ≠ realZero)
+    (rightNonzero : right ≠ realZero) :
+    realMul left right ≠ realZero := by
+  classical
+  by_cases leftNonnegative : realLE realZero left
+  · by_cases rightNonnegative : realLE realZero right
+    · rw [realMul_of_nonnegative left right
+        leftNonnegative rightNonnegative]
+      exact nonnegativeRealMul_ne_zero
+        ⟨left, leftNonnegative⟩ ⟨right, rightNonnegative⟩
+        leftNonzero rightNonzero
+    · rw [realMul_of_nonnegative_not_nonnegative left right
+        leftNonnegative rightNonnegative]
+      apply realNeg_ne_zero
+      apply nonnegativeRealMul_ne_zero
+      · exact leftNonzero
+      · exact realNeg_ne_zero rightNonzero
+  · by_cases rightNonnegative : realLE realZero right
+    · rw [realMul_of_not_nonnegative_nonnegative left right
+        leftNonnegative rightNonnegative]
+      apply realNeg_ne_zero
+      apply nonnegativeRealMul_ne_zero
+      · exact realNeg_ne_zero leftNonzero
+      · exact rightNonzero
+    · rw [realMul_of_not_nonnegative left right
+        leftNonnegative rightNonnegative]
+      apply nonnegativeRealMul_ne_zero
+      · exact realNeg_ne_zero leftNonzero
+      · exact realNeg_ne_zero rightNonzero
+
+theorem real_eq_of_add_neg_eq_zero {left right : IncReal}
+    (differenceZero : realAdd left (realNeg right) = realZero) :
+    left = right := by
+  apply realAdd_cancel_right left right (realNeg right)
+  rw [differenceZero, realAdd_neg]
+
+theorem realMul_cancel_left {factor left right : IncReal}
+    (factorNonzero : factor ≠ realZero)
+    (equal : realMul factor left = realMul factor right) :
+    left = right := by
+  have productDifferenceZero :
+      realMul factor (realAdd left (realNeg right)) = realZero := by
+    rw [realMul_add, realMul_neg_right, equal, realAdd_neg]
+  have differenceZero : realAdd left (realNeg right) = realZero := by
+    by_cases differenceZero : realAdd left (realNeg right) = realZero
+    · exact differenceZero
+    · exact False.elim
+        ((realMul_ne_zero factorNonzero differenceZero)
+          productDifferenceZero)
+  exact real_eq_of_add_neg_eq_zero differenceZero
+
+theorem realMul_cancel_right {factor left right : IncReal}
+    (factorNonzero : factor ≠ realZero)
+    (equal : realMul left factor = realMul right factor) :
+    left = right := by
+  apply realMul_cancel_left factorNonzero
+  simpa [realMul_comm] using equal
+
 theorem realMul_one_left (value : IncReal) :
     realMul realOne value = value := by
   rw [realMul, realPositivePart_one, realNegativePart_one,

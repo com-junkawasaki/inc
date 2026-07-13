@@ -198,7 +198,9 @@ case where the selector is complete and resonance has no unselected modes.
   eight sign cases prove signed associativity from nonnegative associativity.
   Cancellation and difference rearrangement reduce mixed-sign sums to the
   nonnegative distribution theorem, proving both signed distributive laws.
-  Nonzero inverse and remaining ordered-field laws remain subsequent obligations.
+  Products of nonzero signed reals are nonzero in all four quadrants, and
+  distributivity yields multiplication cancellation. Nonzero inverse and
+  remaining ordered-field laws remain subsequent obligations.
 
 ### Non-normative physical intuition
 

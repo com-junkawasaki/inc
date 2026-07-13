@@ -193,6 +193,8 @@ Checked constructions include:
   the checked nonnegative associativity law; additive cancellation and
   difference rearrangement reduce the mixed-sign sum case to nonnegative
   distribution, completing both distributive laws for arbitrary signed inputs;
+  four-quadrant nonzero-product analysis proves there are no zero divisors, and
+  distribution then gives left/right cancellation by every nonzero factor;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets
