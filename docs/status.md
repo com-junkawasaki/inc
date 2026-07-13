@@ -208,6 +208,8 @@ Checked constructions include:
   and exact rational halving plus the triangle law proves every convergent
   sequence is Cauchy; rounded-cut separation forces any nonnegative real below
   every positive rational radius to be zero, proving metric limits unique;
+  distance is negation-invariant and addition-subadditive, so convergent
+  sequences remain convergent under termwise negation, addition, and subtraction;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets

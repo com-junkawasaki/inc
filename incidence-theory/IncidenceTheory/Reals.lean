@@ -2572,6 +2572,54 @@ theorem realDist_triangle (first second third : IncReal) :
   rw [differenceDecompose]
   exact realAbs_add_le _ _
 
+theorem realDist_neg (left right : IncReal) :
+    realDist (realNeg left) (realNeg right) = realDist left right := by
+  rw [realDist, realDist, realNeg_neg]
+  have differenceNeg :
+      realAdd (realNeg left) right =
+        realNeg (realAdd left (realNeg right)) := by
+    rw [realNeg_add, realNeg_neg]
+  rw [differenceNeg, realAbs_neg]
+
+theorem realDist_add_le (left right left' right' : IncReal) :
+    realLE (realDist (realAdd left right) (realAdd left' right')).value
+      (nonnegativeRealAdd (realDist left left')
+        (realDist right right')).value := by
+  have differenceDecompose :
+      realAdd (realAdd left right)
+          (realNeg (realAdd left' right')) =
+        realAdd (realAdd left (realNeg left'))
+          (realAdd right (realNeg right')) := by
+    rw [realNeg_add]
+    calc
+      realAdd (realAdd left right)
+          (realAdd (realNeg left') (realNeg right')) =
+        realAdd left
+          (realAdd right (realAdd (realNeg left') (realNeg right'))) :=
+        realAdd_assoc _ _ _
+      _ = realAdd left
+          (realAdd (realNeg left') (realAdd right (realNeg right'))) := by
+        apply congrArg (realAdd left)
+        calc
+          realAdd right (realAdd (realNeg left') (realNeg right')) =
+              realAdd (realAdd right (realNeg left')) (realNeg right') :=
+            (realAdd_assoc _ _ _).symm
+          _ = realAdd (realAdd (realNeg left') right) (realNeg right') := by
+            rw [realAdd_comm right (realNeg left')]
+          _ = realAdd (realNeg left') (realAdd right (realNeg right')) :=
+            realAdd_assoc _ _ _
+      _ = realAdd (realAdd left (realNeg left'))
+          (realAdd right (realNeg right')) :=
+        (realAdd_assoc _ _ _).symm
+  change realLE
+    (realAbs (realAdd (realAdd left right)
+      (realNeg (realAdd left' right')))).value
+    (nonnegativeRealAdd
+      (realAbs (realAdd left (realNeg left')))
+      (realAbs (realAdd right (realNeg right')))).value
+  rw [differenceDecompose]
+  exact realAbs_add_le _ _
+
 abbrev RealSequence := Nat → IncReal
 
 /-- Metric convergence, quantified over reconstructed positive rational
@@ -2692,5 +2740,58 @@ theorem realSequence_limit_unique
   have distanceZero := nonnegativeReal_eq_zero_of_le_all_positive
     (realDist firstLimit secondLimit) distanceBounded
   exact (realDist_eq_zero_iff firstLimit secondLimit).mp distanceZero
+
+theorem realSequenceConverges_neg
+    {sequence : RealSequence} {limit : IncReal}
+    (converges : RealSequenceConverges sequence limit) :
+    RealSequenceConverges (fun index => realNeg (sequence index))
+      (realNeg limit) := by
+  intro epsilon epsilonPositive
+  obtain ⟨threshold, eventuallyClose⟩ := converges epsilon epsilonPositive
+  refine ⟨threshold, ?_⟩
+  intro index indexLarge
+  rw [realDist_neg]
+  exact eventuallyClose index indexLarge
+
+theorem realSequenceConverges_add
+    {leftSequence rightSequence : RealSequence}
+    {leftLimit rightLimit : IncReal}
+    (leftConverges : RealSequenceConverges leftSequence leftLimit)
+    (rightConverges : RealSequenceConverges rightSequence rightLimit) :
+    RealSequenceConverges
+      (fun index => realAdd (leftSequence index) (rightSequence index))
+      (realAdd leftLimit rightLimit) := by
+  intro epsilon epsilonPositive
+  obtain ⟨half, halfPositive, halfAdd⟩ :=
+    rational_exists_positive_half epsilonPositive
+  obtain ⟨leftThreshold, leftEventually⟩ :=
+    leftConverges half halfPositive
+  obtain ⟨rightThreshold, rightEventually⟩ :=
+    rightConverges half halfPositive
+  refine ⟨Nat.max leftThreshold rightThreshold, ?_⟩
+  intro index indexLarge
+  have leftLarge : leftThreshold ≤ index :=
+    Nat.le_trans (Nat.le_max_left _ _) indexLarge
+  have rightLarge : rightThreshold ≤ index :=
+    Nat.le_trans (Nat.le_max_right _ _) indexLarge
+  have distanceBound := realDist_add_le
+    (leftSequence index) (rightSequence index) leftLimit rightLimit
+  have summed := realAdd_monotone
+    (leftEventually index leftLarge) (rightEventually index rightLarge)
+  have result := realLE_trans distanceBound summed
+  rw [realAdd_rationalToReal, halfAdd] at result
+  exact result
+
+theorem realSequenceConverges_sub
+    {leftSequence rightSequence : RealSequence}
+    {leftLimit rightLimit : IncReal}
+    (leftConverges : RealSequenceConverges leftSequence leftLimit)
+    (rightConverges : RealSequenceConverges rightSequence rightLimit) :
+    RealSequenceConverges
+      (fun index => realAdd (leftSequence index)
+        (realNeg (rightSequence index)))
+      (realAdd leftLimit (realNeg rightLimit)) :=
+  realSequenceConverges_add leftConverges
+    (realSequenceConverges_neg rightConverges)
 
 end IncidenceCore
