@@ -7505,6 +7505,31 @@ theorem realSequenceNonincreasing_converges
   refine ⟨realNeg (realSequenceTailSup negated 0 negatedBounded), ?_⟩
   simpa only [negated, realNeg_neg] using restoredConverges
 
+theorem realSequenceNonincreasing_converges_to_neg_tailSup
+    {sequence : RealSequence}
+    (monotone : RealSequenceNonincreasing sequence)
+    (bounded : ∃ lower, RealSequenceLowerBound sequence lower) :
+    let negated : RealSequence := fun index => realNeg (sequence index)
+    let negatedBounded : ∃ upper, RealSequenceUpperBound negated upper := by
+      obtain ⟨lower, isLower⟩ := bounded
+      exact ⟨realNeg lower, fun index =>
+        realNeg_order_reverse (isLower index)⟩
+    RealSequenceConverges sequence
+      (realNeg (realSequenceTailSup negated 0 negatedBounded)) := by
+  dsimp only
+  let negated : RealSequence := fun index => realNeg (sequence index)
+  have negatedMonotone : RealSequenceNondecreasing negated := by
+    intro left right ordered
+    exact realNeg_order_reverse (monotone ordered)
+  let negatedBounded : ∃ upper, RealSequenceUpperBound negated upper := by
+    obtain ⟨lower, isLower⟩ := bounded
+    exact ⟨realNeg lower, fun index =>
+      realNeg_order_reverse (isLower index)⟩
+  have negatedConverges := realSequenceNondecreasing_converges
+    negatedMonotone negatedBounded
+  have restored := realSequenceConverges_neg negatedConverges
+  simpa only [negated, realNeg_neg] using restored
+
 theorem realSequenceMonotone_bounded_converges
     {sequence : RealSequence}
     (monotone : RealSequenceNondecreasing sequence ∨
@@ -7748,5 +7773,123 @@ theorem realClosedInterval_sequence_has_convergent_subsequence
   apply realSequence_bounded_has_convergent_subsequence sequence
   · exact ⟨lower, fun index => (inInterval index).1⟩
   · exact ⟨upper, fun index => (inInterval index).2⟩
+
+theorem realClosedInterval_sequentiallyCompact
+    (lower upper : IncReal) :
+    RealSequentiallyCompact (RealClosedInterval lower upper) := by
+  intro sequence inInterval
+  obtain ⟨indices, subsequence, monotone⟩ :=
+    realSequence_has_monotone_subsequence sequence
+  let extracted : RealSequence := fun order => sequence (indices order)
+  have extractedBoundedBelow : ∃ bound,
+      RealSequenceLowerBound extracted bound :=
+    ⟨lower, fun order => (inInterval (indices order)).1⟩
+  have extractedBoundedAbove : ∃ bound,
+      RealSequenceUpperBound extracted bound :=
+    ⟨upper, fun order => (inInterval (indices order)).2⟩
+  rcases monotone with increasing | decreasing
+  · let limit := realSequenceTailSup extracted 0 extractedBoundedAbove
+    have converges : RealSequenceConverges extracted limit :=
+      realSequenceNondecreasing_converges increasing extractedBoundedAbove
+    have lowerBound : realLE lower limit := by
+      exact realLE_trans (inInterval (indices 0)).1
+        (realSequence_le_tailSup extractedBoundedAbove (Nat.zero_le 0))
+    have upperBound : realLE limit upper := by
+      apply realSup_is_least
+      intro value member
+      obtain ⟨index, _, equal⟩ := member
+      subst value
+      exact (inInterval (indices index)).2
+    exact ⟨indices, subsequence, limit, ⟨lowerBound, upperBound⟩,
+      converges⟩
+  · let negated : RealSequence := fun order => realNeg (extracted order)
+    let negatedBounded : ∃ bound,
+        RealSequenceUpperBound negated bound := by
+      exact ⟨realNeg lower, fun order =>
+        realNeg_order_reverse (inInterval (indices order)).1⟩
+    let limit := realNeg
+      (realSequenceTailSup negated 0 negatedBounded)
+    have converges : RealSequenceConverges extracted limit := by
+      simpa only [limit, negated, extracted] using
+        (realSequenceNonincreasing_converges_to_neg_tailSup
+          decreasing extractedBoundedBelow)
+    have supremumBelowNegLower :
+        realLE (realSequenceTailSup negated 0 negatedBounded)
+          (realNeg lower) := by
+      apply realSup_is_least
+      intro value member
+      obtain ⟨index, _, equal⟩ := member
+      subst value
+      exact realNeg_order_reverse (inInterval (indices index)).1
+    have lowerBound : realLE lower limit := by
+      have reversed := realNeg_order_reverse supremumBelowNegLower
+      simpa only [limit, realNeg_neg] using reversed
+    have negUpperBelowSupremum :
+        realLE (realNeg upper)
+          (realSequenceTailSup negated 0 negatedBounded) := by
+      exact realLE_trans
+        (realNeg_order_reverse (inInterval (indices 0)).2)
+        (realSequence_le_tailSup negatedBounded (Nat.zero_le 0))
+    have upperBound : realLE limit upper := by
+      have reversed := realNeg_order_reverse negUpperBelowSupremum
+      simpa only [limit, realNeg_neg] using reversed
+    exact ⟨indices, subsequence, limit, ⟨lowerBound, upperBound⟩,
+      converges⟩
+
+theorem realContinuousAt_sequentiallyContinuousAt
+    {function : IncReal → IncReal} {point : IncReal}
+    (continuous : RealContinuousAt function point) :
+    RealSequentiallyContinuousAt function point := by
+  intro sequence converges
+  intro epsilon epsilonPositive
+  obtain ⟨inputRadius, inputRadiusPositive, eventuallyMapped⟩ :=
+    continuous epsilon epsilonPositive
+  obtain ⟨threshold, eventuallyInput⟩ :=
+    converges inputRadius inputRadiusPositive
+  refine ⟨threshold, ?_⟩
+  intro index indexLarge
+  exact eventuallyMapped (sequence index)
+    (eventuallyInput index indexLarge)
+
+def RealImage
+    (function : IncReal → IncReal) (domain : IncReal → Prop)
+    (value : IncReal) : Prop :=
+  ∃ source, domain source ∧ function source = value
+
+theorem realSequentiallyCompact_continuous_image
+    {function : IncReal → IncReal} {domain : IncReal → Prop}
+    (compact : RealSequentiallyCompact domain)
+    (continuous : RealContinuousOn function domain) :
+    RealSequentiallyCompact (RealImage function domain) := by
+  classical
+  intro imageSequence inImage
+  let sourceSequence : RealSequence := fun index =>
+    Classical.choose (inImage index)
+  have sourceInDomain : ∀ index, domain (sourceSequence index) := by
+    intro index
+    exact (Classical.choose_spec (inImage index)).1
+  have sourceMaps : ∀ index,
+      function (sourceSequence index) = imageSequence index := by
+    intro index
+    exact (Classical.choose_spec (inImage index)).2
+  obtain ⟨indices, subsequence, limit, limitInDomain, sourceConverges⟩ :=
+    compact sourceSequence sourceInDomain
+  have mappedConverges : RealSequenceConverges
+      (fun order => function (sourceSequence (indices order)))
+      (function limit) :=
+    (realContinuousAt_sequentiallyContinuousAt
+      (continuous limit limitInDomain)) _ sourceConverges
+  refine ⟨indices, subsequence, function limit,
+    ⟨limit, limitInDomain, rfl⟩, ?_⟩
+  intro epsilon epsilonPositive
+  obtain ⟨threshold, eventuallyClose⟩ :=
+    mappedConverges epsilon epsilonPositive
+  refine ⟨threshold, ?_⟩
+  intro order orderLarge
+  change realLE
+    (realDist (imageSequence (indices order)) (function limit)).value
+    (rationalToReal epsilon)
+  rw [← sourceMaps (indices order)]
+  exact eventuallyClose order orderLarge
 
 end IncidenceCore
