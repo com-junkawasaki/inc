@@ -4975,3 +4975,168 @@ source but degenerates under collapse) -- no existing instance has been
 audited for this specific combination, and it would test whether cycle
 53's and cycle 54's mechanisms are truly exhaustive of the failure modes
 or merely the two most obvious ones.
+
+## Cycle 55
+
+**Hypothesis**: cycle 54's queued option (a) / cycle 53's queued item
+(c) -- does any EXISTING `Guards` definition in this project
+(`Guards.permissive`, `prodGuards`, `sumGuards`) have an "absorbing"-style
+shape analogous to `glue`'s absorbing-unit formula (cycle 53), so that
+`GuardInvariant`/`GuardRealization` fail the same way `GlueInvariant`/
+`GlueRealization` did for simplex/path/tree -- or does cycle 54's own
+tentative guess ("`Guards.permissive` looks trivially total... may
+resolve quickly as the analogy doesn't apply") hold up when actually
+checked against the concrete `guards` fields, rather than assumed from
+the name? Per the task's framing, a rigorous "the pattern doesn't occur,
+here is exactly why" finding was to be treated as equally legitimate as
+a positive extension.
+
+**Method**: first grepped `Quotient.lean` for `GuardInvariant`/
+`GuardRealization` case-sensitively before writing anything, per cycle
+54's own explicit uncertainty ("worth checking whether any EXISTING
+guard definition... before assuming the analogy transfers... may not
+exist and would need to be DEFINED first"). Found both ALREADY DEFINED
+(lines ~675-740), built alongside `GlueInvariant`/`GlueRealization` in
+the same generic infrastructure, complete with `canonicalGuards`/
+`canonicalGuards_unique` and `CanonicalGuardedQuotientIncidenceCoherence`
+(~1133-1192) -- and one concrete instance already discharged,
+`natBoolProductClassification_guardInvariant` (~1512-1516, over
+`NatBoolProductIncidence := incidenceProd natIncidence trivialIncidence`,
+guards `prodGuards natIncidence trivialIncidence`). So cycle 53/54's
+phrasing ("still untouched", "might not exist") was not quite right --
+the notion and one instance predate this cycle; what was actually
+untouched was applying it to the three glue sources
+(`simplexBisimulationQuotientClassification`/`pathBisimulationQuotientClassification`/
+`treeBisimulationQuotientClassification`, cycle 53's own three) plus
+`cycleBisimulationQuotientClassification` (cycle 54's Subsingleton
+instance). Then read `simplexIncidence`'s/`pathIncidence`'s/
+`treeIncidence`'s/`cycleIncidence`'s own `guards` fields directly
+(`Simplex.lean:65`, `PathComplex.lean:42`, `Tree.lean:53`,
+`Cycle.lean:61`), plus `natIncidence`'s/`trivialIncidence`'s
+(`Peano.lean:40`, `GraphModel.lean:30`) for the pre-existing product
+instance, rather than trusting cycle 54's "looks trivially total"
+phrasing at face value. Also re-read cycles 46/47/50's `Sum.lean` guards
+work (`incidenceSum_prod_guards_always_permissive`,
+`incidenceProd_sum_guards_depends_on_inc1_only`,
+`incidenceSum_guards_diverges_of_inc1_disallows`, `Guards.never`/
+`finiteIncidenceNeverGuards`) to check for any non-permissive guards
+definition actually attached to a `BisimulationQuotientClassification`
+anywhere in the project.
+
+**Result**: **confirmed, sorry-free, first `lake build` attempt --
+cycle 54's speculation holds, proved rather than assumed, and
+generalizes beyond `Guards.permissive` specifically.** All four of
+`simplexIncidence`/`pathIncidence`/`treeIncidence`/`cycleIncidence`'s
+`guards` fields are literally `Guards.permissive <I>` (the identical
+closed term, confirmed by reading each file, not inferred from the
+name); `natIncidence.guards` is `Guards.permissive Nat` and
+`trivialIncidence.guards` is `{ allow := fun _ _ => true }` (structurally
+identical, spelled inline). `Guards.never` (cycle 50) exists but is used
+only in `Sum.lean`'s `sumGuardsExpected`-divergence work
+(`finiteIncidenceNeverGuards`), never attached to a
+`BisimulationQuotientClassification`. So EVERY `Guards` value this
+project has ever attached to an actually-classified `Incidence` -- all
+five existing classifications, no exceptions -- reduces to a function
+that ignores BOTH its arguments; the polar opposite of `glue`'s
+essential-argument-dependent absorbing-unit formula. Added to
+`Quotient.lean`, after the `cycleIncidence`-no-coherence section: (1)
+`guardInvariant_of_constantGuards`/`guardRealization_of_constantGuards`,
+the fully general theorem -- for ANY `Incidence` and ANY
+`BisimulationQuotientClassification`, if `inc.guards.allow` is constant
+(`= b` for some fixed `Bool` and all argument pairs), `GuardInvariant`
+holds, proved by `fun x x' y y' _ _ => (constant x y).trans (constant
+x' y').symm` with NO hypothesis about `inc`'s laws at all -- no
+`unit_left`-analogue, no fact about `approxBisim` beyond it being some
+relation, not even `DecidableEq`-driven case splits, strictly weaker
+machinery than cycle 53's mechanism needed. (2)
+`guardInvariant_of_permissive`/`guardRealization_of_permissive`,
+specializing to `Guards.permissive` (the constant-`true` case) via
+`rfl`/`simp` once `inc.guards = Guards.permissive I` is given. (3) eight
+one-line corollaries -- `GuardInvariant`+`GuardRealization` for
+`simplexBisimulationQuotientClassification`/
+`pathBisimulationQuotientClassification`/
+`treeBisimulationQuotientClassification`/
+`cycleBisimulationQuotientClassification` -- each `permissive := rfl`,
+zero case analysis on `SimplexId`/`PathId`/`TreeId`/`CycleId` anywhere,
+mirroring cycle 53's "zero new casework" corollary pattern but for a
+positive conclusion. `lake build`: 62/62 jobs, clean on first attempt.
+`#print axioms` on all twelve new declarations (scratch file fed to
+`lake env lean`, then deleted): `guardInvariant_of_constantGuards`
+needs nothing; the rest need only `propext`/`Quot.sound`(/
+`Classical.choice` for the `Realization`-level and product-instance
+ones) -- fully within this project's accepted axiom set, no new axiom
+anywhere. Full `./verify.sh` (`lake clean && lake build`, example binary,
+repo-wide `axiom`/`sorry`/`sorryAx` grep): passes end to end.
+
+**Synthesis**: cycle 54's queued question resolves in the direction it
+tentatively guessed, but the mechanism turns out sharper than "the
+absorbing pattern doesn't happen to occur in the guards this project
+built" -- it is that `Guards`' `allow : I → I → Bool` field, in EVERY
+instance this project has ever classified, is constant, and constancy
+of a two-argument function alone (needing no law of `Incidence`, no
+property of `approxBisim`, not even that the two arguments come from
+`≈`-related pairs) is already sufficient to force `GuardInvariant`. This
+is the cleanest possible contrast with cycle 53's `GlueInvariant`
+mechanism: `glue`'s absorbing-unit formula broke invariance BECAUSE it
+was argument-dependent (`if i = unit then some j else some i` treats its
+first argument differently depending on its value, and `unit_left`
+forces one specific asymmetric behavior at `unit` that the `else` branch
+then contradicts for `unit`'s bisimilar non-unit classmates); `guards`
+never gives itself the chance to exhibit that shape in this project,
+because every concrete `Guards` value built so far is a constant
+(`Guards.permissive`'s `true`, or a conjunction of constants via
+`prodGuards`, which stays constant). This is not a coincidence discovered
+after the fact but a structural gap: `type_preserve`, the one law
+`guards` is actually used for (`IncidencePreservation.type_preserve`/
+`GradedIncidenceData.type_preserve`/`IncidenceCandidateData.type_preserve`),
+only ever needs `guards.allow i j = true` to unlock `glue`'s
+type-consistency obligation -- nothing in this project's obligations
+ever needed `guards` to DENY gluing selectively based on which specific
+elements are involved (cycle 50's `sumGuardsExpected`/`Guards.never`
+work explored what such a selective guard would look like, but as a
+counterfactual "expected" definition, never as material actually wired
+into a classified instance's own `guards` field). So this cycle's
+finding is a genuine, PROVEN instance of cycle 54's speculated "the
+analogy doesn't apply because the hypothesis pattern itself doesn't
+occur" -- extended into one theorem covering all five of the project's
+classifications at once (simplex/path/tree/cycle by direct
+`Guards.permissive`, the pre-existing nat/bool product instance by the
+same underlying constancy fact, re-derivable from
+`guardInvariant_of_constantGuards` too though not re-derived here since
+`natBoolProductClassification_guardInvariant` already stood proved) --
+rather than a family of separately-checked non-occurrences. Confirms
+cycle 53's own methodological point (cycle 54's synthesis) once more:
+generality is not intrinsically tied to a positive/unifying answer about
+FAILURE -- here the general theorem unifies a POSITIVE (invariant-holds)
+conclusion across every existing instance instead.
+
+**Next hypothesis (cycle 56, not yet attempted)**: with `GlueInvariant`
+(cycle 53), the Subsingleton/`well_founded` obstruction (cycle 54), and
+now `GuardInvariant`'s constancy-driven triviality (this cycle) all
+closed, cycle 53's next-hypothesis queue reduces to two live threads,
+neither touched by this cycle's guards-focused work. (a) [still open,
+cycle 53 item (b) / cycle 54 item (b)] does `incidenceProd`'s own
+`guards` (`prodGuards`) have a blind spot analogous to `incidenceSum`'s
+(cycles 46-50) -- this cycle established `prodGuards` of two CONSTANT
+factors stays constant (hence trivially `GuardInvariant`-respecting via
+the same `guardInvariant_of_constantGuards` route), but never
+constructed or audited a `prodGuards` instance built from a
+NON-constant factor guard, which is a genuinely different question from
+anything checked here (cycle 47/50's `sumGuardsExpected`-divergence
+work is about `incidenceSum`'s guards ignoring its factors' guards
+entirely, a different failure mode than `GuardInvariant`-under-bisimulation).
+(b) [cycle 54's item (c), the freshest angle] the still-unaudited THIRD
+collapse regime: a partial (non-Subsingleton, non-faithful) quotient
+where `BoundaryInvariant`/`GlueInvariant` fails not via cycle 53's
+absorbing-unit mechanism but via something closer to cycle 54's
+shape/`well_founded`-based obstruction (e.g. a grading well-founded on
+the source that degenerates -- develops a cycle or a self-loop -- only
+after collapsing into fewer-than-all classes) -- no existing instance in
+the project has this specific combination, so this thread would likely
+require constructing a new small instance deliberately (mirroring how
+cycle 54 had to build `cycleBisimulationQuotientClassification`, which
+had never been built before, to test its own hypothesis), not merely
+re-deriving from what already exists. (a) is the lower-risk, narrower
+next step (audit only, reusing `Sum.lean`'s existing non-permissive
+witnesses like `finiteIncidenceNeverGuards`); (b) is the higher-payoff
+one flagged repeatedly since cycle 54 without yet being attempted.

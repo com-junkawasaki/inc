@@ -2824,4 +2824,139 @@ theorem cycleBisimulationQuotientClassification_no_coherence :
     cycleBisimulationQuotientClassification
     (x := CycleId.c0) (by simp [cycleIncidence, cycleBoundary])
 
+/- Research cycle 55 (see RESEARCH_LOG.md): cycle 53's queued item (c),
+   restated as thread (a) by cycle 54's synthesis -- does any EXISTING
+   `Guards` value this project actually attaches to a classified
+   `Incidence` have an "absorbing"-style shape parallel to `glue`'s
+   (cycle 53), so the same two-layer criterion (general behavioral
+   lemma, then a literal-formula specialization) transfers to
+   `GuardInvariant`/`GuardRealization`?
+
+   First surprise, checked by `grep`, not assumed: `GuardInvariant`/
+   `GuardRealization` (lines ~675-740 above) and
+   `CanonicalGuardedQuotientIncidenceCoherence` (~1133-1192) already
+   existed BEFORE this cycle, built alongside `GlueInvariant`/
+   `GlueRealization` in the same generic infrastructure, complete with
+   `canonicalGuards`/`canonicalGuards_unique` and one concrete instance
+   already discharged, `natBoolProductClassification_guardInvariant`
+   (~1512-1516, over `NatBoolProductIncidence := incidenceProd natIncidence
+   trivialIncidence`, whose `guards := prodGuards natIncidence
+   trivialIncidence`). So cycle 53's parenthetical ("worth checking
+   whether any EXISTING guard definition... before assuming the analogy
+   transfers") was answered in one direction already, just not for
+   `simplexBisimulationQuotientClassification`/`pathBisimulationQuotientClassification`/
+   `treeBisimulationQuotientClassification` (cycle 53's own three glue
+   sources) nor `cycleBisimulationQuotientClassification` (cycle 54's
+   Subsingleton instance) -- those four were the genuinely untouched
+   gap.
+
+   Read `simplexIncidence`'s/`pathIncidence`'s/`treeIncidence`'s/
+   `cycleIncidence`'s own `guards` fields directly (`Simplex.lean:65`,
+   `PathComplex.lean:42`, `Tree.lean:53`, `Cycle.lean:61`) rather than
+   trusting cycle 54's tentative "`Guards.permissive`... looks trivially
+   total" phrasing: all FOUR are literally `Guards.permissive`, the exact
+   same closed term (not merely similar in spirit, the way cycle 53 first
+   had to confirm for `glue`'s absorbing-unit formula). Combined with the
+   pre-existing `NatBoolProductIncidence` instance (`prodGuards` of two
+   `Guards.permissive`-carrying factors, `natIncidence`/`trivialIncidence`,
+   confirmed by reading `natIncidence`'s and `trivialIncidence`'s own
+   `guards` fields -- `natIncidence.guards = Guards.permissive Nat`
+   literally, `trivialIncidence.guards = { allow := fun _ _ => true }`
+   structurally identical to it though spelled out inline rather than via
+   the `Guards.permissive` name), EVERY `Guards` value this project has
+   ever attached
+   to an actually-classified `Incidence` -- all five existing
+   `BisimulationQuotientClassification`s in the codebase, no exceptions --
+   reduces to a function that ignores BOTH its arguments. This is the
+   exact polar opposite of `glue`'s absorbing-unit formula (cycle 53),
+   which is essential-argument-dependent by construction (that dependence
+   is precisely what broke `GlueInvariant`). So the criterion does not
+   "transfer" in the sense of finding a parallel counterexample -- there
+   is structurally no room for one, since none of this project's guard
+   definitions ever make `allow` depend on its arguments in the first
+   place. Proved as one theorem needing NOTHING about `inc`'s laws (no
+   `unit_left`-style obligation, no fact about `approxBisim` beyond it
+   being some relation, not even `DecidableEq`): constancy of `allow`
+   alone forces `GuardInvariant`, full stop, generalizing beyond
+   `Guards.permissive` specifically (e.g. it covers `Guards.never`
+   (cycle 50) too, were any classification ever built over an instance
+   using it -- none currently is, `finiteIncidenceNeverGuards` in
+   `Sum.lean` is used only for the unrelated `sumGuardsExpected`
+   divergence work, not attached to a `BisimulationQuotientClassification`). -/
+theorem guardInvariant_of_constantGuards
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (b : Bool) (constant : ∀ i j, inc.guards.allow i j = b) :
+    classification.GuardInvariant :=
+  fun x x' y y' _ _ => (constant x y).trans (constant x' y').symm
+
+theorem guardRealization_of_constantGuards
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (b : Bool) (constant : ∀ i j, inc.guards.allow i j = b) :
+    classification.GuardRealization :=
+  (classification.guardRealization_iff_invariant).mpr
+    (guardInvariant_of_constantGuards classification b constant)
+
+/- The specialization matching every concrete instance actually built in
+   this project so far: `Guards.permissive`'s `allow` is the constant
+   `true`, so the `constant` hypothesis above discharges by `rfl` once
+   `inc.guards` is known equal to `Guards.permissive I`. -/
+theorem guardInvariant_of_permissive
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (permissive : inc.guards = Guards.permissive I) :
+    classification.GuardInvariant :=
+  guardInvariant_of_constantGuards classification true
+    (fun i j => by simp [permissive, Guards.permissive])
+
+theorem guardRealization_of_permissive
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (permissive : inc.guards = Guards.permissive I) :
+    classification.GuardRealization :=
+  (classification.guardRealization_iff_invariant).mpr
+    (guardInvariant_of_permissive classification permissive)
+
+/- The four corollaries: simplex/path/tree (cycle 53's own three `glue`
+   sources, `GuardInvariant` untouched by name until now) plus
+   `cycleIncidence` (cycle 54's Subsingleton instance), each a one-line
+   application of the general theorem with `permissive := rfl` -- every
+   one of these sources' `guards` field literally IS `Guards.permissive`
+   (confirmed above by reading the field, not inferred from the name),
+   so no case analysis on `SimplexId`/`PathId`/`TreeId`/`CycleId` is
+   needed anywhere, mirroring cycle 53's own "zero new casework" corollary
+   pattern but for a positive rather than a negative conclusion. -/
+theorem simplexClassification_guardInvariant :
+    simplexBisimulationQuotientClassification.GuardInvariant :=
+  guardInvariant_of_permissive simplexBisimulationQuotientClassification rfl
+
+theorem simplexClassification_guardRealization :
+    simplexBisimulationQuotientClassification.GuardRealization :=
+  guardRealization_of_permissive simplexBisimulationQuotientClassification rfl
+
+theorem pathClassification_guardInvariant :
+    pathBisimulationQuotientClassification.GuardInvariant :=
+  guardInvariant_of_permissive pathBisimulationQuotientClassification rfl
+
+theorem pathClassification_guardRealization :
+    pathBisimulationQuotientClassification.GuardRealization :=
+  guardRealization_of_permissive pathBisimulationQuotientClassification rfl
+
+theorem treeClassification_guardInvariant :
+    treeBisimulationQuotientClassification.GuardInvariant :=
+  guardInvariant_of_permissive treeBisimulationQuotientClassification rfl
+
+theorem treeClassification_guardRealization :
+    treeBisimulationQuotientClassification.GuardRealization :=
+  guardRealization_of_permissive treeBisimulationQuotientClassification rfl
+
+theorem cycleBisimulationQuotientClassification_guardInvariant :
+    cycleBisimulationQuotientClassification.GuardInvariant :=
+  guardInvariant_of_permissive cycleBisimulationQuotientClassification rfl
+
+theorem cycleBisimulationQuotientClassification_guardRealization :
+    cycleBisimulationQuotientClassification.GuardRealization :=
+  guardRealization_of_permissive cycleBisimulationQuotientClassification rfl
+
 end IncidenceCore
