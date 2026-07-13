@@ -2356,6 +2356,38 @@ theorem realInv_mul (value : IncReal) (nonzero : value ≠ realZero) :
     realMul (realInv value nonzero) value = realOne := by
   rw [realMul_comm, realMul_inv]
 
+theorem realInv_sub_realInv
+    (left right : IncReal)
+    (leftNonzero : left ≠ realZero)
+    (rightNonzero : right ≠ realZero) :
+    realAdd (realInv left leftNonzero)
+        (realNeg (realInv right rightNonzero)) =
+      realMul
+        (realMul (realInv left leftNonzero)
+          (realInv right rightNonzero))
+        (realAdd right (realNeg left)) := by
+  rw [realMul_add, realMul_neg_right]
+  have firstTerm :
+      realMul
+          (realMul (realInv left leftNonzero)
+            (realInv right rightNonzero)) right =
+        realInv left leftNonzero := by
+    rw [realMul_assoc, realInv_mul, realMul_one_right]
+  have secondTerm :
+      realMul
+          (realMul (realInv left leftNonzero)
+            (realInv right rightNonzero)) left =
+        realInv right rightNonzero := by
+    calc
+      _ = realMul (realInv right rightNonzero)
+          (realMul (realInv left leftNonzero) left) := by
+            rw [← realMul_assoc, realMul_comm
+              (realInv left leftNonzero) (realInv right rightNonzero),
+              realMul_assoc]
+      _ = realInv right rightNonzero := by
+            rw [realInv_mul, realMul_one_right]
+  rw [firstTerm, secondTerm]
+
 def realMulResonance (left right mode : IncReal) : Prop :=
   realMul left right = mode
 
@@ -2603,6 +2635,13 @@ theorem realAbs_mul (left right : IncReal) :
       rw [leftEq, rightEq, realMul_neg_neg, realAbs_neg, realAbs_neg]
       exact realAbs_mul_nonnegative leftPart rightPart
 
+theorem realAbs_mul_abs_inv
+    (value : IncReal) (nonzero : value ≠ realZero) :
+    nonnegativeRealMul (realAbs value) (realAbs (realInv value nonzero)) =
+      nonnegativeOne := by
+  rw [← realAbs_mul, realMul_inv]
+  exact realAbs_of_nonnegative realOne nonnegativeOne.nonnegative
+
 /-- The order-valued metric candidate induced by absolute difference. -/
 noncomputable def realDist (left right : IncReal) : NonnegativeReal :=
   realAbs (realAdd left (realNeg right))
@@ -2619,6 +2658,20 @@ theorem realDist_comm (left right : IncReal) :
         realAdd right (realNeg left) := by
     rw [realNeg_add, realNeg_neg, realAdd_comm]
   rw [← differenceNeg, realAbs_neg]
+
+theorem realDist_inv
+    (left right : IncReal)
+    (leftNonzero : left ≠ realZero)
+    (rightNonzero : right ≠ realZero) :
+    realDist (realInv left leftNonzero) (realInv right rightNonzero) =
+      nonnegativeRealMul
+        (nonnegativeRealMul
+          (realAbs (realInv left leftNonzero))
+          (realAbs (realInv right rightNonzero)))
+        (realDist left right) := by
+  rw [realDist, realInv_sub_realInv left right leftNonzero rightNonzero,
+    realAbs_mul, realAbs_mul, realDist_comm]
+  rfl
 
 theorem realDist_eq_zero_iff (left right : IncReal) :
     (realDist left right).value = realZero ↔ left = right := by
