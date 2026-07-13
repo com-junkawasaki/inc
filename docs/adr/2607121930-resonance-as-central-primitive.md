@@ -204,9 +204,11 @@ case where the selector is complete and resonance has no unselected modes.
   nonnegative cut, a relational reciprocal cut is now well formed: a rational
   lies in it when it is negative or lies below an inverse resonance witness of
   a positive rational outside the source cut. This avoids a global inverse
-  selector. The source-reciprocal product is proved bounded above by principal
-  one; the reverse bound requires the remaining inside/outside ratio
-  approximation theorem.
+  selector. An inside/outside ratio approximation proves the product exactly
+  principal one. Restoring the sign gives left and right inverses for every
+  nonzero real. `realMulResonance` consequently instantiates
+  `DistributiveResonanceSpec`, `FieldResonanceSpec`, and
+  `OrderedFieldResonanceSpec` over the Dedekind-complete real incidence.
 
 ### Non-normative physical intuition
 

@@ -1572,6 +1572,124 @@ theorem nonnegativeRealMul_inv_le_one
         exact strict
       exact rationalLT_trans rationalBelow productBelowOne
 
+theorem one_le_nonnegativeRealMul_inv
+    (value : NonnegativeReal) (nonzero : value.value ≠ realZero) :
+    realLE nonnegativeOne.value
+      (nonnegativeRealMul value (nonnegativeRealInv value nonzero)).value := by
+  intro rational rationalBelowOne
+  by_cases rationalNegative : rationalLT rational (rationalOfInteger 0)
+  · exact Or.inl rationalNegative
+  · have rationalNonnegative :
+        rationalLE (rationalOfInteger 0) rational :=
+      rationalLE_of_not_lt rationalNegative
+    let gap := rationalAdd (rationalOfInteger 1) (rationalNeg rational)
+    have gapPositive : rationalLT (rationalOfInteger 0) gap := by
+      have shifted := rationalLT_add_right (rationalNeg rational)
+        rationalBelowOne
+      simpa [gap, rationalAdd_neg] using shifted
+    obtain ⟨positiveMember, positiveMemberProof, positiveMemberPositive⟩ :=
+      value.exists_positive_member nonzero
+    have gapProductPositive : rationalLT (rationalOfInteger 0)
+        (rationalMul gap positiveMember) :=
+      rationalMul_positive gapPositive positiveMemberPositive
+    obtain ⟨step, stepPositive, stepBelowMember, stepBelowGapProduct⟩ :=
+      rational_exists_positive_below_two positiveMemberPositive
+        gapProductPositive
+    obtain ⟨inside, outside, insideMember, outsideNotMember, outsideStep⟩ :=
+      value.value.boundary_approximation stepPositive
+    have positiveMemberBelowOutside : rationalLT positiveMember outside :=
+      value.value.lt_of_lower_of_not_lower positiveMemberProof outsideNotMember
+    have insidePositive : rationalLT (rationalOfInteger 0) inside := by
+      have memberMinusStepBelowInside : rationalLT
+          (rationalAdd positiveMember (rationalNeg step)) inside := by
+        have shifted := rationalLT_add_right (rationalNeg step)
+          positiveMemberBelowOutside
+        rw [outsideStep, rationalAdd_add_neg_cancel] at shifted
+        exact shifted
+      have zeroBelowMemberMinusStep : rationalLT (rationalOfInteger 0)
+          (rationalAdd positiveMember (rationalNeg step)) := by
+        have shifted := rationalLT_add_right (rationalNeg step) stepBelowMember
+        rw [rationalAdd_neg] at shifted
+        exact shifted
+      exact rationalLT_trans zeroBelowMemberMinusStep memberMinusStepBelowInside
+    have outsidePositive : rationalLT (rationalOfInteger 0) outside :=
+      rationalLT_trans insidePositive (by
+        rw [outsideStep]
+        have shifted := rationalLT_add_left inside stepPositive
+        simpa [rationalAdd_zero_right] using shifted)
+    have stepBelowGapOutside :
+        rationalLT step (rationalMul gap outside) := by
+      have multiplied := rationalLT_mul_left_of_positive
+        positiveMemberBelowOutside gapPositive
+      exact rationalLT_trans stepBelowGapProduct multiplied
+    have rationalAddGap : rationalAdd rational gap = rationalOfInteger 1 := by
+      dsimp [gap]
+      calc
+        _ = rationalAdd (rationalAdd rational (rationalNeg rational))
+            (rationalOfInteger 1) := by
+          rw [rationalAdd_comm (rationalOfInteger 1),
+            ← rationalAdd_assoc]
+        _ = rationalOfInteger 1 := by
+          rw [rationalAdd_neg, rationalAdd_zero_left]
+    have rationalOutsideBelowInside :
+        rationalLT (rationalMul rational outside) inside := by
+      have added := rationalLT_add_left (rationalMul rational outside)
+        stepBelowGapOutside
+      have sumRestore : rationalAdd (rationalMul rational outside)
+          (rationalMul gap outside) = outside := by
+        calc
+          _ = rationalMul outside (rationalAdd rational gap) := by
+            rw [rationalMul_add]
+            simp only [rationalMul_comm]
+          _ = rationalMul outside (rationalOfInteger 1) := by rw [rationalAddGap]
+          _ = outside := rationalMul_one_right outside
+      rw [sumRestore] at added
+      have added' : rationalLT
+          (rationalAdd (rationalMul rational outside) step)
+          (rationalAdd inside step) := by
+        rw [← outsideStep]
+        exact added
+      exact rationalLT_add_cancel_right step added'
+    have outsideNonzero : outside ≠ rationalOfInteger 0 := fun equal => by
+      have impossible := outsidePositive
+      rw [equal] at impossible
+      exact rationalLT_irrefl _ impossible
+    obtain ⟨outsideInverse, outsideInverseLaw⟩ :=
+      rational_nonzero_has_mul_inverse outsideNonzero
+    have outsideInversePositive :
+        rationalLT (rationalOfInteger 0) outsideInverse := by
+      apply rationalMul_positive_reflect_right outsidePositive
+      rw [outsideInverseLaw]
+      exact rational_zero_lt_one
+    have rationalBelowInsideInverse : rationalLT rational
+        (rationalMul inside outsideInverse) := by
+      have multiplied := rationalLT_mul_right_of_positive
+        rationalOutsideBelowInside outsideInversePositive
+      have restore : rationalMul (rationalMul rational outside)
+          outsideInverse = rational := by
+        rw [rationalMul_assoc, outsideInverseLaw, rationalMul_one_right]
+      rw [restore] at multiplied
+      exact multiplied
+    obtain ⟨inverseValue, inverseValuePositive, inverseValueBelow,
+        finalBelow⟩ := rationalLT_mul_positive_approx_right
+      rationalNonnegative insidePositive outsideInversePositive
+      rationalBelowInsideInverse
+    have inverseMember :
+        (nonnegativeRealInv value nonzero).value.lower inverseValue :=
+      Or.inr ⟨outside, outsideInverse, outsideNotMember, outsidePositive,
+        outsideInverseLaw, inverseValueBelow⟩
+    exact Or.inr ⟨inside, inverseValue, insideMember, inverseMember,
+      insidePositive, inverseValuePositive, finalBelow⟩
+
+theorem nonnegativeRealMul_inv
+    (value : NonnegativeReal) (nonzero : value.value ≠ realZero) :
+    nonnegativeRealMul value (nonnegativeRealInv value nonzero) =
+      nonnegativeOne := by
+  apply NonnegativeReal.ext
+  exact realLE_antisymm
+    (nonnegativeRealMul_inv_le_one value nonzero)
+    (one_le_nonnegativeRealMul_inv value nonzero)
+
 /-- Canonical positive part of a real, bundled in the nonnegative cone. -/
 noncomputable def realPositivePart (value : IncReal) : NonnegativeReal :=
   by
@@ -2193,5 +2311,133 @@ theorem realMul_one_left (value : IncReal) :
 theorem realMul_one_right (value : IncReal) :
     realMul value realOne = value := by
   rw [realMul_comm, realMul_one_left]
+
+/-- Multiplicative inverse of a nonzero signed real, obtained by applying the
+relational reciprocal cut to its positive magnitude and restoring its sign. -/
+noncomputable def realInv (value : IncReal) (nonzero : value ≠ realZero) :
+    IncReal := by
+  classical
+  exact if nonnegative : realLE realZero value then
+    (nonnegativeRealInv ⟨value, nonnegative⟩ nonzero).value
+  else
+    realNeg (nonnegativeRealInv (realNegativePart value)
+      (realNegativePart_ne_zero nonnegative nonzero)).value
+
+theorem realMul_inv (value : IncReal) (nonzero : value ≠ realZero) :
+    realMul value (realInv value nonzero) = realOne := by
+  classical
+  by_cases nonnegative : realLE realZero value
+  · rw [realInv]
+    simp only [dif_pos nonnegative]
+    rw [realMul_of_nonnegative value
+      (nonnegativeRealInv ⟨value, nonnegative⟩ nonzero).value
+      nonnegative
+      (nonnegativeRealInv ⟨value, nonnegative⟩ nonzero).nonnegative]
+    exact congrArg NonnegativeReal.value
+      (nonnegativeRealMul_inv ⟨value, nonnegative⟩ nonzero)
+  · let magnitude := realNegativePart value
+    have magnitudeNonzero : magnitude.value ≠ realZero :=
+      realNegativePart_ne_zero nonnegative nonzero
+    have valueEq : value = realNeg magnitude.value :=
+      real_eq_neg_negativePart value nonnegative
+    rw [realInv]
+    simp only [dif_neg nonnegative]
+    change realMul value
+      (realNeg (nonnegativeRealInv magnitude magnitudeNonzero).value) = realOne
+    rw [valueEq, realMul_neg_neg]
+    rw [realMul_of_nonnegative magnitude.value
+      (nonnegativeRealInv magnitude magnitudeNonzero).value
+      magnitude.nonnegative
+      (nonnegativeRealInv magnitude magnitudeNonzero).nonnegative]
+    exact congrArg NonnegativeReal.value
+      (nonnegativeRealMul_inv magnitude magnitudeNonzero)
+
+theorem realInv_mul (value : IncReal) (nonzero : value ≠ realZero) :
+    realMul (realInv value nonzero) value = realOne := by
+  rw [realMul_comm, realMul_inv]
+
+def realMulResonance (left right mode : IncReal) : Prop :=
+  realMul left right = mode
+
+theorem real_zero_ne_one : realZero ≠ realOne := by
+  intro equal
+  have rationalEqual : rationalOfInteger 0 = rationalOfInteger 1 :=
+    rationalToReal_injective equal
+  have integerEqual := rationalOfInteger_injective rationalEqual
+  omega
+
+noncomputable def realDistributiveResonanceSpec :
+    DistributiveResonanceSpec realIncidence where
+  one := realOne
+  multiply := realMulResonance
+  symmetric := by
+    intro i j k multiplied
+    simpa [realMulResonance, realMul_comm] using multiplied
+  unit_left := by intro i; exact realMul_one_left i
+  unit_right := by intro i; exact realMul_one_right i
+  associative := by
+    intro i j k out
+    constructor
+    · rintro ⟨ij, hij, hout⟩
+      subst ij
+      refine ⟨realMul j k, rfl, ?_⟩
+      simpa [realMulResonance, realMul_assoc] using hout
+    · rintro ⟨jk, hjk, hout⟩
+      subst jk
+      refine ⟨realMul i j, rfl, ?_⟩
+      simpa [realMulResonance, realMul_assoc] using hout
+  distributes := by
+    intro i j k out
+    constructor
+    · rintro ⟨jk, hjk, hout⟩
+      have hjkEq : realAdd j k = jk := by
+        simpa [realIncidence] using hjk
+      subst jk
+      refine ⟨realMul i j, realMul i k, rfl, rfl, ?_⟩
+      simpa [realIncidence, realMulResonance, realMul_add] using hout
+    · rintro ⟨ij, ik, hij, hik, hout⟩
+      subst ij
+      subst ik
+      refine ⟨realAdd j k, ?_, ?_⟩
+      · simp [realIncidence]
+      · simpa [realIncidence, realMulResonance, realMul_add] using hout
+
+noncomputable def realFieldResonanceSpec :
+    FieldResonanceSpec realIncidence where
+  toDistributiveResonanceSpec := realDistributiveResonanceSpec
+  zero_ne_one := real_zero_ne_one
+  additive_inverse := by
+    intro value
+    refine ⟨realNeg value, ?_⟩
+    simpa [realIncidence] using realAdd_neg value
+  multiplicative_inverse := by
+    intro value nonzero
+    exact ⟨realInv value nonzero, realMul_inv value nonzero⟩
+
+noncomputable def realOrderedFieldResonanceSpec :
+    OrderedFieldResonanceSpec realIncidence where
+  toFieldResonanceSpec := realFieldResonanceSpec
+  le := realLE
+  le_refl := realLE_refl
+  le_antisymm := by intro i j; exact realLE_antisymm
+  le_trans := by intro i j k; exact realLE_trans
+  le_total := realLE_total
+  add_monotone := by
+    intro offset i j outI outJ ordered leftMode rightMode
+    have leftEq : realAdd offset i = outI := by
+      simpa [realIncidence] using leftMode
+    have rightEq : realAdd offset j = outJ := by
+      simpa [realIncidence] using rightMode
+    subst outI
+    subst outJ
+    exact realAdd_monotone_right ordered
+  multiply_nonnegative := by
+    intro i j out iNonnegative jNonnegative multiplied
+    have outEq : realMul i j = out := by
+      simpa [realMulResonance] using multiplied
+    subst out
+    rw [realMul_of_nonnegative i j iNonnegative jNonnegative]
+    exact (nonnegativeRealMul ⟨i, iNonnegative⟩
+      ⟨j, jNonnegative⟩).nonnegative
 
 end IncidenceCore

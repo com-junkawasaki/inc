@@ -816,6 +816,21 @@ theorem rationalLT_exists_positive_between {lower upper : IncRational}
         (rationalLT_of_le_of_lt candidateNonpositive zeroMiddle),
       middleUpper⟩
 
+theorem rational_exists_positive_below_two {first second : IncRational}
+    (firstPositive : rationalLT (rationalOfInteger 0) first)
+    (secondPositive : rationalLT (rationalOfInteger 0) second) :
+    ∃ value, rationalLT (rationalOfInteger 0) value ∧
+      rationalLT value first ∧ rationalLT value second := by
+  rcases rationalLE_total first second with firstSecond | secondFirst
+  · obtain ⟨value, valuePositive, valueFirst⟩ :=
+      rationalLT_dense firstPositive
+    exact ⟨value, valuePositive, valueFirst,
+      rationalLT_of_lt_of_le valueFirst firstSecond⟩
+  · obtain ⟨value, valuePositive, valueSecond⟩ :=
+      rationalLT_dense secondPositive
+    exact ⟨value, valuePositive,
+      rationalLT_of_lt_of_le valueSecond secondFirst, valueSecond⟩
+
 /-- A strict bound below a sum of positive rationals can be realized below a
 sum of positive strict approximants of both summands. -/
 theorem rationalLT_split_positive_add
