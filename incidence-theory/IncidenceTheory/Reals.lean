@@ -4240,6 +4240,35 @@ theorem realHasDerivativeAt_continuousAt
   rw [realDist, ← reconstructed]
   simpa [realDist_zero_right] using productClose
 
+theorem realContinuousAt_shift
+    {function : IncReal → IncReal} {point : IncReal}
+    (continuous : RealContinuousAt function point) :
+    RealFunctionLimitAt (fun increment => function (realAdd point increment))
+      realZero (function point) := by
+  intro epsilon epsilonPositive
+  obtain ⟨delta, deltaPositive, eventuallyClose⟩ :=
+    continuous epsilon epsilonPositive
+  refine ⟨delta, deltaPositive, ?_⟩
+  intro increment incrementClose
+  apply eventuallyClose
+  have translated :
+      realAdd (realAdd point increment) (realNeg point) = increment := by
+    calc
+      realAdd (realAdd point increment) (realNeg point) =
+          realAdd increment (realAdd point (realNeg point)) := by
+            rw [realAdd_comm point increment, realAdd_assoc]
+      _ = increment := by rw [realAdd_neg, realAdd_zero_right]
+  rw [realDist, translated]
+  rw [realDist_zero_right] at incrementClose
+  exact incrementClose
+
+theorem realHasDerivativeAt_shift_limit
+    {function : IncReal → IncReal} {derivative point : IncReal}
+    (differentiable : RealHasDerivativeAt function derivative point) :
+    RealFunctionLimitAt (fun increment => function (realAdd point increment))
+      realZero (function point) :=
+  realContinuousAt_shift (realHasDerivativeAt_continuousAt differentiable)
+
 theorem realDifferenceQuotient_const
     (constant derivative point increment : IncReal)
     (derivativeZero : derivative = realZero) :
@@ -4491,6 +4520,96 @@ theorem realHasDerivativeAt_mul_const
   refine ⟨delta, deltaPositive, ?_⟩
   intro increment incrementClose
   rw [realDifferenceQuotient_mul_const]
+  exact eventuallyClose increment incrementClose
+
+theorem realMul_sub_mul_decompose
+    (leftThen leftNow rightThen rightNow : IncReal) :
+    realAdd (realMul leftThen rightThen)
+        (realNeg (realMul leftNow rightNow)) =
+      realAdd
+        (realMul (realAdd leftThen (realNeg leftNow)) rightThen)
+        (realMul leftNow (realAdd rightThen (realNeg rightNow))) := by
+  rw [realAdd_mul, realMul_add, realMul_neg_left, realMul_neg_right]
+  rw [realAdd_assoc
+      (realMul leftThen rightThen)
+      (realNeg (realMul leftNow rightThen))
+      (realAdd (realMul leftNow rightThen)
+        (realNeg (realMul leftNow rightNow))),
+    ← realAdd_assoc
+      (realNeg (realMul leftNow rightThen))
+      (realMul leftNow rightThen)
+      (realNeg (realMul leftNow rightNow)),
+    realAdd_neg_left, realAdd_zero_left]
+
+theorem realDifferenceQuotient_mul
+    (left right : IncReal → IncReal)
+    (leftDerivative rightDerivative point increment : IncReal) :
+    realDifferenceQuotient (fun value => realMul (left value) (right value))
+        point
+        (realAdd (realMul leftDerivative (right point))
+          (realMul (left point) rightDerivative)) increment =
+      realAdd
+        (realMul (realDifferenceQuotient left point leftDerivative increment)
+          (right (realAdd point increment)))
+        (realMul (left point)
+          (realDifferenceQuotient right point rightDerivative increment)) := by
+  classical
+  by_cases incrementZero : increment = realZero
+  · subst increment
+    simp only [realDifferenceQuotient]
+    simp only [if_true, realAdd_zero_right]
+  · simp only [realDifferenceQuotient, if_neg incrementZero]
+    rw [realMul_sub_mul_decompose]
+    rw [realDiv, realDiv, realDiv, realAdd_mul,
+      ← realMul_assoc]
+    congr 1
+    calc
+      realMul
+          (realMul
+            (realAdd (left (realAdd point increment)) (realNeg (left point)))
+            (right (realAdd point increment)))
+          (realInvOrZero increment) =
+        realMul
+          (realAdd (left (realAdd point increment)) (realNeg (left point)))
+          (realMul (right (realAdd point increment))
+            (realInvOrZero increment)) := realMul_assoc _ _ _
+      _ =
+        realMul
+          (realAdd (left (realAdd point increment)) (realNeg (left point)))
+          (realMul (realInvOrZero increment)
+            (right (realAdd point increment))) := by
+              apply congrArg (realMul
+                (realAdd (left (realAdd point increment))
+                  (realNeg (left point))))
+              exact realMul_comm _ _
+      _ = realMul
+          (realMul
+            (realAdd (left (realAdd point increment)) (realNeg (left point)))
+            (realInvOrZero increment))
+          (right (realAdd point increment)) :=
+            (realMul_assoc _ _ _).symm
+
+theorem realHasDerivativeAt_mul
+    {left right : IncReal → IncReal}
+    {leftDerivative rightDerivative point : IncReal}
+    (leftDifferentiable : RealHasDerivativeAt left leftDerivative point)
+    (rightDifferentiable : RealHasDerivativeAt right rightDerivative point) :
+    RealHasDerivativeAt (fun value => realMul (left value) (right value))
+      (realAdd (realMul leftDerivative (right point))
+        (realMul (left point) rightDerivative)) point := by
+  have rightShiftLimit :=
+    realHasDerivativeAt_shift_limit rightDifferentiable
+  have firstTermLimit :=
+    realFunctionLimitAt_mul leftDifferentiable rightShiftLimit
+  have secondTermLimit :=
+    realFunctionLimitAt_mul_const (left point) rightDifferentiable
+  have sumLimit := realFunctionLimitAt_add firstTermLimit secondTermLimit
+  intro epsilon epsilonPositive
+  obtain ⟨delta, deltaPositive, eventuallyClose⟩ :=
+    sumLimit epsilon epsilonPositive
+  refine ⟨delta, deltaPositive, ?_⟩
+  intro increment incrementClose
+  rw [realDifferenceQuotient_mul]
   exact eventuallyClose increment incrementClose
 
 noncomputable def realPow (base : IncReal) : Nat → IncReal
