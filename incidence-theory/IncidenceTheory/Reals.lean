@@ -1085,6 +1085,14 @@ theorem nonnegativeRealMul_one_left (value : NonnegativeReal) :
     (nonnegativeRealMul nonnegativeOne value).value = value.value := by
   rw [nonnegativeRealMul_comm, nonnegativeRealMul_one_right]
 
+theorem nonnegativeRealMul_one_right_bundle (value : NonnegativeReal) :
+    nonnegativeRealMul value nonnegativeOne = value :=
+  NonnegativeReal.ext (nonnegativeRealMul_one_right value)
+
+theorem nonnegativeRealMul_one_left_bundle (value : NonnegativeReal) :
+    nonnegativeRealMul nonnegativeOne value = value :=
+  NonnegativeReal.ext (nonnegativeRealMul_one_left value)
+
 theorem nonnegativeRealMul_assoc_forward
     (first second third : NonnegativeReal) :
     realLE (nonnegativeRealMul (nonnegativeRealMul first second) third).value
@@ -1458,6 +1466,16 @@ noncomputable def realMul (left right : IncReal) : IncReal :=
     (nonnegativeRealMul (realNegativePart left) (realPositivePart right))
   realAdd positive.value (realNeg negative.value)
 
+def realOne : IncReal := nonnegativeOne.value
+
+theorem realPositivePart_one : realPositivePart realOne = nonnegativeOne := by
+  apply NonnegativeReal.ext
+  rw [realPositivePart_of_nonnegative realOne nonnegativeOne.nonnegative]
+  rfl
+
+theorem realNegativePart_one : realNegativePart realOne = nonnegativeZero := by
+  exact realNegativePart_of_nonnegative realOne nonnegativeOne.nonnegative
+
 theorem realMul_comm (left right : IncReal) :
     realMul left right = realMul right left := by
   have positiveEq :
@@ -1521,5 +1539,20 @@ theorem realMul_zero_left (value : IncReal) :
 theorem realMul_zero_right (value : IncReal) :
     realMul value realZero = realZero := by
   rw [realMul_comm, realMul_zero_left]
+
+theorem realMul_one_left (value : IncReal) :
+    realMul realOne value = value := by
+  rw [realMul, realPositivePart_one, realNegativePart_one,
+    nonnegativeRealMul_one_left_bundle,
+    nonnegativeRealMul_zero_left_bundle,
+    nonnegativeRealAdd_zero_right,
+    nonnegativeRealMul_one_left_bundle,
+    nonnegativeRealMul_zero_left_bundle,
+    nonnegativeRealAdd_zero_right]
+  exact real_signed_decomposition value
+
+theorem realMul_one_right (value : IncReal) :
+    realMul value realOne = value := by
+  rw [realMul_comm, realMul_one_left]
 
 end IncidenceCore

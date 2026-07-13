@@ -191,6 +191,23 @@ case where the selector is complete and resonance has no unselected modes.
   splitting, common-factor synchronization, and inner-factor approximation
   prove both distributive laws. The signed extension is now constructed by
   canonical positive/negative parts and the four-term product expansion; its
-  signed decomposition, commutativity, zero absorption, and exact restriction
-  to nonnegative multiplication are checked. Unit, associativity,
+  signed decomposition, commutativity, principal-one identity, zero absorption,
+  and exact restriction to nonnegative multiplication are checked. Associativity,
   distributivity, and inverse laws remain subsequent obligations.
+
+### Non-normative physical intuition
+
+The formal theory remains mathematical: `incidence` presents generated objects,
+their boundaries, dependencies, and relations, while the ternary proposition
+`resonance i j k` presents `k` as an admissible composition mode of `i` and `j`.
+No quantum-field axiom is inferred from this terminology.
+
+As design intuition only, a resonance may be read as an excitation or coupled
+mode, and a future "glueon" may be read as evidence or a mediator realizing a
+resonance. Such a mediator is derived data carrying a proof of
+`resonance i j k`; it is not a replacement for the ternary primitive and is not
+identified with the QCD gluon. Deterministic legacy `glue` is likewise only a
+selector of one admissible resonance mode. Physics-specific amplitudes, phases,
+state spaces, locality, dynamics, and probability must be introduced explicitly
+by later models. All current proofs therefore continue to depend only on
+incidence and resonance laws.
