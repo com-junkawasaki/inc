@@ -3875,6 +3875,145 @@ noncomputable def nonnegativeRealPow
   | 0 => nonnegativeOne
   | Nat.succ exponent => nonnegativeRealMul (nonnegativeRealPow base exponent) base
 
+def nonnegativeRealNatScale
+    (count : Nat) (value : NonnegativeReal) : NonnegativeReal :=
+  Nat.rec nonnegativeZero
+    (fun _ accumulated => nonnegativeRealAdd accumulated value) count
+
+@[simp] theorem nonnegativeRealNatScale_zero (value : NonnegativeReal) :
+    nonnegativeRealNatScale 0 value = nonnegativeZero := rfl
+
+theorem nonnegativeRealNatScale_succ
+    (count : Nat) (value : NonnegativeReal) :
+    nonnegativeRealNatScale (Nat.succ count) value =
+      nonnegativeRealAdd (nonnegativeRealNatScale count value) value := rfl
+
+theorem nonnegativeRealNatScale_rationalToReal
+    (count : Nat) {value : IncRational}
+    (nonnegative : rationalLE (rationalOfInteger 0) value) :
+    (nonnegativeRealNatScale count
+      { value := rationalToReal value
+        nonnegative := (rationalToReal_le_iff _ _).mpr nonnegative }).value =
+      rationalToReal (rationalNatScale count value) := by
+  induction count with
+  | zero =>
+      rw [nonnegativeRealNatScale_zero, rationalNatScale_zero]
+      rfl
+  | succ count induction =>
+      rw [nonnegativeRealNatScale_succ]
+      change realAdd
+        (nonnegativeRealNatScale count
+          { value := rationalToReal value
+            nonnegative := (rationalToReal_le_iff _ _).mpr nonnegative }).value
+        (rationalToReal value) =
+        rationalToReal (rationalNatScale (Nat.succ count) value)
+      rw [induction, realAdd_rationalToReal]
+      simpa [Nat.succ_eq_add_one] using
+        congrArg rationalToReal (rationalNatScale_succ count value).symm
+
+theorem nonnegativeRealNatScale_monotone
+    (count : Nat) {left right : NonnegativeReal}
+    (ordered : realLE left.value right.value) :
+    realLE (nonnegativeRealNatScale count left).value
+      (nonnegativeRealNatScale count right).value := by
+  induction count with
+  | zero => exact realLE_refl _
+  | succ count induction =>
+      rw [nonnegativeRealNatScale_succ, nonnegativeRealNatScale_succ]
+      exact realAdd_monotone induction ordered
+
+theorem nonnegativeReal_bernoulli
+    (value : NonnegativeReal) (exponent : Nat) :
+    realLE
+      (nonnegativeRealAdd nonnegativeOne
+        (nonnegativeRealNatScale exponent value)).value
+      (nonnegativeRealPow
+        (nonnegativeRealAdd nonnegativeOne value) exponent).value := by
+  induction exponent with
+  | zero =>
+      rw [nonnegativeRealNatScale_zero, nonnegativeRealAdd_zero_right,
+        nonnegativeRealPow]
+      exact realLE_refl _
+  | succ exponent induction =>
+      let linear := nonnegativeRealAdd nonnegativeOne
+        (nonnegativeRealNatScale exponent value)
+      let factor := nonnegativeRealAdd nonnegativeOne value
+      let extra := nonnegativeRealMul
+        (nonnegativeRealNatScale exponent value) value
+      let nextLinear := nonnegativeRealAdd nonnegativeOne
+        (nonnegativeRealNatScale (Nat.succ exponent) value)
+      have expansion : nonnegativeRealMul linear factor =
+          nonnegativeRealAdd nextLinear extra := by
+        dsimp [linear, factor, extra, nextLinear]
+        rw [nonnegativeRealAdd_mul,
+          nonnegativeRealMul_one_left_bundle,
+          nonnegativeRealMul_add,
+          nonnegativeRealMul_one_right_bundle,
+          nonnegativeRealNatScale_succ]
+        rw [nonnegativeRealAdd_assoc]
+        rw [nonnegativeRealAdd_assoc nonnegativeOne
+          (nonnegativeRealAdd (nonnegativeRealNatScale exponent value) value)
+          (nonnegativeRealMul (nonnegativeRealNatScale exponent value) value)]
+        apply congrArg (nonnegativeRealAdd nonnegativeOne)
+        rw [← nonnegativeRealAdd_assoc,
+          nonnegativeRealAdd_comm value
+            (nonnegativeRealNatScale exponent value)]
+      have nextBelowExpansion : realLE nextLinear.value
+          (nonnegativeRealMul linear factor).value := by
+        rw [expansion]
+        have added := realAdd_monotone_right
+          (left := nextLinear.value) extra.nonnegative
+        simpa [realAdd_zero_right] using added
+      have multiplied := nonnegativeRealMul_monotone_left
+        (right := factor) induction
+      have powerStep : nonnegativeRealMul
+          (nonnegativeRealPow factor exponent) factor =
+          nonnegativeRealPow factor (Nat.succ exponent) := rfl
+      rw [powerStep] at multiplied
+      exact realLE_trans nextBelowExpansion multiplied
+
+theorem nonnegativeReal_one_add_pow_unbounded
+    (value : NonnegativeReal) (valueNonzero : value.value ≠ realZero)
+    (target : IncReal) :
+    ∃ exponent : Nat,
+      realLT target
+        (nonnegativeRealPow
+          (nonnegativeRealAdd nonnegativeOne value) exponent).value := by
+  obtain ⟨step, stepMember, stepPositive⟩ :=
+    value.exists_positive_member valueNonzero
+  obtain ⟨targetRational, targetBelow⟩ := real_exists_rational_above target
+  obtain ⟨exponent, rationalGrowthRaw⟩ := rational_archimedean_steps
+    (start := rationalOfInteger 1) (target := targetRational)
+    (step := step) stepPositive
+  let stepReal : NonnegativeReal :=
+    { value := rationalToReal step
+      nonnegative := (rationalToReal_le_iff _ _).mpr stepPositive.1 }
+  have stepBelow : realLE stepReal.value value.value :=
+    (rationalToReal_lt_of_lower value.value stepMember).1
+  have scaledBelow := nonnegativeRealNatScale_monotone
+    exponent stepBelow
+  have rationalGrowth : realLT (rationalToReal targetRational)
+      (nonnegativeRealAdd nonnegativeOne
+        (nonnegativeRealNatScale exponent stepReal)).value := by
+    have principalGrowth : rationalLT targetRational
+        (rationalAdd (rationalOfInteger 1)
+          (rationalNatScale exponent step)) := by
+      simpa [rationalStepValue] using rationalGrowthRaw
+    have embedded := rationalToReal_lt_preserves principalGrowth
+    change realLT (rationalToReal targetRational)
+      (realAdd realOne (nonnegativeRealNatScale exponent stepReal).value)
+    rw [nonnegativeRealNatScale_rationalToReal exponent stepPositive.1]
+    change realLT (rationalToReal targetRational)
+      (realAdd (rationalToReal (rationalOfInteger 1))
+        (rationalToReal (rationalNatScale exponent step)))
+    rw [realAdd_rationalToReal]
+    exact embedded
+  have rationalToPower := realLT_of_lt_of_le rationalGrowth
+    (realLE_trans
+      (realAdd_monotone_right (left := nonnegativeOne.value) scaledBelow)
+      (nonnegativeReal_bernoulli value exponent))
+  exact ⟨exponent, realLT_trans targetBelow rationalToPower⟩
+
 theorem nonnegativeRealPow_value (base : NonnegativeReal) (exponent : Nat) :
     (nonnegativeRealPow base exponent).value = realPow base.value exponent := by
   induction exponent with

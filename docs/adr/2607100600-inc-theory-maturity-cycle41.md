@@ -1620,6 +1620,11 @@ gluon 等の物理的粒子と同一視しない。この区別により、直�
 Archimedean 上界、`x < y` を主有理実数で分離する Dedekind cut 分離定理、任意の正の
 非零実数より小さい自然数逆数 `1/n` の存在を sorry-free に証明した。従って残る冪減衰
 課題は Archimedean 性そのものではなく、有理比の冪に対する Bernoulli/反復評価である。
+その反復評価として非負実数の自然数倍、自然数倍の単調性と主有理埋め込み保存を構成し、
+実数上の Bernoulli 不等式 `1 + n x ≤ (1+x)^n` を証明した。さらに正の非零 `x` に
+ついて、任意の構成実数 target を上回る `(1+x)^n` が存在することを、主有理内部点、
+有理 Archimedean steps、Bernoulli の合成として検査した。残件は指数方向の単調性で
+この存在評価を tail 評価へ強化し、逆数冪の 0 収束へ反転することである。
 
 cycle 41時点の「土台固め」評価からは大きく進み、現在はchecked incidence core、
 bisimulation/quotient理論、多数の具体モデル、命題内部論理のsoundness・完全性、
