@@ -5536,6 +5536,180 @@ theorem realHasDerivativeAt_polynomial_pair
   simpa only [realPolynomialDerivativeEval_pair] using
     realHasDerivativeAt_polynomial [constant, linear] point
 
+noncomputable def realPolynomialScaleFrom :
+    Nat → List IncReal → List IncReal
+  | _, [] => []
+  | weight, coefficient :: coefficients =>
+      realMul (realNatCoefficient weight) coefficient ::
+        realPolynomialScaleFrom (Nat.succ weight) coefficients
+
+noncomputable def realPolynomialDerivativeCoefficients :
+    List IncReal → List IncReal
+  | [] => []
+  | _ :: coefficients => realPolynomialScaleFrom 1 coefficients
+
+@[simp] theorem realPolynomialScaleFrom_nil (weight : Nat) :
+    realPolynomialScaleFrom weight [] = [] := rfl
+
+@[simp] theorem realPolynomialScaleFrom_cons
+    (weight : Nat) (coefficient : IncReal) (coefficients : List IncReal) :
+    realPolynomialScaleFrom weight (coefficient :: coefficients) =
+      realMul (realNatCoefficient weight) coefficient ::
+        realPolynomialScaleFrom (Nat.succ weight) coefficients := rfl
+
+@[simp] theorem realPolynomialDerivativeCoefficients_nil :
+    realPolynomialDerivativeCoefficients [] = [] := rfl
+
+@[simp] theorem realPolynomialDerivativeCoefficients_cons
+    (coefficient : IncReal) (coefficients : List IncReal) :
+    realPolynomialDerivativeCoefficients (coefficient :: coefficients) =
+      realPolynomialScaleFrom 1 coefficients := rfl
+
+theorem realPolynomialScaleFrom_eval
+    (weight : Nat) (coefficients : List IncReal) (value : IncReal) :
+    realPolynomialEval (realPolynomialScaleFrom weight coefficients) value =
+      realAdd
+        (realMul (realNatCoefficient weight)
+          (realPolynomialEval coefficients value))
+        (realMul value (realPolynomialDerivativeEval coefficients value)) := by
+  induction coefficients generalizing weight with
+  | nil =>
+      rw [realPolynomialScaleFrom_nil, realPolynomialEval_nil,
+        realPolynomialDerivativeEval_nil, realMul_zero_right,
+        realAdd_zero_left, realMul_zero_right]
+  | cons coefficient coefficients induction =>
+      rw [realPolynomialScaleFrom_cons, realPolynomialEval_cons,
+        realPolynomialEval_cons, realPolynomialDerivativeEval_cons,
+        induction]
+      simp only [realNatCoefficient_succ, realAdd_mul, realMul_add,
+        realMul_one_left]
+      have commuteScale :
+          realMul value
+              (realMul (realNatCoefficient weight)
+                (realPolynomialEval coefficients value)) =
+            realMul (realNatCoefficient weight)
+              (realMul value (realPolynomialEval coefficients value)) := by
+        rw [← realMul_assoc,
+          realMul_comm value (realNatCoefficient weight), realMul_assoc]
+      rw [commuteScale]
+      rw [realAdd_assoc
+          (realMul (realNatCoefficient weight)
+            (realMul value (realPolynomialEval coefficients value)))
+          (realMul value (realPolynomialEval coefficients value))
+          (realMul value
+            (realMul value
+              (realPolynomialDerivativeEval coefficients value))),
+        ← realAdd_assoc]
+
+theorem realPolynomialDerivativeCoefficients_eval
+    (coefficients : List IncReal) (value : IncReal) :
+    realPolynomialEval (realPolynomialDerivativeCoefficients coefficients) value =
+      realPolynomialDerivativeEval coefficients value := by
+  cases coefficients with
+  | nil => rfl
+  | cons coefficient coefficients =>
+      rw [realPolynomialDerivativeCoefficients_cons,
+        realPolynomialScaleFrom_eval]
+      rw [show realNatCoefficient 1 = realOne by
+        rw [realNatCoefficient_succ, realNatCoefficient_zero,
+          realAdd_zero_left], realMul_one_left]
+      rfl
+
+theorem realHasDerivativeAt_polynomial_coefficients
+    (coefficients : List IncReal) (point : IncReal) :
+    RealHasDerivativeAt (realPolynomialEval coefficients)
+      (realPolynomialEval
+        (realPolynomialDerivativeCoefficients coefficients) point) point := by
+  rw [realPolynomialDerivativeCoefficients_eval]
+  exact realHasDerivativeAt_polynomial coefficients point
+
+noncomputable def realPolynomialIteratedDerivativeCoefficients
+    (coefficients : List IncReal) : Nat → List IncReal
+  | 0 => coefficients
+  | Nat.succ order =>
+      realPolynomialDerivativeCoefficients
+        (realPolynomialIteratedDerivativeCoefficients coefficients order)
+
+@[simp] theorem realPolynomialIteratedDerivativeCoefficients_zero
+    (coefficients : List IncReal) :
+    realPolynomialIteratedDerivativeCoefficients coefficients 0 =
+      coefficients := rfl
+
+@[simp] theorem realPolynomialIteratedDerivativeCoefficients_succ
+    (coefficients : List IncReal) (order : Nat) :
+    realPolynomialIteratedDerivativeCoefficients coefficients
+        (Nat.succ order) =
+      realPolynomialDerivativeCoefficients
+        (realPolynomialIteratedDerivativeCoefficients coefficients order) := rfl
+
+noncomputable def realPolynomialIteratedDerivativeEval
+    (coefficients : List IncReal) (order : Nat) (value : IncReal) : IncReal :=
+  realPolynomialEval
+    (realPolynomialIteratedDerivativeCoefficients coefficients order) value
+
+theorem realHasDerivativeAt_polynomial_iterated
+    (coefficients : List IncReal) (order : Nat) (point : IncReal) :
+    RealHasDerivativeAt
+      (realPolynomialIteratedDerivativeEval coefficients order)
+      (realPolynomialIteratedDerivativeEval coefficients
+        (Nat.succ order) point) point := by
+  change RealHasDerivativeAt
+    (realPolynomialEval
+      (realPolynomialIteratedDerivativeCoefficients coefficients order))
+    (realPolynomialEval
+      (realPolynomialDerivativeCoefficients
+        (realPolynomialIteratedDerivativeCoefficients coefficients order))
+      point) point
+  exact realHasDerivativeAt_polynomial_coefficients
+    (realPolynomialIteratedDerivativeCoefficients coefficients order) point
+
+theorem realPolynomialScaleFrom_length
+    (weight : Nat) (coefficients : List IncReal) :
+    (realPolynomialScaleFrom weight coefficients).length = coefficients.length := by
+  induction coefficients generalizing weight with
+  | nil => rfl
+  | cons coefficient coefficients induction =>
+      simp only [realPolynomialScaleFrom_cons, List.length_cons]
+      rw [induction]
+
+theorem realPolynomialDerivativeCoefficients_length
+    (coefficients : List IncReal) :
+    (realPolynomialDerivativeCoefficients coefficients).length =
+      coefficients.length - 1 := by
+  cases coefficients with
+  | nil => rfl
+  | cons coefficient coefficients =>
+      rw [realPolynomialDerivativeCoefficients_cons,
+        realPolynomialScaleFrom_length]
+      simp
+
+theorem realPolynomialIteratedDerivativeCoefficients_length
+    (coefficients : List IncReal) (order : Nat) :
+    (realPolynomialIteratedDerivativeCoefficients coefficients order).length =
+      coefficients.length - order := by
+  induction order with
+  | zero => simp
+  | succ order induction =>
+      rw [realPolynomialIteratedDerivativeCoefficients_succ,
+        realPolynomialDerivativeCoefficients_length, induction]
+      omega
+
+theorem realPolynomialIteratedDerivativeCoefficients_at_length
+    (coefficients : List IncReal) :
+    realPolynomialIteratedDerivativeCoefficients coefficients
+      coefficients.length = [] := by
+  apply List.eq_nil_of_length_eq_zero
+  rw [realPolynomialIteratedDerivativeCoefficients_length]
+  omega
+
+theorem realPolynomialIteratedDerivativeEval_at_length
+    (coefficients : List IncReal) (value : IncReal) :
+    realPolynomialIteratedDerivativeEval coefficients coefficients.length value =
+      realZero := by
+  rw [realPolynomialIteratedDerivativeEval,
+    realPolynomialIteratedDerivativeCoefficients_at_length,
+    realPolynomialEval_nil]
+
 theorem nonnegativeRealNatScale_rationalToReal
     (count : Nat) {value : IncRational}
     (nonnegative : rationalLE (rationalOfInteger 0) value) :
