@@ -179,7 +179,9 @@ Checked constructions include:
   commutative additive monoid, and is closed under a well-formed cut product;
   this product is a commutative monoid with principal one, absorbs zero, and is
   monotone in both inputs, based on checked strict multiplication monotonicity
-  and positivity reflection for positive rationals;
+  and positivity reflection for positive rationals; nonzero nonnegative cuts
+  have positive members cofinal above every member, and positive-bound splitting
+  proves the forward distributive inclusion `a*(b+c) ≤ a*b+a*c`;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets

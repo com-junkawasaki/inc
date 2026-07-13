@@ -636,6 +636,15 @@ theorem rationalLT_trichotomy (left right : IncRational) :
     · exact Or.inr (Or.inl equal)
     · exact Or.inr (Or.inr ⟨reverse, fun rightLeft => equal rightLeft.symm⟩)
 
+theorem rationalLE_of_not_lt {left right : IncRational}
+    (notStrict : ¬ rationalLT right left) : rationalLE left right := by
+  rcases rationalLE_total left right with ordered | reverse
+  · exact ordered
+  · by_cases equal : right = left
+    · subst right
+      exact rationalLE_refl _
+    · exact False.elim (notStrict ⟨reverse, equal⟩)
+
 theorem rationalLT_dense {left right : IncRational}
     (strict : rationalLT left right) :
     ∃ middle, rationalLT left middle ∧ rationalLT middle right := by

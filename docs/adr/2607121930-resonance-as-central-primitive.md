@@ -186,5 +186,7 @@ case where the selector is complete and resonance has no unselected modes.
   bundled cone is closed under cut addition with its commutative-monoid laws.
   Its nonnegative product is a valid cut, commutative, associative, has the
   principal one as unit, is zero-absorbing, and is monotone in both inputs.
-  Signed extension, distribution,
+  Nonzero nonnegative cuts have positive members cofinal above their members;
+  together with strict positive sum-bound splitting this proves the forward
+  distributive inclusion. The reverse inclusion, signed extension, full distribution,
   and inverse modes remain explicit subsequent obligations.
