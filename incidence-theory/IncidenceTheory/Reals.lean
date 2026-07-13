@@ -831,6 +831,24 @@ theorem NonnegativeReal.exists_positive_member_above
     exact ⟨positive, positiveMember, positiveValue,
       rationalLT_trans rationalRounded roundedBelowPositive⟩
 
+theorem NonnegativeReal.exists_positive_member_above_two
+    (value : NonnegativeReal) (nonzero : value.value ≠ realZero)
+    {first second : IncRational}
+    (firstMember : value.value.lower first)
+    (secondMember : value.value.lower second) :
+    ∃ larger, value.value.lower larger ∧
+      rationalLT (rationalOfInteger 0) larger ∧
+      rationalLT first larger ∧ rationalLT second larger := by
+  rcases rationalLE_total first second with firstSecond | secondFirst
+  · obtain ⟨larger, largerMember, largerPositive, secondLarger⟩ :=
+      value.exists_positive_member_above nonzero secondMember
+    exact ⟨larger, largerMember, largerPositive,
+      rationalLT_of_le_of_lt firstSecond secondLarger, secondLarger⟩
+  · obtain ⟨larger, largerMember, largerPositive, firstLarger⟩ :=
+      value.exists_positive_member_above nonzero firstMember
+    exact ⟨larger, largerMember, largerPositive, firstLarger,
+      rationalLT_of_le_of_lt secondFirst firstLarger⟩
+
 /-- Addition restricted to the nonnegative cone. -/
 def nonnegativeRealAdd (left right : NonnegativeReal) : NonnegativeReal where
   value := realAdd left.value right.value
@@ -941,6 +959,26 @@ theorem nonnegativeRealMul_comm (left right : NonnegativeReal) :
           rightPositive, leftPositive, below⟩ := generated
       exact Or.inr ⟨leftValue, rightValue, leftMember, rightMember,
         leftPositive, rightPositive, by simpa [rationalMul_comm] using below⟩
+
+theorem nonnegativeRealMul_ne_zero
+    (left right : NonnegativeReal)
+    (leftNonzero : left.value ≠ realZero)
+    (rightNonzero : right.value ≠ realZero) :
+    (nonnegativeRealMul left right).value ≠ realZero := by
+  obtain ⟨leftValue, leftMember, leftPositive⟩ :=
+    left.exists_positive_member leftNonzero
+  obtain ⟨rightValue, rightMember, rightPositive⟩ :=
+    right.exists_positive_member rightNonzero
+  have productPositive := rationalMul_positive leftPositive rightPositive
+  obtain ⟨witness, witnessPositive, _, witnessBelow⟩ :=
+    rationalLT_exists_positive_between productPositive productPositive
+  intro productZero
+  have witnessMember :
+      (nonnegativeRealMul left right).value.lower witness :=
+    Or.inr ⟨leftValue, rightValue, leftMember, rightMember,
+      leftPositive, rightPositive, witnessBelow⟩
+  rw [productZero] at witnessMember
+  exact (rationalLT_asymm witnessPositive) witnessMember
 
 theorem nonnegativeRealMul_comm_bundle (left right : NonnegativeReal) :
     nonnegativeRealMul left right = nonnegativeRealMul right left :=
@@ -1207,6 +1245,127 @@ theorem nonnegativeRealMul_add_le
               rightPositiveMember, factorPositive, rightPositive,
               rightPartBelow⟩,
             finalBelow⟩
+
+theorem nonnegativeRealAdd_mul_le
+    (factor left right : NonnegativeReal) :
+    realLE
+      (nonnegativeRealAdd (nonnegativeRealMul factor left)
+        (nonnegativeRealMul factor right)).value
+      (nonnegativeRealMul factor (nonnegativeRealAdd left right)).value := by
+  by_cases factorZero : factor.value = realZero
+  · have factorEq : factor = nonnegativeZero :=
+      NonnegativeReal.ext factorZero
+    subst factor
+    rw [nonnegativeRealMul_zero_left_bundle,
+      nonnegativeRealMul_zero_left_bundle,
+      nonnegativeRealAdd_zero_left,
+      nonnegativeRealMul_zero_left_bundle]
+    exact realLE_refl _
+  · by_cases leftZero : left.value = realZero
+    · have leftEq : left = nonnegativeZero :=
+        NonnegativeReal.ext leftZero
+      subst left
+      rw [nonnegativeRealMul_zero_right_bundle,
+        nonnegativeRealAdd_zero_left,
+        nonnegativeRealAdd_zero_left]
+      exact realLE_refl _
+    · by_cases rightZero : right.value = realZero
+      · have rightEq : right = nonnegativeZero :=
+          NonnegativeReal.ext rightZero
+        subst right
+        rw [nonnegativeRealMul_zero_right_bundle,
+          nonnegativeRealAdd_zero_right,
+          nonnegativeRealAdd_zero_right]
+        exact realLE_refl _
+      · intro rational member
+        by_cases rationalNegative : rationalLT rational (rationalOfInteger 0)
+        · exact Or.inl rationalNegative
+        · obtain ⟨leftProductValue, rightProductValue,
+              leftProductMember, rightProductMember, rationalBelow⟩ := member
+          have leftProductNonzero :=
+            nonnegativeRealMul_ne_zero factor left factorZero leftZero
+          have rightProductNonzero :=
+            nonnegativeRealMul_ne_zero factor right factorZero rightZero
+          obtain ⟨leftPositiveValue, leftPositiveMember,
+              leftPositive, leftProductBelow⟩ :=
+            (nonnegativeRealMul factor left).exists_positive_member_above
+              leftProductNonzero leftProductMember
+          obtain ⟨rightPositiveValue, rightPositiveMember,
+              rightPositive, rightProductBelow⟩ :=
+            (nonnegativeRealMul factor right).exists_positive_member_above
+              rightProductNonzero rightProductMember
+          rcases leftPositiveMember with leftNegative | leftGenerated
+          · exact False.elim
+              ((rationalLT_asymm leftPositive) leftNegative)
+          · rcases rightPositiveMember with rightNegative | rightGenerated
+            · exact False.elim
+                ((rationalLT_asymm rightPositive) rightNegative)
+            · obtain ⟨leftFactor, leftValue, leftFactorMember,
+                  leftMember, leftFactorPositive, leftValuePositive,
+                  leftBelowProduct⟩ := leftGenerated
+              obtain ⟨rightFactor, rightValue, rightFactorMember,
+                  rightMember, rightFactorPositive, rightValuePositive,
+                  rightBelowProduct⟩ := rightGenerated
+              obtain ⟨commonFactor, commonFactorMember, commonFactorPositive,
+                  leftFactorBelow, rightFactorBelow⟩ :=
+                factor.exists_positive_member_above_two factorZero
+                  leftFactorMember rightFactorMember
+              have leftExpanded : rationalLT leftProductValue
+                  (rationalMul commonFactor leftValue) :=
+                rationalLT_trans leftProductBelow
+                  (rationalLT_trans leftBelowProduct
+                    (rationalLT_mul_right_of_positive leftFactorBelow
+                      leftValuePositive))
+              have rightExpanded : rationalLT rightProductValue
+                  (rationalMul commonFactor rightValue) :=
+                rationalLT_trans rightProductBelow
+                  (rationalLT_trans rightBelowProduct
+                    (rationalLT_mul_right_of_positive rightFactorBelow
+                      rightValuePositive))
+              have expandedBelow : rationalLT rational
+                  (rationalMul commonFactor
+                    (rationalAdd leftValue rightValue)) := by
+                have summed := rationalLT_add leftExpanded rightExpanded
+                rw [← rationalMul_add] at summed
+                exact rationalLT_trans rationalBelow summed
+              have sumPositive : rationalLT (rationalOfInteger 0)
+                  (rationalAdd leftValue rightValue) := by
+                have summed := rationalLT_add leftValuePositive rightValuePositive
+                simpa [rationalAdd_zero_left] using summed
+              have rationalNonnegative :
+                  rationalLE (rationalOfInteger 0) rational :=
+                rationalLE_of_not_lt rationalNegative
+              obtain ⟨sumApproximant, sumApproximantPositive,
+                  sumApproximantBelow, finalBelow⟩ :=
+                rationalLT_mul_positive_approx_right rationalNonnegative
+                  commonFactorPositive sumPositive expandedBelow
+              have sumMember :
+                  (nonnegativeRealAdd left right).value.lower sumApproximant :=
+                ⟨leftValue, rightValue, leftMember, rightMember,
+                  sumApproximantBelow⟩
+              exact Or.inr ⟨commonFactor, sumApproximant,
+                commonFactorMember, sumMember, commonFactorPositive,
+                sumApproximantPositive, finalBelow⟩
+
+theorem nonnegativeRealMul_add
+    (factor left right : NonnegativeReal) :
+    nonnegativeRealMul factor (nonnegativeRealAdd left right) =
+      nonnegativeRealAdd (nonnegativeRealMul factor left)
+        (nonnegativeRealMul factor right) := by
+  apply NonnegativeReal.ext
+  exact realLE_antisymm
+    (nonnegativeRealMul_add_le factor left right)
+    (nonnegativeRealAdd_mul_le factor left right)
+
+theorem nonnegativeRealAdd_mul
+    (left right factor : NonnegativeReal) :
+    nonnegativeRealMul (nonnegativeRealAdd left right) factor =
+      nonnegativeRealAdd (nonnegativeRealMul left factor)
+        (nonnegativeRealMul right factor) := by
+  rw [nonnegativeRealMul_comm_bundle (nonnegativeRealAdd left right) factor,
+    nonnegativeRealMul_add,
+    nonnegativeRealMul_comm_bundle factor left,
+    nonnegativeRealMul_comm_bundle factor right]
 
 theorem nonnegativeRealMul_monotone_left
     {left left' right : NonnegativeReal}

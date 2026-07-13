@@ -180,8 +180,10 @@ Checked constructions include:
   this product is a commutative monoid with principal one, absorbs zero, and is
   monotone in both inputs, based on checked strict multiplication monotonicity
   and positivity reflection for positive rationals; nonzero nonnegative cuts
-  have positive members cofinal above every member, and positive-bound splitting
-  proves the forward distributive inclusion `a*(b+c) ≤ a*b+a*c`;
+  have positive members cofinal above every member, nonzero products stay
+  nonzero, and common-factor synchronization plus positive-bound splitting
+  proves both distributive laws, completing the nonnegative commutative-semiring
+  laws;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets
@@ -192,7 +194,7 @@ Checked constructions include:
 
 Major remaining areas include a canonical reduced-fraction boundary and
 computational reciprocal selector, extension of nonnegative cut multiplication
-to signed reals, distribution and field laws,
+to signed reals and the resulting field laws,
 real analysis, broader algebra, and a larger categorical library. Rational
 incidence is now observationally faithful:
 zero has an empty boundary and every nonzero rational has a one-step boundary

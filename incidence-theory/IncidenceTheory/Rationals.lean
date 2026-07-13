@@ -963,6 +963,59 @@ theorem rationalLT_mul_of_positive
     (rationalLT_mul_right_of_positive leftStrict rightPositive)
     (rationalLT_mul_left_of_positive rightStrict leftPrimePositive)
 
+/-- A nonnegative bound below a product by a positive factor remains below the
+product after replacing the second factor by a positive strict approximant. -/
+theorem rationalLT_mul_positive_approx_right
+    {value factor target : IncRational}
+    (valueNonnegative : rationalLE (rationalOfInteger 0) value)
+    (factorPositive : rationalLT (rationalOfInteger 0) factor)
+    (targetPositive : rationalLT (rationalOfInteger 0) target)
+    (below : rationalLT value (rationalMul factor target)) :
+    ∃ approximant,
+      rationalLT (rationalOfInteger 0) approximant ∧
+      rationalLT approximant target ∧
+      rationalLT value (rationalMul factor approximant) := by
+  have factorNonzero : factor ≠ rationalOfInteger 0 := fun equal => by
+    subst factor
+    exact rationalLT_irrefl _ factorPositive
+  obtain ⟨inverse, inverseLaw⟩ :=
+    rational_nonzero_has_mul_inverse factorNonzero
+  have inversePositive : rationalLT (rationalOfInteger 0) inverse := by
+    apply rationalMul_positive_reflect_right factorPositive
+    rw [inverseLaw]
+    exact rational_zero_lt_one
+  let translated := rationalMul value inverse
+  have translatedNonnegative :
+      rationalLE (rationalOfInteger 0) translated :=
+    rationalMul_nonnegative valueNonnegative inversePositive.1
+  have translatedBelow : rationalLT translated target := by
+    have multiplied := rationalLT_mul_right_of_positive below inversePositive
+    have restore : rationalMul (rationalMul factor target) inverse = target := by
+      calc
+        _ = rationalMul target (rationalMul factor inverse) := by
+          rw [rationalMul_comm factor target,
+            rationalMul_assoc target factor inverse]
+        _ = rationalMul target (rationalOfInteger 1) := by rw [inverseLaw]
+        _ = target := rationalMul_one_right target
+    rw [restore] at multiplied
+    exact multiplied
+  obtain ⟨approximant, approximantPositive, translatedApproximant,
+      approximantBelow⟩ :=
+    rationalLT_exists_positive_between translatedBelow targetPositive
+  refine ⟨approximant, approximantPositive, approximantBelow, ?_⟩
+  have multiplied := rationalLT_mul_left_of_positive
+    translatedApproximant factorPositive
+  have restore : rationalMul factor translated = value := by
+    calc
+      _ = rationalMul value (rationalMul factor inverse) := by
+        rw [← rationalMul_assoc factor value inverse,
+          rationalMul_comm factor value,
+          rationalMul_assoc value factor inverse]
+      _ = rationalMul value (rationalOfInteger 1) := by rw [inverseLaw]
+      _ = value := rationalMul_one_right value
+  rw [restore] at multiplied
+  exact multiplied
+
 theorem rationalOfInteger_add (left right : Int) :
     rationalOfInteger (left + right) =
       rationalAdd (rationalOfInteger left) (rationalOfInteger right) := by
