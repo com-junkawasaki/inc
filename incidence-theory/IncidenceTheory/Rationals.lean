@@ -779,6 +779,78 @@ theorem rationalLT_add_cancel_left {left right : IncRational}
   rw [rationalAdd_comm offset left, rationalAdd_comm offset right] at strict
   exact rationalLT_add_cancel_right offset strict
 
+/-- Between any lower bound and a positive upper bound there is a positive
+rational. This is the density form needed when splitting strict cut bounds. -/
+theorem rationalLT_exists_positive_between {lower upper : IncRational}
+    (lowerUpper : rationalLT lower upper)
+    (upperPositive : rationalLT (rationalOfInteger 0) upper) :
+    ∃ middle, rationalLT (rationalOfInteger 0) middle ∧
+      rationalLT lower middle ∧ rationalLT middle upper := by
+  obtain ⟨candidate, lowerCandidate, candidateUpper⟩ :=
+    rationalLT_dense lowerUpper
+  by_cases candidatePositive :
+      rationalLT (rationalOfInteger 0) candidate
+  · exact ⟨candidate, candidatePositive, lowerCandidate, candidateUpper⟩
+  · have candidateNonpositive :
+        rationalLE candidate (rationalOfInteger 0) := by
+      rcases rationalLE_total candidate (rationalOfInteger 0) with ordered | reverse
+      · exact ordered
+      · by_cases equal : candidate = rationalOfInteger 0
+        · subst candidate
+          exact rationalLE_refl _
+        · exact False.elim (candidatePositive ⟨reverse, fun zeroCandidate =>
+            equal zeroCandidate.symm⟩)
+    obtain ⟨middle, zeroMiddle, middleUpper⟩ :=
+      rationalLT_dense upperPositive
+    exact ⟨middle, zeroMiddle,
+      rationalLT_trans lowerCandidate
+        (rationalLT_of_le_of_lt candidateNonpositive zeroMiddle),
+      middleUpper⟩
+
+/-- A strict bound below a sum of positive rationals can be realized below a
+sum of positive strict approximants of both summands. -/
+theorem rationalLT_split_positive_add
+    {value left right : IncRational}
+    (leftPositive : rationalLT (rationalOfInteger 0) left)
+    (rightPositive : rationalLT (rationalOfInteger 0) right)
+    (below : rationalLT value (rationalAdd left right)) :
+    ∃ leftPart rightPart,
+      rationalLT (rationalOfInteger 0) leftPart ∧
+      rationalLT leftPart left ∧
+      rationalLT (rationalOfInteger 0) rightPart ∧
+      rationalLT rightPart right ∧
+      rationalLT value (rationalAdd leftPart rightPart) := by
+  let translatedLeft := rationalAdd value (rationalNeg right)
+  have translatedLeftRestore :
+      rationalAdd translatedLeft right = value :=
+    rationalAdd_sub_cancel value right
+  have translatedLeftBelow : rationalLT translatedLeft left := by
+    apply rationalLT_add_cancel_right right
+    rw [translatedLeftRestore]
+    exact below
+  obtain ⟨leftPart, leftPartPositive, translatedLeftPart, leftPartBelow⟩ :=
+    rationalLT_exists_positive_between translatedLeftBelow leftPositive
+  have valueBelowLeftPlusRight :
+      rationalLT value (rationalAdd leftPart right) := by
+    have shifted := rationalLT_add_right right translatedLeftPart
+    rw [translatedLeftRestore] at shifted
+    exact shifted
+  let translatedRight := rationalAdd value (rationalNeg leftPart)
+  have translatedRightRestore :
+      rationalAdd translatedRight leftPart = value :=
+    rationalAdd_sub_cancel value leftPart
+  have translatedRightBelow : rationalLT translatedRight right := by
+    apply rationalLT_add_cancel_right leftPart
+    rw [translatedRightRestore, rationalAdd_comm right leftPart]
+    exact valueBelowLeftPlusRight
+  obtain ⟨rightPart, rightPartPositive, translatedRightPart, rightPartBelow⟩ :=
+    rationalLT_exists_positive_between translatedRightBelow rightPositive
+  refine ⟨leftPart, rightPart, leftPartPositive, leftPartBelow,
+    rightPartPositive, rightPartBelow, ?_⟩
+  have shifted := rationalLT_add_right leftPart translatedRightPart
+  rw [translatedRightRestore, rationalAdd_comm rightPart leftPart] at shifted
+  exact shifted
+
 def rationalNatScale (count : Nat) (value : IncRational) : IncRational :=
   rationalMul (rationalOfInteger (Int.ofNat count)) value
 

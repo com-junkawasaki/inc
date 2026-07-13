@@ -161,7 +161,9 @@ Checked constructions include:
   cross-multiplication order descends to the quotient, is reflexive,
   antisymmetric, transitive, and total, exactly preserves integer order,
   is translation-monotone under addition, and has a multiplicatively closed
-  nonnegative cone
+  nonnegative cone; rational density also supplies positive intermediates and
+  splits every strict bound below a positive sum into two positive strict
+  approximants, preparing the cut-level real distributivity proof
 - Dedekind real carriers as inhabited, proper, downward-closed, rounded lower
   rational cuts; cut inclusion is a total order, rational principal cuts are
   well formed, and the rational-to-real embedding is injective and exactly
