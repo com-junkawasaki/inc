@@ -217,6 +217,8 @@ case where the selector is complete and resonance has no unselected modes.
   reconstructed rational radii. Rational inverse resonance constructs an exact
   positive half-radius, so the metric triangle law proves every convergent
   sequence Cauchy; constant sequences supply the initial checked examples.
+  Rounded-cut Archimedean separation then proves a nonnegative value below all
+  positive rational radii is zero, and two sequence limits must coincide.
 
 ### Non-normative physical intuition
 

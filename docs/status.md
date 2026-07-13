@@ -206,7 +206,8 @@ Checked constructions include:
   triangle-bounded nonnegative real distance; positive rational radii define
   metric convergence and Cauchy sequences, constant sequences satisfy both,
   and exact rational halving plus the triangle law proves every convergent
-  sequence is Cauchy;
+  sequence is Cauchy; rounded-cut separation forces any nonnegative real below
+  every positive rational radius to be zero, proving metric limits unique;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets
@@ -217,7 +218,7 @@ Checked constructions include:
 
 Major remaining areas include a canonical reduced-fraction boundary and
 computational reciprocal selector, extension of nonnegative cut multiplication
-of limit uniqueness, Cauchy completeness, and continuity in the real metric layer,
+of Cauchy completeness and continuity in the real metric layer,
 real analysis, broader algebra, and a larger categorical library. Rational
 incidence is now observationally faithful:
 zero has an empty boundary and every nonzero rational has a one-step boundary

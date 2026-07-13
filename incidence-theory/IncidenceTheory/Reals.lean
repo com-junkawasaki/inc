@@ -2636,4 +2636,61 @@ theorem realSequenceConverges_cauchy
     _ = rationalToReal epsilon := by
       rw [realAdd_rationalToReal, halfAdd]
 
+theorem nonnegativeReal_eq_zero_of_le_all_positive
+    (value : NonnegativeReal)
+    (bounded : ∀ epsilon : IncRational,
+      rationalLT (rationalOfInteger 0) epsilon →
+        realLE value.value (rationalToReal epsilon)) :
+    value.value = realZero := by
+  apply Eq.symm
+  apply realLE_antisymm value.nonnegative
+  intro rational member
+  obtain ⟨larger, largerMember, rationalLarger⟩ := value.value.rounded member
+  by_cases rationalNegative : rationalLT rational (rationalOfInteger 0)
+  · exact rationalNegative
+  · have rationalNonnegative :
+        rationalLE (rationalOfInteger 0) rational :=
+      rationalLE_of_not_lt rationalNegative
+    have largerPositive : rationalLT (rationalOfInteger 0) larger :=
+      rationalLT_of_le_of_lt rationalNonnegative rationalLarger
+    obtain ⟨epsilon, epsilonPositive, epsilonLarger⟩ :=
+      rationalLT_dense largerPositive
+    have largerBelowEpsilon := bounded epsilon epsilonPositive larger largerMember
+    exact False.elim
+      ((rationalLT_asymm epsilonLarger) largerBelowEpsilon)
+
+theorem realSequence_limit_unique
+    {sequence : RealSequence} {firstLimit secondLimit : IncReal}
+    (firstConverges : RealSequenceConverges sequence firstLimit)
+    (secondConverges : RealSequenceConverges sequence secondLimit) :
+    firstLimit = secondLimit := by
+  have distanceBounded : ∀ epsilon : IncRational,
+      rationalLT (rationalOfInteger 0) epsilon →
+        realLE (realDist firstLimit secondLimit).value
+          (rationalToReal epsilon) := by
+    intro epsilon epsilonPositive
+    obtain ⟨half, halfPositive, halfAdd⟩ :=
+      rational_exists_positive_half epsilonPositive
+    obtain ⟨firstThreshold, firstEventually⟩ :=
+      firstConverges half halfPositive
+    obtain ⟨secondThreshold, secondEventually⟩ :=
+      secondConverges half halfPositive
+    let index := Nat.max firstThreshold secondThreshold
+    have firstLarge : firstThreshold ≤ index := Nat.le_max_left _ _
+    have secondLarge : secondThreshold ≤ index := Nat.le_max_right _ _
+    have firstBound : realLE
+        (realDist firstLimit (sequence index)).value
+        (rationalToReal half) := by
+      rw [realDist_comm]
+      exact firstEventually index firstLarge
+    have secondBound := secondEventually index secondLarge
+    have triangle := realDist_triangle firstLimit (sequence index) secondLimit
+    have summed := realAdd_monotone firstBound secondBound
+    have result := realLE_trans triangle summed
+    rw [realAdd_rationalToReal, halfAdd] at result
+    exact result
+  have distanceZero := nonnegativeReal_eq_zero_of_le_all_positive
+    (realDist firstLimit secondLimit) distanceBounded
+  exact (realDist_eq_zero_iff firstLimit secondLimit).mp distanceZero
+
 end IncidenceCore
