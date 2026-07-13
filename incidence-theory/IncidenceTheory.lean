@@ -743,6 +743,163 @@ theorem intListSum_gram_row_swap {I : Type u} (rows cols : List I)
             (intListSum_cons k rows
               (fun r => b r i * intListSum cols (fun j => b r j))).symm
 
+/- A right-multiplied constant can be pulled out of a finite sum, the
+   mirror image of `intListSum_mul_left`. -/
+theorem intListSum_mul_right {α : Type u} (xs : List α) (f : α → Int) (a : Int) :
+    intListSum xs f * a = intListSum xs (fun x => f x * a) := by
+  rw [Int.mul_comm (intListSum xs f) a, ← intListSum_mul_left]
+  congr 1
+  funext x
+  exact Int.mul_comm a (f x)
+
+/- Two nested finite sums over independent index lists commute (finite
+   Fubini).  This generalizes `intListSum_gram_row_swap` above (which is the
+   special case `f a b := b_ (a) i * b_ (a) b` composed with pulling a
+   factor out of the inner sum): here the summand `f` is an arbitrary
+   two-argument function, with no multiplicative structure assumed. -/
+theorem intListSum_comm {α : Type u} {β : Type v} (xs : List α) (ys : List β)
+    (f : α → β → Int) :
+    intListSum xs (fun a => intListSum ys (fun b => f a b)) =
+      intListSum ys (fun b => intListSum xs (fun a => f a b)) := by
+  induction xs with
+  | nil =>
+    have hzero : (fun b : β => intListSum ([] : List α) (fun a => f a b)) =
+        fun _ : β => (0 : Int) := funext (fun _ => rfl)
+    calc
+      intListSum ([] : List α) (fun a => intListSum ys (fun b => f a b)) = 0 := rfl
+      _ = intListSum ys (fun _ : β => (0 : Int)) := (intListSum_zero ys).symm
+      _ = intListSum ys (fun b => intListSum ([] : List α) (fun a => f a b)) := by
+            rw [hzero]
+  | cons a xs ih =>
+    rw [intListSum_cons, ih, ← intListSum_add]
+    congr 1
+    funext b
+    exact (intListSum_cons a xs (fun a' => f a' b)).symm
+
+/- Merkle-ID: foundation.axiomatization.matrix_algebra
+   General arithmetic for the bare `Matrix m n α := m → n → α` abstraction
+   (`Axioms/Basic.lean` L30).  Before this block no arithmetic operation on
+   `Matrix` existed anywhere in the project -- `boundaryMatrix`/`laplacian`
+   above are concrete, narrow formulas built directly from
+   `Incidence.boundary`, not instances of a general `add`/`mul`/`transpose`
+   layer.  Multiplication sums over an explicit finite observation list for
+   the shared middle index, matching this project's existing
+   `idx : List I`-based summation style rather than assuming a
+   `Fintype`/`Finset` structure the index types need not have. Entries are
+   fixed to `Int`, matching every other numeric development in this project
+   (`Integers.lean`, `boundaryMatrix`/`laplacian`); `transpose` is kept
+   polymorphic in the entry type since it is purely structural. -/
+namespace Matrix
+
+def add {m : Type u} {n : Type v} (A B : Matrix m n Int) : Matrix m n Int :=
+  fun i j => A i j + B i j
+
+theorem add_comm {m : Type u} {n : Type v} (A B : Matrix m n Int) :
+    add A B = add B A := by
+  funext i j
+  exact Int.add_comm (A i j) (B i j)
+
+theorem add_assoc {m : Type u} {n : Type v} (A B C : Matrix m n Int) :
+    add (add A B) C = add A (add B C) := by
+  funext i j
+  exact Int.add_assoc (A i j) (B i j) (C i j)
+
+def transpose {m : Type u} {n : Type v} {α : Type w} (A : Matrix m n α) : Matrix n m α :=
+  fun j i => A i j
+
+theorem transpose_transpose {m : Type u} {n : Type v} {α : Type w} (A : Matrix m n α) :
+    transpose (transpose A) = A := rfl
+
+theorem transpose_add {m : Type u} {n : Type v} (A B : Matrix m n Int) :
+    transpose (add A B) = add (transpose A) (transpose B) := rfl
+
+def mul {m : Type u} {n : Type v} {p : Type w} (idx : List n)
+    (A : Matrix m n Int) (B : Matrix n p Int) : Matrix m p Int :=
+  fun i j => intListSum idx (fun k => A i k * B k j)
+
+theorem mul_add {m : Type u} {n : Type v} {p : Type w} (idx : List n)
+    (A : Matrix m n Int) (B C : Matrix n p Int) :
+    mul idx A (add B C) = add (mul idx A B) (mul idx A C) := by
+  funext i j
+  show intListSum idx (fun k => A i k * (B k j + C k j)) =
+      intListSum idx (fun k => A i k * B k j) + intListSum idx (fun k => A i k * C k j)
+  rw [← intListSum_add]
+  congr 1
+  funext k
+  exact Int.mul_add (A i k) (B k j) (C k j)
+
+theorem add_mul {m : Type u} {n : Type v} {p : Type w} (idx : List n)
+    (A B : Matrix m n Int) (C : Matrix n p Int) :
+    mul idx (add A B) C = add (mul idx A C) (mul idx B C) := by
+  funext i j
+  show intListSum idx (fun k => (A i k + B i k) * C k j) =
+      intListSum idx (fun k => A i k * C k j) + intListSum idx (fun k => B i k * C k j)
+  rw [← intListSum_add]
+  congr 1
+  funext k
+  exact Int.add_mul (A i k) (B i k) (C k j)
+
+theorem transpose_mul {m : Type u} {n : Type v} {p : Type w} (idx : List n)
+    (A : Matrix m n Int) (B : Matrix n p Int) :
+    transpose (mul idx A B) = mul idx (transpose B) (transpose A) := by
+  funext j i
+  show intListSum idx (fun k => A i k * B k j) = intListSum idx (fun k => B k j * A i k)
+  congr 1
+  funext k
+  exact Int.mul_comm (A i k) (B k j)
+
+/- Associativity of `mul`: the middle-index sum for `A * B` and the
+   shared-index sum for `(A * B) * C`/`A * (B * C)` may range over different
+   observation lists (`idxN : List n`, `idxP : List p`), since `n` and `p`
+   need not coincide or share a canonical enumeration.  Reuses
+   `intListSum_mul_left`/`intListSum_mul_right` to move constants across a
+   sum and `intListSum_comm` (finite Fubini, just above) to swap the two
+   nested sums -- no finite-sum algebra is re-derived from scratch here. -/
+theorem mul_assoc {m : Type u} {n : Type v} {p : Type w} {q : Type u}
+    (idxN : List n) (idxP : List p)
+    (A : Matrix m n Int) (B : Matrix n p Int) (C : Matrix p q Int) :
+    mul idxP (mul idxN A B) C = mul idxN A (mul idxP B C) := by
+  funext i j
+  show intListSum idxP (fun k => (intListSum idxN (fun l => A i l * B l k)) * C k j) =
+      intListSum idxN (fun l => A i l * intListSum idxP (fun k => B l k * C k j))
+  have step1 : ∀ k, (intListSum idxN (fun l => A i l * B l k)) * C k j =
+      intListSum idxN (fun l => A i l * (B l k * C k j)) := by
+    intro k
+    rw [intListSum_mul_right]
+    congr 1
+    funext l
+    exact Int.mul_assoc (A i l) (B l k) (C k j)
+  calc
+    intListSum idxP (fun k => (intListSum idxN (fun l => A i l * B l k)) * C k j)
+        = intListSum idxP (fun k => intListSum idxN (fun l => A i l * (B l k * C k j))) := by
+          congr 1
+          funext k
+          exact step1 k
+    _ = intListSum idxN (fun l => intListSum idxP (fun k => A i l * (B l k * C k j))) :=
+          intListSum_comm idxP idxN (fun k l => A i l * (B l k * C k j))
+    _ = intListSum idxN (fun l => A i l * intListSum idxP (fun k => B l k * C k j)) := by
+          congr 1
+          funext l
+          exact intListSum_mul_left (A i l) idxP (fun k => B l k * C k j)
+
+end Matrix
+
+/- The concrete `A17` payoff: `IncidenceTheory/Axioms/A14_A17.lean` L16
+   carries the comment "A17: Laplacian (B^T @ B)" next to the
+   `IncidenceAlgebraic.laplacian` field, but nothing in the project actually
+   states this as a theorem connecting the two abstract fields, let alone
+   the concrete `laplacian`/`boundaryMatrix` defined above. This closes that
+   gap for the concrete definitions: `laplacian` literally IS `Bᵀ * B` under
+   the general `Matrix.mul`/`Matrix.transpose` just defined, for the same
+   observation list on both sides. Both sides unfold to the identical
+   `idx.foldl`/`intListSum` expression, so the proof is definitional. -/
+theorem laplacian_eq_transpose_mul_boundaryMatrix {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) :
+    laplacian inc idx =
+      Matrix.mul idx (Matrix.transpose (boundaryMatrix inc idx)) (boundaryMatrix inc idx) := by
+  funext i j
+  rfl
+
 /- A boundary row is balanced when the coefficients visible in the chosen
    finite observation list add to zero.  This is an explicit hypothesis: it
    is not implied by the generic incidence axioms. -/

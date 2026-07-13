@@ -1999,3 +1999,37 @@ coherence certificate）を確立し、この一次的な古さは解消済み�
 自動導出する汎用アルゴリズムはまだ存在しない）、既存の実務的評価
 （incidence/resonance 約90%、他の値は変更なし）を動かす根拠にはならないと判断する。
 percentagesは全て現状維持とする。
+
+## 2026-07-14 追補（cycle 60: 線形代数——`Matrix` 演算層の新設と `laplacian = BᵀB` の定式化）
+
+本追補は `RESEARCH_LOG.md` cycle 60 の結果を反映する。cycle 45–58 統合追補（直上）が
+項目5（Quotient構成）の記述を古くしたのに対し、cycle 60 は上記「8. 線形代数・抽象代数・
+位相・測度論等の再構成」（本文、cycle 41 時点、「これら四領域の体系的ライブラリと
+主要定理群は未構成」）に関わる、この ADR で初めての進展である。
+
+cycle 59 の事後監査（本文には含まれていない）が確定した通り、`IncidenceCore.Matrix
+m n α := m → n → α`（`Axioms/Basic.lean` L30）にはこの cycle まで add/mul/transpose を
+含むいかなる演算も存在せず、`boundaryMatrix`/`laplacian`（`IncidenceTheory.lean`
+L645-659）は `Incidence.boundary` から直接構築された狭い具体式であり、一般行列演算の
+インスタンスではなかった。cycle 60 は:
+
+- `Matrix.add`/`Matrix.transpose`/`Matrix.mul`（entry 型を `Int` に固定、`mul` は
+  既存の `idx : List I` 方式の有限和を再利用）を新設し、`add` の可換性・結合性、
+  `transpose` の対合性・加法との可換性、`mul` の `add` に対する両側分配則、
+  `transpose` の反分配則（`(AB)ᵀ = BᵀAᵀ`）、および `mul` の結合性を全て証明した
+  （結合性の証明のため、既存の `intListSum_gram_row_swap` を一般化した有限 Fubini
+  補題 `intListSum_comm` を新設し、再利用した）。
+- `Axioms/A14_A17.lean` L16 が長らく抱えていた未定式化コメント「A17: Laplacian
+  (B^T @ B)」を、`laplacian inc idx = Matrix.mul idx (Matrix.transpose (boundaryMatrix
+  inc idx)) (boundaryMatrix inc idx)` という定理として実際に証明した（両辺が同一の
+  `intListSum` 式へ簡約するため、証明は `funext` の後 `rfl`）。
+
+これにより項目8の評価は「四領域とも未構成」から「線形代数のみ、行列の基本代数法則群と
+`laplacian` との接続定理という具体的な第一歩を得た」へ更新する。ただし: (a) 抽象代数は
+依然として `Integers.lean` の `*ResonanceSpec` フレームワーク（単一インスタンスのみ）に
+留まり、行列以上の一般化はまだ無い、(b) 位相・測度論は cycle 59 の監査通り scaffolding
+が全く存在しない、(c) 単位行列・階数・行列式・固有値等、線形代数自体の中でも未着手の
+項目は多く残る。項目8の記述は「部分完了」のまま維持し、パーセンテージ（本文59行目、
+40%/55–60%）も本追補では動かさない——1 cycle 分の具体的だが限定的な前進を過大評価
+しないための保守的判断であり、cycle 45–58統合追補が14 cycle分の蓄積を経て初めて
+percentages の据え置きを確認した基準と同じ基準を、単一 cycle の結果にも適用する。

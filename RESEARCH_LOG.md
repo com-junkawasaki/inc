@@ -5940,3 +5940,188 @@ concretely well-scoped (a handful of definitions plus finite-sum-algebra
 lemmas already half-available), and has a ready-made motivating theorem
 (the unformalized B^T@B comment) rather than requiring the next agent to
 invent its own motivating question from scratch.
+
+## Cycle 60
+
+**Hypothesis**: cycle 59's Part 2 scouting recommendation, taken up in
+full -- roadmap item 8 (`docs/adr/2607100600-inc-theory-maturity-cycle41.md`,
+"完成へ向けた9項目ロードマップ") is genuinely unbuilt for the linear-algebra
+sub-area: does the bare `IncidenceCore.Matrix m n α := m → n → α`
+abstraction (`incidence-theory/IncidenceTheory/Axioms/Basic.lean` L30) admit
+a clean, reusable `add`/`mul`/`transpose` layer with the standard algebraic
+laws (commutativity/associativity of `add`, distributivity and
+associativity of `mul`, transpose's involution and antidistributivity), built
+by reusing the project's existing `intListSum` finite-sum library rather
+than re-deriving summation facts from scratch -- and does that layer connect
+to `Axioms/A14_A17.lean` L16's long-standing unformalized comment "A17:
+Laplacian (B^T @ B)" by literally proving `laplacian inc idx = (boundaryMatrix
+inc idx)ᵀ * boundaryMatrix inc idx` for the project's own concrete
+`boundaryMatrix`/`laplacian` (`IncidenceTheory.lean` L645-659)?
+
+**Method**: read `Axioms/Basic.lean` L28-32 (`Matrix`'s bare definition,
+confirmed as stated in cycle 59: zero fields, zero operations, a plain
+function type) and `IncidenceTheory.lean` L644-829 (`boundaryMatrix`,
+`laplacian`, and the full `intListSum` library: `intListSum_acc`/`_cons`/
+`_add`/`_mul_left`/`_zero`/`_eq_zero_of_mem`/`_gram_row_swap`) before writing
+anything, plus `Axioms/A14_A17.lean` L1-19 (`IncidenceAlgebraic`, confirming
+the L16 comment sits on an ABSTRACT field with no law connecting it to any
+concrete `boundaryMatrix`/`laplacian` computation -- the gap cycle 59
+flagged) and `GraphModel.lean` L512-521 (`finiteAlgebraicModel`, the one
+place `IncidenceAlgebraic` is actually instantiated, confirming its
+`boundaryMatrix`/`laplacian` fields are literally the module-level
+`boundaryMatrix inc idx`/`laplacian inc idx` for `finiteIncidence`/
+`finiteIdx`, `rfl` both ways). Confirmed `Matrix` is used unqualified
+throughout `IncidenceTheory.lean` because that whole file lives inside
+`namespace IncidenceCore` (L11), the same namespace `Matrix` itself is
+declared in -- so a new `namespace Matrix ... end Matrix` block placed
+inside `IncidenceTheory.lean` produces `IncidenceCore.Matrix.add`/`.mul`/
+`.transpose`, the standard Lean idiom of a type and its "companion"
+namespace coexisting (as with `Nat`/`Nat.add`), not a name clash. Decided
+`Matrix.mul` must sum over an explicit `idx : List n` argument for the
+shared middle index, rather than assuming a `Fintype`/`Finset` structure on
+`n` -- matching `boundaryMatrix`/`laplacian`'s own existing `idx`-parameterized
+style exactly (the index types in this project, e.g. `I` in `Incidence I R
+T`, carry no finiteness typeclass). Entries fixed to `Int` for `add`/`mul`
+(matching `boundaryMatrix`/`laplacian`'s codomain and every other numeric
+development in the project -- `Integers.lean` -- with no mathlib ring
+typeclass available to be generic over); `transpose` kept polymorphic in the
+entry type since it needs no arithmetic. Before attempting general
+associativity of `mul`, worked out on paper that it reduces to a
+finite-Fubini double-sum swap plus pulling constants through sums on both
+sides -- checked whether `intListSum_gram_row_swap` (the one existing
+double-sum-swap lemma, used by `laplacian_rowSum_zero_of_boundaryRowBalanced`)
+could be reused directly, and found it could not AS STATED (its RHS already
+has one constant factored out of the inner sum, baking in one extra step
+beyond a pure swap) but that its induction PROOF PATTERN generalizes cleanly
+to an unconditional two-argument-function Fubini lemma with no multiplicative
+structure assumed -- this generalization (`intListSum_comm`, stated below) is
+strictly more reusable than the specific lemma it was modeled on, an
+instance of this thread's established preference (cycles 45-59) for the
+most general provable statement over a narrower one.
+
+**Result**: **the full recommendation from cycle 59 landed in one cycle,
+including the headline payoff theorem, not merely the partial `add`/
+`transpose` fallback the task flagged as an acceptable fallback -- sorry-free,
+clean on the first `lake build`/`./verify.sh` attempt after one tactic-level
+fix (a `rw` direction mistake, not a mathematical one).** Added to
+`IncidenceTheory.lean`, immediately after `intListSum_gram_row_swap` (L745)
+and before the pre-existing `boundaryRowSum` (previously L749, now
+shifted): 14 new declarations, in three groups.
+
+(1) Two new general-purpose `intListSum` lemmas (L748-777), extending the
+existing library rather than duplicating it: `intListSum_mul_right`
+(pulling a right-multiplied constant out of a sum, the mirror of the
+existing `intListSum_mul_left`, proved FROM `intListSum_mul_left` plus
+`Int.mul_comm` rather than by fresh induction) and `intListSum_comm` (finite
+Fubini: `intListSum xs (fun a => intListSum ys (fun b => f a b)) =
+intListSum ys (fun b => intListSum xs (fun a => f a b))` for an arbitrary
+two-argument `f`, no multiplicative structure required) -- proved by
+induction on `xs` using only `intListSum_cons`/`intListSum_add`/
+`intListSum_zero`, mirroring `intListSum_gram_row_swap`'s own proof shape
+one level more general, per the Method's plan.
+
+(2) `namespace Matrix` (L779-885, comment plus block), the general arithmetic layer itself:
+`add`/`add_comm`/`add_assoc` (pointwise, `Int.add_comm`/`Int.add_assoc`
+directly); `transpose`/`transpose_transpose` (`rfl`, using Lean 4's kernel
+eta for functions -- swapping arguments twice is definitionally the
+identity) /`transpose_add` (also `rfl`); `mul` (`idx`-indexed sum of
+products, as scoped in the Method) with `mul_add`/`add_mul` (both reusing
+`intListSum_add` plus `Int.mul_add`/`Int.add_mul` directly, exactly cycle
+59's plan) and `transpose_mul` (`(A * B)ᵀ = Bᵀ * Aᵀ`, pointwise `Int.mul_comm`
+under the sum); and `mul_assoc` (`mul idxP (mul idxN A B) C = mul idxN A
+(mul idxP B C)`, for possibly-different observation lists `idxN : List n`/
+`idxP : List p` since `n`/`p` need not coincide or share an enumeration) --
+proved exactly via the Method's worked-out plan: `intListSum_mul_right`/
+`Int.mul_assoc` to reshape the inner product, `intListSum_comm` to swap the
+two sums, `intListSum_mul_left` to re-factor the surviving constant. This is
+the one lemma in this cycle that is not a one-line reuse, but every step
+still routes through an existing or cycle-60-added `intListSum` lemma; no
+finite-sum algebra was re-derived by hand.
+
+(3) `laplacian_eq_transpose_mul_boundaryMatrix` (L886-900, top-level,
+outside `namespace Matrix` since it is about the module's own concrete
+`laplacian`/`boundaryMatrix`, not the general layer): `laplacian inc idx =
+Matrix.mul idx (Matrix.transpose (boundaryMatrix inc idx)) (boundaryMatrix
+inc idx)` for the SAME observation list on both sides. This is the concrete
+formalization of `Axioms/A14_A17.lean` L16's comment, for the project's own
+`boundaryMatrix`/`laplacian` (not the abstract `IncidenceAlgebraic` fields,
+which carry no law connecting them to any concrete computation at all and so
+have nothing for a theorem to state). The proof is `funext i j; rfl`: once
+`Matrix.mul`/`Matrix.transpose` are defined to match `boundaryMatrix`/
+`laplacian`'s own `idx.foldl`/`intListSum` shape exactly, both sides reduce
+to the identical fold, confirming the Method's prediction that this
+connection is definitional, not merely provable, once the general operations
+are defined compatibly.
+
+`lake build IncidenceTheory`: one fix needed on the first attempt (not
+mathematical) -- `intListSum_mul_right`'s proof initially tried
+`rw [Int.mul_comm, intListSum_mul_left]`, but `Int.mul_comm` with no explicit
+arguments rewrote the wrong occurrence (turning `intListSum xs f * a` into
+`a * intListSum xs f`, which does not match `intListSum_mul_left`'s LHS
+pattern); fixed by giving `Int.mul_comm` explicit arguments and rewriting
+with `← intListSum_mul_left` in the correct direction. Full `lake build`
+(62/62 jobs, unchanged from baseline) and `./verify.sh` (clean rebuild from
+`lake clean`, example run, repo-wide `axiom`/`sorry`/`sorryAx` grep) both
+pass end to end. `#print axioms` on all 11 new theorems (`intListSum_mul_
+right`/`_comm`, `Matrix.add_comm`/`_assoc`/`transpose_transpose`/`_add`/
+`mul_add`/`add_mul`/`transpose_mul`/`mul_assoc`, `laplacian_eq_transpose_
+mul_boundaryMatrix`; `Matrix.add`/`transpose`/`mul` are defs, not theorems):
+the two pure structural facts proved by `rfl` (`transpose_transpose`,
+`transpose_add`) need no axioms at all; everything using `funext` needs
+`propext`/`Quot.sound` (the standard profile for `funext`-based proofs in
+Lean 4 core, matching cycles 57-59's own baseline exactly); the payoff
+theorem needs only `Quot.sound` (no `propext`, since its `funext` closes on
+`rfl` rather than a further `Prop`-level rewrite). No new axiom anywhere.
+
+**Synthesis**: cycle 59's scouting picked a well-targeted first step: a
+finite-sum-algebra library (`intListSum`) already existed with almost
+exactly the right shape, so the entire general `add`/`mul`/`transpose` layer
+plus its basic laws (including the least-trivial one, `mul`'s associativity)
+assembled from that library's lemmas plus two small, well-motivated
+extensions to it (`intListSum_mul_right`, `intListSum_comm`) rather than
+needing fresh finite-sum induction at every step -- the "reuse, don't
+rebuild" instruction from cycle 59's recommendation held up completely in
+practice, not just in principle. The headline payoff (`laplacian_eq_
+transpose_mul_boundaryMatrix`) landing as a `rfl`-after-`funext` rather than
+needing real algebraic work is itself informative: it confirms `laplacian`
+was ALREADY, silently, computing `Bᵀ B` all along (cycles 1-59 built an
+extensive theory of `laplacian`'s properties -- row/column sums, symmetry,
+diagonal nonnegativity, monotonicity under `idx` extension -- without this
+project ever having the vocabulary to say so directly), so this cycle's
+contribution is best read as supplying the missing general vocabulary and
+then using it to make an implicit fact explicit, rather than discovering new
+mathematical content about `laplacian` itself. This is the first roadmap-item-8
+content in the project (linear algebra sub-area) and, per the task's framing,
+warrants an ADR addendum: the ADR's item 8 status changes from "genuinely
+empty, zero operations defined anywhere" (cycle 59's own audit) to "general
+`Matrix` arithmetic with associativity/distributivity/transpose laws exists
+and is connected to the one existing linear-algebra fact (`laplacian`) the
+project had already built without a name for it" -- a first concrete brick
+in a "四領域の体系的ライブラリ" still missing three of its four sub-areas
+(abstract algebra has `Integers.lean`'s `*ResonanceSpec` framework as a head
+start per cycle 59's audit; topology and measure theory have no scaffolding
+at all).
+
+**Next hypothesis (cycle 61, not yet attempted)**: two candidate
+continuations, both inside roadmap item 8's linear-algebra sub-area, neither
+requiring a fresh scoping decision the way topology/measure-theory would
+(per cycle 59's audit, those two sub-areas have no starting scaffolding at
+all and would need their own ADR-level scoping first): (a) an identity
+matrix and its unit laws (`Matrix.one`/`Matrix.one_mul`/`Matrix.mul_one`,
+requiring a notion of "the index list contains exactly the diagonal
+position with multiplicity one" or restricting to `DecidableEq`-indexed
+square matrices with `idx` ranging over all of a finite carrier, the way
+`boundaryMatrix`'s own `[DecidableEq I]` instance is already available) --
+this is the natural next law a "vector space/ring" layer would need per
+cycle 59's own framing, and was deliberately left out of this cycle to keep
+scope to what could be cleanly finished; (b) revisit `laplacian_symmetric`
+(`IncidenceTheory.lean` L780-794, already proved directly from `boundaryMatrix`
+by hand) and reprove it as a two-line corollary of `transpose_mul`/
+`transpose_transpose` plus `laplacian_eq_transpose_mul_boundaryMatrix`
+(`(BᵀB)ᵀ = Bᵀ(Bᵀ)ᵀ = BᵀB` by the general laws just proved, rather than the
+existing bespoke fold-symmetry argument) -- a small but genuine test of
+whether this cycle's general layer can retroactively simplify/explain
+existing project theorems, not just prove new ones, which would be a
+different kind of payoff than the forward-looking one this cycle delivered.
+Either is well-scoped and low-risk; (a) grows the library outward, (b) tests
+whether it already pays for itself against existing content.
