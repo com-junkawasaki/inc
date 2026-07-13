@@ -4156,6 +4156,242 @@ theorem realFunctionLimitAt_mul
   rw [pointwise input]
   exact eventuallyClose input inputClose
 
+theorem realFunctionLimitAt_eventually_inv_abs_upper
+    {function : IncReal → IncReal} {point limit : IncReal}
+    (limitNonzero : limit ≠ realZero)
+    (converges : RealFunctionLimitAt function point limit) :
+    ∃ bound : IncRational,
+      rationalLT (rationalOfInteger 0) bound ∧
+      ∃ radius : IncRational,
+        rationalLT (rationalOfInteger 0) radius ∧
+        ∀ input, realLE (realDist input point).value
+            (rationalToReal radius) →
+          ∃ inputNonzero : function input ≠ realZero,
+            realLE (realAbs (realInv (function input) inputNonzero)).value
+              (rationalToReal bound) := by
+  have absoluteNonzero : (realAbs limit).value ≠ realZero := by
+    intro absoluteZero
+    exact limitNonzero ((realAbs_eq_zero_iff limit).mp absoluteZero)
+  obtain ⟨inside, insideMember, insidePositive⟩ :=
+    (realAbs limit).exists_positive_member absoluteNonzero
+  obtain ⟨lower, lowerPositive, lowerAdd⟩ :=
+    rational_exists_positive_half insidePositive
+  obtain ⟨inputRadius, inputRadiusPositive, eventuallyClose⟩ :=
+    converges lower lowerPositive
+  have insideStrict :
+      realLT (rationalToReal inside) (realAbs limit).value :=
+    rationalToReal_lt_of_lower (realAbs limit).value insideMember
+  have eventuallyLower : ∀ input,
+      realLE (realDist input point).value (rationalToReal inputRadius) →
+      realLE (rationalToReal lower) (realAbs (function input)).value := by
+    intro input inputClose
+    rcases realLE_total (rationalToReal lower)
+        (realAbs (function input)).value with lowerBound | belowLower
+    · exact lowerBound
+    · exfalso
+      have limitBound := realAbs_le_dist_add_abs limit (function input)
+      have distanceBound : realLE (realDist limit (function input)).value
+          (rationalToReal lower) := by
+        rw [realDist_comm]
+        exact eventuallyClose input inputClose
+      have sumBound := realAdd_monotone distanceBound belowLower
+      have limitBelowInside := realLE_trans limitBound sumBound
+      rw [realAdd_rationalToReal, lowerAdd] at limitBelowInside
+      exact insideStrict.2 (realLE_antisymm insideStrict.1 limitBelowInside)
+  have lowerRealNonzero : rationalToReal lower ≠ realZero := by
+    intro equal
+    have injected := rationalToReal_injective equal
+    rw [injected] at lowerPositive
+    exact rationalLT_irrefl (rationalOfInteger 0) lowerPositive
+  have lowerNonzero : lower ≠ rationalOfInteger 0 := by
+    intro lowerZero
+    rw [lowerZero] at lowerPositive
+    exact rationalLT_irrefl (rationalOfInteger 0) lowerPositive
+  obtain ⟨bound, inverseLaw⟩ :=
+    rational_nonzero_has_mul_inverse lowerNonzero
+  have boundPositive : rationalLT (rationalOfInteger 0) bound := by
+    apply rationalMul_positive_reflect_right lowerPositive
+    rw [inverseLaw]
+    exact rational_zero_lt_one
+  refine ⟨bound, boundPositive, inputRadius, inputRadiusPositive, ?_⟩
+  intro input inputClose
+  have lowerBound := eventuallyLower input inputClose
+  have inputNonzero : function input ≠ realZero := by
+    intro inputZero
+    rw [inputZero, realAbs_zero] at lowerBound
+    have lowerNonpositive := realLE_trans lowerBound nonnegativeZero.nonnegative
+    have positiveOrder : realLT realZero (rationalToReal lower) :=
+      ⟨(rationalToReal_le_iff _ _).mpr lowerPositive.1,
+        fun equal => lowerRealNonzero equal.symm⟩
+    exact positiveOrder.2
+      (realLE_antisymm positiveOrder.1 lowerNonpositive)
+  refine ⟨inputNonzero, ?_⟩
+  rw [realAbs_inv_eq_nonnegativeRealInv]
+  let lowerReal : NonnegativeReal :=
+    { value := rationalToReal lower
+      nonnegative := (rationalToReal_le_iff _ _).mpr lowerPositive.1 }
+  have reversed := nonnegativeRealInv_order_reverse
+    (left := lowerReal) (right := realAbs (function input))
+    lowerRealNonzero
+    (by
+      intro absoluteZero
+      exact inputNonzero
+        ((realAbs_eq_zero_iff (function input)).mp absoluteZero)) lowerBound
+  rw [nonnegativeRealInv_rationalToReal_positive
+    lowerPositive lowerRealNonzero inverseLaw] at reversed
+  exact reversed
+
+theorem realFunctionLimitAt_invOrZero
+    {function : IncReal → IncReal} {point limit : IncReal}
+    (limitNonzero : limit ≠ realZero)
+    (converges : RealFunctionLimitAt function point limit) :
+    RealFunctionLimitAt (fun input => realInvOrZero (function input))
+      point (realInvOrZero limit) := by
+  obtain ⟨tailBound, tailBoundPositive, tailRadius, tailRadiusPositive,
+      tailEventually⟩ :=
+    realFunctionLimitAt_eventually_inv_abs_upper limitNonzero converges
+  obtain ⟨limitBound, limitBoundNotMember, limitBoundPositive⟩ :=
+    (realAbs (realInv limit limitNonzero)).positive_upper
+  have limitAbsoluteBound :
+      realLE (realAbs (realInv limit limitNonzero)).value
+        (rationalToReal limitBound) := by
+    intro rational member
+    exact (realAbs (realInv limit limitNonzero)).value.lt_of_lower_of_not_lower
+      member limitBoundNotMember
+  let productBound := rationalMul tailBound limitBound
+  have productBoundPositive :
+      rationalLT (rationalOfInteger 0) productBound :=
+    rationalMul_positive tailBoundPositive limitBoundPositive
+  have productBoundNonzero : productBound ≠ rationalOfInteger 0 := by
+    intro equal
+    rw [equal] at productBoundPositive
+    exact rationalLT_irrefl _ productBoundPositive
+  obtain ⟨productBoundInverse, productBoundInverseLaw⟩ :=
+    rational_nonzero_has_mul_inverse productBoundNonzero
+  have productBoundInversePositive :
+      rationalLT (rationalOfInteger 0) productBoundInverse := by
+    apply rationalMul_positive_reflect_right productBoundPositive
+    rw [productBoundInverseLaw]
+    exact rational_zero_lt_one
+  intro epsilon epsilonPositive
+  let outputRadius := rationalMul epsilon productBoundInverse
+  have outputRadiusPositive : rationalLT (rationalOfInteger 0) outputRadius :=
+    rationalMul_positive epsilonPositive productBoundInversePositive
+  have productOutputRadius :
+      rationalMul productBound outputRadius = epsilon := by
+    calc
+      _ = rationalMul epsilon
+          (rationalMul productBound productBoundInverse) := by
+            rw [← rationalMul_assoc productBound epsilon productBoundInverse,
+              rationalMul_comm productBound epsilon,
+              rationalMul_assoc epsilon productBound productBoundInverse]
+      _ = rationalMul epsilon (rationalOfInteger 1) := by
+            rw [productBoundInverseLaw]
+      _ = epsilon := rationalMul_one_right epsilon
+  obtain ⟨closeRadius, closeRadiusPositive, eventuallyClose⟩ :=
+    converges outputRadius outputRadiusPositive
+  let tailBoundReal : NonnegativeReal :=
+    { value := rationalToReal tailBound
+      nonnegative := (rationalToReal_le_iff _ _).mpr tailBoundPositive.1 }
+  let limitBoundReal : NonnegativeReal :=
+    { value := rationalToReal limitBound
+      nonnegative := (rationalToReal_le_iff _ _).mpr limitBoundPositive.1 }
+  let outputRadiusReal : NonnegativeReal :=
+    { value := rationalToReal outputRadius
+      nonnegative :=
+        (rationalToReal_le_iff _ _).mpr outputRadiusPositive.1 }
+  let productBoundReal : NonnegativeReal :=
+    { value := rationalToReal productBound
+      nonnegative :=
+        (rationalToReal_le_iff _ _).mpr productBoundPositive.1 }
+  have finish : ∀ radius : IncRational,
+      rationalLT (rationalOfInteger 0) radius →
+      rationalLE radius tailRadius → rationalLE radius closeRadius →
+      ∃ delta : IncRational,
+        rationalLT (rationalOfInteger 0) delta ∧
+        ∀ input, realLE (realDist input point).value
+            (rationalToReal delta) →
+          realLE
+            (realDist (realInvOrZero (function input))
+              (realInvOrZero limit)).value
+            (rationalToReal epsilon) := by
+    intro radius radiusPositive radiusTail radiusClose
+    refine ⟨radius, radiusPositive, ?_⟩
+    intro input inputClose
+    have tailInputClose : realLE (realDist input point).value
+        (rationalToReal tailRadius) :=
+      realLE_trans inputClose ((rationalToReal_le_iff _ _).mpr radiusTail)
+    have closeInputClose : realLE (realDist input point).value
+        (rationalToReal closeRadius) :=
+      realLE_trans inputClose ((rationalToReal_le_iff _ _).mpr radiusClose)
+    obtain ⟨inputNonzero, inputInverseBound⟩ :=
+      tailEventually input tailInputClose
+    rw [realInvOrZero_of_ne (function input) inputNonzero,
+      realInvOrZero_of_ne limit limitNonzero,
+      realDist_inv (function input) limit inputNonzero limitNonzero]
+    have inverseProductBound := nonnegativeRealMul_monotone
+      (left := realAbs (realInv (function input) inputNonzero))
+      (left' := tailBoundReal)
+      (right := realAbs (realInv limit limitNonzero))
+      (right' := limitBoundReal)
+      inputInverseBound limitAbsoluteBound
+    have totalBound := nonnegativeRealMul_monotone
+      (left := nonnegativeRealMul
+        (realAbs (realInv (function input) inputNonzero))
+        (realAbs (realInv limit limitNonzero)))
+      (left' := nonnegativeRealMul tailBoundReal limitBoundReal)
+      (right := realDist (function input) limit)
+      (right' := outputRadiusReal)
+      inverseProductBound (eventuallyClose input closeInputClose)
+    have firstPrincipal := nonnegativeRealMul_rationalToReal_positive
+      tailBoundPositive limitBoundPositive
+    have secondPrincipal := nonnegativeRealMul_rationalToReal_positive
+      productBoundPositive outputRadiusPositive
+    have firstBundle :
+        nonnegativeRealMul tailBoundReal limitBoundReal =
+          productBoundReal := by
+      apply NonnegativeReal.ext
+      exact firstPrincipal
+    have secondBundle :
+        nonnegativeRealMul productBoundReal outputRadiusReal =
+          { value := rationalToReal
+              (rationalMul productBound outputRadius)
+            nonnegative := (rationalToReal_le_iff _ _).mpr
+              (rationalMul_positive productBoundPositive
+                outputRadiusPositive).1 } := by
+      apply NonnegativeReal.ext
+      exact secondPrincipal
+    rw [firstBundle, secondBundle] at totalBound
+    change realLE
+      (nonnegativeRealMul
+        (nonnegativeRealMul
+          (realAbs (realInv (function input) inputNonzero))
+          (realAbs (realInv limit limitNonzero)))
+        (realDist (function input) limit)).value
+      (rationalToReal (rationalMul productBound outputRadius)) at totalBound
+    rw [productOutputRadius] at totalBound
+    exact totalBound
+  rcases rationalLE_total tailRadius closeRadius with ordered | reverse
+  · exact finish tailRadius tailRadiusPositive (rationalLE_refl _)
+      ordered
+  · exact finish closeRadius closeRadiusPositive reverse
+      (rationalLE_refl _)
+
+theorem realFunctionLimitAt_div
+    {numerator denominator : IncReal → IncReal}
+    {point numeratorLimit denominatorLimit : IncReal}
+    (denominatorLimitNonzero : denominatorLimit ≠ realZero)
+    (numeratorConverges :
+      RealFunctionLimitAt numerator point numeratorLimit)
+    (denominatorConverges :
+      RealFunctionLimitAt denominator point denominatorLimit) :
+    RealFunctionLimitAt
+      (fun input => realDiv (numerator input) (denominator input))
+      point (realDiv numeratorLimit denominatorLimit) := by
+  exact realFunctionLimitAt_mul numeratorConverges
+    (realFunctionLimitAt_invOrZero denominatorLimitNonzero
+      denominatorConverges)
+
 noncomputable def realDifferenceQuotient
     (function : IncReal → IncReal) (point derivative increment : IncReal) : IncReal :=
   if increment = realZero then derivative
@@ -4729,6 +4965,143 @@ theorem realHasDerivativeAt_comp
   intro increment incrementClose
   rw [realDifferenceQuotient_comp]
   exact eventuallyClose increment incrementClose
+
+theorem realDifferenceQuotient_invOrZero_of_ne
+    (point increment : IncReal)
+    (pointNonzero : point ≠ realZero)
+    (shiftedNonzero : realAdd point increment ≠ realZero) :
+    realDifferenceQuotient realInvOrZero point
+        (realNeg (realMul (realInvOrZero point) (realInvOrZero point)))
+        increment =
+      realNeg (realMul (realInvOrZero (realAdd point increment))
+        (realInvOrZero point)) := by
+  classical
+  by_cases incrementZero : increment = realZero
+  · subst increment
+    simp only [realDifferenceQuotient, if_true, realAdd_zero_right]
+  · rw [realDifferenceQuotient, if_neg incrementZero,
+      realInvOrZero_of_ne point pointNonzero,
+      realInvOrZero_of_ne (realAdd point increment) shiftedNonzero,
+      realInv_sub_realInv]
+    have reversedIncrement :
+        realAdd point (realNeg (realAdd point increment)) =
+          realNeg increment := by
+      rw [realNeg_add]
+      calc
+        realAdd point (realAdd (realNeg point) (realNeg increment)) =
+          realAdd (realAdd point (realNeg point)) (realNeg increment) :=
+            (realAdd_assoc _ _ _).symm
+        _ = realNeg increment := by rw [realAdd_neg, realAdd_zero_left]
+    rw [reversedIncrement, realDiv, realMul_neg_right]
+    calc
+      realMul
+          (realNeg
+            (realMul
+              (realMul
+                (realInv (realAdd point increment) shiftedNonzero)
+                (realInv point pointNonzero))
+              increment))
+          (realInvOrZero increment) =
+        realNeg
+          (realMul
+            (realMul
+              (realMul
+                (realInv (realAdd point increment) shiftedNonzero)
+                (realInv point pointNonzero))
+              increment)
+            (realInvOrZero increment)) := by rw [realMul_neg_left]
+      _ = realNeg
+          (realMul
+            (realInv (realAdd point increment) shiftedNonzero)
+            (realInv point pointNonzero)) := by
+              rw [realInvOrZero_of_ne increment incrementZero,
+                realMul_assoc, realMul_inv, realMul_one_right]
+
+theorem realHasDerivativeAt_invOrZero
+    (point : IncReal) (pointNonzero : point ≠ realZero) :
+    RealHasDerivativeAt realInvOrZero
+      (realNeg (realMul (realInvOrZero point) (realInvOrZero point)))
+      point := by
+  have shiftedLimit : RealFunctionLimitAt
+      (fun increment => realAdd point increment) realZero point := by
+    have added := realFunctionLimitAt_add
+      (realFunctionLimitAt_const point realZero)
+      (realFunctionLimitAt_id realZero)
+    simpa [realAdd_zero_right] using added
+  have inverseShiftedLimit : RealFunctionLimitAt
+      (fun increment => realInvOrZero (realAdd point increment))
+      realZero (realInvOrZero point) :=
+    realFunctionLimitAt_invOrZero pointNonzero shiftedLimit
+  have scaledLimit := realFunctionLimitAt_mul_const
+    (realInvOrZero point) inverseShiftedLimit
+  have negatedLimit := realFunctionLimitAt_neg scaledLimit
+  have targetLimit : RealFunctionLimitAt
+      (fun increment => realNeg
+        (realMul (realInvOrZero (realAdd point increment))
+          (realInvOrZero point)))
+      realZero
+      (realNeg (realMul (realInvOrZero point) (realInvOrZero point))) := by
+    simpa [realMul_comm] using negatedLimit
+  obtain ⟨bound, boundPositive, nonzeroRadius, nonzeroRadiusPositive,
+      eventuallyNonzero⟩ :=
+    realFunctionLimitAt_eventually_inv_abs_upper pointNonzero shiftedLimit
+  intro epsilon epsilonPositive
+  obtain ⟨limitRadius, limitRadiusPositive, eventuallyClose⟩ :=
+    targetLimit epsilon epsilonPositive
+  rcases rationalLE_total nonzeroRadius limitRadius with ordered | reverse
+  · refine ⟨nonzeroRadius, nonzeroRadiusPositive, ?_⟩
+    intro increment incrementClose
+    have limitClose : realLE (realDist increment realZero).value
+        (rationalToReal limitRadius) :=
+      realLE_trans incrementClose ((rationalToReal_le_iff _ _).mpr ordered)
+    obtain ⟨shiftedNonzero, _⟩ :=
+      eventuallyNonzero increment incrementClose
+    rw [realDifferenceQuotient_invOrZero_of_ne point increment
+      pointNonzero shiftedNonzero]
+    exact eventuallyClose increment limitClose
+  · refine ⟨limitRadius, limitRadiusPositive, ?_⟩
+    intro increment incrementClose
+    have nonzeroClose : realLE (realDist increment realZero).value
+        (rationalToReal nonzeroRadius) :=
+      realLE_trans incrementClose ((rationalToReal_le_iff _ _).mpr reverse)
+    obtain ⟨shiftedNonzero, _⟩ :=
+      eventuallyNonzero increment nonzeroClose
+    rw [realDifferenceQuotient_invOrZero_of_ne point increment
+      pointNonzero shiftedNonzero]
+    exact eventuallyClose increment incrementClose
+
+theorem realHasDerivativeAt_inv_comp
+    {function : IncReal → IncReal} {derivative point : IncReal}
+    (valueNonzero : function point ≠ realZero)
+    (differentiable : RealHasDerivativeAt function derivative point) :
+    RealHasDerivativeAt (fun value => realInvOrZero (function value))
+      (realMul
+        (realNeg (realMul (realInvOrZero (function point))
+          (realInvOrZero (function point)))) derivative) point := by
+  exact realHasDerivativeAt_comp differentiable
+    (realHasDerivativeAt_invOrZero (function point) valueNonzero)
+
+theorem realHasDerivativeAt_div
+    {numerator denominator : IncReal → IncReal}
+    {numeratorDerivative denominatorDerivative point : IncReal}
+    (denominatorValueNonzero : denominator point ≠ realZero)
+    (numeratorDifferentiable :
+      RealHasDerivativeAt numerator numeratorDerivative point)
+    (denominatorDifferentiable :
+      RealHasDerivativeAt denominator denominatorDerivative point) :
+    RealHasDerivativeAt
+      (fun value => realDiv (numerator value) (denominator value))
+      (realAdd
+        (realMul numeratorDerivative (realInvOrZero (denominator point)))
+        (realMul (numerator point)
+          (realMul
+            (realNeg (realMul (realInvOrZero (denominator point))
+              (realInvOrZero (denominator point))))
+            denominatorDerivative))) point := by
+  simpa only [realDiv] using
+    realHasDerivativeAt_mul numeratorDifferentiable
+      (realHasDerivativeAt_inv_comp denominatorValueNonzero
+        denominatorDifferentiable)
 
 noncomputable def realPow (base : IncReal) : Nat → IncReal
   | 0 => realOne
