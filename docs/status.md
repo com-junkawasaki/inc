@@ -210,6 +210,9 @@ Checked constructions include:
   every positive rational radius to be zero, proving metric limits unique;
   distance is negation-invariant and addition-subadditive, so convergent
   sequences remain convergent under termwise negation, addition, and subtraction;
+  distance control yields order control, finite prefixes admit inductively
+  selected upper bounds, and every Cauchy sequence is globally bounded above
+  and below;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets

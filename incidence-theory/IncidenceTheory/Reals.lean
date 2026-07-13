@@ -2794,4 +2794,103 @@ theorem realSequenceConverges_sub
   realSequenceConverges_add leftConverges
     (realSequenceConverges_neg rightConverges)
 
+theorem real_le_add_of_dist_le {left right radius : IncReal}
+    (bounded : realLE (realDist left right).value radius) :
+    realLE left (realAdd right radius) := by
+  have differenceBound :
+      realLE (realAdd left (realNeg right)) radius :=
+    realLE_trans (real_le_abs (realAdd left (realNeg right))) bounded
+  have translated := realAdd_monotone_left
+    (right := right) differenceBound
+  have restore : realAdd (realAdd left (realNeg right)) right = left := by
+    rw [realAdd_assoc, realAdd_neg_left, realAdd_zero_right]
+  rw [restore, realAdd_comm radius right] at translated
+  exact translated
+
+theorem real_finite_sequence_upper_bound
+    (sequence : RealSequence) (count : Nat) :
+    ∃ upper : IncReal, ∀ index, index < count →
+      realLE (sequence index) upper := by
+  induction count with
+  | zero =>
+      exact ⟨realZero, fun index impossible => False.elim (Nat.not_lt_zero _ impossible)⟩
+  | succ count induction =>
+      obtain ⟨previousUpper, previousBound⟩ := induction
+      rcases realLE_total previousUpper (sequence count) with ordered | reverse
+      · refine ⟨sequence count, ?_⟩
+        intro index indexBelow
+        rcases Nat.lt_or_eq_of_le (Nat.le_of_lt_succ indexBelow) with earlier | equal
+        · exact realLE_trans (previousBound index earlier) ordered
+        · subst index
+          exact realLE_refl _
+      · refine ⟨previousUpper, ?_⟩
+        intro index indexBelow
+        rcases Nat.lt_or_eq_of_le (Nat.le_of_lt_succ indexBelow) with earlier | equal
+        · exact previousBound index earlier
+        · subst index
+          exact reverse
+
+def RealSequenceUpperBound (sequence : RealSequence) (upper : IncReal) : Prop :=
+  ∀ index, realLE (sequence index) upper
+
+theorem realSequenceCauchy_bounded_above
+    {sequence : RealSequence} (cauchy : RealSequenceCauchy sequence) :
+    ∃ upper, RealSequenceUpperBound sequence upper := by
+  have onePositive :
+      rationalLT (rationalOfInteger 0) (rationalOfInteger 1) :=
+    rational_zero_lt_one
+  obtain ⟨threshold, tailCauchy⟩ :=
+    cauchy (rationalOfInteger 1) onePositive
+  obtain ⟨prefixUpper, prefixBound⟩ :=
+    real_finite_sequence_upper_bound sequence threshold
+  let tailUpper := realAdd (sequence threshold) realOne
+  rcases realLE_total prefixUpper tailUpper with prefixTail | tailPrefix
+  · refine ⟨tailUpper, ?_⟩
+    intro index
+    by_cases indexLarge : threshold ≤ index
+    · have distanceBound := tailCauchy index threshold indexLarge
+        (Nat.le_refl threshold)
+      have ordered := real_le_add_of_dist_le distanceBound
+      simpa [realOne] using ordered
+    · have indexBelow : index < threshold := Nat.lt_of_not_ge indexLarge
+      exact realLE_trans (prefixBound index indexBelow) prefixTail
+  · refine ⟨prefixUpper, ?_⟩
+    intro index
+    by_cases indexLarge : threshold ≤ index
+    · have distanceBound := tailCauchy index threshold indexLarge
+        (Nat.le_refl threshold)
+      have ordered := real_le_add_of_dist_le distanceBound
+      exact realLE_trans (by simpa [realOne] using ordered) tailPrefix
+    · exact prefixBound index (Nat.lt_of_not_ge indexLarge)
+
+theorem realSequenceCauchy_neg {sequence : RealSequence}
+    (cauchy : RealSequenceCauchy sequence) :
+    RealSequenceCauchy (fun index => realNeg (sequence index)) := by
+  intro epsilon epsilonPositive
+  obtain ⟨threshold, eventuallyClose⟩ := cauchy epsilon epsilonPositive
+  refine ⟨threshold, ?_⟩
+  intro left right leftLarge rightLarge
+  rw [realDist_neg]
+  exact eventuallyClose left right leftLarge rightLarge
+
+def RealSequenceLowerBound (sequence : RealSequence) (lower : IncReal) : Prop :=
+  ∀ index, realLE lower (sequence index)
+
+theorem realSequenceCauchy_bounded_below
+    {sequence : RealSequence} (cauchy : RealSequenceCauchy sequence) :
+    ∃ lower, RealSequenceLowerBound sequence lower := by
+  obtain ⟨negUpper, negBound⟩ :=
+    realSequenceCauchy_bounded_above (realSequenceCauchy_neg cauchy)
+  refine ⟨realNeg negUpper, ?_⟩
+  intro index
+  have reversed := realNeg_order_reverse (negBound index)
+  simpa [realNeg_neg] using reversed
+
+theorem realSequenceCauchy_bounded
+    {sequence : RealSequence} (cauchy : RealSequenceCauchy sequence) :
+    (∃ lower, RealSequenceLowerBound sequence lower) ∧
+      ∃ upper, RealSequenceUpperBound sequence upper :=
+  ⟨realSequenceCauchy_bounded_below cauchy,
+    realSequenceCauchy_bounded_above cauchy⟩
+
 end IncidenceCore

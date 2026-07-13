@@ -220,7 +220,10 @@ case where the selector is complete and resonance has no unselected modes.
   Rounded-cut Archimedean separation then proves a nonnegative value below all
   positive rational radii is zero, and two sequence limits must coincide.
   Negation invariance and paired-addition subadditivity of distance lift
-  convergence through negation, addition, and subtraction.
+  convergence through negation, addition, and subtraction. A distance bound
+  gives an order bound; finite prefixes have bounds by total-order induction,
+  while a Cauchy tail is bounded by one fixed-radius ball. Negation supplies
+  the lower bound, so every Cauchy sequence is two-sided bounded.
 
 ### Non-normative physical intuition
 
