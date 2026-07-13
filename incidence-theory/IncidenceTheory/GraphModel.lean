@@ -382,6 +382,29 @@ theorem finiteL_root_row_sum : finiteL .root .leaf + finiteL .root .root = 0 := 
 theorem finiteL_trace : finiteL .leaf .leaf + finiteL .root .root = 1 := by
   native_decide
 
+/- Cycle 62 (b): `finiteIdx := [.leaf, .root]` enumerates all of
+   `FiniteIncidence` (a two-constructor inductive, `deriving DecidableEq`)
+   exactly once each -- so `Matrix.IdxComplete finiteIdx` (`∀ i, finiteIdx.count
+   i = 1`, `IncidenceTheory.lean` L5940 in cycle 61's reopened `namespace
+   Matrix` block) holds, closed by case-splitting the only two constructors
+   and letting `native_decide` settle each concrete `List.count` computation
+   (same tactic this file already uses throughout for `finiteB`/`finiteL`
+   entries). This gives the project's first CONCRETE (not merely general)
+   instance of cycle 61's unit laws: `finiteB` is a genuine two-sided
+   `Matrix.one`-unital matrix, not merely an unnamed instance of the general
+   theorem. -/
+theorem finiteIdx_complete : Matrix.IdxComplete finiteIdx := by
+  intro i
+  cases i <;> native_decide
+
+theorem finiteB_one_mul :
+    Matrix.mul finiteIdx Matrix.one finiteB = finiteB :=
+  Matrix.one_mul finiteIdx finiteIdx_complete finiteB
+
+theorem finiteB_mul_one :
+    Matrix.mul finiteIdx finiteB Matrix.one = finiteB :=
+  Matrix.mul_one finiteIdx finiteIdx_complete finiteB
+
 /- Matrix application is written using the same finite index list as the
    Gram product.  The root coordinate is the kernel direction, while the
    leaf coordinate is observed exactly. -/

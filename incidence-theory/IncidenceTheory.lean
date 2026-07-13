@@ -711,6 +711,21 @@ theorem intListSum_eq_zero_of_mem {α : Type u} (xs : List α) (f : α → Int)
     intro y hy
     exact hzero y (by simp [hy])
 
+/- Cycle 62 (c): a finite sum of pointwise-nonnegative terms is
+   nonnegative. Not previously in the `intListSum` library (checked: no
+   `intListSum_nonneg`/`_nonneg`-named lemma existed anywhere in the file
+   before this cycle); needed to state a general "the diagonal of a Gram
+   matrix `Aᵀ * A` is nonnegative" fact for the `Matrix` layer below, mirroring
+   `intListSum_eq_zero_of_mem` just above (same induction shape, `Int.add_nonneg`
+   in place of the vanishing-sum argument). -/
+theorem intListSum_nonneg {α : Type u} (xs : List α) (f : α → Int)
+    (hf : ∀ a ∈ xs, 0 ≤ f a) : 0 ≤ intListSum xs f := by
+  induction xs with
+  | nil => simp [intListSum]
+  | cons x xs ih =>
+    rw [intListSum_cons]
+    exact Int.add_nonneg (hf x (by simp)) (ih (fun a ha => hf a (by simp [ha])))
+
 theorem intListSum_gram_row_swap {I : Type u} (rows cols : List I)
     (b : I → I → Int) (i : I) :
     intListSum cols (fun j => intListSum rows (fun k => b k i * b k j)) =
@@ -882,6 +897,27 @@ theorem mul_assoc {m : Type u} {n : Type v} {p : Type w} {q : Type u}
           funext l
           exact intListSum_mul_left (A i l) idxP (fun k => B l k * C k j)
 
+/- Cycle 62 (c): a general fact about `Aᵀ * A`'s diagonal, motivated by
+   checking whether `laplacian_diagonal_nonnegative` (originally a bespoke
+   fold-nonnegativity induction over `boundaryMatrix`, L985 below) reduces to
+   a corollary of the `Matrix` layer. `mul idx (transpose M) M i i` unfolds
+   to `intListSum idx (fun k => M k i * M k i)`, a sum of squares -- reusing
+   `intListSum_nonneg` (added just above, alongside the rest of the
+   `intListSum` library) plus the same `Int`-level square-nonnegativity
+   split (`Int.le_total`/`Int.neg_mul_neg`) the original proof used inline,
+   now stated once at the general `Matrix` level instead of specialized to
+   `boundaryMatrix`. -/
+theorem mul_transpose_self_diag_nonneg {p q : Type u} (idx : List p)
+    (M : Matrix p q Int) (i : q) :
+    0 ≤ mul idx (transpose M) M i i := by
+  show 0 ≤ intListSum idx (fun k => M k i * M k i)
+  apply intListSum_nonneg
+  intro k _
+  rcases Int.le_total 0 (M k i) with h | h
+  · exact Int.mul_nonneg h h
+  · rw [← Int.neg_mul_neg]
+    exact Int.mul_nonneg (Int.neg_nonneg_of_nonpos h) (Int.neg_nonneg_of_nonpos h)
+
 end Matrix
 
 /- The concrete `A17` payoff: `IncidenceTheory/Axioms/A14_A17.lean` L16
@@ -1004,6 +1040,25 @@ theorem laplacian_diagonal_nonnegative {I R T : Type u} [DecidableEq I]
       apply ih
       exact Int.add_nonneg hacc (square_nonnegative (b k i))
   exact fold_nonnegative idx 0 (Int.le_refl 0)
+
+/- Cycle 62 (c): does this bespoke fold-induction reduce to a corollary of
+   the `Matrix` layer, the way cycle 61 (b) reduced `laplacian_symmetric`?
+   Yes: `laplacian inc idx = Bᵀ * B` (`laplacian_eq_transpose_mul_
+   boundaryMatrix`) and `Matrix.mul_transpose_self_diag_nonneg` (just added
+   above, at the end of cycle 60's original `namespace Matrix` block) states
+   exactly "`(Aᵀ * A) i i` is nonnegative" in general -- so this is a
+   two-line corollary,
+   with the original untouched, same accounting discipline as cycle 61 (b):
+   the marginal proof is smaller, but only because the general fact needed
+   (sum-of-squares nonnegativity) had to be added to the `Matrix` layer
+   first (it was not already there, unlike (b)'s `transpose_mul`/
+   `transpose_transpose`, which cycle 60 had already proved for unrelated
+   reasons). -/
+theorem laplacian_diagonal_nonnegative_via_matrix {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (i : I) :
+    0 ≤ laplacian inc idx i i := by
+  rw [laplacian_eq_transpose_mul_boundaryMatrix]
+  exact Matrix.mul_transpose_self_diag_nonneg idx (boundaryMatrix inc idx) i
 
 /- The `BᵀB` sum is additive in the finite list of rows.  This makes the
    derived Laplacian usable incrementally: extending a finite observation
@@ -5832,6 +5887,26 @@ def verify_boundary_composition {I R T : Type u} [DecidableEq I]
   (inc : Incidence I R T) (idx : List I) : Bool :=
   idx.all (fun i => idx.all (fun k => decide (boundary_composition inc idx i k = 0)))
 
+/- Cycle 62 (c) bonus finding, while sweeping `boundaryMatrix_*`/`laplacian_*`
+   for `Matrix`-layer reductions: `boundary_composition` above is exactly
+   `laplacian_eq_transpose_mul_boundaryMatrix`'s sibling for the
+   *un*-transposed self-product `B * B` (∂² itself), rather than the Gram
+   product `Bᵀ * B` that theorem connects to `laplacian`. This was not
+   previously stated as a `Matrix.mul` fact anywhere -- `boundary_composition`
+   predates the `Matrix` layer (cycle 9-era) and was always just an explicit
+   `idx.foldl`. Same proof shape as the L896 theorem it mirrors: both sides
+   unfold to the identical fold, so `funext; rfl`. This is new vocabulary
+   (a definitional bridge for an existing definition), not a simplification
+   of an existing hand-proved THEOREM the way the diagonal-nonnegativity
+   corollary above is -- recorded separately from that finding for this
+   reason. -/
+theorem boundary_composition_eq_matrix_mul_self {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) :
+  boundary_composition inc idx =
+    Matrix.mul idx (boundaryMatrix inc idx) (boundaryMatrix inc idx) := by
+  funext i k
+  rfl
+
 /- ∂² = 0 is *not* a generic property of an arbitrary incidence structure
    (nothing in `Incidence` ties chains of boundary references together); it
    is only true of well-formed chain complexes. This lemma is the honest
@@ -5970,6 +6045,25 @@ theorem mul_one {I : Type u} [DecidableEq I] (idx : List I) (hidx : IdxComplete 
   unfold intListSum
   rw [hfold, hidx j]
   simp
+
+/- Cycle 62 (a): `one`'s bare definition (`fun i j => if i = j then 1 else
+   0`) carries no hypothesis at all -- only its unit LAWS (`one_mul`/`mul_one`
+   just above) needed `IdxComplete`, since those involve `mul`'s `idx`-indexed
+   sum. `transpose`, likewise, is purely structural (swaps its two arguments)
+   and needs nothing about `idx`. So `transpose one = one` needs no
+   `IdxComplete`/`DecidableEq`-list hypothesis beyond what `one` itself
+   already requires (`[DecidableEq I]`, for the `if i = j` test to be
+   decidable) -- it is pure `if`-symmetry: `transpose one i j` unfolds to
+   `one j i = if j = i then 1 else 0`, equal to `one i j = if i = j then 1
+   else 0` by symmetry of `=`. -/
+theorem transpose_one {I : Type u} [DecidableEq I] :
+    transpose (one : Matrix I I Int) = one := by
+  funext i j
+  show (if j = i then (1 : Int) else 0) = (if i = j then (1 : Int) else 0)
+  by_cases h : i = j
+  · subst h
+    rfl
+  · rw [if_neg h, if_neg (fun hc : j = i => h hc.symm)]
 
 end Matrix
 

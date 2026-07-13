@@ -6304,3 +6304,287 @@ conditional simplifications of the kind (b) just found, or equally
 legitimately find that most of them do not reduce to the general layer as
 cleanly (an honest negative result would be just as informative, per this
 cycle's own (b) finding and this project's established culture).
+
+## Cycle 62
+
+**Hypothesis**: cycle 61's own "Next hypothesis" queue named three
+complementary, individually well-scoped continuations of roadmap item 8's
+linear-algebra sub-area, and this cycle attempts all three in order, per the
+task's framing: (a) does `Matrix.transpose Matrix.one = Matrix.one`
+(`IncidenceTheory.lean` L5943-L5944's `one`, L5947/L5960's `one_mul`/`mul_one`)
+hold, and does it need any hypothesis beyond what `Matrix.one` itself already
+requires (`[DecidableEq I]`), given the unit LAWS needed `IdxComplete` but
+`one`'s bare definition did not? (b) does `Matrix.IdxComplete GraphModel.finiteIdx`
+(`GraphModel.lean` L354, `finiteIdx := [.leaf, .root]`) actually hold, and if
+so, does instantiating `Matrix.one_mul`/`Matrix.mul_one` against it give the
+project's first concrete (not merely general) unit-law witness for `finiteB`?
+(c) do any OTHER existing hand-proved `laplacian_*`/`boundaryMatrix_*` theorems
+(beyond `laplacian_symmetric`, already covered by cycle 61 (b)) reduce to short
+corollaries of the `Matrix` layer's now-larger lemma set (`add`/`mul`/
+`transpose`/`one` plus their proven laws), following a systematic sweep rather
+than the single-theorem spot-check cycle 61 did?
+
+**Method**: read `IncidenceTheory.lean`'s full `Matrix` section in both
+locations (L807-900, cycle 60's `add`/`mul`/`transpose`/`mul_assoc`; L5947-6008,
+cycle 61's reopened block with `IdxComplete`/`one`/`one_mul`/`mul_one`) and
+`GraphModel.lean` in full, per the task's instructions, before writing
+anything. Confirmed for (a): `one {I} [DecidableEq I] : Matrix I I Int := fun
+i j => if i = j then 1 else 0` carries no hypothesis parameter at all (only
+`[DecidableEq I]`, needed just to make `i = j` decidable) — `IdxComplete idx`
+only appears in `one_mul`/`mul_one`'s SIGNATURES, as a side-condition on the
+finite observation list `mul` sums over, not as a condition on `one` itself.
+So `transpose_one` should need nothing beyond `[DecidableEq I]`; worked out on
+paper that `transpose one i j` unfolds to `one j i = if j = i then 1 else 0`,
+equal to `one i j = if i = j then 1 else 0` by symmetry of `=` (`by_cases h : i
+= j`, both branches close by substitution or by `if_neg` on each side's
+negated, mirrored condition). For (b): read `GraphModel.lean` L85-86
+(`inductive FiniteIncidence where | leaf | root deriving DecidableEq, Repr`)
+and L354 (`finiteIdx := [.leaf, .root]`) — a two-element list over a
+two-constructor inductive with no repeats, so `IdxComplete finiteIdx := ∀ i,
+finiteIdx.count i = 1` should hold by cases on `i`'s two constructors, each a
+concrete, decidable `List.count` computation matching this file's existing
+`native_decide`-based style (`finiteB_leaf_leaf` etc., L366-374) rather than
+`decide` (no attempt made to check `decide`'s kernel-reduction cost here, since
+`native_decide` is already this project's established default for this exact
+shape of goal). For (c): grepped the whole tree for `^theorem laplacian_` and
+`^theorem boundaryMatrix_` (not just the two names the task listed as
+examples), finding 22 additional declarations beyond `laplacian_symmetric`/
+`laplacian_symmetric_via_matrix` (already handled): `laplacian_eq_transpose_
+mul_boundaryMatrix` (the Matrix-layer connector itself, not a candidate),
+`laplacian_rowSum_zero_of_boundaryRowBalanced`, `laplacian_columnSum_zero_of_
+boundaryRowBalanced`, `laplacian_diagonal_nonnegative`, `laplacian_append`,
+`laplacian_cons`, `laplacian_empty`, `laplacian_diagonal_monotone_append`,
+`laplacian_diagonal_monotone_cons`, `laplacian_of_empty_boundaries`,
+`boundaryMatrix_index_irrel`, `boundaryMatrix_congr`, `laplacian_congr`,
+`laplacian_diagonal_strict_monotone_append`, `laplacian_diagonal_increment_
+append`, `boundaryMatrix_of_empty_boundary` (all L903-1213), plus
+`boundaryMatrix_single_link`, `boundaryMatrix_eq_foldl`, `boundaryMatrix_ne_
+zero_witness`, `boundaryMatrix_eq_zero_of_leaf`, `boundaryMatrix_two_link`,
+`boundaryMatrix_three_link` (L5879-6300+, the cycle-9/17/30-era ∂²-composition
+family). Read every one of these in full (not just their statements) before
+judging reducibility, per the task's explicit instruction not to assume the
+two named examples were the only candidates. Categorized by what dimension
+each theorem varies: (i) POINTWISE facts about a fixed `idx`/`inc` (candidates
+for genuine Matrix-layer reduction, since `add`/`mul`/`transpose`/`one`'s laws
+are themselves pointwise-in-`idx` equalities); (ii) facts that vary `idx`
+itself (`_append`/`_cons`/`_empty`/monotonicity family) — structurally outside
+what the Matrix layer's laws (which all hold for one FIXED `idx`) say anything
+about; (iii) facts that vary `inc`/`inc'` (`_congr` family) — likewise outside
+the Matrix layer's scope, which has no notion of "two different matrices
+derived from congruent underlying data"; (iv) facts that sum ACROSS the matrix
+(row/column sums) — a different operation from the POINTWISE equalities
+`add`/`mul`/`transpose`/`one`'s laws state, even though the object summed is a
+`Matrix`; (v) facts about `boundary_composition`/`Endpoint`-level case
+structure (the ∂²-composition family) — about a specific list of at most three
+named endpoints and their signs, not about the general algebraic layer at all.
+`laplacian_diagonal_nonnegative` (category i) was the one clear candidate:
+worked out on paper that its content — "the diagonal of `BᵀB` is a sum of
+squares, hence nonnegative" — is exactly a general fact about `mul idx
+(transpose M) M i i` for ANY `M`, not anything specific to `boundaryMatrix`;
+checked (via `rg 'nonneg'`) whether a reusable "sum of nonnegative terms is
+nonnegative" `intListSum` lemma already existed (as cycle 61's `foldl_add_eq_
+count_mul` had, unexpectedly, for the unit laws) and found none, so this
+required adding one small general lemma first, unlike cycle 61 (b)'s reuse of
+already-existing `transpose_mul`/`transpose_transpose`.
+
+**Result**: **all three parts landed, `./verify.sh` clean on the first `lake
+build` attempt with zero tactic-level fixes needed across all of (a)/(b)/(c)
+— a second consecutive cycle (after cycle 61) with no build-time surprises,
+this time across a strictly larger set of new declarations (9 vs. cycle 61's
+4).**
+
+(a): `Matrix.transpose_one` (`IncidenceTheory.lean`, added directly after
+`mul_one` inside cycle 61's reopened `namespace Matrix` block, before its
+`end Matrix`): `funext i j; show (if j = i then (1:Int) else 0) = (if i = j
+then (1:Int) else 0); by_cases h : i = j` — the `h` branch closes by `subst h;
+rfl`, the `¬h` branch by `rw [if_neg h, if_neg (fun hc : j = i => h hc.symm)]`
+(both `if`s collapse to `0 = 0`, closed automatically by `rw`'s trailing
+`rfl`). Confirmed by inspection (and by the proof needing no `idx`/`IdxComplete`
+argument at all) that this needs nothing beyond `[DecidableEq I]`, exactly as
+the Method predicted: `Matrix.one` the OBJECT is unconditional, only `Matrix.
+one`'s interaction with `mul`'s finite sum needs the completeness hypothesis.
+
+(b): three declarations in `GraphModel.lean`, placed directly after `finiteL_
+trace` (L382-383) and before the existing `finiteLApply` material: `finiteIdx_
+complete : Matrix.IdxComplete finiteIdx` (`intro i; cases i <;> native_decide`
+— two branches, `finiteIdx.count .leaf = 1`/`finiteIdx.count .root = 1`, each
+closed by `native_decide` exactly like this file's existing `finiteB_*`/
+`finiteL_*` facts); `finiteB_one_mul : Matrix.mul finiteIdx Matrix.one finiteB
+= finiteB` and `finiteB_mul_one : Matrix.mul finiteIdx finiteB Matrix.one =
+finiteB`, both one-line direct applications of `Matrix.one_mul`/`Matrix.mul_
+one` to `finiteIdx_complete` and `finiteB` — no new proof content beyond
+supplying the hypothesis, confirming the Method's prediction that this is a
+genuine but small "first concrete witness" connection, not a nontrivial new
+argument.
+
+(c): one clean reduction (category i), one bonus definitional-bridge finding
+(analogous to but distinct from the reduction, and not counted against the 22
+candidates since it connects to a DEFINITION rather than a prior hand-proved
+theorem), and an honest, itemized negative result for the remaining 20 of the
+21 non-connector candidates (22 additional declarations found minus the 1
+connector `laplacian_eq_transpose_mul_boundaryMatrix` itself, which is
+cycle 60's own bridge and not a candidate; of the 21 true candidates, 1
+reduced and 20 did not).
+- **Reduction**: `laplacian_diagonal_nonnegative_via_matrix` (`IncidenceTheory.lean`,
+  placed directly after the original `laplacian_diagonal_nonnegative`, which is
+  byte-for-byte unchanged), a 2-line corollary (`rw [laplacian_eq_transpose_mul_
+  boundaryMatrix]; exact Matrix.mul_transpose_self_diag_nonneg idx
+  (boundaryMatrix inc idx) i`) versus the original's ~20-line proof (an inline
+  `square_nonnegative` lemma plus a `fold_nonnegative` induction, both specific
+  to `boundaryMatrix`). This required adding, first, a genuinely NEW general
+  fact to the `Matrix` layer that did not previously exist: `Matrix.mul_
+  transpose_self_diag_nonneg {p q} (idx : List p) (M : Matrix p q Int) (i : q) :
+  0 ≤ mul idx (transpose M) M i i` (added at the end of cycle 60's original
+  `namespace Matrix` block, L807-900, since it is a pure `add`/`mul`/`transpose`
+  fact needing no `IdxComplete`/`one`), proved via a new small general lemma
+  `intListSum_nonneg {α} (xs : List α) (f : α → Int) (hf : ∀ a ∈ xs, 0 ≤ f a) :
+  0 ≤ intListSum xs f` (added to the `intListSum` library, directly after
+  `intListSum_eq_zero_of_mem`, same induction shape) plus the same `Int.le_
+  total`/`Int.neg_mul_neg` square-nonnegativity split the ORIGINAL proof already
+  used inline, now stated once at the general level instead of duplicated per
+  call site. **Honest accounting, matching cycle 61 (b)'s discipline exactly**:
+  this is smaller-and-genuine ONLY because the fixed cost of `intListSum_
+  nonneg`/`mul_transpose_self_diag_nonneg` was paid this cycle — unlike cycle
+  61 (b), which reused laws cycle 60 had ALREADY proved for unrelated reasons,
+  this reduction required net-new general-layer content, so the marginal
+  saving is real but the total proof-plus-infrastructure weight is closer to a
+  wash than a pure win.
+- **Bonus finding (not a simplification of an existing theorem — new
+  vocabulary for an existing DEFINITION)**: while reading the ∂²-composition
+  family for category (v), noticed `boundary_composition inc idx i k`
+  (`IncidenceTheory.lean` L5879-5881, cycle-9-era, predates the `Matrix`
+  layer entirely) is syntactically identical in fold-shape to `Matrix.mul idx
+  (boundaryMatrix inc idx) (boundaryMatrix inc idx) i k` — the UN-transposed
+  self-product `B * B` (∂² itself), the sibling of `laplacian_eq_transpose_
+  mul_boundaryMatrix`'s Gram product `Bᵀ * B`. Added `boundary_composition_eq_
+  matrix_mul_self : boundary_composition inc idx = Matrix.mul idx (boundaryMatrix
+  inc idx) (boundaryMatrix inc idx)` (placed directly after `verify_boundary_
+  composition`, before the pre-existing `boundary_operator_square_zero`),
+  proved identically to the L896 theorem it mirrors (`funext i k; rfl` — both
+  sides are the same fold once `Matrix.mul` is unfolded). Recorded separately
+  from the (c) reduction above since it connects the Matrix layer to an
+  existing DEFINITION, not to an existing hand-proved THEOREM the way the
+  task's (c) asked to check.
+- **Honest negative results, 20 theorems checked and NOT reduced, by category**
+  (per the task's own framing that a checked-and-doesn't-simplify finding is
+  fully legitimate, not a failure to report): (ii) idx-varying —
+  `laplacian_append`, `laplacian_cons`, `laplacian_empty`, `laplacian_diagonal_
+  monotone_append`, `laplacian_diagonal_monotone_cons`, `laplacian_diagonal_
+  strict_monotone_append`, `laplacian_diagonal_increment_append`,
+  `laplacian_of_empty_boundaries` (8 theorems) — their entire content IS the
+  effect of extending/splitting the observation list `idx`, a dimension none
+  of `add`/`mul`/`transpose`/`one`'s laws (all stated for one fixed `idx`)
+  address at all; (iii) inc-congruence — `boundaryMatrix_index_irrel`,
+  `boundaryMatrix_congr`, `laplacian_congr` (3 theorems) — vary the underlying
+  `Incidence`, a parameter the Matrix layer has no vocabulary for relating
+  across; (iv) row/column-sum — `laplacian_rowSum_zero_of_boundaryRowBalanced`,
+  `laplacian_columnSum_zero_of_boundaryRowBalanced` (2 theorems) — these sum a
+  matrix's entries ACROSS an index (a genuinely different finite-sum
+  manipulation, using `intListSum_gram_row_swap` to swap summation order, not
+  a pointwise matrix equality), so they are not corollaries of pointwise
+  `add`/`mul`/`transpose`/`one` laws even though their SUBJECT is a `Matrix`;
+  (v) ∂²/`Endpoint`-level — `boundaryMatrix_single_link`, `boundaryMatrix_eq_
+  foldl`, `boundaryMatrix_ne_zero_witness`, `boundaryMatrix_eq_zero_of_leaf`,
+  `boundaryMatrix_of_empty_boundary`, `boundaryMatrix_two_link`,
+  `boundaryMatrix_three_link` (7 theorems, plus their `foldl_add_eq_count_mul_
+  two`/`_three`/`list_foldl_witness`/`boundary_composition_zero_of_leaf_
+  boundary` supporting lemmas, not independently counted) — these are
+  irreducibly about a SPECIFIC named list of one/two/three `Endpoint`s and
+  their `Sign`s, not about the general algebraic layer; the bonus finding
+  above shows the TOP-LEVEL `boundary_composition` object connects to `Matrix.
+  mul`, but these per-endpoint case-split theorems are a different, more
+  granular level of content that a pointwise matrix-algebra law cannot express.
+
+`#print axioms` on all 9 new declarations (`Matrix.transpose_one`, `finiteIdx_
+complete`, `finiteB_one_mul`, `finiteB_mul_one`, `intListSum_nonneg`, `Matrix.
+mul_transpose_self_diag_nonneg`, `laplacian_diagonal_nonnegative_via_matrix`,
+`boundary_composition_eq_matrix_mul_self`): all depend only on some subset of
+`[propext, Quot.sound]` (the `funext`-based proofs) or additionally `[Lean.
+ofReduceBool, Lean.trustCompiler]` for the three `native_decide`-based
+declarations in (b) — confirmed by cross-checking against the PRE-EXISTING
+`finiteB_leaf_leaf` (also `native_decide`-based), which carries the identical
+axiom set `[propext, Lean.ofReduceBool, Lean.trustCompiler, Quot.sound]`, so
+(b) introduces no new axiom dependency beyond what this file's established
+`native_decide` style already uses everywhere. No new axiom anywhere. Full
+`./verify.sh` (clean `lake clean` rebuild, example run, repo-wide `axiom`/
+`sorry`/`sorryAx` grep) passes end to end with (a), (b), and (c) all present
+simultaneously.
+
+**Synthesis**: this cycle's three parts differ in what kind of payoff they
+deliver, and the honest accounting matters more than a rounded-up headline.
+(a) is the cheapest possible extension — a fact that was already implied by
+`one`'s bare definition needing no hypothesis, formalized in four tactic
+lines — but it closes a real gap: roadmap item 8's unit-law pair was
+previously silent on how `one` interacts with `transpose`, and now it is not.
+(b) is this cycle's most structurally significant result even though it is
+the smallest by line count: it is the FIRST time any general fact proved in
+either `Matrix` block has been instantiated against the project's own concrete
+`finiteB`/`finiteL` data, closing a gap cycle 60 itself left open (that cycle's
+Method section confirmed `finiteAlgebraicModel`'s fields were `rfl`-equal to
+the concrete `boundaryMatrix`/`laplacian`, but the general algebraic laws
+themselves were never checked against a live instance until now) — the
+"abstract library vs. one concrete example" gap this project's culture has
+flagged before (cf. cycle 59's audit of `IncidenceAlgebraic`) is now closed
+for at least the unit laws. (c) is the cycle's most labor-intensive part and
+delivers the smallest single win by raw arithmetic (1 reduction found out of
+21 true candidates checked, excluding cycle 60's own connector theorem, ~5%),
+but this LOW hit rate is itself the finding: cycle
+61 (b)'s single spot-checked success (`laplacian_symmetric`) did not
+generalize into "most existing theorems secretly reduce to the Matrix layer"
+— instead, the sweep reveals that `laplacian_symmetric` was reducible for a
+SPECIFIC reason (its content is a pointwise equality expressible purely via
+`transpose`/`mul`'s existing laws with no fresh general lemma needed), and
+`laplacian_diagonal_nonnegative` reduces for a DIFFERENT specific reason (its
+content is pointwise but needed one new general lemma), while the other 22
+resist for THREE independent structural reasons (idx-variation, inc-variation,
+cross-index summation) that have nothing to do with each other — the `Matrix`
+layer's pointwise `add`/`mul`/`transpose`/`one` vocabulary is simply the wrong
+shape to express "what happens when you change the list/instance/summing axis
+around a matrix," and no amount of adding more pointwise lemmas would fix
+that. This is a more precise, falsifiable characterization of the Matrix
+layer's reach than cycle 61's queue could have had before the sweep was done,
+and per this project's established culture (cycles 38-40/45-61), an honest
+"checked 23, found 1, here is exactly why the other 22 don't apply" is exactly
+as valuable a research output as landing more reductions would have been.
+Per cycle 60/61's own precedent (ADR addendum for genuine new-construction
+progress on item 8, not for confirmatory/negative results alone), this cycle
+warrants a further ADR addendum: (a) is a real if small extension of the
+`one`/`transpose` interaction; (b) is the qualitatively new "abstract-to-concrete"
+connection the ADR's item 8 status has not yet recorded; (c)'s one genuine
+reduction plus its one bonus definitional bridge are worth a mention, but the
+22-theorem negative sweep is itself ADR-worthy as the first systematic
+boundary-mapping of what the Matrix layer does and does not currently reach.
+
+**Next hypothesis (cycle 63, not yet attempted)**: three candidates surface,
+none requiring fresh scoping: (a) this cycle's negative sweep identified THREE
+distinct structural reasons existing theorems resist Matrix-layer reduction
+(idx-variation, inc-variation, cross-index summation) — does the `Matrix`
+layer admit a genuinely NEW general vocabulary for any ONE of these axes,
+e.g. a general `Matrix.mul` fact about `idx ++ idx'` splitting analogous to
+`laplacian_append` (the idx-variation family), which would then let
+`laplacian_append`/`_cons`/`_empty`/the monotonicity family reduce to
+corollaries the way this cycle's `mul_transpose_self_diag_nonneg` let
+`laplacian_diagonal_nonnegative` reduce? This is a genuine EXTENSION (new
+general fact, category (ii) from this cycle's taxonomy) rather than a further
+sweep, since the sweep itself is now exhausted for the `laplacian_*`/
+`boundaryMatrix_*` family under the CURRENT lemma set. (b) this cycle's bonus
+finding (`boundary_composition_eq_matrix_mul_self`, the `B * B` sibling of
+`laplacian_eq_transpose_mul_boundaryMatrix`'s `Bᵀ * B`) opens its own small
+family: does `Matrix.mul_assoc` let `boundary_composition`'s iterated ∂³/∂⁴
+(if any such concept is ever needed) compose cleanly, or — more immediately
+useful — does recasting `boundary_operator_square_zero`/`empty_boundaries_
+square_zero` via `Matrix.mul` give any new insight into WHY ∂²=0 fails for
+multi-entry boundaries (cycles 8/9/16/17), the way `laplacian_eq_transpose_
+mul_boundaryMatrix` explained `laplacian`'s pre-existing properties? (c) this
+cycle's row/column-sum family (`laplacian_rowSum_zero_of_boundaryRowBalanced`/
+`_columnSum_...`) uses `intListSum_gram_row_swap`, a manipulation that sums a
+Gram matrix against a UNIFORM `1` weighting implicitly (summing every column)
+— does the `Matrix` layer benefit from a genuine "matrix applied to the
+all-ones vector" or more general "matrix-vector product" concept (distinct
+from `Matrix.mul`, which is matrix-matrix), which might unify `laplacian
+RowSum`/`ColumnSum` AND `GraphModel.lean`'s existing `finiteLApply` (L388,
+already an ad hoc `idx.foldl`-based matrix-vector application predating any
+general vocabulary for it) under one new abstraction? All three are
+well-scoped extensions rather than further audits, since (c)'s own sweep this
+cycle exhausted what the CURRENT lemma set can explain about the EXISTING
+theorem set.

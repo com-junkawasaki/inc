@@ -2065,3 +2065,55 @@ percentages の据え置きを確認した基準と同じ基準を、単一 cycl
 「部分完了」のまま維持し、パーセンテージ（本文59行目、40%/55–60%）も本追補では
 動かさない——cycle 60 追補と同じ保守的判断（1 cycle 分の具体的だが限定的な前進を
 過大評価しない）を一貫して適用する。
+
+## 2026-07-14 追補（cycle 62: `transpose_one`・`finiteIdx` 完備性の実例接続・グラム対角非負性の一般化、および `laplacian_*`/`boundaryMatrix_*` 系統的網羅監査）
+
+本追補は `RESEARCH_LOG.md` cycle 62 の結果を反映する。cycle 61 が自ら次サイクルの
+候補として並記した三案——(a) `Matrix.transpose Matrix.one = Matrix.one`、(b)
+`Matrix.IdxComplete GraphModel.finiteIdx` の証明と `finiteB` への単位律の具体適用、
+(c) `laplacian_symmetric` 以外の既存 `laplacian_*`/`boundaryMatrix_*` 手書き証明が
+`Matrix` 層の系統的簡約対象になるかの網羅監査——を全て同一サイクルで完了した。
+
+(a): 追加した `Matrix.transpose_one`（`IncidenceTheory.lean`、cycle 61 が再オープン
+した `namespace Matrix` ブロックの `mul_one` 直後）は、`Matrix.one` 自体の定義には
+`IdxComplete` 等の仮定が一切不要であること（単位律のみが必要としていた）を確認した
+上での、`if` 対称性のみによる4行の証明。
+
+(b): `GraphModel.lean` に `finiteIdx_complete : Matrix.IdxComplete finiteIdx`
+（`finiteIdx := [.leaf, .root]` の2要素・2コンストラクタでの `native_decide` 場合分け）
+を証明し、`finiteB_one_mul`/`finiteB_mul_one`（`Matrix.one_mul`/`Matrix.mul_one` を
+`finiteIdx_complete`/`finiteB` へ直接適用）を追加した。これは cycle 61 追補が明示的に
+「未実施」と記録した項目（直上 (c) 参照）を閉じるものであり、cycle 60 の一般 `Matrix`
+演算層が初めてこのプロジェクト自身の具体インスタンス（`finiteB`）に対して非自明に
+適用されたことを示す——抽象ライブラリと唯一の具体例の接続という、cycle 59 の監査が
+繰り返し指摘してきたギャップの一部が、単位律について閉じた。
+
+(c): 24個の `laplacian_*`/`boundaryMatrix_*` 定理（cycle 61 で処理済みの
+`laplacian_symmetric`/`_via_matrix` 2件、および cycle 60 自身の橋渡し定理
+`laplacian_eq_transpose_mul_boundaryMatrix` 1件を除く21件）を全て精読し分類した。
+既存の `laplacian_diagonal_nonnegative` を、新設した一般補題 `Matrix.mul_transpose_
+self_diag_nonneg`（`Aᵀ * A` の対角成分が非負——グラム行列の対角は平方和、という
+一般事実。基盤として `intListSum_nonneg` も新設）の2行の系として再証明した
+（`laplacian_diagonal_nonnegative_via_matrix`、原証明は保持）。加えて、
+`boundary_composition`（∂²、cycle 9 由来）が `Matrix.mul idx B B`（転置なしの
+自己積、`laplacian_eq_transpose_mul_boundaryMatrix` の姉妹関係）に等しいという
+未記録の定義的接続を発見・証明した（`boundary_composition_eq_matrix_mul_self`）。
+残り20件は簡約されないことを確認し、3系統の構造的理由——(i) `idx` を可変にする
+性質（`laplacian_append` 系列8件）、(ii) 異なる `Incidence` 間の合同性
+（`boundaryMatrix_congr` 系列3件）、(iii) 行/列方向の総和（`laplacian_rowSum_zero_
+of_boundaryRowBalanced` 系列2件）、(iv) `Endpoint`/`Sign` 単位の場合分け
+（`boundaryMatrix_two_link` 系列7件）——に整理して記録した（いずれも
+`Matrix.add`/`mul`/`transpose`/`one` の逐点的な等式という形と本質的に異なる形の
+主張であることが理由）。
+
+これにより項目8の評価をさらに「行列の基本代数法則群 + `laplacian` との接続 +
+単位行列と単位律」から「+ `transpose`/`one` の相互律 + 具体インスタンス
+（`finiteB`）での単位律の実例接続 + グラム行列対角非負性の一般化 + ∂²
+（`boundary_composition`）の `Matrix.mul` 接続 + `laplacian_*`/`boundaryMatrix_*`
+系統監査による層の到達範囲の明確化（24件中1件のみ追加簡約、範囲外の理由を3系統に
+特定）」へ更新する。ただし依然として: (a) 階数・行列式・固有値・逆行列は未着手、
+(b) 抽象代数・位相・測度論は cycle 60 追補時点の記述から変化なし、(c) 今回特定した
+3系統（`idx` 可変・`Incidence` 合同・行/列総和）を埋める一般語彙は cycle 63 以降の
+課題として残る（`RESEARCH_LOG.md` cycle 62 の Next hypothesis に記録済み）。項目8の
+記述は「部分完了」のまま維持し、パーセンテージ（本文59行目、40%/55–60%）も本追補
+では動かさない——cycle 60/61 追補と同じ保守的判断を一貫して適用する。
