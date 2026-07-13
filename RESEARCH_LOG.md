@@ -7545,3 +7545,167 @@ work, is incremental in the same sense cycle 60's ADR addendum was careful
 not to overclaim. Either is legitimate; this cycle does not have enough
 additional exploration budget remaining to judge between them and leaves the
 choice, with this orientation, to cycle 68.
+
+## Cycle 68
+
+**Hypothesis**: per cycle 67's option (b), read the ADR's item 7 in full
+(`docs/adr/2607100600-inc-theory-maturity-cycle41.md`, body L48-50: item 7,
+"incidence / resonance と内部論理・解析構造の統合", names its remaining goal
+as a single universal interpretation theorem connecting resonance-driven
+generation/composition to the internal-logic model and constructive real
+analysis) against what the `*ResonanceSpec` framework
+(`IncidenceTheory.lean` L1660-1744: `ResonanceSpec`/`FunctionalResonanceSpec`/
+`AssociativeResonanceSpec`/`AdditiveGroupResonanceSpec`/
+`UnitReflectingResonanceSpec`/`DistributiveResonanceSpec`/
+`FieldResonanceSpec`/`OrderedFieldResonanceSpec`) and its six concrete
+instantiations (`Integers.lean`/`Reals.lean`/`Rationals.lean`/
+`GraphModel.lean`/`Sum.lean`/`Product.lean`) actually supply, to judge
+whether a genuine (if partial) scoped step toward the universal
+interpretation theorem is available this cycle, falling back to cycle 67's
+option (a) (`ResonantQuotientEquivalenceCriterion`, the resonance-level
+analogue of `BehavioralQuotientEquivalenceCriterion`, L8938-9127) only if
+the `*ResonanceSpec` investigation turns up nothing concretely scoped.
+
+**Method**: read the `*ResonanceSpec` structure family in full at
+L1660-1744 (not just the grep hits), then read all six named files in
+full via sequential `Read` calls (`Integers.lean`, 336 lines, entirely;
+`Product.lean`, 617 lines, entirely; `Sum.lean`, 1933 lines, in full plus
+a structural `grep` pass over every `theorem`/`def` to confirm no
+resonance-relevant material was skipped; `Rationals.lean`'s carrier
+definition and its `*ResonanceSpec` block; `GraphModel.lean`'s
+`finiteIncidence` definition and its `ResonanceSpec` block; `Reals.lean`'s
+`*ResonanceSpec` block headers). Cross-referenced every instantiation
+against the internal-logic bridge machinery
+(`CountablyPresentedIncidence`/`CountableAtomCoding`, `Logic.lean`
+L5120-5290) via `grep -n` for `CountablyPresentedIncidence`/`internalLogic`
+in each of the six files plus `Peano.lean`.
+
+This surfaced a clean, concrete gap, structurally analogous in kind to
+cycle 67's finding (an asymmetry between otherwise-parallel pieces of the
+project) but at a different pair of layers: **only `natIncidence` (via
+`natCountablyPresentedIncidence`, `Peano.lean` L66-73) and the two generic
+combinators `incidenceSum`/`incidenceProd` (via
+`natSumCountablyPresentedIncidence`/`natProductCountablyPresentedIncidence`,
+themselves built by pairing two `natCountablyPresentedIncidence`s) are
+connected to the internal-logic (`CountablyPresentedIncidence`/Kripke
+soundness-completeness) machinery.** Every one of
+`integerIncidence`/`rationalIncidence`/`realIncidence`/`finiteIncidence` --
+despite four of them (`Integers`/`Rationals`/`Reals`, all extending
+`GraphModel`'s `finiteIncidence` pattern) carrying substantial
+`*ResonanceSpec` structure -- has zero occurrences of
+`CountablyPresentedIncidence`/`internalLogic` anywhere in their files
+(confirmed by `grep`, not by absence of a match report alone: re-ran the
+grep positively against `Peano.lean`/`Sum.lean`/`Product.lean` first to
+confirm the pattern DOES show up where expected, ruling out a tooling
+false-negative). This is exactly the kind of asymmetry the ADR's item 7
+describes as still-open: resonance-rich instances exist, the internal-logic
+apparatus is independently mature (~90% per the ADR), but they had never
+been connected for any instance besides `Nat` and its two combinators.
+
+Auditing the four disconnected instances for which is best-scoped to close
+first: `realIncidence` is ruled out immediately and permanently, not just
+for this cycle -- `CountableAtomCoding Atom` requires `code : Atom → Nat`
+with a left inverse `decode`, i.e. an injection `Atom ↪ Nat`, which cannot
+exist for the (classically) uncountable reals; no future cycle should
+attempt `CountablyPresentedIncidence` directly on `realIncidence` for this
+structural reason. Among the three genuinely countable remaining
+candidates, `finiteIncidence` (`GraphModel.lean`) has only the bare
+`ResonanceSpec` (`AssociativeResonanceSpec` fails for it, per its own
+negative theorem `finiteIncidenceSum_not_associativeResonance` on its sum
+with itself) and `rationalIncidence` (`Rationals.lean`) is built over a
+custom `Quotient rationalRepresentativeSetoid` carrier (`IncRational`),
+which would need a coding routed through `RationalRepresentative`
+(`Int` numerator/denominator pairs) plus a `Quotient.out`-based
+representative-choice argument -- a real but structurally more involved
+task queued for a future cycle rather than attempted here.
+`integerIncidence` is both the richest instance (`FunctionalResonanceSpec`/
+`AssociativeResonanceSpec`/`AdditiveGroupResonanceSpec`/
+`DistributiveResonanceSpec` all present, strictly more than
+`finiteIncidence`) and the simplest carrier (plain `Int`, no quotient
+wrapping), making it the best-scoped target: this cycle built a genuinely
+non-identity `CountableAtomCoding Int` (the standard zig-zag bijection with
+`Nat` -- `Int.ofNat n ↦ 2 * n`, `Int.negSucc n ↦ 2 * n + 1`, the first
+non-identity `CountableAtomCoding` instantiation in the project, in
+contrast to `natCountablyPresentedIncidence`'s `id`/`id` coding) and
+instantiated `CountablyPresentedIncidence Int IntegerRole GraphType` from
+it, then the same two corollary theorems `Peano.lean` derives for `Nat`
+(`_internalLogic_complete`, `_internalLogic_consistent_iff_model`), added
+directly before `end IncidenceCore` in `Integers.lean` (originals
+byte-for-byte unchanged).
+
+**Result**: **all 7 new declarations
+(`integerCode`/`integerDecode`/`integerDecode_integerCode`/
+`integerAtomCoding`/`integerCountablyPresentedIncidence`/
+`integerIncidence_internalLogic_complete`/
+`integerIncidence_internalLogic_consistent_iff_model`) type-check;
+`./verify.sh` (clean `lake clean` + `lake build`, example run, repo-wide
+`axiom`/`sorry`/`sorryAx` grep) passes end to end.** A scratch
+`lake env lean` check file (`import IncidenceTheory.Integers`, deleted
+after use per this project's established practice) confirmed `#print
+axioms` on the five substantive declarations: all depend on exactly
+`[propext, Classical.choice, Quot.sound]` (`integerDecode_integerCode`/
+`integerAtomCoding` depend on `[propext, Quot.sound]` only, no
+`Classical.choice`). A second scratch check against
+`natIncidence_internalLogic_complete`/`natCountablyPresentedIncidence`
+confirmed these depend on the *identical* axiom set
+(`[propext, Classical.choice, Quot.sound]`) -- the new `Int` bridge
+introduces no axiom beyond what the existing `Nat` bridge already uses;
+these three are standing project-wide axioms (`Classical.choice` and
+`propext` from the classical logic/Kripke-completeness layer used since
+long before this cycle, `Quot.sound` from `Quotient`-based proofs used
+since even earlier), not new commitments.
+
+**Synthesis**: the full-file reading of the `*ResonanceSpec` framework and
+all six named instantiations confirms cycle 67's own estimate of the
+remaining gap and sharpens it into a concrete, checkable finding: the
+"resonance ↔ internal logic" leg of item 7's universal interpretation
+theorem had, before this cycle, exactly one worked instance (`Nat`, via a
+*trivial* identity coding) plus its two generic combinator closures --
+every richer algebraic instance (`Int`/`Rat`/`Real`/the finite graph model)
+was untouched. This cycle adds a second, non-trivial worked instance
+(`Int`, whose `*ResonanceSpec` structure is a genuine additive group with
+compatible multiplication, connected via a genuinely non-identity coding),
+and additionally produces a permanent structural finding: `realIncidence`
+can *never* receive this treatment directly (uncountability is a hard
+mathematical obstruction to `CountableAtomCoding`, not a scoping choice),
+which means the "resonance ↔ internal logic ↔ constructive real analysis"
+triangle item 7 envisions cannot be closed by extending
+`CountablyPresentedIncidence` uniformly across all instances -- the real
+line's leg of that triangle, if it is ever built, will need a genuinely
+different bridge (most plausibly through the discrete/rational
+approximating structure `realIncidence` is itself built from in
+`Reals.lean`, not through direct atom-coding). This is a real, bounded step
+narrowing the gap (one new instance, plus a documented permanent
+obstruction ruling out a whole family of future attempts on `Real`), not
+the universal interpretation theorem itself -- consistent with this
+project's conservative convention (cycles 60-67: don't bump a roadmap
+percentage for one cycle's concrete-but-bounded progress), so the ADR
+addendum below records the finding without moving item 7's 85% figure.
+
+**Next hypothesis (cycle 69, not yet attempted)**: two concrete threads are
+now queued, both narrower and better-scoped than this cycle's own starting
+point. (a) Extend the internal-logic bridge to `rationalIncidence`
+(`Rationals.lean`), the last countable-but-unconnected instance and the
+richest `*ResonanceSpec` instantiation in the whole project
+(`FieldResonanceSpec`/`OrderedFieldResonanceSpec`, strictly more than
+`Int`'s) -- this needs a `CountableAtomCoding IncRational` routed through
+`RationalRepresentative`'s `Int` numerator/denominator pair (reusing this
+cycle's `integerCode`/`integerDecode` plus a `Nat × Nat → Nat` pairing,
+e.g. the existing `diagonalPair`/`diagonalIndex`/`diagonalRemainder` already
+used by `CountableAtomCoding.prod`, `Logic.lean` L4988-4998) combined with
+a `Quotient.out`-based representative-choice argument for `decode_code` --
+more involved than this cycle's direct `Int` case but concretely scoped,
+not open-ended. (b) Per this cycle's permanent-obstruction finding on
+`Real`, investigate whether `Reals.lean`'s own construction (whatever
+discrete/rational approximating structure `realIncidence` is built from)
+already supplies, or could supply, a *countable dense substructure* bridge
+to the internal-logic layer -- e.g. a `CountableAtomCoding` on the
+approximating/index structure rather than on `Real` itself, connecting to
+`realIncidence` indirectly -- explicitly flagged as exploratory (reading
+`Reals.lean`'s own construction in full first, not yet done beyond its
+`*ResonanceSpec` block headers, is a prerequisite before judging whether
+this is well-scoped or itself needs a further scope-down). If neither
+proves tractable in one cycle, cycle 67's still-unclaimed option (a)
+(`ResonantQuotientEquivalenceCriterion` by direct analogy with
+`BehavioralQuotientEquivalenceCriterion`) remains available as a
+concretely well-scoped fallback.

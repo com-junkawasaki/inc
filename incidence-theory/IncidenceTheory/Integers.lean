@@ -333,4 +333,94 @@ theorem integerIncidence_nontrivial_resonance :
     integerIncidence.resonance 2 (-3) (-1) := by
   simp [integerIncidence]
 
+/- Research cycle 68 (see RESEARCH_LOG.md): roadmap item 7 ("incidence /
+resonance と内部論理・解析構造の統合") names its remaining goal as a single
+universal interpretation theorem connecting resonance-driven
+generation/composition to the internal-logic model and constructive real
+analysis. Auditing every concrete `*ResonanceSpec` instantiation
+(`Integers.lean`/`Rationals.lean`/`Reals.lean`/`GraphModel.lean`, plus the
+generic combinators `Sum.lean`/`Product.lean`) against the internal-logic
+apparatus (`CountablyPresentedIncidence`/Kripke soundness-completeness,
+`IncidenceTheory/Logic.lean`) found that only `natIncidence` (via
+`natCountablyPresentedIncidence`, `Peano.lean`) and the two generic
+combinators `incidenceSum`/`incidenceProd` (via
+`natSumCountablyPresentedIncidence`/`natProductCountablyPresentedIncidence`,
+themselves built from `natCountablyPresentedIncidence`) are connected to it
+-- every one of `integerIncidence`/`rationalIncidence`/`realIncidence`/
+`finiteIncidence` has none. `Real` is ruled out immediately: `CountableAtomCoding`
+demands a `code : Atom → Nat` with a left inverse `decode`, i.e. an
+injection into `Nat`, which cannot exist for the uncountable reals. Among
+the remaining three, `integerIncidence` is the richest `*ResonanceSpec`
+instance (`FunctionalResonanceSpec`/`AssociativeResonanceSpec`/
+`AdditiveGroupResonanceSpec`/`DistributiveResonanceSpec`, strictly more
+structure than `finiteIncidence`'s bare `ResonanceSpec` and reusing none of
+`natIncidence`'s trivial identity coding), so it is the best-scoped target
+for a first non-`Nat` bridge: give `Int` a genuinely non-identity
+`CountableAtomCoding` (the standard zig-zag bijection with `Nat`) and
+instantiate the same generic `CountablyPresentedIncidence` machinery already
+used for `Nat`, connecting the integers' resonance-driven additive/
+multiplicative structure to Kripke-model soundness/completeness for the
+first time. This is a modest, concrete step, not item 7's full universal
+interpretation theorem -- it establishes one additional worked instance of
+"resonance ↔ internal logic" beyond the identity-coded `Nat` case, on the
+richest currently-available candidate; `rationalIncidence` (built over a
+custom `Quotient` carrier, `IncRational`, needing a coding through
+`RationalRepresentative` pairs) is the natural next target if this thread
+continues, per this cycle's `RESEARCH_LOG.md` entry. -/
+
+/-- The standard zig-zag encoding of `Int` into `Nat`: a nonnegative integer
+`n` (`Int.ofNat n`) doubles to `2 * n`; a negative integer `-(n+1)`
+(`Int.negSucc n`) doubles-and-shifts to `2 * n + 1` -- the two families
+interleave exhaustively and disjointly across all of `Nat`. -/
+def integerCode : Int → Nat
+  | Int.ofNat n => 2 * n
+  | Int.negSucc n => 2 * n + 1
+
+/-- Inverse of `integerCode`: even codes decode to the nonnegative half,
+odd codes decode to the corresponding `negSucc`. -/
+def integerDecode (code : Nat) : Int :=
+  if code % 2 = 0 then Int.ofNat (code / 2) else Int.negSucc (code / 2)
+
+theorem integerDecode_integerCode (value : Int) :
+    integerDecode (integerCode value) = value := by
+  cases value with
+  | ofNat n =>
+      have hmod : (2 * n) % 2 = 0 := by omega
+      have hdiv : (2 * n) / 2 = n := by omega
+      simp [integerCode, integerDecode, hmod, hdiv]
+  | negSucc n =>
+      have hmod : (2 * n + 1) % 2 = 1 := by omega
+      have hdiv : (2 * n + 1) / 2 = n := by omega
+      simp [integerCode, integerDecode, hmod, hdiv]
+
+/-- `Int`'s countable-atom presentation via the zig-zag coding above --
+unlike `natCountablyPresentedIncidence`'s trivial identity coding
+(`Peano.lean`), this is the project's first genuinely non-identity
+`CountableAtomCoding` instantiation. -/
+def integerAtomCoding : CountableAtomCoding Int where
+  decode := integerDecode
+  code := integerCode
+  decode_code := integerDecode_integerCode
+
+/-- The bridge this cycle builds: `integerIncidence` -- the richest
+`*ResonanceSpec`-equipped concrete instance without a prior internal-logic
+connection -- paired with its countable-atom presentation, making the
+generic Kripke soundness/completeness machinery
+(`IncidenceTheory/Logic.lean`) applicable to it exactly as it already is to
+`natIncidence` (`Peano.lean`). -/
+def integerCountablyPresentedIncidence :
+    CountablyPresentedIncidence Int IntegerRole GraphType where
+  incidence := integerIncidence
+  atoms := integerAtomCoding
+
+theorem integerIncidence_internalLogic_complete
+    (context : List (Formula Int)) (formula : Formula Int) :
+    KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
+  integerCountablyPresentedIncidence.internalLogic_complete context formula
+
+theorem integerIncidence_internalLogic_consistent_iff_model
+    (context : List (Formula Int)) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context :=
+  integerCountablyPresentedIncidence.internalLogic_consistent_iff_model context
+
 end IncidenceCore

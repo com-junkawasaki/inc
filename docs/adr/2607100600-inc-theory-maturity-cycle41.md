@@ -2433,3 +2433,88 @@ resonance 層の類似構造（`ResonantQuotientEquivalenceCriterion`）が
 まだ存在しないという、同種の並行構築を続ける選択肢と、項目7の「普遍的
 解釈定理」そのものへ着手できるかを判定する選択肢の両方を、判断材料
 つきで cycle 68 に委ねている。
+
+## 2026-07-14 追補（cycle 68: `*ResonanceSpec` の6具体化を精読し、
+`integerIncidence` を内部論理層へ初めて接続——同時に `realIncidence` への
+同種接続が構造的に不可能であることを確定）
+
+本追補は `RESEARCH_LOG.md` cycle 68 の結果を反映する。cycle 67 が
+cycle 68 に委ねた二択のうち、項目7の「普遍的解釈定理」側（本文
+L1660-1744 の `*ResonanceSpec` framework と、`Integers.lean`/
+`Reals.lean`/`Rationals.lean`/`GraphModel.lean`/`Sum.lean`/`Product.lean`
+の6具体化）を、事前仮説なしに全文精読した（cycle 67 は `grep -l` で
+存在確認のみで個別には未読と明記していた6ファイル全て）。
+
+精読の結果、`CountablyPresentedIncidence`/内部論理（Kripke
+健全性・完全性）機構に接続済みなのは `natIncidence`（`Peano.lean`の
+`natCountablyPresentedIncidence`）と、その2つの一般コンストラクタ
+`incidenceSum`/`incidenceProd`（`natCountablyPresentedIncidence`を
+2つ組み合わせて構築）だけであり、`integerIncidence`/`rationalIncidence`/
+`realIncidence`/`finiteIncidence` は（4つのうち3つが `*ResonanceSpec` を
+それなりに豊富に備えているにもかかわらず）**一つも内部論理層に
+接続されていなかった**ことを確認した（`CountablyPresentedIncidence`/
+`internalLogic` の grep がこの4ファイルで0件、対照として
+`Peano.lean`/`Sum.lean`/`Product.lean` では期待通りヒットすることで
+grep 手法自体の false-negative ではないことも確認済み）。これは
+項目7が明示する「resonance ↔内部論理」という一辺が、`Nat`（しかも
+恒等写像という自明な符号化）以外では一度も検証されていなかった、
+という具体的な欠落である。
+
+この欠落に対し: **`realIncidence` は構造的に恒久的除外**と判定した——
+`CountableAtomCoding Atom` は `code : Atom → Nat` とその左逆
+`decode` を要求する（= `Atom` から `Nat` への単射の存在）が、
+（古典論理下で）非可算な実数体にはこれが原理的に存在しない。残る
+可算な3候補のうち、`finiteIncidence` は `ResonanceSpec` のみ（その
+`AssociativeResonanceSpec` は自身の sum で既に反証済み）、
+`rationalIncidence` はカスタム `Quotient` carrier（`IncRational`）上に
+構築されており符号化に `Quotient.out` 経由の代表元選択が要ることから
+より手間のかかる次候補として温存し、`integerIncidence`（
+`FunctionalResonanceSpec`/`AssociativeResonanceSpec`/
+`AdditiveGroupResonanceSpec`/`DistributiveResonanceSpec` を全て備える、
+この中で最も豊かな `*ResonanceSpec` インスタンスかつ carrier が
+quotient でなく素の `Int`）を今サイクルの対象に選んだ。
+
+具体的には: `Int` の標準 zig-zag 符号化（`Int.ofNat n ↦ 2n`、
+`Int.negSucc n ↦ 2n+1`）による初めての非恒等 `CountableAtomCoding Int`
+を構築し、`natCountablyPresentedIncidence` と全く同じ一般機構を用いて
+`integerCountablyPresentedIncidence : CountablyPresentedIncidence Int
+IntegerRole GraphType` を得て、`Peano.lean` が `Nat` について持つのと
+同じ2つの系（`_internalLogic_complete`/
+`_internalLogic_consistent_iff_model`）を `Integers.lean` に追加した
+（既存部分はバイト単位で不変）。
+
+`./verify.sh`（`lake clean` を含む完全リビルド、実行例、`axiom`/
+`sorry`/`sorryAx` の全木 grep）はクリーンに通過した。scratch
+`lake env lean` 検査（使用後削除）で新規5宣言の `#print axioms` を
+確認: いずれも `[propext, Classical.choice, Quot.sound]`（符号化本体の
+2件は `Classical.choice` 不要の `[propext, Quot.sound]`）で、対照実験
+として `natIncidence_internalLogic_complete`/
+`natCountablyPresentedIncidence` も同一の公理集合に依存することを
+確認——新規公理は皆無、この内部論理層が以前から使ってきた公理と
+同一である。
+
+これにより項目7の記述を評価し直す: この cycle は「resonance ↔
+内部論理」という一辺について、`Nat`（自明な符号化）に加えて
+`Int`（非自明な符号化、より豊かな resonance 構造）という2件目の
+具体的接続を追加し、同時に「`realIncidence` への同種の直接接続は
+非可算性という数学的障害により原理的に不可能」という恒久的な構造的
+知見も確定した——これは「resonance ↔内部論理↔構成実数解析」という
+項目7の三角形が `CountablyPresentedIncidence` の一様な拡張では
+決して閉じられないことを意味し、実数の脚を将来つなぐとすれば
+`Reals.lean` 自身が実数を構成する際の離散/有理近似構造を経由する
+別種の橋が必要になる、という今後の探索方向を絞り込む具体的成果で
+ある。とはいえ項目7が明示する単一の普遍的解釈定理そのものには
+遠く及ばないため、cycle 60-67 の保守的規律どおり、項目7の記述
+（「部分完了」）とパーセンテージ（本文57–58行目、incidence/resonance
+約90%・内部論理約90%）は本追補では動かさない。`RESEARCH_LOG.md`
+cycle 68 の Next hypothesis は、(a) `rationalIncidence`
+（`FieldResonanceSpec`/`OrderedFieldResonanceSpec` を備える、
+project 内で最も豊かな `*ResonanceSpec` インスタンス）への同種接続
+——`RationalRepresentative` の `Int` 対を経由する符号化と
+`Quotient.out` ベースの代表元選択が必要、今サイクルより手間はかかるが
+具体的に scope 済み——と、(b) `realIncidence` 自身の構成が可算稠密な
+部分構造への橋を（間接的にせよ）既に供給しているかの探索的調査
+（`Reals.lean` 自身の構成を全文精読するのが前提、今サイクルでは
+`*ResonanceSpec` ブロックのヘッダのみ確認）の両方を、cycle 67 が
+まだ手つかずのまま残した `ResonantQuotientEquivalenceCriterion`
+フォールバックと共に cycle 69 に委ねている。
