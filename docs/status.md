@@ -190,9 +190,9 @@ Checked constructions include:
   nonnegative product or its additive negation, providing the case interface
   for signed arithmetic; negation exchanges positive/negative parts and changes
   either product sign, and all eight sign cases reduce signed associativity to
-  the checked nonnegative associativity law; distributivity is lifted for
-  same-sign summands with either factor sign, while additive cancellation and
-  difference-rearrangement laws prepare the remaining mixed-sign case;
+  the checked nonnegative associativity law; additive cancellation and
+  difference rearrangement reduce the mixed-sign sum case to nonnegative
+  distribution, completing both distributive laws for arbitrary signed inputs;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets
@@ -203,7 +203,7 @@ Checked constructions include:
 
 Major remaining areas include a canonical reduced-fraction boundary and
 computational reciprocal selector, extension of nonnegative cut multiplication
-of the signed product to its distribution/inverse field laws,
+of the signed product to its nonzero inverse and remaining ordered-field laws,
 real analysis, broader algebra, and a larger categorical library. Rational
 incidence is now observationally faithful:
 zero has an empty boundary and every nonzero rational has a one-step boundary

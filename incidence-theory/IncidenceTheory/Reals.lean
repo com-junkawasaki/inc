@@ -1774,6 +1774,115 @@ theorem realMul_add_all_negated_nonnegative
   rw [realMul_neg_left, realMul_neg_left, realMul_neg_left,
     realMul_add_negated_nonnegative, realNeg_add]
 
+theorem realMul_add_sub_nonnegative
+    (factor left right : NonnegativeReal) :
+    realMul factor.value (realAdd left.value (realNeg right.value)) =
+      realAdd (realMul factor.value left.value)
+        (realNeg (realMul factor.value right.value)) := by
+  let difference := realAdd left.value (realNeg right.value)
+  by_cases differenceNonnegative : realLE realZero difference
+  · let differencePart : NonnegativeReal :=
+      ⟨difference, differenceNonnegative⟩
+    have restore : realAdd differencePart.value right.value = left.value := by
+      change realAdd (realAdd left.value (realNeg right.value)) right.value =
+        left.value
+      rw [realAdd_assoc, realAdd_neg_left, realAdd_zero_right]
+    have distributed := realMul_add_nonnegative factor differencePart right
+    rw [restore] at distributed
+    exact real_eq_add_neg_of_add_eq distributed.symm
+  · let differencePart := realNegativePart difference
+    have differenceEq : difference = realNeg differencePart.value :=
+      real_eq_neg_negativePart difference differenceNonnegative
+    have magnitudeEq : differencePart.value = realNeg difference := by
+      have negated := congrArg realNeg differenceEq
+      simpa [realNeg_neg] using negated.symm
+    have restore : realAdd left.value differencePart.value = right.value := by
+      rw [magnitudeEq]
+      change realAdd left.value
+        (realNeg (realAdd left.value (realNeg right.value))) = right.value
+      rw [realNeg_add, realNeg_neg, ← realAdd_assoc,
+        realAdd_neg, realAdd_zero_left]
+    have distributed := realMul_add_nonnegative factor left differencePart
+    rw [restore] at distributed
+    change realMul factor.value difference = _
+    rw [differenceEq, realMul_neg_right]
+    exact realNeg_eq_add_neg_of_add_eq distributed.symm
+
+theorem realMul_add_sub_neg_factor_nonnegative
+    (factor left right : NonnegativeReal) :
+    realMul (realNeg factor.value)
+        (realAdd left.value (realNeg right.value)) =
+      realAdd (realMul (realNeg factor.value) left.value)
+        (realNeg (realMul (realNeg factor.value) right.value)) := by
+  rw [realMul_neg_left, realMul_neg_left, realMul_neg_left,
+    realMul_add_sub_nonnegative, realNeg_add, realNeg_neg]
+
+theorem realMul_add (factor left right : IncReal) :
+    realMul factor (realAdd left right) =
+      realAdd (realMul factor left) (realMul factor right) := by
+  classical
+  by_cases factorNonnegative : realLE realZero factor
+  · let factorPart : NonnegativeReal := ⟨factor, factorNonnegative⟩
+    by_cases leftNonnegative : realLE realZero left
+    · let leftPart : NonnegativeReal := ⟨left, leftNonnegative⟩
+      by_cases rightNonnegative : realLE realZero right
+      · let rightPart : NonnegativeReal := ⟨right, rightNonnegative⟩
+        exact realMul_add_nonnegative factorPart leftPart rightPart
+      · let rightPart := realNegativePart right
+        have rightEq := real_eq_neg_negativePart right rightNonnegative
+        rw [rightEq]
+        simpa [realMul_neg_right] using
+          realMul_add_sub_nonnegative factorPart leftPart rightPart
+    · let leftPart := realNegativePart left
+      have leftEq := real_eq_neg_negativePart left leftNonnegative
+      by_cases rightNonnegative : realLE realZero right
+      · let rightPart : NonnegativeReal := ⟨right, rightNonnegative⟩
+        rw [leftEq]
+        rw [realAdd_comm (realNeg leftPart.value) rightPart.value,
+          realMul_neg_right]
+        rw [realAdd_comm
+          (realNeg (realMul factorPart.value leftPart.value))
+          (realMul factorPart.value rightPart.value)]
+        exact realMul_add_sub_nonnegative factorPart rightPart leftPart
+      · let rightPart := realNegativePart right
+        have rightEq := real_eq_neg_negativePart right rightNonnegative
+        rw [leftEq, rightEq]
+        exact realMul_add_negated_nonnegative factorPart leftPart rightPart
+  · let factorPart := realNegativePart factor
+    have factorEq := real_eq_neg_negativePart factor factorNonnegative
+    by_cases leftNonnegative : realLE realZero left
+    · let leftPart : NonnegativeReal := ⟨left, leftNonnegative⟩
+      by_cases rightNonnegative : realLE realZero right
+      · let rightPart : NonnegativeReal := ⟨right, rightNonnegative⟩
+        rw [factorEq]
+        exact realMul_add_neg_factor_nonnegative factorPart leftPart rightPart
+      · let rightPart := realNegativePart right
+        have rightEq := real_eq_neg_negativePart right rightNonnegative
+        rw [factorEq, rightEq]
+        simpa [realMul_neg_right] using
+          realMul_add_sub_neg_factor_nonnegative factorPart leftPart rightPart
+    · let leftPart := realNegativePart left
+      have leftEq := real_eq_neg_negativePart left leftNonnegative
+      by_cases rightNonnegative : realLE realZero right
+      · let rightPart : NonnegativeReal := ⟨right, rightNonnegative⟩
+        rw [factorEq, leftEq]
+        rw [realAdd_comm (realNeg leftPart.value) rightPart.value,
+          realMul_neg_right]
+        rw [realAdd_comm
+          (realNeg (realMul (realNeg factorPart.value) leftPart.value))
+          (realMul (realNeg factorPart.value) rightPart.value)]
+        exact realMul_add_sub_neg_factor_nonnegative factorPart rightPart leftPart
+      · let rightPart := realNegativePart right
+        have rightEq := real_eq_neg_negativePart right rightNonnegative
+        rw [factorEq, leftEq, rightEq]
+        exact realMul_add_all_negated_nonnegative factorPart leftPart rightPart
+
+theorem realAdd_mul (left right factor : IncReal) :
+    realMul (realAdd left right) factor =
+      realAdd (realMul left factor) (realMul right factor) := by
+  rw [realMul_comm, realMul_add,
+    realMul_comm factor left, realMul_comm factor right]
+
 theorem realMul_of_nonnegative_not_nonnegative
     (left right : IncReal)
     (leftNonnegative : realLE realZero left)
