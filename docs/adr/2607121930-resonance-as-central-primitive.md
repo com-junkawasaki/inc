@@ -189,5 +189,8 @@ case where the selector is complete and resonance has no unselected modes.
   Nonzero nonnegative cuts have positive members cofinal above their members,
   and products of nonzero cuts remain nonzero. Strict positive sum-bound
   splitting, common-factor synchronization, and inner-factor approximation
-  prove both distributive laws. Signed extension and inverse modes remain
-  explicit subsequent obligations.
+  prove both distributive laws. The signed extension is now constructed by
+  canonical positive/negative parts and the four-term product expansion; its
+  signed decomposition, commutativity, zero absorption, and exact restriction
+  to nonnegative multiplication are checked. Unit, associativity,
+  distributivity, and inverse laws remain subsequent obligations.

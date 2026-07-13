@@ -26,7 +26,7 @@ kept under [`docs/`](docs/).
 | Quotient theory | Conditional general theory plus concrete simplex quotient |
 | Existing mathematics | Peano, integers, faithful ordered rational field, Dedekind-complete additive real resonance, HF sets, pairs, trees, paths, simplices, product, sum, quotient |
 | Unit-fiber relational semantics | Legacy alignment-dependent API being replaced |
-| Integer/rational/analysis reconstruction | Dedekind-complete additive group plus bundled nonnegative commutative-semiring laws checked; signed field/analysis open |
+| Integer/rational/analysis reconstruction | Dedekind-complete additive group, nonnegative commutative-semiring laws, and a compatible commutative signed product checked; remaining signed field laws/analysis open |
 
 The structural preservation completion certificate is
 `incDepRawNormalizedBasicPreservation : IncDepRawNormalizedBasicPreservation`.

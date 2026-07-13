@@ -1397,4 +1397,129 @@ theorem nonnegativeRealMul_monotone
   realLE_trans (nonnegativeRealMul_monotone_left leftOrdered)
     (nonnegativeRealMul_monotone_right rightOrdered)
 
+/-- Canonical positive part of a real, bundled in the nonnegative cone. -/
+noncomputable def realPositivePart (value : IncReal) : NonnegativeReal :=
+  by
+    classical
+    exact if nonnegative : realLE realZero value then
+      ⟨value, nonnegative⟩
+    else
+      nonnegativeZero
+
+/-- Canonical negative magnitude. The same order branch as `realPositivePart`
+makes the signed decomposition computationally transparent. -/
+noncomputable def realNegativePart (value : IncReal) : NonnegativeReal :=
+  by
+    classical
+    exact if nonnegative : realLE realZero value then
+      nonnegativeZero
+    else
+      { value := realNeg value
+        nonnegative := by
+          have valueNonpositive : realLE value realZero := by
+            rcases realLE_total value realZero with ordered | reverse
+            · exact ordered
+            · exact False.elim (nonnegative reverse)
+          have reversed := (realNeg_order_iff value realZero).mpr valueNonpositive
+          simpa [realNeg_zero] using reversed }
+
+theorem real_signed_decomposition (value : IncReal) :
+    realAdd (realPositivePart value).value
+      (realNeg (realNegativePart value).value) = value := by
+  classical
+  by_cases nonnegative : realLE realZero value
+  · simp [realPositivePart, realNegativePart, nonnegative, nonnegativeZero,
+      realNeg_zero, realAdd_zero_right]
+  · simp [realPositivePart, realNegativePart, nonnegative, nonnegativeZero,
+      realNeg_neg, realAdd_zero_left]
+
+theorem realPositivePart_of_nonnegative (value : IncReal)
+    (nonnegative : realLE realZero value) :
+    realPositivePart value = ⟨value, nonnegative⟩ := by
+  apply NonnegativeReal.ext
+  classical
+  simp [realPositivePart, nonnegative]
+
+theorem realNegativePart_of_nonnegative (value : IncReal)
+    (nonnegative : realLE realZero value) :
+    realNegativePart value = nonnegativeZero := by
+  apply NonnegativeReal.ext
+  classical
+  simp [realNegativePart, nonnegative, nonnegativeZero]
+
+/-- Signed multiplication reconstructed from the nonnegative semiring by the
+identity `(p-n)(q-m) = (pq+nm) - (pm+nq)`. -/
+noncomputable def realMul (left right : IncReal) : IncReal :=
+  let positive := nonnegativeRealAdd
+    (nonnegativeRealMul (realPositivePart left) (realPositivePart right))
+    (nonnegativeRealMul (realNegativePart left) (realNegativePart right))
+  let negative := nonnegativeRealAdd
+    (nonnegativeRealMul (realPositivePart left) (realNegativePart right))
+    (nonnegativeRealMul (realNegativePart left) (realPositivePart right))
+  realAdd positive.value (realNeg negative.value)
+
+theorem realMul_comm (left right : IncReal) :
+    realMul left right = realMul right left := by
+  have positiveEq :
+      nonnegativeRealAdd
+          (nonnegativeRealMul (realPositivePart left) (realPositivePart right))
+          (nonnegativeRealMul (realNegativePart left) (realNegativePart right)) =
+        nonnegativeRealAdd
+          (nonnegativeRealMul (realPositivePart right) (realPositivePart left))
+          (nonnegativeRealMul (realNegativePart right) (realNegativePart left)) := by
+    rw [nonnegativeRealMul_comm_bundle (realPositivePart left),
+      nonnegativeRealMul_comm_bundle (realNegativePart left)]
+  have negativeEq :
+      nonnegativeRealAdd
+          (nonnegativeRealMul (realPositivePart left) (realNegativePart right))
+          (nonnegativeRealMul (realNegativePart left) (realPositivePart right)) =
+        nonnegativeRealAdd
+          (nonnegativeRealMul (realPositivePart right) (realNegativePart left))
+          (nonnegativeRealMul (realNegativePart right) (realPositivePart left)) := by
+    rw [nonnegativeRealMul_comm_bundle (realPositivePart left),
+      nonnegativeRealMul_comm_bundle (realNegativePart left),
+      nonnegativeRealAdd_comm]
+  simp only [realMul]
+  rw [positiveEq, negativeEq]
+
+theorem realMul_of_nonnegative (left right : IncReal)
+    (leftNonnegative : realLE realZero left)
+    (rightNonnegative : realLE realZero right) :
+    realMul left right =
+      (nonnegativeRealMul ⟨left, leftNonnegative⟩
+        ⟨right, rightNonnegative⟩).value := by
+  rw [realMul, realPositivePart_of_nonnegative left leftNonnegative,
+    realPositivePart_of_nonnegative right rightNonnegative,
+    realNegativePart_of_nonnegative left leftNonnegative,
+    realNegativePart_of_nonnegative right rightNonnegative,
+    nonnegativeRealMul_zero_left_bundle,
+    nonnegativeRealMul_zero_right_bundle,
+    nonnegativeRealAdd_zero_right, nonnegativeRealAdd_zero_left,
+    nonnegativeRealMul_zero_left_bundle]
+  change realAdd _ (realNeg realZero) = _
+  rw [realNeg_zero, realAdd_zero_right]
+
+theorem realMul_zero_left (value : IncReal) :
+    realMul realZero value = realZero := by
+  rw [realMul_comm, realMul]
+  rw [realPositivePart_of_nonnegative realZero (realLE_refl _),
+    realNegativePart_of_nonnegative realZero (realLE_refl _)]
+  change realAdd
+    (nonnegativeRealAdd
+      (nonnegativeRealMul (realPositivePart value) nonnegativeZero)
+      (nonnegativeRealMul (realNegativePart value) nonnegativeZero)).value
+    (realNeg
+      (nonnegativeRealAdd
+        (nonnegativeRealMul (realPositivePart value) nonnegativeZero)
+        (nonnegativeRealMul (realNegativePart value) nonnegativeZero)).value) = _
+  rw [nonnegativeRealMul_zero_right_bundle,
+    nonnegativeRealMul_zero_right_bundle,
+    nonnegativeRealAdd_zero_left]
+  change realAdd realZero (realNeg realZero) = realZero
+  rw [realNeg_zero, realAdd_zero_left]
+
+theorem realMul_zero_right (value : IncReal) :
+    realMul value realZero = realZero := by
+  rw [realMul_comm, realMul_zero_left]
+
 end IncidenceCore

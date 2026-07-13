@@ -183,7 +183,9 @@ Checked constructions include:
   have positive members cofinal above every member, nonzero products stay
   nonzero, and common-factor synchronization plus positive-bound splitting
   proves both distributive laws, completing the nonnegative commutative-semiring
-  laws;
+  laws; canonical positive and negative parts reconstruct every real exactly,
+  and their four-term signed product is commutative, absorbs zero, and agrees
+  exactly with the nonnegative cut product on nonnegative inputs;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets
@@ -194,7 +196,7 @@ Checked constructions include:
 
 Major remaining areas include a canonical reduced-fraction boundary and
 computational reciprocal selector, extension of nonnegative cut multiplication
-to signed reals and the resulting field laws,
+of the signed product to its unit/associativity/distribution/inverse field laws,
 real analysis, broader algebra, and a larger categorical library. Rational
 incidence is now observationally faithful:
 zero has an empty boundary and every nonzero rational has a one-step boundary
