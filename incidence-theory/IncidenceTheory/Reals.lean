@@ -3677,6 +3677,79 @@ theorem realSequentiallyContinuousAt_comp
   intro sequence converges
   exact secondContinuous _ (firstContinuous _ converges)
 
+noncomputable def realPow (base : IncReal) : Nat → IncReal
+  | 0 => realOne
+  | Nat.succ exponent => realMul (realPow base exponent) base
+
+@[simp] theorem realPow_zero (base : IncReal) :
+    realPow base 0 = realOne := rfl
+
+@[simp] theorem realPow_succ (base : IncReal) (exponent : Nat) :
+    realPow base (Nat.succ exponent) =
+      realMul (realPow base exponent) base := rfl
+
+theorem realPow_one (base : IncReal) : realPow base 1 = base := by
+  rw [realPow_succ, realPow_zero, realMul_one_left]
+
+theorem realPow_add (base : IncReal) (left right : Nat) :
+    realPow base (left + right) =
+      realMul (realPow base left) (realPow base right) := by
+  induction right with
+  | zero => rw [Nat.add_zero, realPow_zero, realMul_one_right]
+  | succ right induction =>
+      rw [Nat.add_succ, realPow_succ, realPow_succ, induction,
+        realMul_assoc]
+
+theorem realPow_mul (base : IncReal) (left right : Nat) :
+    realPow base (left * right) = realPow (realPow base left) right := by
+  induction right with
+  | zero => rw [Nat.mul_zero, realPow_zero, realPow_zero]
+  | succ right induction =>
+      rw [Nat.mul_succ, realPow_add, realPow_succ, induction]
+
+theorem realPow_mul_base (left right : IncReal) (exponent : Nat) :
+    realPow (realMul left right) exponent =
+      realMul (realPow left exponent) (realPow right exponent) := by
+  induction exponent with
+  | zero => rw [realPow_zero, realPow_zero, realPow_zero, realMul_one_left]
+  | succ exponent induction =>
+      rw [realPow_succ, realPow_succ, realPow_succ, induction]
+      calc
+        realMul (realMul (realPow left exponent) (realPow right exponent))
+            (realMul left right) =
+          realMul (realMul (realPow left exponent) left)
+            (realMul (realPow right exponent) right) := by
+              rw [realMul_assoc,
+                ← realMul_assoc (realPow right exponent) left right,
+                realMul_comm (realPow right exponent) left,
+                realMul_assoc left (realPow right exponent) right,
+                ← realMul_assoc]
+        _ = _ := rfl
+
+noncomputable def nonnegativeRealPow
+    (base : NonnegativeReal) : Nat → NonnegativeReal
+  | 0 => nonnegativeOne
+  | Nat.succ exponent => nonnegativeRealMul (nonnegativeRealPow base exponent) base
+
+theorem nonnegativeRealPow_value (base : NonnegativeReal) (exponent : Nat) :
+    (nonnegativeRealPow base exponent).value = realPow base.value exponent := by
+  induction exponent with
+  | zero => rfl
+  | succ exponent induction =>
+      rw [nonnegativeRealPow, realPow_succ, ← induction]
+      rw [realMul_of_nonnegative
+        (nonnegativeRealPow base exponent).value base.value
+        (nonnegativeRealPow base exponent).nonnegative base.nonnegative]
+
+theorem realAbs_pow (base : IncReal) (exponent : Nat) :
+    realAbs (realPow base exponent) = nonnegativeRealPow (realAbs base) exponent := by
+  induction exponent with
+  | zero =>
+      rw [realPow_zero, nonnegativeRealPow]
+      exact realAbs_of_nonnegative realOne nonnegativeOne.nonnegative
+  | succ exponent induction =>
+      rw [realPow_succ, nonnegativeRealPow, realAbs_mul, induction]
+
 def realPartialSum (terms : RealSequence) : RealSequence
   | 0 => realZero
   | Nat.succ count => realAdd (realPartialSum terms count) (terms count)
@@ -3688,11 +3761,151 @@ def realPartialSum (terms : RealSequence) : RealSequence
     realPartialSum terms (Nat.succ count) =
       realAdd (realPartialSum terms count) (terms count) := rfl
 
+noncomputable def realGeometricPartialSum
+    (ratio : IncReal) (count : Nat) : IncReal :=
+  realPartialSum (realPow ratio) count
+
+@[simp] theorem realGeometricPartialSum_zero (ratio : IncReal) :
+    realGeometricPartialSum ratio 0 = realZero := rfl
+
+theorem realGeometricPartialSum_succ (ratio : IncReal) (count : Nat) :
+    realGeometricPartialSum ratio (Nat.succ count) =
+      realAdd (realGeometricPartialSum ratio count) (realPow ratio count) := rfl
+
+theorem realGeometric_factor_term (ratio : IncReal) (exponent : Nat) :
+    realMul (realAdd realOne (realNeg ratio)) (realPow ratio exponent) =
+      realAdd (realPow ratio exponent)
+        (realNeg (realPow ratio (Nat.succ exponent))) := by
+  rw [realAdd_mul, realMul_one_left, realPow_succ,
+    realMul_neg_left, realMul_comm ratio (realPow ratio exponent)]
+
+theorem realGeometricPartialSum_mul_one_sub
+    (ratio : IncReal) (count : Nat) :
+    realMul (realAdd realOne (realNeg ratio))
+        (realGeometricPartialSum ratio count) =
+      realAdd realOne (realNeg (realPow ratio count)) := by
+  induction count with
+  | zero =>
+      rw [realGeometricPartialSum_zero, realMul_zero_right,
+        realPow_zero, realAdd_neg]
+  | succ count induction =>
+      rw [realGeometricPartialSum_succ, realMul_add, induction,
+        realGeometric_factor_term]
+      calc
+        realAdd
+            (realAdd realOne (realNeg (realPow ratio count)))
+            (realAdd (realPow ratio count)
+              (realNeg (realPow ratio (Nat.succ count)))) =
+          realAdd realOne
+            (realAdd (realNeg (realPow ratio count))
+              (realAdd (realPow ratio count)
+                (realNeg (realPow ratio (Nat.succ count))))) :=
+            realAdd_assoc _ _ _
+        _ = realAdd realOne
+            (realAdd
+              (realAdd (realNeg (realPow ratio count))
+                (realPow ratio count))
+              (realNeg (realPow ratio (Nat.succ count)))) := by
+                apply congrArg (realAdd realOne)
+                exact (realAdd_assoc _ _ _).symm
+        _ = realAdd realOne (realNeg (realPow ratio (Nat.succ count))) := by
+              rw [realAdd_neg_left, realAdd_zero_left]
+
+theorem realGeometricPartialSum_closed
+    (ratio : IncReal) (ratioNeOne : ratio ≠ realOne) (count : Nat) :
+    realGeometricPartialSum ratio count =
+      realDiv (realAdd realOne (realNeg (realPow ratio count)))
+        (realAdd realOne (realNeg ratio)) := by
+  let denominator := realAdd realOne (realNeg ratio)
+  have denominatorNonzero : denominator ≠ realZero := by
+    intro denominatorZero
+    have oneEqRatio := real_eq_of_add_neg_eq_zero denominatorZero
+    exact ratioNeOne oneEqRatio.symm
+  have finiteIdentity := realGeometricPartialSum_mul_one_sub ratio count
+  change realMul denominator (realGeometricPartialSum ratio count) =
+    realAdd realOne (realNeg (realPow ratio count)) at finiteIdentity
+  change realGeometricPartialSum ratio count =
+    realMul (realAdd realOne (realNeg (realPow ratio count)))
+      (realInvOrZero denominator)
+  rw [realInvOrZero_of_ne denominator denominatorNonzero,
+    ← finiteIdentity]
+  symm
+  calc
+    realMul (realMul denominator (realGeometricPartialSum ratio count))
+        (realInv denominator denominatorNonzero) =
+      realMul (realGeometricPartialSum ratio count)
+        (realMul denominator (realInv denominator denominatorNonzero)) := by
+          rw [realMul_comm denominator (realGeometricPartialSum ratio count),
+            realMul_assoc]
+    _ = realGeometricPartialSum ratio count := by
+          rw [realMul_inv, realMul_one_right]
+
 def RealSeriesConverges (terms : RealSequence) (sum : IncReal) : Prop :=
   RealSequenceConverges (realPartialSum terms) sum
 
 def RealSeriesSummable (terms : RealSequence) : Prop :=
   ∃ sum, RealSeriesConverges terms sum
+
+theorem realGeometricSeriesConverges_of_pow_zero
+    (ratio : IncReal) (ratioNeOne : ratio ≠ realOne)
+    (powersConverge :
+      RealSequenceConverges (realPow ratio) realZero) :
+    RealSeriesConverges (realPow ratio)
+      (realDiv realOne (realAdd realOne (realNeg ratio))) := by
+  let denominator := realAdd realOne (realNeg ratio)
+  have denominatorNonzero : denominator ≠ realZero := by
+    intro denominatorZero
+    have oneEqRatio := real_eq_of_add_neg_eq_zero denominatorZero
+    exact ratioNeOne oneEqRatio.symm
+  have numeratorConverges :
+      RealSequenceConverges
+        (fun index => realAdd realOne (realNeg (realPow ratio index)))
+        realOne := by
+    have combined := realSequenceConverges_add
+      (realSequenceConverges_const realOne)
+      (realSequenceConverges_neg powersConverge)
+    simpa [realNeg_zero, realAdd_zero_right] using combined
+  have quotientConverges := realSequenceConverges_div denominatorNonzero
+    numeratorConverges (realSequenceConverges_const denominator)
+  intro epsilon epsilonPositive
+  obtain ⟨threshold, eventuallyClose⟩ :=
+    quotientConverges epsilon epsilonPositive
+  refine ⟨threshold, ?_⟩
+  intro index indexLarge
+  change realLE
+    (realDist (realGeometricPartialSum ratio index)
+      (realDiv realOne denominator)).value
+    (rationalToReal epsilon)
+  rw [realGeometricPartialSum_closed ratio ratioNeOne index]
+  exact eventuallyClose index indexLarge
+
+theorem realPow_zero_succ (exponent : Nat) :
+    realPow realZero (Nat.succ exponent) = realZero := by
+  rw [realPow_succ, realMul_zero_right]
+
+theorem realPow_zero_converges :
+    RealSequenceConverges (realPow realZero) realZero := by
+  intro epsilon epsilonPositive
+  refine ⟨1, ?_⟩
+  intro index indexLarge
+  cases index with
+  | zero => omega
+  | succ exponent =>
+      rw [realPow_zero_succ, realDist_self]
+      exact (rationalToReal_le_iff _ _).mpr epsilonPositive.1
+
+theorem realGeometricSeries_zero :
+    RealSeriesConverges (realPow realZero) realOne := by
+  have oneNonzero : realOne ≠ realZero := real_zero_ne_one.symm
+  have inverseOne : realInv realOne oneNonzero = realOne := by
+    have law := realMul_inv realOne oneNonzero
+    rw [realMul_one_left] at law
+    exact law
+  have converges := realGeometricSeriesConverges_of_pow_zero
+    realZero real_zero_ne_one realPow_zero_converges
+  simpa [realNeg_zero, realAdd_zero_right, realDiv,
+    realInvOrZero_of_ne realOne oneNonzero, inverseOne,
+    realMul_one_left] using converges
 
 theorem realSequenceConverges_shift
     {sequence : RealSequence} {limit : IncReal}
