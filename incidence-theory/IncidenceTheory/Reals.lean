@@ -517,6 +517,42 @@ theorem realAdd_neg_left (value : IncReal) :
     realAdd (realNeg value) value = realZero := by
   rw [realAdd_comm, realAdd_neg]
 
+theorem realAdd_cancel_left (offset left right : IncReal)
+    (equal : realAdd offset left = realAdd offset right) : left = right := by
+  have shifted := congrArg (realAdd (realNeg offset)) equal
+  calc
+    left = realAdd realZero left := (realAdd_zero_left left).symm
+    _ = realAdd (realAdd (realNeg offset) offset) left := by
+      rw [realAdd_neg_left]
+    _ = realAdd (realNeg offset) (realAdd offset left) :=
+      realAdd_assoc _ _ _
+    _ = realAdd (realNeg offset) (realAdd offset right) := shifted
+    _ = realAdd (realAdd (realNeg offset) offset) right :=
+      (realAdd_assoc _ _ _).symm
+    _ = realAdd realZero right := by rw [realAdd_neg_left]
+    _ = right := realAdd_zero_left right
+
+theorem realAdd_cancel_right (left right offset : IncReal)
+    (equal : realAdd left offset = realAdd right offset) : left = right := by
+  apply realAdd_cancel_left offset
+  simpa [realAdd_comm] using equal
+
+theorem realNeg_add (left right : IncReal) :
+    realNeg (realAdd left right) =
+      realAdd (realNeg left) (realNeg right) := by
+  apply realAdd_cancel_left (realAdd left right)
+  rw [realAdd_neg]
+  symm
+  calc
+    realAdd (realAdd left right)
+        (realAdd (realNeg left) (realNeg right)) =
+      realAdd (realAdd left (realNeg left))
+        (realAdd right (realNeg right)) := by
+          rw [realAdd_assoc, ← realAdd_assoc right,
+            realAdd_comm right (realNeg left),
+            realAdd_assoc (realNeg left), ← realAdd_assoc left]
+    _ = realZero := by rw [realAdd_neg, realAdd_neg, realAdd_zero_left]
+
 noncomputable instance : DecidableEq IncReal :=
   Classical.typeDecidableEq IncReal
 
@@ -1477,6 +1513,43 @@ theorem realNegativePart_of_not_nonnegative (value : IncReal)
   classical
   simp [realNegativePart, notNonnegative]
 
+theorem realPositivePart_neg (value : IncReal) :
+    realPositivePart (realNeg value) = realNegativePart value := by
+  classical
+  by_cases valueNonnegative : realLE realZero value
+  · by_cases negNonnegative : realLE realZero (realNeg value)
+    · have valueNonpositive : realLE value realZero := by
+        have reversed := (realNeg_order_iff value realZero).mp (by
+          simpa [realNeg_zero] using negNonnegative)
+        exact reversed
+      have valueZero := realLE_antisymm valueNonnegative valueNonpositive
+      subst value
+      apply NonnegativeReal.ext
+      simp [realPositivePart, realNegativePart, realLE_refl,
+        realNeg_zero, nonnegativeZero]
+    · rw [realPositivePart_of_not_nonnegative _ negNonnegative,
+        realNegativePart_of_nonnegative _ valueNonnegative]
+  · have negNonnegative : realLE realZero (realNeg value) := by
+      have valueNonpositive : realLE value realZero := by
+        rcases realLE_total value realZero with ordered | reverse
+        · exact ordered
+        · exact False.elim (valueNonnegative reverse)
+      have reversed := (realNeg_order_iff value realZero).mpr valueNonpositive
+      simpa [realNeg_zero] using reversed
+    rw [realPositivePart_of_nonnegative _ negNonnegative,
+      realNegativePart_of_not_nonnegative _ valueNonnegative]
+
+theorem realNegativePart_neg (value : IncReal) :
+    realNegativePart (realNeg value) = realPositivePart value := by
+  have swapped := realPositivePart_neg (realNeg value)
+  simpa [realNeg_neg] using swapped.symm
+
+theorem real_eq_neg_negativePart (value : IncReal)
+    (notNonnegative : ¬ realLE realZero value) :
+    value = realNeg (realNegativePart value).value := by
+  rw [realNegativePart_of_not_nonnegative value notNonnegative]
+  simp [realNeg_neg]
+
 /-- Signed multiplication reconstructed from the nonnegative semiring by the
 identity `(p-n)(q-m) = (pq+nm) - (pm+nq)`. -/
 noncomputable def realMul (left right : IncReal) : IncReal :=
@@ -1522,6 +1595,20 @@ theorem realMul_comm (left right : IncReal) :
   simp only [realMul]
   rw [positiveEq, negativeEq]
 
+theorem realMul_neg_right (left right : IncReal) :
+    realMul left (realNeg right) = realNeg (realMul left right) := by
+  simp only [realMul]
+  rw [realPositivePart_neg, realNegativePart_neg, realNeg_add,
+    realNeg_neg, realAdd_comm]
+
+theorem realMul_neg_left (left right : IncReal) :
+    realMul (realNeg left) right = realNeg (realMul left right) := by
+  rw [realMul_comm, realMul_neg_right, realMul_comm]
+
+theorem realMul_neg_neg (left right : IncReal) :
+    realMul (realNeg left) (realNeg right) = realMul left right := by
+  rw [realMul_neg_left, realMul_neg_right, realNeg_neg]
+
 theorem realMul_of_nonnegative (left right : IncReal)
     (leftNonnegative : realLE realZero left)
     (rightNonnegative : realLE realZero right) :
@@ -1538,6 +1625,88 @@ theorem realMul_of_nonnegative (left right : IncReal)
     nonnegativeRealMul_zero_left_bundle]
   change realAdd _ (realNeg realZero) = _
   rw [realNeg_zero, realAdd_zero_right]
+
+theorem realMul_assoc_nonnegative
+    (first second third : NonnegativeReal) :
+    realMul (realMul first.value second.value) third.value =
+      realMul first.value (realMul second.value third.value) := by
+  rw [realMul_of_nonnegative first.value second.value
+      first.nonnegative second.nonnegative,
+    realMul_of_nonnegative
+      (nonnegativeRealMul first second).value third.value
+      (nonnegativeRealMul first second).nonnegative third.nonnegative,
+    realMul_of_nonnegative second.value third.value
+      second.nonnegative third.nonnegative,
+    realMul_of_nonnegative first.value
+      (nonnegativeRealMul second third).value first.nonnegative
+      (nonnegativeRealMul second third).nonnegative,
+    nonnegativeRealMul_assoc]
+
+theorem realMul_assoc (first second third : IncReal) :
+    realMul (realMul first second) third =
+      realMul first (realMul second third) := by
+  classical
+  by_cases firstNonnegative : realLE realZero first
+  · let firstPart : NonnegativeReal := ⟨first, firstNonnegative⟩
+    by_cases secondNonnegative : realLE realZero second
+    · let secondPart : NonnegativeReal := ⟨second, secondNonnegative⟩
+      by_cases thirdNonnegative : realLE realZero third
+      · let thirdPart : NonnegativeReal := ⟨third, thirdNonnegative⟩
+        exact realMul_assoc_nonnegative firstPart secondPart thirdPart
+      · let thirdPart := realNegativePart third
+        have thirdEq : third = realNeg thirdPart.value := by
+          exact real_eq_neg_negativePart third thirdNonnegative
+        rw [thirdEq]
+        simp only [realMul_neg_right]
+        exact congrArg realNeg
+          (realMul_assoc_nonnegative firstPart secondPart thirdPart)
+    · let secondPart := realNegativePart second
+      have secondEq : second = realNeg secondPart.value := by
+        exact real_eq_neg_negativePart second secondNonnegative
+      by_cases thirdNonnegative : realLE realZero third
+      · let thirdPart : NonnegativeReal := ⟨third, thirdNonnegative⟩
+        rw [secondEq]
+        simp only [realMul_neg_right, realMul_neg_left]
+        exact congrArg realNeg
+          (realMul_assoc_nonnegative firstPart secondPart thirdPart)
+      · let thirdPart := realNegativePart third
+        have thirdEq : third = realNeg thirdPart.value := by
+          exact real_eq_neg_negativePart third thirdNonnegative
+        rw [secondEq, thirdEq]
+        simp only [realMul_neg_right, realMul_neg_left, realNeg_neg]
+        exact realMul_assoc_nonnegative firstPart secondPart thirdPart
+  · let firstPart := realNegativePart first
+    have firstEq : first = realNeg firstPart.value := by
+      exact real_eq_neg_negativePart first firstNonnegative
+    by_cases secondNonnegative : realLE realZero second
+    · let secondPart : NonnegativeReal := ⟨second, secondNonnegative⟩
+      by_cases thirdNonnegative : realLE realZero third
+      · let thirdPart : NonnegativeReal := ⟨third, thirdNonnegative⟩
+        rw [firstEq]
+        simp only [realMul_neg_left]
+        exact congrArg realNeg
+          (realMul_assoc_nonnegative firstPart secondPart thirdPart)
+      · let thirdPart := realNegativePart third
+        have thirdEq : third = realNeg thirdPart.value := by
+          exact real_eq_neg_negativePart third thirdNonnegative
+        rw [firstEq, thirdEq]
+        simp only [realMul_neg_right, realMul_neg_left, realNeg_neg]
+        exact realMul_assoc_nonnegative firstPart secondPart thirdPart
+    · let secondPart := realNegativePart second
+      have secondEq : second = realNeg secondPart.value := by
+        exact real_eq_neg_negativePart second secondNonnegative
+      by_cases thirdNonnegative : realLE realZero third
+      · let thirdPart : NonnegativeReal := ⟨third, thirdNonnegative⟩
+        rw [firstEq, secondEq]
+        simp only [realMul_neg_right, realMul_neg_left, realNeg_neg]
+        exact realMul_assoc_nonnegative firstPart secondPart thirdPart
+      · let thirdPart := realNegativePart third
+        have thirdEq : third = realNeg thirdPart.value := by
+          exact real_eq_neg_negativePart third thirdNonnegative
+        rw [firstEq, secondEq, thirdEq]
+        simp only [realMul_neg_right, realMul_neg_left, realNeg_neg]
+        exact congrArg realNeg
+          (realMul_assoc_nonnegative firstPart secondPart thirdPart)
 
 theorem realMul_of_nonnegative_not_nonnegative
     (left right : IncReal)

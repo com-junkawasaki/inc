@@ -193,7 +193,9 @@ case where the selector is complete and resonance has no unselected modes.
   canonical positive/negative parts and the four-term product expansion; its
   signed decomposition, commutativity, principal-one identity, zero absorption,
   exact restriction to nonnegative multiplication, and reduction of all four
-  sign quadrants to nonnegative multiplication or its negation are checked. Associativity,
+  sign quadrants to nonnegative multiplication or its negation are checked.
+  Negation swaps the two canonical parts and flips either product input, so all
+  eight sign cases prove signed associativity from nonnegative associativity. Signed
   distributivity, and inverse laws remain subsequent obligations.
 
 ### Non-normative physical intuition
