@@ -1941,3 +1941,61 @@ sorry-free に証明し、これを既存の閉区間点列コンパクト性・
 （項目4が完全に完了したため）。他の評価値（incidence/resonance 約90%、内部論理
 約90%、翻訳・保存層約85%、依存型層約75%、既存数学全体の再構成約40%、最終目標
 約55–60%）は変更しない。
+
+## 2026-07-14 追補（cycle 45–58 統合: quotient 不変量の失敗機構タキソノミー）
+
+本追補は `RESEARCH_LOG.md` cycle 45–58（14 cycle、`GlueInvariant`/
+`BoundaryInvariant`/`GuardInvariant` と `well_founded` を巡る一連の研究）の
+**個々の結果ではなく、その積み重ねが上記「完成へ向けた9項目ロードマップ」項目5
+（Quotient構成）の記述をどれだけ古くしたか**をまとめて反映する（cycle 45–57 は
+各cycle単独では「narrower/mixed/negative」と判断し追補を見送っており、その判断は
+妥当だったと本追補でも追認する——本追補は個別cycleの代わりではなく、14 cycle分の
+蓄積を一度に反映する統合追補である）。本文・これより上の追補・他項目・percentages
+は変更しない。
+
+上記「5. Quotient構成」の本文（cycle 41 時点）は「唯一の成功例（simplexIncidence）
+… 一般十分条件はまだ定理化されていない」と記す。2026-07-11 追補は「いつ
+quotient 構成が **成功** するか」の一般十分条件（canonical descent の必要十分条件、
+coherence certificate）を確立し、この一次的な古さは解消済みである。cycle 45–58 が
+追加で確立したのは、その双対——「いつ、なぜ quotient 不変量が **失敗** するか」——の
+一般理論であり、これは 2026-07-11 追補にも含まれていない:
+
+- **`GlueInvariant` の失敗機構**: GLOBAL版（cycle 53、`glueInvariant_fails_of_
+  unit_class_witness`）——`inc.unit`固有の`unit_left`法則と、`unit`を含む
+  非singleton `≈`-classの組み合わせで一般に破綻することを、simplex/path/tree
+  3インスタンスの個別反例から一つの定理へ統合。cycle 58 はこれをさらに
+  class-LOCAL版へ一般化した（`glueInvariant_fails_of_class_witness`）:
+  `unit`固有の`∀j`量化された法則ではなく、単一点`j`での恒等的挙動という真に
+  弱い仮定だけで同じ結論が成り立ち、`unit`は必要条件ではないと同時に、
+  `unit_unique_full_left_identity`（cycle 58、`unit_right`のみから2行で証明）
+  により「`∀j`の完全形を持つ要素は`unit`以外に存在し得ない」ことも確認済みで、
+  一般化がどの粒度で真に非自明かを正確に特定した。
+- **`BoundaryInvariant`/`well_founded` の失敗機構**: GLOBAL版（cycle 54、
+  Subsingleton全崩壊、`canonicalBoundary_self_loop_of_subsingleton`）と
+  LOCAL版（cycle 56、単一classへの局所self-loop、`canonicalBoundary_self_
+  loop_of_boundary_within_class`）が判明し、後者から前者が特別な場合として
+  再導出されることも確認済み。cycle 54 は同時に、この機構が`GlueInvariant`の
+  機構とは**双対**（一方は全崩壊+shape制約、他方は部分崩壊+congruence制約）
+  であり、統一されないことも証明した。
+- **collapse regimeの3極分類**: 全崩壊(`cycleIncidence`、Subsingleton)・
+  well-founded な部分崩壊(`simplexIncidence`/`pathIncidence`/`treeIncidence`)・
+  非well-founded局所部分崩壊(`mirrorIncidence`、cycle 56で新規構築)の3つが
+  相互に還元不可能であることを、実インスタンスの構築を伴って確認済み。
+- **`GuardInvariant`**: この project が実際に分類してきた**全て**の既存
+  instance（simplex/path/tree/cycle と nat×bool product）の`guards`が定数
+  関数であり、それだけで`GuardInvariant`が自動成立することを証明
+  （cycle 55、`guardInvariant_of_constantGuards`）。さらに`incidenceProd`の
+  `prodGuards`（要素ごとの`&&`）は非定数factorのguardからも`GuardInvariant`を
+  忠実に transport し独自の欠陥を持たないことを証明（cycle 57、
+  `incidenceProd_guardInvariant_of_factors`）——`incidenceSum`のguardが両
+  factorを無条件に捨てる（cycle 46/47/50）のと鋭い非対称をなす。
+
+これらは断片的な反例の集積ではなく、各不変量ごとに GLOBAL/LOCAL 双方の一般定理・
+互いの再導出関係・既存インスタンスでの非自明な確認を伴う完結したタキソノミーで
+あり、9項目ロードマップ項目5が本来求めていた「一般十分条件」の**失敗側の鏡像**に
+相当する。ただし、これは「単一の普遍的 quotient コンストラクタ」という項目5の
+最終目標そのものを達成するものではなく（各インスタンスは依然として手構築であり、
+`BisimulationQuotientClassification`から`CanonicalQuotientIncidenceCoherence`を
+自動導出する汎用アルゴリズムはまだ存在しない）、既存の実務的評価
+（incidence/resonance 約90%、他の値は変更なし）を動かす根拠にはならないと判断する。
+percentagesは全て現状維持とする。

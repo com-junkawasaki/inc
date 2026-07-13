@@ -3414,4 +3414,383 @@ theorem incidenceProd_mirrorDiagGuards_nat_guardInvariant_fails :
    this project has built (`mirrorDiagGuards`), not merely against the
    constant guards every prior instance happened to use. -/
 
+
+/- Research cycle 58 (see RESEARCH_LOG.md): the one remaining item from
+   cycle 56's queue -- does cycle 53's `GlueInvariant`-failure mechanism
+   (`glueInvariant_fails_of_unit_class_witness`, keyed on the specific
+   distinguished `inc.unit` element and its universal `unit_left` law)
+   admit a class-LOCAL refinement, the way cycle 56's
+   `canonicalBoundary_self_loop_of_boundary_within_class` refined cycle
+   54's GLOBAL `Subsingleton` theorem? Cycle 57 flagged a precise reason
+   to be skeptical rather than assume the pattern transfers mechanically:
+   `GlueInvariant` compares `glue x y` across a PAIR of `≈`-related
+   inputs (two-argument, congruence-shaped), unlike `BoundaryInvariant`'s
+   single-argument, shape-shaped obligation that cycle 56 localized.
+
+   Read cycle 53's proof of `glueInvariant_fails_of_unit_class_witness`
+   again with this question specifically in mind: which of its hypotheses
+   is doing the "global" work cycle 56 found a way to remove? The answer
+   is NOT the two-argument/congruence shape cycle 57 worried about --
+   `GlueInvariant`'s NEGATION was already existential/pointwise from the
+   moment cycle 53 stated it (needing just ONE witnessing `x`/`j` pair,
+   nothing about "every class"), so there was never a cardinality-style
+   global hypothesis analogous to cycle 54's `Subsingleton` to remove in
+   the first place. The actual global dependency is different: the proof
+   uses `inc.unit_left`, a law quantified `∀ j` but ANCHORED at the one
+   element `inc.unit` -- and the proof only ever INSTANTIATES that law at
+   the single `j` already fixed by the `xAbsorbs` hypothesis. So the
+   `∀ j` quantification is never load-bearing; only the one-point fact
+   `inc.glue inc.unit j = some j` (for THAT `j`) is used. This is the
+   real localization axis: replace "the ∀-quantified law, which only
+   `inc.unit` can supply" with "the one-point behavioral fact, which any
+   element could in principle supply at that one `j`" -- a DIFFERENT axis
+   from cycle 56's "how many classes does the hypothesis quantify over."
+
+   Before building anything, checked directly (not assumed) whether
+   `inc.unit` is the ONLY element that could ever supply even the FULL
+   `∀ j` version of this fact, since if some other element could always
+   do so too, the "generalization" would be vacuous. `unit_unique_full_
+   left_identity` below proves it in two lines from `unit_right` alone,
+   for EVERY `Incidence`: an element with `∀ j, glue e j = some j` is
+   forced to equal `inc.unit`. So the full-law form of the property really
+   is unit-exclusive -- confirming any genuine generalization has to work
+   at the strictly weaker ONE-POINT level cycle 53's own proof actually
+   uses, not by finding a second element with the full law.
+
+   Built `glueInvariant_fails_of_class_witness`: the primitive lemma with
+   `inc.unit`/`unit_left` replaced by an arbitrary `e`/a one-point
+   hypothesis `inc.glue e j = some j`. `glueInvariant_fails_of_unit_
+   class_witness_via_local` re-derives cycle 53's exact original theorem
+   as the special case `e := inc.unit`, `inc.unit_left j` -- confirming
+   the generalization is genuine, not merely a relabeling, exactly
+   mirroring cycle 56's own re-derivation of cycle 54's theorem.
+
+   To confirm this is exercised at a genuinely NEW point (not just
+   re-provable via cycle 53's own criterion under a different name, the
+   way `Guards.never` turned out to be a dead end for cycle 57), built
+   `glueLocalIncidence`: a fresh 4-element carrier (`GlueLocalId := core |
+   e | x | out`) where `core` is `inc.unit` with a genuine SINGLETON
+   `≈`-class (`glueLocalIncidence_unit_class_singleton` proves this, so
+   cycle 53's own criterion is PROVABLY inapplicable here, exactly
+   mirroring cycle 54's `no_jOutsideUnitClass_of_subsingleton` vacuity
+   check but for the opposite reason -- there unit's class was
+   the WHOLE space; here it is a singleton within a partial quotient),
+   while `e`/`x` form a separate NON-singleton class (mutual boundary
+   reference, cycle 56's `mirrorIncidence` recipe) at which the new
+   one-point identity fact holds (`glue e out = some out`) alongside the
+   conflicting absorbing behavior of its classmate (`glue x out = some
+   x`) -- witnessing `glueInvariant_fails_of_class_witness`'s hypotheses
+   at `e ≠ inc.unit` for the first time in this project. `out`'s boundary
+   entry uses a DIFFERENT role (`GlueLocalRole.anchor` vs `e`/`x`'s
+   `.link`) specifically so `out`'s non-bisimilarity to `e`/`x` is a
+   one-step `boundaryCompatible` mismatch rather than requiring a deeper
+   argument about what `out`'s target itself bisimulates with. -/
+
+inductive GlueLocalRole where | link | anchor
+deriving DecidableEq, Repr
+
+inductive GlueLocalId where | core | e | x | out
+deriving DecidableEq, Repr
+
+def glueLocalBoundary : GlueLocalId → Boundary GlueLocalId GlueLocalRole
+  | .e    => [{ i := .x, role := GlueLocalRole.link, sign := Sign.neg, mult := 1 }]
+  | .x    => [{ i := .e, role := GlueLocalRole.link, sign := Sign.neg, mult := 1 }]
+  | .core => []
+  | .out  => [{ i := .core, role := GlueLocalRole.anchor, sign := Sign.neg, mult := 1 }]
+
+/- `glue` deliberately keeps the project's usual "absorb at a fixed
+   representative" shape at `core` (= `unit`), matching `unit_left`/
+   `unit_right`, but ALSO carries a second, purely LOCAL exception at
+   `(e, out)` -- `e` behaves like an identity specifically toward `out`,
+   even though `e ≠ inc.unit` and `e`'s own class is non-singleton. `x`
+   (`e`'s classmate) keeps the ordinary "absorb self" behavior at `out`,
+   producing the same clash cycle 53's mechanism needs, just anchored at
+   `e` instead of `inc.unit`. -/
+def glueLocalIncidence : Incidence GlueLocalId GlueLocalRole GraphType where
+  boundary := glueLocalBoundary
+  typeFunc := fun _ => GraphType.unit
+  glue := fun i k =>
+    if i = GlueLocalId.e ∧ k = GlueLocalId.out then some k
+    else if i = GlueLocalId.core then some k
+    else some i
+  unit := GlueLocalId.core
+  guards := Guards.permissive GlueLocalId
+  type_consistent := fun _ _ _ => rfl
+  sign_rules := fun _ e _ => by cases e.sign <;> simp
+  multiplicities := fun _ e _ => e.mult_pos
+  well_founded := by
+    rintro i ⟨e, he, hei⟩
+    cases i <;> simp [glueLocalBoundary] at he <;> subst he <;> simp_all
+  unit_left := by intro i; simp
+  unit_right := by
+    intro i
+    cases i <;> simp
+  type_preserve := fun _ _ => rfl
+
+abbrev glueLocalRel (a b : GlueLocalId) : Prop :=
+  (a = GlueLocalId.e ∨ a = GlueLocalId.x) ∧ (b = GlueLocalId.e ∨ b = GlueLocalId.x) ∨
+  (a = GlueLocalId.core ∧ b = GlueLocalId.core) ∨
+  (a = GlueLocalId.out ∧ b = GlueLocalId.out)
+
+theorem glueLocalRel_isBisimulation : IsBisimulation glueLocalIncidence glueLocalRel := by
+  intro i j hij
+  refine ⟨rfl, ?_⟩
+  rcases hij with ⟨hi, hj⟩ | ⟨hi, hj⟩ | ⟨hi, hj⟩
+  · rcases hi with hi | hi <;> subst hi <;> rcases hj with hj | hj <;> subst hj
+    · exact boundaryMatched_of_one_entry glueLocalIncidence glueLocalRel GlueLocalId.e GlueLocalId.e
+        { i := GlueLocalId.x, role := GlueLocalRole.link, sign := Sign.neg, mult := 1 }
+        { i := GlueLocalId.x, role := GlueLocalRole.link, sign := Sign.neg, mult := 1 }
+        rfl rfl ⟨rfl, rfl, rfl⟩ (by decide)
+    · exact boundaryMatched_of_one_entry glueLocalIncidence glueLocalRel GlueLocalId.e GlueLocalId.x
+        { i := GlueLocalId.x, role := GlueLocalRole.link, sign := Sign.neg, mult := 1 }
+        { i := GlueLocalId.e, role := GlueLocalRole.link, sign := Sign.neg, mult := 1 }
+        rfl rfl ⟨rfl, rfl, rfl⟩ (by decide)
+    · exact boundaryMatched_of_one_entry glueLocalIncidence glueLocalRel GlueLocalId.x GlueLocalId.e
+        { i := GlueLocalId.e, role := GlueLocalRole.link, sign := Sign.neg, mult := 1 }
+        { i := GlueLocalId.x, role := GlueLocalRole.link, sign := Sign.neg, mult := 1 }
+        rfl rfl ⟨rfl, rfl, rfl⟩ (by decide)
+    · exact boundaryMatched_of_one_entry glueLocalIncidence glueLocalRel GlueLocalId.x GlueLocalId.x
+        { i := GlueLocalId.e, role := GlueLocalRole.link, sign := Sign.neg, mult := 1 }
+        { i := GlueLocalId.e, role := GlueLocalRole.link, sign := Sign.neg, mult := 1 }
+        rfl rfl ⟨rfl, rfl, rfl⟩ (by decide)
+  · subst hi; subst hj
+    simp [boundaryMatched, glueLocalIncidence, glueLocalBoundary]
+  · subst hi; subst hj
+    exact boundaryMatched_of_one_entry glueLocalIncidence glueLocalRel GlueLocalId.out GlueLocalId.out
+      { i := GlueLocalId.core, role := GlueLocalRole.anchor, sign := Sign.neg, mult := 1 }
+      { i := GlueLocalId.core, role := GlueLocalRole.anchor, sign := Sign.neg, mult := 1 }
+      rfl rfl ⟨rfl, rfl, rfl⟩ (by decide)
+
+theorem glueLocalIncidence_e_not_bisim_core :
+    ¬ approxBisim glueLocalIncidence GlueLocalId.e GlueLocalId.core :=
+  not_approxBisim_empty_nonempty glueLocalIncidence GlueLocalId.e GlueLocalId.core rfl
+    { i := GlueLocalId.x, role := GlueLocalRole.link, sign := Sign.neg, mult := 1 }
+    (by simp [glueLocalIncidence, glueLocalBoundary])
+
+theorem glueLocalIncidence_x_not_bisim_core :
+    ¬ approxBisim glueLocalIncidence GlueLocalId.x GlueLocalId.core :=
+  not_approxBisim_empty_nonempty glueLocalIncidence GlueLocalId.x GlueLocalId.core rfl
+    { i := GlueLocalId.e, role := GlueLocalRole.link, sign := Sign.neg, mult := 1 }
+    (by simp [glueLocalIncidence, glueLocalBoundary])
+
+theorem glueLocalIncidence_core_not_bisim_out :
+    ¬ approxBisim glueLocalIncidence GlueLocalId.core GlueLocalId.out := by
+  intro h
+  exact not_approxBisim_empty_nonempty glueLocalIncidence GlueLocalId.out GlueLocalId.core rfl
+    { i := GlueLocalId.core, role := GlueLocalRole.anchor, sign := Sign.neg, mult := 1 }
+    (by simp [glueLocalIncidence, glueLocalBoundary])
+    (approxBisim_symm h)
+
+theorem glueLocalIncidence_e_not_bisim_out :
+    ¬ approxBisim glueLocalIncidence GlueLocalId.e GlueLocalId.out := by
+  apply not_approxBisim_of_boundary_mismatch glueLocalIncidence GlueLocalId.e GlueLocalId.out
+    { i := GlueLocalId.x, role := GlueLocalRole.link, sign := Sign.neg, mult := 1 }
+    (by simp [glueLocalIncidence, glueLocalBoundary])
+  intro e' he'
+  simp [glueLocalIncidence, glueLocalBoundary] at he'
+  subst he'
+  simp [boundaryCompatible]
+
+theorem glueLocalIncidence_x_not_bisim_out :
+    ¬ approxBisim glueLocalIncidence GlueLocalId.x GlueLocalId.out := by
+  apply not_approxBisim_of_boundary_mismatch glueLocalIncidence GlueLocalId.x GlueLocalId.out
+    { i := GlueLocalId.e, role := GlueLocalRole.link, sign := Sign.neg, mult := 1 }
+    (by simp [glueLocalIncidence, glueLocalBoundary])
+  intro e' he'
+  simp [glueLocalIncidence, glueLocalBoundary] at he'
+  subst he'
+  simp [boundaryCompatible]
+
+inductive GlueLocalShape where | pairShape | coreShape | outShape
+deriving DecidableEq, Repr
+
+def glueLocalToShape : GlueLocalId → GlueLocalShape
+  | .e    => .pairShape
+  | .x    => .pairShape
+  | .core => .coreShape
+  | .out  => .outShape
+
+theorem glueLocalToShape_reflects (a b : GlueLocalId) (h : glueLocalToShape a = glueLocalToShape b) :
+    approxBisim glueLocalIncidence a b := by
+  cases a <;> cases b <;> simp [glueLocalToShape] at h <;>
+    exact ⟨glueLocalRel, glueLocalRel_isBisimulation, by decide⟩
+
+theorem glueLocalToShape_distinguishes (a b : GlueLocalId) (h : approxBisim glueLocalIncidence a b) :
+    glueLocalToShape a = glueLocalToShape b := by
+  cases a <;> cases b <;> simp only [glueLocalToShape] <;>
+    first
+    | rfl
+    | exact absurd h glueLocalIncidence_e_not_bisim_core
+    | exact absurd h glueLocalIncidence_x_not_bisim_core
+    | exact absurd h glueLocalIncidence_e_not_bisim_out
+    | exact absurd h glueLocalIncidence_x_not_bisim_out
+    | exact absurd h glueLocalIncidence_core_not_bisim_out
+    | exact absurd (approxBisim_symm h) glueLocalIncidence_e_not_bisim_core
+    | exact absurd (approxBisim_symm h) glueLocalIncidence_x_not_bisim_core
+    | exact absurd (approxBisim_symm h) glueLocalIncidence_e_not_bisim_out
+    | exact absurd (approxBisim_symm h) glueLocalIncidence_x_not_bisim_out
+    | exact absurd (approxBisim_symm h) glueLocalIncidence_core_not_bisim_out
+
+theorem glueLocalToShape_iff_approxBisim (a b : GlueLocalId) :
+    glueLocalToShape a = glueLocalToShape b ↔ approxBisim glueLocalIncidence a b :=
+  ⟨glueLocalToShape_reflects a b, glueLocalToShape_distinguishes a b⟩
+
+def glueLocalBisimulationQuotientClassification :
+    BisimulationQuotientClassification (Q := GlueLocalShape) glueLocalIncidence :=
+  bisimulationQuotientClassificationOfKernel glueLocalIncidence glueLocalToShape
+    glueLocalToShape_iff_approxBisim
+    (fun shape => by
+      cases shape with
+      | pairShape => exact ⟨GlueLocalId.e, rfl⟩
+      | coreShape => exact ⟨GlueLocalId.core, rfl⟩
+      | outShape => exact ⟨GlueLocalId.out, rfl⟩)
+
+/- `inc.unit` (= `core`)'s `≈`-class here is a genuine SINGLETON -- so
+   cycle 53's own criterion (`glueInvariant_fails_of_unit_class_witness`,
+   which needs some `x ≈ inc.unit` with `x` behaving differently from
+   `inc.unit`) is PROVABLY inapplicable to this instance: there is no
+   witness for it to use. Confirms `glueLocalIncidence` genuinely
+   exercises NEW content, not a relabeled instance of cycle 53's own
+   already-covered ground -- the failure below can ONLY be explained via
+   the local mechanism anchored at `e`. -/
+theorem glueLocalIncidence_unit_class_singleton {y : GlueLocalId}
+    (hy : approxBisim glueLocalIncidence y GlueLocalId.core) : y = GlueLocalId.core := by
+  have hshape := (glueLocalToShape_iff_approxBisim y GlueLocalId.core).mpr hy
+  cases y <;> first | rfl | simp [glueLocalToShape] at hshape
+
+/- The general theorem: `unit`'s role in cycle 53's mechanism is
+   replaceable by ANY element `e`, provided the one-point behavioral fact
+   `unit_left` supplied at `inc.unit` is instead supplied directly at
+   `e`/`j` -- no reference to `inc.unit`, `unit_left`, or any global
+   cardinality condition on the classification's target at all. This is
+   the class-LOCAL refinement of cycle 53's mechanism, in exact parallel
+   to how cycle 56 refined cycle 54's `Subsingleton` theorem, but along a
+   different axis: cycle 56 removed a hypothesis about how many classes
+   the WHOLE quotient has; this removes a hypothesis about WHICH element
+   supplies the identity law, weakening `unit_left`'s `∀ j` universal
+   guarantee (available only at `inc.unit`, `unit_unique_full_left_
+   identity` below) down to the single instantiated fact cycle 53's own
+   proof actually used. -/
+theorem glueInvariant_fails_of_class_witness
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    {e x : I} (xBisimE : approxBisim inc x e)
+    {j : I} (jOutsideEClass :
+      classification.classify j ≠ classification.classify e)
+    (eIdentityAt : inc.glue e j = some j)
+    (xAbsorbs : inc.glue x j = some x) :
+    ¬ classification.GlueInvariant := by
+  intro invariant
+  have equalMappedGlue := invariant xBisimE (approxBisim_refl inc j)
+  have he : classification.mappedSourceGlue e j =
+      some (classification.classify j) := by
+    simp [BisimulationQuotientClassification.mappedSourceGlue, eIdentityAt]
+  have hx : classification.mappedSourceGlue x j =
+      some (classification.classify x) := by
+    simp [BisimulationQuotientClassification.mappedSourceGlue, xAbsorbs]
+  rw [hx, he] at equalMappedGlue
+  have classifyEq : classification.classify j = classification.classify e :=
+    ((classification.respects xBisimE).symm.trans
+      (Option.some.inj equalMappedGlue)).symm
+  exact jOutsideEClass classifyEq
+
+theorem glueRealization_fails_of_class_witness
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    {e x : I} (xBisimE : approxBisim inc x e)
+    {j : I} (jOutsideEClass :
+      classification.classify j ≠ classification.classify e)
+    (eIdentityAt : inc.glue e j = some j)
+    (xAbsorbs : inc.glue x j = some x) :
+    ¬ classification.GlueRealization :=
+  fun realization =>
+    glueInvariant_fails_of_class_witness classification xBisimE jOutsideEClass
+      eIdentityAt xAbsorbs
+      ((classification.glueRealization_iff_invariant).mp realization)
+
+/- Cycle 53's own theorem, re-derived here as the special case `e :=
+   inc.unit`, confirming the generalization is genuine (not merely
+   analogous in spirit) -- exactly mirroring cycle 56's `canonicalBoundary_
+   self_loop_of_subsingleton_via_local`. -/
+theorem glueInvariant_fails_of_unit_class_witness_via_local
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    {x : I} (xBisimUnit : approxBisim inc x inc.unit)
+    {j : I} (jOutsideUnitClass :
+      classification.classify j ≠ classification.classify inc.unit)
+    (xAbsorbs : inc.glue x j = some x) :
+    ¬ classification.GlueInvariant :=
+  glueInvariant_fails_of_class_witness classification xBisimUnit jOutsideUnitClass
+    (inc.unit_left j) xAbsorbs
+
+/- The concrete witness, exercising `glueInvariant_fails_of_class_witness`
+   at `e := GlueLocalId.e ≠ inc.unit` -- the first `GlueInvariant` failure
+   in this project's history NOT explainable by cycle 53's own criterion
+   (`glueLocalIncidence_unit_class_singleton` above rules that out
+   directly). -/
+theorem glueLocalIncidence_not_glueInvariant :
+    ¬ glueLocalBisimulationQuotientClassification.GlueInvariant :=
+  glueInvariant_fails_of_class_witness glueLocalBisimulationQuotientClassification
+    (e := GlueLocalId.e) (x := GlueLocalId.x)
+    (xBisimE := (glueLocalToShape_iff_approxBisim GlueLocalId.x GlueLocalId.e).mp rfl)
+    (j := GlueLocalId.out)
+    (jOutsideEClass := by decide)
+    (eIdentityAt := by decide)
+    (xAbsorbs := by decide)
+
+theorem glueLocalIncidence_not_glueRealization :
+    ¬ glueLocalBisimulationQuotientClassification.GlueRealization :=
+  glueRealization_fails_of_class_witness glueLocalBisimulationQuotientClassification
+    (e := GlueLocalId.e) (x := GlueLocalId.x)
+    (xBisimE := (glueLocalToShape_iff_approxBisim GlueLocalId.x GlueLocalId.e).mp rfl)
+    (j := GlueLocalId.out)
+    (jOutsideEClass := by decide)
+    (eIdentityAt := by decide)
+    (xAbsorbs := by decide)
+
+/- The precise limit on the generalization, checked rather than assumed
+   per this cycle's own brief: the FULL `∀ j` form of the identity
+   property (`unit_left`'s exact shape) is unique to `inc.unit` in EVERY
+   `Incidence`, not just in the three known glue-formula instances --
+   proved directly from `unit_right` alone, no reference to `glue`'s
+   shape in any specific instance. This is why the generalization above
+   only succeeds at the strictly weaker ONE-POINT level cycle 53's own
+   proof already used (`eIdentityAt` fixed at one `j`), not by exhibiting
+   a second element with the full law: no such second element can ever
+   exist. -/
+theorem unit_unique_full_left_identity
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T)
+    {e : I} (hident : ∀ j, inc.glue e j = some j) : e = inc.unit := by
+  have h1 : inc.glue e inc.unit = some inc.unit := hident inc.unit
+  have h2 : inc.glue e inc.unit = some e := inc.unit_right e
+  exact (Option.some.inj (h1.symm.trans h2)).symm
+
+/- Synthesis recorded here alongside the theorems, matching this file's
+   convention (cycles 53/56/57): cycle 57's flagged caveat -- that
+   `GlueInvariant`'s two-argument, congruence shape might block the same
+   "global -> local" move cycle 56 made for `BoundaryInvariant`'s
+   single-argument, shape-shaped obligation -- turns out not to be the
+   operative obstruction at all. `GlueInvariant`'s NEGATION was already
+   pointwise/existential from cycle 53's first statement of it (one
+   witnessing pair, not "every class"), so there was never a
+   `Subsingleton`-style cardinality hypothesis to relax in the first
+   place; the two-argument shape is orthogonal to the axis this cycle
+   actually generalizes along. The real global dependency cycle 53's
+   proof had was on WHICH element could supply the needed identity fact
+   -- `inc.unit` via its universally-quantified `unit_left` law -- and
+   `unit_unique_full_left_identity` confirms that dependency is not a
+   proof artifact but a real theorem (unit is the UNIQUE full-law
+   holder, in every `Incidence`, via `unit_right` alone). The
+   generalization this cycle proves succeeds precisely because cycle
+   53's own proof never actually needed the full `∀ j` law -- only the
+   one instantiated fact at the one `j` already fixed by `xAbsorbs` --
+   so weakening the hypothesis to that one point (rather than trying to
+   find a second element with the full law, which `unit_unique_full_
+   left_identity` shows is impossible) is where the genuine slack was.
+   `glueLocalIncidence` confirms this is not vacuous reshuffling: its
+   `inc.unit`'s class is a proved singleton
+   (`glueLocalIncidence_unit_class_singleton`), so cycle 53's own
+   criterion cannot explain `glueLocalIncidence_not_glueInvariant` at
+   all -- only the local criterion anchored at `e ≠ inc.unit` can. -/
+
 end IncidenceCore

@@ -5495,3 +5495,187 @@ one, so the localization may not transfer mechanically -- worth checking
 directly, per this cycle's own experience that reusing a queued framing
 without re-verifying its exact shape (`Guards.never`'s constancy, above)
 can be a dead end that only a direct read catches.
+
+## Cycle 58
+
+**Hypothesis**: cycle 56's own queued item (b), the last thread left from
+the glue/boundary/guards taxonomy cycles 45-57 have been mapping: does
+cycle 53's `GlueInvariant`-failure mechanism (`glueInvariant_fails_of_
+unit_class_witness`, anchored on the specific distinguished `inc.unit`
+element and its universal `unit_left` law) admit a class-LOCAL refinement
+the way cycle 56's `canonicalBoundary_self_loop_of_boundary_within_class`
+refined cycle 54's GLOBAL `Subsingleton` theorem -- or does `GlueInvariant`'s
+TWO-argument, congruence-shaped obligation (unlike `BoundaryInvariant`'s
+single-argument, shape-shaped one) resist the same move, per cycle 57's
+own explicitly flagged caveat not to assume the pattern transfers
+mechanically? Per the task's framing, a precise negative finding (with a
+structural reason, not a hand-wave) was to be treated as equally
+legitimate as a positive generalization.
+
+**Method**: read `glueInvariant_fails_of_unit_class_witness`'s exact proof
+again (`Quotient.lean` ~2575-2595) side by side with cycle 56's
+`canonicalBoundary_self_loop_of_boundary_within_class` (~3183-3193), asking
+specifically WHAT made cycle 56's generalization possible, rather than
+pattern-matching on surface shape. Traced cycle 54's theorem
+(`canonicalBoundary_self_loop_of_subsingleton`): its GLOBAL hypothesis was
+`Subsingleton Q` -- a CARDINALITY condition on the whole quotient target,
+forcing the needed per-point fact (`classify e.i = classify x`) to hold
+EVERYWHERE via `Subsingleton.elim`; cycle 56 replaced that cardinality
+condition with the per-point fact directly, keeping the conclusion itself
+equally local (a self-loop AT one specific class). Then re-examined cycle
+53's proof with the same question: is there an analogous CARDINALITY
+hypothesis being relaxed? Found there is not -- `glueInvariant_fails_of_
+unit_class_witness`'s conclusion (`¬ classification.GlueInvariant`) was
+already existential/pointwise from the moment cycle 53 stated it (one
+witnessing `x`/`j` pair suffices; nothing quantifies over "every class"),
+so there was never a `Subsingleton`-style global cardinality hypothesis to
+strip away in the first place -- cycle 57's "two-argument shape" worry,
+while a reasonable thing to check, turned out not to be where cycle 53's
+theorem was actually global. Located the REAL global dependency instead:
+the proof invokes `inc.unit_left`, a law quantified `∀ j` but USABLE ONLY
+at the one element `inc.unit`, yet the proof only ever instantiates that
+law at the single `j` already fixed by the `xAbsorbs` hypothesis -- the
+`∀ j` quantification, and the restriction to `inc.unit` specifically, are
+both stronger than the proof needs. Before building anything on this
+observation, checked (rather than assumed) whether some OTHER element
+could always supply even the FULL `∀ j` version of the property, since if
+so the "generalization" would be empty content: proved `unit_unique_full_
+left_identity` (two lines, from `inc.unit_right` alone, for every
+`Incidence`) -- any `e` with `∀ j, glue e j = some j` is forced to equal
+`inc.unit`. So the full-law form really is unit-exclusive; a genuine
+generalization has to work at the strictly weaker ONE-POINT level cycle
+53's own proof actually uses.
+
+**Result**: **a genuine local generalization exists, confirmed via both a
+general lemma and a fresh concrete witness where cycle 53's own criterion
+is PROVABLY inapplicable, sorry-free, first `lake build`/`./verify.sh`
+attempt.** Added to `Quotient.lean`, after cycle 57's closing theorem (14
+new declarations):
+
+(1) `glueInvariant_fails_of_class_witness`/`glueRealization_fails_of_
+class_witness`: cycle 53's primitive lemma with `inc.unit`/`unit_left`
+replaced by an arbitrary `e : I` and a one-point hypothesis `eIdentityAt :
+inc.glue e j = some j` (the exact single fact the original proof used, no
+more). The proof term is structurally identical to cycle 53's, with
+`inc.unit`/`unit_left j` replaced by `e`/`eIdentityAt` throughout -- no new
+proof technique needed, confirming the slack was exactly where the Method
+located it.
+
+(2) `glueInvariant_fails_of_unit_class_witness_via_local`: cycle 53's
+original theorem re-derived as the special case `e := inc.unit`,
+`eIdentityAt := inc.unit_left j` -- confirming the generalization is
+genuine, not merely analogous, exactly mirroring cycle 56's own
+re-derivation of cycle 54's theorem via `canonicalBoundary_self_loop_of_
+subsingleton_via_local`.
+
+(3) `glueLocalIncidence` (new instance, `GlueLocalId := core | e | x |
+out`): `core` is `inc.unit`; `e`/`x` mutually reference each other
+(cycle 56's `mirrorIncidence` recipe, giving a genuine non-singleton
+`≈`-class not containing `unit`); `out`'s boundary entry uses a DIFFERENT
+role (`GlueLocalRole.anchor` vs. `e`/`x`'s `.link`) specifically so its
+non-bisimilarity to `e`/`x` is a one-step `boundaryCompatible` role
+mismatch rather than requiring a deeper argument about what `out`'s own
+target bisimulates with. `glue` keeps the usual absorbing-unit shape at
+`core` (satisfying `unit_left`/`unit_right`) plus ONE extra local
+exception: `glue e out = some out` (the new one-point identity fact, at
+`e ≠ inc.unit`) while `glue x out = some x` (the ordinary "absorb self"
+behavior, producing the clash `GlueInvariant` needs). `glueLocalIncidence_
+unit_class_singleton` proves `inc.unit`'s (`core`'s) `≈`-class here is a
+genuine SINGLETON -- so cycle 53's own criterion is PROVABLY inapplicable
+to this instance (no witness for it to use), confirming
+`glueLocalIncidence_not_glueInvariant`/`_not_glueRealization` (built from
+(1) at `e := GlueLocalId.e`, the genuinely new anchor point) exercise
+content cycle 53's mechanism could never reach -- mirroring cycle 57's own
+discipline of checking `Guards.never` and rejecting it as a dead end
+before it was actually used for anything, rather than assuming any
+plausible-looking existing/adjacent construction would automatically
+transfer.
+
+(4) `unit_unique_full_left_identity`: the precise limiting fact,
+confirming the caveat noted in the Method is real and not merely a proof
+artifact -- in EVERY `Incidence`, not just the three known glue-formula
+instances, an element with the FULL `∀ j` identity property is forced to
+equal `inc.unit`.
+
+`lake build IncidenceTheory.Quotient`: 24/24 jobs, clean on the first
+attempt, no fixes needed anywhere (unlike cycle 56's two small fixes).
+`#print axioms` on all ten headline new declarations (scratch file fed to
+`lake env lean`, then deleted, cross-checked against cycle 53's own
+`glueInvariant_fails_of_unit_class_witness` in the same run to confirm
+the profile matches this project's standing baseline exactly):
+`unit_unique_full_left_identity` needs nothing at all; `glueInvariant_
+fails_of_class_witness`/`glueInvariant_fails_of_unit_class_witness_via_
+local` need only `propext` (IDENTICAL to cycle 53's own theorem's
+profile, `[propext]`, confirming the generalization adds no new axiom
+dependency); the `Realization`-level and concrete-instance declarations
+additionally need `Classical.choice`/`Quot.sound` as usual for this
+project's `canonicalGlue`/`Quotient`-based infrastructure. No new axiom
+anywhere. Full `./verify.sh` (`lake clean && lake build`, example binary
+run, repo-wide `axiom`/`sorry`/`sorryAx` grep): passes end to end.
+
+**Synthesis**: cycle 57's flagged caveat -- that `GlueInvariant`'s
+two-argument, congruence shape might block the same "global → local" move
+cycle 56 made for `BoundaryInvariant`'s single-argument, shape-shaped
+obligation -- turns out not to be the operative obstruction, but checking
+it directly (rather than either assuming it blocks the move or assuming
+cycle 56's pattern transfers unexamined) is precisely what surfaced the
+REAL axis of generalization, which is orthogonal to argument-count
+entirely. `GlueInvariant`'s negation was already pointwise/existential
+from cycle 53's first statement of it, so there was never a
+`Subsingleton`-style cardinality hypothesis of the kind cycle 56 relaxed;
+the actual global dependency cycle 53's proof had was on WHICH ELEMENT
+could supply the needed identity fact (`inc.unit`, via a law usable only
+there), not on HOW MANY CLASSES the classification has. This cycle's
+positive result generalizes along that different axis: `inc.unit_left`'s
+`∀ j` universal guarantee is stronger than cycle 53's own proof ever used,
+and weakening it to the one instantiated point the proof actually needs
+is where the genuine slack was -- confirmed to be non-vacuous by
+`unit_unique_full_left_identity` (no second element can ever have the
+FULL law, so the generalization is only real at the strictly weaker
+one-point level) and by `glueLocalIncidence` (a fresh instance where
+`inc.unit`'s class is a proved singleton, so cycle 53's own criterion is
+mechanically unable to explain the very failure this cycle's new
+criterion proves). The methodological lesson mirrors cycle 57's own
+(checking `Guards.never` and rejecting it before use) and extends it:
+verifying a queued caveat carefully sometimes shows the caveat's SPECIFIC
+concern was not the real obstacle, without thereby making the caveat
+worthless -- it was the right question to ask, it just had to be checked
+against the actual proof term (which hypothesis is doing the global work)
+rather than against surface shape (how many arguments the invariant
+compares) to find where the true generalization axis was. Given this
+thread (`GlueInvariant`/`BoundaryInvariant`/`GuardInvariant` across
+quotient constructors) has now run fourteen cycles (45-58) and this
+cycle closes the LAST item left on cycle 56's own queue with a genuine
+positive result (not a narrower audit or a mixed finding, unlike several
+of the intervening cycles), this feels like a natural point to take stock
+of the whole thread rather than immediately spawn another item from
+within it -- recorded as the primary open question below rather than
+decided unilaterally in this cycle's own synthesis.
+
+**Next hypothesis (cycle 59, not yet attempted)**: two candidates, of
+different character. (a) a narrower continuation in the same style as
+this cycle: `GuardInvariant`'s own failure mechanism (cycle 57's
+`mirrorDiagGuards_not_guardInvariant`, a hand-built non-constant-guards
+witness) has not yet been checked for a `unit`/distinguished-element
+dependency the way `GlueInvariant` (cycle 53, this cycle) and
+`BoundaryInvariant` (cycle 54, cycle 56) both were -- worth checking
+directly whether `GuardInvariant`'s failure mode has ANY analogous
+"which element supplies the behavior" axis at all, or whether (since
+`guards.allow` has no law analogous to `unit_left`/`unit_right` binding it
+to a specific element) the question is vacuous for a precise, checkable
+reason, continuing this thread's practice of checking rather than
+assuming either way. (b) the higher-level candidate this cycle's own
+synthesis flags: with `GlueInvariant`'s local/global taxonomy now closed
+(cycle 53 global, this cycle local), `BoundaryInvariant`'s local/global
+taxonomy closed (cycle 54 global, cycle 56 local), and `GuardInvariant`'s
+constancy mechanism closed (cycle 55) plus its `prodGuards`-transport
+question closed (cycle 57), the glue/boundary/guards/quotient thread
+(cycles 45-58) may be at or near a natural stopping point for ITS OWN
+scope -- worth a deliberate cycle 59 spent surveying whether a genuinely
+NEW fourth axis exists within this thread (option (a) is the concrete
+test of that) versus whether the next cycle should instead pick an
+entirely different open thread from EARLIER in the project (e.g. the
+still-unbuilt `GradedIncidenceData`-level questions cycle 41's own queue
+left, or categorical/functorial directions untouched since the cycles
+that opened `Coherent.lean`) -- a judgment call this cycle deliberately
+leaves open rather than presuming its own thread must continue.
