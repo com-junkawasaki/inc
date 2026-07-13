@@ -7430,4 +7430,91 @@ def RealSequentiallyCompact (domain : IncReal → Prop) : Prop :=
       ∃ limit, domain limit ∧
         RealSequenceConverges (fun index => sequence (indices index)) limit
 
+def RealSequenceNondecreasing (sequence : RealSequence) : Prop :=
+  ∀ {left right}, left ≤ right → realLE (sequence left) (sequence right)
+
+def RealSequenceNonincreasing (sequence : RealSequence) : Prop :=
+  ∀ {left right}, left ≤ right → realLE (sequence right) (sequence left)
+
+theorem realSequenceNondecreasing_converges
+    {sequence : RealSequence}
+    (monotone : RealSequenceNondecreasing sequence)
+    (bounded : ∃ upper, RealSequenceUpperBound sequence upper) :
+    RealSequenceConverges sequence
+      (realSequenceTailSup sequence 0 bounded) := by
+  intro epsilon epsilonPositive
+  let supremum := realSequenceTailSup sequence 0 bounded
+  obtain ⟨inside, outside, insideMember, outsideNotMember, outsideStep⟩ :=
+    supremum.boundary_approximation epsilonPositive
+  change ∃ value, RealSequenceTail sequence 0 value ∧
+      value.lower inside at insideMember
+  obtain ⟨value, valueInTail, insideBelowValue⟩ := insideMember
+  obtain ⟨threshold, _, valueEqual⟩ := valueInTail
+  subst value
+  have supremumBelowOutside :
+      realLE supremum (rationalToReal outside) := by
+    intro rational member
+    exact supremum.lt_of_lower_of_not_lower member outsideNotMember
+  have insideBelowSequence :
+      realLE (rationalToReal inside) (sequence threshold) :=
+    (rationalToReal_lt_of_lower (sequence threshold) insideBelowValue).1
+  have outsideBelowSequencePlus :
+      realLE (rationalToReal outside)
+        (realAdd (sequence threshold) (rationalToReal epsilon)) := by
+    rw [outsideStep, ← realAdd_rationalToReal]
+    exact realAdd_monotone insideBelowSequence (realLE_refl _)
+  have supremumBelowThresholdPlus :
+      realLE supremum
+        (realAdd (sequence threshold) (rationalToReal epsilon)) :=
+    realLE_trans supremumBelowOutside outsideBelowSequencePlus
+  let radius : NonnegativeReal :=
+    { value := rationalToReal epsilon
+      nonnegative := (rationalToReal_le_iff _ _).mpr epsilonPositive.1 }
+  refine ⟨threshold, ?_⟩
+  intro index indexLarge
+  have sequenceOrdered := monotone indexLarge
+  have sequenceBelowSupremum : realLE (sequence index) supremum :=
+    realSequence_le_tailSup bounded (Nat.zero_le index)
+  have supremumBelowIndexPlus :
+      realLE supremum
+        (realAdd (sequence index) radius.value) := by
+    have plusOrdered := realAdd_monotone_left
+      (right := rationalToReal epsilon) sequenceOrdered
+    exact realLE_trans supremumBelowThresholdPlus (by
+      simpa only [radius] using plusOrdered)
+  exact realDist_le_of_le_of_le_add radius
+    sequenceBelowSupremum supremumBelowIndexPlus
+
+theorem realSequenceNonincreasing_converges
+    {sequence : RealSequence}
+    (monotone : RealSequenceNonincreasing sequence)
+    (bounded : ∃ lower, RealSequenceLowerBound sequence lower) :
+    ∃ limit, RealSequenceConverges sequence limit := by
+  let negated : RealSequence := fun index => realNeg (sequence index)
+  have negatedMonotone : RealSequenceNondecreasing negated := by
+    intro left right ordered
+    exact realNeg_order_reverse (monotone ordered)
+  have negatedBounded : ∃ upper, RealSequenceUpperBound negated upper := by
+    obtain ⟨lower, isLower⟩ := bounded
+    refine ⟨realNeg lower, ?_⟩
+    intro index
+    exact realNeg_order_reverse (isLower index)
+  have negatedConverges := realSequenceNondecreasing_converges
+    negatedMonotone negatedBounded
+  have restoredConverges := realSequenceConverges_neg negatedConverges
+  refine ⟨realNeg (realSequenceTailSup negated 0 negatedBounded), ?_⟩
+  simpa only [negated, realNeg_neg] using restoredConverges
+
+theorem realSequenceMonotone_bounded_converges
+    {sequence : RealSequence}
+    (monotone : RealSequenceNondecreasing sequence ∨
+      RealSequenceNonincreasing sequence)
+    (boundedBelow : ∃ lower, RealSequenceLowerBound sequence lower)
+    (boundedAbove : ∃ upper, RealSequenceUpperBound sequence upper) :
+    ∃ limit, RealSequenceConverges sequence limit := by
+  rcases monotone with increasing | decreasing
+  · exact ⟨realSequenceTailSup sequence 0 boundedAbove,
+      realSequenceNondecreasing_converges increasing boundedAbove⟩
+  · exact realSequenceNonincreasing_converges decreasing boundedBelow
+
 end IncidenceCore
