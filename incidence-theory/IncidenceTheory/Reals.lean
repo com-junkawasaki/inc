@@ -4485,6 +4485,30 @@ theorem realAbs_intervalSum_le_absIntervalSum
       exact realLE_trans (realAbs_add_le _ _)
         (realAdd_monotone induction (realLE_refl _))
 
+theorem realIntervalSum_nonnegative
+    {terms : RealSequence}
+    (termsNonnegative : ∀ index, realLE realZero (terms index))
+    (start length : Nat) :
+    realLE realZero (realIntervalSum terms start length) := by
+  induction length with
+  | zero => exact realLE_refl _
+  | succ length induction =>
+      rw [realIntervalSum]
+      have added := realAdd_monotone induction (termsNonnegative (start + length))
+      simpa [realAdd_zero_left] using added
+
+theorem realIntervalSum_monotone
+    {smaller larger : RealSequence}
+    (ordered : ∀ index, realLE (smaller index) (larger index))
+    (start length : Nat) :
+    realLE (realIntervalSum smaller start length)
+      (realIntervalSum larger start length) := by
+  induction length with
+  | zero => exact realLE_refl _
+  | succ length induction =>
+      rw [realIntervalSum, realIntervalSum]
+      exact realAdd_monotone induction (ordered (start + length))
+
 theorem realDist_base_add (base increment : IncReal) :
     realDist base (realAdd base increment) = realAbs increment := by
   rw [realDist]
@@ -4529,6 +4553,46 @@ theorem realDist_partialSum_le_absPartialSum_dist
   · rw [realDist_comm (realPartialSum terms first),
       realDist_comm (realAbsPartialSum terms first).value]
     exact realDist_partialSum_le_absPartialSum_dist_ordered terms reverse
+
+theorem realDist_partialSum_le_dominating_ordered
+    {smaller larger : RealSequence}
+    (smallerNonnegative : ∀ index, realLE realZero (smaller index))
+    (largerNonnegative : ∀ index, realLE realZero (larger index))
+    (dominated : ∀ index, realLE (smaller index) (larger index))
+    {first second : Nat} (indicesOrdered : first ≤ second) :
+    realLE
+      (realDist (realPartialSum smaller first)
+        (realPartialSum smaller second)).value
+      (realDist (realPartialSum larger first)
+        (realPartialSum larger second)).value := by
+  obtain ⟨length, equal⟩ := Nat.le.dest indicesOrdered
+  subst second
+  rw [realPartialSum_add_interval, realPartialSum_add_interval,
+    realDist_base_add, realDist_base_add]
+  rw [realAbs_of_nonnegative _
+      (realIntervalSum_nonnegative smallerNonnegative first length),
+    realAbs_of_nonnegative _
+      (realIntervalSum_nonnegative largerNonnegative first length)]
+  exact realIntervalSum_monotone dominated first length
+
+theorem realDist_partialSum_le_dominating
+    {smaller larger : RealSequence}
+    (smallerNonnegative : ∀ index, realLE realZero (smaller index))
+    (largerNonnegative : ∀ index, realLE realZero (larger index))
+    (dominated : ∀ index, realLE (smaller index) (larger index))
+    (first second : Nat) :
+    realLE
+      (realDist (realPartialSum smaller first)
+        (realPartialSum smaller second)).value
+      (realDist (realPartialSum larger first)
+        (realPartialSum larger second)).value := by
+  rcases Nat.le_total first second with ordered | reverse
+  · exact realDist_partialSum_le_dominating_ordered
+      smallerNonnegative largerNonnegative dominated ordered
+  · rw [realDist_comm (realPartialSum smaller first),
+      realDist_comm (realPartialSum larger first)]
+    exact realDist_partialSum_le_dominating_ordered
+      smallerNonnegative largerNonnegative dominated reverse
 
 noncomputable def realGeometricPartialSum
     (ratio : IncReal) (count : Nat) : IncReal :=
@@ -5291,5 +5355,130 @@ theorem realSeriesAbsolutelyConverges_has_sum
     ∃ sum, RealSeriesConverges terms sum :=
   realSeriesAbsolutelySummable_implies_summable
     ⟨absoluteSum, absoluteConverges⟩
+
+theorem realSeries_comparison
+    {smaller larger : RealSequence}
+    (smallerNonnegative : ∀ index, realLE realZero (smaller index))
+    (largerNonnegative : ∀ index, realLE realZero (larger index))
+    (dominated : ∀ index, realLE (smaller index) (larger index))
+    (largerSummable : RealSeriesSummable larger) :
+    RealSeriesSummable smaller := by
+  have largerCauchy :=
+    (realSeriesSummable_iff_partialSum_cauchy larger).mp largerSummable
+  have smallerCauchy : RealSequenceCauchy (realPartialSum smaller) := by
+    intro epsilon epsilonPositive
+    obtain ⟨threshold, eventuallyClose⟩ := largerCauchy epsilon epsilonPositive
+    refine ⟨threshold, ?_⟩
+    intro first second firstLarge secondLarge
+    exact realLE_trans
+      (realDist_partialSum_le_dominating
+        smallerNonnegative largerNonnegative dominated first second)
+      (eventuallyClose first second firstLarge secondLarge)
+  exact (realSeriesSummable_iff_partialSum_cauchy smaller).mpr smallerCauchy
+
+theorem realSeries_absolute_comparison
+    {terms majorant : RealSequence}
+    (majorantNonnegative : ∀ index, realLE realZero (majorant index))
+    (dominated : ∀ index,
+      realLE (realAbs (terms index)).value (majorant index))
+    (majorantSummable : RealSeriesSummable majorant) :
+    RealSeriesAbsolutelySummable terms := by
+  have absoluteSummable := realSeries_comparison
+    (smaller := fun index => (realAbs (terms index)).value)
+    (larger := majorant)
+    (fun index => (realAbs (terms index)).nonnegative)
+    majorantNonnegative dominated majorantSummable
+  exact absoluteSummable
+
+theorem realSeries_absolute_comparison_converges
+    {terms majorant : RealSequence}
+    (majorantNonnegative : ∀ index, realLE realZero (majorant index))
+    (dominated : ∀ index,
+      realLE (realAbs (terms index)).value (majorant index))
+    (majorantSummable : RealSeriesSummable majorant) :
+    RealSeriesSummable terms :=
+  realSeriesAbsolutelySummable_implies_summable
+    (realSeries_absolute_comparison majorantNonnegative dominated majorantSummable)
+
+theorem realSeries_absolute_comparison_of_absolute
+    {smaller larger : RealSequence}
+    (dominated : ∀ index,
+      realLE (realAbs (smaller index)).value (realAbs (larger index)).value)
+    (largerAbsolutelySummable : RealSeriesAbsolutelySummable larger) :
+    RealSeriesAbsolutelySummable smaller := by
+  exact realSeries_absolute_comparison
+    (majorant := fun index => (realAbs (larger index)).value)
+    (fun index => (realAbs (larger index)).nonnegative)
+    dominated largerAbsolutelySummable
+
+theorem realSeries_ratio_bound
+    (terms : RealSequence) (ratio : NonnegativeReal)
+    (stepBound : ∀ index,
+      realLE (realAbs (terms (Nat.succ index))).value
+        (nonnegativeRealMul ratio (realAbs (terms index))).value)
+    (index : Nat) :
+    realLE (realAbs (terms index)).value
+      (nonnegativeRealMul (realAbs (terms 0))
+        (nonnegativeRealPow ratio index)).value := by
+  induction index with
+  | zero =>
+      rw [nonnegativeRealPow, nonnegativeRealMul_one_right_bundle]
+      exact realLE_refl _
+  | succ index induction =>
+      have multiplied := nonnegativeRealMul_monotone_right
+        (left := ratio) induction
+      have chained := realLE_trans (stepBound index) multiplied
+      rw [nonnegativeRealPow]
+      change realLE (realAbs (terms (Nat.succ index))).value
+        (nonnegativeRealMul (realAbs (terms 0))
+          (nonnegativeRealMul (nonnegativeRealPow ratio index) ratio)).value
+      exact realLE_trans chained (by
+        rw [← nonnegativeRealMul_assoc,
+          nonnegativeRealMul_comm_bundle ratio (realAbs (terms 0)),
+          nonnegativeRealMul_assoc,
+          nonnegativeRealMul_comm_bundle ratio
+            (nonnegativeRealPow ratio index)]
+        exact realLE_refl _)
+
+theorem realSeries_ratio_test
+    (terms : RealSequence) (ratio : NonnegativeReal)
+    (ratioBelowOne : realLT ratio.value nonnegativeOne.value)
+    (stepBound : ∀ index,
+      realLE (realAbs (terms (Nat.succ index))).value
+        (nonnegativeRealMul ratio (realAbs (terms index))).value) :
+    RealSeriesAbsolutelySummable terms := by
+  let majorant : RealSequence := fun index =>
+    realMul (realAbs (terms 0)).value (realPow ratio.value index)
+  have ratioAbs : realAbs ratio.value = ratio :=
+    realAbs_of_nonnegative ratio.value ratio.nonnegative
+  have ratioPowers := realGeometricSeriesConverges_of_abs_lt_one
+    ratio.value (by simpa [ratioAbs] using ratioBelowOne)
+  have majorantConverges := realSeriesConverges_mul_const
+    (realAbs (terms 0)).value ratioPowers
+  have majorantSummable : RealSeriesSummable majorant :=
+    ⟨_, majorantConverges⟩
+  have majorantNonnegative : ∀ index, realLE realZero (majorant index) := by
+    intro index
+    dsimp [majorant]
+    rw [← nonnegativeRealPow_value ratio index]
+    rw [realMul_of_nonnegative
+      (realAbs (terms 0)).value (nonnegativeRealPow ratio index).value
+      (realAbs (terms 0)).nonnegative
+      (nonnegativeRealPow ratio index).nonnegative]
+    exact (nonnegativeRealMul
+      (realAbs (terms 0)) (nonnegativeRealPow ratio index)).nonnegative
+  have dominated : ∀ index,
+      realLE (realAbs (terms index)).value (majorant index) := by
+    intro index
+    have bound := realSeries_ratio_bound terms ratio stepBound index
+    dsimp [majorant]
+    rw [← nonnegativeRealPow_value ratio index]
+    rw [realMul_of_nonnegative
+      (realAbs (terms 0)).value (nonnegativeRealPow ratio index).value
+      (realAbs (terms 0)).nonnegative
+      (nonnegativeRealPow ratio index).nonnegative]
+    exact bound
+  exact realSeries_absolute_comparison
+    majorantNonnegative dominated majorantSummable
 
 end IncidenceCore
