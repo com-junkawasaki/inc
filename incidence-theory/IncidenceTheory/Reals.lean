@@ -2517,6 +2517,40 @@ theorem realAbs_add_le (left right : IncReal) :
     rw [realNeg_add]
     exact realAdd_monotone (real_neg_le_abs left) (real_neg_le_abs right)
 
+theorem realAbs_mul_nonnegative (left right : NonnegativeReal) :
+    realAbs (realMul left.value right.value) =
+      nonnegativeRealMul (realAbs left.value) (realAbs right.value) := by
+  rw [realMul_of_nonnegative left.value right.value
+      left.nonnegative right.nonnegative,
+    realAbs_of_nonnegative
+      (nonnegativeRealMul left right).value
+      (nonnegativeRealMul left right).nonnegative,
+    realAbs_of_nonnegative left.value left.nonnegative,
+    realAbs_of_nonnegative right.value right.nonnegative]
+
+theorem realAbs_mul (left right : IncReal) :
+    realAbs (realMul left right) =
+      nonnegativeRealMul (realAbs left) (realAbs right) := by
+  by_cases leftNonnegative : realLE realZero left
+  · let leftPart : NonnegativeReal := ⟨left, leftNonnegative⟩
+    by_cases rightNonnegative : realLE realZero right
+    · let rightPart : NonnegativeReal := ⟨right, rightNonnegative⟩
+      exact realAbs_mul_nonnegative leftPart rightPart
+    · let rightPart := realNegativePart right
+      have rightEq := real_eq_neg_negativePart right rightNonnegative
+      rw [rightEq, realMul_neg_right, realAbs_neg, realAbs_neg]
+      exact realAbs_mul_nonnegative leftPart rightPart
+  · let leftPart := realNegativePart left
+    have leftEq := real_eq_neg_negativePart left leftNonnegative
+    by_cases rightNonnegative : realLE realZero right
+    · let rightPart : NonnegativeReal := ⟨right, rightNonnegative⟩
+      rw [leftEq, realMul_neg_left, realAbs_neg, realAbs_neg]
+      exact realAbs_mul_nonnegative leftPart rightPart
+    · let rightPart := realNegativePart right
+      have rightEq := real_eq_neg_negativePart right rightNonnegative
+      rw [leftEq, rightEq, realMul_neg_neg, realAbs_neg, realAbs_neg]
+      exact realAbs_mul_nonnegative leftPart rightPart
+
 /-- The order-valued metric candidate induced by absolute difference. -/
 noncomputable def realDist (left right : IncReal) : NonnegativeReal :=
   realAbs (realAdd left (realNeg right))
@@ -2871,6 +2905,77 @@ theorem realDist_le_of_le_add_both
   · exact realDist_le_of_le_of_le_add radius leftRight rightBound
   · rw [realDist_comm]
     exact realDist_le_of_le_of_le_add radius rightLeft leftBound
+
+theorem realAbs_le_dist_add_abs (left right : IncReal) :
+    realLE (realAbs left).value
+      (realAdd (realDist left right).value (realAbs right).value) := by
+  have restore : realAdd (realAdd left (realNeg right)) right = left := by
+    rw [realAdd_assoc, realAdd_neg_left, realAdd_zero_right]
+  have bounded := realAbs_add_le (realAdd left (realNeg right)) right
+  rw [restore] at bounded
+  exact bounded
+
+theorem realDist_abs_le (left right : IncReal) :
+    realLE (realDist (realAbs left).value (realAbs right).value).value
+      (realDist left right).value := by
+  let radius := realDist left right
+  have leftBound : realLE (realAbs left).value
+      (realAdd (realAbs right).value radius.value) := by
+    rw [realAdd_comm]
+    exact realAbs_le_dist_add_abs left right
+  have rightBound : realLE (realAbs right).value
+      (realAdd (realAbs left).value radius.value) := by
+    have bounded := realAbs_le_dist_add_abs right left
+    rw [realDist_comm right left] at bounded
+    simpa [realAdd_comm] using bounded
+  exact realDist_le_of_le_add_both radius leftBound rightBound
+
+theorem realSequenceConverges_abs
+    {sequence : RealSequence} {limit : IncReal}
+    (converges : RealSequenceConverges sequence limit) :
+    RealSequenceConverges (fun index => (realAbs (sequence index)).value)
+      (realAbs limit).value := by
+  intro epsilon epsilonPositive
+  obtain ⟨threshold, eventuallyClose⟩ := converges epsilon epsilonPositive
+  refine ⟨threshold, ?_⟩
+  intro index indexLarge
+  exact realLE_trans (realDist_abs_le (sequence index) limit)
+    (eventuallyClose index indexLarge)
+
+def RealSequentiallyContinuousAt
+    (function : IncReal → IncReal) (point : IncReal) : Prop :=
+  ∀ sequence : RealSequence,
+    RealSequenceConverges sequence point →
+      RealSequenceConverges (fun index => function (sequence index))
+        (function point)
+
+theorem realSequentiallyContinuousAt_id (point : IncReal) :
+    RealSequentiallyContinuousAt (fun value => value) point := by
+  intro sequence converges
+  exact converges
+
+theorem realSequentiallyContinuousAt_const (constant point : IncReal) :
+    RealSequentiallyContinuousAt (fun _ => constant) point := by
+  intro sequence _
+  exact realSequenceConverges_const constant
+
+theorem realSequentiallyContinuousAt_neg (point : IncReal) :
+    RealSequentiallyContinuousAt realNeg point := by
+  intro sequence converges
+  exact realSequenceConverges_neg converges
+
+theorem realSequentiallyContinuousAt_abs (point : IncReal) :
+    RealSequentiallyContinuousAt (fun value => (realAbs value).value) point := by
+  intro sequence converges
+  exact realSequenceConverges_abs converges
+
+theorem realSequentiallyContinuousAt_comp
+    {first second : IncReal → IncReal} {point : IncReal}
+    (firstContinuous : RealSequentiallyContinuousAt first point)
+    (secondContinuous : RealSequentiallyContinuousAt second (first point)) :
+    RealSequentiallyContinuousAt (fun value => second (first value)) point := by
+  intro sequence converges
+  exact secondContinuous _ (firstContinuous _ converges)
 
 theorem real_finite_sequence_upper_bound
     (sequence : RealSequence) (count : Nat) :

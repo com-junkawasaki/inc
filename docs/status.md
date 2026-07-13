@@ -220,6 +220,9 @@ Checked constructions include:
   the infimum of the tail-supremum family; Cauchy control sandwiches this
   candidate between `a_N-ε` and `a_N+ε`, and half-radius composition proves
   every Cauchy sequence converges to it, completing the real metric space;
+  absolute value is multiplicative and 1-Lipschitz by the reverse triangle
+  estimate, hence preserves convergence; sequential continuity now has checked
+  identity, constant, negation, absolute-value, and composition constructors;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets

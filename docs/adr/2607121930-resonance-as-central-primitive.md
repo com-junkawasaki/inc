@@ -233,6 +233,10 @@ case where the selector is complete and resonance has no unselected modes.
   maximality of the infimum gives a two-sided metric bound. Exact half-radius
   composition then proves every Cauchy sequence converges, deriving metric
   completeness from Dedekind completeness.
+- Absolute value is multiplicative across all four sign quadrants and obeys the
+  reverse triangle estimate, making it sequentially continuous. A pointwise
+  sequential-continuity API now verifies identity, constant, negation,
+  absolute-value, and composition closure.
 
 ### Non-normative physical intuition
 
