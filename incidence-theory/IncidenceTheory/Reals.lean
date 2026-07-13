@@ -4012,6 +4012,150 @@ theorem realFunctionLimitAt_mul_const
   rw [principalProduct, boundOutputRadius] at productBound
   exact productBound
 
+theorem realFunctionLimitAt_mul_zero
+    {left right : IncReal → IncReal} {point : IncReal}
+    (leftConverges : RealFunctionLimitAt left point realZero)
+    (rightConverges : RealFunctionLimitAt right point realZero) :
+    RealFunctionLimitAt (fun value => realMul (left value) (right value))
+      point realZero := by
+  intro epsilon epsilonPositive
+  obtain ⟨delta, deltaPositive, deltaBelowOne, deltaBelowEpsilon⟩ :=
+    rational_exists_positive_below_two rational_zero_lt_one epsilonPositive
+  obtain ⟨leftRadius, leftRadiusPositive, leftClose⟩ :=
+    leftConverges delta deltaPositive
+  obtain ⟨rightRadius, rightRadiusPositive, rightClose⟩ :=
+    rightConverges delta deltaPositive
+  let deltaReal : NonnegativeReal :=
+    { value := rationalToReal delta
+      nonnegative := (rationalToReal_le_iff _ _).mpr deltaPositive.1 }
+  rcases rationalLE_total leftRadius rightRadius with ordered | reverse
+  · refine ⟨leftRadius, leftRadiusPositive, ?_⟩
+    intro input inputClose
+    have rightInputClose : realLE (realDist input point).value
+        (rationalToReal rightRadius) :=
+      realLE_trans inputClose ((rationalToReal_le_iff _ _).mpr ordered)
+    rw [realDist_zero_right, realAbs_mul]
+    have productBound := nonnegativeRealMul_monotone
+      (left := realAbs (left input)) (left' := deltaReal)
+      (right := realAbs (right input)) (right' := deltaReal)
+      (by simpa [realDist_zero_right] using leftClose input inputClose)
+      (by simpa [realDist_zero_right] using
+        rightClose input rightInputClose)
+    have principalProduct := nonnegativeRealMul_rationalToReal_positive
+      deltaPositive deltaPositive
+    rw [principalProduct] at productBound
+    have deltaSquareBelowDelta : rationalLT (rationalMul delta delta) delta := by
+      have multiplied := rationalLT_mul_left_of_positive deltaBelowOne deltaPositive
+      simpa [rationalMul_one_right] using multiplied
+    exact realLE_trans productBound ((rationalToReal_le_iff _ _).mpr
+      (rationalLT_trans deltaSquareBelowDelta deltaBelowEpsilon).1)
+  · refine ⟨rightRadius, rightRadiusPositive, ?_⟩
+    intro input inputClose
+    have leftInputClose : realLE (realDist input point).value
+        (rationalToReal leftRadius) :=
+      realLE_trans inputClose ((rationalToReal_le_iff _ _).mpr reverse)
+    rw [realDist_zero_right, realAbs_mul]
+    have productBound := nonnegativeRealMul_monotone
+      (left := realAbs (left input)) (left' := deltaReal)
+      (right := realAbs (right input)) (right' := deltaReal)
+      (by simpa [realDist_zero_right] using
+        leftClose input leftInputClose)
+      (by simpa [realDist_zero_right] using rightClose input inputClose)
+    have principalProduct := nonnegativeRealMul_rationalToReal_positive
+      deltaPositive deltaPositive
+    rw [principalProduct] at productBound
+    have deltaSquareBelowDelta : rationalLT (rationalMul delta delta) delta := by
+      have multiplied := rationalLT_mul_left_of_positive deltaBelowOne deltaPositive
+      simpa [rationalMul_one_right] using multiplied
+    exact realLE_trans productBound ((rationalToReal_le_iff _ _).mpr
+      (rationalLT_trans deltaSquareBelowDelta deltaBelowEpsilon).1)
+
+theorem realFunctionLimitAt_mul
+    {left right : IncReal → IncReal}
+    {point leftLimit rightLimit : IncReal}
+    (leftConverges : RealFunctionLimitAt left point leftLimit)
+    (rightConverges : RealFunctionLimitAt right point rightLimit) :
+    RealFunctionLimitAt (fun value => realMul (left value) (right value))
+      point (realMul leftLimit rightLimit) := by
+  let leftError : IncReal → IncReal := fun value =>
+    realAdd (left value) (realNeg leftLimit)
+  let rightError : IncReal → IncReal := fun value =>
+    realAdd (right value) (realNeg rightLimit)
+  have leftErrorConverges : RealFunctionLimitAt leftError point realZero := by
+    have result := realFunctionLimitAt_add leftConverges
+      (realFunctionLimitAt_const (realNeg leftLimit) point)
+    simpa [leftError, realAdd_neg] using result
+  have rightErrorConverges : RealFunctionLimitAt rightError point realZero := by
+    have result := realFunctionLimitAt_add rightConverges
+      (realFunctionLimitAt_const (realNeg rightLimit) point)
+    simpa [rightError, realAdd_neg] using result
+  let quadratic : IncReal → IncReal := fun value =>
+    realMul (leftError value) (rightError value)
+  have quadraticConverges : RealFunctionLimitAt quadratic point realZero :=
+    realFunctionLimitAt_mul_zero leftErrorConverges rightErrorConverges
+  let leftLinear : IncReal → IncReal := fun value =>
+    realMul (leftError value) rightLimit
+  have leftLinearConverges : RealFunctionLimitAt leftLinear point realZero := by
+    have result := realFunctionLimitAt_mul_const rightLimit leftErrorConverges
+    simpa [leftLinear, realMul_comm, realMul_zero_right] using result
+  let rightLinear : IncReal → IncReal := fun value =>
+    realMul leftLimit (rightError value)
+  have rightLinearConverges : RealFunctionLimitAt rightLinear point realZero := by
+    simpa [rightLinear, realMul_zero_right] using
+      (realFunctionLimitAt_mul_const leftLimit rightErrorConverges)
+  let error : IncReal → IncReal := fun value =>
+    realAdd (realAdd (quadratic value) (leftLinear value))
+      (rightLinear value)
+  have errorConverges : RealFunctionLimitAt error point realZero := by
+    have firstSum := realFunctionLimitAt_add quadraticConverges
+      leftLinearConverges
+    have total := realFunctionLimitAt_add firstSum rightLinearConverges
+    simpa [error, realAdd_zero_left] using total
+  let assembled : IncReal → IncReal := fun value =>
+    realAdd (error value) (realMul leftLimit rightLimit)
+  have assembledConverges : RealFunctionLimitAt assembled point
+      (realMul leftLimit rightLimit) := by
+    have result := realFunctionLimitAt_add errorConverges
+      (realFunctionLimitAt_const (realMul leftLimit rightLimit) point)
+    simpa [assembled, realAdd_zero_left] using result
+  have pointwise : ∀ value,
+      realMul (left value) (right value) = assembled value := by
+    intro value
+    have leftRestore : realAdd (leftError value) leftLimit = left value := by
+      simp only [leftError]
+      rw [realAdd_assoc, realAdd_neg_left, realAdd_zero_right]
+    have rightRestore : realAdd (rightError value) rightLimit = right value := by
+      simp only [rightError]
+      rw [realAdd_assoc, realAdd_neg_left, realAdd_zero_right]
+    calc
+      realMul (left value) (right value) =
+          realMul (realAdd (leftError value) leftLimit)
+            (realAdd (rightError value) rightLimit) := by
+              rw [leftRestore, rightRestore]
+      _ = realAdd
+          (realAdd (realMul (leftError value) (rightError value))
+            (realMul (leftError value) rightLimit))
+          (realAdd (realMul leftLimit (rightError value))
+            (realMul leftLimit rightLimit)) := by
+              rw [realAdd_mul]
+              congr 1 <;> rw [realMul_add]
+      _ = assembled value := by
+            dsimp only [assembled, error, quadratic, leftLinear, rightLinear]
+            exact (realAdd_assoc
+              (realAdd (realMul (leftError value) (rightError value))
+                (realMul (leftError value) rightLimit))
+              (realMul leftLimit (rightError value))
+              (realMul leftLimit rightLimit)).symm
+  intro epsilon epsilonPositive
+  obtain ⟨radius, radiusPositive, eventuallyClose⟩ :=
+    assembledConverges epsilon epsilonPositive
+  refine ⟨radius, radiusPositive, ?_⟩
+  intro input inputClose
+  change realLE (realDist (realMul (left input) (right input))
+    (realMul leftLimit rightLimit)).value (rationalToReal epsilon)
+  rw [pointwise input]
+  exact eventuallyClose input inputClose
+
 noncomputable def realDifferenceQuotient
     (function : IncReal → IncReal) (point derivative increment : IncReal) : IncReal :=
   if increment = realZero then derivative
@@ -4019,10 +4163,82 @@ noncomputable def realDifferenceQuotient
     (realAdd (function (realAdd point increment)) (realNeg (function point)))
     increment
 
+theorem realMul_differenceQuotient
+    (function : IncReal → IncReal) (point derivative increment : IncReal) :
+    realMul increment
+        (realDifferenceQuotient function point derivative increment) =
+      realAdd (function (realAdd point increment))
+        (realNeg (function point)) := by
+  classical
+  by_cases incrementZero : increment = realZero
+  · subst increment
+    rw [realDifferenceQuotient, if_pos rfl, realMul_zero_left,
+      realAdd_zero_right, realAdd_neg]
+  · rw [realDifferenceQuotient, if_neg incrementZero, realDiv,
+      realInvOrZero_of_ne increment incrementZero]
+    calc
+      realMul increment
+          (realMul
+            (realAdd (function (realAdd point increment))
+              (realNeg (function point)))
+            (realInv increment incrementZero)) =
+        realMul
+          (realAdd (function (realAdd point increment))
+            (realNeg (function point)))
+          (realMul increment (realInv increment incrementZero)) := by
+            rw [← realMul_assoc,
+              realMul_comm increment
+                (realAdd (function (realAdd point increment))
+                  (realNeg (function point))),
+              realMul_assoc]
+      _ = realAdd (function (realAdd point increment))
+          (realNeg (function point)) := by
+            rw [realMul_inv, realMul_one_right]
+
 def RealHasDerivativeAt
     (function : IncReal → IncReal) (derivative point : IncReal) : Prop :=
   RealFunctionLimitAt
     (realDifferenceQuotient function point derivative) realZero derivative
+
+theorem realHasDerivativeAt_continuousAt
+    {function : IncReal → IncReal} {derivative point : IncReal}
+    (differentiable : RealHasDerivativeAt function derivative point) :
+    RealContinuousAt function point := by
+  have incrementLimit : RealFunctionLimitAt (fun increment => increment)
+      realZero realZero := realFunctionLimitAt_id realZero
+  have productLimit : RealFunctionLimitAt
+      (fun increment => realMul increment
+        (realDifferenceQuotient function point derivative increment))
+      realZero realZero :=
+    by simpa [realMul_zero_left] using
+      (realFunctionLimitAt_mul incrementLimit differentiable)
+  intro epsilon epsilonPositive
+  obtain ⟨delta, deltaPositive, eventuallyClose⟩ :=
+    productLimit epsilon epsilonPositive
+  refine ⟨delta, deltaPositive, ?_⟩
+  intro input inputClose
+  let increment := realAdd input (realNeg point)
+  have incrementClose : realLE (realDist increment realZero).value
+      (rationalToReal delta) := by
+    rw [realDist_zero_right]
+    change realLE (realAbs (realAdd input (realNeg point))).value
+      (rationalToReal delta)
+    simpa [realDist] using inputClose
+  have productClose := eventuallyClose increment incrementClose
+  have restore : realAdd point increment = input := by
+    dsimp only [increment]
+    calc
+      realAdd point (realAdd input (realNeg point)) =
+          realAdd input (realAdd point (realNeg point)) := by
+            rw [← realAdd_assoc, realAdd_comm point input, realAdd_assoc]
+      _ = input := by rw [realAdd_neg, realAdd_zero_right]
+  change realLE (realDist (function input) (function point)).value
+    (rationalToReal epsilon)
+  rw [← restore]
+  have reconstructed :=
+    realMul_differenceQuotient function point derivative increment
+  rw [realDist, ← reconstructed]
+  simpa [realDist_zero_right] using productClose
 
 theorem realDifferenceQuotient_const
     (constant derivative point increment : IncReal)
