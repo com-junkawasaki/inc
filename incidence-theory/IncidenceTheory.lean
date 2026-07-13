@@ -1156,6 +1156,18 @@ theorem laplacian_symmetric_via_matrix {I R T : Type u} [DecidableEq I]
   rw [hM]
   exact (congrFun (congrFun hsymm i) j).symm
 
+/- Cycle 66 fallback: `laplacian_symmetric_via_matrix`'s own proof already
+   establishes, as an intermediate `have` (`hsymm`), that `laplacian inc idx`
+   equals its own `Matrix.transpose` as a FULL matrix (not merely pointwise
+   via two `congrFun`s) -- extracted here as a standalone fact so the
+   row/column-sum unification below can use it directly, rather than each
+   caller re-deriving `transpose_mul`/`transpose_transpose` inline. -/
+theorem laplacian_transpose_eq_self {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) :
+    Matrix.transpose (laplacian inc idx) = laplacian inc idx := by
+  rw [laplacian_eq_transpose_mul_boundaryMatrix, Matrix.transpose_mul,
+      Matrix.transpose_transpose]
+
 theorem laplacian_columnSum_zero_of_boundaryRowBalanced {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I) (hbalanced : BoundaryRowBalanced inc idx)
     (j : I) : laplacianColumnSum inc idx j = 0 := by
@@ -1180,6 +1192,49 @@ theorem laplacian_columnSum_zero_of_boundaryRowBalanced_via_matrix {I R T : Type
     exact laplacian_symmetric inc idx row j
   rw [hrewrite]
   exact laplacian_rowSum_zero_of_boundaryRowBalanced_via_matrix inc idx hbalanced j
+
+/- Cycle 66 fallback: cycle 65's own "Next hypothesis" queue flagged an
+   asymmetry left unclosed -- `laplacian_rowSum_zero_of_boundaryRowBalanced_
+   via_matrix` reduces purely through `Matrix`-layer algebra (`mul_mulVec`),
+   while `laplacian_columnSum_zero_of_boundaryRowBalanced_via_matrix` just
+   above still routes through the ORIGINAL hand-proved `laplacian_symmetric`
+   (a bespoke fold-symmetry induction, not a `Matrix`-layer fact) to reduce
+   column-sum to row-sum. This closes that gap: `laplacianColumnSum` is
+   `mulVec` of `laplacian`'s TRANSPOSE against the all-ones vector (the
+   column-sum analogue of `laplacianRowSum_eq_mulVec_ones` above), and
+   `laplacian_transpose_eq_self` (itself built from `Matrix.transpose_mul`/
+   `transpose_transpose`, not from `laplacian_symmetric`) collapses that
+   transpose away -- so column-sum equals row-sum via the SAME `Matrix`-layer
+   route the row-sum reduction already uses, with `laplacian_symmetric`
+   nowhere in the proof term. -/
+theorem laplacianColumnSum_eq_mulVec_transpose_ones {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (column : I) :
+    laplacianColumnSum inc idx column =
+      Matrix.mulVec idx (Matrix.transpose (laplacian inc idx)) (fun _ => 1) column := by
+  unfold laplacianColumnSum Matrix.mulVec Matrix.transpose
+  congr 1
+  funext row
+  exact (Int.mul_one _).symm
+
+theorem laplacianColumnSum_eq_laplacianRowSum_via_matrix {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (x : I) :
+    laplacianColumnSum inc idx x = laplacianRowSum inc idx x := by
+  rw [laplacianColumnSum_eq_mulVec_transpose_ones, laplacian_transpose_eq_self,
+      ← laplacianRowSum_eq_mulVec_ones]
+
+/- Same conclusion as `laplacian_columnSum_zero_of_boundaryRowBalanced_via_
+   matrix` above, but via the unified `mulVec`/`transpose` route rather than
+   `laplacian_symmetric`: both row-sum and column-sum now reduce through the
+   identical general-algebra chain (`mul_mulVec`, `transpose_mul`,
+   `transpose_transpose`), closing cycle 65's flagged asymmetry. Kept
+   alongside (not replacing) the existing `_via_matrix` corollary, per this
+   project's established "add, never overwrite" discipline. -/
+theorem laplacian_columnSum_zero_of_boundaryRowBalanced_via_mulVec_transpose
+    {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (hbalanced : BoundaryRowBalanced inc idx)
+    (column : I) : laplacianColumnSum inc idx column = 0 := by
+  rw [laplacianColumnSum_eq_laplacianRowSum_via_matrix]
+  exact laplacian_rowSum_zero_of_boundaryRowBalanced_via_matrix inc idx hbalanced column
 
 /- Each diagonal entry of `BᵀB` is a finite sum of integer squares. -/
 theorem laplacian_diagonal_nonnegative {I R T : Type u} [DecidableEq I]
@@ -1426,6 +1481,37 @@ theorem laplacian_congr {I R T : Type u} [DecidableEq I]
       rw [hmatrix k i, hmatrix k j]
       exact ih _
   exact hfold idx 0
+
+/- Cycle 66: cycle 62(c) bucketed `laplacian_congr` under its "inc-congruence"
+   negatives alongside `boundaryMatrix_index_irrel`/`boundaryMatrix_congr`,
+   and never individually re-examined it. On close reading, unlike its two
+   textually-adjacent siblings (which are facts about how `boundaryMatrix`
+   itself is *constructed* from `Incidence` data -- outside the `Matrix`
+   layer's vocabulary entirely, since `add`/`mul`/`transpose`/`one`/`mulVec`
+   all take an already-formed `Matrix` as an opaque input and say nothing
+   about how it was built), `laplacian_congr`'s content is exactly "the
+   already-existing bridge `laplacian_eq_transpose_mul_boundaryMatrix`
+   applied to two matrices `boundaryMatrix inc idx`/`boundaryMatrix inc' idx`
+   that happen to be equal as full functions" -- once that function equality
+   is in hand (a one-line `funext` over the pre-existing `boundaryMatrix_
+   congr`, itself unchanged), the fold-induction the ORIGINAL proof performs
+   from scratch (L1418-1427, re-deriving "pointwise-equal summands give
+   pointwise-equal folds") is entirely unnecessary: substituting equal
+   matrices into `Matrix.mul`'s two arguments is direct term rewriting, not a
+   new algebraic law. This is the SAME mis-bucketing pattern cycle 64 found
+   for `laplacian_of_empty_boundaries` (grouped by textual proximity to
+   idx-variation siblings, but actually reducible via pre-existing
+   vocabulary with no new lemma) -- here recurring for the inc-congruence
+   bucket, confirming cycle 64's finding was not a one-off. -/
+theorem laplacian_congr_via_matrix {I R T : Type u} [DecidableEq I]
+    (inc inc' : Incidence I R T) (idx : List I)
+    (hboundary : ∀ i, inc.boundary i = inc'.boundary i) (i j : I) :
+    laplacian inc idx i j = laplacian inc' idx i j := by
+  have hB : boundaryMatrix inc idx = boundaryMatrix inc' idx := by
+    funext a b
+    exact boundaryMatrix_congr inc inc' idx idx hboundary a b
+  rw [laplacian_eq_transpose_mul_boundaryMatrix inc idx,
+      laplacian_eq_transpose_mul_boundaryMatrix inc' idx, hB]
 
 /- Pointwise preservation of boundary data transports the explicit
    row-balance hypothesis itself.  Consequently the zero row/column sums of
@@ -6393,6 +6479,27 @@ theorem transpose_one {I : Type u} [DecidableEq I] :
   · subst h
     rfl
   · rw [if_neg h, if_neg (fun hc : j = i => h hc.symm)]
+
+/- Cycle 66 fallback: `mulVec` (cycle 65) is comparatively thin (only
+   `mulVec_add`/`mul_mulVec` so far) -- this is the vector analogue of
+   `one_mul`/`mul_one` just above, using the identical `foldl_add_eq_
+   count_mul` collapse with the matrix argument specialized to a vector.
+   Needs `IdxComplete` for the same reason `one_mul`/`mul_one` do: `mulVec`
+   sums over the explicit list `idx`, so a missing or repeated index would
+   make `Matrix.one`'s diagonal `1` miss or double-count. -/
+theorem mulVec_one {I : Type u} [DecidableEq I] (idx : List I) (hidx : IdxComplete idx)
+    (v : I → Int) :
+    mulVec idx one v = v := by
+  funext i
+  show intListSum idx (fun k => (if i = k then (1 : Int) else 0) * v k) = v i
+  have hother : ∀ y ∈ idx, y ≠ i → (if i = y then (1 : Int) else 0) * v y = 0 := by
+    intro y _ hy
+    rw [if_neg (fun h => hy h.symm), Int.zero_mul]
+  have hfold := foldl_add_eq_count_mul idx i
+    (fun y => (if i = y then (1 : Int) else 0) * v y) hother 0
+  unfold intListSum
+  rw [hfold, hidx i]
+  simp
 
 end Matrix
 

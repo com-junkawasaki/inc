@@ -2268,3 +2268,86 @@ row-sum側の新証明を呼ぶだけの1行差し替えとなった。
 まだ適用されていない最後の2系統でもある）。項目8の記述は「部分完了」のまま
 維持し、パーセンテージ（本文59行目、40%/55–60%）も本追補では動かさない——
 cycle 60–64 追補と同じ保守的判断を一貫して適用する。
+
+## 2026-07-14 追補（cycle 66: cycle 62(c) 21件スイープの完全閉鎖——
+`laplacian_congr` の再ミス分類発見、および `mulVec` 単位律・
+行/列総和証明の統一によるフォールバック達成）
+
+本追補は `RESEARCH_LOG.md` cycle 66 の結果を反映する。cycle 65 が自ら次
+サイクルの主対象として挙げた、cycle 62(c) の元タキソノミーで唯一「内容を
+個別に再点検する」cycle 64 の監査規律が未適用のまま残っていた2系統
+——`_congr` 系（`Incidence` 合同、3件）と ∂²/`Endpoint` 系（7件）、計10件
+——を対象に、各定理の現在の文と証明を実際に読んで個別判定した。
+
+結果、`_congr` 系のうち `boundaryMatrix_index_irrel`/`boundaryMatrix_congr`
+の2件は真に還元不可能——`boundaryMatrix` が `Incidence`/`idx` から如何に
+「構築」されるかについての事実であり、`Matrix` 層の演算（`add`/`mul`/
+`transpose`/`one`/`mulVec`）はすでに出来上がった行列を不透明な入力として
+扱うだけで、その構築過程には一切言及しない語彙だからである（むしろ逆に、
+`Matrix` 層自身の還元——例えば cycle 64 の `laplacian_append_via_matrix`
+——がこの2件の事実を前提として消費している）。一方 `laplacian_congr`
+（3件目）は、原証明が独自の `xs` 帰納法で「各点で等しい被加数を持つ fold
+は等しい」を一から再証明していたが、これは cycle 60 の橋渡し定理
+`laplacian_eq_transpose_mul_boundaryMatrix` に、`boundaryMatrix_congr`
+（既存・無変更）から一行の `funext` で得られる行列全体の等式を代入する
+だけで得られることが判明した——新規の一般補題を一切追加せずに、5行の
+`laplacian_congr_via_matrix` として簡約した。これは cycle 64 が
+`laplacian_of_empty_boundaries`（「idx可変」系にテキスト上の近接で
+分類されていたが、実際には既存語彙だけで還元できた）で発見した
+「ミス分類パターン」が、**今回2回目、しかも別カテゴリ（`_congr` 系）で**
+再現したことを意味する——テキスト上の近接スイープは正しい「近傍」は
+高い確度で当てるが、その近傍内の「個々のメンバー」まで正しく分類する
+とは限らないという、cycle 64 単発ではない再現性のある知見である。
+
+∂²/`Endpoint` 系7件（`boundaryMatrix_single_link`/`_eq_foldl`/`_ne_zero_
+witness`/`_eq_zero_of_leaf`/`_of_empty_boundary`/`_two_link`/`_three_link`）
+は全件、`Matrix` 層の演算を一切経由しない、`boundaryMatrix` 自身の
+`List.foldl` 定義を具体的な `Endpoint` リスト（`[]`/`[e1]`/`[e1,e2]`/
+`[e1,e2,e3]`）に対して直接展開した事実であることを確認し、cycle 62(c)
+の原分類どおり真に還元不可能と判定した。副次的発見として、
+`boundaryMatrix_of_empty_boundary` と `boundaryMatrix_eq_zero_of_leaf` が
+引数名の違いを除いて同一命題であり、前者はコードベース中どこからも
+参照されていないことも確認した（`Matrix` 層とは無関係の重複語彙の指摘）。
+
+以上により cycle 62(c) が当初特定した21件の真の候補（pointwise 1件・
+idx可変8件・`_congr` 3件・行/列総和2件・∂²/`Endpoint` 7件）全件が、
+cycle 62/64/65/66 の4サイクルにわたり個別に内容を読んで判定済みとなり、
+**12件が `Matrix` 層の系として還元され、9件が真に還元不可能と確認された**
+（1 + 8 + 2 + 1 = 12 の還元、残り9件——`_congr` の2件と ∂²/`Endpoint`
+全7件——が確定した負例）。cycle 62(c) 自身のスイープはこれで完全に閉鎖
+された（別途 cycle 63 が扱った `boundary_operator_square_zero`/
+`empty_boundaries_square_zero` 系は、cycle 62(c) の `^theorem laplacian_`/
+`^theorem boundaryMatrix_` grep には元々ヒットしない別名称のため、この
+21件の集計には含まれない独立スレッドである）。
+
+時間に余裕があったため、cycle 65 が「今回は着手しなかった」と明記して
+残していたフォールバック——`Matrix.mulVec` への単位律・転置相互作用の
+追加——にも着手した。`Matrix.mulVec_one`（`IdxComplete idx` の下で
+`mulVec idx one v = v`、`one_mul`/`mul_one` と同一の `foldl_add_eq_
+count_mul` 収束を行列引数をベクトルに特化して転用）を新設し、`mulVec`
+の法則集合を `mul` 自身の単位律と対称にした。さらに、cycle 65 が
+「row-sum は `mul_mulVec` 経由、column-sum は原証明の `laplacian_symmetric`
+経由という異なる経路を取ったまま」と明記していた非対称性を、
+`laplacian_transpose_eq_self`（`laplacian` が自身の転置に等しいという
+行列全体の等式、`transpose_mul`/`transpose_transpose` から）と
+`laplacianColumnSum_eq_mulVec_transpose_ones`（column-sum を `laplacian`
+の転置に対する `mulVec` として再定式化）を組み合わせることで解消した:
+`laplacianColumnSum_eq_laplacianRowSum_via_matrix` は `laplacian_symmetric`
+を一切使わずに column-sum = row-sum を証明し、新設した
+`laplacian_columnSum_zero_of_boundaryRowBalanced_via_mulVec_transpose`
+は row-sum と全く同じ `mul_mulVec`/`transpose_mul`/`transpose_transpose`
+連鎖で column-sum のゼロ性に到達する（cycle 65 の既存 `_via_matrix` 系は
+維持したまま並存させる、本プロジェクト established の「追加のみ・上書き
+しない」規律どおり）。
+
+これにより、cycle 62(c) の元スイープ（cycle 62/63/64/65/66、5サイクル）
+は roadmap 項目8の `Matrix`/`laplacian` 系統について、この5サイクルが
+自ら生成した「次サイクル」キューが指し示す先を使い果たした状態にある。
+項目8の記述は「部分完了」のまま維持し、パーセンテージ（本文59行目、
+40%/55–60%）も本追補では動かさない——cycle 60–65 追補と同じ保守的
+判断を一貫して適用する。`RESEARCH_LOG.md` cycle 66 の Next hypothesis は、
+この `Matrix`/`laplacian` スレッドから他の未着手領域（項目8内の階数・
+行列式・固有値・逆行列、または `CompletenessTheory`/`TranslationPreservation`
+名前空間など）へ軸足を移すことを推奨として明記している——5サイクル
+連続で同一スレッドを掘り続けるより、cycle 67 では ADR 項目8全体の
+棚卸しから始めるべきという判断である。
