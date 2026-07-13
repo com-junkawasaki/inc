@@ -2440,6 +2440,58 @@ noncomputable def realOrderedFieldResonanceSpec :
     exact (nonnegativeRealMul ⟨i, iNonnegative⟩
       ⟨j, jNonnegative⟩).nonnegative
 
+theorem nonnegativeRealMul_rationalToReal_positive
+    {left right : IncRational}
+    (leftPositive : rationalLT (rationalOfInteger 0) left)
+    (rightPositive : rationalLT (rationalOfInteger 0) right) :
+    (nonnegativeRealMul
+      { value := rationalToReal left
+        nonnegative := (rationalToReal_le_iff _ _).mpr leftPositive.1 }
+      { value := rationalToReal right
+        nonnegative := (rationalToReal_le_iff _ _).mpr rightPositive.1 }).value =
+      rationalToReal (rationalMul left right) := by
+  apply IncReal.ext
+  intro rational
+  constructor
+  · intro member
+    rcases member with negative | generated
+    · exact rationalLT_trans negative
+        (rationalMul_positive leftPositive rightPositive)
+    · obtain ⟨leftValue, rightValue, leftMember, rightMember,
+          leftValuePositive, rightValuePositive, below⟩ := generated
+      have productBelow := rationalLT_mul_of_positive leftMember rightMember
+        rightValuePositive leftPositive
+      exact rationalLT_trans below productBelow
+  · intro below
+    by_cases negative : rationalLT rational (rationalOfInteger 0)
+    · exact Or.inl negative
+    · have rationalNonnegative :
+          rationalLE (rationalOfInteger 0) rational :=
+        rationalLE_of_not_lt negative
+      obtain ⟨rightValue, rightValuePositive, rightMember,
+          firstBelow⟩ := rationalLT_mul_positive_approx_right
+        rationalNonnegative leftPositive rightPositive below
+      have firstBelowComm : rationalLT rational
+          (rationalMul rightValue left) := by
+        simpa [rationalMul_comm] using firstBelow
+      obtain ⟨leftValue, leftValuePositive, leftMember,
+          finalBelow⟩ := rationalLT_mul_positive_approx_right
+        rationalNonnegative rightValuePositive leftPositive firstBelowComm
+      exact Or.inr ⟨leftValue, rightValue, leftMember, rightMember,
+        leftValuePositive, rightValuePositive, by
+          simpa [rationalMul_comm] using finalBelow⟩
+
+theorem realMul_rationalToReal_positive
+    {left right : IncRational}
+    (leftPositive : rationalLT (rationalOfInteger 0) left)
+    (rightPositive : rationalLT (rationalOfInteger 0) right) :
+    realMul (rationalToReal left) (rationalToReal right) =
+      rationalToReal (rationalMul left right) := by
+  rw [realMul_of_nonnegative (rationalToReal left) (rationalToReal right)
+    ((rationalToReal_le_iff _ _).mpr leftPositive.1)
+    ((rationalToReal_le_iff _ _).mpr rightPositive.1)]
+  exact nonnegativeRealMul_rationalToReal_positive leftPositive rightPositive
+
 /-- Absolute value as the sum of the canonical positive and negative
 magnitudes. Exactly one part is nonzero away from the origin. -/
 noncomputable def realAbs (value : IncReal) : NonnegativeReal :=
@@ -2930,6 +2982,33 @@ theorem realDist_abs_le (left right : IncReal) :
     simpa [realAdd_comm] using bounded
   exact realDist_le_of_le_add_both radius leftBound rightBound
 
+theorem realDist_mul_left (factor left right : IncReal) :
+    realDist (realMul factor left) (realMul factor right) =
+      nonnegativeRealMul (realAbs factor) (realDist left right) := by
+  have differenceFactor :
+      realAdd (realMul factor left) (realNeg (realMul factor right)) =
+        realMul factor (realAdd left (realNeg right)) := by
+    rw [← realMul_neg_right, ← realMul_add]
+  change realAbs
+      (realAdd (realMul factor left) (realNeg (realMul factor right))) =
+    nonnegativeRealMul (realAbs factor)
+      (realAbs (realAdd left (realNeg right)))
+  rw [differenceFactor, realAbs_mul]
+
+theorem realDist_mul_right (left right factor : IncReal) :
+    realDist (realMul left factor) (realMul right factor) =
+      nonnegativeRealMul (realDist left right) (realAbs factor) := by
+  rw [realMul_comm left factor, realMul_comm right factor,
+    realDist_mul_left, nonnegativeRealMul_comm_bundle]
+
+theorem realDist_zero_right (value : IncReal) :
+    realDist value realZero = realAbs value := by
+  rw [realDist, realNeg_zero, realAdd_zero_right]
+
+theorem realDist_zero_left (value : IncReal) :
+    realDist realZero value = realAbs value := by
+  rw [realDist_comm, realDist_zero_right]
+
 theorem realSequenceConverges_abs
     {sequence : RealSequence} {limit : IncReal}
     (converges : RealSequenceConverges sequence limit) :
@@ -2942,12 +3021,220 @@ theorem realSequenceConverges_abs
   exact realLE_trans (realDist_abs_le (sequence index) limit)
     (eventuallyClose index indexLarge)
 
+theorem realSequenceConverges_mul_const
+    {sequence : RealSequence} {limit factor : IncReal}
+    (converges : RealSequenceConverges sequence limit) :
+    RealSequenceConverges (fun index => realMul factor (sequence index))
+      (realMul factor limit) := by
+  intro epsilon epsilonPositive
+  obtain ⟨bound, boundNotMember, boundPositive⟩ :=
+    (realAbs factor).positive_upper
+  have absoluteBound : realLE (realAbs factor).value
+      (rationalToReal bound) := by
+    intro rational member
+    exact (realAbs factor).value.lt_of_lower_of_not_lower
+      member boundNotMember
+  have boundNonzero : bound ≠ rationalOfInteger 0 := fun equal => by
+    subst bound
+    exact rationalLT_irrefl _ boundPositive
+  obtain ⟨boundInverse, boundInverseLaw⟩ :=
+    rational_nonzero_has_mul_inverse boundNonzero
+  have boundInversePositive :
+      rationalLT (rationalOfInteger 0) boundInverse := by
+    apply rationalMul_positive_reflect_right boundPositive
+    rw [boundInverseLaw]
+    exact rational_zero_lt_one
+  let delta := rationalMul epsilon boundInverse
+  have deltaPositive : rationalLT (rationalOfInteger 0) delta :=
+    rationalMul_positive epsilonPositive boundInversePositive
+  have boundDelta : rationalMul bound delta = epsilon := by
+    calc
+      _ = rationalMul epsilon (rationalMul bound boundInverse) := by
+        rw [← rationalMul_assoc bound epsilon boundInverse,
+          rationalMul_comm bound epsilon,
+          rationalMul_assoc epsilon bound boundInverse]
+      _ = rationalMul epsilon (rationalOfInteger 1) := by rw [boundInverseLaw]
+      _ = epsilon := rationalMul_one_right epsilon
+  obtain ⟨threshold, eventuallyClose⟩ := converges delta deltaPositive
+  let boundReal : NonnegativeReal :=
+    { value := rationalToReal bound
+      nonnegative := (rationalToReal_le_iff _ _).mpr boundPositive.1 }
+  let deltaReal : NonnegativeReal :=
+    { value := rationalToReal delta
+      nonnegative := (rationalToReal_le_iff _ _).mpr deltaPositive.1 }
+  refine ⟨threshold, ?_⟩
+  intro index indexLarge
+  rw [realDist_mul_left]
+  have productBound := nonnegativeRealMul_monotone
+    (left := realAbs factor) (left' := boundReal)
+    (right := realDist (sequence index) limit) (right' := deltaReal)
+    absoluteBound (eventuallyClose index indexLarge)
+  have principalProduct := nonnegativeRealMul_rationalToReal_positive
+    boundPositive deltaPositive
+  rw [principalProduct, boundDelta] at productBound
+  exact productBound
+
+theorem realSequenceConverges_mul_zero
+    {leftSequence rightSequence : RealSequence}
+    (leftConverges : RealSequenceConverges leftSequence realZero)
+    (rightConverges : RealSequenceConverges rightSequence realZero) :
+    RealSequenceConverges
+      (fun index => realMul (leftSequence index) (rightSequence index))
+      realZero := by
+  intro epsilon epsilonPositive
+  obtain ⟨delta, deltaPositive, deltaBelowOne, deltaBelowEpsilon⟩ :=
+    rational_exists_positive_below_two rational_zero_lt_one epsilonPositive
+  obtain ⟨leftThreshold, leftEventually⟩ :=
+    leftConverges delta deltaPositive
+  obtain ⟨rightThreshold, rightEventually⟩ :=
+    rightConverges delta deltaPositive
+  let deltaReal : NonnegativeReal :=
+    { value := rationalToReal delta
+      nonnegative := (rationalToReal_le_iff _ _).mpr deltaPositive.1 }
+  refine ⟨Nat.max leftThreshold rightThreshold, ?_⟩
+  intro index indexLarge
+  have leftLarge : leftThreshold ≤ index :=
+    Nat.le_trans (Nat.le_max_left _ _) indexLarge
+  have rightLarge : rightThreshold ≤ index :=
+    Nat.le_trans (Nat.le_max_right _ _) indexLarge
+  rw [realDist_zero_right, realAbs_mul]
+  have productBound := nonnegativeRealMul_monotone
+    (left := realAbs (leftSequence index)) (left' := deltaReal)
+    (right := realAbs (rightSequence index)) (right' := deltaReal)
+    (by simpa [realDist_zero_right] using leftEventually index leftLarge)
+    (by simpa [realDist_zero_right] using rightEventually index rightLarge)
+  have principalProduct := nonnegativeRealMul_rationalToReal_positive
+    deltaPositive deltaPositive
+  rw [principalProduct] at productBound
+  have deltaSquareBelowDelta :
+      rationalLT (rationalMul delta delta) delta := by
+    have multiplied := rationalLT_mul_left_of_positive deltaBelowOne deltaPositive
+    simpa [rationalMul_one_right] using multiplied
+  have deltaSquareBelowEpsilon :=
+    rationalLT_trans deltaSquareBelowDelta deltaBelowEpsilon
+  exact realLE_trans productBound
+    ((rationalToReal_le_iff _ _).mpr deltaSquareBelowEpsilon.1)
+
+theorem realSequenceConverges_mul
+    {leftSequence rightSequence : RealSequence}
+    {leftLimit rightLimit : IncReal}
+    (leftConverges : RealSequenceConverges leftSequence leftLimit)
+    (rightConverges : RealSequenceConverges rightSequence rightLimit) :
+    RealSequenceConverges
+      (fun index => realMul (leftSequence index) (rightSequence index))
+      (realMul leftLimit rightLimit) := by
+  let leftError : RealSequence := fun index =>
+    realAdd (leftSequence index) (realNeg leftLimit)
+  let rightError : RealSequence := fun index =>
+    realAdd (rightSequence index) (realNeg rightLimit)
+  have leftErrorConverges : RealSequenceConverges leftError realZero := by
+    have result := realSequenceConverges_sub leftConverges
+      (realSequenceConverges_const leftLimit)
+    simpa [leftError, realAdd_neg] using result
+  have rightErrorConverges : RealSequenceConverges rightError realZero := by
+    have result := realSequenceConverges_sub rightConverges
+      (realSequenceConverges_const rightLimit)
+    simpa [rightError, realAdd_neg] using result
+  let quadratic : RealSequence := fun index =>
+    realMul (leftError index) (rightError index)
+  have quadraticConverges : RealSequenceConverges quadratic realZero :=
+    realSequenceConverges_mul_zero leftErrorConverges rightErrorConverges
+  let leftLinear : RealSequence := fun index =>
+    realMul (leftError index) rightLimit
+  have leftLinearConverges : RealSequenceConverges leftLinear realZero := by
+    have result := realSequenceConverges_mul_const
+      (factor := rightLimit) leftErrorConverges
+    simpa [leftLinear, realMul_comm, realMul_zero_right] using result
+  let rightLinear : RealSequence := fun index =>
+    realMul leftLimit (rightError index)
+  have rightLinearConverges : RealSequenceConverges rightLinear realZero := by
+    simpa [rightLinear, realMul_zero_right] using
+      (realSequenceConverges_mul_const
+        (factor := leftLimit) rightErrorConverges)
+  let error : RealSequence := fun index =>
+    realAdd (realAdd (quadratic index) (leftLinear index))
+      (rightLinear index)
+  have errorConverges : RealSequenceConverges error realZero := by
+    have firstSum := realSequenceConverges_add quadraticConverges
+      leftLinearConverges
+    have total := realSequenceConverges_add firstSum rightLinearConverges
+    simpa [error, realAdd_zero_left] using total
+  let assembled : RealSequence := fun index =>
+    realAdd (error index) (realMul leftLimit rightLimit)
+  have assembledConverges : RealSequenceConverges assembled
+      (realMul leftLimit rightLimit) := by
+    have result := realSequenceConverges_add errorConverges
+      (realSequenceConverges_const (realMul leftLimit rightLimit))
+    simpa [assembled, realAdd_zero_left] using result
+  have pointwise : ∀ index,
+      realMul (leftSequence index) (rightSequence index) = assembled index := by
+    intro index
+    have leftRestore : realAdd (leftError index) leftLimit =
+        leftSequence index := by
+      simp only [leftError]
+      rw [realAdd_assoc, realAdd_neg_left, realAdd_zero_right]
+    have rightRestore : realAdd (rightError index) rightLimit =
+        rightSequence index := by
+      simp only [rightError]
+      rw [realAdd_assoc, realAdd_neg_left, realAdd_zero_right]
+    calc
+      realMul (leftSequence index) (rightSequence index) =
+          realMul (realAdd (leftError index) leftLimit)
+            (realAdd (rightError index) rightLimit) := by
+              rw [leftRestore, rightRestore]
+      _ = realAdd
+          (realAdd (realMul (leftError index) (rightError index))
+            (realMul (leftError index) rightLimit))
+          (realAdd (realMul leftLimit (rightError index))
+            (realMul leftLimit rightLimit)) := by
+              rw [realAdd_mul]
+              congr 1 <;> rw [realMul_add]
+      _ = assembled index := by
+            dsimp only [assembled, error, quadratic, leftLinear, rightLinear]
+            exact (realAdd_assoc
+              (realAdd (realMul (leftError index) (rightError index))
+                (realMul (leftError index) rightLimit))
+              (realMul leftLimit (rightError index))
+              (realMul leftLimit rightLimit)).symm
+  intro epsilon epsilonPositive
+  obtain ⟨threshold, eventuallyClose⟩ :=
+    assembledConverges epsilon epsilonPositive
+  refine ⟨threshold, ?_⟩
+  intro index indexLarge
+  change realLE (realDist
+    (realMul (leftSequence index) (rightSequence index))
+    (realMul leftLimit rightLimit)).value (rationalToReal epsilon)
+  rw [pointwise index]
+  exact eventuallyClose index indexLarge
+
 def RealSequentiallyContinuousAt
     (function : IncReal → IncReal) (point : IncReal) : Prop :=
   ∀ sequence : RealSequence,
     RealSequenceConverges sequence point →
       RealSequenceConverges (fun index => function (sequence index))
         (function point)
+
+def RealBinarySequentiallyContinuous
+    (operation : IncReal → IncReal → IncReal) : Prop :=
+  ∀ leftSequence rightSequence : RealSequence,
+    ∀ leftLimit rightLimit : IncReal,
+      RealSequenceConverges leftSequence leftLimit →
+      RealSequenceConverges rightSequence rightLimit →
+      RealSequenceConverges
+        (fun index => operation (leftSequence index) (rightSequence index))
+        (operation leftLimit rightLimit)
+
+theorem realMul_sequentiallyContinuous :
+    RealBinarySequentiallyContinuous realMul := by
+  intro leftSequence rightSequence leftLimit rightLimit
+    leftConverges rightConverges
+  exact realSequenceConverges_mul leftConverges rightConverges
+
+theorem realSequentiallyContinuousAt_mul_const
+    (factor point : IncReal) :
+    RealSequentiallyContinuousAt (fun value => realMul factor value) point := by
+  intro sequence converges
+  exact realSequenceConverges_mul_const converges
 
 theorem realSequentiallyContinuousAt_id (point : IncReal) :
     RealSequentiallyContinuousAt (fun value => value) point := by
