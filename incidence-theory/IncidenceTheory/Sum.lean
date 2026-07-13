@@ -1491,4 +1491,312 @@ theorem incidenceProd_incidenceSum_distrib_glue_misaligned_not_bisim_rescued :
     incidenceProd_incidenceSum_distrib_glue_rhs_none]
   exact not_optionApproxBisim_some_none _ _
 
+/- Research cycle 49 (see RESEARCH_LOG.md): cycle 48's own next-hypothesis (a)
+   -- cycle 48 proved `incidenceProd_incidenceSum_distrib_glue_agrees_of_rhs_some`
+   (RHS some -> LHS some, exactly equal) but explicitly left its CONVERSE
+   uncharacterized: does the LHS glue ever succeed while the RHS glue is
+   `none`, and if so, exactly when? Cycle 47's single concrete witness
+   showed this CAN happen; this cycle characterizes EVERY case where it
+   does, as a clean `iff`, fully generically over any `inc1`/`inc2`/`inc3`.
+
+   First strengthens two of cycle 48's own lemmas
+   (`incidenceSum_glue_same_left`/`_same_right`, each proved only under a
+   "componentwise glue succeeds" hypothesis) into unconditional EQUALITIES:
+   neither same-side case can ever differ from the plain componentwise
+   glue, not even when the componentwise glue itself is `none` -- the same
+   unit-law argument cycle 48 used for the `some` case works verbatim for
+   `none` (if the componentwise glue is `none`, neither argument can be the
+   absorbing unit, since the unit laws would force a `some` result if it
+   were). This in turn gives FULL, unconditional equalities (not merely
+   "if RHS succeeds") for the distributive law's two SAME-side tag
+   combinations (`inl_inl`/`inr_inr`) -- proving, as a new fact this
+   project's log has not stated before, that same-side pairs can NEVER
+   misalign at all (misalignment is possible ONLY for genuinely
+   cross-side pairs, exactly the shape of cycle 47's own counterexample).
+
+   For the two CROSS-side combinations, derives closed `if`-`then`-`else`
+   forms for both the LHS and the (already-known) RHS glue directly from
+   cycle 48's `incidenceSum_glue_cross_left`/`_cross_right`, then reads
+   off the precise misalignment condition by comparing the two closed
+   forms: for `inl_inr` (`i1`/`i2` on the left, `j1`/`j3` on the right),
+   LHS succeeds iff `i2 = inc2.unit` AND `inc1.glue i1 j1` succeeds (at
+   ANY value), while RHS succeeds iff `i1 = inc1.unit` AND
+   `i2 = inc2.unit` -- strictly narrower because it also demands `i1`
+   itself be the unit, not merely that `inc1.glue i1 j1` succeed. So
+   "LHS some, RHS none" happens exactly when `i2 = inc2.unit`,
+   `i1 ≠ inc1.unit`, and `inc1.glue i1 j1` succeeds anyway (as it always
+   does for `natIncidence`, cycle 47's own instance choice) -- confirming
+   cycle 47's counterexample was not an isolated accident but the generic
+   shape of the ENTIRE misalignment phenomenon for this tag combination.
+   `inr_inl` is the mirror image, with the roles of `i1`/`j1` swapped
+   (the unit-test lands on `j1` instead, since `incidenceSum`'s cross
+   glue always tests whichever argument is tagged `Sum.inl`). Combines
+   both cross cases with the (now-proved-impossible) same-side cases into
+   one master `iff` over arbitrary `x y : I2 ⊕ I3`, completing the
+   picture cycle 48 left open. -/
+
+/- Strengthens `incidenceSum_glue_same_left` (cycle 48) to an unconditional
+   equality: the sum's same-left glue is ALWAYS exactly the componentwise
+   `inc1.glue` result (lifted through `Sum.inl`), whether or not that
+   componentwise glue succeeds. -/
+theorem incidenceSum_glue_same_left_eq
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (i1 j1 : I1) :
+    (incidenceSum inc1 inc2).glue (Sum.inl i1) (Sum.inl j1) = (inc1.glue i1 j1).map Sum.inl := by
+  simp only [incidenceSum, sumGlue]
+  by_cases hj : j1 = inc1.unit
+  · subst hj
+    simp [inc1.unit_right i1]
+  · by_cases hi : i1 = inc1.unit
+    · subst hi
+      simp [hj, inc1.unit_left j1]
+    · simp [hj, hi]
+
+/- Strengthens `incidenceSum_glue_same_right` (cycle 48) to an unconditional
+   equality, mirroring `incidenceSum_glue_same_left_eq` -- the second
+   factor's same-side pair never hits an absorption branch at all
+   (`incidenceSum`'s designated unit is always `Sum.inl inc1.unit`), so
+   this reduces unconditionally to the componentwise `inc2.glue`, no case
+   split needed. -/
+theorem incidenceSum_glue_same_right_eq
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (i2 j2 : I2) :
+    (incidenceSum inc1 inc2).glue (Sum.inr i2) (Sum.inr j2) = (inc2.glue i2 j2).map Sum.inr := by
+  simp [incidenceSum, sumGlue]
+
+/- New fact: the `inl_inl` distributive-law combination can NEVER misalign
+   -- a full, unconditional equality (not merely "if RHS succeeds"),
+   strictly stronger than cycle 48's `incidenceProd_incidenceSum_distrib_glue_agree_inl_inl`. -/
+theorem incidenceProd_incidenceSum_distrib_glue_inl_inl_eq
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 j1 : I1) (i2 j2 : I2) :
+    ((incidenceProd inc1 (incidenceSum inc2 inc3)).glue (i1, Sum.inl i2) (j1, Sum.inl j2)).map
+      prodSumDistribForward =
+    (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+      (Sum.inl (i1, i2)) (Sum.inl (j1, j2)) := by
+  rw [incidenceSum_glue_same_left_eq (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)
+    (i1, i2) (j1, j2)]
+  simp only [incidenceProd, prodGlue, incidenceSum_glue_same_left_eq inc2 inc3 i2 j2]
+  rcases inc1.glue i1 j1 with _ | k1 <;> rcases inc2.glue i2 j2 with _ | k2 <;>
+    simp [prodSumDistribForward]
+
+/- Mirror for `inr_inr`: also can NEVER misalign. -/
+theorem incidenceProd_incidenceSum_distrib_glue_inr_inr_eq
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 j1 : I1) (i3 j3 : I3) :
+    ((incidenceProd inc1 (incidenceSum inc2 inc3)).glue (i1, Sum.inr i3) (j1, Sum.inr j3)).map
+      prodSumDistribForward =
+    (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+      (Sum.inr (i1, i3)) (Sum.inr (j1, j3)) := by
+  rw [incidenceSum_glue_same_right_eq (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)
+    (i1, i3) (j1, j3)]
+  simp only [incidenceProd, prodGlue, incidenceSum_glue_same_right_eq inc2 inc3 i3 j3]
+  rcases inc1.glue i1 j1 with _ | k1 <;> rcases inc3.glue i3 j3 with _ | k3 <;>
+    simp [prodSumDistribForward]
+
+/- Closed form for the LHS glue at the `inl_inr` cross combination, derived
+   directly from `incidenceSum_glue_cross_left` (cycle 48): succeeds
+   exactly when `i2 = inc2.unit` AND the outer `inc1.glue i1 j1` succeeds
+   (at whatever value it happens to produce). -/
+theorem incidenceProd_incidenceSum_distrib_glue_inl_inr_lhs_eq
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 j1 : I1) (i2 : I2) (j3 : I3) :
+    (incidenceProd inc1 (incidenceSum inc2 inc3)).glue (i1, Sum.inl i2) (j1, Sum.inr j3) =
+      if i2 = inc2.unit then (inc1.glue i1 j1).map (fun k1 => (k1, Sum.inr j3)) else none := by
+  simp only [incidenceProd, prodGlue, incidenceSum_glue_cross_left inc2 inc3 i2 j3]
+  by_cases h : i2 = inc2.unit
+  · subst h
+    rcases inc1.glue i1 j1 with _ | k1 <;> simp
+  · simp [h]
+
+/- Closed form for the RHS glue at the `inl_inr` combination, derived from
+   `incidenceSum_glue_cross_left` applied to the OUTER sum: succeeds
+   exactly when the FULL pair `(i1, i2)` is `((incidenceProd inc1 inc2).unit`
+   `= (inc1.unit, inc2.unit)` -- strictly narrower than the LHS's condition. -/
+theorem incidenceSum_incidenceProd_distrib_glue_inl_inr_rhs_eq
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 j1 : I1) (i2 : I2) (j3 : I3) :
+    (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+      (Sum.inl (i1, i2)) (Sum.inr (j1, j3)) =
+      if i1 = inc1.unit ∧ i2 = inc2.unit then some (Sum.inr (j1, j3)) else none := by
+  rw [incidenceSum_glue_cross_left (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)
+    (i1, i2) (j1, j3)]
+  simp [incidenceProd, Prod.ext_iff]
+
+/- The headline `inl_inr` characterization: LHS succeeds while RHS is
+   `none` EXACTLY when `i2 = inc2.unit`, `i1 ≠ inc1.unit`, and
+   `inc1.glue i1 j1` succeeds anyway -- the precise generic shape of
+   cycle 47's concrete counterexample (`i1 := 2`, `j1 := 3`, both
+   `≠ 0 = natIncidence.unit`, `inc1.glue i1 j1` total for `natIncidence`). -/
+theorem incidenceProd_incidenceSum_distrib_glue_lhs_some_rhs_none_iff_inl_inr
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 j1 : I1) (i2 : I2) (j3 : I3) :
+    ((∃ v, (incidenceProd inc1 (incidenceSum inc2 inc3)).glue
+        (i1, Sum.inl i2) (j1, Sum.inr j3) = some v) ∧
+     (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+       (Sum.inl (i1, i2)) (Sum.inr (j1, j3)) = none)
+    ↔ i2 = inc2.unit ∧ i1 ≠ inc1.unit ∧ ∃ k1, inc1.glue i1 j1 = some k1 := by
+  rw [incidenceProd_incidenceSum_distrib_glue_inl_inr_lhs_eq inc1 inc2 inc3 i1 j1 i2 j3,
+    incidenceSum_incidenceProd_distrib_glue_inl_inr_rhs_eq inc1 inc2 inc3 i1 j1 i2 j3]
+  constructor
+  · rintro ⟨⟨v, hv⟩, hnone⟩
+    by_cases h2 : i2 = inc2.unit
+    · refine ⟨h2, ?_, ?_⟩
+      · intro h1
+        rw [if_pos ⟨h1, h2⟩] at hnone
+        exact absurd hnone (by simp)
+      · rcases hk1 : inc1.glue i1 j1 with _ | k1
+        · rw [if_pos h2, hk1] at hv
+          exact absurd hv (by simp)
+        · exact ⟨k1, rfl⟩
+    · rw [if_neg h2] at hv
+      exact absurd hv (by simp)
+  · rintro ⟨h2, h1, k1, hk1⟩
+    refine ⟨⟨(k1, Sum.inr j3), ?_⟩, ?_⟩
+    · rw [if_pos h2, hk1]; rfl
+    · rw [if_neg (fun h => h1 h.1)]
+
+/- Closed forms and the headline characterization for the mirror `inr_inl`
+   combination -- same mechanism, with the unit-test landing on `j1`
+   instead of `i1` (since `incidenceSum`'s cross glue always tests
+   whichever argument is tagged `Sum.inl`, and here that is the `j`
+   argument). -/
+theorem incidenceProd_incidenceSum_distrib_glue_inr_inl_lhs_eq
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 j1 : I1) (i3 : I3) (j2 : I2) :
+    (incidenceProd inc1 (incidenceSum inc2 inc3)).glue (i1, Sum.inr i3) (j1, Sum.inl j2) =
+      if j2 = inc2.unit then (inc1.glue i1 j1).map (fun k1 => (k1, Sum.inr i3)) else none := by
+  simp only [incidenceProd, prodGlue, incidenceSum_glue_cross_right inc2 inc3 i3 j2]
+  by_cases h : j2 = inc2.unit
+  · subst h
+    rcases inc1.glue i1 j1 with _ | k1 <;> simp
+  · simp [h]
+
+theorem incidenceSum_incidenceProd_distrib_glue_inr_inl_rhs_eq
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 j1 : I1) (i3 : I3) (j2 : I2) :
+    (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+      (Sum.inr (i1, i3)) (Sum.inl (j1, j2)) =
+      if j1 = inc1.unit ∧ j2 = inc2.unit then some (Sum.inr (i1, i3)) else none := by
+  rw [incidenceSum_glue_cross_right (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)
+    (i1, i3) (j1, j2)]
+  simp [incidenceProd, Prod.ext_iff]
+
+theorem incidenceProd_incidenceSum_distrib_glue_lhs_some_rhs_none_iff_inr_inl
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 j1 : I1) (i3 : I3) (j2 : I2) :
+    ((∃ v, (incidenceProd inc1 (incidenceSum inc2 inc3)).glue
+        (i1, Sum.inr i3) (j1, Sum.inl j2) = some v) ∧
+     (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+       (Sum.inr (i1, i3)) (Sum.inl (j1, j2)) = none)
+    ↔ j2 = inc2.unit ∧ j1 ≠ inc1.unit ∧ ∃ k1, inc1.glue i1 j1 = some k1 := by
+  rw [incidenceProd_incidenceSum_distrib_glue_inr_inl_lhs_eq inc1 inc2 inc3 i1 j1 i3 j2,
+    incidenceSum_incidenceProd_distrib_glue_inr_inl_rhs_eq inc1 inc2 inc3 i1 j1 i3 j2]
+  constructor
+  · rintro ⟨⟨v, hv⟩, hnone⟩
+    by_cases h2 : j2 = inc2.unit
+    · refine ⟨h2, ?_, ?_⟩
+      · intro h1
+        rw [if_pos ⟨h1, h2⟩] at hnone
+        exact absurd hnone (by simp)
+      · rcases hk1 : inc1.glue i1 j1 with _ | k1
+        · rw [if_pos h2, hk1] at hv
+          exact absurd hv (by simp)
+        · exact ⟨k1, rfl⟩
+    · rw [if_neg h2] at hv
+      exact absurd hv (by simp)
+  · rintro ⟨h2, h1, k1, hk1⟩
+    refine ⟨⟨(k1, Sum.inr i3), ?_⟩, ?_⟩
+    · rw [if_pos h2, hk1]; rfl
+    · rw [if_neg (fun h => h1 h.1)]
+
+/- The master theorem: combines all four tag combinations into one clean
+   `iff`, fully answering cycle 48's queued converse question. The
+   same-side cases contribute nothing (shown impossible via the `_eq`
+   lemmas above), so the only way "LHS some, RHS none" can happen at all
+   is one of the two cross-side conditions above. -/
+theorem incidenceProd_incidenceSum_distrib_glue_lhs_some_rhs_none_iff
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 j1 : I1) (x y : I2 ⊕ I3) :
+    ((∃ v, (incidenceProd inc1 (incidenceSum inc2 inc3)).glue (i1, x) (j1, y) = some v) ∧
+     (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+       (prodSumDistribForward (i1, x)) (prodSumDistribForward (j1, y)) = none)
+    ↔ (∃ i2 j3, x = Sum.inl i2 ∧ y = Sum.inr j3 ∧
+         i2 = inc2.unit ∧ i1 ≠ inc1.unit ∧ ∃ k1, inc1.glue i1 j1 = some k1) ∨
+       (∃ i3 j2, x = Sum.inr i3 ∧ y = Sum.inl j2 ∧
+         j2 = inc2.unit ∧ j1 ≠ inc1.unit ∧ ∃ k1, inc1.glue i1 j1 = some k1) := by
+  cases x with
+  | inl i2 =>
+    cases y with
+    | inl j2 =>
+      constructor
+      · rintro ⟨⟨v, hv⟩, hnone⟩
+        have heq := incidenceProd_incidenceSum_distrib_glue_inl_inl_eq inc1 inc2 inc3 i1 j1 i2 j2
+        simp only [prodSumDistribForward] at hnone
+        rw [hv, hnone] at heq
+        simp at heq
+      · rintro (⟨_, _, _, hy, _⟩ | ⟨_, _, hx, _⟩)
+        · exact absurd hy (by simp)
+        · exact absurd hx (by simp)
+    | inr j3 =>
+      simp only [prodSumDistribForward]
+      rw [incidenceProd_incidenceSum_distrib_glue_lhs_some_rhs_none_iff_inl_inr
+        inc1 inc2 inc3 i1 j1 i2 j3]
+      constructor
+      · intro h
+        exact Or.inl ⟨i2, j3, rfl, rfl, h⟩
+      · rintro (⟨i2', j3', hi2, hj3, h⟩ | ⟨_, _, hx, _⟩)
+        · rw [Sum.inl.injEq] at hi2
+          rw [Sum.inr.injEq] at hj3
+          subst hi2
+          subst hj3
+          exact h
+        · exact absurd hx (by simp)
+  | inr i3 =>
+    cases y with
+    | inl j2 =>
+      simp only [prodSumDistribForward]
+      rw [incidenceProd_incidenceSum_distrib_glue_lhs_some_rhs_none_iff_inr_inl
+        inc1 inc2 inc3 i1 j1 i3 j2]
+      constructor
+      · intro h
+        exact Or.inr ⟨i3, j2, rfl, rfl, h⟩
+      · rintro (⟨_, _, hx, _⟩ | ⟨i3', j2', hi3, hj2, h⟩)
+        · exact absurd hx (by simp)
+        · rw [Sum.inr.injEq] at hi3
+          rw [Sum.inl.injEq] at hj2
+          subst hi3
+          subst hj2
+          exact h
+    | inr j3 =>
+      constructor
+      · rintro ⟨⟨v, hv⟩, hnone⟩
+        have heq := incidenceProd_incidenceSum_distrib_glue_inr_inr_eq inc1 inc2 inc3 i1 j1 i3 j3
+        simp only [prodSumDistribForward] at hnone
+        rw [hv, hnone] at heq
+        simp at heq
+      · rintro (⟨_, _, hx, _⟩ | ⟨_, _, _, hy, _⟩)
+        · exact absurd hx (by simp)
+        · exact absurd hy (by simp)
+
 end IncidenceCore

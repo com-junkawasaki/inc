@@ -4049,3 +4049,175 @@ counterexample (or discover it does NOT concretely manifest even then).
 (c) cycle 39's still-open item, now queued four cycles running: does any
 existing instance have a `≈`-quotient in the middle ground beyond
 `simplexIncidence` (cycle 41's only example)?
+
+## Cycle 49
+
+**Audit note (task-mandated cycle 39/41 sanity check, done first): item (c)
+of cycle 48's own queue is STALE, not open -- cycle 41 already answered it,
+and cycle 45 already said so.** Before picking a target, re-read cycle 41 in
+full (as instructed): cycle 41's own Method/Result sections directly answer
+cycle 39's exact question ("does any EXISTING instance have a `≈`-quotient in
+the genuinely interesting middle ground -- more than one class, fewer than
+all") in the AFFIRMATIVE -- `simplexIncidence`'s `≈`-partition is exactly 3
+classes out of 7 elements (`simplexToShape_iff_approxBisim`, established
+across cycles 12/18/21/22/23 and recognized by cycle 41 as answering this
+question), and cycle 41 goes on to build `shapeIncidence` on that quotient.
+Cycle 41's own next-hypothesis section explicitly narrows the remaining
+open thread down to option (c) alone (the internal-logic distributivity
+direction) -- it does NOT re-queue the middle-ground question, because it
+had just been answered. Cycle 45's own synthesis independently confirms this
+in so many words: *"with both of cycle 41's queued options now resolved..."*
+Despite this, cycle 47's queue re-introduced "cycle 39's still-open item" as
+a fallback option (c), and cycle 48 repeated it again, verbatim, labeling it
+"queued four cycles running" -- propagating a label that was already false
+at the moment cycle 47 wrote it (cycle 41 had closed it six cycles earlier,
+cycle 45 had said so explicitly three cycles before that). This is the SAME
+failure mode cycles 45/46 each caught and corrected once (a stale "still
+open" queue label surviving multiple cycles without anyone checking the
+actual resolved state) -- except this time it slipped through TWO
+re-statements (cycles 47 and 48) before this cycle's mandated audit caught
+it a third time. **Correction for cycle 50+: item (c) is CLOSED (by cycle 41,
+confirmed by cycle 45) and should not be re-queued again.** If a future
+cycle wants a genuinely NEW instance of a "middle ground" `≈`-quotient
+(distinct from `simplexIncidence`, the only witness so far), that would be a
+different, fresh question -- not a re-run of cycle 39's original one, which
+already has its answer. With (c) correctly retired, this cycle picks between
+cycle 48's remaining live threads (a) and (b), per the task's own tractability
+ranking: (a), the converse-iff characterization, since cycle 48's own Method
+section already sketches its shape from by-hand case analysis.
+
+**Hypothesis**: cycle 48's queued thread (a) -- cycle 48 proved
+`incidenceProd_incidenceSum_distrib_glue_agrees_of_rhs_some` (RHS `some` ->
+LHS `some`, exactly equal, for ANY `inc1`/`inc2`/`inc3`) but left its
+CONVERSE uncharacterized beyond a single concrete witness (cycle 47's
+`i1:=2,j1:=3` counterexample): does LHS succeed while RHS is `none` in
+general, and if so, exactly when -- stated as a clean `iff`, not merely
+another one-off instance?
+
+**Method**: grepped `Sum.lean`'s exact current statements before writing
+anything (per the task's explicit instruction), confirming
+`incidenceSum_glue_same_left`/`_same_right`/`_cross_left`/`_cross_right` and
+`incidenceProd_incidenceSum_distrib_glue_agrees_of_rhs_some` cycle 48 added,
+plus `Product.lean`'s `prodGlue`/`incidenceProd.unit := (inc1.unit,
+inc2.unit)`. Two observations before writing any new theorem. (1) Cycle 48's
+`incidenceSum_glue_same_left`/`_same_right` are stated only under a
+"componentwise glue succeeds" hypothesis, but re-reading their own proofs
+shows the SAME argument works with no hypothesis at all: if the
+componentwise glue is `none`, neither argument can secretly be the
+absorbing unit either (the unit laws would force a `some` result if it
+were), so the sum's same-side glue is an UNCONDITIONAL equality to the
+componentwise glue, not merely an implication from success. Strengthened
+both to full equalities first (`incidenceSum_glue_same_left_eq`/
+`_same_right_eq`) since the whole converse question turns on exactly this
+kind of "what happens when it's `none`" information cycle 48's
+success-only lemmas didn't carry. (2) With these equalities in hand, the
+distributive law's two SAME-side tag combinations (`inl_inl`/`inr_inr`)
+turn out to depend on IDENTICAL success conditions on both sides (both
+reduce to "`inc1.glue i1 j1` succeeds AND the matching `I2`/`I3`-component
+glue succeeds") -- so same-side pairs can NEVER misalign at all, a fact
+this project's log had not stated before (cycle 48 proved only the "RHS
+some -> LHS some" direction for these, not the full "never differ" fact).
+Worked the two CROSS-side combinations (`inl_inr`/`inr_inl`, the only
+places misalignment is even possible) out by hand using
+`incidenceSum_glue_cross_left`/`_cross_right`, deriving closed
+`if`-`then`-`else` forms for both the LHS and RHS glue directly, then
+reading the misalignment condition off by comparing the two closed forms
+-- exactly the shape cycle 48's own Method section sketched by hand
+without formalizing.
+
+**Result**: **a complete, fully general characterization, confirmed
+sorry-free on the first attempt after one proof-term fix caught by the
+compiler (not by hand).** Added to `Sum.lean` (18 new declarations): two
+strengthened same-side equalities, two same-side "never misalign" full
+equalities (`incidenceProd_incidenceSum_distrib_glue_inl_inl_eq`/
+`_inr_inr_eq`), four cross-side closed-form lemmas (LHS/RHS for each of
+`inl_inr`/`inr_inl`), two cross-side headline `iff`s, and one master `iff`
+combining all four tag combinations.
+
+The two cross-side `iff`s are the headline result. For `inl_inr`
+(`i1`/`i2` on the left, `j1`/`j3` on the right):
+```
+incidenceProd_incidenceSum_distrib_glue_lhs_some_rhs_none_iff_inl_inr :
+  ((∃ v, LHS.glue (i1, Sum.inl i2) (j1, Sum.inr j3) = some v) ∧
+   RHS.glue (Sum.inl (i1,i2)) (Sum.inr (j1,j3)) = none)
+  ↔ i2 = inc2.unit ∧ i1 ≠ inc1.unit ∧ ∃ k1, inc1.glue i1 j1 = some k1
+```
+i.e. LHS succeeds while RHS fails EXACTLY when the inner sum's own
+absorbing unit condition (`i2 = inc2.unit`) fires (letting the inner
+sum's `glue` succeed regardless of `i1`) while `i1` itself is NOT the
+outer unit (so the outer sum's stricter "whole-pair-is-the-unit" test
+fails) and `inc1.glue i1 j1` still happens to succeed anyway (as it always
+does for `natIncidence`, confirming cycle 47's witness was the generic
+case, not a special accident). `inr_inl` is the exact mirror, with the
+roles of `i1`/`j1` swapped (the unit-test lands on whichever argument is
+tagged `Sum.inr`'s PARTNER, i.e. `j1` here, since `incidenceSum`'s cross
+test always inspects the `Sum.inl`-tagged side). The master theorem
+(`incidenceProd_incidenceSum_distrib_glue_lhs_some_rhs_none_iff`) combines
+all four combinations into one `iff` over arbitrary `x y : I2 ⊕ I3`,
+using the same-side equalities to rule those two combinations out
+entirely (their contribution to the disjunction is provably `False`,
+closed via `Sum.noConfusion`-style contradictions). One hand-derivation
+error the compiler caught (matching cycle 48's own experience): an initial
+attempt used `rcases hk1 : inc1.glue i1 j1 with _ | k1` while the ambient
+goal itself still mentioned `inc1.glue i1 j1`, which silently rewrote the
+goal's own occurrence during the case split, breaking the intended
+`exact ⟨k1, hk1⟩` (Lean's error: expected `some k1 = some k1`, not
+`inc1.glue i1 j1 = some k1`) -- fixed by using `rfl` instead of `hk1` for
+that already-substituted goal, a small but genuine instance of this
+project's standing discipline of trusting the compiler's exact error over
+a plausible-looking hand derivation.
+
+`lake build`: 62/62 jobs (`lake clean && lake build`, matching `verify.sh`).
+`#print axioms` (scratch file, deleted after use, cycles 45-48's method):
+every one of the 18 new declarations needs only `propext`/`Quot.sound` --
+strictly SIMPLER than cycle 48's own concrete-instance theorems (which
+needed `Classical.choice` for the `natIncidence`-involving facts), because
+this cycle's entire result is stated and proved fully generically, with no
+concrete instance touched at all. Full `./verify.sh` (clean `lake clean &&
+lake build`, example binary run, repo-wide unproved-declaration grep):
+passes end to end.
+
+**Synthesis**: this closes cycle 48's queued hypothesis (a) completely,
+upgrading cycle 47's single concrete witness and cycle 48's one-directional
+general theorem into a full converse characterization -- exactly the
+"clean iff" the task asked for, not merely another instance-level check.
+The net picture across cycles 47-49 is now complete: the distributive law's
+`glue` misalignment is possible in EXACTLY two of the four tag
+combinations (cross-side only; same-side NEVER misaligns, a new fact this
+cycle establishes), and within those two, misalignment happens EXACTLY when
+one factor's inner-sum absorption condition fires on a value that is not
+literally the outer sum's own absorbing unit but still yields a successful
+`inc1.glue` result -- the precise mechanism cycle 47 described in prose
+("inner-sum absorption ignoring `i1` vs. outer-sum absorption requiring the
+full pair") is now a formal `iff`, not just a mechanism description backed
+by one witness. Separately, and just as important as the mathematical
+result: this cycle's mandated audit step found a THIRD instance of this
+project's recurring "stale queue label" failure mode (after cycles 45/46),
+this time surviving through two cycles (47, 48) rather than being caught
+immediately -- worth naming plainly as a process pattern, not a one-off:
+this log's per-cycle "next hypothesis" sections get COPIED forward more
+often than they get RE-VERIFIED against the file being copied from, and a
+brief, cheap "does this really do what it says" check on the OLDEST
+still-open-looking item (feasible in a few minutes, as the task's own
+framing anticipated) is worth doing before every cycle, not only when
+explicitly prompted to, since the cost of catching it is small and the cost
+of silently repeating dead work (as nearly happened again here) is not.
+
+**Next hypothesis (cycle 50, not yet attempted)**: with cycle 48's option
+(a) now fully closed (converse iff) and option (c) retired as stale
+(closed by cycle 41), the one remaining live thread from cycles 47/48's
+queues is option (b): build a first concrete `Incidence` instance actually
+USING `incidenceSum` with a non-permissive `guards`, to test whether the
+`guards`-forcing-permissive structural asymmetry cycle 47 found
+(`incidenceSum_prod_guards_always_permissive` vs.
+`incidenceProd_sum_guards_depends_on_inc1_only`) concretely manifests as an
+observable disagreement, or whether it turns out -- like this cycle's
+same-side glue finding -- to be provably impossible for a reason not yet
+identified. Scope narrowly per the task's own fallback framing: one small
+non-permissive-`guards` instance built via `incidenceSum`, checked
+computationally (`decide`/`rfl`), not a general theorem attempt in the same
+cycle. Separately, if a future cycle wants a genuinely NEW `≈`-quotient
+"middle ground" instance (distinct from `simplexIncidence`), that is a
+fresh question this cycle's audit note explicitly distinguishes from the
+now-closed cycle 39/41 question -- worth its own hypothesis statement, not
+a queue-label carryover, if picked up later.
