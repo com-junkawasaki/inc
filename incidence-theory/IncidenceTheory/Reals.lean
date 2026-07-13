@@ -4399,6 +4399,137 @@ def realPartialSum (terms : RealSequence) : RealSequence
     realPartialSum terms (Nat.succ count) =
       realAdd (realPartialSum terms count) (terms count) := rfl
 
+noncomputable def realAbsPartialSum
+    (terms : RealSequence) : Nat → NonnegativeReal
+  | 0 => nonnegativeZero
+  | Nat.succ count =>
+      nonnegativeRealAdd (realAbsPartialSum terms count) (realAbs (terms count))
+
+@[simp] theorem realAbsPartialSum_zero (terms : RealSequence) :
+    realAbsPartialSum terms 0 = nonnegativeZero := rfl
+
+theorem realAbsPartialSum_succ (terms : RealSequence) (count : Nat) :
+    realAbsPartialSum terms (Nat.succ count) =
+      nonnegativeRealAdd (realAbsPartialSum terms count)
+        (realAbs (terms count)) := rfl
+
+theorem realAbsPartialSum_value (terms : RealSequence) (count : Nat) :
+    (realAbsPartialSum terms count).value =
+      realPartialSum (fun index => (realAbs (terms index)).value) count := by
+  induction count with
+  | zero => rfl
+  | succ count induction =>
+      rw [realAbsPartialSum_succ, realPartialSum_succ]
+      exact congrArg (fun value => realAdd value (realAbs (terms count)).value)
+        induction
+
+theorem realAbs_partialSum_le_absPartialSum
+    (terms : RealSequence) (count : Nat) :
+    realLE (realAbs (realPartialSum terms count)).value
+      (realAbsPartialSum terms count).value := by
+  induction count with
+  | zero =>
+      rw [realPartialSum_zero, realAbs_zero, realAbsPartialSum_zero]
+      exact realLE_refl _
+  | succ count induction =>
+      rw [realPartialSum_succ, realAbsPartialSum_succ]
+      exact realLE_trans (realAbs_add_le _ _)
+        (realAdd_monotone induction (realLE_refl _))
+
+def realIntervalSum
+    (terms : RealSequence) (start : Nat) : Nat → IncReal
+  | 0 => realZero
+  | Nat.succ length =>
+      realAdd (realIntervalSum terms start length) (terms (start + length))
+
+noncomputable def realAbsIntervalSum
+    (terms : RealSequence) (start : Nat) : Nat → NonnegativeReal
+  | 0 => nonnegativeZero
+  | Nat.succ length =>
+      nonnegativeRealAdd (realAbsIntervalSum terms start length)
+        (realAbs (terms (start + length)))
+
+theorem realPartialSum_add_interval
+    (terms : RealSequence) (start length : Nat) :
+    realPartialSum terms (start + length) =
+      realAdd (realPartialSum terms start)
+        (realIntervalSum terms start length) := by
+  induction length with
+  | zero => rw [Nat.add_zero, realIntervalSum, realAdd_zero_right]
+  | succ length induction =>
+      rw [Nat.add_succ, realPartialSum_succ, realIntervalSum, induction,
+        realAdd_assoc]
+
+theorem realAbsPartialSum_add_interval
+    (terms : RealSequence) (start length : Nat) :
+    realAbsPartialSum terms (start + length) =
+      nonnegativeRealAdd (realAbsPartialSum terms start)
+        (realAbsIntervalSum terms start length) := by
+  induction length with
+  | zero =>
+      rw [Nat.add_zero, realAbsIntervalSum, nonnegativeRealAdd_zero_right]
+  | succ length induction =>
+      rw [Nat.add_succ, realAbsPartialSum_succ, realAbsIntervalSum,
+        induction, nonnegativeRealAdd_assoc]
+
+theorem realAbs_intervalSum_le_absIntervalSum
+    (terms : RealSequence) (start length : Nat) :
+    realLE (realAbs (realIntervalSum terms start length)).value
+      (realAbsIntervalSum terms start length).value := by
+  induction length with
+  | zero =>
+      rw [realIntervalSum, realAbs_zero, realAbsIntervalSum]
+      exact realLE_refl _
+  | succ length induction =>
+      rw [realIntervalSum, realAbsIntervalSum]
+      exact realLE_trans (realAbs_add_le _ _)
+        (realAdd_monotone induction (realLE_refl _))
+
+theorem realDist_base_add (base increment : IncReal) :
+    realDist base (realAdd base increment) = realAbs increment := by
+  rw [realDist]
+  have difference : realAdd base (realNeg (realAdd base increment)) =
+      realNeg increment := by
+    rw [realNeg_add]
+    calc
+      realAdd base (realAdd (realNeg base) (realNeg increment)) =
+        realAdd (realAdd base (realNeg base)) (realNeg increment) :=
+          (realAdd_assoc _ _ _).symm
+      _ = realNeg increment := by rw [realAdd_neg, realAdd_zero_left]
+  rw [difference, realAbs_neg]
+
+theorem realDist_partialSum_le_absPartialSum_dist_ordered
+    (terms : RealSequence) {first second : Nat} (ordered : first ≤ second) :
+    realLE
+      (realDist (realPartialSum terms first)
+        (realPartialSum terms second)).value
+      (realDist (realAbsPartialSum terms first).value
+        (realAbsPartialSum terms second).value).value := by
+  obtain ⟨length, equal⟩ := Nat.le.dest ordered
+  subst second
+  rw [realPartialSum_add_interval, realAbsPartialSum_add_interval,
+    realDist_base_add]
+  change realLE (realAbs (realIntervalSum terms first length)).value
+    (realDist (realAbsPartialSum terms first).value
+      (realAdd (realAbsPartialSum terms first).value
+        (realAbsIntervalSum terms first length).value)).value
+  rw [realDist_base_add]
+  rw [realAbs_of_nonnegative _ (realAbsIntervalSum terms first length).nonnegative]
+  exact realAbs_intervalSum_le_absIntervalSum terms first length
+
+theorem realDist_partialSum_le_absPartialSum_dist
+    (terms : RealSequence) (first second : Nat) :
+    realLE
+      (realDist (realPartialSum terms first)
+        (realPartialSum terms second)).value
+      (realDist (realAbsPartialSum terms first).value
+        (realAbsPartialSum terms second).value).value := by
+  rcases Nat.le_total first second with ordered | reverse
+  · exact realDist_partialSum_le_absPartialSum_dist_ordered terms ordered
+  · rw [realDist_comm (realPartialSum terms first),
+      realDist_comm (realAbsPartialSum terms first).value]
+    exact realDist_partialSum_le_absPartialSum_dist_ordered terms reverse
+
 noncomputable def realGeometricPartialSum
     (ratio : IncReal) (count : Nat) : IncReal :=
   realPartialSum (realPow ratio) count
@@ -4483,6 +4614,13 @@ def RealSeriesConverges (terms : RealSequence) (sum : IncReal) : Prop :=
 
 def RealSeriesSummable (terms : RealSequence) : Prop :=
   ∃ sum, RealSeriesConverges terms sum
+
+def RealSeriesAbsolutelyConverges
+    (terms : RealSequence) (absoluteSum : IncReal) : Prop :=
+  RealSeriesConverges (fun index => (realAbs (terms index)).value) absoluteSum
+
+def RealSeriesAbsolutelySummable (terms : RealSequence) : Prop :=
+  ∃ absoluteSum, RealSeriesAbsolutelyConverges terms absoluteSum
 
 theorem realGeometricSeriesConverges_of_pow_zero
     (ratio : IncReal) (ratioNeOne : ratio ≠ realOne)
@@ -4609,6 +4747,35 @@ theorem realSeriesSummable_terms_zero
     RealSequenceConverges terms realZero := by
   obtain ⟨sum, converges⟩ := summable
   exact realSeriesConverges_terms_zero converges
+
+theorem realSeriesAbsolutelyConverges_abs_terms_zero
+    {terms : RealSequence} {absoluteSum : IncReal}
+    (converges : RealSeriesAbsolutelyConverges terms absoluteSum) :
+    RealSequenceConverges
+      (fun index => (realAbs (terms index)).value) realZero :=
+  realSeriesConverges_terms_zero converges
+
+theorem realSeriesAbsolutelyConverges_terms_zero
+    {terms : RealSequence} {absoluteSum : IncReal}
+    (converges : RealSeriesAbsolutelyConverges terms absoluteSum) :
+    RealSequenceConverges terms realZero := by
+  have absoluteTerms :=
+    realSeriesAbsolutelyConverges_abs_terms_zero converges
+  intro epsilon epsilonPositive
+  obtain ⟨threshold, eventuallyClose⟩ :=
+    absoluteTerms epsilon epsilonPositive
+  refine ⟨threshold, ?_⟩
+  intro index indexLarge
+  have close := eventuallyClose index indexLarge
+  change realLE (realDist (terms index) realZero).value
+    (rationalToReal epsilon)
+  rw [realDist_zero_right]
+  change realLE
+    (realDist (realAbs (terms index)).value realZero).value
+    (rationalToReal epsilon) at close
+  rw [realDist_zero_right,
+    realAbs_of_nonnegative _ (realAbs (terms index)).nonnegative] at close
+  exact close
 
 theorem realPartialSum_add
     (left right : RealSequence) (count : Nat) :
@@ -5086,5 +5253,43 @@ theorem realSeriesSummable_iff_partialSum_cauchy (terms : RealSequence) :
   · intro cauchy
     obtain ⟨sum, converges⟩ := real_metric_complete (realPartialSum terms) cauchy
     exact ⟨sum, converges⟩
+
+theorem realSeriesAbsolutelySummable_implies_summable
+    {terms : RealSequence}
+    (absoluteSummable : RealSeriesAbsolutelySummable terms) :
+    RealSeriesSummable terms := by
+  obtain ⟨absoluteSum, absoluteConverges⟩ := absoluteSummable
+  have absolutePartialCauchy :=
+    realSequenceConverges_cauchy absoluteConverges
+  have bundledAbsoluteCauchy :
+      RealSequenceCauchy (fun index => (realAbsPartialSum terms index).value) := by
+    intro epsilon epsilonPositive
+    obtain ⟨threshold, eventuallyClose⟩ :=
+      absolutePartialCauchy epsilon epsilonPositive
+    refine ⟨threshold, ?_⟩
+    intro first second firstLarge secondLarge
+    change realLE
+      (realDist (realAbsPartialSum terms first).value
+        (realAbsPartialSum terms second).value).value
+      (rationalToReal epsilon)
+    rw [realAbsPartialSum_value, realAbsPartialSum_value]
+    exact eventuallyClose first second firstLarge secondLarge
+  have partialCauchy : RealSequenceCauchy (realPartialSum terms) := by
+    intro epsilon epsilonPositive
+    obtain ⟨threshold, eventuallyClose⟩ :=
+      bundledAbsoluteCauchy epsilon epsilonPositive
+    refine ⟨threshold, ?_⟩
+    intro first second firstLarge secondLarge
+    exact realLE_trans
+      (realDist_partialSum_le_absPartialSum_dist terms first second)
+      (eventuallyClose first second firstLarge secondLarge)
+  exact (realSeriesSummable_iff_partialSum_cauchy terms).mpr partialCauchy
+
+theorem realSeriesAbsolutelyConverges_has_sum
+    {terms : RealSequence} {absoluteSum : IncReal}
+    (absoluteConverges : RealSeriesAbsolutelyConverges terms absoluteSum) :
+    ∃ sum, RealSeriesConverges terms sum :=
+  realSeriesAbsolutelySummable_implies_summable
+    ⟨absoluteSum, absoluteConverges⟩
 
 end IncidenceCore
