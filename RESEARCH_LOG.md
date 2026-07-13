@@ -5679,3 +5679,264 @@ still-unbuilt `GradedIncidenceData`-level questions cycle 41's own queue
 left, or categorical/functorial directions untouched since the cycles
 that opened `Coherent.lean`) -- a judgment call this cycle deliberately
 leaves open rather than presuming its own thread must continue.
+
+## Cycle 59
+
+**Hypothesis (Part 1)**: cycle 58's queued option (a), the one cheap
+confirmatory check flagged before treating the 14-cycle glue/boundary/
+guards/quotient-invariant thread (cycles 45-58) as closed: does
+`GuardInvariant`'s failure mechanism (cycle 57's `mirrorDiagGuards_not_
+guardInvariant`) have any "which specific element" dependency analogous to
+`GlueInvariant`'s original `inc.unit`-anchored mechanism (cycle 53) and its
+class-local generalization (cycle 58), or is it -- as cycle 58's own
+synthesis speculated -- vacuous, because `guards.allow` (the base
+`Incidence` structure's `guards : Guards I` field) has no law binding it to
+a distinguished element the way `glue` is bound to `unit` via `unit_left`/
+`unit_right`?
+
+**Method**: read the base `Incidence` structure field-by-field
+(`incidence-theory/IncidenceTheory/Axioms.lean` L17-58) before writing
+anything, together with `Guards`'s own definition
+(`incidence-theory/IncidenceTheory/Axioms/A9_A13.lean` L9-10),
+`GuardInvariant`'s definition (`Quotient.lean` L675-679), cycle 57's
+`mirrorDiagGuards`/`mirrorDiagGuards_not_guardInvariant` (`Quotient.lean`
+~L3307-3350), and cycle 58's `glueLocalIncidence`/
+`glueLocalIncidence_unit_class_singleton` (`Quotient.lean` ~L3509-3660).
+Confirmed by direct reading, not assumed: `Guards I` is a BARE one-field
+wrapper (`allow : I → I → Bool`) with zero structural laws attached to it at
+all -- contrasted directly against `glue`, which the SAME `Incidence`
+structure pins down unconditionally at `unit` via `unit_left`/`unit_right :
+∀ i, glue unit i = some i` / `glue i unit = some i`. The only place
+`guards.allow` appears in any law of `Incidence` at all is `type_preserve :
+guards.allow i j → glue i j = some k → typeFunc k = typeFunc i` -- but this
+is a CONDITIONAL cross-field constraint (guards/glue/typeFunc must agree
+when the guard fires), not a value-forcing law in `unit_left`'s shape; it
+never singles out any distinguished element, and places zero constraint on
+`guards.allow` wherever its hypothesis is false. So `guards.allow` is free
+to be ANY `I → I → Bool` function subject only to this one global
+implication. Went one level further than a source-reading confirmation
+(matching this thread's established preference for a general theorem over
+an instance-by-instance audit): checked `IsBisimulation`/`boundaryMatched`/
+`boundaryCompatible` (`IncidenceTheory.lean` L36-66) and found they are
+defined using ONLY `inc.typeFunc`/`inc.boundary` -- `guards` (and `glue`/
+`unit`) never appear in their definitions at all, a strictly stronger fact
+than "no unit_left-analog law for guards".
+
+**Result**: **confirmed vacuous, for the precise structural reason
+identified above, plus a strictly stronger general theorem, plus a fresh
+concrete witness reusing cycle 58's own unit-singleton instance -- sorry-free,
+`lake build`/`./verify.sh` clean after two small fixes (a metavariable
+elaboration order issue and a `constructorNameAsVariable` linter rename, both
+mechanical).** Added to `Quotient.lean`, after cycle 58's closing block (10
+new declarations):
+
+(1) `isBisimulation_eq_of_typeFunc_boundary_eq` / `approxBisim_eq_of_
+typeFunc_boundary_eq`: for ANY two `Incidence I R T` values agreeing on
+`typeFunc` and `boundary` (regardless of what their `glue`/`unit`/`guards`
+are), `IsBisimulation`/`approxBisim` coincide exactly. This is the general
+theorem answering cycle 58's question in its strongest form: `≈` is
+provably blind to `guards` (and to `glue`/`unit`) in EVERY `Incidence`, not
+merely in the instances built so far, so no future instance could ever
+smuggle in a hidden guards/distinguished-element coupling through `≈`
+either.
+
+(2) `guardInvariant_fails_of_pair_witness`: the direct, structure-free
+`GuardInvariant`-failure criterion -- any bisimilar pair `p ≈ p'` plus any
+guards disagreement `guards.allow p y ≠ guards.allow p' y` at a shared third
+point `y` immediately refutes `GuardInvariant`. Proof is a one-line
+unfolding of `GuardInvariant`'s own definition, in sharp contrast to
+`glueInvariant_fails_of_class_witness`'s (cycle 58) multi-step
+`mappedSourceGlue` argument -- there is no analogous "which element can
+supply this fact" question to even ask for guards, because `GuardInvariant`
+routes through no law of `Incidence` at all.
+
+(3) `glueLocalDiagGuards`: cycle 58's OWN `glueLocalIncidence` (the instance
+whose `unit`/`core` class is a PROVEN singleton, `glueLocalIncidence_unit_
+class_singleton`) with only the `guards` field swapped to `Guards.diag`
+(cycle 57's non-constant witness guard, `allow i j := decide (i = j)`) --
+reusing an existing instance rather than building a fresh carrier, per this
+thread's established economy (cycle 57 did the same to `mirrorIncidence`).
+`type_preserve := fun _ _ => rfl` carries over unchanged since `typeFunc` is
+constant there, so the hypothesis is never used regardless of `guards`.
+
+(4) `glueLocalDiagGuards_typeFunc_eq`/`_boundary_eq` (both `rfl`) plus
+`glueLocalDiagGuards_approxBisim_iff`: the guards swap leaves `≈` on this
+carrier completely identical to `glueLocalIncidence`'s, an instance of (1)
+rather than a fresh bisimulation proof. `glueLocalDiagGuards_unit_class_
+singleton`: `unit`'s class is STILL a singleton here, transferred directly
+from cycle 58's own lemma through the iff, no new argument needed.
+
+(5) `glueLocalDiagGuardsBisimulationQuotientClassification` (via
+`bisimulationQuotientClassificationOfKernel`, reusing `glueLocalToShape`
+unchanged) plus `approxBisim_glueLocalDiagGuards_e_x` (`e ≈ x`, both
+`.pairShape`) and the closing theorem `glueLocalDiagGuards_not_
+guardInvariant`: a genuine `GuardInvariant` failure (`allow e e = true ≠
+false = allow x e`, `e ≈ x`) on a carrier where `unit`'s class is PROVABLY
+empty of anything else -- so cycle 53/58's own unit-anchored/class-local
+criteria are structurally unable to explain this failure; only "guards
+carries no law at all" can.
+
+`lake build IncidenceTheory.Quotient`: clean after two fixes needed on the
+first attempt (neither a mathematical issue) -- (a) `guardInvariant_fails_
+of_pair_witness`'s implicit `y` needed a named argument (`(y :=
+GlueLocalId.e)`) at the call site, since `by decide` alone left a
+metavariable Lean couldn't resolve from the expected-type shape; (b)
+renamed `guardInvariant_fails_of_pair_witness`'s bound variables from `x
+x'` to `p p'`, and `glueLocalDiagGuards_approxBisim_iff`'s from `x y` to `a
+b`, to silence the `constructorNameAsVariable` linter (these generic names
+happened to shadow the concrete `GlueLocalId.x` constructor already in
+scope by this point in the file -- purely cosmetic, cycle 58's own
+`glueLocalToShape_reflects` already used `a b` for exactly this reason).
+Full `lake build` (62/62 jobs) and `./verify.sh` (clean rebuild, example
+run, repo-wide `axiom`/`sorry`/`sorryAx` grep) both pass end to end.
+`#print axioms` on all nine new declarations (scratch file fed to `lake env
+lean`, then deleted): the two pure `≈`-structural theorems ((1) above) need
+NO axioms at all; everything downstream needs only `propext`/`Quot.sound`
+(the `Quotient`-based classification infrastructure's usual profile,
+matching cycle 57/58's own baselines exactly). No new axiom anywhere.
+
+**Synthesis**: cycle 58's speculation is confirmed, and for a stronger
+reason than merely "no counterexample found" -- `GuardInvariant`'s failure
+mechanism is STRUCTURALLY simpler than `GlueInvariant`'s along two
+independent, both now-proven axes: `Guards I` carries no law at all (source
+level), and `≈` itself cannot see `guards` in any `Incidence` whatsoever
+(semantic level, strictly stronger, and new content beyond what cycle 58's
+question asked). Reusing cycle 58's own `glueLocalIncidence` for the
+concrete witness (rather than building a fourth fresh carrier) both saved
+effort and gave the sharpest possible confirmation, since that instance's
+`unit`-class-singleton proof was already on hand. With this check complete,
+every thread cycle 53's original three-item queue and its cycles 54-58
+follow-ons raised is now closed: `GlueInvariant` (global cycle 53, local
+cycle 58), `BoundaryInvariant`/`well_founded` (global cycle 54, local cycle
+56), `GuardInvariant` (constancy cycle 55, `prodGuards`-transport cycle 57,
+element-independence this cycle). This closes the 15-cycle (45-59)
+glue/boundary/guards/quotient-invariant thread. No ADR addendum: this is a
+narrow, positive, confirmatory result that closes an already-scoped queue
+item without changing the 9-item roadmap's status or percentages, and the
+existing 2026-07-14 addendum (cycle 45-58 synthesis) already summarizes this
+whole thread's shape -- adding a one-line "and cycle 59 confirmed the last
+open sub-question" would not meet the bar this project has consistently
+applied (cycles 45-58 individually skipped addenda for exactly this reason;
+only the 14-cycle cumulative sweep warranted one).
+
+**Hypothesis (Part 2, scouting only -- not attempted this cycle)**: with the
+glue/boundary/guards/quotient-invariant thread now genuinely closed (15
+cycles, 45-59), spent the remainder of this cycle surveying the ADR's
+9-item roadmap (`docs/adr/2607100600-inc-theory-maturity-cycle41.md`,
+"完成へ向けた9項目ロードマップ" section) plus a skim of this log's early arc
+(cycles 1-44, titles/hypotheses only) to find a genuinely fresh, well-scoped
+candidate for cycle 60, distinct from the family this session spent cycles
+41-59 on.
+
+**Method/findings (Part 2)**: cycles 1-44 (skimmed, not re-derived) cover:
+(1-41) the T5-translation/faithfulness/∂²/generic-constructor arc across
+`natIncidence`/`pairIncidence`/`pathIncidence`/`cycleIncidence`/
+`treeIncidence`/`simplexIncidence` plus `incidenceSum`/`incidenceProd`/
+quotient constructions -- this is roadmap item 5 (Quotient構成)'s
+prehistory, continued by 45-59; (42-44) the constructive-reals analysis arc
+(extreme value theorem, Rolle, mean value theorem in
+`incidence-theory/IncidenceTheory/Reals.lean`) -- roadmap items 3-4, both
+marked 完了 in the ADR's cycle-42/43/44 addenda. Checked the ADR's remaining
+未完/部分完了 items (6, 7, 8, 9) against actual repo content before
+recommending any of them, per this task's explicit instruction not to
+recommend blind:
+
+- Item 6 (dependent raw syntax → semantic Pi/Sigma/Id full interpretation/
+  soundness bridge) and item 7 (incidence/resonance ↔ internal-logic ↔
+  analysis integration): checked `incidence-theory/IncidenceTheory/
+  CrossInstance.lean` (24,028 lines) and `incidence-theory/IncidenceTheory/
+  Logic.lean` (6,221 lines) directly rather than assuming "未完/部分完了"
+  means "empty". Both are FAR from empty: `CrossInstance.lean` already has
+  an extensive `IncDepRaw*`-prefixed dependent raw syntax layer (renaming,
+  substitution, `IncDepRawSubstitutionFiberModel.preserveFormation_pi`/
+  `preserveTyping_variable`, `IncDepRawTypingSemanticResult.pi_beta`/
+  `sigma_first_beta`/`sigma_second_beta`/`identity_J_beta`, closed-semantic-
+  result interpretation defs) already built out to a substantial partial
+  bridge; `Logic.lean` already has full `KripkeModel`/`KripkeForces`/
+  pullback-naturality machinery. Picking either as a cycle-60 starting point
+  would require a large, costly audit of tens of thousands of existing lines
+  just to locate the actual gap before any new proof work could start -- a
+  poor "well-scoped, cheap first step" candidate, unlike Part 1 above.
+- Item 9 (conservativity/interpretability final theorem): explicitly
+  described in the ADR itself as requiring "specify the target foundational
+  system, its syntax/semantics, theorem preservation, and reflection or
+  conservativity" -- a large, ill-defined meta-question, not actionable as a
+  single well-scoped cycle.
+- Item 8 (linear algebra / abstract algebra / topology / measure theory
+  reconstruction, ADR: "これら四領域の体系的ライブラリと主要定理群は未構成" --
+  NOT YET BUILT): checked directly and confirmed genuinely, concretely
+  empty for THREE of the four sub-areas. `Matrix` itself
+  (`incidence-theory/IncidenceTheory/Axioms/Basic.lean` L30: `def Matrix (m :
+  Type u) (n : Type v) (α : Type w) := m → n → α`) has ZERO operations
+  defined on it anywhere in the repo (no `Matrix.add`/`Matrix.mul`/
+  `Matrix.transpose`/determinant/rank/basis/eigenvalue -- grepped for
+  `structure Group`/`VectorSpace`/`Topology`/`Measure`/`Ring`/`Field`
+  project-wide: zero hits). What DOES exist and should NOT be confused with
+  this: (a) `boundaryMatrix`/`laplacian` (`incidence-theory/
+  IncidenceTheory.lean` L645-659) are concrete, narrow, `intListSum`-based
+  formulas specific to graph-Laplacian computation from an `Incidence`'s own
+  `boundary` field, used throughout `GraphModel.lean` (2,884 lines, row/
+  column-sum-zero and symmetry theorems) -- NOT a general matrix-algebra
+  library; (b) `Axioms/A14_A17.lean` L16 has a COMMENT "A17: Laplacian (B^T @
+  B)" that is never actually formalized or connected to `boundaryMatrix` via
+  any real matrix multiplication -- this gap is a ready-made, concretely
+  falsifiable/provable first theorem once general matrix multiplication
+  exists; (c) `IncidenceTheory/Integers.lean` (`integerAssociativeResonanceSpec`/
+  `integerAdditiveGroupResonanceSpec`/`integerDistributiveResonanceSpec`,
+  built on Lean-core `Int`, no mathlib) shows this project already has a
+  reusable GENERIC `*ResonanceSpec` framework for group/ring-shaped algebraic
+  laws (defined generically over any `Incidence`, `Axioms`/`Coherent.lean`-
+  adjacent), demonstrated so far only for one instance -- a real head start
+  for the "abstract algebra" sub-area, but topology and measure theory have
+  no analogous starting scaffolding at all, and linear algebra (vector
+  spaces / matrices with actual arithmetic) has none either. Also considered
+  and explicitly ruled out cycle 58's own two alternative candidates:
+  `GradedIncidenceData`-level questions are NOT fresh -- that exact structure
+  (`Quotient.lean` L976) was the primary machinery cycles 41/45-58 already
+  mined heavily (`treeShapeGradedIncidenceData`, `pathShapeGradedIncidenceData`,
+  etc.), so continuing it would just re-enter the just-closed family;
+  `Coherent.lean`'s categorical/functorial direction is actually roadmap item
+  7 (it packages `ChainComplexPushoutIncidence`/`CompletePropositionalInternalLogic`
+  together), already substantially built per the `CrossInstance.lean`/
+  `Logic.lean` audit above, so it has the same "large audit before any new
+  proof" cost problem as items 6/7 rather than being a clean blank slate.
+
+**Recommendation for cycle 60**: **roadmap item 8, linear algebra
+sub-thread, starting from general matrix arithmetic on the existing
+`Matrix` type.** Concrete first steps for a future agent with no other
+context: (1) Read `incidence-theory/IncidenceTheory/Axioms/Basic.lean` L30
+(`Matrix`'s bare definition) and `incidence-theory/IncidenceTheory.lean`
+L645-716 (`boundaryMatrix`/`laplacian`/`intListSum` and its already-proven
+algebra: `intListSum_add`, `intListSum_mul_left`, `intListSum_gram_row_
+swap`, plus more nearby) -- this finite-sum library is the natural
+summation primitive to reuse, not something to rebuild. (2) Define
+`Matrix.add`/`Matrix.mul` (for `List I`-indexed, not necessarily square,
+matrices over `Int`, matching this project's existing `Int`-based,
+mathlib-free style, e.g. as used in `Integers.lean`) using `intListSum` for
+the multiplication's inner sum, and `Matrix.transpose`. Prove the basic
+laws a future "vector space/ring" layer would need: associativity/
+distributivity of `Matrix.mul` over `Matrix.add` (reusing `intListSum_add`/
+`intListSum_mul_left` directly rather than re-deriving finite-sum algebra
+from scratch), and existence of an identity matrix. (3) The natural,
+already-motivated FIRST connecting theorem back into existing project
+content (giving this new thread an immediate, concrete payoff rather than
+an abstract library nobody uses yet): formalize `Axioms/A14_A17.lean` L16's
+currently-unformalized comment "A17: Laplacian (B^T @ B)" as an actual
+theorem, `laplacian inc idx = Matrix.mul (Matrix.transpose (boundaryMatrix
+inc idx)) (boundaryMatrix inc idx)` (indices/argument order to be worked out
+against `laplacian`'s actual definition, `IncidenceTheory.lean` L656-659,
+which already computes `∑ k, b k i * b k j` via `idx.foldl` -- this is
+already LITERALLY `(Bᵀ B) i j` restricted to `idx`, so the theorem should
+follow readily once `Matrix.mul` is defined compatibly, likely `rfl` or a
+short `intListSum`-based rewrite). (4) Only after this lands, consider
+whether to continue toward vector spaces/rank/determinant (deeper into item
+8) or stop there and let a later cycle pick topology/measure-theory (which,
+per the audit above, have literally no existing scaffolding at all and
+would need a scoping decision of their own -- likely too large for a single
+cycle 60 without first seeing how the matrix-arithmetic step goes). This
+direction is distinct in kind from cycles 41-59 (no `BisimulationQuotientClassification`/
+`GlueInvariant`/`GuardInvariant`/`approxBisim` machinery involved at all),
+concretely well-scoped (a handful of definitions plus finite-sum-algebra
+lemmas already half-available), and has a ready-made motivating theorem
+(the unformalized B^T@B comment) rather than requiring the next agent to
+invent its own motivating question from scratch.

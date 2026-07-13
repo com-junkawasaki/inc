@@ -3793,4 +3793,194 @@ theorem unit_unique_full_left_identity
    criterion cannot explain `glueLocalIncidence_not_glueInvariant` at
    all -- only the local criterion anchored at `e ≠ inc.unit` can. -/
 
+/- Research cycle 59 (see RESEARCH_LOG.md): cycle 58's own queued option (a),
+   the last cheap confirmatory check on the glue/boundary/guards/quotient-
+   invariant thread (cycles 45-58) before treating it as closed -- does
+   `GuardInvariant`'s failure mechanism (cycle 57's `mirrorDiagGuards_not_
+   guardInvariant`) have ANY "which element supplies the behavior" dependency
+   analogous to `GlueInvariant`'s `inc.unit`-anchored mechanism (cycle 53) and
+   its class-local generalization (cycle 58), or is it -- as cycle 58's own
+   synthesis speculated -- vacuous, because `guards.allow` has no law
+   analogous to `unit_left`/`unit_right` binding it to a specific element?
+
+   Checked directly, not assumed: read the base `Incidence` structure
+   (`Axioms.lean` L17-58) field by field. `guards : Guards I`, and `Guards I`
+   itself (`A9_A13.lean` L9-10) is a BARE one-field wrapper (`allow : I → I →
+   Bool`) carrying ZERO structural laws of its own -- unlike `glue`, which is
+   directly pinned down by two unconditional, unit-anchored laws (`unit_left`/
+   `unit_right : ∀ i, glue unit i = some i` / `glue i unit = some i`). The
+   ONLY place `guards.allow` appears in any law of the full `Incidence`
+   structure at all is `type_preserve : guards.allow i j → glue i j = some k →
+   typeFunc k = typeFunc i` (`Axioms.lean` L58) -- but this is a CONDITIONAL
+   constraint relating three different fields at matching triples, not a
+   value-forcing law like `unit_left` (which states, unconditionally, for
+   EVERY `i`, exactly what `glue unit i` equals). It never singles out any
+   distinguished element the way `unit_left`/`unit_right` single out `unit`,
+   and it places no constraint whatsoever on `guards.allow` at any point
+   where its own hypothesis is false. So `guards.allow` is free to be ANY
+   `I → I → Bool` function subject only to this one global implication --
+   confirming cycle 58's speculation for a PRECISE, STRUCTURAL reason (no
+   analogous law exists in the structure), not merely because no
+   counterexample had been checked yet.
+
+   Went one level deeper, in this thread's established style of preferring a
+   general theorem over an instance-by-instance audit: `IsBisimulation`/
+   `boundaryMatched`/`boundaryCompatible` (`IncidenceTheory.lean` L36-66) are
+   defined using ONLY `inc.typeFunc` and `inc.boundary` -- `guards` (and
+   `glue`/`unit`) never appear in their definitions at all. This is stronger
+   than "guards has no `unit_left`-analog law": `≈` itself is STRUCTURALLY
+   BLIND to `guards` (and to `glue`/`unit`) in EVERY `Incidence`, not merely
+   in the instances this project happens to have built. -/
+
+theorem isBisimulation_eq_of_typeFunc_boundary_eq
+    {I R T : Type u} [DecidableEq I] (inc1 inc2 : Incidence I R T)
+    (htype : inc1.typeFunc = inc2.typeFunc) (hbound : inc1.boundary = inc2.boundary)
+    (rel : I → I → Prop) :
+    IsBisimulation inc1 rel ↔ IsBisimulation inc2 rel := by
+  unfold IsBisimulation boundaryMatched boundaryCompatible
+  rw [htype, hbound]
+
+theorem approxBisim_eq_of_typeFunc_boundary_eq
+    {I R T : Type u} [DecidableEq I] (inc1 inc2 : Incidence I R T)
+    (htype : inc1.typeFunc = inc2.typeFunc) (hbound : inc1.boundary = inc2.boundary)
+    (x y : I) :
+    approxBisim inc1 x y ↔ approxBisim inc2 x y := by
+  unfold approxBisim
+  constructor
+  · rintro ⟨rel, hbisim, hxy⟩
+    exact ⟨rel,
+      (isBisimulation_eq_of_typeFunc_boundary_eq inc1 inc2 htype hbound rel).mp hbisim, hxy⟩
+  · rintro ⟨rel, hbisim, hxy⟩
+    exact ⟨rel,
+      (isBisimulation_eq_of_typeFunc_boundary_eq inc1 inc2 htype hbound rel).mpr hbisim, hxy⟩
+
+/- The direct consequence for `GuardInvariant`: unlike `glueInvariant_fails_of_
+   class_witness` (cycle 58), which needed a genuine one-point BEHAVIORAL fact
+   about `glue` (`eIdentityAt`/`xAbsorbs`), a `GuardInvariant` failure needs
+   NOTHING beyond unfolding its own definition -- any bisimilar pair plus any
+   guards disagreement at a shared third point. There is no analogous "which
+   element can supply this fact" question to even ask, because
+   `GuardInvariant`'s hypotheses are not routed through any law of `Incidence`
+   at all -- this lemma's proof is a one-liner, in sharp contrast to
+   `glueInvariant_fails_of_class_witness`'s multi-step `mappedSourceGlue`
+   argument. -/
+theorem guardInvariant_fails_of_pair_witness
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    {p p' y : I} (hpp' : approxBisim inc p p')
+    (hdiff : inc.guards.allow p y ≠ inc.guards.allow p' y) :
+    ¬ classification.GuardInvariant :=
+  fun invariant => hdiff (invariant hpp' (approxBisim_refl inc y))
+
+/- Concrete confirmation, reusing cycle 58's OWN unit-class-singleton instance
+   `glueLocalIncidence` rather than building a fresh carrier from scratch --
+   this both economizes the construction and gives the strongest possible
+   witness: cycle 58 already proved `glueLocalIncidence`'s `unit` (= `core`)
+   class is a genuine singleton (`glueLocalIncidence_unit_class_singleton`),
+   so ANY `GuardInvariant` failure exhibited on this exact carrier is, by
+   construction, provably unrelated to `unit`. Everything except `guards` is
+   copied verbatim from `glueLocalIncidence`; `type_preserve := fun _ _ =>
+   rfl` carries over unchanged because `typeFunc` is the constant
+   `GraphType.unit` there, so the hypothesis is never actually used --
+   exactly cycle 57's `mirrorDiagGuards` recipe, applied here to a different
+   existing instance instead of `mirrorIncidence`. -/
+def glueLocalDiagGuards : Incidence GlueLocalId GlueLocalRole GraphType where
+  boundary := glueLocalBoundary
+  typeFunc := fun _ => GraphType.unit
+  glue := fun i k =>
+    if i = GlueLocalId.e ∧ k = GlueLocalId.out then some k
+    else if i = GlueLocalId.core then some k
+    else some i
+  unit := GlueLocalId.core
+  guards := Guards.diag GlueLocalId
+  type_consistent := fun _ _ _ => rfl
+  sign_rules := fun _ e _ => by cases e.sign <;> simp
+  multiplicities := fun _ e _ => e.mult_pos
+  well_founded := by
+    rintro i ⟨e, he, hei⟩
+    cases i <;> simp [glueLocalBoundary] at he <;> subst he <;> simp_all
+  unit_left := by intro i; simp
+  unit_right := by
+    intro i
+    cases i <;> simp
+  type_preserve := fun _ _ => rfl
+
+theorem glueLocalDiagGuards_typeFunc_eq :
+    glueLocalDiagGuards.typeFunc = glueLocalIncidence.typeFunc := rfl
+
+theorem glueLocalDiagGuards_boundary_eq :
+    glueLocalDiagGuards.boundary = glueLocalIncidence.boundary := rfl
+
+/- The guards swap is completely invisible to `≈` on this carrier, an instance
+   of the general fact above rather than a fresh bisimulation argument. -/
+theorem glueLocalDiagGuards_approxBisim_iff (a b : GlueLocalId) :
+    approxBisim glueLocalDiagGuards a b ↔ approxBisim glueLocalIncidence a b :=
+  approxBisim_eq_of_typeFunc_boundary_eq glueLocalDiagGuards glueLocalIncidence
+    glueLocalDiagGuards_typeFunc_eq glueLocalDiagGuards_boundary_eq a b
+
+/- `unit`'s (= `core`'s) `≈`-class is STILL a genuine singleton on this
+   carrier -- transferred directly from cycle 58's `glueLocalIncidence_unit_
+   class_singleton` via the iff above, with no new bisimulation argument
+   needed, confirming the guards swap really is invisible to `≈` here, not
+   merely in the abstract. -/
+theorem glueLocalDiagGuards_unit_class_singleton {y : GlueLocalId}
+    (hy : approxBisim glueLocalDiagGuards y GlueLocalId.core) : y = GlueLocalId.core :=
+  glueLocalIncidence_unit_class_singleton
+    ((glueLocalDiagGuards_approxBisim_iff y GlueLocalId.core).mp hy)
+
+def glueLocalDiagGuardsBisimulationQuotientClassification :
+    BisimulationQuotientClassification (Q := GlueLocalShape) glueLocalDiagGuards :=
+  bisimulationQuotientClassificationOfKernel glueLocalDiagGuards glueLocalToShape
+    (fun a b => by
+      rw [glueLocalDiagGuards_approxBisim_iff]
+      exact glueLocalToShape_iff_approxBisim a b)
+    (fun shape => by
+      cases shape with
+      | pairShape => exact ⟨GlueLocalId.e, rfl⟩
+      | coreShape => exact ⟨GlueLocalId.core, rfl⟩
+      | outShape => exact ⟨GlueLocalId.out, rfl⟩)
+
+theorem approxBisim_glueLocalDiagGuards_e_x :
+    approxBisim glueLocalDiagGuards GlueLocalId.e GlueLocalId.x :=
+  (glueLocalDiagGuards_approxBisim_iff GlueLocalId.e GlueLocalId.x).mpr
+    ((glueLocalToShape_iff_approxBisim GlueLocalId.e GlueLocalId.x).mp rfl)
+
+/- The failure itself: `e ≈ x` (just above, on a carrier where `unit`'s class
+   is PROVABLY a singleton), yet `allow e e ≠ allow x e` -- `Guards.diag`'s
+   argument-dependence bites at `e`/`x`, exactly as it bit at `m0`/`m1` in
+   cycle 57's `mirrorDiagGuards`, but this time anchored at a point cycle
+   53/58's own unit-anchored criterion cannot reach. This is the closing
+   confirmation: `GuardInvariant`'s failure needs no distinguished element at
+   all, not even the weakened one-point kind `GlueInvariant`'s local
+   refinement (cycle 58) still required. -/
+theorem glueLocalDiagGuards_not_guardInvariant :
+    ¬ glueLocalDiagGuardsBisimulationQuotientClassification.GuardInvariant :=
+  guardInvariant_fails_of_pair_witness glueLocalDiagGuardsBisimulationQuotientClassification
+    (y := GlueLocalId.e) approxBisim_glueLocalDiagGuards_e_x (by decide)
+
+/- Synthesis recorded here alongside the theorems, matching this file's
+   convention (cycles 53/56/57/58): the question cycle 58 flagged is now
+   closed definitively rather than left as speculation. `GuardInvariant`'s
+   failure mechanism is STRICTLY simpler than `GlueInvariant`'s, along two
+   independent axes proven above rather than merely observed in one instance.
+   (1) Source-level: `Guards I` has no law at all, let alone one anchored at a
+   distinguished element -- `type_preserve` is the only law mentioning
+   `guards.allow`, and it is a conditional cross-field constraint, not a
+   value-forcing law in `unit_left`/`unit_right`'s shape. (2) Semantic-level,
+   strictly stronger: `≈` (`IsBisimulation`/`approxBisim`) is defined purely
+   from `typeFunc`/`boundary` and is PROVABLY INSENSITIVE to `guards` (and to
+   `glue`/`unit`) in every `Incidence` (`approxBisim_eq_of_typeFunc_boundary_
+   eq`), so no future instance -- however its `glue`/`unit` are shaped -- could
+   ever manufacture a hidden guards/unit coupling through `≈` either. The
+   concrete witness (`glueLocalDiagGuards`, reusing cycle 58's own `unit`-
+   class-singleton carrier `glueLocalIncidence` with only `guards` swapped)
+   confirms this is not vacuous reshuffling: a genuine `GuardInvariant`
+   failure exists at `e`/`x`, on a carrier where `unit`'s class is proved to
+   contain nothing else, so cycle 53/58's own unit-anchored/class-local
+   criteria are structurally unable to explain it -- only the fact that
+   `guards` carries no law at all can. With this check complete, all threads
+   cycle 56/57/58 queued from the original cycle 53 three-item list, plus
+   cycle 58's own queued option (a), are now closed; see RESEARCH_LOG.md
+   cycle 59 for the resulting scouting recommendation for cycle 60. -/
+
 end IncidenceCore
