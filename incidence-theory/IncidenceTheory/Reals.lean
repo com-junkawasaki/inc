@@ -125,6 +125,21 @@ theorem realLE_total (left right : IncReal) :
 def realLT (left right : IncReal) : Prop :=
   realLE left right ∧ left ≠ right
 
+theorem rationalToReal_lt_of_lower
+    (value : IncReal) {rational : IncRational}
+    (member : value.lower rational) :
+    realLT (rationalToReal rational) value := by
+  constructor
+  · intro smaller smallerBelow
+    exact value.downward member
+      ((rationalToReal_lower_iff rational smaller).mp smallerBelow)
+  · intro equal
+    have rationalMember : (rationalToReal rational).lower rational := by
+      rw [equal]
+      exact member
+    exact rationalLT_irrefl rational
+      ((rationalToReal_lower_iff rational rational).mp rationalMember)
+
 theorem realLT_irrefl (value : IncReal) : ¬ realLT value value := by
   intro strict
   exact strict.2 rfl
@@ -1548,6 +1563,22 @@ noncomputable def nonnegativeRealInv (value : NonnegativeReal)
     intro rational negative
     exact Or.inl negative
 
+theorem nonnegativeRealInv_order_reverse
+    {left right : NonnegativeReal}
+    (leftNonzero : left.value ≠ realZero)
+    (rightNonzero : right.value ≠ realZero)
+    (ordered : realLE left.value right.value) :
+    realLE (nonnegativeRealInv right rightNonzero).value
+      (nonnegativeRealInv left leftNonzero).value := by
+  intro rational member
+  rcases member with negative | generated
+  · exact Or.inl negative
+  · obtain ⟨outside, inverse, outsideNotRight, outsidePositive,
+        inverseLaw, rationalBelow⟩ := generated
+    exact Or.inr ⟨outside, inverse,
+      (fun outsideLeft => outsideNotRight (ordered outside outsideLeft)),
+      outsidePositive, inverseLaw, rationalBelow⟩
+
 theorem nonnegativeRealMul_inv_le_one
     (value : NonnegativeReal) (nonzero : value.value ≠ realZero) :
     realLE (nonnegativeRealMul value (nonnegativeRealInv value nonzero)).value
@@ -2323,6 +2354,21 @@ noncomputable def realInv (value : IncReal) (nonzero : value ≠ realZero) :
     realNeg (nonnegativeRealInv (realNegativePart value)
       (realNegativePart_ne_zero nonnegative nonzero)).value
 
+noncomputable def realInvOrZero (value : IncReal) : IncReal := by
+  classical
+  exact if nonzero : value ≠ realZero then realInv value nonzero else realZero
+
+theorem realInvOrZero_of_ne (value : IncReal) (nonzero : value ≠ realZero) :
+    realInvOrZero value = realInv value nonzero := by
+  classical
+  rw [realInvOrZero]
+  simp only [dif_pos nonzero]
+
+theorem realInvOrZero_zero : realInvOrZero realZero = realZero := by
+  classical
+  rw [realInvOrZero]
+  simp
+
 theorem realMul_inv (value : IncReal) (nonzero : value ≠ realZero) :
     realMul value (realInv value nonzero) = realOne := by
   classical
@@ -2524,6 +2570,47 @@ theorem realMul_rationalToReal_positive
     ((rationalToReal_le_iff _ _).mpr rightPositive.1)]
   exact nonnegativeRealMul_rationalToReal_positive leftPositive rightPositive
 
+theorem nonnegativeRealInv_rationalToReal_positive
+    {value inverse : IncRational}
+    (valuePositive : rationalLT (rationalOfInteger 0) value)
+    (valueRealNonzero : rationalToReal value ≠ realZero)
+    (inverseLaw : rationalMul value inverse = rationalOfInteger 1) :
+    nonnegativeRealInv
+        { value := rationalToReal value
+          nonnegative := (rationalToReal_le_iff _ _).mpr valuePositive.1 }
+        valueRealNonzero =
+      { value := rationalToReal inverse
+        nonnegative := by
+          have inversePositive :
+              rationalLT (rationalOfInteger 0) inverse := by
+            apply rationalMul_positive_reflect_right valuePositive
+            rw [inverseLaw]
+            exact rational_zero_lt_one
+          exact (rationalToReal_le_iff _ _).mpr inversePositive.1 } := by
+  have inversePositive : rationalLT (rationalOfInteger 0) inverse := by
+    apply rationalMul_positive_reflect_right valuePositive
+    rw [inverseLaw]
+    exact rational_zero_lt_one
+  let source : NonnegativeReal :=
+    { value := rationalToReal value
+      nonnegative := (rationalToReal_le_iff _ _).mpr valuePositive.1 }
+  let target : NonnegativeReal :=
+    { value := rationalToReal inverse
+      nonnegative := (rationalToReal_le_iff _ _).mpr inversePositive.1 }
+  apply NonnegativeReal.ext
+  apply realMul_cancel_left valueRealNonzero
+  rw [realMul_of_nonnegative source.value
+      (nonnegativeRealInv source valueRealNonzero).value source.nonnegative
+      (nonnegativeRealInv source valueRealNonzero).nonnegative,
+    realMul_of_nonnegative source.value target.value source.nonnegative
+      target.nonnegative]
+  change (nonnegativeRealMul source (nonnegativeRealInv source valueRealNonzero)).value =
+    (nonnegativeRealMul source target).value
+  rw [nonnegativeRealMul_inv,
+    nonnegativeRealMul_rationalToReal_positive valuePositive inversePositive,
+    inverseLaw]
+  rfl
+
 /-- Absolute value as the sum of the canonical positive and negative
 magnitudes. Exactly one part is nonzero away from the origin. -/
 noncomputable def realAbs (value : IncReal) : NonnegativeReal :=
@@ -2641,6 +2728,29 @@ theorem realAbs_mul_abs_inv
       nonnegativeOne := by
   rw [← realAbs_mul, realMul_inv]
   exact realAbs_of_nonnegative realOne nonnegativeOne.nonnegative
+
+theorem realAbs_inv_eq_nonnegativeRealInv
+    (value : IncReal) (nonzero : value ≠ realZero) :
+    realAbs (realInv value nonzero) =
+      nonnegativeRealInv (realAbs value)
+        (by
+          intro absoluteZero
+          exact nonzero ((realAbs_eq_zero_iff value).mp absoluteZero)) := by
+  let magnitude := realAbs value
+  have magnitudeNonzero : magnitude.value ≠ realZero := by
+    intro absoluteZero
+    exact nonzero ((realAbs_eq_zero_iff value).mp absoluteZero)
+  let canonicalInverse := nonnegativeRealInv magnitude magnitudeNonzero
+  apply NonnegativeReal.ext
+  apply realMul_cancel_left magnitudeNonzero
+  rw [realMul_of_nonnegative magnitude.value
+      (realAbs (realInv value nonzero)).value
+      magnitude.nonnegative (realAbs (realInv value nonzero)).nonnegative,
+    realMul_of_nonnegative magnitude.value canonicalInverse.value
+      magnitude.nonnegative canonicalInverse.nonnegative]
+  change (nonnegativeRealMul magnitude (realAbs (realInv value nonzero))).value =
+    (nonnegativeRealMul magnitude canonicalInverse).value
+  rw [realAbs_mul_abs_inv, nonnegativeRealMul_inv]
 
 /-- The order-valued metric candidate induced by absolute difference. -/
 noncomputable def realDist (left right : IncReal) : NonnegativeReal :=
@@ -3074,6 +3184,118 @@ theorem realSequenceConverges_abs
   exact realLE_trans (realDist_abs_le (sequence index) limit)
     (eventuallyClose index indexLarge)
 
+theorem realSequenceConverges_eventually_ne_zero
+    {sequence : RealSequence} {limit : IncReal}
+    (limitNonzero : limit ≠ realZero)
+    (converges : RealSequenceConverges sequence limit) :
+    ∃ threshold, ∀ index, threshold ≤ index → sequence index ≠ realZero := by
+  have absoluteNonzero : (realAbs limit).value ≠ realZero := by
+    intro absoluteZero
+    exact limitNonzero ((realAbs_eq_zero_iff limit).mp absoluteZero)
+  obtain ⟨radius, radiusMember, radiusPositive⟩ :=
+    (realAbs limit).exists_positive_member absoluteNonzero
+  obtain ⟨threshold, eventuallyClose⟩ :=
+    converges radius radiusPositive
+  have radiusStrict : realLT (rationalToReal radius) (realAbs limit).value :=
+    rationalToReal_lt_of_lower (realAbs limit).value radiusMember
+  refine ⟨threshold, ?_⟩
+  intro index indexLarge sequenceZero
+  have close := eventuallyClose index indexLarge
+  rw [sequenceZero, realDist_zero_left] at close
+  exact radiusStrict.2 (realLE_antisymm radiusStrict.1 close)
+
+theorem realSequenceConverges_eventually_abs_lower
+    {sequence : RealSequence} {limit : IncReal}
+    (limitNonzero : limit ≠ realZero)
+    (converges : RealSequenceConverges sequence limit) :
+    ∃ radius : IncRational,
+      rationalLT (rationalOfInteger 0) radius ∧
+      ∃ threshold, ∀ index, threshold ≤ index →
+        realLE (rationalToReal radius) (realAbs (sequence index)).value := by
+  have absoluteNonzero : (realAbs limit).value ≠ realZero := by
+    intro absoluteZero
+    exact limitNonzero ((realAbs_eq_zero_iff limit).mp absoluteZero)
+  obtain ⟨inside, insideMember, insidePositive⟩ :=
+    (realAbs limit).exists_positive_member absoluteNonzero
+  obtain ⟨radius, radiusPositive, radiusAdd⟩ :=
+    rational_exists_positive_half insidePositive
+  obtain ⟨threshold, eventuallyClose⟩ :=
+    converges radius radiusPositive
+  have insideStrict :
+      realLT (rationalToReal inside) (realAbs limit).value :=
+    rationalToReal_lt_of_lower (realAbs limit).value insideMember
+  refine ⟨radius, radiusPositive, threshold, ?_⟩
+  intro index indexLarge
+  rcases realLE_total (rationalToReal radius)
+      (realAbs (sequence index)).value with lower | absoluteBelowRadius
+  · exact lower
+  · exfalso
+    have limitBound := realAbs_le_dist_add_abs limit (sequence index)
+    have distanceBound :
+        realLE (realDist limit (sequence index)).value
+          (rationalToReal radius) := by
+      rw [realDist_comm]
+      exact eventuallyClose index indexLarge
+    have sumBound := realAdd_monotone distanceBound absoluteBelowRadius
+    have limitBelowInside := realLE_trans limitBound sumBound
+    rw [realAdd_rationalToReal, radiusAdd] at limitBelowInside
+    exact insideStrict.2 (realLE_antisymm insideStrict.1 limitBelowInside)
+
+theorem realSequenceConverges_eventually_inv_abs_upper
+    {sequence : RealSequence} {limit : IncReal}
+    (limitNonzero : limit ≠ realZero)
+    (converges : RealSequenceConverges sequence limit) :
+    ∃ bound : IncRational,
+      rationalLT (rationalOfInteger 0) bound ∧
+      ∃ threshold, ∀ index, threshold ≤ index →
+        ∃ indexNonzero : sequence index ≠ realZero,
+          realLE (realAbs (realInv (sequence index) indexNonzero)).value
+            (rationalToReal bound) := by
+  obtain ⟨radius, radiusPositive, threshold, eventuallyLower⟩ :=
+    realSequenceConverges_eventually_abs_lower limitNonzero converges
+  have radiusRealNonzero : rationalToReal radius ≠ realZero := by
+    intro equal
+    have injected := rationalToReal_injective equal
+    rw [injected] at radiusPositive
+    exact rationalLT_irrefl (rationalOfInteger 0) radiusPositive
+  have radiusNonzero : radius ≠ rationalOfInteger 0 := by
+    intro radiusZero
+    rw [radiusZero] at radiusPositive
+    exact rationalLT_irrefl (rationalOfInteger 0) radiusPositive
+  obtain ⟨bound, inverseLaw⟩ :=
+    rational_nonzero_has_mul_inverse radiusNonzero
+  have boundPositive : rationalLT (rationalOfInteger 0) bound := by
+    apply rationalMul_positive_reflect_right radiusPositive
+    rw [inverseLaw]
+    exact rational_zero_lt_one
+  refine ⟨bound, boundPositive, threshold, ?_⟩
+  intro index indexLarge
+  have lower := eventuallyLower index indexLarge
+  have indexNonzero : sequence index ≠ realZero := by
+    intro indexZero
+    rw [indexZero, realAbs_zero] at lower
+    have radiusNonpositive := realLE_trans lower nonnegativeZero.nonnegative
+    have positiveOrder : realLT realZero (rationalToReal radius) :=
+      ⟨(rationalToReal_le_iff _ _).mpr radiusPositive.1,
+        fun equal => radiusRealNonzero equal.symm⟩
+    exact positiveOrder.2
+      (realLE_antisymm positiveOrder.1 radiusNonpositive)
+  refine ⟨indexNonzero, ?_⟩
+  rw [realAbs_inv_eq_nonnegativeRealInv]
+  let radiusReal : NonnegativeReal :=
+    { value := rationalToReal radius
+      nonnegative := (rationalToReal_le_iff _ _).mpr radiusPositive.1 }
+  have reversed := nonnegativeRealInv_order_reverse
+    (left := radiusReal) (right := realAbs (sequence index))
+    radiusRealNonzero
+    (by
+      intro absoluteZero
+      exact indexNonzero
+        ((realAbs_eq_zero_iff (sequence index)).mp absoluteZero)) lower
+  rw [nonnegativeRealInv_rationalToReal_positive
+    radiusPositive radiusRealNonzero inverseLaw] at reversed
+  exact reversed
+
 theorem realSequenceConverges_mul_const
     {sequence : RealSequence} {limit factor : IncReal}
     (converges : RealSequenceConverges sequence limit) :
@@ -3260,6 +3482,138 @@ theorem realSequenceConverges_mul
   rw [pointwise index]
   exact eventuallyClose index indexLarge
 
+theorem realSequenceConverges_invOrZero
+    {sequence : RealSequence} {limit : IncReal}
+    (limitNonzero : limit ≠ realZero)
+    (converges : RealSequenceConverges sequence limit) :
+    RealSequenceConverges (fun index => realInvOrZero (sequence index))
+      (realInvOrZero limit) := by
+  obtain ⟨tailBound, tailBoundPositive, tailThreshold, tailEventually⟩ :=
+    realSequenceConverges_eventually_inv_abs_upper limitNonzero converges
+  obtain ⟨limitBound, limitBoundNotMember, limitBoundPositive⟩ :=
+    (realAbs (realInv limit limitNonzero)).positive_upper
+  have limitAbsoluteBound :
+      realLE (realAbs (realInv limit limitNonzero)).value
+        (rationalToReal limitBound) := by
+    intro rational member
+    exact (realAbs (realInv limit limitNonzero)).value.lt_of_lower_of_not_lower
+      member limitBoundNotMember
+  let productBound := rationalMul tailBound limitBound
+  have productBoundPositive :
+      rationalLT (rationalOfInteger 0) productBound :=
+    rationalMul_positive tailBoundPositive limitBoundPositive
+  have productBoundNonzero : productBound ≠ rationalOfInteger 0 := by
+    intro equal
+    rw [equal] at productBoundPositive
+    exact rationalLT_irrefl _ productBoundPositive
+  obtain ⟨productBoundInverse, productBoundInverseLaw⟩ :=
+    rational_nonzero_has_mul_inverse productBoundNonzero
+  have productBoundInversePositive :
+      rationalLT (rationalOfInteger 0) productBoundInverse := by
+    apply rationalMul_positive_reflect_right productBoundPositive
+    rw [productBoundInverseLaw]
+    exact rational_zero_lt_one
+  intro epsilon epsilonPositive
+  let delta := rationalMul epsilon productBoundInverse
+  have deltaPositive : rationalLT (rationalOfInteger 0) delta :=
+    rationalMul_positive epsilonPositive productBoundInversePositive
+  have productDelta : rationalMul productBound delta = epsilon := by
+    calc
+      _ = rationalMul epsilon
+          (rationalMul productBound productBoundInverse) := by
+            rw [← rationalMul_assoc productBound epsilon productBoundInverse,
+              rationalMul_comm productBound epsilon,
+              rationalMul_assoc epsilon productBound productBoundInverse]
+      _ = rationalMul epsilon (rationalOfInteger 1) := by
+            rw [productBoundInverseLaw]
+      _ = epsilon := rationalMul_one_right epsilon
+  obtain ⟨closeThreshold, eventuallyClose⟩ :=
+    converges delta deltaPositive
+  let tailBoundReal : NonnegativeReal :=
+    { value := rationalToReal tailBound
+      nonnegative := (rationalToReal_le_iff _ _).mpr tailBoundPositive.1 }
+  let limitBoundReal : NonnegativeReal :=
+    { value := rationalToReal limitBound
+      nonnegative := (rationalToReal_le_iff _ _).mpr limitBoundPositive.1 }
+  let deltaReal : NonnegativeReal :=
+    { value := rationalToReal delta
+      nonnegative := (rationalToReal_le_iff _ _).mpr deltaPositive.1 }
+  let productBoundReal : NonnegativeReal :=
+    { value := rationalToReal productBound
+      nonnegative :=
+        (rationalToReal_le_iff _ _).mpr productBoundPositive.1 }
+  refine ⟨Nat.max tailThreshold closeThreshold, ?_⟩
+  intro index indexLarge
+  have tailLarge : tailThreshold ≤ index :=
+    Nat.le_trans (Nat.le_max_left _ _) indexLarge
+  have closeLarge : closeThreshold ≤ index :=
+    Nat.le_trans (Nat.le_max_right _ _) indexLarge
+  obtain ⟨indexNonzero, indexInverseBound⟩ := tailEventually index tailLarge
+  change realLE
+    (realDist (realInvOrZero (sequence index)) (realInvOrZero limit)).value
+    (rationalToReal epsilon)
+  rw [realInvOrZero_of_ne (sequence index) indexNonzero,
+    realInvOrZero_of_ne limit limitNonzero,
+    realDist_inv (sequence index) limit indexNonzero limitNonzero]
+  have inverseProductBound := nonnegativeRealMul_monotone
+    (left := realAbs (realInv (sequence index) indexNonzero))
+    (left' := tailBoundReal)
+    (right := realAbs (realInv limit limitNonzero))
+    (right' := limitBoundReal)
+    indexInverseBound limitAbsoluteBound
+  have totalBound := nonnegativeRealMul_monotone
+    (left := nonnegativeRealMul
+      (realAbs (realInv (sequence index) indexNonzero))
+      (realAbs (realInv limit limitNonzero)))
+    (left' := nonnegativeRealMul tailBoundReal limitBoundReal)
+    (right := realDist (sequence index) limit)
+    (right' := deltaReal)
+    inverseProductBound (eventuallyClose index closeLarge)
+  have firstPrincipal := nonnegativeRealMul_rationalToReal_positive
+    tailBoundPositive limitBoundPositive
+  have secondPrincipal := nonnegativeRealMul_rationalToReal_positive
+    productBoundPositive deltaPositive
+  have firstBundle :
+      nonnegativeRealMul tailBoundReal limitBoundReal = productBoundReal := by
+    apply NonnegativeReal.ext
+    exact firstPrincipal
+  have secondBundle :
+      nonnegativeRealMul productBoundReal deltaReal =
+        { value := rationalToReal (rationalMul productBound delta)
+          nonnegative := (rationalToReal_le_iff _ _).mpr
+            (rationalMul_positive productBoundPositive deltaPositive).1 } := by
+    apply NonnegativeReal.ext
+    exact secondPrincipal
+  rw [firstBundle, secondBundle] at totalBound
+  change realLE
+    (nonnegativeRealMul
+      (nonnegativeRealMul
+        (realAbs (realInv (sequence index) indexNonzero))
+        (realAbs (realInv limit limitNonzero)))
+      (realDist (sequence index) limit)).value
+    (rationalToReal (rationalMul productBound delta)) at totalBound
+  rw [productDelta] at totalBound
+  exact totalBound
+
+noncomputable def realDiv (numerator denominator : IncReal) : IncReal :=
+  realMul numerator (realInvOrZero denominator)
+
+theorem realSequenceConverges_div
+    {numeratorSequence denominatorSequence : RealSequence}
+    {numeratorLimit denominatorLimit : IncReal}
+    (denominatorLimitNonzero : denominatorLimit ≠ realZero)
+    (numeratorConverges :
+      RealSequenceConverges numeratorSequence numeratorLimit)
+    (denominatorConverges :
+      RealSequenceConverges denominatorSequence denominatorLimit) :
+    RealSequenceConverges
+      (fun index => realDiv (numeratorSequence index)
+        (denominatorSequence index))
+      (realDiv numeratorLimit denominatorLimit) := by
+  exact realSequenceConverges_mul numeratorConverges
+    (realSequenceConverges_invOrZero denominatorLimitNonzero
+      denominatorConverges)
+
 def RealSequentiallyContinuousAt
     (function : IncReal → IncReal) (point : IncReal) : Prop :=
   ∀ sequence : RealSequence,
@@ -3288,6 +3642,12 @@ theorem realSequentiallyContinuousAt_mul_const
     RealSequentiallyContinuousAt (fun value => realMul factor value) point := by
   intro sequence converges
   exact realSequenceConverges_mul_const converges
+
+theorem realSequentiallyContinuousAt_invOrZero
+    (point : IncReal) (pointNonzero : point ≠ realZero) :
+    RealSequentiallyContinuousAt realInvOrZero point := by
+  intro sequence converges
+  exact realSequenceConverges_invOrZero pointNonzero converges
 
 theorem realSequentiallyContinuousAt_id (point : IncReal) :
     RealSequentiallyContinuousAt (fun value => value) point := by
