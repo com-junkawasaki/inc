@@ -8044,3 +8044,143 @@ self-sum, per its own negative theorem
 `finiteIncidenceSum_not_associativeResonance`, so it looked less rich than
 `Int`/`Rational` at the time). Fallback, still unclaimed since cycle 67:
 `ResonantQuotientEquivalenceCriterion`.
+
+## Cycle 71
+
+**Hypothesis**: cycle 70's queued thread (b), the one gap left standing
+from cycle 68's original audit: `finiteIncidence` (`GraphModel.lean`) is
+the last concrete `*ResonanceSpec`/named `Incidence` instance with ZERO
+internal-logic connection of any kind, strong or weak. Unlike
+`realIncidence` (uncountable, permanently ruled out from the strong route
+per cycle 68, closed only at the weaker `_arbitrary` level by cycle 70),
+`FiniteIncidence` is finite, hence trivially countable, and should be able
+to receive the same STRONG `CountablyPresentedIncidence` treatment cycle
+68 gave `Int` and cycle 69 gave `Rational` directly, with no cardinality
+obstruction and (expected) far less machinery than either.
+
+**Method**: read `FiniteIncidence`'s definition in full (`GraphModel.lean`
+L85): a plain two-constructor inductive type, `leaf`/`root` (`deriving
+DecidableEq, Repr`), confirming the task's framing exactly -- the simplest
+carrier of the five audited instances, not a quotient or a richer
+algebraic structure. Grepped `GraphModel.lean` for
+`CountableAtomCoding`/`CountablyPresentedIncidence` before writing
+anything, per this project's established discipline of checking for
+existing helpers first (cycle 71's own task brief flagged this
+explicitly, echoing cycle 70's discovery that `_arbitrary` already existed
+unused). This turned up a real prior-art fact, not a false lead:
+`finiteIncidenceAtomCoding : CountableAtomCoding FiniteIncidence`
+(L705-710) already exists in the file -- `decode index :=
+boolToFiniteIncidence (index % 2 == 1)`, `code node := if node = .leaf
+then 0 else 1`, `decode_code` by `cases node <;> decide`. `git log -S`
+traces it to commit `56accef` ("feat(inc): prove finite resonance logic
+completeness", 2026-07-12), predating this project's `RESEARCH_LOG.md`
+numbered-cycle convention entirely (part of the separate
+`docs/adr/2607121930-resonance-as-central-primitive.md` migration) --
+built there solely as an input to `finiteResonanceAtomCoding`
+(`CountableAtomCoding (ResonanceAtom FiniteIncidence)`, coding *triples*
+of nodes for `ResonanceAtom` Kripke completeness), never once paired with
+`finiteIncidence` itself via `CountablyPresentedIncidence`. This is
+exactly the asymmetry cycle 68's audit caught: a `CountableAtomCoding
+FiniteIncidence` value existed in the file the whole time, for a
+different purpose, while `finiteIncidence` (the base `Incidence
+FiniteIncidence GraphRole GraphType` structure) had no
+`CountablyPresentedIncidence` instance at all -- confirmed by grep
+returning zero hits for either identifier prior to this cycle's edit.
+Read `Logic.lean`'s `CountablyPresentedIncidence` structure (L5328-5330:
+just `incidence : Incidence I R T` plus `atoms : CountableAtomCoding I`)
+and `Integers.lean`/`Rationals.lean`/`Peano.lean`'s exact instantiation +
+naming convention (`<x>CountablyPresentedIncidence` pairing `<x>Incidence`
+with `<x>AtomCoding`, followed by `<x>Incidence_internalLogic_complete`/
+`_internalLogic_consistent_iff_model` as one-line corollaries of
+`CountablyPresentedIncidence.internalLogic_complete`/
+`_consistent_iff_model`) to mirror precisely. Checked whether cycle 70's
+new `CountableAtomCoding.ofQuotient` combinator was relevant: it is not
+-- `FiniteIncidence` is a plain inductive type, not a `Quotient`, so no
+quotient-lift step is needed here (unlike cycle 69's `IncRational`).
+
+Given `finiteIncidenceAtomCoding` already exists and already has the
+exact type `CountableAtomCoding FiniteIncidence` the `CountablyPresentedIncidence`
+structure needs, the entire remaining task reduces to a direct pairing:
+added `finiteCountablyPresentedIncidence : CountablyPresentedIncidence
+FiniteIncidence GraphRole GraphType` (`incidence := finiteIncidence`,
+`atoms := finiteIncidenceAtomCoding`) plus the two corollaries
+`finiteIncidence_internalLogic_complete`/
+`finiteIncidence_internalLogic_consistent_iff_model`, inserted directly
+after `finiteIncidenceAtomCoding`'s definition and before
+`finiteResonanceAtomCoding` in `GraphModel.lean` (all surrounding code
+byte-for-byte unchanged) -- no new coding function, no new roundtrip
+lemma, the smallest possible closing of the five-instance audit.
+
+**Result**: **all 3 new declarations
+(`finiteCountablyPresentedIncidence`/
+`finiteIncidence_internalLogic_complete`/
+`finiteIncidence_internalLogic_consistent_iff_model`) type-check on the
+first `lake build` attempt; `./verify.sh` (clean `lake clean` + `lake
+build`, example run, repo-wide `axiom`/`sorry`/`sorryAx` grep) passes end
+to end.** A scratch `lake env lean` check file (deleted after use, per
+this project's established practice) confirmed `#print axioms` on all
+three: `finiteCountablyPresentedIncidence` depends on exactly `[propext,
+Quot.sound]` (no `Classical.choice`, since `finiteIncidenceAtomCoding`
+itself is fully computable -- `cases <;> decide`, no `Classical.choose`
+anywhere in the chain); the two `_internalLogic_*` corollaries depend on
+`[propext, Classical.choice, Quot.sound]`, identical to the axiom
+footprint cycle 68 found for `integerIncidence`'s and cycle 69 found for
+`rationalIncidence`'s analogous corollaries -- this project's standing
+three axioms, no new commitment.
+
+**Synthesis**: this closes the full four-cycle audit thread cycle 68
+opened. Every one of this project's concrete `*ResonanceSpec`/named
+`Incidence` instances now has SOME connection to the internal-logic
+layer, each via the route its carrier's cardinality actually supports:
+`natIncidence` (identity coding, pre-cycle-68) and its two generic
+combinators `incidenceSum`/`incidenceProd`; `integerIncidence` (zig-zag
+coding, cycle 68); `rationalIncidence` (quotient-lift coding through
+`RationalRepresentative`, cycle 69, later shown `rfl`-equal to the
+general `CountableAtomCoding.ofQuotient` combinator, cycle 70);
+`realIncidence` (the strictly weaker `_arbitrary` route, the only one
+available given cycle 68's permanent uncountability obstruction, cycle
+70); and now `finiteIncidence` (the strong `CountablyPresentedIncidence`
+route, reusing a `CountableAtomCoding` that had existed in the file since
+before this project's numbered-cycle convention began, but had never been
+connected to the base incidence structure). The audit cycle 68 set out to
+run -- "does every concrete instance have an internal-logic connection,
+and if not, why not, and can the gap be closed" -- is now answered
+completely and honestly for all five instances, with the one genuinely
+permanent negative (`Real`'s direct route) documented rather than routed
+around. This is a real completion, not a reclassification: no roadmap
+item is fully proved by this closure (item 7's own single universal
+interpretation theorem, connecting resonance-driven generation/composition
+to internal logic AND constructive real analysis in one result, remains
+untouched by this thread, which has always been narrower -- one bridge
+per concrete instance, not the universal theorem), so per cycles 60-70's
+conservative convention the ADR addendum below records the completion
+without moving item 7's existing percentage figures. The completion
+itself -- closing a specific, well-defined open question across 4 cycles
+rather than adding one more isolated instance -- is judged worth an ADR
+addendum in its own right, distinct from a routine per-cycle note.
+
+**Next hypothesis (cycle 72, not yet attempted)**: the internal-logic-
+connection audit (cycles 68-71) is now fully closed for every concrete
+instance this project has -- there is no sixth instance waiting, and
+cycle 70's minor leftover (a) (mechanically adding `_arbitrary` corollaries
+to `natIncidence`/`integerIncidence`/`rationalIncidence`/`finiteIncidence`
+for uniformity) remains low-value on its own, since all four already have
+the strictly stronger `CountablyPresentedIncidence`-based corollaries.
+Recommend pivoting away from this thread entirely rather than manufacturing
+a fifth increment on top of a closed audit. Two concretely-scoped
+candidates, both already queued by earlier cycles rather than newly
+invented: (a) cycle 67's still-unclaimed
+`ResonantQuotientEquivalenceCriterion` (the resonance-level analogue of
+`BehavioralQuotientEquivalenceCriterion` -- grep `IncidenceTheory.lean`
+for the latter's exact definition as a template), queued since cycle 67
+and carried forward unclaimed through cycles 68/69/70 as the standing
+fallback; (b) roadmap item 7's actual remaining content now that its
+"resonance ↔ internal logic" leg is closed for every instance: the single
+universal interpretation theorem itself, which this whole cycle 68-71
+thread has deliberately scoped narrower than (per-instance bridges, not
+one theorem connecting resonance-driven generation/composition to BOTH
+the internal-logic model AND constructive real analysis at once) --
+attempting this directly is high-risk/high-reward compared to (a)'s
+concretely-scoped, already-templated shape, so (a) is the recommended
+default unless a future cycle judges the project newly ready for item 7's
+harder synthesis.

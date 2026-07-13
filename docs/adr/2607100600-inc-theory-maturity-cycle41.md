@@ -2672,3 +2672,77 @@ cycle 60-69 の保守的規律どおり、項目7の記述（「部分完了」�
 有限ゆえ自明に可算)への直接の強い bridge 構築を、cycle 67 がまだ
 手つかずのまま残した `ResonantQuotientEquivalenceCriterion`
 フォールバックと共に、cycle 71 に委ねている。
+
+## 2026-07-14 追補（cycle 71: `finiteIncidence` を内部論理層へ強接続——
+cycle 68 が開始した5インスタンス監査を完全に閉じる）
+
+本追補は `RESEARCH_LOG.md` cycle 71 の結果を反映する。cycle 70 が残した
+選択肢 (b): `finiteIncidence`（`GraphModel.lean`）は cycle 68 の監査で
+唯一まだ内部論理層に何の接続も持たなかったインスタンスであり、
+`realIncidence`（非可算ゆえ恒久的に強い route を取れず、cycle 70 で
+`_arbitrary` という弱い route のみ接続済み）と異なり、有限ゆえ自明に
+可算——`Int`（cycle 68）・`Rational`（cycle 69）と同じ強い
+`CountableAtomCoding`/`CountablyPresentedIncidence` route を直接
+受けられるはずという仮説に取り組んだ。
+
+`FiniteIncidence`（`GraphModel.lean` L85）が `leaf`/`root` の2値
+inductive 型であることを確認したうえで、新規符号化を書く前に既存の
+helper を確認したところ、`finiteIncidenceAtomCoding : CountableAtomCoding
+FiniteIncidence`（L705-710）が**既に存在していた**ことが判明した——
+ただし `finiteResonanceAtomCoding`（`ResonanceAtom FiniteIncidence` の
+三つ組を符号化する、Kripke 完全性を三項関係 `resonance` の論理式に
+適用するための別目的の構築物）の入力としてのみ使われており、
+`finiteIncidence` 本体（`Incidence FiniteIncidence GraphRole GraphType`）
+と `CountablyPresentedIncidence` で組にされたことは一度もなかった
+（`git log -S` でこの符号化自体はコミット `56accef`
+「feat(inc): prove finite resonance logic completeness」（2026-07-12、
+本 `RESEARCH_LOG.md` の cycle 番号体系より前、別ADR
+`2607121930-resonance-as-central-primitive.md` の migration の一部）に
+由来すると確認——cycle 68 の監査が捉えた非対称性そのものである:
+`CountableAtomCoding FiniteIncidence` の値はファイル内に存在していたが、
+それが基礎となる `Incidence` 構造と接続されたことは一度もなかった）。
+
+このため今サイクルの作業は新規符号化の構築ではなく、既存の
+`finiteIncidenceAtomCoding` をそのまま用いた直接の組み合わせに帰着した:
+`Logic.lean` の `CountablyPresentedIncidence`
+構造・`Integers.lean`/`Rationals.lean`/`Peano.lean` の命名規約に厳密に
+倣い、`finiteCountablyPresentedIncidence : CountablyPresentedIncidence
+FiniteIncidence GraphRole GraphType`（`incidence := finiteIncidence`、
+`atoms := finiteIncidenceAtomCoding`）と、その2つの系
+`finiteIncidence_internalLogic_complete`/
+`finiteIncidence_internalLogic_consistent_iff_model` を
+`GraphModel.lean` に追加した（既存部分はバイト単位で不変。cycle 70 が
+新設した `CountableAtomCoding.ofQuotient` は `FiniteIncidence` が
+`Quotient` 型ではないため今回は不要と判断・確認済み）。
+
+新規3宣言は初回の `lake build` で型検査を通過し、`./verify.sh`（完全
+リビルド、実行例、`axiom`/`sorry`/`sorryAx` の全木 grep）はクリーンに
+通過した。scratch `lake env lean` 検査（使用後削除）で
+`finiteCountablyPresentedIncidence` は `[propext, Quot.sound]`
+（`finiteIncidenceAtomCoding` 自体が `cases <;> decide` で完全に
+computable なため `Classical.choice` 不要）、2つの系は cycle 68/69 の
+`Int`/`Rational` 系と同一の `[propext, Classical.choice, Quot.sound]`
+に依存することを確認——新規公理は皆無である。
+
+これにより cycle 68 が開始した監査は完全に閉じた: この project の
+具体的な `*ResonanceSpec`/named `Incidence` インスタンス
+（`natIncidence`・`integerIncidence`・`rationalIncidence`・
+`realIncidence`・`finiteIncidence`）の**全て**が、その carrier の
+濃度が実際に許す route（強い `CountableAtomCoding`/
+`CountablyPresentedIncidence`、または `realIncidence` のみ弱い
+`_arbitrary`）のいずれかで内部論理層へ接続済みとなった。とはいえこれは
+「監査を完全に閉じた」という達成であって、項目7が明示する単一の
+普遍的解釈定理（resonance 駆動の生成・合成を内部論理モデルと構成実数
+解析の両方に一結果で結ぶもの）そのものではない——この cycle 68-71 の
+スレッドは一貫して「インスタンスごとの個別 bridge」に scope
+してきたものであり、その普遍的定理には変わらず遠く及ばない。したがって
+cycle 60-70 の保守的規律を踏襲し、項目7の記述（「部分完了」）と
+パーセンテージ（本文57–58行目、incidence/resonance 約90%・内部論理
+約90%）は本追補でも動かさない——4 cycle にまたがる監査スレッドの
+完全閉鎖という区切りの良さは、末尾の数値ではなく本追補という記録の
+形で残す。`RESEARCH_LOG.md` cycle 71 の Next hypothesis は、この監査
+スレッド自体への追加インスタンスがもう存在しないことを理由に、別スレッド
+への転換を推奨している: (a) cycle 67 以来まだ手つかずの
+`ResonantQuotientEquivalenceCriterion`（推奨デフォルト、具体的に
+scope 済み）、(b) 項目7自身の残作業である単一の普遍的解釈定理への
+本格着手（cycle 68-71 のスレッドより難度が高い）。

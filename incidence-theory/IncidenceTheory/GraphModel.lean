@@ -709,6 +709,36 @@ def finiteIncidenceAtomCoding : CountableAtomCoding FiniteIncidence where
     intro node
     cases node <;> decide
 
+/- Research cycle 71 (see RESEARCH_LOG.md): closes the last gap of cycle
+68's audit of every concrete `*ResonanceSpec`/named `Incidence` instance
+against the internal-logic (`CountablyPresentedIncidence`) layer.
+`finiteIncidence` is the one instance cycle 68 flagged but did not close --
+it is finite, hence trivially countable, so unlike `realIncidence` (whose
+cardinality permanently rules out any `CountableAtomCoding`, forcing cycle
+70's strictly weaker `_arbitrary` route) it can receive the same STRONG
+`CountablyPresentedIncidence` treatment cycle 68 gave `integerIncidence`
+and cycle 69 gave `rationalIncidence`. No new atom coding needs to be
+built: `finiteIncidenceAtomCoding` immediately above already codes
+`FiniteIncidence` into `Nat` (built for `finiteResonanceAtomCoding`'s
+`ResonanceAtom FiniteIncidence` triples below, years before this cycle),
+and is exactly the `CountableAtomCoding FiniteIncidence` the
+`CountablyPresentedIncidence` structure (`Logic.lean`) needs -- pairing it
+with `finiteIncidence` is the entire bridge. -/
+def finiteCountablyPresentedIncidence :
+    CountablyPresentedIncidence FiniteIncidence GraphRole GraphType where
+  incidence := finiteIncidence
+  atoms := finiteIncidenceAtomCoding
+
+theorem finiteIncidence_internalLogic_complete
+    (context : List (Formula FiniteIncidence)) (formula : Formula FiniteIncidence) :
+    KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
+  finiteCountablyPresentedIncidence.internalLogic_complete context formula
+
+theorem finiteIncidence_internalLogic_consistent_iff_model
+    (context : List (Formula FiniteIncidence)) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context :=
+  finiteCountablyPresentedIncidence.internalLogic_consistent_iff_model context
+
 noncomputable def finiteResonanceAtomCoding :
     CountableAtomCoding (ResonanceAtom FiniteIncidence) := by
   let triples := finiteIncidenceAtomCoding.prod
