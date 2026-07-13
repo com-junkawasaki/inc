@@ -200,7 +200,13 @@ case where the selector is complete and resonance has no unselected modes.
   nonnegative distribution theorem, proving both signed distributive laws.
   Products of nonzero signed reals are nonzero in all four quadrants, and
   distributivity yields multiplication cancellation. Nonzero inverse and
-  remaining ordered-field laws remain subsequent obligations.
+  remaining ordered-field laws remain subsequent obligations. For a nonzero
+  nonnegative cut, a relational reciprocal cut is now well formed: a rational
+  lies in it when it is negative or lies below an inverse resonance witness of
+  a positive rational outside the source cut. This avoids a global inverse
+  selector. The source-reciprocal product is proved bounded above by principal
+  one; the reverse bound requires the remaining inside/outside ratio
+  approximation theorem.
 
 ### Non-normative physical intuition
 

@@ -1462,6 +1462,116 @@ theorem nonnegativeRealMul_monotone
   realLE_trans (nonnegativeRealMul_monotone_left leftOrdered)
     (nonnegativeRealMul_monotone_right rightOrdered)
 
+/-- Reciprocal cut of a nonzero nonnegative real. Membership is relational:
+`q` lies below an inverse witness of some positive rational outside the source
+cut. No global computational inverse selector is assumed. -/
+noncomputable def nonnegativeRealInv (value : NonnegativeReal)
+    (nonzero : value.value ≠ realZero) : NonnegativeReal where
+  value :=
+    { lower := fun rational =>
+        rationalLT rational (rationalOfInteger 0) ∨
+          ∃ outside inverse,
+            ¬ value.value.lower outside ∧
+            rationalLT (rationalOfInteger 0) outside ∧
+            rationalMulResonance outside inverse (rationalOfInteger 1) ∧
+            rationalLT rational inverse
+      inhabited := ⟨rationalOfInteger (-1), Or.inl (by
+        exact ⟨(rationalOfInteger_le_iff (-1) 0).mpr (by omega),
+          fun equal => by
+            have impossible := rationalOfInteger_injective equal
+            omega⟩)⟩
+      proper := by
+        obtain ⟨inside, insideMember, insidePositive⟩ :=
+          value.exists_positive_member nonzero
+        have insideNonzero : inside ≠ rationalOfInteger 0 := fun equal => by
+          subst inside
+          exact rationalLT_irrefl _ insidePositive
+        obtain ⟨insideInverse, insideInverseLaw⟩ :=
+          rational_nonzero_has_mul_inverse insideNonzero
+        have insideInversePositive :
+            rationalLT (rationalOfInteger 0) insideInverse := by
+          apply rationalMul_positive_reflect_right insidePositive
+          rw [insideInverseLaw]
+          exact rational_zero_lt_one
+        refine ⟨insideInverse, ?_⟩
+        intro inverseMember
+        rcases inverseMember with negative | generated
+        · exact (rationalLT_asymm insideInversePositive) negative
+        · obtain ⟨outside, inverse, outsideNotMember, outsidePositive,
+              inverseLaw, insideInverseBelow⟩ := generated
+          have oneBelowInsideInverseProduct : rationalLT
+              (rationalOfInteger 1) (rationalMul inside inverse) := by
+            have multiplied := rationalLT_mul_left_of_positive
+              insideInverseBelow insidePositive
+            rw [insideInverseLaw] at multiplied
+            exact multiplied
+          have outsideBelowInside : rationalLT outside inside := by
+            have multiplied := rationalLT_mul_left_of_positive
+              oneBelowInsideInverseProduct outsidePositive
+            have restore : rationalMul outside
+                (rationalMul inside inverse) = inside := by
+              calc
+                _ = rationalMul (rationalMul outside inside) inverse :=
+                  (rationalMul_assoc outside inside inverse).symm
+                _ = rationalMul (rationalMul inside outside) inverse := by
+                  rw [rationalMul_comm outside inside]
+                _ = rationalMul inside (rationalMul outside inverse) :=
+                  rationalMul_assoc inside outside inverse
+                _ = rationalMul inside (rationalOfInteger 1) := by
+                  rw [inverseLaw]
+                _ = inside := rationalMul_one_right inside
+            rw [rationalMul_one_right, restore] at multiplied
+            exact multiplied
+          exact outsideNotMember
+            (value.value.downward insideMember outsideBelowInside)
+      downward := by
+        intro smaller rational member smallerRational
+        rcases member with negative | generated
+        · exact Or.inl (rationalLT_trans smallerRational negative)
+        · obtain ⟨outside, inverse, outsideNotMember, outsidePositive,
+              inverseLaw, rationalBelow⟩ := generated
+          exact Or.inr ⟨outside, inverse, outsideNotMember, outsidePositive,
+            inverseLaw, rationalLT_trans smallerRational rationalBelow⟩
+      rounded := by
+        intro rational member
+        rcases member with negative | generated
+        · obtain ⟨middle, rationalMiddle, middleNegative⟩ :=
+            rationalLT_dense negative
+          exact ⟨middle, Or.inl middleNegative, rationalMiddle⟩
+        · obtain ⟨outside, inverse, outsideNotMember, outsidePositive,
+              inverseLaw, rationalBelow⟩ := generated
+          obtain ⟨middle, rationalMiddle, middleBelow⟩ :=
+            rationalLT_dense rationalBelow
+          exact ⟨middle, Or.inr ⟨outside, inverse, outsideNotMember,
+            outsidePositive, inverseLaw, middleBelow⟩, rationalMiddle⟩ }
+  nonnegative := by
+    intro rational negative
+    exact Or.inl negative
+
+theorem nonnegativeRealMul_inv_le_one
+    (value : NonnegativeReal) (nonzero : value.value ≠ realZero) :
+    realLE (nonnegativeRealMul value (nonnegativeRealInv value nonzero)).value
+      nonnegativeOne.value := by
+  intro rational member
+  rcases member with negative | generated
+  · exact rationalLT_trans negative rational_zero_lt_one
+  · obtain ⟨inside, inverseValue, insideMember, inverseMember,
+        insidePositive, inverseValuePositive, rationalBelow⟩ := generated
+    rcases inverseMember with inverseNegative | inverseGenerated
+    · exact False.elim
+        ((rationalLT_asymm inverseValuePositive) inverseNegative)
+    · obtain ⟨outside, outsideInverse, outsideNotMember, outsidePositive,
+          outsideInverseLaw, inverseBelow⟩ := inverseGenerated
+      have insideBelowOutside := value.value.lt_of_lower_of_not_lower
+        insideMember outsideNotMember
+      have productBelowOne : rationalLT
+          (rationalMul inside inverseValue) (rationalOfInteger 1) := by
+        have strict := rationalLT_mul_of_positive insideBelowOutside
+          inverseBelow inverseValuePositive outsidePositive
+        rw [outsideInverseLaw] at strict
+        exact strict
+      exact rationalLT_trans rationalBelow productBelowOne
+
 /-- Canonical positive part of a real, bundled in the nonnegative cone. -/
 noncomputable def realPositivePart (value : IncReal) : NonnegativeReal :=
   by
