@@ -3424,3 +3424,120 @@ impossible for the same reason cycle 38 found `glue` doesn't respect `≈` in
 general — still flagged as a short, focused check, and given (a)'s repeated
 deferral for being under-scoped, (b) may be the more immediately tractable
 pick for cycle 45 specifically because it needs no scoping pass of its own.
+
+## Cycle 45
+
+**Hypothesis**: pursue thread (b) from cycle 44's queue (= cycle 41's option
+(b)) — is there ANY well-typed `glue : SimplexShape → SimplexShape → Option
+SimplexShape`, not just cycle 41's particular unit-absorbing-pattern copy,
+for which `simplexToShape` is a genuine glue-homomorphism out of
+`simplexIncidence` — or is that structurally impossible? Picked over thread
+(a) (the `incidenceProd`/`incidenceSum` distributivity map) exactly per the
+task's own tractability ranking: (b) needs no scoping pass, cycle 41 already
+identified the precise open question.
+
+**Method**: grepped `Simplex.lean` and `Quotient.lean` for
+`simplexIncidence`/`shapeIncidence`/`simplexToShape`/`SimplexShape` before
+assuming anything. Found `simplexToShape_not_glue_hom` (cycle 41) refutes
+only the ONE `shapeIncidence.glue` this project built. But the same file
+also already contains, a few lines below it,
+`simplexClassification_glue_not_invariant : ¬
+simplexBisimulationQuotientClassification.GlueInvariant` — a theorem this
+cycle's task briefing did not know about, added not in cycle 41's own commit
+(`ac06e86`) but in a batch of ~24 "feat(inc)" commits on 2026-07-11
+(`c6c7610`..`1c07128`, all landed as follow-on generalization of the
+bisimulation-quotient-classification framework, per the merge commit
+"integrate cycle41 proof development") — chronologically after cycle 41,
+chronologically before cycles 42-44 (dated 2026-07-13), but never given its
+own `## Cycle N` entry in this log. The same batch produced
+`docs/adr/2607100600-...md`'s "2026-07-11 追補" section, which already states
+in prose: "canonical glue についても...分類 target 上の二変数演算へ descent
+できることが必要十分であり...simplex 分類ではこの不変性が実際に偽であり、
+`shapeIncidence.glue` が source glue の descent ではない理由を一般条件の失敗
+として示した." In other words: **this cycle's exact question was already
+answered by existing code and existing ADR prose**, just never connected
+into an explicit closing theorem stated in the open question's own terms,
+and never logged as a numbered cycle here — a genuine desync between this
+file's cataloging and the actual `main` state (plausibly from a separate,
+undocumented pass of the recurring automated loop touching this repo).
+Rather than treat this as nothing left to do, checked whether the general
+machinery actually closes the question as strongly as cycle 41's queue
+asked (ALL possible glues, not just `GlueInvariant`'s abstract statement):
+read `BisimulationQuotientClassification.glueRealization_iff_invariant`
+(`GlueRealization ↔ GlueInvariant`, where `GlueRealization` is literally `∃
+glue : Q → Q → Option Q, ∀ x y, glue (classify x) (classify y) =
+mappedSourceGlue x y` — an existential over every possible glue function)
+and confirmed `simplexBisimulationQuotientClassification.classify` is
+definitionally `simplexToShape`, so `GlueRealization` for this
+classification unfolds exactly to the open question's own existential.
+
+**Result**: **confirmed, sorry-free, on the first attempt.** Two new
+theorems in `Quotient.lean`. (1) `simplexShape_glue_not_realizable : ¬
+simplexBisimulationQuotientClassification.GlueRealization`, a one-line proof
+combining `glueRealization_iff_invariant` with the pre-existing
+`simplexClassification_glue_not_invariant`. (2)
+`simplexToShape_no_glue_homomorphism_exists : ¬ ∃ glue' : SimplexShape →
+SimplexShape → Option SimplexShape, ∀ x y : SimplexId, glue' (simplexToShape
+x) (simplexToShape y) = (simplexIncidence.glue x y).map simplexToShape` —
+the classification-free restatement, typechecking directly against (1) by
+definitional unfolding, in exactly the vocabulary cycle 41's queue posed the
+question in. This is a strictly stronger closure than cycle 41's own
+`simplexToShape_not_glue_hom`: that theorem ruled out one specific candidate
+glue; this cycle's theorems rule out EVERY possible well-typed
+`SimplexShape`-valued glue at once, confirming cycle 38's general finding
+("glue does not respect `≈`") really does apply here with no escape hatch —
+a **clean NEGATIVE closure**, not a positive construction, as the task
+briefing said was equally legitimate. `lake build IncidenceTheory.Quotient`:
+succeeds cleanly (22/22 jobs project-wide). `#print axioms` on both new
+theorems (checked via a scratch file fed to `lake env lean`, then deleted):
+`propext, Classical.choice, Quot.sound` — this project's standing profile,
+no new axiom. Full `./verify.sh` (clean `lake clean && lake build`, example
+binary run, repo-wide unproved-declaration grep): passes end to end.
+
+**Synthesis**: this closes the multi-cycle-deferred thread (b), queued since
+cycle 41 and re-queued untouched through cycles 42, 43, 44. Unlike cycle
+41's own synthesis (where the hard mathematical work predated the cycle by
+dozens of cycles but the *connection* was still this project's own
+recognition), this cycle is even more purely archaeological: not only had
+the underlying fact (`GlueInvariant` false for the simplex classification)
+already been proved, it had already been correctly summarized in ADR prose,
+roughly 40 hours before this cycle ran — the only genuinely missing piece
+was the explicit theorem statement closing the loop in the open question's
+own vocabulary, plus recognizing that this log's own "not yet attempted"
+bookkeeping had drifted from the actual `main` state. Worth naming plainly
+as a process finding, not just a mathematical one: a research log that
+tracks work by hand-numbered cycles can silently desync from a codebase
+that also receives commits outside that numbering (here, an apparent
+separate documentation/generalization pass on 2026-07-11) — the fix isn't
+to stop trusting the log, but to grep the actual source before trusting a
+"not yet attempted" label, exactly as this cycle's method did and as cycle
+41's own method already modeled. Mathematically, the result reconfirms
+cycle 38's structural finding (`glue` does not respect `≈` in general) in
+its sharpest form yet for this instance: it is not merely that
+`simplexIncidence`'s three-shape grading fails to transport this ONE
+`glue`, it is that NO `SimplexShape`-valued glue of any definition could
+ever be induced by `simplexToShape` from `simplexIncidence.glue` — the
+obstruction is `GlueInvariant`'s failure itself (two `≈`-related vertices,
+`v0 ≈ v1`, glued against the same `face` give literally different results:
+`simplexIncidence.glue v0 face = some face` vs. `simplexIncidence.glue v1
+face = some v1`, which map to different shapes), not any deficiency of a
+particular candidate construction.
+
+**Next hypothesis (cycle 46, not yet attempted)**: with both of cycle 41's
+queued options now resolved (option (b): closed negatively this cycle;
+option (a) — cycle 37's option (b), the `incidenceProd`/`incidenceSum`
+internal-logic distributivity direction — still fully open), cycle 46 should
+pursue that remaining thread, scoped exactly as cycle 41/42's queues already
+narrowed it: **do not** attempt a full distributivity/bisimulation theorem
+in one shot. First move only: grep for existing concrete
+`incidenceProd`/`incidenceSum` instances that have BOTH been constructed on
+the same underlying carrier (e.g. via `natIncidence`, `NatBoolProductIncidence`
+in `Quotient.lean`, or `Product.lean`/`Sum.lean` directly) and check whether
+a natural, well-typed map between `incidenceProd A B`'s carrier and
+`incidenceSum A B`'s carrier exists at all — before attempting any
+bisimulation or homomorphism claim about that map. Separately, before
+picking a thread, cycle 46 should also do a quick repo-wide sweep for other
+"feat(inc)"-style commits landed outside the numbered-cycle sequence (as
+this cycle found for 2026-07-11) that might have already resolved other
+items this log still lists as open, to avoid re-deriving already-settled
+ground a second time.

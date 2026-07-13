@@ -1806,4 +1806,53 @@ theorem simplexClassification_glue_not_invariant :
     simplexBisimulationQuotientClassification, simplexToShape,
     simplexIncidence] at equalMappedGlue
 
+/- Cycle 45: `simplexToShape_not_glue_hom` (cycle 41) only ruled out
+   the ONE particular `shapeIncidence.glue` this project happened to
+   build there (cycle 41's own "direct copy" of `simplexIncidence`'s
+   unit-absorbing pattern, not derived from anything). Cycle 41's
+   queue asked the strictly stronger question, repeated unattempted
+   through cycles 42/43/44: is there ANY OTHER well-typed
+   `glue : SimplexShape → SimplexShape → Option SimplexShape` for
+   which `simplexToShape` IS a genuine glue-homomorphism -- or is that
+   structurally impossible?
+
+   `BisimulationQuotientClassification.glueRealization_iff_invariant`
+   (built out in the generalized quotient-classification development
+   that followed cycle 41, well before cycles 42-44's analysis-thread
+   detour) already supplies the exact necessary-and-sufficient
+   criterion this question needs: a `Q`-valued glue realizing
+   `classify` as a homomorphism exists (`GlueRealization`) iff
+   `inc.glue` is `≈`-invariant in both arguments (`GlueInvariant`).
+   And `simplexClassification_glue_not_invariant`, proved immediately
+   above as part of that same development, already establishes
+   `¬ GlueInvariant` for EXACTLY this classification
+   (`simplexBisimulationQuotientClassification`, whose `classify`
+   field is `simplexToShape` itself). No prior cycle had drawn these
+   two already-proved facts together into the closing statement the
+   open question actually asks for -- doing so is this cycle's entire
+   contribution: a clean, GENERAL negative closure, ruling out every
+   possible choice of glue at once rather than just the one candidate
+   cycle 41 happened to build. -/
+theorem simplexShape_glue_not_realizable :
+    ¬ simplexBisimulationQuotientClassification.GlueRealization :=
+  fun realization =>
+    simplexClassification_glue_not_invariant
+      ((BisimulationQuotientClassification.glueRealization_iff_invariant
+        simplexBisimulationQuotientClassification).mp realization)
+
+/- The same fact, unfolded out of the classification abstraction into
+   plain function language matching the open question's own phrasing:
+   no total function `SimplexShape → SimplexShape → Option
+   SimplexShape` whatsoever -- `shapeIncidence.glue` or any other
+   well-typed candidate -- can make `simplexToShape` a
+   glue-homomorphism out of `simplexIncidence`. This is the structural
+   impossibility cycle 41's queue asked to confirm or refute; it is
+   confirmed. -/
+theorem simplexToShape_no_glue_homomorphism_exists :
+    ¬ ∃ glue' : SimplexShape → SimplexShape → Option SimplexShape,
+      ∀ x y : SimplexId,
+        glue' (simplexToShape x) (simplexToShape y) =
+          (simplexIncidence.glue x y).map simplexToShape :=
+  simplexShape_glue_not_realizable
+
 end IncidenceCore
