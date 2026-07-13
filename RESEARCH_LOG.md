@@ -4708,3 +4708,139 @@ fourth instance. (b) cycle 50's still-untouched option (i): does
 `incidenceSum`'s (cycles 46-50), beyond top-level conjunction -- available
 as a change-of-pace item after three consecutive quotient-construction
 cycles (41, 51, 52) if (a) turns out out of scope for one cycle.
+
+## Cycle 53
+
+**Hypothesis**: cycle 52's own queued primary next-hypothesis, option (a):
+with THREE separately hand-derived instances of the same negative pattern
+now on record (`simplexClassification_glue_not_invariant`/
+`simplexShape_glue_not_realizable`, cycles 41/45; `pathClassification_glue_
+not_invariant`/`pathShape_glue_not_realizable`, cycle 51;
+`treeClassification_glue_not_invariant`/`treeShape_glue_not_realizable`,
+cycle 52) -- is there ONE general theorem subsuming the repeated
+instance-by-instance derivation, or do the three counterexamples resist
+unification into anything more than a family resemblance? Explicitly not
+assumed in advance which outcome would hold, per the task's own framing:
+a rigorous "they don't unify" finding would be equally legitimate.
+
+**Method**: read all three concrete `GlueInvariant`-refutation proofs in
+`Quotient.lean` side by side (lines ~1799-1810 simplex, ~2112-2127 path,
+~2500-2519 tree), rather than guessing the shared mechanism from the task
+briefing's own tentative phrasing. Then read `simplexIncidence`'s/
+`pathIncidence`'s/`treeIncidence`'s own `glue`/`unit` field definitions
+directly in `Simplex.lean:63-64`, `PathComplex.lean:40-41`, `Tree.lean:51-52`
+(delegated to a read-only sub-agent to keep this cycle's own context
+focused on the proof logic, then independently confirmed the reported
+lines with `grep`). Found: all three are LITERALLY the identical formula
+`fun i j => if i = <unit> then some j else some i`, differing only in
+which concrete element (`SimplexId.v0`/`PathId.node 0`/`TreeId.leaf 0`) is
+chosen as `<unit>` -- not a coincidence of similar style, the exact same
+closed term up to alpha-renaming the chosen unit constant. Then traced
+each of the three `GlueInvariant`-refutation proofs' actual computation:
+every one of them (a) picks some `x` in `inc.unit`'s own `≈`-class with
+`x ≠ inc.unit` (`v1`/`node 1`/`leaf 1`), (b) picks some `j` OUTSIDE that
+class (`face`/`edge 0`/a `node`), and (c) exploits that `inc.unit_left`
+(an obligation of EVERY `Incidence`, not instance-specific) forces
+`glue unit j = some j`, while the "absorbing" formula's `else` branch
+forces `glue x j = some x` for the chosen `x ≠ unit` -- so `classify`
+cannot tell `x` and `unit` apart (same class) but `glue` treats them
+oppositely, immediately breaking `GlueInvariant` at that one pair.
+
+**Result**: **confirmed, sorry-free, on the first `lake build` attempt --
+a genuine common mechanism, not merely a family resemblance, cleanly
+extractable into one theorem.** Added to `Quotient.lean`, after the tree
+section: (1) `glueInvariant_fails_of_unit_class_witness`, the primitive
+general lemma -- for ANY `Incidence`, ANY `BisimulationQuotientClassification`,
+if some `x ≈ inc.unit` satisfies `glue x j = some x` for some `j` with
+`classify j ≠ classify inc.unit`, then `¬ GlueInvariant`. Its proof needs
+only `inc.unit_left` (always available, no hypothesis) plus the one
+assumed fact about `x`; no reference to `SimplexId`/`PathId`/`TreeId` at
+all. (2) `glueRealization_fails_of_unit_class_witness`, the immediate
+`GlueRealization`-level strengthening via the pre-existing
+`glueRealization_iff_invariant`. (3)
+`glueInvariant_fails_of_absorbingUnitGlue`/`glueRealization_fails_of_
+absorbingUnitGlue`, specializing (1)/(2) to the literal "absorbing-unit"
+formula shape all three sources share -- once `inc.glue` is proved equal
+to that formula, the behavioral fact `glue x j = some x` becomes automatic
+from `x ≠ inc.unit` alone (`by rw [absorbing]; simp [xNeUnit]`), so no
+per-instance glue computation is needed at all. (4) Three corollaries,
+`simplexShape_glue_not_realizable_of_general`/`pathShape_glue_not_
+realizable_of_general`/`treeShape_glue_not_realizable_of_general`, each a
+one-line application of (3) at the STRONGEST (`GlueRealization`) level
+directly: the `absorbing` hypothesis discharges by `rfl` (the source
+`glue` fields literally ARE that formula, confirmed above, not merely
+implies it), `xNeUnit`/`jOutsideUnitClass` by `decide` (finite constructor
+disequalities), and `xBisimUnit` by the pre-existing `_iff_approxBisim`
+characterization applied to `rfl` (both `x` and `unit` map to the same
+shape definitionally). No new case-analysis on any of the three carrier
+types was needed anywhere in this cycle's proofs. `lake build
+IncidenceTheory.Quotient`: 24/24 jobs, clean on the very first attempt --
+notably smoother than cycle 52's two implementation snags, since this
+cycle's proofs are pure combinators over already-proved facts rather than
+new structural recursion. `#print axioms` on all seven new declarations
+(checked via a scratch file fed to `lake env lean`, then deleted): all
+reduce to this project's standing profile (`propext`; `Classical.choice`
+for the `GlueRealization`-level lemmas via `canonicalGlue`'s
+representative-choice; `Quot.sound` additionally for the three concrete
+corollaries via their classification's `Quotient`-based infrastructure) --
+no new axiom introduced anywhere. Full `./verify.sh` (`lake clean && lake
+build`, example binary run, repo-wide `axiom`/`sorry`/`sorryAx` grep):
+passes end to end.
+
+**Synthesis**: cycle 52's queued question resolves in the POSITIVE
+direction -- the three-cycle-repeated negative pattern (41/45, 51, 52) was
+never an accident of three separately-chosen constructions; it is one
+theorem about `Incidence`'s own laws (`unit_left`) colliding with one
+implementation choice (`glue`'s "absorb at a single literal representative"
+shape) that all three source instances happened to make. The general
+theorem is deliberately NOT stated in terms of `GradedIncidenceData` or
+well-founded grading at all -- tracing the actual proofs showed grading is
+load-bearing for a DIFFERENT question (whether the quotient's `Incidence`
+structure can be built in the first place, i.e. `well_founded` surviving
+collapse-within-grade, cycles 41/51/52's headline positive results) but is
+completely irrelevant to THIS question (whether the classifying map is a
+glue-homomorphism) -- the glue obstruction is a purely algebraic fact
+about `unit_left` plus one non-singleton class, orthogonal to grading.
+This is itself a useful negative-space finding: the task briefing's own
+tentative guess ("a classifying map that collapses a pair of witnesses
+non-injectively...") was close in spirit but the actual mechanism is
+sharper and needs no talk of "argument-independence" in the abstract --
+it is exactly "does some non-unit class-mate of `inc.unit` get treated
+differently from `inc.unit` itself by `glue`", which `unit_left` alone
+already guarantees will happen whenever `inc.unit`'s class is non-singleton
+AND `glue`'s non-unit branch is not itself constant across the whole
+class. The two-layer statement (primitive behavioral lemma, then a
+literal-formula specialization) is deliberately kept separate: the
+primitive lemma is the actually-general fact (would apply just as well to
+some future instance with a differently-shaped, non-formula glue that
+still happens to satisfy the one behavioral fact), while the specialization
+is what makes the three EXISTING instances' re-derivation a one-line
+`rfl`-driven corollary rather than requiring a fresh proof search each
+time. Confirms this cycle's result is a genuine generalization (not a
+restatement with hypotheses that amount to "assume it works"): the
+hypotheses are checked, not assumed, against all three sources' actual
+field definitions, and the corollaries reduce to `rfl`/`decide`/existing
+lemmas with zero new casework.
+
+**Next hypothesis (cycle 54, not yet attempted)**: with the "third generic
+constructor" (quotient) thread's glue-homomorphism question now closed
+both instance-by-instance (cycles 41/45, 51, 52) AND generally (this
+cycle), the natural next moves are: (a) run the general
+`glueInvariant_fails_of_unit_class_witness`/`_absorbingUnitGlue` criterion
+against `BoundaryInvariant` too -- does an analogous "one law
+(`type_consistent`/`sign_rules`/`multiplicities`) plus one non-singleton
+class" mechanism explain why `boundary` ALSO fails to be `≈`-invariant in
+the fully-general case (cycle 38's `cycleIncidence` finding), or is
+`BoundaryInvariant`'s failure mode structurally different from `GlueInvariant`'s
+(worth checking before assuming the same criterion transfers)? (b) cycle
+50's still-untouched option (i): does `incidenceProd`'s own `guards`
+(`prodGuards`) have an analogous blind spot to `incidenceSum`'s (cycles
+46-50), beyond top-level conjunction -- available as a change-of-pace item
+if (a) turns out to need its own scoping pass first. (c) separately, the
+general criterion this cycle proved is itself a candidate lemma for
+`GuardInvariant`/`GuardRealization` too (the `Guards`-level analogue built
+alongside `GlueInvariant`/`GlueRealization` in the same generic
+infrastructure) -- worth checking whether any EXISTING guard definition in
+this project actually has an "absorbing" shape before assuming the
+analogy transfers, rather than building speculative infrastructure for a
+pattern that may not occur.

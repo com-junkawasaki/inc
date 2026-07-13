@@ -2536,4 +2536,133 @@ theorem treeToShape_no_glue_homomorphism_exists :
           (treeIncidence.glue x y).map treeToShape :=
   treeShape_glue_not_realizable
 
+/- Research cycle 53 (see RESEARCH_LOG.md): cycle 52's own queued primary
+   next-hypothesis -- with THREE separately hand-derived negative results
+   now on record (`simplexClassification_glue_not_invariant`, cycle 41/45;
+   `pathClassification_glue_not_invariant`, cycle 51;
+   `treeClassification_glue_not_invariant`, cycle 52), is there ONE general
+   theorem subsuming the repeated instance-by-instance pattern, rather than
+   a fourth graded instance re-deriving the same shape of argument by hand a
+   fourth time?
+
+   Read all three counterexample proofs side by side (not assumed in
+   advance) plus `simplexIncidence`/`pathIncidence`/`treeIncidence`'s own
+   `glue`/`unit` fields in `Simplex.lean`/`PathComplex.lean`/`Tree.lean`.
+   The literal shared mechanism: EVERY `Incidence`'s `unit_left` law
+   (`glue unit i = some i`, an obligation of ALL instances, not
+   instance-specific) already pins down `mappedSourceGlue inc.unit j = some
+   (classify j)` for free, for any `j`. Each of the three counterexamples
+   then supplies exactly one further, genuinely instance-specific fact: some
+   OTHER element `x` in `inc.unit`'s own `≈`-class (`x ≠ unit`, `x ≈ unit` --
+   `v1 ≈ v0`, `node 1 ≈ node 0`, `leaf 1 ≈ leaf 0` respectively) satisfies
+   `glue x j = some x` for some `j` OUTSIDE that class (`classify j ≠
+   classify unit` -- `face`, `edge 0`, a `node`/`node` respectively) --
+   i.e. `x` is treated as "absorbing/self-fixed" by `glue`, in flat
+   contradiction with `unit`'s own law, even though `classify` cannot tell
+   `x` and `unit` apart. This holds for all three because
+   `simplexIncidence.glue`/`pathIncidence.glue`/`treeIncidence.glue` are
+   ALL LITERALLY the identical formula `fun i j => if i = unit then some j
+   else some i` (confirmed by reading `Simplex.lean:63`,
+   `PathComplex.lean:40`, `Tree.lean:51` directly, not by memory), differing
+   only in which concrete element is chosen as `unit`. The theorem below is
+   stated in two layers: a primitive lemma needing only the one behavioral
+   fact (`glue x j = some x`), then a corollary specializing to the literal
+   "absorbing-unit" formula shape all three sources share, from which all
+   three concrete instances are re-derived below as one-line applications
+   (`rfl` for the formula match, `decide` for the finite disequalities,
+   the existing `_iff_approxBisim` characterization for the bisimilarity
+   witness) -- no new case analysis on `SimplexId`/`PathId`/`TreeId` at all. -/
+theorem glueInvariant_fails_of_unit_class_witness
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    {x : I} (xBisimUnit : approxBisim inc x inc.unit)
+    {j : I} (jOutsideUnitClass :
+      classification.classify j ≠ classification.classify inc.unit)
+    (xAbsorbs : inc.glue x j = some x) :
+    ¬ classification.GlueInvariant := by
+  intro invariant
+  have equalMappedGlue := invariant xBisimUnit (approxBisim_refl inc j)
+  have hunit : classification.mappedSourceGlue inc.unit j =
+      some (classification.classify j) := by
+    simp [BisimulationQuotientClassification.mappedSourceGlue, inc.unit_left]
+  have hx : classification.mappedSourceGlue x j =
+      some (classification.classify x) := by
+    simp [BisimulationQuotientClassification.mappedSourceGlue, xAbsorbs]
+  rw [hx, hunit] at equalMappedGlue
+  have classifyEq : classification.classify j = classification.classify inc.unit :=
+    ((classification.respects xBisimUnit).symm.trans
+      (Option.some.inj equalMappedGlue)).symm
+  exact jOutsideUnitClass classifyEq
+
+theorem glueRealization_fails_of_unit_class_witness
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    {x : I} (xBisimUnit : approxBisim inc x inc.unit)
+    {j : I} (jOutsideUnitClass :
+      classification.classify j ≠ classification.classify inc.unit)
+    (xAbsorbs : inc.glue x j = some x) :
+    ¬ classification.GlueRealization :=
+  fun realization =>
+    glueInvariant_fails_of_unit_class_witness classification xBisimUnit
+      jOutsideUnitClass xAbsorbs
+      ((classification.glueRealization_iff_invariant).mp realization)
+
+/- The specialization matching cycle 52's own phrasing of the open question
+   ("any `GradedIncidenceData`-presentable quotient of an instance whose
+   `glue` has the `if i = unit then some j else some i`-style fixed-
+   representative shape"): once `inc.glue` is LITERALLY that formula, the
+   one behavioral fact `glueInvariant_fails_of_unit_class_witness` needs
+   (`glue x j = some x`) is automatic from `x ≠ inc.unit` alone -- no
+   per-instance glue computation required at all. -/
+theorem glueInvariant_fails_of_absorbingUnitGlue
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (absorbing : inc.glue = fun i j => if i = inc.unit then some j else some i)
+    {x : I} (xNeUnit : x ≠ inc.unit) (xBisimUnit : approxBisim inc x inc.unit)
+    {j : I} (jOutsideUnitClass :
+      classification.classify j ≠ classification.classify inc.unit) :
+    ¬ classification.GlueInvariant :=
+  glueInvariant_fails_of_unit_class_witness classification xBisimUnit jOutsideUnitClass
+    (by rw [absorbing]; simp [xNeUnit])
+
+theorem glueRealization_fails_of_absorbingUnitGlue
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (absorbing : inc.glue = fun i j => if i = inc.unit then some j else some i)
+    {x : I} (xNeUnit : x ≠ inc.unit) (xBisimUnit : approxBisim inc x inc.unit)
+    {j : I} (jOutsideUnitClass :
+      classification.classify j ≠ classification.classify inc.unit) :
+    ¬ classification.GlueRealization :=
+  fun realization =>
+    glueInvariant_fails_of_absorbingUnitGlue classification absorbing xNeUnit xBisimUnit
+      jOutsideUnitClass
+      ((classification.glueRealization_iff_invariant).mp realization)
+
+/- The three corollaries: cycles 41/45, 51, 52's separately hand-derived
+   negative results, all re-obtained here as one-line applications of the
+   SAME general theorem, at the strongest (`GlueRealization`, "no possible
+   glue whatsoever") level directly -- confirming the criterion really does
+   subsume all three, not merely resemble them. -/
+theorem simplexShape_glue_not_realizable_of_general :
+    ¬ simplexBisimulationQuotientClassification.GlueRealization :=
+  glueRealization_fails_of_absorbingUnitGlue simplexBisimulationQuotientClassification
+    (absorbing := rfl) (x := SimplexId.v1) (xNeUnit := by decide)
+    (xBisimUnit := (simplexToShape_iff_approxBisim SimplexId.v1 SimplexId.v0).mp rfl)
+    (j := SimplexId.face) (jOutsideUnitClass := by decide)
+
+theorem pathShape_glue_not_realizable_of_general :
+    ¬ pathBisimulationQuotientClassification.GlueRealization :=
+  glueRealization_fails_of_absorbingUnitGlue pathBisimulationQuotientClassification
+    (absorbing := rfl) (x := PathId.node 1) (xNeUnit := by decide)
+    (xBisimUnit := (pathToShape_iff_approxBisim (PathId.node 1) (PathId.node 0)).mp rfl)
+    (j := PathId.edge 0) (jOutsideUnitClass := by decide)
+
+theorem treeShape_glue_not_realizable_of_general :
+    ¬ treeBisimulationQuotientClassification.GlueRealization :=
+  glueRealization_fails_of_absorbingUnitGlue treeBisimulationQuotientClassification
+    (absorbing := rfl) (x := TreeId.leaf 1) (xNeUnit := by decide)
+    (xBisimUnit := (treeToShape_iff_approxBisim (TreeId.leaf 1) (TreeId.leaf 0)).mp rfl)
+    (j := TreeId.node (TreeId.leaf 0) (TreeId.leaf 1) (TreeId.leaf 2))
+    (jOutsideUnitClass := by decide)
+
 end IncidenceCore
