@@ -152,6 +152,22 @@ theorem realLT_trans {first second third : IncReal}
   subst third
   exact firstSecond.2 (realLE_antisymm firstSecond.1 secondThird.1)
 
+theorem realLT_of_le_of_lt {first second third : IncReal}
+    (firstSecond : realLE first second)
+    (secondThird : realLT second third) : realLT first third := by
+  refine ⟨realLE_trans firstSecond secondThird.1, ?_⟩
+  intro equal
+  subst third
+  exact secondThird.2 (realLE_antisymm secondThird.1 firstSecond)
+
+theorem realLT_of_lt_of_le {first second third : IncReal}
+    (firstSecond : realLT first second)
+    (secondThird : realLE second third) : realLT first third := by
+  refine ⟨realLE_trans firstSecond.1 secondThird, ?_⟩
+  intro equal
+  subst third
+  exact firstSecond.2 (realLE_antisymm firstSecond.1 secondThird)
+
 theorem IncReal.lt_of_lower_of_not_lower (cut : IncReal)
     {memberValue nonmemberValue : IncRational}
     (member : cut.lower memberValue)
@@ -771,6 +787,49 @@ theorem rationalToReal_lt_reflects {left right : IncRational}
   exact ⟨(rationalToReal_le_iff left right).mp strict,
     fun equal => distinct (congrArg rationalToReal equal)⟩
 
+theorem rationalToReal_lt_preserves {left right : IncRational}
+    (strict : rationalLT left right) :
+    realLT (rationalToReal left) (rationalToReal right) := by
+  exact ⟨(rationalToReal_le_iff left right).mpr strict.1,
+    fun equal => strict.2 (rationalToReal_injective equal)⟩
+
+theorem realLT_has_rational_separator {left right : IncReal}
+    (strict : realLT left right) :
+    ∃ rational : IncRational,
+      realLE left (rationalToReal rational) ∧
+      realLT (rationalToReal rational) right := by
+  have witnessExists : ∃ rational, right.lower rational ∧ ¬ left.lower rational := by
+    apply Classical.byContradiction
+    intro noWitness
+    have reverse : realLE right left := by
+      intro rational rightMember
+      by_cases leftMember : left.lower rational
+      · exact leftMember
+      · exact False.elim (noWitness ⟨rational, rightMember, leftMember⟩)
+    exact strict.2 (realLE_antisymm strict.1 reverse)
+  obtain ⟨separator, rightMember, leftNotMember⟩ := witnessExists
+  have leftBelow : realLE left (rationalToReal separator) := by
+    intro rational member
+    exact left.lt_of_lower_of_not_lower member leftNotMember
+  exact ⟨separator, leftBelow,
+    rationalToReal_lt_of_lower right rightMember⟩
+
+theorem real_exists_rational_below (value : IncReal) :
+    ∃ rational, realLT (rationalToReal rational) value := by
+  obtain ⟨member, memberProof⟩ := value.inhabited
+  exact ⟨member, rationalToReal_lt_of_lower value memberProof⟩
+
+theorem real_exists_rational_above (value : IncReal) :
+    ∃ rational, realLT value (rationalToReal rational) := by
+  obtain ⟨bound, boundNotMember⟩ := value.proper
+  let larger := rationalAdd bound (rationalOfInteger 1)
+  have boundLarger : rationalLT bound larger := rational_lt_add_one bound
+  have valueBelowBound : realLE value (rationalToReal bound) := by
+    intro rational member
+    exact value.lt_of_lower_of_not_lower member boundNotMember
+  exact ⟨larger, realLT_of_le_of_lt valueBelowBound
+    (rationalToReal_lt_preserves boundLarger)⟩
+
 def RealUpperBound (family : IncReal → Prop) (upper : IncReal) : Prop :=
   ∀ value, family value → realLE value upper
 
@@ -861,6 +920,24 @@ theorem NonnegativeReal.positive_upper (value : NonnegativeReal) :
   intro boundMember
   exact outsideNotMember (value.value.downward boundMember outsideBound)
 
+theorem real_archimedean_nat_upper (value : IncReal) :
+    ∃ count : Nat,
+      realLT value
+        (rationalToReal (rationalOfInteger (Int.ofNat count))) := by
+  obtain ⟨bound, boundNotMember⟩ := value.proper
+  obtain ⟨count, countBoundRaw⟩ := rational_archimedean_steps
+    (start := rationalOfInteger 0) (target := bound)
+    (step := rationalOfInteger 1) rational_zero_lt_one
+  have countBound :
+      rationalLT bound (rationalOfInteger (Int.ofNat count)) := by
+    simpa [rationalStepValue, rationalNatScale,
+      rationalAdd_zero_left, rationalMul_one_right] using countBoundRaw
+  have valueBelowBound : realLE value (rationalToReal bound) := by
+    intro rational member
+    exact value.lt_of_lower_of_not_lower member boundNotMember
+  exact ⟨count, realLT_of_le_of_lt valueBelowBound
+    (rationalToReal_lt_preserves countBound)⟩
+
 theorem NonnegativeReal.exists_positive_member (value : NonnegativeReal)
     (nonzero : value.value ≠ realZero) :
     ∃ rational, value.value.lower rational ∧
@@ -881,6 +958,73 @@ theorem NonnegativeReal.exists_positive_member (value : NonnegativeReal)
         exact positiveExists ⟨larger, largerMember, largerPositive⟩
       exact rationalLT_of_lt_of_le rationalLarger
         (rationalLE_of_not_lt largerNotPositive)))
+
+theorem nonnegativeReal_exists_nat_reciprocal_below
+    (value : NonnegativeReal) (nonzero : value.value ≠ realZero) :
+    ∃ count : Nat, ∃ inverse : IncRational,
+      rationalLT (rationalOfInteger 0)
+        (rationalOfInteger (Int.ofNat count)) ∧
+      rationalMul (rationalOfInteger (Int.ofNat count)) inverse =
+        rationalOfInteger 1 ∧
+      realLT (rationalToReal inverse) value.value := by
+  obtain ⟨inside, insideMember, insidePositive⟩ :=
+    value.exists_positive_member nonzero
+  obtain ⟨count, countLargeRaw⟩ := rational_archimedean_steps
+    (start := rationalOfInteger 0) (target := rationalOfInteger 1)
+    (step := inside) insidePositive
+  let countRational := rationalOfInteger (Int.ofNat count)
+  have countLarge :
+      rationalLT (rationalOfInteger 1)
+        (rationalMul countRational inside) := by
+    simpa [rationalStepValue, rationalNatScale,
+      rationalAdd_zero_left] using countLargeRaw
+  have countPositive :
+      rationalLT (rationalOfInteger 0) countRational := by
+    cases count with
+    | zero =>
+        dsimp [countRational] at countLarge ⊢
+        rw [rationalMul_zero_left] at countLarge
+        exact False.elim
+          ((rationalLT_asymm rational_zero_lt_one) countLarge)
+    | succ count =>
+        dsimp [countRational]
+        refine ⟨(rationalOfInteger_le_iff 0
+          (Int.ofNat (Nat.succ count))).mpr (Int.ofNat_zero_le _), ?_⟩
+        intro equal
+        have integerEqual := rationalOfInteger_injective equal
+        omega
+  have countNonzero : countRational ≠ rationalOfInteger 0 := fun equal => by
+    exact countPositive.2 equal.symm
+  obtain ⟨inverse, inverseLaw⟩ :=
+    rational_nonzero_has_mul_inverse countNonzero
+  have inversePositive : rationalLT (rationalOfInteger 0) inverse := by
+    apply rationalMul_positive_reflect_right countPositive
+    rw [inverseLaw]
+    exact rational_zero_lt_one
+  have inverseBelowInside : rationalLT inverse inside := by
+    have multiplied := rationalLT_mul_right_of_positive
+      countLarge inversePositive
+    have leftRestore :
+        rationalMul (rationalOfInteger 1) inverse = inverse :=
+      rationalMul_one_left inverse
+    have rightRestore :
+        rationalMul (rationalMul countRational inside) inverse = inside := by
+      calc
+        _ = rationalMul countRational (rationalMul inside inverse) :=
+          rationalMul_assoc countRational inside inverse
+        _ = rationalMul countRational (rationalMul inverse inside) := by
+          rw [rationalMul_comm inside inverse]
+        _ = rationalMul (rationalMul countRational inverse) inside :=
+          (rationalMul_assoc countRational inverse inside).symm
+        _ = rationalMul inside (rationalMul countRational inverse) := by
+          rw [rationalMul_comm]
+        _ = rationalMul inside (rationalOfInteger 1) := by rw [inverseLaw]
+        _ = inside := rationalMul_one_right inside
+    rw [leftRestore, rightRestore] at multiplied
+    exact multiplied
+  exact ⟨count, inverse, countPositive, inverseLaw,
+    realLT_trans (rationalToReal_lt_preserves inverseBelowInside)
+      (rationalToReal_lt_of_lower value.value insideMember)⟩
 
 theorem NonnegativeReal.exists_positive_member_above
     (value : NonnegativeReal) (nonzero : value.value ≠ realZero)
