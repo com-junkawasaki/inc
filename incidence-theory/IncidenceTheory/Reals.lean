@@ -4612,6 +4612,124 @@ theorem realHasDerivativeAt_mul
   rw [realDifferenceQuotient_mul]
   exact eventuallyClose increment incrementClose
 
+theorem realDifferenceQuotient_comp
+    (outer inner : IncReal → IncReal)
+    (outerDerivative innerDerivative point increment : IncReal) :
+    realDifferenceQuotient (fun value => outer (inner value)) point
+        (realMul outerDerivative innerDerivative) increment =
+      realMul
+        (realDifferenceQuotient outer (inner point) outerDerivative
+          (realAdd (inner (realAdd point increment))
+            (realNeg (inner point))))
+        (realDifferenceQuotient inner point innerDerivative increment) := by
+  classical
+  by_cases incrementZero : increment = realZero
+  · subst increment
+    simp only [realDifferenceQuotient, if_true, realAdd_zero_right]
+    rw [realAdd_neg, if_pos rfl]
+  · let innerIncrement := realAdd (inner (realAdd point increment))
+      (realNeg (inner point))
+    by_cases innerIncrementZero : innerIncrement = realZero
+    · have innerValuesEqual : inner (realAdd point increment) = inner point :=
+        real_eq_of_add_neg_eq_zero innerIncrementZero
+      simp only [realDifferenceQuotient, if_neg incrementZero]
+      rw [innerValuesEqual, realAdd_neg, realDiv, realMul_zero_left]
+      rw [realAdd_neg, if_pos rfl, realDiv, realMul_zero_left,
+        realMul_zero_right]
+    · have innerRestore :
+          realAdd (inner point) innerIncrement =
+            inner (realAdd point increment) := by
+        dsimp only [innerIncrement]
+        calc
+          realAdd (inner point)
+              (realAdd (inner (realAdd point increment))
+                (realNeg (inner point))) =
+            realAdd (inner (realAdd point increment))
+              (realAdd (inner point) (realNeg (inner point))) := by
+                rw [← realAdd_assoc,
+                  realAdd_comm (inner point)
+                    (inner (realAdd point increment)),
+                  realAdd_assoc]
+          _ = inner (realAdd point increment) := by
+                rw [realAdd_neg, realAdd_zero_right]
+      simp only [realDifferenceQuotient, if_neg incrementZero]
+      rw [show realAdd (inner (realAdd point increment))
+          (realNeg (inner point)) = innerIncrement from rfl,
+        if_neg innerIncrementZero, innerRestore]
+      rw [realDiv, realDiv, realDiv]
+      calc
+        realMul
+            (realAdd (outer (inner (realAdd point increment)))
+              (realNeg (outer (inner point))))
+            (realInvOrZero increment) =
+          realMul
+            (realMul
+              (realAdd (outer (inner (realAdd point increment)))
+                (realNeg (outer (inner point))))
+              (realInvOrZero innerIncrement))
+            (realMul innerIncrement (realInvOrZero increment)) := by
+              rw [realInvOrZero_of_ne innerIncrement innerIncrementZero]
+              rw [← realMul_assoc
+                  (realMul
+                    (realAdd (outer (inner (realAdd point increment)))
+                      (realNeg (outer (inner point))))
+                    (realInv innerIncrement innerIncrementZero))
+                  innerIncrement (realInvOrZero increment),
+                realMul_assoc
+                  (realAdd (outer (inner (realAdd point increment)))
+                    (realNeg (outer (inner point))))
+                  (realInv innerIncrement innerIncrementZero)
+                  innerIncrement,
+                realInv_mul, realMul_one_right]
+        _ = realMul
+            (realDiv
+              (realAdd (outer (inner (realAdd point increment)))
+                (realNeg (outer (inner point)))) innerIncrement)
+            (realDiv innerIncrement increment) := rfl
+
+theorem realHasDerivativeAt_comp
+    {outer inner : IncReal → IncReal}
+    {outerDerivative innerDerivative point : IncReal}
+    (innerDifferentiable :
+      RealHasDerivativeAt inner innerDerivative point)
+    (outerDifferentiable :
+      RealHasDerivativeAt outer outerDerivative (inner point)) :
+    RealHasDerivativeAt (fun value => outer (inner value))
+      (realMul outerDerivative innerDerivative) point := by
+  let innerIncrement : IncReal → IncReal := fun increment =>
+    realAdd (inner (realAdd point increment)) (realNeg (inner point))
+  have innerIncrementPointwise : ∀ increment,
+      innerIncrement increment =
+        realMul increment
+          (realDifferenceQuotient inner point innerDerivative increment) := by
+    intro increment
+    exact (realMul_differenceQuotient inner point innerDerivative increment).symm
+  have innerIncrementLimit :
+      RealFunctionLimitAt innerIncrement realZero realZero := by
+    have productLimit := realFunctionLimitAt_mul
+      (realFunctionLimitAt_id realZero) innerDifferentiable
+    intro epsilon epsilonPositive
+    obtain ⟨delta, deltaPositive, eventuallyClose⟩ :=
+      productLimit epsilon epsilonPositive
+    refine ⟨delta, deltaPositive, ?_⟩
+    intro increment incrementClose
+    rw [innerIncrementPointwise]
+    simpa [realMul_zero_left] using eventuallyClose increment incrementClose
+  have outerQuotientLimit : RealFunctionLimitAt
+      (fun increment => realDifferenceQuotient outer (inner point)
+        outerDerivative (innerIncrement increment))
+      realZero outerDerivative :=
+    realFunctionLimitAt_comp innerIncrementLimit outerDifferentiable
+  have productLimit :=
+    realFunctionLimitAt_mul outerQuotientLimit innerDifferentiable
+  intro epsilon epsilonPositive
+  obtain ⟨delta, deltaPositive, eventuallyClose⟩ :=
+    productLimit epsilon epsilonPositive
+  refine ⟨delta, deltaPositive, ?_⟩
+  intro increment incrementClose
+  rw [realDifferenceQuotient_comp]
+  exact eventuallyClose increment incrementClose
+
 noncomputable def realPow (base : IncReal) : Nat → IncReal
   | 0 => realOne
   | Nat.succ exponent => realMul (realPow base exponent) base
