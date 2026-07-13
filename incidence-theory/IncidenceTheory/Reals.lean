@@ -7341,4 +7341,93 @@ theorem realPolynomial_continuousOn_closedInterval
   realPolynomial_continuousOn coefficients
     (RealClosedInterval lower upper)
 
+def RealSubsequence (indices : Nat → Nat) : Prop :=
+  ∀ {left right}, left < right → indices left < indices right
+
+theorem realSubsequence_index_large
+    {indices : Nat → Nat} (subsequence : RealSubsequence indices) :
+    ∀ index, index ≤ indices index := by
+  intro index
+  induction index with
+  | zero => exact Nat.zero_le _
+  | succ index induction =>
+      have step := subsequence (Nat.lt_succ_self index)
+      exact Nat.succ_le_of_lt (Nat.lt_of_le_of_lt induction step)
+
+theorem realSubsequence_monotone
+    {indices : Nat → Nat} (subsequence : RealSubsequence indices)
+    {left right : Nat} (ordered : left ≤ right) :
+    indices left ≤ indices right := by
+  rcases Nat.lt_or_eq_of_le ordered with strict | equal
+  · exact Nat.le_of_lt (subsequence strict)
+  · subst right
+    exact Nat.le_refl _
+
+theorem realSequenceConverges_subsequence
+    {sequence : RealSequence} {limit : IncReal}
+    (converges : RealSequenceConverges sequence limit)
+    {indices : Nat → Nat} (subsequence : RealSubsequence indices) :
+    RealSequenceConverges (fun index => sequence (indices index)) limit := by
+  intro epsilon epsilonPositive
+  obtain ⟨threshold, eventuallyClose⟩ := converges epsilon epsilonPositive
+  refine ⟨threshold, ?_⟩
+  intro index indexLarge
+  apply eventuallyClose
+  exact Nat.le_trans (realSubsequence_index_large subsequence threshold)
+    (realSubsequence_monotone subsequence indexLarge)
+
+theorem realSequenceCauchy_subsequence
+    {sequence : RealSequence} (cauchy : RealSequenceCauchy sequence)
+    {indices : Nat → Nat} (subsequence : RealSubsequence indices) :
+    RealSequenceCauchy (fun index => sequence (indices index)) := by
+  intro epsilon epsilonPositive
+  obtain ⟨threshold, eventuallyClose⟩ := cauchy epsilon epsilonPositive
+  refine ⟨threshold, ?_⟩
+  intro left right leftLarge rightLarge
+  apply eventuallyClose
+  · exact Nat.le_trans (realSubsequence_index_large subsequence threshold)
+      (realSubsequence_monotone subsequence leftLarge)
+  · exact Nat.le_trans (realSubsequence_index_large subsequence threshold)
+      (realSubsequence_monotone subsequence rightLarge)
+
+theorem realSubsequence_id : RealSubsequence (fun index => index) := by
+  intro left right strict
+  exact strict
+
+theorem realSubsequence_comp
+    {first second : Nat → Nat}
+    (firstSubsequence : RealSubsequence first)
+    (secondSubsequence : RealSubsequence second) :
+    RealSubsequence (fun index => first (second index)) := by
+  intro left right strict
+  exact firstSubsequence (secondSubsequence strict)
+
+theorem realSequenceConverges_hasConvergentSubsequence
+    {sequence : RealSequence} {limit : IncReal}
+    (converges : RealSequenceConverges sequence limit) :
+    ∃ indices : Nat → Nat, RealSubsequence indices ∧
+      ∃ subsequentialLimit, RealSequenceConverges
+        (fun index => sequence (indices index)) subsequentialLimit := by
+  exact ⟨fun index => index, realSubsequence_id, limit, converges⟩
+
+theorem realSequenceCauchy_subsequence_converges
+    {sequence : RealSequence} (cauchy : RealSequenceCauchy sequence)
+    {indices : Nat → Nat} (subsequence : RealSubsequence indices) :
+    ∃ limit, RealSequenceConverges
+      (fun index => sequence (indices index)) limit :=
+  real_metric_complete (fun index => sequence (indices index))
+    (realSequenceCauchy_subsequence cauchy subsequence)
+
+def RealHasConvergentSubsequence (sequence : RealSequence) : Prop :=
+  ∃ indices : Nat → Nat, RealSubsequence indices ∧
+    ∃ limit, RealSequenceConverges
+      (fun index => sequence (indices index)) limit
+
+def RealSequentiallyCompact (domain : IncReal → Prop) : Prop :=
+  ∀ sequence : RealSequence,
+    (∀ index, domain (sequence index)) →
+    ∃ indices : Nat → Nat, RealSubsequence indices ∧
+      ∃ limit, domain limit ∧
+        RealSequenceConverges (fun index => sequence (indices index)) limit
+
 end IncidenceCore
