@@ -5329,6 +5329,88 @@ theorem realHasDerivativeAt_pow_closed
   rw [← realPowFormalDerivative_closed]
   exact realHasDerivativeAt_pow exponent point
 
+noncomputable def realPolynomialEval : List IncReal → IncReal → IncReal
+  | [], _ => realZero
+  | coefficient :: coefficients, value =>
+      realAdd coefficient
+        (realMul value (realPolynomialEval coefficients value))
+
+noncomputable def realPolynomialDerivativeEval :
+    List IncReal → IncReal → IncReal
+  | [], _ => realZero
+  | _ :: coefficients, value =>
+      realAdd (realPolynomialEval coefficients value)
+        (realMul value (realPolynomialDerivativeEval coefficients value))
+
+@[simp] theorem realPolynomialEval_nil (value : IncReal) :
+    realPolynomialEval [] value = realZero := rfl
+
+@[simp] theorem realPolynomialEval_cons
+    (coefficient : IncReal) (coefficients : List IncReal) (value : IncReal) :
+    realPolynomialEval (coefficient :: coefficients) value =
+      realAdd coefficient
+        (realMul value (realPolynomialEval coefficients value)) := rfl
+
+@[simp] theorem realPolynomialDerivativeEval_nil (value : IncReal) :
+    realPolynomialDerivativeEval [] value = realZero := rfl
+
+@[simp] theorem realPolynomialDerivativeEval_cons
+    (coefficient : IncReal) (coefficients : List IncReal) (value : IncReal) :
+    realPolynomialDerivativeEval (coefficient :: coefficients) value =
+      realAdd (realPolynomialEval coefficients value)
+        (realMul value (realPolynomialDerivativeEval coefficients value)) := rfl
+
+theorem realHasDerivativeAt_polynomial
+    (coefficients : List IncReal) (point : IncReal) :
+    RealHasDerivativeAt (realPolynomialEval coefficients)
+      (realPolynomialDerivativeEval coefficients point) point := by
+  induction coefficients with
+  | nil =>
+      simpa only [realPolynomialEval_nil,
+        realPolynomialDerivativeEval_nil] using
+        realHasDerivativeAt_const realZero point
+  | cons coefficient coefficients induction =>
+      have productDerivative := realHasDerivativeAt_mul
+        (realHasDerivativeAt_id point) induction
+      have sumDerivative := realHasDerivativeAt_add
+        (realHasDerivativeAt_const coefficient point) productDerivative
+      simpa only [realPolynomialEval_cons,
+        realPolynomialDerivativeEval_cons, realMul_one_left,
+        realMul_zero_left, realAdd_zero_left] using sumDerivative
+
+theorem realPolynomialEval_singleton
+    (coefficient value : IncReal) :
+    realPolynomialEval [coefficient] value = coefficient := by
+  rw [realPolynomialEval_cons, realPolynomialEval_nil,
+    realMul_zero_right, realAdd_zero_right]
+
+theorem realPolynomialDerivativeEval_singleton
+    (coefficient value : IncReal) :
+    realPolynomialDerivativeEval [coefficient] value = realZero := by
+  rw [realPolynomialDerivativeEval_cons, realPolynomialEval_nil,
+    realPolynomialDerivativeEval_nil, realMul_zero_right,
+    realAdd_zero_left]
+
+theorem realPolynomialEval_pair
+    (constant linear value : IncReal) :
+    realPolynomialEval [constant, linear] value =
+      realAdd constant (realMul value linear) := by
+  rw [realPolynomialEval_cons, realPolynomialEval_cons,
+    realPolynomialEval_nil, realMul_zero_right, realAdd_zero_right]
+
+theorem realPolynomialDerivativeEval_pair
+    (constant linear value : IncReal) :
+    realPolynomialDerivativeEval [constant, linear] value = linear := by
+  rw [realPolynomialDerivativeEval_cons, realPolynomialEval_singleton,
+    realPolynomialDerivativeEval_singleton, realMul_zero_right,
+    realAdd_zero_right]
+
+theorem realHasDerivativeAt_polynomial_pair
+    (constant linear point : IncReal) :
+    RealHasDerivativeAt (realPolynomialEval [constant, linear]) linear point := by
+  simpa only [realPolynomialDerivativeEval_pair] using
+    realHasDerivativeAt_polynomial [constant, linear] point
+
 theorem nonnegativeRealNatScale_rationalToReal
     (count : Nat) {value : IncRational}
     (nonnegative : rationalLE (rationalOfInteger 0) value) :

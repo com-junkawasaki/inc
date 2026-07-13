@@ -1694,6 +1694,14 @@ Leibniz 則は閉じ、次の解析課題は逆数・商則と連鎖律である
 `n·xⁿ⁻¹` に一致することを検査した。従って構成実数上で
 `(xⁿ)'=n·xⁿ⁻¹` が `n=0` を含め sorry-free に成立する。次の応用層は有限係数列を
 用いた多項式評価・形式微分と、この冪則・和則・定数倍則との接続である。
+有限係数列による多項式 calculus も構成した。係数を定数項から並べた `List IncReal` とし、
+Horner 形式 `P(a::as,x)=a+x·P(as,x)` で評価関数を定義した。同じ再帰構造から
+`D(a::as,x)=P(as,x)+x·D(as,x)` を形式導関数評価として定義し、空多項式の定数則と、
+各 cons 段階の恒等関数・積則・和則を合成する帰納法によって、任意長の係数列について
+`RealHasDerivativeAt (realPolynomialEval coefficients)
+  (realPolynomialDerivativeEval coefficients x) x` を sorry-free に証明した。定数多項式と
+一次多項式について評価・導関数の具体的簡約定理も検査した。従って冪単項式だけでなく、
+有限多項式全体が構成実数上の checked differential calculus に入った。
 
 cycle 41時点の「土台固め」評価からは大きく進み、現在はchecked incidence core、
 bisimulation/quotient理論、多数の具体モデル、命題内部論理のsoundness・完全性、
