@@ -1189,6 +1189,87 @@ theorem rational_archimedean_steps {start target step : IncRational}
             simp [coefficient, Int.add_mul]
             ac_rfl
 
+theorem rationalNatSucc_pos (count : Nat) :
+    rationalLT (rationalOfInteger 0) (rationalOfInteger (Int.ofNat (count + 1))) := by
+  refine ⟨(rationalOfInteger_le_iff 0 (Int.ofNat (count + 1))).mpr
+    (Int.ofNat_zero_le _), ?_⟩
+  intro equal
+  have integerEqual := rationalOfInteger_injective equal
+  have naturalEqual : count + 1 = 0 := Int.ofNat_eq_zero.mp integerEqual.symm
+  omega
+
+theorem rationalNatSucc_ne_zero (count : Nat) :
+    rationalOfInteger (Int.ofNat (count + 1)) ≠ rationalOfInteger 0 :=
+  fun equal => (rationalNatSucc_pos count).2 equal.symm
+
+/-- A canonical positive rational reciprocal of `count + 1`, obtained from the
+field inverse existence proof. Used to index an explicit null sequence of
+rational radii `1 / (n + 1)` for supremum-approximating real sequences
+(cycle 42's extreme value theorem development). -/
+noncomputable def rationalNatSuccInv (count : Nat) : IncRational :=
+  Classical.choose (rational_nonzero_has_mul_inverse
+    (rationalNatSucc_ne_zero count))
+
+theorem rationalNatSuccInv_spec (count : Nat) :
+    rationalMul (rationalOfInteger (Int.ofNat (count + 1)))
+      (rationalNatSuccInv count) = rationalOfInteger 1 :=
+  Classical.choose_spec (rational_nonzero_has_mul_inverse
+    (rationalNatSucc_ne_zero count))
+
+theorem rationalNatSuccInv_pos (count : Nat) :
+    rationalLT (rationalOfInteger 0) (rationalNatSuccInv count) := by
+  apply rationalMul_positive_reflect_right (rationalNatSucc_pos count)
+  rw [rationalNatSuccInv_spec count]
+  exact rational_zero_lt_one
+
+/-- The reciprocals `1 / (n + 1)` are eventually below any positive rational
+target -- the rational-arithmetic core fact needed to show the corresponding
+real sequence of approximants converges. -/
+theorem rationalNatSuccInv_eventually_le
+    {epsilon : IncRational}
+    (epsilonPositive : rationalLT (rationalOfInteger 0) epsilon) :
+    ∃ threshold : Nat, ∀ n, threshold ≤ n →
+      rationalLE (rationalNatSuccInv n) epsilon := by
+  obtain ⟨count, countLarge⟩ := rational_archimedean_steps
+    (start := rationalOfInteger 0) (target := rationalOfInteger 1)
+    (step := epsilon) epsilonPositive
+  have countLarge' : rationalLT (rationalOfInteger 1)
+      (rationalMul (rationalOfInteger (Int.ofNat count)) epsilon) := by
+    simpa [rationalNatScale, rationalAdd_zero_left] using countLarge
+  refine ⟨count, ?_⟩
+  intro n thresholdLe
+  rcases rationalLT_trichotomy (rationalNatSuccInv n) epsilon with
+    smaller | equal | greater
+  · exact smaller.1
+  · exact equal ▸ rationalLE_refl _
+  · exfalso
+    have succPositive := rationalNatSucc_pos n
+    have scaledGreater :
+        rationalLT
+          (rationalMul (rationalOfInteger (Int.ofNat (n + 1))) epsilon)
+          (rationalMul (rationalOfInteger (Int.ofNat (n + 1)))
+            (rationalNatSuccInv n)) :=
+      rationalLT_mul_left_of_positive greater succPositive
+    rw [rationalNatSuccInv_spec n] at scaledGreater
+    have countLeSucc : count ≤ n + 1 := by omega
+    have countLtSucc : rationalLT (rationalOfInteger (Int.ofNat count))
+        (rationalOfInteger (Int.ofNat (n + 1))) := by
+      refine ⟨(rationalOfInteger_le_iff _ _).mpr
+        (Int.ofNat_le.mpr countLeSucc), ?_⟩
+      intro equal
+      have integerEqual := rationalOfInteger_injective equal
+      have naturalEqual : count = n + 1 := Int.ofNat_inj.mp integerEqual
+      omega
+    have scaledLarger :
+        rationalLT
+          (rationalMul (rationalOfInteger (Int.ofNat count)) epsilon)
+          (rationalMul (rationalOfInteger (Int.ofNat (n + 1))) epsilon) :=
+      rationalLT_mul_right_of_positive countLtSucc epsilonPositive
+    have oneLtSucc : rationalLT (rationalOfInteger 1)
+        (rationalMul (rationalOfInteger (Int.ofNat (n + 1))) epsilon) :=
+      rationalLT_trans countLarge' scaledLarger
+    exact rationalLT_irrefl _ (rationalLT_trans scaledGreater oneLtSucc)
+
 noncomputable instance : DecidableEq IncRational :=
   Classical.typeDecidableEq IncRational
 

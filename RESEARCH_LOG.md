@@ -3012,3 +3012,136 @@ anything) under which `simplexToShape` WOULD be a genuine
 reason cycle 38 found `glue` doesn't respect `≈` in general, meaning no
 choice of quotient-carrier `glue` could ever be induced this way?
 Worth a short, focused check before concluding either way.
+
+## Cycle 42
+
+**Hypothesis**: pick between cycle 41's two queued threads by tractability
+rather than size. Thread (a) (internal-logic distributivity between
+`incidenceProd`/`incidenceSum`) was flagged as the largest, most open item,
+explicitly needing its own scope-down step first. Thread (b) (a less naive
+`shapeIncidence.glue` making `simplexToShape` a genuine glue-homomorphism)
+was flagged as a short, focused check. Orthogonal to both, the ADR's
+"完成へ向けた9項目ロードマップ" names a THIRD, independently-tracked item —
+item 3, the extreme value theorem — as "進行中" with an explicit remaining
+scope already isolated by the ADR's 2026-07-13 追補: generalize that a
+nonempty sequentially compact real subset is bounded above/below and
+achieves its `sup`/`inf`, then apply this to continuous images of closed
+intervals. Since cycles prior to this one had already built closed-interval
+sequential compactness, its preservation under continuous images
+(`realSequentiallyCompact_continuous_image`), and Dedekind `realSup`/
+`realInf` with their extremal-bound characterizations, this three-part gap
+(bounded, sup/inf achieved, applied to continuous images) looked like the
+most concretely pre-scoped target of the three, not a from-scratch item —
+worth attempting ahead of (a)/(b) precisely because its remaining shape was
+already spelled out rather than needing a scoping pass of its own.
+
+**Method**: read `RealSequentiallyCompact`, `RealClosedInterval`, `realSup`/
+`realInf` and their extremal lemmas, `RealSequence`/`RealSubsequence`, and
+the existing Cauchy-boundedness lemmas (`realSequenceCauchy_bounded_above`/
+`_below`) in `Reals.lean`, plus the already-proven Archimedean embedding
+`real_archimedean_nat_upper`. Worked in four steps. (1) *Boundedness*: proved
+a nonempty sequentially compact set can't be unbounded above, by
+contradiction — an unbounded set lets a witness sequence be built (via
+`Classical.choice`) exceeding the natural-number embedding at every index;
+compactness extracts a convergent (hence, via `realSequenceConverges_cauchy`
++ `realSequenceCauchy_bounded_above`, Cauchy-bounded) subsequence, but the
+subsequence's own indices grow past any bound by
+`realSubsequence_index_large`, contradiction via `real_archimedean_nat_upper`
+applied to that bound. (2) *Sup achieved*: built a genuine null sequence of
+rational radii `1/(n+1)` from scratch in `Rationals.lean` (field-inverse
+existence was already available, but no reciprocal-of-`n+1` sequence nor its
+eventual-smallness fact existed yet), used it to construct an explicit
+sequence of set members approximating the supremum to within `1/(n+1)`
+(`realSupApproxSequence`, via a new general lemma `realSup_approx`
+generalizing the approximation argument already inlined in cycle-prior
+`realSequenceNondecreasing_converges` from a sequence-tail family to an
+arbitrary bounded family), fed it to compactness, and used the ALREADY
+EXISTING `realSequence_limit_unique` to identify compactness's extracted
+limit with the supremum (since the approximating sequence already converges
+to the supremum, any subsequence of it does too, and a sequence has at most
+one limit). (3) *Below/inf*: derived boundedness-below and inf-achieved from
+(1)/(2) by transport through negation, first checking negation is
+`RealContinuousOn` everywhere (trivial from the ALREADY EXISTING
+`realFunctionLimitAt_neg` applied to `realFunctionLimitAt_id`, no new
+ε–δ argument needed) so `realSequentiallyCompact_continuous_image` transports
+compactness of a set to compactness of its negation. (4) *Applied to closed
+intervals*: composed all of this with the ALREADY EXISTING
+`realClosedInterval_sequentiallyCompact` and
+`realSequentiallyCompact_continuous_image` to get that
+`RealImage function (RealClosedInterval lower upper)` is itself nonempty,
+compact, bounded, and sup/inf-achieving, then unpacked that into an explicit
+maximizer/minimizer in the domain.
+
+**Result**: **confirmed, fully, sorry-free.** Six new theorems in
+`Reals.lean`: `realSequentiallyCompact_bounded_above`,
+`realSequentiallyCompact_bounded_below`, `realSequentiallyCompact_sup_mem`,
+`realSequentiallyCompact_inf_mem`, and the two headline results,
+`realContinuousOn_closedInterval_attains_max` /
+`realContinuousOn_closedInterval_attains_min` — genuine extreme value
+theorems: a function continuous on a closed interval `[lower, upper]`
+(`lower ≤ upper`) attains a maximizer and a minimizer point IN the interval.
+Supporting additions: `realSup_approx` (general supremum-approximation, not
+tied to a sequence tail), `realSupApproxSequence` and its three corollaries,
+`realContinuousAt_neg`/`realContinuousOn_neg` (immediate from
+already-checked pieces), `realSequentiallyCompact_negFamily`. In
+`Rationals.lean`: `rationalNatSucc_pos`/`_ne_zero`, `rationalNatSuccInv` (a
+`Classical.choice`-selected field inverse of `n+1`) with its positivity and
+its eventual-smallness fact `rationalNatSuccInv_eventually_le`, proved from
+`rational_archimedean_steps` plus the ALREADY EXISTING strict-multiplication
+monotonicity lemmas (`rationalLT_mul_left_of_positive`/
+`_right_of_positive`) — no new rational-order infrastructure had to be
+invented beyond the reciprocal itself. One implementation snag worth
+recording: `omega` repeatedly failed ("No usable constraints found", or
+silently treating `Int.ofNat x` and the `↑x` cast notation as different
+atoms) on goals mixing bare `Int.ofNat` applications, even though an
+apparently-identical existing proof elsewhere in `Rationals.lean` uses the
+same-looking pattern successfully — isolating the exact working precedent in
+a scratch file showed it does NOT actually reproduce standalone either,
+meaning omega's success there depends on incidental surrounding context, not
+the pattern itself. Replaced every such step with the explicit core lemmas
+`Int.ofNat_eq_zero` / `Int.ofNat_le` / `Int.ofNat_inj`, which is more robust
+and arguably clearer than relying on omega's cast-recognition heuristics
+here. `lake build`: all 21 modules, including the `incidence-theory` example
+binary. `#print axioms` on all six new theorems: `propext`, `Classical.choice`,
+`Quot.sound` only — the same profile the rest of the project already
+carries, no new axiom. Repo-wide unproved-declaration grep (`verify.sh`):
+none.
+
+**Synthesis**: this closes the ADR roadmap's item 3 (極値定理) outright,
+not just its "residual" framing — the ADR's own 2026-07-13 追補 had already
+narrowed the gap to exactly this: generalized boundedness/achievement for
+compact sets, applied to continuous images of intervals. The route taken
+underscores a pattern already visible in cycle 41's synthesis: a
+disproportionate share of the actual proof weight was ALREADY sitting in
+the codebase (`realClosedInterval_sequentiallyCompact`,
+`realSequentiallyCompact_continuous_image`, `realSup`/`realInf` and their
+extremal characterizations, `realSequence_limit_unique`,
+`realFunctionLimitAt_neg`, the full rational order/field API) — the new
+content this cycle contributes is comparatively small and structural: one
+genuinely new mathematical ingredient (a null sequence of rationals and the
+supremum-approximation lemma built from it, needed because no prior cycle
+had needed to approximate an ARBITRARY bounded set's supremum by a
+sequence, only a specific sequence's own tail supremum) plus the bookkeeping
+to route it through compactness via limit uniqueness, plus a symmetry
+argument (negation) to avoid writing the infimum case from scratch. The
+omega snag is a useful methodological note for future cycles working with
+`Int.ofNat`: don't assume a passing pattern generalizes without testing it
+in isolation, since omega's atom-matching for `Nat`→`Int` casts is more
+brittle than it looks from a single working example.
+
+**Next hypothesis (cycle 43, not yet attempted)**: three live threads.
+(a) Roadmap item 4 (Rolle's theorem / mean value theorem) is now directly
+reachable: the ADR names the route as extreme value theorem → derivative
+vanishes at an interior extremum → auxiliary-function construction for the
+general MVT, and this cycle just supplied the extreme value theorem itself,
+plus the codebase already has the full first-order differential calculus
+(sum/product/quotient/chain rules, polynomial derivatives) that an
+auxiliary-function argument would need. This looks like the most
+directly-continuable thread of the three. (b) Cycle 41's option (c) (= cycle
+37's option (b)): the internal-logic distributivity direction relating
+`incidenceProd`/`incidenceSum`, still unattempted, still flagged as needing
+its own scope-down step. (c) Cycle 41's option (b): whether a less naive
+`shapeIncidence.glue` could make `simplexToShape` a genuine
+glue-homomorphism, or whether that is structurally impossible for the same
+reason cycle 38 found `glue` doesn't respect `≈` in general — still
+unattempted, still flagged as a short, focused check.

@@ -1830,3 +1830,37 @@ bisimulation/quotient理論、多数の具体モデル、命題内部論理のso
 - `incidence-theory/IncidenceTheory.lean`（コア `Incidence` 構造・bisimulation機構）
 - `incidence-theory/IncidenceTheory/Product.lean`, `Sum.lean`, `Quotient.lean`
   （汎用コンストラクタ・quotient構成の三部作、cycle 31–41）
+
+## 2026-07-13 追補（cycle 42: 極値定理）
+
+本追補は cycle 42（`RESEARCH_LOG.md`）の結果を反映し、上記「完成へ向けた9項目
+ロードマップ」項目3の状態のみを更新する（他の項目・本文・冒頭の追補は変更しない）。
+
+`incidence-theory/IncidenceTheory/Reals.lean` に、非空点列コンパクト実数集合が
+上下有界であること（`realSequentiallyCompact_bounded_above` /
+`realSequentiallyCompact_bounded_below`）、その `sup` / `inf` を集合自身が含む
+こと（`realSequentiallyCompact_sup_mem` / `realSequentiallyCompact_inf_mem`）を
+sorry-free に証明し、これを既存の閉区間点列コンパクト性・連続像保存
+（cycle 41 以前に完成済み）と接続して、閉区間上で連続な関数が最大値・最小値を
+達成する古典的な極値定理そのもの（`realContinuousOn_closedInterval_attains_max` /
+`realContinuousOn_closedInterval_attains_min`）を得た。証明は非有界性からの背理法
+（Archimedean 埋め込みと部分列の添字増加性の矛盾）、`sup` 近似列の構成と極限一意性
+による収束先の同定、および符号反転を介した下側・下限側への転用、の三段で構成される。
+`sup` 近似列の構成には `1/(n+1)` という新しい有理数の零列（`Rationals.lean` に
+`rationalNatSuccInv` とその eventual-smallness 補題として追加）が必要だった —
+この零列は既存の archimedean steps・厳密乗法単調性補題から証明でき、新しい有理数
+順序公理は追加していない。`lake build` 全体・`#print axioms`（`propext`・
+`Classical.choice`・`Quot.sound` のみ、既存プロファイルと同一）・repo 全体の
+未証明宣言 grep をすべて確認済み。
+
+これにより、9項目ロードマップの項目3「極値定理」は **進行中 → 完了** に更新する:
+残件だった「非空点列コンパクト実数集合の上下有界性と sup/inf の達成の一般化、
+および閉区間の連続像への適用」はすべて sorry-free に検査された。項目4
+「Rolle・平均値定理」は、極値定理・内点極値での導関数零・補助関数構成という
+既存の想定ルートのうち最初の要素が揃ったことになる（導関数の四則演算・多項式
+微分は cycle 41 以前から checked core にある）。
+
+現時点の実務的評価のうち「構成実数と初等解析」を約80%から約85%に更新する
+（極値定理が閉じ、Rolle・平均値定理への前提が揃ったため）。他の評価値
+（incidence/resonance 約90%、内部論理約90%、翻訳・保存層約85%、依存型層約75%、
+既存数学全体の再構成約40%、最終目標約55–60%）は変更しない。

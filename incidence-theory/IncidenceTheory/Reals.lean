@@ -7892,4 +7892,293 @@ theorem realSequentiallyCompact_continuous_image
   rw [← sourceMaps (indices order)]
   exact eventuallyClose order orderLarge
 
+/-! ### Extreme value theorem (cycle 42)
+
+The remaining roadmap step towards the extreme value theorem: any nonempty
+sequentially compact set of reals is bounded above and below, and achieves
+its supremum and infimum; specialised to a continuous image of a closed
+interval this gives that a continuous function on a closed interval attains
+a maximum and a minimum. -/
+
+theorem realSup_approx (family : IncReal → Prop)
+    (nonempty : ∃ value, family value)
+    (bounded : ∃ upper, RealUpperBound family upper)
+    {epsilon : IncRational} (epsilonPositive : rationalLT (rationalOfInteger 0) epsilon) :
+    ∃ value, family value ∧
+      realLE (realDist value (realSup family nonempty bounded)).value
+        (rationalToReal epsilon) := by
+  let supremum := realSup family nonempty bounded
+  obtain ⟨inside, outside, insideMember, outsideNotMember, outsideStep⟩ :=
+    supremum.boundary_approximation epsilonPositive
+  obtain ⟨value, valueMember, insideBelowValue⟩ := insideMember
+  refine ⟨value, valueMember, ?_⟩
+  have valueBelowSup : realLE value supremum :=
+    realSup_is_upper_bound family nonempty bounded value valueMember
+  have supBelowOutside : realLE supremum (rationalToReal outside) := by
+    intro rational member
+    exact supremum.lt_of_lower_of_not_lower member outsideNotMember
+  have insideBelowValue' : realLE (rationalToReal inside) value :=
+    (rationalToReal_lt_of_lower value insideBelowValue).1
+  have outsideBelowValuePlus : realLE (rationalToReal outside)
+      (realAdd value (rationalToReal epsilon)) := by
+    rw [outsideStep, ← realAdd_rationalToReal]
+    exact realAdd_monotone insideBelowValue' (realLE_refl _)
+  have supBelowValuePlus :
+      realLE supremum (realAdd value (rationalToReal epsilon)) :=
+    realLE_trans supBelowOutside outsideBelowValuePlus
+  exact realDist_le_of_le_of_le_add
+    ⟨rationalToReal epsilon, (rationalToReal_le_iff _ _).mpr epsilonPositive.1⟩
+    valueBelowSup supBelowValuePlus
+
+/-- An explicit sequence of `family` members approximating the supremum to
+within `1 / (n + 1)`, built from `realSup_approx` indexed by the rational
+null sequence `rationalNatSuccInv`. -/
+noncomputable def realSupApproxSequence (family : IncReal → Prop)
+    (nonempty : ∃ value, family value)
+    (bounded : ∃ upper, RealUpperBound family upper) : RealSequence :=
+  fun n => Classical.choose
+    (realSup_approx family nonempty bounded (rationalNatSuccInv_pos n))
+
+theorem realSupApproxSequence_mem (family : IncReal → Prop)
+    (nonempty : ∃ value, family value)
+    (bounded : ∃ upper, RealUpperBound family upper) (n : Nat) :
+    family (realSupApproxSequence family nonempty bounded n) :=
+  (Classical.choose_spec
+    (realSup_approx family nonempty bounded (rationalNatSuccInv_pos n))).1
+
+theorem realSupApproxSequence_dist (family : IncReal → Prop)
+    (nonempty : ∃ value, family value)
+    (bounded : ∃ upper, RealUpperBound family upper) (n : Nat) :
+    realLE (realDist (realSupApproxSequence family nonempty bounded n)
+        (realSup family nonempty bounded)).value
+      (rationalToReal (rationalNatSuccInv n)) :=
+  (Classical.choose_spec
+    (realSup_approx family nonempty bounded (rationalNatSuccInv_pos n))).2
+
+theorem realSupApproxSequence_converges (family : IncReal → Prop)
+    (nonempty : ∃ value, family value)
+    (bounded : ∃ upper, RealUpperBound family upper) :
+    RealSequenceConverges (realSupApproxSequence family nonempty bounded)
+      (realSup family nonempty bounded) := by
+  intro epsilon epsilonPositive
+  obtain ⟨threshold, eventuallyLe⟩ := rationalNatSuccInv_eventually_le epsilonPositive
+  refine ⟨threshold, ?_⟩
+  intro n thresholdLe
+  have distBound := realSupApproxSequence_dist family nonempty bounded n
+  have radiusBound : realLE (rationalToReal (rationalNatSuccInv n))
+      (rationalToReal epsilon) :=
+    (rationalToReal_le_iff _ _).mpr (eventuallyLe n thresholdLe)
+  exact realLE_trans distBound radiusBound
+
+/-- A nonempty sequentially compact set of reals is bounded above. If it were
+not, the Archimedean embedding of the naturals would witness an unbounded
+sequence inside the set, but every convergent subsequence a compactness
+witness extracts is Cauchy, hence bounded -- contradiction. -/
+theorem realSequentiallyCompact_bounded_above
+    {domain : IncReal → Prop}
+    (nonempty : ∃ value, domain value)
+    (compact : RealSequentiallyCompact domain) :
+    ∃ upper, RealUpperBound domain upper := by
+  classical
+  apply Classical.byContradiction
+  intro notExists
+  have notBounded : ∀ upper, ¬ RealUpperBound domain upper := by
+    intro upper isUpper
+    exact notExists ⟨upper, isUpper⟩
+  have witness : ∀ candidate : IncReal,
+      ∃ value, domain value ∧ realLE candidate value := by
+    intro candidate
+    have notUpper := notBounded candidate
+    have witnessExists :
+        ∃ value, domain value ∧ ¬ realLE value candidate := by
+      apply Classical.byContradiction
+      intro noWitness
+      apply notUpper
+      intro value valueMem
+      apply Classical.byContradiction
+      intro notLe
+      exact noWitness ⟨value, valueMem, notLe⟩
+    obtain ⟨value, valueMem, notLe⟩ := witnessExists
+    refine ⟨value, valueMem, ?_⟩
+    rcases realLE_total value candidate with le | ge
+    · exact absurd le notLe
+    · exact ge
+  let sequence : RealSequence := fun n =>
+    Classical.choose (witness (rationalToReal (rationalOfInteger (Int.ofNat n))))
+  have sequenceMem : ∀ n, domain (sequence n) := fun n =>
+    (Classical.choose_spec
+      (witness (rationalToReal (rationalOfInteger (Int.ofNat n))))).1
+  have sequenceAbove : ∀ n, realLE
+      (rationalToReal (rationalOfInteger (Int.ofNat n))) (sequence n) := fun n =>
+    (Classical.choose_spec
+      (witness (rationalToReal (rationalOfInteger (Int.ofNat n))))).2
+  obtain ⟨indices, subsequence, limit, limitInDomain, converges⟩ :=
+    compact sequence sequenceMem
+  have cauchy := realSequenceConverges_cauchy converges
+  obtain ⟨upper, isUpper⟩ := realSequenceCauchy_bounded_above cauchy
+  obtain ⟨count, countAbove⟩ := real_archimedean_nat_upper upper
+  have indicesLarge : count ≤ indices count :=
+    realSubsequence_index_large subsequence count
+  have embedMono : realLE (rationalToReal (rationalOfInteger (Int.ofNat count)))
+      (rationalToReal (rationalOfInteger (Int.ofNat (indices count)))) :=
+    (rationalToReal_le_iff _ _).mpr
+      ((rationalOfInteger_le_iff _ _).mpr (Int.ofNat_le.mpr indicesLarge))
+  have upperBelowEmbed : realLT upper
+      (rationalToReal (rationalOfInteger (Int.ofNat (indices count)))) :=
+    realLT_of_lt_of_le countAbove embedMono
+  have embedBelowExtracted : realLE
+      (rationalToReal (rationalOfInteger (Int.ofNat (indices count))))
+      (sequence (indices count)) :=
+    sequenceAbove (indices count)
+  have upperBelowExtracted : realLT upper (sequence (indices count)) :=
+    realLT_of_lt_of_le upperBelowEmbed embedBelowExtracted
+  exact realLT_irrefl upper
+    (realLT_of_lt_of_le upperBelowExtracted (isUpper count))
+
+/-- A nonempty sequentially compact set of reals contains its own supremum:
+the sup-approximating sequence converges to the supremum by construction, so
+any convergent subsequence a compactness witness extracts must (by
+uniqueness of limits) converge to that same supremum -- and compactness
+requires that subsequence's limit to lie in the set. -/
+theorem realSequentiallyCompact_sup_mem
+    {domain : IncReal → Prop}
+    (compact : RealSequentiallyCompact domain)
+    (nonempty : ∃ value, domain value)
+    (bounded : ∃ upper, RealUpperBound domain upper) :
+    domain (realSup domain nonempty bounded) := by
+  obtain ⟨indices, subsequence, limit, limitInDomain, converges⟩ :=
+    compact (realSupApproxSequence domain nonempty bounded)
+      (realSupApproxSequence_mem domain nonempty bounded)
+  have alsoConverges : RealSequenceConverges
+      (fun order => realSupApproxSequence domain nonempty bounded (indices order))
+      (realSup domain nonempty bounded) :=
+    realSequenceConverges_subsequence
+      (realSupApproxSequence_converges domain nonempty bounded) subsequence
+  have limitEq : limit = realSup domain nonempty bounded :=
+    realSequence_limit_unique converges alsoConverges
+  rw [limitEq] at limitInDomain
+  exact limitInDomain
+
+theorem realContinuousAt_neg (point : IncReal) :
+    RealContinuousAt realNeg point :=
+  realFunctionLimitAt_neg (realFunctionLimitAt_id point)
+
+theorem realContinuousOn_neg (domain : IncReal → Prop) :
+    RealContinuousOn realNeg domain :=
+  fun point _ => realContinuousAt_neg point
+
+/-- Sequential compactness transports across the (everywhere continuous)
+negation map, so it holds for the pointwise negation of a compact set too. -/
+theorem realSequentiallyCompact_negFamily
+    {domain : IncReal → Prop} (compact : RealSequentiallyCompact domain) :
+    RealSequentiallyCompact (RealNegFamily domain) := by
+  have imageCompact := realSequentiallyCompact_continuous_image compact
+    (realContinuousOn_neg domain)
+  intro sequence inNegFamily
+  have inImage : ∀ index, RealImage realNeg domain (sequence index) := by
+    intro index
+    obtain ⟨original, originalMem, eq⟩ := inNegFamily index
+    exact ⟨original, originalMem, eq.symm⟩
+  obtain ⟨indices, subsequence, limit, limitInImage, converges⟩ :=
+    imageCompact sequence inImage
+  obtain ⟨originalLimit, originalLimitMem, limitEq⟩ := limitInImage
+  exact ⟨indices, subsequence, limit,
+    ⟨originalLimit, originalLimitMem, limitEq.symm⟩, converges⟩
+
+/-- A nonempty sequentially compact set of reals is bounded below, by
+transporting boundedness-above through negation. -/
+theorem realSequentiallyCompact_bounded_below
+    {domain : IncReal → Prop}
+    (nonempty : ∃ value, domain value)
+    (compact : RealSequentiallyCompact domain) :
+    ∃ lower, RealLowerBound domain lower := by
+  have negCompact := realSequentiallyCompact_negFamily compact
+  have negNonempty := realNegFamily_nonempty nonempty
+  obtain ⟨upper, isUpper⟩ :=
+    realSequentiallyCompact_bounded_above negNonempty negCompact
+  refine ⟨realNeg upper, ?_⟩
+  intro value member
+  have negValueMem : RealNegFamily domain (realNeg value) := ⟨value, member, rfl⟩
+  have negValueBound := isUpper (realNeg value) negValueMem
+  have reversed := realNeg_order_reverse negValueBound
+  simpa [realNeg_neg] using reversed
+
+/-- A nonempty sequentially compact set of reals contains its own infimum,
+by transporting `realSequentiallyCompact_sup_mem` through negation. -/
+theorem realSequentiallyCompact_inf_mem
+    {domain : IncReal → Prop}
+    (compact : RealSequentiallyCompact domain)
+    (nonempty : ∃ value, domain value)
+    (bounded : ∃ lower, RealLowerBound domain lower) :
+    domain (realInf domain nonempty bounded) := by
+  have negCompact := realSequentiallyCompact_negFamily compact
+  have negNonempty := realNegFamily_nonempty nonempty
+  have negBounded := realNegFamily_bounded bounded
+  have negSupMem := realSequentiallyCompact_sup_mem negCompact negNonempty negBounded
+  obtain ⟨original, originalMem, eq⟩ := negSupMem
+  show domain (realNeg (realSup (RealNegFamily domain) negNonempty negBounded))
+  rw [eq, realNeg_neg]
+  exact originalMem
+
+/-- Extreme value theorem, maximum case: a function continuous on a closed
+interval attains a maximum on that interval. -/
+theorem realContinuousOn_closedInterval_attains_max
+    {function : IncReal → IncReal} {lower upper : IncReal}
+    (ordered : realLE lower upper)
+    (continuous : RealContinuousOn function (RealClosedInterval lower upper)) :
+    ∃ maximizer, RealClosedInterval lower upper maximizer ∧
+      ∀ point, RealClosedInterval lower upper point →
+        realLE (function point) (function maximizer) := by
+  have domainCompact := realClosedInterval_sequentiallyCompact lower upper
+  have imageCompact :=
+    realSequentiallyCompact_continuous_image domainCompact continuous
+  have imageNonempty :
+      ∃ value, RealImage function (RealClosedInterval lower upper) value :=
+    ⟨function lower, lower, realClosedInterval_contains_lower ordered, rfl⟩
+  have imageBounded := realSequentiallyCompact_bounded_above imageNonempty imageCompact
+  have imageSupMem :=
+    realSequentiallyCompact_sup_mem imageCompact imageNonempty imageBounded
+  obtain ⟨maximizer, maximizerMem, maximizerEq⟩ := imageSupMem
+  refine ⟨maximizer, maximizerMem, ?_⟩
+  intro point pointMem
+  have pointImage : RealImage function (RealClosedInterval lower upper)
+      (function point) :=
+    ⟨point, pointMem, rfl⟩
+  have pointBelowSup := realSup_is_upper_bound
+    (RealImage function (RealClosedInterval lower upper)) imageNonempty imageBounded
+    (function point) pointImage
+  rw [← maximizerEq] at pointBelowSup
+  exact pointBelowSup
+
+/-- Extreme value theorem, minimum case: a function continuous on a closed
+interval attains a minimum on that interval. -/
+theorem realContinuousOn_closedInterval_attains_min
+    {function : IncReal → IncReal} {lower upper : IncReal}
+    (ordered : realLE lower upper)
+    (continuous : RealContinuousOn function (RealClosedInterval lower upper)) :
+    ∃ minimizer, RealClosedInterval lower upper minimizer ∧
+      ∀ point, RealClosedInterval lower upper point →
+        realLE (function minimizer) (function point) := by
+  have domainCompact := realClosedInterval_sequentiallyCompact lower upper
+  have imageCompact :=
+    realSequentiallyCompact_continuous_image domainCompact continuous
+  have imageNonempty :
+      ∃ value, RealImage function (RealClosedInterval lower upper) value :=
+    ⟨function lower, lower, realClosedInterval_contains_lower ordered, rfl⟩
+  have imageBoundedBelow :=
+    realSequentiallyCompact_bounded_below imageNonempty imageCompact
+  have imageInfMem :=
+    realSequentiallyCompact_inf_mem imageCompact imageNonempty imageBoundedBelow
+  obtain ⟨minimizer, minimizerMem, minimizerEq⟩ := imageInfMem
+  refine ⟨minimizer, minimizerMem, ?_⟩
+  intro point pointMem
+  have pointImage : RealImage function (RealClosedInterval lower upper)
+      (function point) :=
+    ⟨point, pointMem, rfl⟩
+  have infBelowPoint := realInf_is_lower_bound
+    (RealImage function (RealClosedInterval lower upper)) imageNonempty
+    imageBoundedBelow (function point) pointImage
+  rw [← minimizerEq] at infBelowPoint
+  exact infBelowPoint
+
 end IncidenceCore
