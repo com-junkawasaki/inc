@@ -3887,6 +3887,71 @@ theorem realFunctionLimitAt_unique
     firstLimit = secondLimit := by
   rw [← realFunctionLimitAt_value first, realFunctionLimitAt_value second]
 
+theorem realFunctionLimitAt_unique_of_eq_ne_zero
+    {firstFunction secondFunction : IncReal → IncReal}
+    {firstLimit secondLimit : IncReal}
+    (agree : ∀ input, input ≠ realZero →
+      firstFunction input = secondFunction input)
+    (firstConverges :
+      RealFunctionLimitAt firstFunction realZero firstLimit)
+    (secondConverges :
+      RealFunctionLimitAt secondFunction realZero secondLimit) :
+    firstLimit = secondLimit := by
+  have distanceBounded : ∀ epsilon : IncRational,
+      rationalLT (rationalOfInteger 0) epsilon →
+      realLE (realDist firstLimit secondLimit).value
+        (rationalToReal epsilon) := by
+    intro epsilon epsilonPositive
+    obtain ⟨half, halfPositive, halfAdd⟩ :=
+      rational_exists_positive_half epsilonPositive
+    obtain ⟨firstRadius, firstRadiusPositive, firstClose⟩ :=
+      firstConverges half halfPositive
+    obtain ⟨secondRadius, secondRadiusPositive, secondClose⟩ :=
+      secondConverges half halfPositive
+    obtain ⟨sample, samplePositive, sampleBelowFirst, sampleBelowSecond⟩ :=
+      rational_exists_positive_below_two firstRadiusPositive
+        secondRadiusPositive
+    let input := rationalToReal sample
+    have inputNonnegative : realLE realZero input :=
+      (rationalToReal_le_iff _ _).mpr samplePositive.1
+    have inputNonzero : input ≠ realZero := by
+      intro equal
+      have injected := rationalToReal_injective equal
+      rw [injected] at samplePositive
+      exact rationalLT_irrefl _ samplePositive
+    have firstInputClose : realLE (realDist input realZero).value
+        (rationalToReal firstRadius) := by
+      rw [realDist_zero_right,
+        realAbs_of_nonnegative input inputNonnegative]
+      exact (rationalToReal_le_iff _ _).mpr sampleBelowFirst.1
+    have secondInputClose : realLE (realDist input realZero).value
+        (rationalToReal secondRadius) := by
+      rw [realDist_zero_right,
+        realAbs_of_nonnegative input inputNonnegative]
+      exact (rationalToReal_le_iff _ _).mpr sampleBelowSecond.1
+    have firstBound : realLE
+        (realDist firstLimit (firstFunction input)).value
+        (rationalToReal half) := by
+      rw [realDist_comm]
+      exact firstClose input firstInputClose
+    have secondBound : realLE
+        (realDist (firstFunction input) secondLimit).value
+        (rationalToReal half) := by
+      rw [agree input inputNonzero]
+      exact secondClose input secondInputClose
+    have triangle := realDist_triangle firstLimit
+      (firstFunction input) secondLimit
+    have summed := realAdd_monotone firstBound secondBound
+    have bounded := realLE_trans triangle summed
+    calc
+      realLE (realDist firstLimit secondLimit).value
+          (realAdd (rationalToReal half) (rationalToReal half)) := bounded
+      _ = rationalToReal epsilon := by
+        rw [realAdd_rationalToReal, halfAdd]
+  have distanceZero := nonnegativeReal_eq_zero_of_le_all_positive
+    (realDist firstLimit secondLimit) distanceBounded
+  exact (realDist_eq_zero_iff firstLimit secondLimit).mp distanceZero
+
 theorem realFunctionLimitAt_comp
     {first second : IncReal → IncReal}
     {point middle limit : IncReal}
@@ -4435,6 +4500,66 @@ def RealHasDerivativeAt
     (function : IncReal → IncReal) (derivative point : IncReal) : Prop :=
   RealFunctionLimitAt
     (realDifferenceQuotient function point derivative) realZero derivative
+
+theorem realHasDerivativeAt_unique
+    {function : IncReal → IncReal}
+    {firstDerivative secondDerivative point : IncReal}
+    (first : RealHasDerivativeAt function firstDerivative point)
+    (second : RealHasDerivativeAt function secondDerivative point) :
+    firstDerivative = secondDerivative := by
+  apply realFunctionLimitAt_unique_of_eq_ne_zero
+    (firstConverges := first) (secondConverges := second)
+  intro increment incrementNonzero
+  simp only [realDifferenceQuotient, if_neg incrementNonzero]
+
+def RealDifferentiableAt (function : IncReal → IncReal) (point : IncReal) : Prop :=
+  ∃ derivative, RealHasDerivativeAt function derivative point
+
+def RealDifferentiable (function : IncReal → IncReal) : Prop :=
+  ∀ point, RealDifferentiableAt function point
+
+noncomputable def realDerivativeAt
+    (function : IncReal → IncReal) (point : IncReal)
+    (differentiable : RealDifferentiableAt function point) : IncReal :=
+  Classical.choose differentiable
+
+theorem realDerivativeAt_spec
+    (function : IncReal → IncReal) (point : IncReal)
+    (differentiable : RealDifferentiableAt function point) :
+    RealHasDerivativeAt function
+      (realDerivativeAt function point differentiable) point :=
+  Classical.choose_spec differentiable
+
+theorem realDerivativeAt_eq
+    {function : IncReal → IncReal} {point derivative : IncReal}
+    (differentiable : RealDifferentiableAt function point)
+    (hasDerivative : RealHasDerivativeAt function derivative point) :
+    realDerivativeAt function point differentiable = derivative :=
+  realHasDerivativeAt_unique
+    (realDerivativeAt_spec function point differentiable) hasDerivative
+
+noncomputable def realDerivative
+    (function : IncReal → IncReal) (differentiable : RealDifferentiable function) :
+    IncReal → IncReal :=
+  fun point => realDerivativeAt function point (differentiable point)
+
+theorem realDerivative_spec
+    (function : IncReal → IncReal) (differentiable : RealDifferentiable function)
+    (point : IncReal) :
+    RealHasDerivativeAt function (realDerivative function differentiable point)
+      point :=
+  realDerivativeAt_spec function point (differentiable point)
+
+theorem realDerivative_eq
+    {function derivative : IncReal → IncReal}
+    (differentiable : RealDifferentiable function)
+    (hasDerivative : ∀ point,
+      RealHasDerivativeAt function (derivative point) point) :
+    realDerivative function differentiable = derivative := by
+  funext point
+  exact realHasDerivativeAt_unique
+    (realDerivative_spec function differentiable point)
+    (hasDerivative point)
 
 theorem realHasDerivativeAt_continuousAt
     {function : IncReal → IncReal} {derivative point : IncReal}
