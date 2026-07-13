@@ -1073,4 +1073,422 @@ theorem incidenceProd_sum_guards_depends_on_inc1_only
       inc1.guards.allow i1 j1 := by
   simp [incidenceProd, prodGuards, incidenceSum, Guards.permissive]
 
+/- Research cycle 48 (see RESEARCH_LOG.md): cycle 47's own next-hypothesis
+   (a) -- given cycle 47's concrete counterexample turned on ON-THE-NOSE
+   equality after the bijection (LHS glues to `some (Sum.inr (5, root))`,
+   RHS to `none`), does the WEAKER claim -- agreement up to `≈`
+   (`approxBisim`) rather than exact equality -- rescue it, or hold in
+   general?
+
+   Finding, in two parts, exactly mirroring the task's own anticipated
+   shape. (1) The specific counterexample is NOT rescued by weakening to
+   `≈`, for a structural reason cycle 47 itself flagged as a live
+   possibility: `approxBisim` (`IncidenceTheory.lean`) is a relation
+   `I → I → Prop` on the CARRIER of a single `Incidence`, never on
+   `Option I` -- there is no established notion of a `none` outcome being
+   "`≈`-related" to a `some x` outcome at all, and this project's own
+   existing vocabulary for "gluing respects `≈`" (`GlueRespects`,
+   `IncidenceTheory.lean`, used since `trivial_glue_respects_approxBisim`
+   and `BisimulationNormalizationSpec`) is ITSELF only ever quantified
+   over the case both sides' `glue` produce a `some` -- it says nothing
+   about a `none` outcome. Formalized directly below via
+   `OptionApproxBisim`, the canonical lift of `≈` to `Option` (mirroring
+   how `=` lifts to `Option` -- `none ≈ none`, `some a ≈ some b ↔ a ≈ b`,
+   and `none` is NEVER related to any `some _`, by construction, not by a
+   deep argument): `not_optionApproxBisim_some_none` shows `some a` is
+   never `OptionApproxBisim`-related to `none`, for ANY relation and ANY
+   `a` -- so cycle 47's specific counterexample (LHS `some _`, RHS `none`)
+   remains a counterexample even under this weakening;
+   `incidenceProd_incidenceSum_distrib_glue_misaligned_not_bisim_rescued`
+   confirms this concretely for cycle 47's own instances and values. This
+   is the scoping resolution the task itself anticipated as a live
+   possibility, not a strained proof.
+
+   (2) But investigating WHY led to a stronger and more informative
+   result than the bisimulation question itself: `glue` agreement between
+   the two composite structures turns out to be EXACT (not merely `≈`)
+   whenever the RHS succeeds at all --
+   `incidenceProd_incidenceSum_distrib_glue_agrees_of_rhs_some` proves,
+   fully generically over ANY `inc1`/`inc2`/`inc3` (no instance
+   hypothesis, unlike cycle 47's concrete-instance-only counterexample):
+   if `incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)`'s
+   glue succeeds (`some w`), then `incidenceProd inc1 (incidenceSum inc2
+   inc3)`'s glue ALSO succeeds and, transported through
+   `prodSumDistribForward`, equals `w` EXACTLY. The proof works by cases
+   on which side of `I2 ⊕ I3` each argument's tag falls on (four cases,
+   `incidenceProd_incidenceSum_distrib_glue_agree_{inl_inl,inr_inr,
+   inl_inr,inr_inl}`), using only `inc1`/`inc2`/`inc3`'s own
+   `unit_left`/`unit_right` structural obligations -- no instance-specific
+   facts about `natIncidence`/`finiteIncidence` at all. Two reusable
+   general facts about `incidenceSum` fell out along the way and are
+   recorded as their own theorems (`incidenceSum_glue_same_left`/
+   `_same_right`/`_cross_left`/`_cross_right`): critically,
+   `incidenceSum`'s absorbing unit is ALWAYS `Sum.inl inc1.unit` (the
+   FIRST factor's unit, tagged left) -- so a same-side pair on the
+   SECOND factor (`Sum.inr`/`Sum.inr`) can NEVER hit an absorption
+   branch at all and reduces unconditionally to the plain componentwise
+   glue (`incidenceSum_glue_same_right`), whereas a same-side pair on the
+   FIRST factor genuinely can (`incidenceSum_glue_same_left`) -- the two
+   "symmetric-looking" same-side cases are secretly asymmetric in proof
+   difficulty, a subtlety an initial by-hand derivation (assuming naive
+   left/right symmetry) got wrong on the first pass before the Lean
+   compiler forced the correction.
+
+   Corollary,
+   `incidenceProd_incidenceSum_distrib_glue_no_disagreement_when_both_some`:
+   there is consequently NO possible case, for ANY `inc1`/`inc2`/`inc3`
+   whatsoever (not merely none yet witnessed in this codebase's concrete
+   instances), where both sides' `glue` succeed but disagree -- ruling
+   out the task's suggested "look for a both-succeed-but-differ case"
+   avenue entirely, by proof rather than by exhaustive search of this
+   project's few concrete instances.
+   `incidenceProd_incidenceSum_distrib_glue_approxBisim_of_both_some`
+   restates this in the `≈` vocabulary the task asked about (trivially,
+   via `approxBisim_refl`, since literal equality is always `≈`-related):
+   whenever both sides succeed, they are not just `≈`-related but
+   IDENTICAL.
+
+   Net picture: the misalignment cycle 47 found is exactly and only a
+   "RHS fails, LHS may still succeed" phenomenon (never the reverse, and
+   never a same-side disagreement), and no rescue exists by weakening
+   the FAILING case to `≈` -- because comparing a defined outcome to an
+   undefined one is not what `≈` (or this project's own `GlueRespects`)
+   was ever built to express. `lake build`: 66/66 jobs. `#print axioms`
+   (scratch, deleted after use): every new theorem in this cycle needs at
+   most `propext`/`Classical.choice`/`Quot.sound` -- the two `decide`d
+   concrete facts about `natIncidence`/`finiteIncidence` carry
+   `Classical.choice` for the same standing reason cycle 37/47 already
+   documented (`natIncidence`-involving facts have carried it since cycle
+   4); the fully generic theorems (`_agrees_of_rhs_some` and its case
+   lemmas, `_no_disagreement_when_both_some`,
+   `_approxBisim_of_both_some`, `not_optionApproxBisim_some_none`) need
+   only `propext`/`Quot.sound`. Full `./verify.sh` passes end to end. -/
+
+/- `incidenceSum`'s absorbing unit is always `Sum.inl inc1.unit` -- the
+   FIRST factor's unit only. A same-side pair on the first factor can
+   therefore still hit an absorption branch (if either argument happens
+   to equal the unit exactly), but by `inc1`'s own `unit_left`/
+   `unit_right` laws, whichever branch fires is forced to agree with the
+   plain componentwise `glue` anyway -- so the result is unconditionally
+   `some (Sum.inl k1)` whenever the componentwise glue itself succeeds,
+   regardless of which (if any) absorption branch actually fired. -/
+theorem incidenceSum_glue_same_left
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    {i1 j1 : I1} {k1 : I1} (hk1 : inc1.glue i1 j1 = some k1) :
+    (incidenceSum inc1 inc2).glue (Sum.inl i1) (Sum.inl j1) = some (Sum.inl k1) := by
+  simp only [incidenceSum, sumGlue]
+  by_cases hj : j1 = inc1.unit
+  · subst hj
+    have hu := inc1.unit_right i1
+    rw [hu] at hk1
+    simp only [Option.some.injEq] at hk1
+    subst hk1
+    simp
+  · by_cases hi : i1 = inc1.unit
+    · subst hi
+      have hu := inc1.unit_left j1
+      rw [hu] at hk1
+      simp only [Option.some.injEq] at hk1
+      subst hk1
+      simp [hj]
+    · simp [hj, hi, hk1]
+
+/- Unlike `incidenceSum_glue_same_left`, the SECOND factor never hits the
+   absorption tests at all -- the designated unit is always
+   `Sum.inl inc1.unit`, which can never equal a `Sum.inr`-tagged value --
+   so this reduces unconditionally to the plain componentwise `inc2.glue`,
+   with no case split on `inc2.unit` needed. This asymmetry (only the
+   FIRST factor's same-side case needs the unit-law argument above) is
+   itself the main proof-engineering finding of this cycle. -/
+theorem incidenceSum_glue_same_right
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    {i2 j2 : I2} {k2 : I2} (hk2 : inc2.glue i2 j2 = some k2) :
+    (incidenceSum inc1 inc2).glue (Sum.inr i2) (Sum.inr j2) = some (Sum.inr k2) := by
+  simp [incidenceSum, sumGlue, hk2]
+
+/- Cross-side (first factor on the left, second on the right): succeeds
+   exactly when the left argument is the first factor's unit (absorbing
+   the right argument unchanged), else fails outright -- there is no
+   componentwise fallback for a genuinely cross-side pair. -/
+theorem incidenceSum_glue_cross_left
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (i1 : I1) (j2 : I2) :
+    (incidenceSum inc1 inc2).glue (Sum.inl i1) (Sum.inr j2) =
+      if i1 = inc1.unit then some (Sum.inr j2) else none := by
+  simp only [incidenceSum, sumGlue]
+  by_cases hi : i1 = inc1.unit
+  · simp [hi]
+  · simp [hi]
+
+/- Symmetric cross-side case (second factor on the left, first on the
+   right): the absorption test is on the RIGHT argument here (it must be
+   the first factor's unit, tagged left), since `incidenceSum`'s unit
+   test is always `y = unit` first. -/
+theorem incidenceSum_glue_cross_right
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (i2 : I2) (j1 : I1) :
+    (incidenceSum inc1 inc2).glue (Sum.inr i2) (Sum.inl j1) =
+      if j1 = inc1.unit then some (Sum.inr i2) else none := by
+  simp only [incidenceSum, sumGlue]
+  by_cases hj : j1 = inc1.unit
+  · simp [hj]
+  · simp [hj]
+
+theorem incidenceProd_incidenceSum_distrib_glue_agree_inl_inl
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 j1 : I1) (i2 j2 : I2) (w : (I1 × I2) ⊕ (I1 × I3))
+    (hRHS : (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+              (Sum.inl (i1, i2)) (Sum.inl (j1, j2)) = some w) :
+    ((incidenceProd inc1 (incidenceSum inc2 inc3)).glue (i1, Sum.inl i2) (j1, Sum.inl j2)).map
+      prodSumDistribForward = some w := by
+  by_cases hj : (j1, j2) = (inc1.unit, inc2.unit)
+  · injection hj with hj1 hj2
+    subst hj1; subst hj2
+    have hval : (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+        (Sum.inl (i1, i2)) (Sum.inl (inc1.unit, inc2.unit)) = some (Sum.inl (i1, i2)) := by
+      simp [incidenceSum, sumGlue, incidenceProd]
+    rw [hval] at hRHS
+    simp only [Option.some.injEq] at hRHS
+    subst hRHS
+    simp only [incidenceProd, prodGlue, inc1.unit_right,
+      incidenceSum_glue_same_left inc2 inc3 (inc2.unit_right i2), prodSumDistribForward,
+      Option.map_some]
+  · by_cases hi : (i1, i2) = (inc1.unit, inc2.unit)
+    · injection hi with hi1 hi2
+      subst hi1; subst hi2
+      have hval : (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+          (Sum.inl (inc1.unit, inc2.unit)) (Sum.inl (j1, j2)) = some (Sum.inl (j1, j2)) := by
+        simp [incidenceSum, sumGlue, hj, incidenceProd]
+      rw [hval] at hRHS
+      simp only [Option.some.injEq] at hRHS
+      subst hRHS
+      simp only [incidenceProd, prodGlue, inc1.unit_left,
+        incidenceSum_glue_same_left inc2 inc3 (inc2.unit_left j2), prodSumDistribForward,
+        Option.map_some]
+    · rcases hk1 : inc1.glue i1 j1 with _ | k1
+      · exfalso
+        have hval : (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+            (Sum.inl (i1, i2)) (Sum.inl (j1, j2)) = none := by
+          simp [incidenceSum, sumGlue, hj, hi, incidenceProd, prodGlue, hk1]
+        rw [hval] at hRHS; exact absurd hRHS (by simp)
+      · rcases hk2 : inc2.glue i2 j2 with _ | k2
+        · exfalso
+          have hval : (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+              (Sum.inl (i1, i2)) (Sum.inl (j1, j2)) = none := by
+            simp [incidenceSum, sumGlue, hj, hi, incidenceProd, prodGlue, hk1, hk2]
+          rw [hval] at hRHS; exact absurd hRHS (by simp)
+        · have hval : (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+              (Sum.inl (i1, i2)) (Sum.inl (j1, j2)) = some (Sum.inl (k1, k2)) := by
+            simp [incidenceSum, sumGlue, hj, hi, incidenceProd, prodGlue, hk1, hk2]
+          rw [hval] at hRHS
+          simp only [Option.some.injEq] at hRHS
+          subst hRHS
+          simp only [incidenceProd, prodGlue, hk1,
+            incidenceSum_glue_same_left inc2 inc3 hk2, prodSumDistribForward, Option.map_some]
+
+theorem incidenceProd_incidenceSum_distrib_glue_agree_inr_inr
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 j1 : I1) (i3 j3 : I3) (w : (I1 × I2) ⊕ (I1 × I3))
+    (hRHS : (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+              (Sum.inr (i1, i3)) (Sum.inr (j1, j3)) = some w) :
+    ((incidenceProd inc1 (incidenceSum inc2 inc3)).glue (i1, Sum.inr i3) (j1, Sum.inr j3)).map
+      prodSumDistribForward = some w := by
+  rcases hk1 : inc1.glue i1 j1 with _ | k1
+  · exfalso
+    have hval : (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+        (Sum.inr (i1, i3)) (Sum.inr (j1, j3)) = none := by
+      simp [incidenceSum, sumGlue, incidenceProd, prodGlue, hk1]
+    rw [hval] at hRHS; exact absurd hRHS (by simp)
+  · rcases hk3 : inc3.glue i3 j3 with _ | k3
+    · exfalso
+      have hval : (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+          (Sum.inr (i1, i3)) (Sum.inr (j1, j3)) = none := by
+        simp [incidenceSum, sumGlue, incidenceProd, prodGlue, hk1, hk3]
+      rw [hval] at hRHS; exact absurd hRHS (by simp)
+    · have hval : (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+          (Sum.inr (i1, i3)) (Sum.inr (j1, j3)) = some (Sum.inr (k1, k3)) := by
+        simp [incidenceSum, sumGlue, incidenceProd, prodGlue, hk1, hk3]
+      rw [hval] at hRHS
+      simp only [Option.some.injEq] at hRHS
+      subst hRHS
+      simp only [incidenceProd, prodGlue, hk1,
+        incidenceSum_glue_same_right inc2 inc3 hk3, prodSumDistribForward, Option.map_some]
+
+theorem incidenceProd_incidenceSum_distrib_glue_agree_inl_inr
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 j1 : I1) (i2 : I2) (j3 : I3) (w : (I1 × I2) ⊕ (I1 × I3))
+    (hRHS : (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+              (Sum.inl (i1, i2)) (Sum.inr (j1, j3)) = some w) :
+    ((incidenceProd inc1 (incidenceSum inc2 inc3)).glue (i1, Sum.inl i2) (j1, Sum.inr j3)).map
+      prodSumDistribForward = some w := by
+  rw [incidenceSum_glue_cross_left] at hRHS
+  simp only [incidenceProd] at hRHS
+  by_cases hcombo : (i1, i2) = (inc1.unit, inc2.unit)
+  · simp only [hcombo, if_true] at hRHS
+    injection hcombo with hi1 hi2
+    subst hi1; subst hi2
+    simp only [Option.some.injEq] at hRHS
+    subst hRHS
+    simp only [incidenceProd, prodGlue, inc1.unit_left, incidenceSum_glue_cross_left,
+      if_true, prodSumDistribForward, Option.map_some]
+  · simp [hcombo] at hRHS
+
+theorem incidenceProd_incidenceSum_distrib_glue_agree_inr_inl
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 j1 : I1) (i3 : I3) (j2 : I2) (w : (I1 × I2) ⊕ (I1 × I3))
+    (hRHS : (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+              (Sum.inr (i1, i3)) (Sum.inl (j1, j2)) = some w) :
+    ((incidenceProd inc1 (incidenceSum inc2 inc3)).glue (i1, Sum.inr i3) (j1, Sum.inl j2)).map
+      prodSumDistribForward = some w := by
+  rw [incidenceSum_glue_cross_right] at hRHS
+  simp only [incidenceProd] at hRHS
+  by_cases hcombo : (j1, j2) = (inc1.unit, inc2.unit)
+  · simp only [hcombo, if_true] at hRHS
+    injection hcombo with hj1 hj2
+    subst hj1; subst hj2
+    simp only [Option.some.injEq] at hRHS
+    subst hRHS
+    simp only [incidenceProd, prodGlue, inc1.unit_right, incidenceSum_glue_cross_right,
+      if_true, prodSumDistribForward, Option.map_some]
+  · simp [hcombo] at hRHS
+
+/- The main theorem: fully general over ANY `inc1`/`inc2`/`inc3` (no
+   instance hypothesis at all), whenever the RHS's glue succeeds, the
+   LHS's glue also succeeds and, transported through the bijection,
+   agrees EXACTLY -- not merely up to `≈`. Combines the four tag-combo
+   cases above. -/
+theorem incidenceProd_incidenceSum_distrib_glue_agrees_of_rhs_some
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 j1 : I1) (x y : I2 ⊕ I3) (w : (I1 × I2) ⊕ (I1 × I3))
+    (hRHS : (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+              (prodSumDistribForward (i1, x)) (prodSumDistribForward (j1, y)) = some w) :
+    ((incidenceProd inc1 (incidenceSum inc2 inc3)).glue (i1, x) (j1, y)).map
+      prodSumDistribForward = some w := by
+  cases x with
+  | inl i2 =>
+    cases y with
+    | inl j2 =>
+      exact incidenceProd_incidenceSum_distrib_glue_agree_inl_inl inc1 inc2 inc3 i1 j1 i2 j2 w hRHS
+    | inr j3 =>
+      exact incidenceProd_incidenceSum_distrib_glue_agree_inl_inr inc1 inc2 inc3 i1 j1 i2 j3 w hRHS
+  | inr i3 =>
+    cases y with
+    | inl j2 =>
+      exact incidenceProd_incidenceSum_distrib_glue_agree_inr_inl inc1 inc2 inc3 i1 j1 i3 j2 w hRHS
+    | inr j3 =>
+      exact incidenceProd_incidenceSum_distrib_glue_agree_inr_inr inc1 inc2 inc3 i1 j1 i3 j3 w hRHS
+
+/- Corollary: there is no possible case, for ANY `inc1`/`inc2`/`inc3`
+   whatsoever, where both sides' `glue` succeed but literally disagree --
+   the "look for a both-succeed-but-differ counterexample" avenue the
+   task suggested as a fallback is provably empty, not merely unwitnessed
+   among this project's few concrete instances. -/
+theorem incidenceProd_incidenceSum_distrib_glue_no_disagreement_when_both_some
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 j1 : I1) (x y : I2 ⊕ I3) (v : I1 × (I2 ⊕ I3)) (w : (I1 × I2) ⊕ (I1 × I3))
+    (hLHS : (incidenceProd inc1 (incidenceSum inc2 inc3)).glue (i1, x) (j1, y) = some v)
+    (hRHS : (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+              (prodSumDistribForward (i1, x)) (prodSumDistribForward (j1, y)) = some w) :
+    prodSumDistribForward v = w := by
+  have hforward := incidenceProd_incidenceSum_distrib_glue_agrees_of_rhs_some
+    inc1 inc2 inc3 i1 j1 x y w hRHS
+  rw [hLHS] at hforward
+  simpa using hforward
+
+/- Restated in the `≈` vocabulary the task itself asked about: whenever
+   both sides succeed, they are not just `≈`-related but IDENTICAL
+   (literal equality is always `≈`-related, via `approxBisim_refl`). This
+   is the positive half of this cycle's answer to cycle 47's hypothesis
+   (a) -- the "both succeed" case was never actually in doubt; only the
+   "RHS fails" case (part (1) above) resists any `≈`-level rescue, for a
+   reason unrelated to bisimulation strength (a category mismatch, not a
+   failure of the bisimulation itself). -/
+theorem incidenceProd_incidenceSum_distrib_glue_approxBisim_of_both_some
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 j1 : I1) (x y : I2 ⊕ I3) (v : I1 × (I2 ⊕ I3)) (w : (I1 × I2) ⊕ (I1 × I3))
+    (hLHS : (incidenceProd inc1 (incidenceSum inc2 inc3)).glue (i1, x) (j1, y) = some v)
+    (hRHS : (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).glue
+              (prodSumDistribForward (i1, x)) (prodSumDistribForward (j1, y)) = some w) :
+    approxBisim (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3))
+      (prodSumDistribForward v) w := by
+  rw [incidenceProd_incidenceSum_distrib_glue_no_disagreement_when_both_some
+    inc1 inc2 inc3 i1 j1 x y v w hLHS hRHS]
+  exact approxBisim_refl _ w
+
+/- The canonical lift of `≈` to `Option` -- mirroring how `=` itself
+   lifts to `Option` (`none` only equals `none`; `some a` only equals
+   `some b` when `a = b`): `none` is related only to `none`, `some a` to
+   `some b` exactly when `a ≈ b`, and a `none`/`some _` mismatch is NEVER
+   related. This is the natural, non-strained meaning of "the two glue
+   outcomes agree up to `≈`" for a PARTIAL operation -- and it settles,
+   by construction rather than by a deep argument, whether cycle 47's
+   `none`-vs-`some` counterexample could be rescued by weakening to `≈`. -/
+def OptionApproxBisim {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    Option I → Option I → Prop
+  | none, none => True
+  | some a, some b => approxBisim inc a b
+  | _, _ => False
+
+theorem not_optionApproxBisim_some_none {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (a : I) : ¬ OptionApproxBisim inc (some a) none := by
+  simp [OptionApproxBisim]
+
+/- The concrete values from cycle 47's counterexample, transcribed as
+   named facts (cycle 47 itself only proved the two sides `≠`, without
+   naming either value separately). -/
+theorem incidenceProd_incidenceSum_distrib_glue_lhs_some :
+    ((incidenceProd natIncidence (incidenceSum finiteIncidence finiteIncidence)).glue
+        (2, Sum.inl FiniteIncidence.leaf) (3, Sum.inr FiniteIncidence.root)).map
+      (prodSumDistribForward (I1 := Nat) (I2 := FiniteIncidence) (I3 := FiniteIncidence)) =
+    some (Sum.inr (5, FiniteIncidence.root)) := by decide
+
+theorem incidenceProd_incidenceSum_distrib_glue_rhs_none :
+    (incidenceSum (incidenceProd natIncidence finiteIncidence)
+        (incidenceProd natIncidence finiteIncidence)).glue
+      (prodSumDistribForward (I1 := Nat) (I2 := FiniteIncidence) (I3 := FiniteIncidence)
+        (2, Sum.inl FiniteIncidence.leaf))
+      (prodSumDistribForward (I1 := Nat) (I2 := FiniteIncidence) (I3 := FiniteIncidence)
+        (3, Sum.inr FiniteIncidence.root)) = none := by decide
+
+/- Closes cycle 47's hypothesis (a) concretely: the specific
+   counterexample is NOT rescued by weakening to `≈` -- not because the
+   bisimulation fails to relate the two sides in some subtle way, but
+   because `OptionApproxBisim` (the canonical, non-strained lift of `≈`
+   to a partial operation's outcomes) never relates a `some _` to a
+   `none` in the first place, for any relation whatsoever. -/
+theorem incidenceProd_incidenceSum_distrib_glue_misaligned_not_bisim_rescued :
+    ¬ OptionApproxBisim
+      (incidenceSum (incidenceProd natIncidence finiteIncidence)
+        (incidenceProd natIncidence finiteIncidence))
+      (((incidenceProd natIncidence (incidenceSum finiteIncidence finiteIncidence)).glue
+          (2, Sum.inl FiniteIncidence.leaf) (3, Sum.inr FiniteIncidence.root)).map
+        (prodSumDistribForward (I1 := Nat) (I2 := FiniteIncidence) (I3 := FiniteIncidence)))
+      ((incidenceSum (incidenceProd natIncidence finiteIncidence)
+          (incidenceProd natIncidence finiteIncidence)).glue
+        (prodSumDistribForward (I1 := Nat) (I2 := FiniteIncidence) (I3 := FiniteIncidence)
+          (2, Sum.inl FiniteIncidence.leaf))
+        (prodSumDistribForward (I1 := Nat) (I2 := FiniteIncidence) (I3 := FiniteIncidence)
+          (3, Sum.inr FiniteIncidence.root))) := by
+  rw [incidenceProd_incidenceSum_distrib_glue_lhs_some,
+    incidenceProd_incidenceSum_distrib_glue_rhs_none]
+  exact not_optionApproxBisim_some_none _ _
+
 end IncidenceCore

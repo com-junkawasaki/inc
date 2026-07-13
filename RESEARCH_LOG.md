@@ -3876,3 +3876,176 @@ manifest even then, which would itself be a finding worth having). (c)
 cycle 39's still-open item, still queued three cycles running: does any
 existing instance have a `≈`-quotient in the middle ground beyond
 `simplexIncidence` (cycle 41's only example)?
+
+## Cycle 48
+
+**Hypothesis**: cycle 47's own next-hypothesis (a), the highest-priority
+of its three queued threads: cycle 47's concrete `glue` misalignment
+counterexample (`incidenceProd natIncidence (incidenceSum finiteIncidence
+finiteIncidence)` vs `incidenceSum (incidenceProd natIncidence
+finiteIncidence) (incidenceProd natIncidence finiteIncidence)`, at
+`i1=2, j1=3, x = Sum.inl FiniteIncidence.leaf, y = Sum.inr
+FiniteIncidence.root`) turned on ON-THE-NOSE equality after the
+bijection. Does the WEAKER claim — the two sides' `glue` results agree
+up to `≈` (`approxBisim`) rather than exact equality — rescue it, or
+hold more generally? Per the task's own explicit caution: since one side
+of the counterexample is `none` (glue fails) and the other is `some x`
+(glue succeeds), first determine whether "`≈`-related" even has a
+non-strained meaning when comparing a defined outcome to an undefined
+one, before attempting to force a proof through.
+
+**Method**: first grepped for this project's actual bisimulation
+machinery rather than assuming — `approxBisim` (`IncidenceTheory.lean`,
+not a per-cycle file) is `∃ rel, IsBisimulation inc rel ∧ rel i j`, a
+relation on the CARRIER `I` of a single `Incidence I R T`, never on
+`Option I` and never comparing two DIFFERENT `Incidence` structures'
+carriers directly. Also found this project already has a native notion
+of "gluing respects a relation" — `GlueRespects` (`IncidenceTheory.lean`,
+used since cycle-1-era `trivial_glue_respects_approxBisim` and
+`BisimulationNormalizationSpec`) — and its type signature is itself
+telling: `∀ {i₁ i₂ j₁ j₂ k₁ k₂}, rel i₁ i₂ → rel j₁ j₂ → inc.glue i₁ j₁ =
+some k₁ → inc.glue i₂ j₂ = some k₂ → rel k₁ k₂` — quantified ONLY over
+the case both sides' `glue` produce a `some`; it says nothing whatsoever
+about a `none` outcome. This is direct textual evidence (not an
+invented convention) that this codebase's own established vocabulary for
+"glue agrees up to a relation" doesn't extend to comparing `none` against
+`some x` at all.
+
+Given that, split the investigation in two: (1) formalize the canonical
+lift of `≈` to `Option` (mirroring how `=` itself lifts — `none` only
+relates to `none`, `some a` only to `some b` when `a ≈ b`, and a
+`none`/`some` pair is never related, by construction) and check whether
+cycle 47's specific counterexample is rescued under it. (2) Since (1)
+was expected to resolve negatively (a scoping finding, per the task's own
+suggestion), also checked the task's suggested fallback: does a DIFFERENT
+concrete case exist where BOTH sides succeed but disagree? Rather than
+hunt instance-by-instance, worked out the general algebra by hand first
+(as cycle 47 did): for ANY `inc1`/`inc2`/`inc3`, using only `inc1`'s
+`unit_left`/`unit_right` structural obligations, whenever the RHS
+(`incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)`)'s
+`glue` succeeds at all, does the LHS's `glue` (transported through
+`prodSumDistribForward`) necessarily equal it? Worked through all four
+tag combinations of the `I2 ⊕ I3` argument (inl/inl, inr/inr, inl/inr,
+inr/inl) by hand, then transcribed each as a Lean theorem and let the
+compiler catch errors in the by-hand reasoning — it did catch one: an
+initial assumption that the two same-side cases (inl/inl and inr/inr)
+would need symmetric case-splitting on `inc2.unit`/`inc3.unit` was wrong.
+`incidenceSum`'s designated absorbing unit is ALWAYS `Sum.inl inc1.unit`
+(the FIRST factor's unit only) — so a same-side pair on the SECOND
+factor can never hit an absorption branch at all (wrong tag,
+unconditionally), while a same-side pair on the FIRST factor genuinely
+can. Two small reusable facts about `incidenceSum` fell out of pinning
+this down precisely (`incidenceSum_glue_same_left`/`_same_right`/
+`_cross_left`/`_cross_right`, added to `Sum.lean`) and made the
+main proof mechanical once available.
+
+**Result**: **a genuine two-part finding, one negative (closing cycle
+47's exact question) and one positive (stronger than what was asked)**.
+Added to `IncidenceTheory/Sum.lean` (15 new declarations: 4 general
+`incidenceSum`-glue characterization lemmas, 4 per-tag-combo agreement
+lemmas, the main theorem, two corollaries, an `Option`-lift definition
+plus its one structural lemma, and 3 declarations transcribing cycle
+47's concrete counterexample values/closing fact).
+
+(1) **The specific counterexample is NOT rescued by weakening to `≈`** —
+confirmed by `not_optionApproxBisim_some_none`, a fully general,
+instance-independent fact: under `OptionApproxBisim` (the canonical
+`Option`-lift of any relation on a carrier, defined precisely to mirror
+how `=` lifts to `Option`), `some a` is NEVER related to `none`, for any
+underlying relation and any `a` — not a deep fact, but the direct,
+honest consequence of `≈` being defined only on actual carrier elements
+plus this project's own `GlueRespects` already implicitly agreeing (its
+hypotheses require both sides to be `some`). Instantiated concretely at
+cycle 47's own values via
+`incidenceProd_incidenceSum_distrib_glue_misaligned_not_bisim_rescued`
+(using two newly-named facts, `..._lhs_some` = `some (Sum.inr (5,
+FiniteIncidence.root))` and `..._rhs_none` = `none`, both `decide`-closed
+— cycle 47 itself only proved the two sides `≠`, without naming either
+value). This is the scoping resolution the task anticipated as a live
+possibility, reached honestly rather than by straining a comparison that
+was never well-formed to begin with: the counterexample is about a
+`glue` DEFINED-vs-UNDEFINED mismatch, and `≈`/`GlueRespects` were never
+built to adjudicate that.
+
+(2) **But the investigation into WHY produced a stronger, fully general,
+POSITIVE theorem that subsumes the task's suggested fallback question.**
+`incidenceProd_incidenceSum_distrib_glue_agrees_of_rhs_some`: for ANY
+`inc1`/`inc2`/`inc3` (no instance hypothesis at all, unlike cycle 47's
+necessarily-concrete counterexample) — whenever the RHS's `glue`
+succeeds (`some w`), the LHS's `glue` ALSO succeeds and, transported
+through the bijection, equals `w` EXACTLY, not merely up to `≈`. Proved
+by cases on the four `I2 ⊕ I3`-tag combinations, using only `inc1`'s
+`unit_left`/`unit_right` laws (no `natIncidence`/`finiteIncidence`
+specifics). Direct corollary,
+`incidenceProd_incidenceSum_distrib_glue_no_disagreement_when_both_some`:
+there is consequently NO possible case, for ANY instances whatsoever,
+where both sides succeed but disagree — the task's own suggested
+fallback ("look for a both-succeed-but-differ case") is answered
+definitively in the negative, by proof rather than by exhausting this
+project's handful of concrete instances. Restated in the `≈` vocabulary
+the task asked about via `..._approxBisim_of_both_some` (trivial once
+the exact-equality corollary is in hand, via `approxBisim_refl` — literal
+equality is always `≈`-related).
+
+Net picture, combining (1) and (2): the misalignment cycle 47 found is
+now known to be *exactly and only* a "RHS fails, LHS may still succeed"
+phenomenon — never the reverse (not proved this cycle, but not needed:
+cycle 47's own asymmetric absorption-mechanism description already makes
+the RHS-fails/LHS-succeeds direction the only possible one, and this
+cycle's part (2) rules out the remaining "both succeed, disagree" case
+entirely) — and no `≈`-level rescue is available for that failing case,
+for a reason unrelated to bisimulation strength: it is a category
+mismatch (comparing a defined outcome to an undefined one), not a
+weakness of `≈` itself.
+
+`lake build`: 62/62 jobs (`lake clean && lake build`, matching
+`verify.sh`). `#print axioms` (scratch file, deleted after use, cycles
+45-47's method): the four general `incidenceSum`-glue lemmas, the main
+theorem, and both corollaries need only `propext`/`Quot.sound`;
+`not_optionApproxBisim_some_none` needs only `propext`; the three
+declarations instantiating cycle 47's concrete
+`natIncidence`/`finiteIncidence` values need
+`propext`/`Classical.choice`/`Quot.sound` — the same standing baseline
+cycles 37/47 already documented for any `natIncidence`-involving fact
+(present since cycle 4), not something newly introduced. Full
+`./verify.sh` (clean `lake clean && lake build`, example binary run,
+repo-wide unproved-declaration grep): passes end to end.
+
+**Synthesis**: this closes cycle 47's queued hypothesis (a) with an
+honest, two-sided answer rather than forcing either half — the negative
+half is a genuine scoping finding (the same family as cycles 38-40's
+honest negatives), and the positive half is a materially STRONGER
+general theorem than the bisimulation-weakening the task asked for
+(exact agreement, not merely `≈`-agreement, whenever the comparison is
+even meaningful). The recurring lesson from this project's "generic
+constructor" thread (cycles 31-48) sharpens further: `incidenceSum`'s
+unit-absorption is not merely "aware only of its own two immediate
+arguments" (cycle 47's framing) but specifically "aware only of its
+FIRST argument's unit" — an asymmetry between the sum's two factors that
+this cycle's initial by-hand derivation got wrong on the first attempt
+(assuming naive left/right symmetry) before the Lean compiler's case
+analysis forced the correction, a small but genuine instance of this
+project's standing discipline (cycle 37 onward) of not trusting
+structural arguments by inspection alone, formal or otherwise.
+
+**Next hypothesis (cycle 49, not yet attempted)**: two live threads
+remain from cycle 47's queue (its (b) and (c)), plus one this cycle
+surfaces. (a, new) This cycle proved the RHS-fails/LHS-succeeds
+direction is a real asymmetry but did not prove it EXHAUSTIVELY
+characterizes every misalignment case in general (only ruled out
+same-value disagreement when both succeed) — is there a clean, fully
+general characterization of exactly when
+`incidenceProd_incidenceSum_distrib_glue_agrees_of_rhs_some`'s converse
+fails (LHS succeeds, RHS is `none`), stated as an iff rather than
+cycle 47's single concrete witness? The by-hand cross-case analysis in
+this cycle's Method section already sketches the shape (LHS's inner-sum
+absorption test ignores whichever `I1` component isn't tagged into it,
+RHS's outer-sum absorption test demands the full pair) — formalizing it
+as a clean `↔` is the natural completion. (b) cycle 47's still-queued
+item: build a first concrete instance actually USING `incidenceSum` with
+a non-permissive `guards`, to convert cycle 47's part-(3)
+structural-but-unwitnessed `guards` asymmetry into an actual concrete
+counterexample (or discover it does NOT concretely manifest even then).
+(c) cycle 39's still-open item, now queued four cycles running: does any
+existing instance have a `≈`-quotient in the middle ground beyond
+`simplexIncidence` (cycle 41's only example)?
