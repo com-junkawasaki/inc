@@ -6125,3 +6125,182 @@ existing project theorems, not just prove new ones, which would be a
 different kind of payoff than the forward-looking one this cycle delivered.
 Either is well-scoped and low-risk; (a) grows the library outward, (b) tests
 whether it already pays for itself against existing content.
+
+## Cycle 61
+
+**Hypothesis**: cycle 60's own "Next hypothesis" queue named two independent,
+low-risk continuations of roadmap item 8's linear-algebra sub-area, and this
+cycle takes up both, per the task's framing that they are complementary and
+each individually comparable in scope to a full cycle: (b) does the general
+`Matrix` layer (`add`/`mul`/`transpose`, `IncidenceTheory.lean` L792-885) and
+its headline payoff `laplacian_eq_transpose_mul_boundaryMatrix` (L896-901)
+retroactively SIMPLIFY `laplacian_symmetric` (L937-951), an existing theorem
+proved by hand, via a bespoke fold-symmetry induction, before cycle 60's
+general infrastructure existed -- can `laplacian`'s symmetry instead be
+derived as `(BᵀB)ᵀ = Bᵀ(Bᵀ)ᵀ = BᵀB` using only `Matrix.transpose_mul` and
+`Matrix.transpose_transpose`? (a) does the bare `Matrix m n α := m → n → α`
+abstraction admit an identity matrix `Matrix.one` and two-sided unit laws
+`Matrix.one_mul`/`Matrix.mul_one` (`I * A = A`, `A * I = A`) for
+`DecidableEq`-indexed square matrices, reusing the project's existing
+`intListSum`/list-count library rather than re-deriving a fresh
+"sum-collapses-to-one-term" fact from scratch, as cycle 60's own queue
+anticipated might be needed?
+
+**Method**: read `IncidenceTheory.lean` L644-901 (`boundaryMatrix`,
+`laplacian`, the full `intListSum` library, `namespace Matrix ... end Matrix`,
+and `laplacian_eq_transpose_mul_boundaryMatrix`) and L937-951
+(`laplacian_symmetric`'s existing proof: an explicit `∀ (xs : List I) (acc :
+Int), xs.foldl (fun total k => total + b k i * b k j) acc = xs.foldl (fun
+total k => total + b k j * b k i) acc` induction, closed by `Int.mul_comm (b
+k i) (b k j)` at each `cons` step) before writing anything, per the task's
+instructions. For (b), worked out on paper first that the target argument is
+purely structural (transpose-of-product plus transpose-involution, no fresh
+`intListSum` reasoning), so attempted it directly as a new theorem
+`laplacian_symmetric_via_matrix` alongside the untouched original, per the
+task's explicit instruction not to replace the hand-written theorem. For (a),
+before writing `Matrix.one`, searched the codebase (`rg 'Nodup|List.count|
+Fintype|Finset'`) for a reusable "sum where the summand vanishes off one
+target collapses to that target's count times its value" lemma, per cycle
+59-60's established discipline of checking for reusable library content
+before writing fresh induction -- found `foldl_add_eq_count_mul`
+(`IncidenceTheory.lean` L5902, in the file's much earlier cycle-9-era
+`single_link_composition_ne_zero` neighborhood: `∀ acc, idx.foldl (fun a y =>
+a + f y) acc = acc + (idx.count x) * f x` given `f` vanishes on `idx` off
+`x`), proved for an unrelated ∂²-impossibility argument but structurally
+IDENTICAL to what `Matrix.one`'s unit laws need, since `intListSum` is
+definitionally `xs.foldl (fun total x => total + f x) 0`. This forced a
+placement decision: `foldl_add_eq_count_mul` sits at file line 5902, far
+below cycle 60's `namespace Matrix` block (L792-885) in raw line number
+(even though it was proved by a much earlier cycle -- this file is not laid
+out in strict chronological-by-line-number order, since cycle 60 inserted its
+block into the file's early `intListSum`-library neighborhood rather than
+appending at the end), so a Lean declaration using it must physically follow
+line 5902. Decided to reopen `namespace Matrix ... end Matrix` immediately
+after `foldl_add_eq_count_mul` rather than duplicate its content near L885,
+confirmed reopening a namespace later in the same file is standard Lean 4 (no
+different from the file's own later `namespace PushoutUniversality` etc.
+one-shot blocks, except here reopening the SAME namespace, which Lean treats
+identically to a fresh one). Worked out the needed completeness hypothesis on
+paper: `Matrix.mul idx Matrix.one A i j` unfolds to `intListSum idx (fun k =>
+(if i = k then 1 else 0) * A k j)`, which by `foldl_add_eq_count_mul` collapses
+to `idx.count i * A i j` -- equal to `A i j` only when `idx.count i = 1` for
+every `i`, motivating a named hypothesis `IdxComplete idx := ∀ i, idx.count i
+= 1` (checked this is exactly satisfiable by the project's own concrete
+`GraphModel.lean` `finiteIdx := [.leaf, .root]`, a two-element `Nodup` list
+covering all of `FiniteIncidence`, though no example theorem was added this
+cycle since it was not required by either (a) or (b)).
+
+**Result**: **both (a) and (b) landed sorry-free, `./verify.sh` clean on the
+first `lake build` attempt for both with zero tactic-level fixes needed
+(a first for this project's Matrix-layer work -- cycle 60 itself needed one
+`rw`-direction fix).**
+
+(b): `laplacian_symmetric_via_matrix` (`IncidenceTheory.lean` L962-971,
+placed directly after the original `laplacian_symmetric`, which is
+byte-for-byte unchanged): `have hM := laplacian_eq_transpose_mul_
+boundaryMatrix inc idx` gives `laplacian inc idx = Bᵀ * B`; `have hsymm :
+Matrix.transpose (Bᵀ * B) = Bᵀ * B := by rw [Matrix.transpose_mul,
+Matrix.transpose_transpose]` proves `Bᵀ * B` is its own transpose (unfolding
+to `(Bᵀ * B)ᵀ = Bᵀ * (Bᵀ)ᵀ = Bᵀ * B`, exactly the paper argument); then `rw
+[hM]; exact (congrFun (congrFun hsymm i) j).symm` closes the pointwise goal,
+using that `Matrix.transpose M i j` is definitionally `M j i` so `hsymm`
+applied at `(i, j)` and symm'd gives precisely `M i j = M j i`. 10 lines total
+(including signature), no induction, versus the original's 15 lines
+(including signature) built around an explicit `xs.foldl`-generalizing
+induction with its own `cons`-case `Int.mul_comm` rewrite. **Honest
+accounting, not a forced "better" narrative**: the new proof genuinely has a
+shorter, induction-free proof body (7 tactic-lines vs. 13) and reads as pure
+algebraic composition of three already-proven general facts rather than a
+custom argument about `boundaryMatrix`'s fold structure -- but this
+simplicity is realized ONLY because cycle 60 already paid the fixed cost of
+building `Matrix.mul`/`transpose_mul`/`transpose_transpose` and connecting
+them to `laplacian`; amortized against that infrastructure, the marginal new
+proof is smaller, but the total proof-plus-dependencies weight is not smaller
+than the original's self-contained induction, which needs nothing beyond
+`Int.mul_comm`. So: a genuine marginal/conditional simplification (real once
+the general layer exists, which it now does and did not need to be built
+just for this), not an absolute one -- consistent with cycles 38-40/45-60's
+practice of reporting exactly the shape of a finding rather than rounding it
+up.
+
+(a): reopened `namespace Matrix` at `IncidenceTheory.lean` L5932 (immediately
+after `foldl_add_eq_count_mul`, L5923-5932 comment, closed `end Matrix`
+L5974), adding four declarations: `IdxComplete` (L5940-5941, the `∀ i,
+idx.count i = 1` hypothesis motivated in Method); `one` (L5943-5944, `fun i j
+=> if i = j then 1 else 0`); `one_mul` (L5946-5958) and `mul_one`
+(L5960-5972), both proved by the identical three-step pattern predicted in
+Method -- `show` to unfold `mul`/`one` to the explicit `intListSum` form,
+`foldl_add_eq_count_mul` (supplying a one-line `hother` vanishing-off-target
+proof by `if_neg`/`Int.zero_mul` or `Int.mul_zero`) to collapse the sum to
+`idx.count i * (…)` or `idx.count j * (…)`, then `rw [hidx i]`/`rw [hidx j]`
+plus `simp` to discharge the surviving `if i = i then 1 else 0` (`mul_one`'s
+mirror at `j = j`) and arithmetic identities. No fresh induction anywhere in
+(a): every step routes through `foldl_add_eq_count_mul` (reused, not
+re-derived) or core `Int`/`ite` lemmas. `#print axioms` on both new
+theorems and `laplacian_symmetric_via_matrix`: all three depend only on
+`[propext, Quot.sound]`, matching cycle 60's own baseline exactly (no new
+axiom, `Matrix.one`/`IdxComplete` are defs not theorems so contribute
+nothing to check). Full `./verify.sh` (clean `lake clean` rebuild, example
+run, repo-wide `axiom`/`sorry`/`sorryAx` grep) passes end to end with both
+(a) and (b) present simultaneously.
+
+**Synthesis**: this cycle differs in kind from cycle 60's own framing of its
+two queued options as alternatives ("(a) grows the library outward, (b)
+tests whether it already pays for itself") -- both were small enough to
+complete in one cycle, confirming the task's premise that they are
+individually comparable in scope to what cycle 60 itself delivered. The two
+results reinforce each other: (b) shows the general layer already explains
+one existing fact more cheaply than its bespoke proof (once the layer
+exists), while (a) shows the same "reuse an existing library lemma instead of
+re-deriving it" discipline that made cycle 60 possible generalizes cleanly
+to a THIRD source -- `foldl_add_eq_count_mul`, proved for an entirely
+unrelated cycle-9-era ∂²-impossibility argument, turned out to be exactly the
+finite-sum fact `Matrix.one`'s unit laws needed, with zero modification. This
+is now the third instance (after cycle 60's own `intListSum_mul_right`/
+`intListSum_comm`, both fresh generalizations of existing patterns) of this
+project's finite-sum library paying for itself in an unanticipated location,
+strengthening the case that the `intListSum`/`foldl`-count vocabulary built
+across early cycles is a genuinely reusable asset rather than isolated
+one-off lemmas. The `IdxComplete` hypothesis is itself a small but real
+addition to the project's vocabulary for "how much of the carrier `idx`
+covers" (previously only used implicitly, e.g. `finiteIdx := [.leaf, .root]`
+covering all of `FiniteIncidence` exactly once without ever being named as
+such) -- roadmap item 8's linear-algebra sub-area now has, in addition to
+cycle 60's add/mul/transpose/laplacian bricks, a unit element and the
+completeness notion a ring-style treatment of square matrices needs to state
+unit laws at all. Per cycle 60's own precedent (ADR addendum only for genuine
+new-construction progress on item 8, not merely confirmatory results), this
+cycle warrants a further ADR addendum for part (a) (a real, if modest,
+extension of the `Matrix` layer with a new hypothesis-bearing concept) but
+not separately for part (b) (a retroactive-simplification finding about a
+single existing theorem, honestly reported as conditional rather than an
+unconditional win, closer in kind to this project's confirmatory findings
+that have not individually warranted ADR updates).
+
+**Next hypothesis (cycle 62, not yet attempted)**: three candidate
+continuations surface from this cycle's work, none requiring a fresh
+scoping decision: (a) push the `Matrix.one`/`IdxComplete` pair further --
+does `Matrix.mul` restricted to `IdxComplete`-satisfying `idx` plus `add`
+give the expected ring-like structure (e.g. does `Matrix.one` interact
+correctly with `Matrix.transpose`, i.e. `Matrix.transpose Matrix.one =
+Matrix.one`, a one-line `funext`/`if`-symmetry fact not yet stated)? (b) a
+genuinely new concrete instance check: prove `Matrix.IdxComplete
+GraphModel.finiteIdx` (`finiteIdx := [.leaf, .root]`, likely `by decide` or
+`by native_decide` given the project's existing style for concrete
+`FiniteIncidence` facts) and use it to instantiate `Matrix.one_mul`/
+`Matrix.mul_one` against `finiteB`/`finiteL`, giving the project's first
+concrete (not merely general) witness that the new unit laws are
+non-vacuously applicable, mirroring how cycle 60's own general layer was
+eventually checked against `finiteB`/`finiteL` in `GraphModel.lean`. (c) a
+scouting task in the spirit of cycle 59: audit whether any OTHER existing
+hand-proved theorem in the project (beyond `laplacian_symmetric`, now
+covered by this cycle's (b)) becomes a short corollary of the `Matrix` layer
+plus its now-larger lemma set (`add_comm`/`add_assoc`/`mul_add`/`add_mul`/
+`transpose_mul`/`transpose_transpose`/`mul_assoc`/`one_mul`/`mul_one`) --
+this cycle only checked the one theorem the task named; a systematic sweep
+(e.g. `laplacian_diagonal_nonnegative`, `laplacian_rowSum_zero_of_
+boundaryRowBalanced`) has not yet been attempted and could surface further
+conditional simplifications of the kind (b) just found, or equally
+legitimately find that most of them do not reduce to the general layer as
+cleanly (an honest negative result would be just as informative, per this
+cycle's own (b) finding and this project's established culture).

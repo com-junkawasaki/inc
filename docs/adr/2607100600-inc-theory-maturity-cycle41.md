@@ -2033,3 +2033,35 @@ L645-659）は `Incidence.boundary` から直接構築された狭い具体式�
 40%/55–60%）も本追補では動かさない——1 cycle 分の具体的だが限定的な前進を過大評価
 しないための保守的判断であり、cycle 45–58統合追補が14 cycle分の蓄積を経て初めて
 percentages の据え置きを確認した基準と同じ基準を、単一 cycle の結果にも適用する。
+
+## 2026-07-14 追補（cycle 61: 単位行列 `Matrix.one` と単位律、および `laplacian_symmetric` の条件付き簡約）
+
+本追補は `RESEARCH_LOG.md` cycle 61 の結果を反映する。cycle 60 が自ら次サイクルの
+候補として並記した二案——(a) 単位行列とその単位律、(b) 既存の `laplacian_symmetric`
+（手書き証明）が cycle 60 の一般 `Matrix` 層で簡約できるか——を両方とも同一サイクルで
+完了した。ADR 追補の対象は (a) のみとする（(b) は既存1定理の遡及的簡約という確認的
+成果であり、cycle 60 自身の判断基準——項目8の新規構築にのみ ADR 追補する——に照らして
+単独では追補を要しない）。
+
+(a) の内容: `IncidenceTheory.lean` L5932 で `namespace Matrix` を再オープンし
+（cycle 60 の本体 L792-885 の直後ではなく、cycle 9 時代に証明済みの既存補題
+`foldl_add_eq_count_mul`（L5902、∂²非可換性の議論用に証明されていたが「和が1点を
+除いて消えるなら count×値に潰れる」という形が偶然完全に一致）を再利用するため、
+それが依存関係上先に来る L5902 より後に配置）、次を新設・証明した:
+
+- `Matrix.IdxComplete idx := ∀ i, idx.count i = 1`（`idx` が `I` の各要素をちょうど
+  一度ずつ含むという、`Matrix.mul` が `Fintype`/`Finset` でなく明示的な `idx : List I`
+  上の有限和である cycle 60 の設計を前提にした単位律の必要条件）。
+- `Matrix.one : Matrix I I Int := fun i j => if i = j then 1 else 0`。
+- `Matrix.one_mul`/`Matrix.mul_one`（`IdxComplete idx` の下で `I * A = A`/`A * I = A`）
+  ——`foldl_add_eq_count_mul` を再利用し、新規の帰納法は一切書かずに証明。
+
+これにより項目8の評価をさらに「行列の基本代数法則群 + `laplacian` との接続」から
+「+ 単位行列と単位律」へ更新する。ただし依然として: (a) 単位行列以外の線形代数
+（階数・行列式・固有値・逆行列）は未着手、(b) 抽象代数・位相・測度論は cycle 60
+追補時点の記述から変化なし、(c) `IdxComplete` を満たす具体インスタンス
+（`GraphModel.finiteIdx`）での実例チェックはまだ行っていない（cycle 62 の候補として
+`RESEARCH_LOG.md` cycle 61 の Next hypothesis に記録済み）。項目8の記述は
+「部分完了」のまま維持し、パーセンテージ（本文59行目、40%/55–60%）も本追補では
+動かさない——cycle 60 追補と同じ保守的判断（1 cycle 分の具体的だが限定的な前進を
+過大評価しない）を一貫して適用する。

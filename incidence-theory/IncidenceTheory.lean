@@ -950,6 +950,26 @@ theorem laplacian_symmetric {I R T : Type u} [DecidableEq I]
       exact ih _
   exact fold_symmetric idx 0
 
+/- Cycle 61 (b): does cycle 60's general `Matrix` layer retroactively
+   simplify `laplacian_symmetric` above, which predates it and was proved by
+   a bespoke fold-symmetry induction?  `laplacian_symmetric` is unchanged
+   (nothing in this project's culture requires replacing a working proof),
+   but this reproves the same fact as a corollary of
+   `laplacian_eq_transpose_mul_boundaryMatrix` plus `Matrix.transpose_mul`/
+   `Matrix.transpose_transpose`: `laplacian inc idx = Bᵀ * B`, and
+   `(Bᵀ * B)ᵀ = Bᵀ * (Bᵀ)ᵀ = Bᵀ * B` by those two general laws, so `Bᵀ * B`
+   equals its own transpose, i.e. is symmetric at every `(i, j)`. -/
+theorem laplacian_symmetric_via_matrix {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (i j : I) :
+    laplacian inc idx i j = laplacian inc idx j i := by
+  have hM := laplacian_eq_transpose_mul_boundaryMatrix inc idx
+  have hsymm : Matrix.transpose
+      (Matrix.mul idx (Matrix.transpose (boundaryMatrix inc idx)) (boundaryMatrix inc idx)) =
+      Matrix.mul idx (Matrix.transpose (boundaryMatrix inc idx)) (boundaryMatrix inc idx) := by
+    rw [Matrix.transpose_mul, Matrix.transpose_transpose]
+  rw [hM]
+  exact (congrFun (congrFun hsymm i) j).symm
+
 theorem laplacian_columnSum_zero_of_boundaryRowBalanced {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (idx : List I) (hbalanced : BoundaryRowBalanced inc idx)
     (j : I) : laplacianColumnSum inc idx j = 0 := by
@@ -5899,6 +5919,59 @@ theorem foldl_add_eq_count_mul {I : Type u} [DecidableEq I]
     · have hz := hother hd List.mem_cons_self h
       rw [List.count_cons_of_ne h, hz]
       omega
+
+/- Cycle 61 (a): extend cycle 60's general `Matrix` layer (declared at
+   L792-885, `namespace Matrix ... end Matrix`, reopened here) outward with
+   an identity matrix and its two-sided unit laws under `Matrix.mul`.
+   Placed here rather than immediately after cycle 60's block because it
+   reuses `foldl_add_eq_count_mul` just above (a Lean declaration must come
+   after what it depends on) instead of re-deriving "a finite sum where the
+   summand vanishes off one target collapses to that target's count times
+   its value" from scratch -- the same "reuse, don't rebuild" preference
+   cycle 60 itself followed for `intListSum_mul_right`/`intListSum_comm`. -/
+namespace Matrix
+
+/- `idx` hits every index of `I` with multiplicity exactly one: the
+   completeness/nodup hypothesis `Matrix.one`'s unit laws need, since
+   `Matrix.mul` sums over the explicit list `idx` rather than a `Fintype`
+   enumeration -- if some `i` were missing from `idx`, or repeated, the
+   `i`-th diagonal `1` entry of `Matrix.one` would contribute `0` times or
+   more than once, and `mul idx one A` would not recover `A` exactly. -/
+def IdxComplete {I : Type u} [DecidableEq I] (idx : List I) : Prop :=
+  ∀ i, idx.count i = 1
+
+def one {I : Type u} [DecidableEq I] : Matrix I I Int :=
+  fun i j => if i = j then 1 else 0
+
+theorem one_mul {I : Type u} [DecidableEq I] (idx : List I) (hidx : IdxComplete idx)
+    (A : Matrix I I Int) :
+    mul idx one A = A := by
+  funext i j
+  show intListSum idx (fun k => (if i = k then (1 : Int) else 0) * A k j) = A i j
+  have hother : ∀ y ∈ idx, y ≠ i → (if i = y then (1 : Int) else 0) * A y j = 0 := by
+    intro y _ hy
+    rw [if_neg (fun h => hy h.symm), Int.zero_mul]
+  have hfold := foldl_add_eq_count_mul idx i
+    (fun y => (if i = y then (1 : Int) else 0) * A y j) hother 0
+  unfold intListSum
+  rw [hfold, hidx i]
+  simp
+
+theorem mul_one {I : Type u} [DecidableEq I] (idx : List I) (hidx : IdxComplete idx)
+    (A : Matrix I I Int) :
+    mul idx A one = A := by
+  funext i j
+  show intListSum idx (fun k => A i k * (if k = j then (1 : Int) else 0)) = A i j
+  have hother : ∀ y ∈ idx, y ≠ j → A i y * (if y = j then (1 : Int) else 0) = 0 := by
+    intro y _ hy
+    rw [if_neg hy, Int.mul_zero]
+  have hfold := foldl_add_eq_count_mul idx j
+    (fun y => A i y * (if y = j then (1 : Int) else 0)) hother 0
+  unfold intListSum
+  rw [hfold, hidx j]
+  simp
+
+end Matrix
 
 /- Extracted helper: a nonzero-sign, positive-multiplicity endpoint's
    signed value is nonzero, regardless of which of the two nonzero signs
