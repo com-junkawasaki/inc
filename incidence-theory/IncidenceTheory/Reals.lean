@@ -2513,6 +2513,13 @@ theorem realInvOrZero_zero : realInvOrZero realZero = realZero := by
   rw [realInvOrZero]
   simp
 
+theorem realInv_of_nonnegative
+    (value : NonnegativeReal) (nonzero : value.value ≠ realZero) :
+    realInv value.value nonzero = (nonnegativeRealInv value nonzero).value := by
+  classical
+  rw [realInv]
+  simp only [dif_pos value.nonnegative]
+
 theorem realMul_inv (value : IncReal) (nonzero : value ≠ realZero) :
     realMul value (realInv value nonzero) = realOne := by
   classical
@@ -3835,6 +3842,22 @@ noncomputable def realPow (base : IncReal) : Nat → IncReal
 theorem realPow_one (base : IncReal) : realPow base 1 = base := by
   rw [realPow_succ, realPow_zero, realMul_one_left]
 
+theorem realPow_one_base (exponent : Nat) :
+    realPow realOne exponent = realOne := by
+  induction exponent with
+  | zero => rfl
+  | succ exponent induction =>
+      rw [realPow_succ, induction, realMul_one_right]
+
+theorem realPow_ne_zero
+    (base : IncReal) (baseNonzero : base ≠ realZero) (exponent : Nat) :
+    realPow base exponent ≠ realZero := by
+  induction exponent with
+  | zero => exact real_zero_ne_one.symm
+  | succ exponent induction =>
+      rw [realPow_succ]
+      exact realMul_ne_zero induction baseNonzero
+
 theorem realPow_add (base : IncReal) (left right : Nat) :
     realPow base (left + right) =
       realMul (realPow base left) (realPow base right) := by
@@ -3869,6 +3892,67 @@ theorem realPow_mul_base (left right : IncReal) (exponent : Nat) :
                 realMul_assoc left (realPow right exponent) right,
                 ← realMul_assoc]
         _ = _ := rfl
+
+theorem realPow_mul_pow_inv
+    (base : IncReal) (baseNonzero : base ≠ realZero) (exponent : Nat) :
+    realMul (realPow base exponent)
+        (realPow (realInv base baseNonzero) exponent) = realOne := by
+  rw [← realPow_mul_base, realMul_inv, realPow_one_base]
+
+theorem realPow_inv_eq_inv_pow
+    (base : IncReal) (baseNonzero : base ≠ realZero) (exponent : Nat) :
+    realPow (realInv base baseNonzero) exponent =
+      realInv (realPow base exponent)
+        (realPow_ne_zero base baseNonzero exponent) := by
+  apply realMul_cancel_left
+    (realPow_ne_zero base baseNonzero exponent)
+  rw [realPow_mul_pow_inv, realMul_inv]
+
+theorem nonnegativeRealInv_ne_zero
+    (value : NonnegativeReal) (nonzero : value.value ≠ realZero) :
+    (nonnegativeRealInv value nonzero).value ≠ realZero := by
+  intro inverseZero
+  have lawBundle := congrArg NonnegativeReal.value
+    (nonnegativeRealMul_inv value nonzero)
+  have law : realMul value.value
+      (nonnegativeRealInv value nonzero).value = realOne := by
+    rw [realMul_of_nonnegative value.value
+      (nonnegativeRealInv value nonzero).value value.nonnegative
+      (nonnegativeRealInv value nonzero).nonnegative]
+    exact lawBundle
+  rw [inverseZero, realMul_zero_right] at law
+  exact real_zero_ne_one law
+
+theorem nonnegativeRealInv_involutive
+    (value : NonnegativeReal) (nonzero : value.value ≠ realZero) :
+    nonnegativeRealInv (nonnegativeRealInv value nonzero)
+        (nonnegativeRealInv_ne_zero value nonzero) = value := by
+  apply NonnegativeReal.ext
+  apply realMul_cancel_left (nonnegativeRealInv_ne_zero value nonzero)
+  rw [realMul_of_nonnegative
+      (nonnegativeRealInv value nonzero).value
+      (nonnegativeRealInv (nonnegativeRealInv value nonzero)
+        (nonnegativeRealInv_ne_zero value nonzero)).value
+      (nonnegativeRealInv value nonzero).nonnegative
+      (nonnegativeRealInv (nonnegativeRealInv value nonzero)
+        (nonnegativeRealInv_ne_zero value nonzero)).nonnegative,
+    realMul_of_nonnegative
+      (nonnegativeRealInv value nonzero).value value.value
+      (nonnegativeRealInv value nonzero).nonnegative value.nonnegative]
+  change
+    (nonnegativeRealMul (nonnegativeRealInv value nonzero)
+      (nonnegativeRealInv (nonnegativeRealInv value nonzero)
+        (nonnegativeRealInv_ne_zero value nonzero))).value =
+    (nonnegativeRealMul (nonnegativeRealInv value nonzero) value).value
+  rw [nonnegativeRealMul_inv,
+    nonnegativeRealMul_comm_bundle, nonnegativeRealMul_inv]
+
+theorem nonnegativeRealInv_one :
+    nonnegativeRealInv nonnegativeOne real_zero_ne_one.symm =
+      nonnegativeOne := by
+  have law := nonnegativeRealMul_inv nonnegativeOne real_zero_ne_one.symm
+  rw [nonnegativeRealMul_one_left_bundle] at law
+  exact law
 
 noncomputable def nonnegativeRealPow
     (base : NonnegativeReal) : Nat → NonnegativeReal
@@ -4099,6 +4183,179 @@ theorem nonnegativeReal_one_add_pow_eventually_above
   exact realLT_of_lt_of_le thresholdAbove
     (nonnegativeRealPow_monotone_exponent oneBelowBase exponentLarge)
 
+theorem nonnegativeReal_inv_one_add_pow_converges_zero
+    (value : NonnegativeReal) (valueNonzero : value.value ≠ realZero) :
+    RealSequenceConverges
+      (fun exponent =>
+        (nonnegativeRealPow
+          (nonnegativeRealInv (nonnegativeRealAdd nonnegativeOne value)
+            (by
+              intro baseZero
+              have oneBelow : realLE nonnegativeOne.value
+                  (nonnegativeRealAdd nonnegativeOne value).value := by
+                have added := realAdd_monotone_right
+                  (left := nonnegativeOne.value) value.nonnegative
+                simpa [realAdd_zero_right] using added
+              rw [baseZero] at oneBelow
+              exact real_zero_ne_one
+                (realLE_antisymm oneBelow nonnegativeOne.nonnegative).symm))
+          exponent).value)
+      realZero := by
+  let base := nonnegativeRealAdd nonnegativeOne value
+  have baseNonzero : base.value ≠ realZero := by
+    intro baseZero
+    have oneBelow : realLE nonnegativeOne.value base.value := by
+      have added := realAdd_monotone_right
+        (left := nonnegativeOne.value) value.nonnegative
+      simpa [base, realAdd_zero_right] using added
+    rw [baseZero] at oneBelow
+    exact real_zero_ne_one
+      (realLE_antisymm oneBelow nonnegativeOne.nonnegative).symm
+  let inverseBase := nonnegativeRealInv base baseNonzero
+  intro epsilon epsilonPositive
+  let epsilonReal : NonnegativeReal :=
+    { value := rationalToReal epsilon
+      nonnegative := (rationalToReal_le_iff _ _).mpr epsilonPositive.1 }
+  have epsilonNonzero : epsilonReal.value ≠ realZero := by
+    intro epsilonZero
+    have injected := rationalToReal_injective epsilonZero
+    rw [injected] at epsilonPositive
+    exact rationalLT_irrefl _ epsilonPositive
+  let target := nonnegativeRealInv epsilonReal epsilonNonzero
+  obtain ⟨threshold, eventuallyAbove⟩ :=
+    nonnegativeReal_one_add_pow_eventually_above value valueNonzero target.value
+  refine ⟨threshold, ?_⟩
+  intro exponent exponentLarge
+  have above := eventuallyAbove exponent exponentLarge
+  let basePower := nonnegativeRealPow base exponent
+  have basePowerNonzero : basePower.value ≠ realZero := by
+    rw [nonnegativeRealPow_value]
+    exact realPow_ne_zero base.value baseNonzero exponent
+  have reversed := nonnegativeRealInv_order_reverse
+    (left := target) (right := basePower)
+    (nonnegativeRealInv_ne_zero epsilonReal epsilonNonzero)
+    basePowerNonzero above.1
+  have inverseTarget : nonnegativeRealInv target
+      (nonnegativeRealInv_ne_zero epsilonReal epsilonNonzero) = epsilonReal :=
+    nonnegativeRealInv_involutive epsilonReal epsilonNonzero
+  rw [inverseTarget] at reversed
+  have powerInverse :
+      (nonnegativeRealPow inverseBase exponent).value =
+        (nonnegativeRealInv basePower basePowerNonzero).value := by
+    apply realMul_cancel_left basePowerNonzero
+    have leftLaw : realMul basePower.value
+        (nonnegativeRealPow inverseBase exponent).value = realOne := by
+      calc
+        _ = realMul (realPow base.value exponent)
+            (realPow (realInv base.value baseNonzero) exponent) := by
+              dsimp [basePower]
+              rw [nonnegativeRealPow_value, nonnegativeRealPow_value,
+                ← realInv_of_nonnegative base baseNonzero]
+        _ = realOne := realPow_mul_pow_inv base.value baseNonzero exponent
+    have rightLaw : realMul basePower.value
+        (nonnegativeRealInv basePower basePowerNonzero).value = realOne := by
+      rw [← realInv_of_nonnegative basePower basePowerNonzero,
+        realMul_inv]
+    rw [leftLaw, rightLaw]
+  change realLE
+    (realDist (nonnegativeRealPow inverseBase exponent).value realZero).value
+    (rationalToReal epsilon)
+  rw [realDist_zero_right,
+    realAbs_of_nonnegative _ (nonnegativeRealPow inverseBase exponent).nonnegative,
+    powerInverse]
+  exact reversed
+
+theorem nonnegativeReal_pow_converges_zero_of_lt_one
+    (magnitude : NonnegativeReal)
+    (belowOne : realLT magnitude.value nonnegativeOne.value) :
+    RealSequenceConverges
+      (fun exponent => (nonnegativeRealPow magnitude exponent).value)
+      realZero := by
+  by_cases magnitudeZero : magnitude.value = realZero
+  · have magnitudeEq : magnitude = nonnegativeZero := by
+      apply NonnegativeReal.ext
+      exact magnitudeZero
+    subst magnitude
+    intro epsilon epsilonPositive
+    refine ⟨1, ?_⟩
+    intro exponent exponentLarge
+    cases exponent with
+    | zero => omega
+    | succ exponent =>
+        change realLE
+          (realDist (nonnegativeRealPow nonnegativeZero
+            (Nat.succ exponent)).value realZero).value
+          (rationalToReal epsilon)
+        rw [nonnegativeRealPow, nonnegativeRealMul_zero_right_bundle]
+        change realLE (realDist realZero realZero).value
+          (rationalToReal epsilon)
+        rw [realDist_self]
+        exact (rationalToReal_le_iff _ _).mpr epsilonPositive.1
+  · let inverseMagnitude := nonnegativeRealInv magnitude magnitudeZero
+    have oneBelowInverse :
+        realLE nonnegativeOne.value inverseMagnitude.value := by
+      have reversed := nonnegativeRealInv_order_reverse
+        (left := magnitude) (right := nonnegativeOne)
+        magnitudeZero real_zero_ne_one.symm belowOne.1
+      rw [nonnegativeRealInv_one] at reversed
+      exact reversed
+    have inverseNeOne : inverseMagnitude ≠ nonnegativeOne := by
+      intro equal
+      have law := nonnegativeRealMul_inv magnitude magnitudeZero
+      change nonnegativeRealMul magnitude inverseMagnitude = nonnegativeOne at law
+      rw [equal, nonnegativeRealMul_one_right_bundle] at law
+      exact belowOne.2 (congrArg NonnegativeReal.value law)
+    let increment : NonnegativeReal :=
+      { value := realAdd inverseMagnitude.value
+          (realNeg nonnegativeOne.value)
+        nonnegative := by
+          have shifted := realAdd_monotone_left
+            (right := realNeg nonnegativeOne.value) oneBelowInverse
+          rw [realAdd_neg] at shifted
+          exact shifted }
+    have incrementNonzero : increment.value ≠ realZero := by
+      intro incrementZero
+      have inverseValueEq := real_eq_of_add_neg_eq_zero incrementZero
+      exact inverseNeOne (NonnegativeReal.ext inverseValueEq)
+    have baseEq : nonnegativeRealAdd nonnegativeOne increment =
+        inverseMagnitude := by
+      apply NonnegativeReal.ext
+      dsimp [increment]
+      change realAdd nonnegativeOne.value
+        (realAdd inverseMagnitude.value (realNeg nonnegativeOne.value)) =
+        inverseMagnitude.value
+      calc
+        _ = realAdd inverseMagnitude.value
+            (realAdd nonnegativeOne.value (realNeg nonnegativeOne.value)) := by
+              rw [← realAdd_assoc,
+                realAdd_comm nonnegativeOne.value inverseMagnitude.value,
+                realAdd_assoc]
+        _ = inverseMagnitude.value := by
+              rw [realAdd_neg, realAdd_zero_right]
+    have constructedBaseNonzero :
+        (nonnegativeRealAdd nonnegativeOne increment).value ≠ realZero := by
+      rw [baseEq]
+      exact nonnegativeRealInv_ne_zero magnitude magnitudeZero
+    have inverseConverges :=
+      nonnegativeReal_inv_one_add_pow_converges_zero increment incrementNonzero
+    have inverseInverse := nonnegativeRealInv_involutive magnitude magnitudeZero
+    intro epsilon epsilonPositive
+    obtain ⟨threshold, eventuallyClose⟩ :=
+      inverseConverges epsilon epsilonPositive
+    refine ⟨threshold, ?_⟩
+    intro exponent exponentLarge
+    have close := eventuallyClose exponent exponentLarge
+    change realLE
+      (realDist (nonnegativeRealPow magnitude exponent).value realZero).value
+      (rationalToReal epsilon)
+    have inverseBaseEq :
+        nonnegativeRealInv (nonnegativeRealAdd nonnegativeOne increment)
+            constructedBaseNonzero =
+          magnitude := by
+      simpa only [baseEq] using inverseInverse
+    rw [inverseBaseEq] at close
+    exact close
+
 theorem realAbs_pow (base : IncReal) (exponent : Nat) :
     realAbs (realPow base exponent) = nonnegativeRealPow (realAbs base) exponent := by
   induction exponent with
@@ -4107,6 +4364,29 @@ theorem realAbs_pow (base : IncReal) (exponent : Nat) :
       exact realAbs_of_nonnegative realOne nonnegativeOne.nonnegative
   | succ exponent induction =>
       rw [realPow_succ, nonnegativeRealPow, realAbs_mul, induction]
+
+theorem realPow_converges_zero_of_abs_lt_one
+    (ratio : IncReal)
+    (belowOne : realLT (realAbs ratio).value realOne) :
+    RealSequenceConverges (realPow ratio) realZero := by
+  have magnitudeConverges :=
+    nonnegativeReal_pow_converges_zero_of_lt_one (realAbs ratio) belowOne
+  intro epsilon epsilonPositive
+  obtain ⟨threshold, eventuallyClose⟩ :=
+    magnitudeConverges epsilon epsilonPositive
+  refine ⟨threshold, ?_⟩
+  intro exponent exponentLarge
+  have close := eventuallyClose exponent exponentLarge
+  change realLE (realDist (realPow ratio exponent) realZero).value
+    (rationalToReal epsilon)
+  rw [realDist_zero_right, realAbs_pow]
+  change realLE
+    (realDist (nonnegativeRealPow (realAbs ratio) exponent).value realZero).value
+    (rationalToReal epsilon) at close
+  rw [realDist_zero_right,
+    realAbs_of_nonnegative _
+      (nonnegativeRealPow (realAbs ratio) exponent).nonnegative] at close
+  exact close
 
 def realPartialSum (terms : RealSequence) : RealSequence
   | 0 => realZero
@@ -4236,6 +4516,19 @@ theorem realGeometricSeriesConverges_of_pow_zero
     (rationalToReal epsilon)
   rw [realGeometricPartialSum_closed ratio ratioNeOne index]
   exact eventuallyClose index indexLarge
+
+theorem realGeometricSeriesConverges_of_abs_lt_one
+    (ratio : IncReal)
+    (belowOne : realLT (realAbs ratio).value realOne) :
+    RealSeriesConverges (realPow ratio)
+      (realDiv realOne (realAdd realOne (realNeg ratio))) := by
+  have ratioNeOne : ratio ≠ realOne := by
+    intro ratioOne
+    subst ratio
+    have absoluteOne := realAbs_of_nonnegative realOne nonnegativeOne.nonnegative
+    exact belowOne.2 (congrArg NonnegativeReal.value absoluteOne)
+  exact realGeometricSeriesConverges_of_pow_zero ratio ratioNeOne
+    (realPow_converges_zero_of_abs_lt_one ratio belowOne)
 
 theorem realPow_zero_succ (exponent : Nat) :
     realPow realZero (Nat.succ exponent) = realZero := by
