@@ -3862,6 +3862,31 @@ theorem realContinuousAt_id (point : IncReal) :
     RealContinuousAt (fun value => value) point :=
   realFunctionLimitAt_id point
 
+theorem realFunctionLimitAt_value
+    {function : IncReal → IncReal} {point limit : IncReal}
+    (converges : RealFunctionLimitAt function point limit) :
+    function point = limit := by
+  have distanceBounded : ∀ epsilon : IncRational,
+      rationalLT (rationalOfInteger 0) epsilon →
+      realLE (realDist (function point) limit).value
+        (rationalToReal epsilon) := by
+    intro epsilon epsilonPositive
+    obtain ⟨delta, deltaPositive, eventuallyClose⟩ :=
+      converges epsilon epsilonPositive
+    apply eventuallyClose point
+    rw [realDist_self]
+    exact (rationalToReal_le_iff _ _).mpr deltaPositive.1
+  have distanceZero := nonnegativeReal_eq_zero_of_le_all_positive
+    (realDist (function point) limit) distanceBounded
+  exact (realDist_eq_zero_iff (function point) limit).mp distanceZero
+
+theorem realFunctionLimitAt_unique
+    {function : IncReal → IncReal} {point firstLimit secondLimit : IncReal}
+    (first : RealFunctionLimitAt function point firstLimit)
+    (second : RealFunctionLimitAt function point secondLimit) :
+    firstLimit = secondLimit := by
+  rw [← realFunctionLimitAt_value first, realFunctionLimitAt_value second]
+
 theorem realFunctionLimitAt_comp
     {first second : IncReal → IncReal}
     {point middle limit : IncReal}
@@ -3928,6 +3953,64 @@ theorem realFunctionLimitAt_neg
   intro input inputClose
   rw [realDist_neg]
   exact eventuallyClose input inputClose
+
+theorem realFunctionLimitAt_mul_const
+    (factor : IncReal)
+    {function : IncReal → IncReal} {point limit : IncReal}
+    (converges : RealFunctionLimitAt function point limit) :
+    RealFunctionLimitAt (fun value => realMul factor (function value))
+      point (realMul factor limit) := by
+  intro epsilon epsilonPositive
+  obtain ⟨bound, boundNotMember, boundPositive⟩ :=
+    (realAbs factor).positive_upper
+  have absoluteBound : realLE (realAbs factor).value
+      (rationalToReal bound) := by
+    intro rational member
+    exact (realAbs factor).value.lt_of_lower_of_not_lower
+      member boundNotMember
+  have boundNonzero : bound ≠ rationalOfInteger 0 := fun equal => by
+    subst bound
+    exact rationalLT_irrefl _ boundPositive
+  obtain ⟨boundInverse, boundInverseLaw⟩ :=
+    rational_nonzero_has_mul_inverse boundNonzero
+  have boundInversePositive :
+      rationalLT (rationalOfInteger 0) boundInverse := by
+    apply rationalMul_positive_reflect_right boundPositive
+    rw [boundInverseLaw]
+    exact rational_zero_lt_one
+  let outputRadius := rationalMul epsilon boundInverse
+  have outputRadiusPositive :
+      rationalLT (rationalOfInteger 0) outputRadius :=
+    rationalMul_positive epsilonPositive boundInversePositive
+  have boundOutputRadius : rationalMul bound outputRadius = epsilon := by
+    calc
+      _ = rationalMul epsilon (rationalMul bound boundInverse) := by
+        rw [← rationalMul_assoc bound epsilon boundInverse,
+          rationalMul_comm bound epsilon,
+          rationalMul_assoc epsilon bound boundInverse]
+      _ = rationalMul epsilon (rationalOfInteger 1) := by
+        rw [boundInverseLaw]
+      _ = epsilon := rationalMul_one_right epsilon
+  obtain ⟨inputRadius, inputRadiusPositive, eventuallyClose⟩ :=
+    converges outputRadius outputRadiusPositive
+  let boundReal : NonnegativeReal :=
+    { value := rationalToReal bound
+      nonnegative := (rationalToReal_le_iff _ _).mpr boundPositive.1 }
+  let outputRadiusReal : NonnegativeReal :=
+    { value := rationalToReal outputRadius
+      nonnegative :=
+        (rationalToReal_le_iff _ _).mpr outputRadiusPositive.1 }
+  refine ⟨inputRadius, inputRadiusPositive, ?_⟩
+  intro input inputClose
+  rw [realDist_mul_left]
+  have productBound := nonnegativeRealMul_monotone
+    (left := realAbs factor) (left' := boundReal)
+    (right := realDist (function input) limit) (right' := outputRadiusReal)
+    absoluteBound (eventuallyClose input inputClose)
+  have principalProduct := nonnegativeRealMul_rationalToReal_positive
+    boundPositive outputRadiusPositive
+  rw [principalProduct, boundOutputRadius] at productBound
+  exact productBound
 
 noncomputable def realDifferenceQuotient
     (function : IncReal → IncReal) (point derivative increment : IncReal) : IncReal :=
@@ -4159,6 +4242,40 @@ theorem realHasDerivativeAt_sub
       (realAdd leftDerivative (realNeg rightDerivative)) point :=
   realHasDerivativeAt_add leftDifferentiable
     (realHasDerivativeAt_neg rightDifferentiable)
+
+theorem realDifferenceQuotient_mul_const
+    (factor : IncReal) (function : IncReal → IncReal)
+    (derivative point increment : IncReal) :
+    realDifferenceQuotient (fun value => realMul factor (function value))
+        point (realMul factor derivative) increment =
+      realMul factor (realDifferenceQuotient function point derivative increment) := by
+  classical
+  by_cases incrementZero : increment = realZero
+  · simp only [realDifferenceQuotient, if_pos incrementZero]
+  · simp only [realDifferenceQuotient, if_neg incrementZero]
+    have numerator : realAdd
+        (realMul factor (function (realAdd point increment)))
+        (realNeg (realMul factor (function point))) =
+      realMul factor
+        (realAdd (function (realAdd point increment))
+          (realNeg (function point))) := by
+      rw [← realMul_neg_right, realMul_add]
+    rw [numerator, realDiv, realDiv, realMul_assoc]
+
+theorem realHasDerivativeAt_mul_const
+    (factor : IncReal)
+    {function : IncReal → IncReal} {derivative point : IncReal}
+    (differentiable : RealHasDerivativeAt function derivative point) :
+    RealHasDerivativeAt (fun value => realMul factor (function value))
+      (realMul factor derivative) point := by
+  have scaled := realFunctionLimitAt_mul_const factor differentiable
+  intro epsilon epsilonPositive
+  obtain ⟨delta, deltaPositive, eventuallyClose⟩ :=
+    scaled epsilon epsilonPositive
+  refine ⟨delta, deltaPositive, ?_⟩
+  intro increment incrementClose
+  rw [realDifferenceQuotient_mul_const]
+  exact eventuallyClose increment incrementClose
 
 noncomputable def realPow (base : IncReal) : Nat → IncReal
   | 0 => realOne
