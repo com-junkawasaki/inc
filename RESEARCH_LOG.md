@@ -4221,3 +4221,133 @@ cycle. Separately, if a future cycle wants a genuinely NEW `≈`-quotient
 fresh question this cycle's audit note explicitly distinguishes from the
 now-closed cycle 39/41 question -- worth its own hypothesis statement, not
 a queue-label carryover, if picked up later.
+
+## Cycle 50
+
+**Hypothesis**: cycle 49's queued option (b) -- build one concrete
+`Incidence` instance where `incidenceSum inc1 inc2` is applied with an
+`inc1` (or `inc2`) that has non-permissive `guards`, to test whether cycle
+47's structural asymmetry (`incidenceSum_prod_guards_always_permissive`:
+`incidenceSum`'s top-level guards are unconditionally `Guards.permissive`,
+vs. `incidenceProd_sum_guards_depends_on_inc1_only`: `incidenceProd`'s
+genuinely conjoin) actually manifests as an OBSERVABLE difference from a
+natural "expected" componentwise guards definition, or is provably
+impossible to observe (as cycle 49's own same-side-glue finding turned out
+to be for a different question).
+
+**Method**: grepped every `guards :=` field across `IncidenceTheory/*.lean`
+before writing anything (per the task's instruction) -- confirmed cycle 47's
+own claim that every concrete `Incidence` instance in this codebase
+(`natIncidence`, `finiteIncidence`, `trivialIncidence`, `cycleIncidence`,
+`pairIncidence`, `simplexIncidence`, `pathIncidence`, `treeIncidence`, the
+various number-system instances, etc.) uses `Guards.permissive`, with no
+exception; `BisimulationQuotientClassification.canonicalGuards`
+(`Quotient.lean`) is a generic quotient-guards *constructor*, not a
+counterexample itself, since every concrete classification it has been
+applied to descends from a permissive source instance, so its own `allow`
+still reduces to "always true" extensionally. So no existing instance could
+serve as the required witness -- one had to be built. Modeled it directly
+on `finiteIncidence` (`GraphModel.lean`): defined `Guards.never`, the exact
+polar opposite of `Guards.permissive` (`allow := fun _ _ => false`), and
+`finiteIncidenceNeverGuards`, `finiteIncidence` with ONLY the `guards` field
+swapped. Checked first, before writing the proof, that this typechecks at
+all: `finiteIncidence`'s (and `natIncidence`'s and `trivialIncidence`'s)
+`type_preserve` proof already discards its `guards.allow` hypothesis
+entirely (`by intro i j k hallow hglue; rfl`), because every hand-built
+instance's `typeFunc` targets the single constant `GraphType.unit` -- so the
+guard hypothesis was always vacuous for `type_preserve`'s purposes, and
+swapping to any other `Guards` value (permissive or not) reuses the exact
+same proof term unchanged. `finiteIncidence` was picked over the others
+only because its two-element carrier makes the eventual `decide` cheapest.
+
+Then built the comparison baseline: `sumGuardsExpected`, a hypothetical
+componentwise guards function for a sum, following the exact same
+case-structure `sumGlue`/`sumBoundary`/`sumResonance` (cycle 33) already
+use -- unit-absorbing (allow unconditionally when either side is literally
+the designated unit, mirroring `unit_left`/`unit_right`), same-side
+delegates to the matching factor's own `guards.allow`, cross-side (the case
+with no natural componentwise value -- the same tension `sumGlue` resolves
+by returning `none`) disallowed. This is a standalone `def`, not a change to
+`incidenceSum` itself, which stays exactly as cycle 33 left it (redesigning
+`incidenceSum`'s actual `guards` field, or building a full alternate
+guards-respecting sum constructor, is explicitly out of this cycle's scope,
+per the task).
+
+**Result**: **a clear, decide-confirmed positive divergence, sorry-free on
+the first build.** Added to `Sum.lean` (6 new declarations: `Guards.never`,
+`finiteIncidenceNeverGuards`, `sumGuardsExpected`, one general theorem, two
+concrete `decide`-checked corollaries).
+
+(1) The originally-scoped question: `incidenceSum_guards_diverges_of_inc1_disallows`
+proves generically that whenever `inc1.guards` disallows some non-unit pair
+`(i1, j1)`, `incidenceSum inc1 inc2`'s actual guards (`true`, unconditionally)
+diverge from `sumGuardsExpected` (`false`, since it delegates to `inc1`'s
+own disallowing guards) on the corresponding same-side pair
+`(Sum.inl i1, Sum.inl j1)`. `incidenceSum_guards_diverges_concrete`
+instantiates this at `finiteIncidenceNeverGuards`/`finiteIncidence`,
+`i1 = j1 = .root` (both `≠ .leaf = unit`), `decide`-confirmed: actual `=
+true`, expected `= false`. So YES -- cycle 47's structural asymmetry does
+concretely manifest the moment any instance uses non-permissive guards, not
+merely in the abstract.
+
+(2) A sharper finding the task's framing did not anticipate:
+`incidenceSum_guards_diverges_cross_side_permissive_factors` shows the SAME
+kind of divergence already exists for CROSS-side pairs using nothing but
+this project's long-standing, fully-permissive `natIncidence` -- no new
+instance needed at all. At `(Sum.inl 1, Sum.inr 1)` (both `≠ 0 =
+natIncidence.unit`), `incidenceSum natIncidence natIncidence`'s actual
+guards give `true` (permissive, unconditionally), while
+`sumGuardsExpected` gives `false` (genuine cross-side pair, the case
+`sumGlue` itself resolves to `none`, and `sumGuardsExpected` mirrors that
+with `false`). So the permissive/componentwise gap is not solely about a
+factor's OWN guards content (cycle 47's original framing) -- it is already
+present in how `incidenceSum` treats its own `Sum.inl`/`Sum.inr` case split,
+visible with instances this project has had since cycle 4.
+
+`lake build IncidenceTheory.Sum`: clean on the first attempt (no compiler
+errors caught this cycle, unlike cycles 48/49's one-fix experience). Full
+`./verify.sh` (`lake clean && lake build`, 62/62 jobs, example binary run,
+repo-wide `axiom`/`sorry`/`sorryAx` grep): passes end to end.
+
+**Synthesis**: this closes cycle 49's queued option (b) with a genuine
+positive result, not a structural-impossibility finding like cycle 49's own
+same-side-glue observation -- the two open threads cycle 49 left behind
+(this one, and cycle 48/49's converse-iff) now resolve to opposite flavors
+of answer, which is itself worth noting as evidence this project's guards
+machinery has a real, not merely formal, asymmetry: `incidenceProd`
+faithfully propagates its factors' guards; `incidenceSum` does not, and now
+we have both a general theorem and two independent concrete witnesses
+(one hand-built non-permissive instance, one pre-existing permissive pair)
+showing the gap is observable. Taken together with cycle 47's original
+finding, the full picture is: `incidenceSum`'s permissive guards is not a
+narrow oversight limited to non-permissive factors -- it discards
+information at BOTH the same-side (factor-guards) and cross-side
+(structural, glue-shape) levels simultaneously. Per the task's explicit
+instruction, this cycle does not attempt to fix or redesign
+`incidenceSum`'s guards field itself, nor build a general
+guards-respecting sum constructor -- that remains a distinct, larger,
+not-yet-scoped undertaking.
+
+**Next hypothesis (cycle 51, not yet attempted)**: with cycle 49's option
+(b) now closed (positive divergence, both generic and concrete) and cycle
+48/49's option (a) already closed (converse iff), and option (c) retired as
+stale since cycle 41/45 (do NOT re-queue the cycle 39/41 middle-ground
+`≈`-quotient question -- it is answered, by `simplexIncidence`), the
+guards/glue-distributivity thread that has run cycles 46-50 has no further
+queued item from that specific investigation. Two genuinely fresh
+directions, either legitimate: (i) given this cycle showed the
+guards-divergence gap has both a same-side and a cross-side component,
+check whether `incidenceProd`'s own guards (`prodGuards`, cycle 31) has any
+analogous BLIND SPOT of its own -- cycle 47 established it "genuinely
+conjoins", but only checked the top-level `allow` value, not whether
+`prodGuards` respects any WEAKER structure (e.g. does `prodGuards`'s
+conjunction ever silently disagree with what `type_preserve`/`assoc_when_ok`-style
+downstream consumers of guards would actually need, the way `incidenceSum`'s
+permissive default turned out to under-restrict);
+or (ii) a genuinely NEW middle-ground `≈`-quotient instance, distinct from
+`simplexIncidence` (the only witness the project has), building on a
+different concrete instance (e.g. `pathIncidence`, `treeIncidence`, or a
+purpose-built one) to see whether cycle 41's "well-founded grading survives
+collapse" mechanism generalizes or was special to `simplexIncidence`'s
+shape-grading -- this is a fresh question cycle 49's audit note explicitly
+distinguished from the now-closed cycle 39/41 original, not a re-run of it.

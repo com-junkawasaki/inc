@@ -1799,4 +1799,135 @@ theorem incidenceProd_incidenceSum_distrib_glue_lhs_some_rhs_none_iff
         · exact absurd hx (by simp)
         · exact absurd hy (by simp)
 
+/- Research cycle 50 (see RESEARCH_LOG.md): cycle 49's queued option (b) --
+   build one concrete `Incidence` instance where `incidenceSum` is applied
+   to a factor with NON-permissive `guards`, to test whether cycle 47's
+   structural asymmetry (`incidenceSum_prod_guards_always_permissive` vs.
+   `incidenceProd_sum_guards_depends_on_inc1_only`) actually manifests as an
+   observable difference from a natural "expected" componentwise guards
+   definition for `incidenceSum` -- or is provably impossible to observe,
+   the way cycle 49's own same-side-glue finding turned out to be.
+
+   No instance in this codebase before this cycle has non-permissive
+   `guards` (checked by grepping every `guards :=` field across
+   `IncidenceTheory/*.lean`: every one is `Guards.permissive _`), so the
+   minimal witness is built here rather than reused: `Guards.never`, the
+   polar opposite of `Guards.permissive` (`allow` unconditionally `false`
+   instead of unconditionally `true`), and `finiteIncidenceNeverGuards` --
+   `finiteIncidence` (`GraphModel.lean`) with ONLY its `guards` field
+   swapped for `Guards.never`. This typechecks with `finiteIncidence`'s own
+   `type_preserve` proof shape unchanged (`by intro i j k hallow hglue;
+   rfl`) because `finiteIncidence.typeFunc` is the constant `GraphType.unit`,
+   so `type_preserve`'s conclusion never actually depends on the
+   `guards.allow` hypothesis at all -- the same reason `natIncidence`'s and
+   `trivialIncidence`'s `type_preserve` proofs are guard-hypothesis-agnostic
+   too (checked: every existing concrete instance's `type_preserve` in this
+   codebase discards its guard hypothesis, since `GraphType.unit` is the
+   only concrete `typeFunc` target this project's hand-built instances have
+   ever used -- so swapping any of them to non-permissive guards would
+   typecheck the same way; `finiteIncidence` was picked only because its
+   2-element carrier makes `decide` cheapest).
+
+   To have a *baseline* to compare `incidenceSum`'s actual (always
+   permissive) `guards` against, `sumGuardsExpected` below formalizes the
+   natural "componentwise" guards a sum constructor built the way
+   `sumGlue`/`sumBoundary`/`sumResonance` (cycle 33) already are would give:
+   unit-absorbing (matching `unit_left`/`unit_right`, since the unit must
+   glue with everything), same-side delegates to the matching factor's own
+   guards, cross-side (the case with no natural componentwise value -- the
+   same tension `sumGlue` resolves by returning `none`) disallowed. This is
+   NOT part of `incidenceSum` itself (unchanged, still `Guards.permissive`
+   unconditionally, per this cycle's task scope -- redesigning
+   `incidenceSum`'s actual `guards` field, or building a full alternate
+   guards-respecting sum constructor, is explicitly out of scope this
+   cycle) -- it exists purely as this cycle's comparison baseline. -/
+
+def Guards.never (I : Type u) : Guards I := { allow := fun _ _ => false }
+
+def finiteIncidenceNeverGuards : Incidence FiniteIncidence GraphRole GraphType where
+  boundary := finiteBoundary
+  typeFunc := fun _ => GraphType.unit
+  resonance := fun _ _ _ => True
+  glue := finiteGlue
+  selected_resonates := by
+    intro i j k selected
+    trivial
+  unit := .leaf
+  guards := Guards.never FiniteIncidence
+  type_consistent := fun _ _ _ => rfl
+  sign_rules := by intro i e he; cases e.sign <;> simp
+  multiplicities := fun _ e _ => e.mult_pos
+  well_founded := by
+    intro i ⟨e, he, hei⟩
+    cases i with
+    | leaf => simp [finiteBoundary] at he
+    | root =>
+      simp [finiteBoundary] at he
+      rcases he with rfl
+      simp at hei
+  unit_left := by intro i; cases i <;> rfl
+  unit_right := by intro i; cases i <;> rfl
+  type_preserve := by intro i j k hallow hglue; rfl
+
+def sumGuardsExpected {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+  (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (unit : I1 ⊕ I2) :
+  (I1 ⊕ I2) → (I1 ⊕ I2) → Bool
+  | x, y =>
+    if y = unit then true
+    else if x = unit then true
+    else match x, y with
+      | Sum.inl x1, Sum.inl y1 => inc1.guards.allow x1 y1
+      | Sum.inr x2, Sum.inr y2 => inc2.guards.allow x2 y2
+      | _, _ => false
+
+/- Part (b), general theorem: whenever `inc1`'s own guards disallow some
+   non-unit pair, `incidenceSum`'s actual (permissive) guards diverge from
+   `sumGuardsExpected` on the corresponding same-side pair -- confirming
+   cycle 47's structural asymmetry DOES concretely manifest, generically,
+   not merely for one hand-picked instance. -/
+theorem incidenceSum_guards_diverges_of_inc1_disallows
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (i1 j1 : I1) (hi1 : i1 ≠ inc1.unit) (hj1 : j1 ≠ inc1.unit)
+    (hdisallow : inc1.guards.allow i1 j1 = false) :
+    (incidenceSum inc1 inc2).guards.allow (Sum.inl i1) (Sum.inl j1) ≠
+      sumGuardsExpected inc1 inc2 (Sum.inl inc1.unit) (Sum.inl i1) (Sum.inl j1) := by
+  have hlhs : (incidenceSum inc1 inc2).guards.allow (Sum.inl i1) (Sum.inl j1) = true := by
+    simp [incidenceSum, Guards.permissive]
+  have hrhs : sumGuardsExpected inc1 inc2 (Sum.inl inc1.unit) (Sum.inl i1) (Sum.inl j1) =
+      false := by
+    simp only [sumGuardsExpected, Sum.inl.injEq]
+    rw [if_neg hj1, if_neg hi1, hdisallow]
+  rw [hlhs, hrhs]
+  simp
+
+/- Concrete witness: `finiteIncidenceNeverGuards` (`.root`/`.root`, both
+   `≠ .leaf = unit`) instantiates the theorem above, `decide`-checked
+   directly against the actual computed `Bool` values rather than merely
+   trusted through the generic proof. -/
+theorem incidenceSum_guards_diverges_concrete :
+    (incidenceSum finiteIncidenceNeverGuards finiteIncidence).guards.allow
+        (Sum.inl .root) (Sum.inl .root) = true ∧
+      sumGuardsExpected finiteIncidenceNeverGuards finiteIncidence
+        (Sum.inl finiteIncidenceNeverGuards.unit) (Sum.inl .root) (Sum.inl .root) = false := by
+  decide
+
+/- A second, sharper finding, not anticipated by cycle 49's framing: the
+   divergence above needed a hand-built non-permissive instance, but
+   CROSS-side pairs diverge from `sumGuardsExpected` even for EXISTING,
+   fully-permissive instances, with no new instance required at all --
+   because `sumGuardsExpected` disallows genuine cross-side pairs (mirroring
+   `sumGlue`'s own `none` there) while `incidenceSum`'s actual guards allow
+   everything unconditionally. So the permissive-guards/componentwise-guards
+   gap is not solely about factors' OWN guards (cycle 47's framing) -- it is
+   already visible in how `incidenceSum` treats its own cross-side
+   `Sum.inl`/`Sum.inr` case split, using nothing but this project's
+   long-standing `natIncidence`. -/
+theorem incidenceSum_guards_diverges_cross_side_permissive_factors :
+    (incidenceSum natIncidence natIncidence).guards.allow
+        (Sum.inl 1) (Sum.inr 1) = true ∧
+      sumGuardsExpected natIncidence natIncidence
+        (Sum.inl natIncidence.unit) (Sum.inl 1) (Sum.inr 1) = false := by
+  decide
+
 end IncidenceCore
