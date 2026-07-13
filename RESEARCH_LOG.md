@@ -4351,3 +4351,160 @@ purpose-built one) to see whether cycle 41's "well-founded grading survives
 collapse" mechanism generalizes or was special to `simplexIncidence`'s
 shape-grading -- this is a fresh question cycle 49's audit note explicitly
 distinguished from the now-closed cycle 39/41 original, not a re-run of it.
+
+## Cycle 51
+
+**Hypothesis**: cycle 50's queued option (ii), picked over option (i)
+(`incidenceProd`'s own guards blind spot) by the orchestrating session's
+explicit diversification choice, since five straight cycles (46-50) had
+mined the `incidenceProd`/`incidenceSum` guards/glue corner and this
+project's roadmap item 8 (broader algebraic reconstruction) benefits more
+from fresh territory than from a sixth pass at the same corner: does cycle
+41's finding -- a `≈`-quotient construction can succeed exactly when the
+collapse respects a well-founded grading already present in the source
+instance -- generalize to a genuinely DIFFERENT graded instance, or was it
+an accident specific to `simplexIncidence`'s particular three-level
+vertex/edge/face shape? `simplexIncidence` was, until this cycle, the
+ONLY witness this project had ever built for the "genuine middle ground"
+(more than one `≈`-class, fewer than all).
+
+**Method**: grepped every concrete `Incidence` instance across
+`IncidenceTheory/*.lean` before assuming which candidates exist (per the
+task's own instruction not to invent instance names) -- confirmed the
+graded/structured candidates beyond the flat/atomic ones
+(`natIncidence`, `finiteIncidence`, `trivialIncidence`, `cycleIncidence`)
+are `simplexIncidence` (Simplex.lean, already used), `pathIncidence`/
+`pathIncidenceChained` (PathComplex.lean), and `treeIncidence`
+(Tree.lean). Read `PathComplex.lean` and `Tree.lean` in full. Ruled out
+`pathIncidenceChained` immediately: cycle 14's own fix made it FULLY
+faithful (`pathIncidenceChained_approxBisim_iff`, `≈` coincides with `=`)
+-- the "collapses nothing" extreme cycle 40 already closed, not the
+middle ground. Ruled out `treeIncidence` as this cycle's primary target
+on inspection, not by construction: its carrier (`TreeId`) nests
+recursively without bound (`node a b c` can itself contain arbitrarily
+deep further nodes), so any shape-classification collapsing "leaf-label"
+information the way `simplexToShape` collapses vertex-identity would
+have to be an infinite, itself-recursive `TreeShape` type indexed by
+nesting depth -- a substantially larger undertaking than this cycle's
+scope, and not the same kind of finite-or-uniformly-graded target
+`GradedIncidenceData` (see below) was built for; left as a candidate for
+a future cycle rather than forced.
+
+That left plain `pathIncidence` (cycle 10): nodes are uniformly leaves
+(`pathBoundary (node _) = []` for every `n`, cycle 13's own
+`pathIncidence_nodes_collapse` already witnesses `node 0 ≈ node 1`) and
+edges are non-leaves whose two boundary entries both point to nodes --
+structurally a 2-level grading (nodes=0, edges=1), the same *kind* of
+shape as `simplexIncidence`'s 3-level grading but one level shallower and,
+crucially, over an INFINITE carrier (`node`/`edge` indexed by unbounded
+`Nat`) rather than `simplexIncidence`'s finite 7 elements -- a genuinely
+different data point, not a restatement. Before building anything, also
+discovered that the generic machinery cycle 41's construction needed
+(hand-rolled `Incidence` fields, ad hoc `well_founded` case-splitting) had
+since been GENERALIZED into reusable infrastructure already sitting in
+`Quotient.lean` (`GradedIncidenceData`, `IncidenceCandidateData`,
+`BisimulationQuotientClassification`, `GradedBisimulationQuotientPresentation`)
+-- confirmed `shapeIncidence` itself (cycle 41's own construction) is
+already expressed through `GradedIncidenceData.toIncidence` in the current
+`main`, not the bespoke inline record cycle 41's log describes; this
+generalization landed at some point after cycle 41 (exact cycle
+unattributed, same undocumented-batch phenomenon cycles 45/46 already
+flagged for other parts of this file, not re-investigated further here
+since it doesn't change this cycle's own method, only makes it easier).
+Used this machinery directly rather than re-deriving `well_founded`'s
+self-loop avoidance by hand.
+
+**Result**: **a genuine second positive middle-ground quotient instance,
+sorry-free, first build.** Added to `Quotient.lean` (after adding
+`import IncidenceTheory.PathComplex`): `PathShape` (`nodeShape`/
+`edgeShape`), `pathToShape`, the bisimulation relation `pathNodeEdgeRel`
+generalizing cycle 13's representative-pair witness to ALL node/node and
+edge/edge pairs at once (needing, notably, NO per-index case split --
+unlike `simplexEdgeVertexRel_isBisimulation`'s nine enumerated arms,
+`pathIncidence`'s uniform-in-`n` shape lets one generic argument per grade
+suffice, the first concrete evidence the grading pattern doesn't depend on
+grades being finite), and the exhaustive
+`pathToShape_iff_approxBisim : pathToShape x = pathToShape y ↔ approxBisim
+pathIncidence x y` -- exactly TWO classes over `pathIncidence`'s infinite
+carrier, proved with 4 structural cases (not 49 like `simplexIncidence`),
+again because every `node n` is uniformly a leaf (unlike `simplexIncidence`
+where only 3 of 7 constructors are leaves, forcing per-constructor
+enumeration in cycle 22/23).
+
+`pathBisimulationQuotientClassification` packages this
+(`classify := pathToShape`); `pathShapeBoundary`/`pathShapeGrade`
+(`nodeShape ↦ 0`, `edgeShape ↦ 1`) feed `GradedIncidenceData`, whose
+`boundary_decreases` obligation is discharged by a 3-line proof (vs. cycle
+41's hand-written case analysis) -- `pathShapeIncidence :=
+pathShapeGradedIncidenceData.toIncidence` is the fresh, genuine
+`Incidence PathShape PeanoRole GraphType` structure on the quotient's
+carrier, all obligations via the generic constructor. `pathQuotientToShape`
+(via `Quotient.lift`) is confirmed injective and surjective, matching cycle
+41's bijection pattern for `simplexIncidence`.
+
+Task step (d), honestly checked rather than assumed:
+`pathClassification_glue_not_invariant` shows `pathToShape` is NOT a
+glue-homomorphism between `pathIncidence` and `pathShapeIncidence` --
+`node 0 ≈ node 1` (same class), but gluing each against `edge 0` produces
+DIFFERENT shapes (`edgeShape` vs. `nodeShape`), because `pathIncidence`'s
+own `glue` special-cases the literal representative `node 0`, not the
+whole `≈`-class it belongs to -- the identical mechanism cycle 41 found
+for `simplexIncidence`. Going further than cycle 41 could in its own
+cycle: because the general `GlueRealization ↔ GlueInvariant` criterion
+(`glueRealization_iff_invariant`) already existed as reusable
+infrastructure (built sometime after cycle 41, first exercised by
+`simplexIncidence` only in cycle 45 -- one full cycle after its own
+quotient was built), this cycle gets the STRONGER "no possible glue
+whatsoever" closure (`pathShape_glue_not_realizable`,
+`pathToShape_no_glue_homomorphism_exists`) in the SAME cycle the quotient
+itself was constructed, with no separate follow-up cycle needed.
+
+`lake build IncidenceTheory.Quotient`: 23/23 jobs, clean on the first
+attempt (no compile errors, unlike several recent cycles' one-fix
+experience). `#print axioms` on the six headline declarations (checked via
+a scratch file fed to `lake env lean`, then deleted): all reduce to this
+project's standing profile (`propext`, `Quot.sound`, and `Classical.choice`
+only for the two `GlueRealization`-based closures, matching cycle 45's own
+axiom profile for the analogous simplex theorems) -- no new axiom
+introduced. Full `./verify.sh` (`lake clean && lake build`, example binary
+run, repo-wide `axiom`/`sorry`/`sorryAx` grep): passes end to end.
+
+**Synthesis**: cycle 41's finding generalizes -- it was not an accident of
+`simplexIncidence`'s specific shape. `pathIncidence` confirms the same
+mechanism (well-founded grading survives collapse-within-grade) works for
+a structurally different graded instance: fewer grades (2 vs. 3), but each
+grade infinite rather than a handful of named constructors, which turned
+out to make several of the individual proof steps EASIER, not harder (no
+per-index case split needed for the bisimulation or the shape-agreement
+iff, since the uniformity-in-`n` that makes the carrier infinite also makes
+each grade's leaf/non-leaf status carrier-wide rather than
+constructor-by-constructor). This also validates a genuinely useful
+methodological point about this project's own history: the
+`GradedIncidenceData`/`BisimulationQuotientClassification` machinery that
+was generalized out of cycle 41's bespoke construction (by an unattributed
+later pass) is not just a refactor for its own sake -- reusing it here cut
+this cycle's proof effort substantially (no hand-written `well_founded`
+case split, and the `GlueRealization` closure that took `simplexIncidence`
+two separate cycles, 41 then 45, to reach was available to `pathIncidence`
+in one). `treeIncidence` remains a live, larger candidate for testing
+whether the grading mechanism survives UNBOUNDED recursive depth (not just
+unbounded per-grade multiplicity, which is what this cycle's `pathIncidence`
+result actually tested) -- explicitly deferred, not attempted, since a
+faithful `TreeShape` construction needs its own recursive target type and
+was assessed as out of this cycle's scope rather than forced.
+
+**Next hypothesis (cycle 52, not yet attempted)**: two live threads. (a)
+`treeIncidence`'s ternary, unboundedly-recursive shape, deferred above --
+does building a recursive `TreeShape` (mirroring `TreeId` but erasing leaf
+labels) and its own `GradedIncidenceData` presentation (grade = structural
+depth, well-founded via the same `sizeOf`-based measure `treeIncidence`
+itself already uses) succeed, or does unbounded recursive depth break the
+"well-founded grading survives collapse" mechanism in a way finite/
+per-grade-infinite gradings (`simplexIncidence`, `pathIncidence`) do not?
+This is the natural next generalization test and was explicitly scoped out
+of this cycle rather than attempted underprepared. (b) Cycle 50's other
+queued option (i), still untouched: does `incidenceProd`'s own guards
+(`prodGuards`) have an analogous blind spot to `incidenceSum`'s (cycles
+46-50), beyond top-level conjunction -- still open, still narrowly scoped,
+available if (a) turns out intractable or as a change-of-pace item after
+two consecutive quotient-construction cycles.

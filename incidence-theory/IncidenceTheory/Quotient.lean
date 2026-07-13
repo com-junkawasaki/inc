@@ -1,5 +1,6 @@
 import IncidenceTheory.Cycle
 import IncidenceTheory.Peano
+import IncidenceTheory.PathComplex
 import IncidenceTheory.Product
 import IncidenceTheory.Simplex
 
@@ -1854,5 +1855,297 @@ theorem simplexToShape_no_glue_homomorphism_exists :
         glue' (simplexToShape x) (simplexToShape y) =
           (simplexIncidence.glue x y).map simplexToShape :=
   simplexShape_glue_not_realizable
+
+/- Research cycle 51 (see RESEARCH_LOG.md): cycle 50's queue (option
+   (ii), preferred over option (i) by the task's own diversification
+   choice) asks whether cycle 41's finding -- a quotient construction can
+   succeed exactly when the collapse respects some well-founded grading
+   already present in the instance -- generalizes to ANOTHER graded
+   instance, or was an accident of `simplexIncidence`'s specific shape.
+   `pathIncidence` (`PathComplex.lean`, cycle 10) is the natural second
+   candidate flagged in the task briefing: a 2-graded structure (nodes =
+   grade 0 / leaves, edges = grade 1), already known since cycle 13
+   (`pathIncidence_nodes_collapse`) to have its nodes collapse under `≈`.
+   The open question genuinely new to this cycle: do `pathIncidence`'s
+   edges ALSO collapse among themselves (the way `simplexIncidence`'s
+   edges did, cycle 18), giving exactly two `≈`-classes over an INFINITE
+   carrier (unlike `simplexIncidence`'s finite 7-element carrier) -- a
+   meaningfully different data point (unbounded multiplicity per grade,
+   not just finitely many grades), not a restatement of the simplex case. -/
+
+inductive PathShape where | nodeShape | edgeShape
+deriving DecidableEq, Repr
+
+def pathToShape : PathId → PathShape
+  | .node _ => .nodeShape
+  | .edge _ => .edgeShape
+
+/- The bisimulation relation witnessing both collapses at once, in
+   exactly `simplexEdgeVertexRel`'s style (cycle 18): any two nodes are
+   related, and any two edges are related, generalized here to ARBITRARY
+   indices (cycle 13's own relation was already stated generally enough
+   internally, just never packaged as a reusable named lemma over
+   arbitrary `m`/`n` -- done here since the shape-classification below
+   needs it for every pair, not one representative). -/
+def pathNodeEdgeRel (x y : PathId) : Prop :=
+  (∃ m, x = PathId.node m) ∧ (∃ n, y = PathId.node n) ∨
+  (∃ m, x = PathId.edge m) ∧ (∃ n, y = PathId.edge n)
+
+theorem pathNodeEdgeRel_symm : ∀ a b, pathNodeEdgeRel a b → pathNodeEdgeRel b a := by
+  intro a b h
+  unfold pathNodeEdgeRel at h ⊢
+  rcases h with ⟨ha, hb⟩ | ⟨ha, hb⟩
+  · exact Or.inl ⟨hb, ha⟩
+  · exact Or.inr ⟨hb, ha⟩
+
+theorem pathCompat_refl (e : Endpoint PathId PeanoRole) :
+  boundaryCompatible pathIncidence e e := ⟨rfl, rfl, rfl⟩
+
+/- Method note: unlike `simplexEdgeVertexRel_isBisimulation` (cycle 18),
+   which needed nine case-split arms (three vertices × three vertices,
+   etc.) because `SimplexId` has finitely many named constructors per
+   grade, `pathIncidence`'s two grades each have INFINITELY many elements
+   (`node n`/`edge n` for every `n : Nat`) but are structurally uniform in
+   `n` -- so a single generic argument per grade suffices, no per-index
+   case split needed. This is the first concrete evidence that the
+   "grading" pattern cycle 41 identified does not depend on the grades
+   being finite. -/
+theorem pathNodeEdgeRel_isBisimulation :
+  IsBisimulation pathIncidence pathNodeEdgeRel := by
+  intro i j hij
+  refine ⟨rfl, ?_⟩
+  rcases hij with ⟨⟨m, hm⟩, ⟨n, hn⟩⟩ | ⟨⟨m, hm⟩, ⟨n, hn⟩⟩
+  · subst hm; subst hn
+    simp [boundaryMatched, pathIncidence, pathBoundary]
+  · subst hm; subst hn
+    exact boundaryMatched_of_two_entries pathIncidence pathNodeEdgeRel
+      (PathId.edge m) (PathId.edge n)
+      { i := PathId.node m, role := PeanoRole.pred, sign := Sign.neg, mult := 1 }
+      { i := PathId.node (m + 1), role := PeanoRole.pred, sign := Sign.pos, mult := 1 }
+      { i := PathId.node n, role := PeanoRole.pred, sign := Sign.neg, mult := 1 }
+      { i := PathId.node (n + 1), role := PeanoRole.pred, sign := Sign.pos, mult := 1 }
+      rfl rfl (pathCompat_refl _) (Or.inl ⟨⟨m, rfl⟩, ⟨n, rfl⟩⟩)
+      (pathCompat_refl _) (Or.inl ⟨⟨m + 1, rfl⟩, ⟨n + 1, rfl⟩⟩)
+
+/- The general leaf-vs-nonleaf separator: EVERY `node n` is a leaf
+   (`pathBoundary` matches `node _` uniformly, unlike `simplexIncidence`
+   where only three of seven constructors are leaves) -- so this single
+   lemma, over an arbitrary `n`, does the job `simplexIncidence_nonempty_
+   not_vertex` (cycle 22) needed three enumerated cases for. -/
+theorem pathIncidence_nonempty_not_node (i : PathId)
+  (hi : pathIncidence.boundary i ≠ []) (n : Nat) :
+  ¬ approxBisim pathIncidence i (PathId.node n) := by
+  obtain ⟨e, he⟩ := List.exists_mem_of_ne_nil _ hi
+  exact not_approxBisim_empty_nonempty pathIncidence i (PathId.node n) rfl e he
+
+theorem pathToShape_reflects (x y : PathId) (h : pathToShape x = pathToShape y) :
+  approxBisim pathIncidence x y := by
+  cases x with
+  | node m => cases y with
+    | node n => exact ⟨pathNodeEdgeRel, pathNodeEdgeRel_isBisimulation, Or.inl ⟨⟨m, rfl⟩, ⟨n, rfl⟩⟩⟩
+    | edge n => simp [pathToShape] at h
+  | edge m => cases y with
+    | node n => simp [pathToShape] at h
+    | edge n => exact ⟨pathNodeEdgeRel, pathNodeEdgeRel_isBisimulation, Or.inr ⟨⟨m, rfl⟩, ⟨n, rfl⟩⟩⟩
+
+/- The converse, over all four constructor-shape combinations at once
+   (again, no per-index enumeration needed -- contrast
+   `simplexToShape_distinguishes`'s 49 explicit arms, cycle 23). -/
+theorem pathToShape_distinguishes (x y : PathId) (h : approxBisim pathIncidence x y) :
+  pathToShape x = pathToShape y := by
+  cases x with
+  | node m => cases y with
+    | node n => rfl
+    | edge n =>
+      exact absurd (approxBisim_symm h)
+        (pathIncidence_nonempty_not_node (PathId.edge n) (by simp [pathIncidence, pathBoundary]) m)
+  | edge m => cases y with
+    | node n =>
+      exact absurd h
+        (pathIncidence_nonempty_not_node (PathId.edge m) (by simp [pathIncidence, pathBoundary]) n)
+    | edge n => rfl
+
+/- The exhaustive characterization: `pathIncidence`'s `≈` is exactly
+   `pathToShape`-agreement -- exactly two classes over an infinite
+   carrier, confirming the open question above. -/
+theorem pathToShape_iff_approxBisim (x y : PathId) :
+  pathToShape x = pathToShape y ↔ approxBisim pathIncidence x y :=
+  ⟨pathToShape_reflects x y, pathToShape_distinguishes x y⟩
+
+def pathBisimulationQuotientClassification :
+    BisimulationQuotientClassification (Q := PathShape) pathIncidence where
+  classify := pathToShape
+  respects := fun h => pathToShape_distinguishes _ _ h
+  reflects := fun h => pathToShape_reflects _ _ h
+  surjective := by
+    intro shape
+    cases shape with
+    | nodeShape => exact ⟨PathId.node 0, rfl⟩
+    | edgeShape => exact ⟨PathId.edge 0, rfl⟩
+
+noncomputable def pathQuotientToShape :
+  Quotient (approxBisimSetoid pathIncidence) → PathShape :=
+  Quotient.lift pathToShape pathToShape_distinguishes
+
+theorem pathQuotientToShape_injective (q1 q2 : Quotient (approxBisimSetoid pathIncidence))
+  (h : pathQuotientToShape q1 = pathQuotientToShape q2) : q1 = q2 := by
+  induction q1 using Quotient.ind with
+  | _ x =>
+    induction q2 using Quotient.ind with
+    | _ y =>
+      unfold pathQuotientToShape at h
+      simp only [Quotient.lift] at h
+      exact Quotient.sound (pathToShape_reflects x y h)
+
+theorem pathQuotientToShape_surjective (s : PathShape) :
+  ∃ q : Quotient (approxBisimSetoid pathIncidence), pathQuotientToShape q = s := by
+  cases s with
+  | nodeShape => exact ⟨Quotient.mk _ (PathId.node 0), rfl⟩
+  | edgeShape => exact ⟨Quotient.mk _ (PathId.edge 0), rfl⟩
+
+noncomputable def pathQuotientShapeEquivalence :
+    IncTypeEquivalence
+      (Quotient (approxBisimSetoid pathIncidence)) PathShape :=
+  pathBisimulationQuotientClassification.equivalence
+
+/- The genuine fresh `Incidence PathShape` structure, built the SAME way
+   cycle 41 built `shapeIncidence` -- but this time using the
+   `GradedIncidenceData` machinery that was generalized (as reusable
+   infrastructure) sometime after cycle 41's own bespoke construction,
+   making the `well_founded` obligation fall out of a single `Nat`-valued
+   grade rather than a hand-written case split. `nodeShape` is grade 0
+   (empty boundary); `edgeShape` is grade 1, its two entries both
+   pointing to `nodeShape` -- exactly `simplexIncidence`'s vertex/edge
+   two-level grading, one level shallower than its vertex/edge/face
+   three-level grading (there is no `face`-analogue here, since
+   `pathIncidence` has no third grade). -/
+def pathShapeBoundary : PathShape → Boundary PathShape PeanoRole
+  | .nodeShape => []
+  | .edgeShape =>
+    [ { i := .nodeShape, role := PeanoRole.pred, sign := Sign.neg, mult := 1 }
+    , { i := .nodeShape, role := PeanoRole.pred, sign := Sign.pos, mult := 1 } ]
+
+theorem pathClassification_boundaryRealization :
+    pathBisimulationQuotientClassification.BoundaryRealization := by
+  refine ⟨pathShapeBoundary, ?_⟩
+  intro atom
+  cases atom <;>
+    simp [pathShapeBoundary,
+      BisimulationQuotientClassification.mappedSourceBoundary,
+      pathBisimulationQuotientClassification, pathToShape,
+      pathIncidence, pathBoundary]
+
+theorem pathClassification_boundaryInvariant :
+    pathBisimulationQuotientClassification.BoundaryInvariant :=
+  (pathBisimulationQuotientClassification.boundaryRealization_iff_invariant).mp
+    pathClassification_boundaryRealization
+
+def pathShapeGrade : PathShape → Nat
+  | .nodeShape => 0
+  | .edgeShape => 1
+
+def pathShapeGradedIncidenceData :
+    GradedIncidenceData PathShape PeanoRole GraphType where
+  boundary := pathShapeBoundary
+  typeFunc := fun _ => GraphType.unit
+  glue     := fun i j => if i = PathShape.nodeShape then some j else some i
+  unit     := PathShape.nodeShape
+  guards   := Guards.permissive PathShape
+  grade := pathShapeGrade
+  boundary_decreases := by
+    intro i e h
+    cases i <;> simp [pathShapeBoundary] at h <;>
+      (rcases h with h | h <;> subst h <;> simp [pathShapeGrade])
+  type_consistent := fun i e h => rfl
+  sign_rules := by
+    intro i e h
+    cases i <;> simp [pathShapeBoundary] at h <;>
+      (rcases h with h | h <;> subst h <;> simp)
+  multiplicities := by
+    intro i e h
+    cases i <;> simp [pathShapeBoundary] at h <;>
+      (rcases h with h | h <;> subst h <;> simp)
+  unit_left := by intro i; simp
+  unit_right := by intro i; by_cases h : i = PathShape.nodeShape <;> simp [h]
+  type_preserve := fun _ _ => rfl
+
+def pathShapeIncidence : Incidence PathShape PeanoRole GraphType :=
+  pathShapeGradedIncidenceData.toIncidence
+
+def pathGradedQuotientPresentation :
+    GradedBisimulationQuotientPresentation
+      (Q := PathShape) (QR := PeanoRole) (QT := GraphType)
+      pathIncidence where
+  classification := pathBisimulationQuotientClassification
+  data := pathShapeGradedIncidenceData
+  boundary_iff := by
+    intro atom
+    cases atom <;>
+      simp [IncidenceBoundaryValuation, pathBisimulationQuotientClassification,
+        pathToShape, pathIncidence, pathBoundary,
+        pathShapeGradedIncidenceData, GradedIncidenceData.toIncidence, pathShapeBoundary]
+
+def pathQuotientIncidencePresentation :
+    BisimulationQuotientIncidencePresentation
+      (Q := PathShape) (QR := PeanoRole) (QT := GraphType)
+      pathIncidence :=
+  pathGradedQuotientPresentation.toPresentation
+
+theorem pathQuotientPresentation_equivalence :
+    Nonempty (IncTypeEquivalence
+      (IncidenceQuotient pathIncidence) PathShape) :=
+  ⟨pathQuotientIncidencePresentation.quotientEquivalence⟩
+
+/- Honest check (task step (d), not assumed): is `pathToShape` a
+   `glue`-homomorphism between `pathIncidence` and `pathShapeIncidence`?
+   Both `glue`s share the identical "absorb at the unit" shape
+   (`if i = unit then some j else some i`), but the unit-check happens on
+   the SOURCE type against ONE specific representative (`PathId.node 0`)
+   while every OTHER node (`node 1`, `node 3`, ...) is also `≈ node 0`
+   yet is treated as "not the unit" by `pathIncidence.glue` itself --
+   exactly the same mismatch cycle 41 found for `simplexIncidence`, now
+   confirmed in a second, differently-shaped instance: `node 0` and
+   `node 1` collapse to the same class, but gluing each against a fixed
+   edge produces different SHAPES, not just different underlying
+   elements. -/
+theorem pathClassification_glue_not_invariant :
+    ¬ pathBisimulationQuotientClassification.GlueInvariant := by
+  intro invariant
+  have nodesBisimilar : approxBisim pathIncidence (PathId.node 0) (PathId.node 1) :=
+    (pathToShape_iff_approxBisim (PathId.node 0) (PathId.node 1)).mp rfl
+  have equalMappedGlue := invariant nodesBisimilar (approxBisim_refl pathIncidence (PathId.edge 0))
+  have hlhs : pathBisimulationQuotientClassification.mappedSourceGlue
+      (PathId.node 0) (PathId.edge 0) = some PathShape.edgeShape := by
+    simp [BisimulationQuotientClassification.mappedSourceGlue,
+      pathBisimulationQuotientClassification, pathToShape, pathIncidence]
+  have hrhs : pathBisimulationQuotientClassification.mappedSourceGlue
+      (PathId.node 1) (PathId.edge 0) = some PathShape.nodeShape := by
+    simp [BisimulationQuotientClassification.mappedSourceGlue,
+      pathBisimulationQuotientClassification, pathToShape, pathIncidence]
+  rw [hlhs, hrhs] at equalMappedGlue
+  exact absurd equalMappedGlue (by decide)
+
+/- The strictly stronger, "no escape hatch" closure -- reusing the
+   ALREADY GENERALIZED `glueRealization_iff_invariant` (built after
+   cycle 41, first spent on `simplexIncidence` only in cycle 45, one
+   cycle after its own quotient was built) to get the full closure in
+   the SAME cycle the quotient itself was constructed, rather than
+   needing a separate follow-up cycle the way `simplexIncidence` did
+   (cycle 41 → cycle 45). No well-typed
+   `glue' : PathShape → PathShape → Option PathShape` whatsoever can
+   make `pathToShape` a glue-homomorphism out of `pathIncidence`. -/
+theorem pathShape_glue_not_realizable :
+    ¬ pathBisimulationQuotientClassification.GlueRealization :=
+  fun realization =>
+    pathClassification_glue_not_invariant
+      ((BisimulationQuotientClassification.glueRealization_iff_invariant
+        pathBisimulationQuotientClassification).mp realization)
+
+theorem pathToShape_no_glue_homomorphism_exists :
+    ¬ ∃ glue' : PathShape → PathShape → Option PathShape,
+      ∀ x y : PathId,
+        glue' (pathToShape x) (pathToShape y) =
+          (pathIncidence.glue x y).map pathToShape :=
+  pathShape_glue_not_realizable
 
 end IncidenceCore
