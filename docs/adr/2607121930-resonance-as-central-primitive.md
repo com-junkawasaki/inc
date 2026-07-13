@@ -228,7 +228,11 @@ case where the selector is complete and resonance has no unselected modes.
   smaller suprema, and the Cauchy radius bounds each selected term-to-tail-sup
   distance. Negation duality derives general infima and their greatest-lower-
   bound law. The candidate Cauchy limit is the infimum of all tail suprema and
-  is checked below each member of that family.
+  is checked below each member of that family. Cauchy estimates make
+  `a_N-ε` a lower bound and the matching tail supremum at most `a_N+ε`;
+  maximality of the infimum gives a two-sided metric bound. Exact half-radius
+  composition then proves every Cauchy sequence converges, deriving metric
+  completeness from Dedekind completeness.
 
 ### Non-normative physical intuition
 

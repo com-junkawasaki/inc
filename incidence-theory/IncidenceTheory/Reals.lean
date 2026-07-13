@@ -2843,6 +2843,35 @@ theorem realDist_le_of_le_of_le_add
     rw [negDifference]
     exact translated
 
+theorem realAdd_neg_le_of_le_add {left right radius : IncReal}
+    (ordered : realLE left (realAdd right radius)) :
+    realLE (realAdd left (realNeg radius)) right := by
+  have translated := realAdd_monotone_left
+    (right := realNeg radius) ordered
+  have restore : realAdd (realAdd right radius) (realNeg radius) = right := by
+    rw [realAdd_assoc, realAdd_neg, realAdd_zero_right]
+  rw [restore] at translated
+  exact translated
+
+theorem realLE_add_of_add_neg_le {left right radius : IncReal}
+    (ordered : realLE (realAdd left (realNeg radius)) right) :
+    realLE left (realAdd right radius) := by
+  have translated := realAdd_monotone_left (right := radius) ordered
+  have restore : realAdd (realAdd left (realNeg radius)) radius = left := by
+    rw [realAdd_assoc, realAdd_neg_left, realAdd_zero_right]
+  rw [restore] at translated
+  exact translated
+
+theorem realDist_le_of_le_add_both
+    {left right : IncReal} (radius : NonnegativeReal)
+    (leftBound : realLE left (realAdd right radius.value))
+    (rightBound : realLE right (realAdd left radius.value)) :
+    realLE (realDist left right).value radius.value := by
+  rcases realLE_total left right with leftRight | rightLeft
+  · exact realDist_le_of_le_of_le_add radius leftRight rightBound
+  · rw [realDist_comm]
+    exact realDist_le_of_le_of_le_add radius rightLeft leftBound
+
 theorem real_finite_sequence_upper_bound
     (sequence : RealSequence) (count : Nat) :
     ∃ upper : IncReal, ∀ index, index < count →
@@ -3122,5 +3151,98 @@ theorem realCauchyLimitCandidate_le_tailSup
     (realCauchyTailSupFamily_nonempty sequence cauchy)
     (realCauchyTailSupFamily_bounded_below sequence cauchy)
   exact ⟨start, rfl⟩
+
+theorem realCauchy_candidate_close
+    {sequence : RealSequence} (cauchy : RealSequenceCauchy sequence)
+    {epsilon : IncRational}
+    (epsilonPositive : rationalLT (rationalOfInteger 0) epsilon) :
+    ∃ threshold,
+      (∀ index, threshold ≤ index →
+        realLE (realDist (sequence index) (sequence threshold)).value
+          (rationalToReal epsilon)) ∧
+      realLE (realDist (sequence threshold)
+          (realCauchyLimitCandidate sequence cauchy)).value
+        (rationalToReal epsilon) := by
+  obtain ⟨threshold, tailClose⟩ := cauchy epsilon epsilonPositive
+  have bounded := realSequenceCauchy_bounded_above cauchy
+  let radius : NonnegativeReal :=
+    { value := rationalToReal epsilon
+      nonnegative := (rationalToReal_le_iff _ _).mpr epsilonPositive.1 }
+  let lower := realAdd (sequence threshold) (realNeg radius.value)
+  have lowerBelowThreshold : realLE lower (sequence threshold) := by
+    apply realAdd_neg_le_of_le_add
+    simpa [realAdd_zero_right] using
+      (realAdd_monotone_right (left := sequence threshold) radius.nonnegative)
+  have lowerIsFamilyBound :
+      RealLowerBound (RealCauchyTailSupFamily sequence cauchy) lower := by
+    intro value member
+    obtain ⟨start, equal⟩ := member
+    subst value
+    by_cases startLarge : threshold ≤ start
+    · have distanceBound := tailClose threshold start
+        (Nat.le_refl threshold) startLarge
+      have thresholdBelowStartRadius := real_le_add_of_dist_le distanceBound
+      have lowerBelowStart :=
+        realAdd_neg_le_of_le_add thresholdBelowStartRadius
+      exact realLE_trans lowerBelowStart
+        (realSequence_le_tailSup bounded (Nat.le_refl start))
+    · have startThreshold : start ≤ threshold :=
+        Nat.le_of_lt (Nat.lt_of_not_ge startLarge)
+      exact realLE_trans lowerBelowThreshold
+        (realLE_trans
+          (realSequence_le_tailSup bounded (Nat.le_refl threshold))
+          (realCauchyTailSup_monotone cauchy startThreshold))
+  have lowerBelowCandidate :
+      realLE lower (realCauchyLimitCandidate sequence cauchy) := by
+    apply realInf_is_greatest (RealCauchyTailSupFamily sequence cauchy)
+      (realCauchyTailSupFamily_nonempty sequence cauchy)
+      (realCauchyTailSupFamily_bounded_below sequence cauchy)
+    exact lowerIsFamilyBound
+  have candidateBelowTail :=
+    realCauchyLimitCandidate_le_tailSup sequence cauchy threshold
+  have tailBelow : realLE (realCauchyTailSup sequence cauchy threshold)
+      (realAdd (sequence threshold) radius.value) := by
+    apply realSup_is_least
+      (RealSequenceTail sequence threshold)
+      (realSequenceTail_nonempty sequence threshold)
+      (realSequenceTail_bounded bounded threshold)
+    intro value member
+    obtain ⟨index, indexLarge, equal⟩ := member
+    subst value
+    exact real_le_add_of_dist_le
+      (tailClose index threshold indexLarge (Nat.le_refl threshold))
+  have candidateUpper := realLE_trans candidateBelowTail tailBelow
+  have sequenceUpper : realLE (sequence threshold)
+      (realAdd (realCauchyLimitCandidate sequence cauchy) radius.value) :=
+    realLE_add_of_add_neg_le lowerBelowCandidate
+  refine ⟨threshold, ?_, ?_⟩
+  · intro index indexLarge
+    exact tailClose index threshold indexLarge (Nat.le_refl threshold)
+  · exact realDist_le_of_le_add_both radius sequenceUpper candidateUpper
+
+theorem realSequenceCauchy_converges
+    {sequence : RealSequence} (cauchy : RealSequenceCauchy sequence) :
+    RealSequenceConverges sequence
+      (realCauchyLimitCandidate sequence cauchy) := by
+  intro epsilon epsilonPositive
+  obtain ⟨half, halfPositive, halfAdd⟩ :=
+    rational_exists_positive_half epsilonPositive
+  obtain ⟨threshold, tailClose, candidateClose⟩ :=
+    realCauchy_candidate_close cauchy halfPositive
+  refine ⟨threshold, ?_⟩
+  intro index indexLarge
+  have triangle := realDist_triangle (sequence index) (sequence threshold)
+    (realCauchyLimitCandidate sequence cauchy)
+  have summed := realAdd_monotone (tailClose index indexLarge) candidateClose
+  have result := realLE_trans triangle summed
+  rw [realAdd_rationalToReal, halfAdd] at result
+  exact result
+
+theorem real_metric_complete (sequence : RealSequence) :
+    RealSequenceCauchy sequence →
+      ∃ limit, RealSequenceConverges sequence limit := by
+  intro cauchy
+  exact ⟨realCauchyLimitCandidate sequence cauchy,
+    realSequenceCauchy_converges cauchy⟩
 
 end IncidenceCore

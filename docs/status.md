@@ -217,7 +217,9 @@ Checked constructions include:
   suitable sequence term and its corresponding tail supremum; order duality
   through negation constructs arbitrary nonempty bounded infima with their
   greatest-lower-bound law, and the Cauchy limit candidate is now defined as
-  the infimum of the tail-supremum family;
+  the infimum of the tail-supremum family; Cauchy control sandwiches this
+  candidate between `a_N-ε` and `a_N+ε`, and half-radius composition proves
+  every Cauchy sequence converges to it, completing the real metric space;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets
@@ -228,7 +230,7 @@ Checked constructions include:
 
 Major remaining areas include a canonical reduced-fraction boundary and
 computational reciprocal selector, extension of nonnegative cut multiplication
-of Cauchy completeness and continuity in the real metric layer,
+of continuity, compactness, series, and calculus beyond the complete metric layer,
 real analysis, broader algebra, and a larger categorical library. Rational
 incidence is now observationally faithful:
 zero has an empty boundary and every nonzero rational has a one-step boundary
