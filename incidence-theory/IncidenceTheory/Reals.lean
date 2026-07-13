@@ -7517,4 +7517,236 @@ theorem realSequenceMonotone_bounded_converges
       realSequenceNondecreasing_converges increasing boundedAbove⟩
   · exact realSequenceNonincreasing_converges decreasing boundedBelow
 
+def RealSequencePeak (sequence : RealSequence) (index : Nat) : Prop :=
+  ∀ later, index < later → realLE (sequence later) (sequence index)
+
+noncomputable def realPeakSubsequenceIndices
+    (sequence : RealSequence)
+    (abundant : ∀ start, ∃ index, start ≤ index ∧
+      RealSequencePeak sequence index) : Nat → Nat
+  | 0 => Classical.choose (abundant 0)
+  | Nat.succ order =>
+      Classical.choose
+        (abundant (Nat.succ
+          (realPeakSubsequenceIndices sequence abundant order)))
+
+theorem realPeakSubsequenceIndices_spec
+    (sequence : RealSequence)
+    (abundant : ∀ start, ∃ index, start ≤ index ∧
+      RealSequencePeak sequence index) (order : Nat) :
+    (match order with
+      | 0 => 0
+      | Nat.succ previous => Nat.succ
+          (realPeakSubsequenceIndices sequence abundant previous)) ≤
+        realPeakSubsequenceIndices sequence abundant order ∧
+      RealSequencePeak sequence
+        (realPeakSubsequenceIndices sequence abundant order) := by
+  cases order with
+  | zero => exact Classical.choose_spec (abundant 0)
+  | succ previous =>
+      exact Classical.choose_spec
+        (abundant (Nat.succ
+          (realPeakSubsequenceIndices sequence abundant previous)))
+
+theorem realPeakSubsequence_isSubsequence
+    (sequence : RealSequence)
+    (abundant : ∀ start, ∃ index, start ≤ index ∧
+      RealSequencePeak sequence index) :
+    RealSubsequence (realPeakSubsequenceIndices sequence abundant) := by
+  intro left right strict
+  induction right with
+  | zero => exact False.elim (Nat.not_lt_zero _ strict)
+  | succ right induction =>
+      rcases Nat.lt_or_eq_of_le (Nat.le_of_lt_succ strict) with before | equal
+      · exact Nat.lt_trans (induction before)
+          (Nat.lt_of_lt_of_le (Nat.lt_succ_self _)
+            (realPeakSubsequenceIndices_spec sequence abundant
+              (Nat.succ right)).1)
+      · subst left
+        exact Nat.lt_of_lt_of_le (Nat.lt_succ_self _)
+          (realPeakSubsequenceIndices_spec sequence abundant
+            (Nat.succ right)).1
+
+theorem realPeakSubsequence_nonincreasing
+    (sequence : RealSequence)
+    (abundant : ∀ start, ∃ index, start ≤ index ∧
+      RealSequencePeak sequence index) :
+    RealSequenceNonincreasing
+      (fun order => sequence
+        (realPeakSubsequenceIndices sequence abundant order)) := by
+  intro left right ordered
+  rcases Nat.lt_or_eq_of_le ordered with strict | equal
+  · exact (realPeakSubsequenceIndices_spec sequence abundant left).2 _
+      (realPeakSubsequence_isSubsequence sequence abundant strict)
+  · subst right
+    exact realLE_refl _
+
+noncomputable def realRisingNext
+    (sequence : RealSequence) (start : Nat)
+    (noPeak : ∀ index, start ≤ index →
+      ¬ RealSequencePeak sequence index) (index : Nat) : Nat :=
+  if indexLarge : start ≤ index then
+    Classical.choose (show ∃ later, index < later ∧
+        ¬ realLE (sequence later) (sequence index) from by
+      have notPeak := noPeak index indexLarge
+      apply Classical.byContradiction
+      intro none
+      apply notPeak
+      intro later laterLarge
+      by_cases ordered : realLE (sequence later) (sequence index)
+      · exact ordered
+      · exact False.elim (none ⟨later, laterLarge, ordered⟩))
+  else Nat.succ index
+
+theorem realRisingNext_spec
+    (sequence : RealSequence) (start : Nat)
+    (noPeak : ∀ index, start ≤ index →
+      ¬ RealSequencePeak sequence index)
+    {index : Nat} (indexLarge : start ≤ index) :
+    index < realRisingNext sequence start noPeak index ∧
+      realLE (sequence index)
+        (sequence (realRisingNext sequence start noPeak index)) := by
+  rw [realRisingNext, dif_pos indexLarge]
+  have chosen := Classical.choose_spec (show ∃ later, index < later ∧
+      ¬ realLE (sequence later) (sequence index) from by
+    have notPeak := noPeak index indexLarge
+    apply Classical.byContradiction
+    intro none
+    apply notPeak
+    intro later laterLarge
+    by_cases ordered : realLE (sequence later) (sequence index)
+    · exact ordered
+    · exact False.elim (none ⟨later, laterLarge, ordered⟩))
+  refine ⟨chosen.1, ?_⟩
+  rcases realLE_total (sequence index)
+      (sequence (Classical.choose _)) with ordered | reverse
+  · exact ordered
+  · exact False.elim (chosen.2 reverse)
+
+noncomputable def realRisingSubsequenceIndices
+    (sequence : RealSequence) (start : Nat)
+    (noPeak : ∀ index, start ≤ index →
+      ¬ RealSequencePeak sequence index) : Nat → Nat
+  | 0 => start
+  | Nat.succ order => realRisingNext sequence start noPeak
+      (realRisingSubsequenceIndices sequence start noPeak order)
+
+theorem realRisingSubsequenceIndices_large
+    (sequence : RealSequence) (start : Nat)
+    (noPeak : ∀ index, start ≤ index →
+      ¬ RealSequencePeak sequence index) :
+    ∀ order, start ≤
+      realRisingSubsequenceIndices sequence start noPeak order := by
+  intro order
+  induction order with
+  | zero => exact Nat.le_refl _
+  | succ order induction =>
+      exact Nat.le_trans induction (Nat.le_of_lt
+        (realRisingNext_spec sequence start noPeak induction).1)
+
+theorem realRisingSubsequence_step
+    (sequence : RealSequence) (start : Nat)
+    (noPeak : ∀ index, start ≤ index →
+      ¬ RealSequencePeak sequence index) (order : Nat) :
+    realRisingSubsequenceIndices sequence start noPeak order <
+      realRisingSubsequenceIndices sequence start noPeak (Nat.succ order) ∧
+    realLE
+      (sequence (realRisingSubsequenceIndices sequence start noPeak order))
+      (sequence (realRisingSubsequenceIndices sequence start noPeak
+        (Nat.succ order))) := by
+  exact realRisingNext_spec sequence start noPeak
+    (realRisingSubsequenceIndices_large sequence start noPeak order)
+
+theorem realRisingSubsequence_isSubsequence
+    (sequence : RealSequence) (start : Nat)
+    (noPeak : ∀ index, start ≤ index →
+      ¬ RealSequencePeak sequence index) :
+    RealSubsequence
+      (realRisingSubsequenceIndices sequence start noPeak) := by
+  intro left right strict
+  induction right with
+  | zero => exact False.elim (Nat.not_lt_zero _ strict)
+  | succ right induction =>
+      rcases Nat.lt_or_eq_of_le (Nat.le_of_lt_succ strict) with before | equal
+      · exact Nat.lt_trans (induction before)
+          (realRisingSubsequence_step sequence start noPeak right).1
+      · subst left
+        exact (realRisingSubsequence_step sequence start noPeak right).1
+
+theorem realRisingSubsequence_nondecreasing
+    (sequence : RealSequence) (start : Nat)
+    (noPeak : ∀ index, start ≤ index →
+      ¬ RealSequencePeak sequence index) :
+    RealSequenceNondecreasing
+      (fun order => sequence
+        (realRisingSubsequenceIndices sequence start noPeak order)) := by
+  intro left right ordered
+  induction right with
+  | zero =>
+      have equal : left = 0 := Nat.eq_zero_of_le_zero ordered
+      subst left
+      exact realLE_refl _
+  | succ right induction =>
+      rcases Nat.lt_or_eq_of_le ordered with strict | equal
+      · have leftBefore : left ≤ right := Nat.le_of_lt_succ strict
+        exact realLE_trans (induction leftBefore)
+          (realRisingSubsequence_step sequence start noPeak right).2
+      · subst left
+        exact realLE_refl _
+
+theorem realSequence_has_monotone_subsequence (sequence : RealSequence) :
+    ∃ indices : Nat → Nat, RealSubsequence indices ∧
+      (RealSequenceNondecreasing (fun order => sequence (indices order)) ∨
+       RealSequenceNonincreasing (fun order => sequence (indices order))) := by
+  classical
+  by_cases abundant : ∀ start, ∃ index, start ≤ index ∧
+      RealSequencePeak sequence index
+  · exact ⟨realPeakSubsequenceIndices sequence abundant,
+      realPeakSubsequence_isSubsequence sequence abundant,
+      Or.inr (realPeakSubsequence_nonincreasing sequence abundant)⟩
+  · have eventuallyNoPeak : ∃ start, ∀ index, start ≤ index →
+        ¬ RealSequencePeak sequence index := by
+      apply Classical.byContradiction
+      intro none
+      apply abundant
+      intro start
+      apply Classical.byContradiction
+      intro noIndex
+      apply none
+      refine ⟨start, ?_⟩
+      intro index indexLarge peak
+      exact noIndex ⟨index, indexLarge, peak⟩
+    obtain ⟨start, noPeak⟩ := eventuallyNoPeak
+    exact ⟨realRisingSubsequenceIndices sequence start noPeak,
+      realRisingSubsequence_isSubsequence sequence start noPeak,
+      Or.inl (realRisingSubsequence_nondecreasing sequence start noPeak)⟩
+
+theorem realSequence_bounded_has_convergent_subsequence
+    (sequence : RealSequence)
+    (boundedBelow : ∃ lower, RealSequenceLowerBound sequence lower)
+    (boundedAbove : ∃ upper, RealSequenceUpperBound sequence upper) :
+    RealHasConvergentSubsequence sequence := by
+  obtain ⟨indices, subsequence, monotone⟩ :=
+    realSequence_has_monotone_subsequence sequence
+  have subsequenceBoundedBelow : ∃ lower,
+      RealSequenceLowerBound (fun order => sequence (indices order)) lower := by
+    obtain ⟨lower, isLower⟩ := boundedBelow
+    exact ⟨lower, fun order => isLower (indices order)⟩
+  have subsequenceBoundedAbove : ∃ upper,
+      RealSequenceUpperBound (fun order => sequence (indices order)) upper := by
+    obtain ⟨upper, isUpper⟩ := boundedAbove
+    exact ⟨upper, fun order => isUpper (indices order)⟩
+  obtain ⟨limit, converges⟩ := realSequenceMonotone_bounded_converges
+    monotone subsequenceBoundedBelow subsequenceBoundedAbove
+  exact ⟨indices, subsequence, limit, converges⟩
+
+theorem realClosedInterval_sequence_has_convergent_subsequence
+    {lower upper : IncReal} {sequence : RealSequence}
+    (inInterval : ∀ index,
+      RealClosedInterval lower upper (sequence index)) :
+    RealHasConvergentSubsequence sequence := by
+  apply realSequence_bounded_has_convergent_subsequence sequence
+  · exact ⟨lower, fun index => (inInterval index).1⟩
+  · exact ⟨upper, fun index => (inInterval index).2⟩
+
 end IncidenceCore
