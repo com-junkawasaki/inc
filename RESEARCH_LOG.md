@@ -4508,3 +4508,203 @@ queued option (i), still untouched: does `incidenceProd`'s own guards
 46-50), beyond top-level conjunction -- still open, still narrowly scoped,
 available if (a) turns out intractable or as a change-of-pace item after
 two consecutive quotient-construction cycles.
+
+## Cycle 52
+
+**Hypothesis**: cycle 51's own queued primary next-hypothesis, option (a):
+`treeIncidence` (Tree.lean, cycle 29) is the one graded instance cycle 51
+explicitly declined to attempt, because its carrier (`TreeId`) nests
+recursively WITHOUT BOUND (`node a b c`'s children can themselves be nodes,
+to arbitrary depth) -- unlike `simplexIncidence`'s fixed 3-level grading
+(cycle 41) or `pathIncidence`'s fixed 2-level grading with unbounded
+per-grade multiplicity but structurally uniform-in-`n` elements (cycle 51).
+Does the "collapse survives exactly when it respects a well-founded
+grading" mechanism ALSO survive when the grading itself comes from
+UNBOUNDED RECURSIVE DEPTH, or does the recursive self-similarity of a tree
+create a genuinely different obstruction than either prior flat case?
+
+**Method**: read `Tree.lean` in full (cycle 29's `treeIncidence`: carrier
+`TreeId := leaf Nat | node TreeId TreeId TreeId`, boundary `treeBoundary`
+giving non-leaves exactly 3 role-tagged entries `c1`/`c2`/`c3`, `glue`
+identical in shape to `pathIncidence`'s and `simplexIncidence`'s --
+"absorb at a fixed literal unit representative" -- and `well_founded`
+proved via `sizeOf`/`TreeId.node.sizeOf_spec`/`omega`, i.e. `treeIncidence`
+itself already used a `sizeOf`-based well-founded measure, not a small
+enumerated grade). Read `Quotient.lean` in full for the generalized
+`GradedIncidenceData`/`BisimulationQuotientClassification`/
+`GradedBisimulationQuotientPresentation` infrastructure cycles 41/51 built
+and used. Confirmed (per cycle 51's own note) that no `TreeShape` type or
+tree-quotient construction exists anywhere yet.
+
+Designed the natural candidate before writing any Lean: a `TreeShape`
+type mirroring `TreeId` but with leaf labels erased (`leaf | node
+TreeShape TreeShape TreeShape`) -- itself an unboundedly recursive
+inductive type, unlike `PathShape`/`SimplexShape`'s 2/3 finite named
+constructors. The classifying map `treeToShape` forgets only `Nat` leaf
+labels, congruence-closed up the tree. Anticipated before proving it that
+the two directions of `treeToShape_iff_approxBisim` would need genuinely
+different techniques than cycles 41/51: the "reflects" direction (shape-
+equal → bisimilar) is a single level of case analysis, same shape as
+`pathNodeEdgeRel_isBisimulation` (the relation "same shape" already
+encodes whatever is needed about the children, no re-derivation needed);
+but the "distinguishes" direction (bisimilar → shape-equal) cannot be a
+flat argument (`pathToShape_distinguishes`, uniform-in-`n`) nor a finite
+enumeration (`simplexToShape_distinguishes`, 7 elements total) since
+`TreeId` nests without bound -- it needs genuine structural induction over
+an arbitrary witnessing bisimulation, the first time this project's
+quotient-construction thread (cycles 38-51) has needed induction rather
+than direct case-splitting or finite enumeration for a classifying map's
+converse direction.
+
+**Result**: **a genuine third positive middle-ground quotient instance,
+sorry-free, first build -- the recursive-depth generalization survives,
+but required a strictly larger proof-technique toolkit than either prior
+instance, plus two real (not merely stylistic) implementation snags worth
+recording.**
+
+Added to `IncidenceTheory.lean` (root file): `boundaryMatched_of_three_entries`,
+the natural 3-entry generalization of cycle-41-era
+`boundaryMatched_of_two_entries` -- needed because both `treeIncidence` and
+its quotient have genuinely ternary (not binary) boundaries, unlike every
+prior quotient instance. Added to `Quotient.lean` (after adding `import
+IncidenceTheory.Tree`): `TreeShape`, `treeToShape`, the bisimulation
+relation `treeShapeRel x y := treeToShape x = treeToShape y` (defined VIA
+the recursive classifying map itself, since there is no flat non-recursive
+way to state "same branching shape" for an unboundedly deep type -- unlike
+`pathNodeEdgeRel`/`simplexEdgeVertexRel`, stated directly on the two
+grades), and `treeShapeRel_isBisimulation` (one level of case analysis,
+using the new `boundaryMatched_of_three_entries`). The converse direction,
+`treeToShape_distinguishes_of_bisimulation`, is proved by genuine
+structural induction on `TreeId` over an ARBITRARY witnessing bisimulation
+`rel` (mirroring `incidence_bisim_faithful`'s cycle-4 structure -- induction
+over a well-founded measure to chase an arbitrary bisimulation's existentials
+-- but concluding shape-agreement rather than literal equality, and using
+`TreeId`'s own recursor as the well-founded measure directly rather than a
+separate `Nat`-valued one). The needed extraction step -- unpacking
+`boundaryMatched` at a known pair of ternary nodes into the three
+positional `rel` facts -- is `treeIncidence_node_node_boundaryMatched_rel`,
+using that `c1`/`c2`/`c3` are pairwise distinct to rule out two "wrong
+slot" matches per entry. `treeToShape_iff_approxBisim` closes the loop:
+`treeIncidence`'s `≈` is exactly `treeToShape`-agreement, a genuine
+middle-ground quotient (every `leaf n` collapses regardless of `n`;
+distinct branching shapes remain distinct) even though the grading now
+comes from unbounded recursive depth.
+
+`treeBisimulationQuotientClassification` packages this; `treeShapeBoundary`
+feeds `GradedIncidenceData`. Two real implementation snags surfaced here
+that cycles 41/51 never hit (both diagnosed and fixed, not routed around):
+
+1. The FIRST attempt at the grade used `grade := sizeOf` directly, reusing
+   `TreeShape`'s auto-derived `SizeOf` instance the same way
+   `treeIncidence.well_founded` itself reuses `TreeId`'s. This proved
+   correctly (the `boundary_decreases` proof went through) but then failed
+   to COMPILE: `lake build` rejected `treeShapeGradedIncidenceData` with
+   "depends on declaration `TreeShape._sizeOf_inst`, which has no
+   executable code; consider marking definition as `noncomputable`" --
+   `TreeShape`'s auto-derived `SizeOf` instance is itself noncomputable
+   (unlike `TreeId`'s, which compiles fine, but is only ever consumed
+   inside `Prop`-valued proofs where computability never matters).
+   `GradedIncidenceData` is a plain executable `def` whose `grade` field is
+   real run-time data, so this is a genuine constraint, not a proof gap.
+   Fixed by replacing `sizeOf` with a hand-written, structurally-recursive
+   `treeShapeGrade : TreeShape → Nat` (subtree size: `leaf ↦ 0`,
+   `node a b c ↦ grade a + grade b + grade c + 1`) -- fully computable,
+   in exactly `pathShapeGrade`/`simplexShapeGrade`'s style (an explicit
+   `Q → Nat` map) generalized from a finite lookup table to genuine
+   structural recursion. `boundary_decreases`'s proof is then a 2-line
+   `omega` closure, the same shape `treeIncidence`'s own `well_founded`
+   proof uses.
+2. The extraction lemma's role-mismatch case splits (proving e.g.
+   `TernaryRole.c1 ≠ TernaryRole.c2` to rule out a wrong positional match)
+   hit a reproducible Lean elaboration snag: `by decide`, even under an
+   explicit type ascription, was rejected with "Expected type must not
+   contain free variables" when run inside a context with unrelated free
+   variables in scope (the tree's child variables `a`, `b'`, etc., bound
+   by the enclosing case-split but not mentioned by the target
+   proposition itself) -- `decide`'s closed-term precondition looks at the
+   ambient elaboration context, not just the stated goal, and type
+   ascription does not change what gets checked. Fixed by proving the six
+   pairwise `TernaryRole` disequalities as standalone, fully closed
+   top-level lemmas FIRST, then merely *applying* them via `absurd` at the
+   point of use (a defeq check against a fully elaborated closed term, not
+   a fresh in-context `decide` elaboration) -- sidesteps the snag entirely
+   rather than fighting it in place.
+
+`treeShapeIncidence := treeShapeGradedIncidenceData.toIncidence` is the
+fresh, genuine `Incidence TreeShape TernaryRole GraphType` structure on
+the quotient's carrier, all obligations via the generic constructor.
+`treeQuotientToShape` (via `Quotient.lift`) confirmed injective and
+surjective. Task step (d), honestly checked rather than assumed:
+`treeClassification_glue_not_invariant`/`treeShape_glue_not_realizable`
+show `treeToShape` is NOT a glue-homomorphism between `treeIncidence` and
+`treeShapeIncidence` -- the identical mechanism cycles 41/51 found:
+`leaf 0 ≈ leaf 1` (same class), but gluing each against a fixed non-leaf
+node produces different shapes, because `treeIncidence.glue` special-cases
+the literal representative `leaf 0`, not the whole `≈`-class of leaves.
+The strictly stronger "no possible glue whatsoever" closure
+(`treeToShape_no_glue_homomorphism_exists`) is available in the SAME cycle
+the quotient itself was constructed, as for `pathIncidence` (cycle 51).
+
+`lake build` (targeted `IncidenceTheory.Quotient`, then full project):
+clean after the three fixes above (two real compile/elaboration snags plus
+one straightforward missing-`simp`-lemma miss in the leaf/leaf bisimulation
+case). `#print axioms` on the headline declarations (`treeToShape_iff_approxBisim`,
+`treeBisimulationQuotientClassification`, `treeShapeIncidence`,
+`treeGradedQuotientPresentation`, `treeShape_glue_not_realizable`,
+`treeToShape_no_glue_homomorphism_exists`): all reduce to this project's
+standing profile (`propext`, `Quot.sound`, `Classical.choice`) -- no new
+axiom introduced. Full `./verify.sh` (`lake clean && lake build`, example
+binary run, repo-wide `axiom`/`sorry`/`sorryAx` grep): passes end to end.
+
+**Synthesis**: the well-founded-grading mechanism survives unbounded
+recursive depth -- this is NOT an accident specific to flat or finite
+gradings. But cycle 51's framing of this as an open question with a
+genuinely uncertain outcome was well-calibrated: unlike cycle 51's own
+result (which "turned out to make several proof steps EASIER, not
+harder"), this cycle needed a strictly larger proof-technique toolkit
+(genuine structural induction for the converse direction, a new 3-entry
+root-file lemma, and two implementation-level snags requiring real
+debugging rather than routine casework) even though the final mathematical
+shape of the result is the same three-part pattern as cycles 41/51
+(classification, `GradedIncidenceData` presentation, negative
+glue-homomorphism check). The `sizeOf`-noncomputability snag is a small
+but genuine addition to this project's methodological knowledge: an
+auto-derived typeclass instance (`SizeOf`) that is perfectly fine to
+reference inside `Prop`-valued proofs (as `treeIncidence.well_founded`
+itself already did, pre-existing and unchanged) can silently be unusable
+as literal run-time DATA in an executable `def` -- the failure mode is a
+compile error, not a proof gap, and would not have been caught by proof
+review alone. The `decide`-under-free-variables snag is a reusable
+methodological note for any future cycle needing to discharge small
+finite-constructor disequalities inside a context with unrelated bound
+variables: prove the disequality as an isolated closed lemma first, don't
+inline `decide` at the point of use.
+
+This closes the three-instance arc cycle 51 characterized as "confirm or
+refute cycle 41 was an accident of `simplexIncidence`'s specific shape":
+`simplexIncidence` (finite carrier, 3 fixed grades), `pathIncidence`
+(infinite carrier, 2 fixed grades, uniform-in-index elements), and now
+`treeIncidence` (infinite carrier, unboundedly many grades via recursive
+depth) all confirm the same mechanism. Roadmap item 8 (algebra/topology/
+measure reconstruction) and item 7 (incidence/resonance ↔ internal-logic
+integration) are not directly advanced by this cycle -- it is squarely a
+"third generic constructor" (quotient) thread result, continuing cycles
+38-51's arc rather than opening item 7/8 territory.
+
+**Next hypothesis (cycle 53, not yet attempted)**: with all three graded
+instances this project has ever built (`simplexIncidence`, `pathIncidence`,
+`treeIncidence`) now confirmed to have well-behaved middle-ground
+quotients under the SAME mechanism, and all three also confirmed to fail
+the glue-homomorphism check by the SAME mechanism (fixed-representative
+`glue` vs. whole-class collapse), two live threads: (a) is there a general
+THEOREM lurking here -- e.g. "any `GradedIncidenceData`-presentable
+quotient of an instance whose `glue` has the `if i = unit then some j else
+some i`-style fixed-representative shape NEVER has a realizable glue
+lift", proved once and for all rather than re-discovered instance-by-
+instance (cycles 41/45, 51, 52 each re-derived essentially the same
+negative fact by hand)? This would be a genuine generalization, not just a
+fourth instance. (b) cycle 50's still-untouched option (i): does
+`incidenceProd`'s own guards (`prodGuards`) have an analogous blind spot to
+`incidenceSum`'s (cycles 46-50), beyond top-level conjunction -- available
+as a change-of-pace item after three consecutive quotient-construction
+cycles (41, 51, 52) if (a) turns out out of scope for one cycle.

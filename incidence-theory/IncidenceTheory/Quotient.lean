@@ -3,6 +3,7 @@ import IncidenceTheory.Peano
 import IncidenceTheory.PathComplex
 import IncidenceTheory.Product
 import IncidenceTheory.Simplex
+import IncidenceTheory.Tree
 
 /- Merkle-ID: implementation.graph_model.quotient
    story.jsonnet → implementation.nodes.quotient
@@ -2147,5 +2148,392 @@ theorem pathToShape_no_glue_homomorphism_exists :
         glue' (pathToShape x) (pathToShape y) =
           (pathIncidence.glue x y).map pathToShape :=
   pathShape_glue_not_realizable
+
+/- Research cycle 52 (see RESEARCH_LOG.md): cycle 51's own queued primary
+   next-hypothesis -- `treeIncidence` (Tree.lean, cycle 29), the ONE
+   graded instance cycle 51 explicitly declined to attempt because its
+   carrier (`TreeId`) nests recursively WITHOUT BOUND (`node a b c`'s
+   children can themselves be nodes, to arbitrary depth), unlike
+   `simplexIncidence`'s fixed 3-level grading (cycle 41) or
+   `pathIncidence`'s fixed 2-level grading with unbounded per-grade
+   multiplicity (cycle 51). Does the "collapse survives exactly when it
+   respects a well-founded grading" mechanism ALSO survive when the
+   grading itself comes from unbounded recursive depth? -/
+
+/- The quotient target: `TreeId` with leaf labels erased but the full
+   recursive branching structure retained. Unlike `PathShape`/`SimplexShape`
+   (finite types with 2/3 named constructors), `TreeShape` is ITSELF an
+   unboundedly recursive inductive type -- any single value has finite
+   depth, but there is no bound across all values, mirroring `TreeId`'s own
+   shape one level up (after erasing `Nat` leaf labels). -/
+inductive TreeShape where
+  | leaf
+  | node (a b c : TreeShape)
+deriving DecidableEq, Repr
+
+def treeToShape : TreeId → TreeShape
+  | .leaf _ => .leaf
+  | .node a b c => .node (treeToShape a) (treeToShape b) (treeToShape c)
+
+/- The natural candidate bisimulation: "same `TreeShape`". Unlike
+   `pathNodeEdgeRel`/`simplexEdgeVertexRel` (flat relations stated
+   directly on the two grades), this one is defined VIA the recursive
+   classifying map itself -- there is no flat, non-recursive way to state
+   "these two trees have the same branching shape" for an unboundedly deep
+   type. -/
+def treeShapeRel (x y : TreeId) : Prop := treeToShape x = treeToShape y
+
+/- `treeShapeRel` is a bisimulation via a SINGLE level of case analysis
+   (using `boundaryMatched_of_three_entries` above) -- no induction needed
+   here, since the relation already *assumes* shape-equality of the
+   children (`TreeShape.node.injEq` unpacks it), it does not need to
+   RE-DERIVE it. This mirrors `pathNodeEdgeRel_isBisimulation`'s
+   one-level-suffices shape, not `simplexEdgeVertexRel_isBisimulation`'s
+   per-constructor enumeration. -/
+theorem treeShapeRel_isBisimulation :
+  IsBisimulation treeIncidence treeShapeRel := by
+  intro i j hij
+  refine ⟨rfl, ?_⟩
+  cases i with
+  | leaf n =>
+    cases j with
+    | leaf m => simp [boundaryMatched, treeIncidence, treeBoundary]
+    | node a' b' c' => exact absurd hij (by simp [treeShapeRel, treeToShape])
+  | node a b c =>
+    cases j with
+    | leaf m => exact absurd hij (by simp [treeShapeRel, treeToShape])
+    | node a' b' c' =>
+      have heq : treeToShape a = treeToShape a' ∧ treeToShape b = treeToShape b' ∧
+          treeToShape c = treeToShape c' := by
+        simpa [treeShapeRel, treeToShape, TreeShape.node.injEq] using hij
+      exact boundaryMatched_of_three_entries treeIncidence treeShapeRel
+        (TreeId.node a b c) (TreeId.node a' b' c')
+        { i := a, role := TernaryRole.c1, sign := Sign.pos, mult := 1 }
+        { i := b, role := TernaryRole.c2, sign := Sign.pos, mult := 1 }
+        { i := c, role := TernaryRole.c3, sign := Sign.pos, mult := 1 }
+        { i := a', role := TernaryRole.c1, sign := Sign.pos, mult := 1 }
+        { i := b', role := TernaryRole.c2, sign := Sign.pos, mult := 1 }
+        { i := c', role := TernaryRole.c3, sign := Sign.pos, mult := 1 }
+        rfl rfl ⟨rfl, rfl, rfl⟩ heq.1 ⟨rfl, rfl, rfl⟩ heq.2.1 ⟨rfl, rfl, rfl⟩ heq.2.2
+
+theorem treeToShape_reflects (x y : TreeId) (h : treeToShape x = treeToShape y) :
+  approxBisim treeIncidence x y :=
+  ⟨treeShapeRel, treeShapeRel_isBisimulation, h⟩
+
+/- Method note: `TernaryRole`'s pairwise constructor-distinctness facts
+   are proved as standalone, fully closed lemmas FIRST (no ambient free
+   variables at all), rather than inlining `by decide` at the point of use
+   below. The inline version hit a genuine, reproducible Lean elaboration
+   snag: even under an explicit type ascription, `by decide` run inside a
+   context with unrelated free variables in scope (`a`, `b'`, etc., bound
+   by the enclosing theorem/case-split, entirely unmentioned by the target
+   proposition itself) is rejected with "Expected type must not contain
+   free variables" -- `decide`'s closed-term precondition looks at the
+   ambient elaboration context, not just the stated goal. Proving the
+   disequalities in total isolation and then merely *applying* them via
+   `absurd` (a defeq check, not a fresh `decide` elaboration) sidesteps
+   this entirely. -/
+theorem ternaryRole_c1_ne_c2 : TernaryRole.c1 ≠ TernaryRole.c2 := by decide
+theorem ternaryRole_c1_ne_c3 : TernaryRole.c1 ≠ TernaryRole.c3 := by decide
+theorem ternaryRole_c2_ne_c1 : TernaryRole.c2 ≠ TernaryRole.c1 := by decide
+theorem ternaryRole_c2_ne_c3 : TernaryRole.c2 ≠ TernaryRole.c3 := by decide
+theorem ternaryRole_c3_ne_c1 : TernaryRole.c3 ≠ TernaryRole.c1 := by decide
+theorem ternaryRole_c3_ne_c2 : TernaryRole.c3 ≠ TernaryRole.c2 := by decide
+
+/- The extraction lemma the converse direction needs: unpacking
+   `boundaryMatched` at a *specific known pair* of ternary nodes into the
+   three positional `rel` facts, using that the three roles `c1`/`c2`/`c3`
+   are pairwise distinct to rule out the two "wrong slot" matches per
+   entry. This is the general shape `treeIncidence_node_x_boundary`
+   (Tree.lean, cycle 30) already exploited for `boundaryMatrix`; here it's
+   extracted directly for an arbitrary `rel` via `boundaryMatched`, not
+   specialized to `=`. -/
+theorem treeIncidence_node_node_boundaryMatched_rel
+    {rel : TreeId → TreeId → Prop} {a b c a' b' c' : TreeId}
+    (h : boundaryMatched treeIncidence rel (TreeId.node a b c) (TreeId.node a' b' c')) :
+    rel a a' ∧ rel b b' ∧ rel c c' := by
+  obtain ⟨hforward, _⟩ := h
+  have ha := hforward { i := a, role := TernaryRole.c1, sign := Sign.pos, mult := 1 }
+    (by simp [treeIncidence, treeBoundary])
+  have hb := hforward { i := b, role := TernaryRole.c2, sign := Sign.pos, mult := 1 }
+    (by simp [treeIncidence, treeBoundary])
+  have hc := hforward { i := c, role := TernaryRole.c3, sign := Sign.pos, mult := 1 }
+    (by simp [treeIncidence, treeBoundary])
+  obtain ⟨e1', he1', hcompat1, hr1⟩ := ha
+  obtain ⟨e2', he2', hcompat2, hr2⟩ := hb
+  obtain ⟨e3', he3', hcompat3, hr3⟩ := hc
+  simp only [treeIncidence, treeBoundary, List.mem_cons, List.not_mem_nil, or_false]
+    at he1' he2' he3'
+  refine ⟨?_, ?_, ?_⟩
+  · rcases he1' with he1' | he1' | he1' <;> subst he1'
+    · exact hr1
+    · exact absurd hcompat1.1 ternaryRole_c1_ne_c2
+    · exact absurd hcompat1.1 ternaryRole_c1_ne_c3
+  · rcases he2' with he2' | he2' | he2' <;> subst he2'
+    · exact absurd hcompat2.1 ternaryRole_c2_ne_c1
+    · exact hr2
+    · exact absurd hcompat2.1 ternaryRole_c2_ne_c3
+  · rcases he3' with he3' | he3' | he3' <;> subst he3'
+    · exact absurd hcompat3.1 ternaryRole_c3_ne_c1
+    · exact absurd hcompat3.1 ternaryRole_c3_ne_c2
+    · exact hr3
+
+/- The genuinely NEW proof-technique requirement this cycle surfaces: the
+   converse direction (`approxBisim → shape-equal`) cannot be a flat,
+   uniform-in-index argument the way `pathToShape_distinguishes` was
+   (`pathIncidence`'s grades are flat -- one level, uniform in `n`) nor a
+   finite-enumeration one the way `simplexToShape_distinguishes` was
+   (`simplexIncidence` has only 7 elements total). Because `TreeId` nests
+   without bound, this needs GENUINE STRUCTURAL INDUCTION over the tree --
+   the first time this project's quotient-construction thread (cycles
+   38-51) has needed induction rather than direct case-splitting or finite
+   enumeration to establish a classifying map's converse direction. The
+   induction is over an arbitrary witnessing bisimulation `rel`, not just
+   `treeShapeRel` itself (mirroring `incidence_bisim_faithful`'s structure,
+   cycle 4, but with a shape-classification conclusion instead of literal
+   equality, and structural recursion on `TreeId` instead of a `Nat`-valued
+   well-founded measure -- `TreeId`'s own recursor already IS a
+   well-founded measure). -/
+theorem treeToShape_distinguishes_of_bisimulation
+    {rel : TreeId → TreeId → Prop} (isBisim : IsBisimulation treeIncidence rel) :
+    ∀ x y, rel x y → treeToShape x = treeToShape y := by
+  intro x
+  induction x with
+  | leaf n =>
+    intro y hxy
+    cases y with
+    | leaf m => rfl
+    | node a' b' c' =>
+      have hb : approxBisim treeIncidence (TreeId.node a' b' c') (TreeId.leaf n) :=
+        approxBisim_symm ⟨rel, isBisim, hxy⟩
+      exact absurd hb (not_approxBisim_empty_nonempty treeIncidence
+        (TreeId.node a' b' c') (TreeId.leaf n) rfl
+        { i := a', role := TernaryRole.c1, sign := Sign.pos, mult := 1 }
+        (by simp [treeIncidence, treeBoundary]))
+  | node a b c ih_a ih_b ih_c =>
+    intro y hxy
+    cases y with
+    | leaf m =>
+      exact absurd (⟨rel, isBisim, hxy⟩ : approxBisim treeIncidence (TreeId.node a b c) (TreeId.leaf m))
+        (not_approxBisim_empty_nonempty treeIncidence (TreeId.node a b c) (TreeId.leaf m) rfl
+          { i := a, role := TernaryRole.c1, sign := Sign.pos, mult := 1 }
+          (by simp [treeIncidence, treeBoundary]))
+    | node a' b' c' =>
+      obtain ⟨_, hmatch⟩ := isBisim (TreeId.node a b c) (TreeId.node a' b' c') hxy
+      obtain ⟨hra, hrb, hrc⟩ := treeIncidence_node_node_boundaryMatched_rel hmatch
+      simp only [treeToShape]
+      rw [ih_a a' hra, ih_b b' hrb, ih_c c' hrc]
+
+theorem treeToShape_distinguishes (x y : TreeId) (h : approxBisim treeIncidence x y) :
+  treeToShape x = treeToShape y := by
+  obtain ⟨rel, isBisim, hxy⟩ := h
+  exact treeToShape_distinguishes_of_bisimulation isBisim x y hxy
+
+/- The exhaustive characterization, closing the loop cycle 51 left open:
+   `treeIncidence`'s `≈` is exactly `treeToShape`-agreement -- a genuine
+   middle-ground quotient (more than one class: distinct branching shapes
+   remain distinct; fewer than all: every `leaf n` collapses to one class
+   regardless of `n`) even though the grading now comes from unbounded
+   recursive depth, not a fixed handful of levels. -/
+theorem treeToShape_iff_approxBisim (x y : TreeId) :
+  treeToShape x = treeToShape y ↔ approxBisim treeIncidence x y :=
+  ⟨treeToShape_reflects x y, treeToShape_distinguishes x y⟩
+
+def treeBisimulationQuotientClassification :
+    BisimulationQuotientClassification (Q := TreeShape) treeIncidence where
+  classify := treeToShape
+  respects := fun h => treeToShape_distinguishes _ _ h
+  reflects := fun h => treeToShape_reflects _ _ h
+  surjective := by
+    intro shape
+    induction shape with
+    | leaf => exact ⟨TreeId.leaf 0, rfl⟩
+    | node a b c ih_a ih_b ih_c =>
+      obtain ⟨ta, hta⟩ := ih_a
+      obtain ⟨tb, htb⟩ := ih_b
+      obtain ⟨tc, htc⟩ := ih_c
+      exact ⟨TreeId.node ta tb tc, by simp [treeToShape, hta, htb, htc]⟩
+
+noncomputable def treeQuotientToShape :
+  Quotient (approxBisimSetoid treeIncidence) → TreeShape :=
+  Quotient.lift treeToShape treeToShape_distinguishes
+
+theorem treeQuotientToShape_injective (q1 q2 : Quotient (approxBisimSetoid treeIncidence))
+  (h : treeQuotientToShape q1 = treeQuotientToShape q2) : q1 = q2 := by
+  induction q1 using Quotient.ind with
+  | _ x =>
+    induction q2 using Quotient.ind with
+    | _ y =>
+      unfold treeQuotientToShape at h
+      simp only [Quotient.lift] at h
+      exact Quotient.sound (treeToShape_reflects x y h)
+
+theorem treeQuotientToShape_surjective (s : TreeShape) :
+  ∃ q : Quotient (approxBisimSetoid treeIncidence), treeQuotientToShape q = s := by
+  obtain ⟨x, hx⟩ := treeBisimulationQuotientClassification.surjective s
+  exact ⟨Quotient.mk _ x, hx⟩
+
+noncomputable def treeQuotientShapeEquivalence :
+    IncTypeEquivalence
+      (Quotient (approxBisimSetoid treeIncidence)) TreeShape :=
+  treeBisimulationQuotientClassification.equivalence
+
+/- The genuine fresh `Incidence TreeShape` structure, built via the SAME
+   `GradedIncidenceData` machinery cycles 41/51 used -- but now with a
+   grading function that is genuinely UNBOUNDED (not 0/1/2-valued): subtree
+   size. Method note, an incidental but real finding: the FIRST attempt
+   used `grade := sizeOf` directly, reusing `TreeShape`'s auto-derived
+   `SizeOf` instance the same way `treeIncidence.well_founded` itself
+   (`Tree.lean`, cycle 29) reuses `TreeId`'s. That failed to COMPILE --
+   not a proof failure, a compilation one: `lake build` rejected
+   `treeShapeGradedIncidenceData` with "depends on declaration
+   `TreeShape._sizeOf_inst`, which has no executable code; consider
+   marking definition as `noncomputable`" -- `TreeShape`'s auto-derived
+   `SizeOf` instance is itself noncomputable (unlike `TreeId`'s, which
+   compiles fine and is only ever consumed inside `Prop`-valued proofs,
+   where computability never matters). Since `GradedIncidenceData` is a
+   plain, executable `def` (its `grade` field is real run-time data, not
+   proof-irrelevant), this forces a choice between marking the whole
+   presentation `noncomputable` or avoiding `sizeOf`. Chose the latter:
+   `treeShapeGrade` below is a hand-written, structurally-recursive `Nat`
+   function (subtree size) in exactly `pathShapeGrade`/`simplexShapeGrade`'s
+   style (an explicit `Q → Nat` map, cycles 41/51) generalized from a
+   finite lookup table to genuine structural recursion -- fully computable,
+   and its `boundary_decreases` proof is the same shape `treeIncidence`'s
+   own `well_founded` proof uses (a strict decrease across one constructor
+   application), just stated for an explicit sum-of-children measure
+   instead of via `sizeOf_spec`. -/
+def treeShapeGrade : TreeShape → Nat
+  | .leaf => 0
+  | .node a b c => treeShapeGrade a + treeShapeGrade b + treeShapeGrade c + 1
+
+def treeShapeBoundary : TreeShape → Boundary TreeShape TernaryRole
+  | .leaf => []
+  | .node a b c =>
+    [ { i := a, role := TernaryRole.c1, sign := Sign.pos, mult := 1 }
+    , { i := b, role := TernaryRole.c2, sign := Sign.pos, mult := 1 }
+    , { i := c, role := TernaryRole.c3, sign := Sign.pos, mult := 1 } ]
+
+theorem treeClassification_boundaryRealization :
+    treeBisimulationQuotientClassification.BoundaryRealization := by
+  refine ⟨treeShapeBoundary, ?_⟩
+  intro atom
+  cases atom <;>
+    simp [treeShapeBoundary, BisimulationQuotientClassification.mappedSourceBoundary,
+      treeBisimulationQuotientClassification, treeToShape, treeIncidence, treeBoundary]
+
+theorem treeClassification_boundaryInvariant :
+    treeBisimulationQuotientClassification.BoundaryInvariant :=
+  (treeBisimulationQuotientClassification.boundaryRealization_iff_invariant).mp
+    treeClassification_boundaryRealization
+
+def treeShapeGradedIncidenceData :
+    GradedIncidenceData TreeShape TernaryRole GraphType where
+  boundary := treeShapeBoundary
+  typeFunc := fun _ => GraphType.unit
+  glue     := fun i j => if i = TreeShape.leaf then some j else some i
+  unit     := TreeShape.leaf
+  guards   := Guards.permissive TreeShape
+  grade    := treeShapeGrade
+  boundary_decreases := by
+    intro q e h
+    cases q with
+    | leaf => simp [treeShapeBoundary] at h
+    | node a b c =>
+      simp only [treeShapeBoundary, List.mem_cons, List.not_mem_nil, or_false] at h
+      rcases h with h | h | h <;> subst h <;>
+        simp only [treeShapeGrade] <;> omega
+  type_consistent := fun i e h => rfl
+  sign_rules := by
+    intro q e h
+    cases q with
+    | leaf => simp [treeShapeBoundary] at h
+    | node a b c =>
+      simp only [treeShapeBoundary, List.mem_cons, List.not_mem_nil, or_false] at h
+      rcases h with h | h | h <;> subst h <;> simp
+  multiplicities := by
+    intro q e h
+    cases q with
+    | leaf => simp [treeShapeBoundary] at h
+    | node a b c =>
+      simp only [treeShapeBoundary, List.mem_cons, List.not_mem_nil, or_false] at h
+      rcases h with h | h | h <;> subst h <;> simp
+  unit_left := by intro q; simp
+  unit_right := by intro q; by_cases h : q = TreeShape.leaf <;> simp [h]
+  type_preserve := fun _ _ => rfl
+
+def treeShapeIncidence : Incidence TreeShape TernaryRole GraphType :=
+  treeShapeGradedIncidenceData.toIncidence
+
+def treeGradedQuotientPresentation :
+    GradedBisimulationQuotientPresentation
+      (Q := TreeShape) (QR := TernaryRole) (QT := GraphType)
+      treeIncidence where
+  classification := treeBisimulationQuotientClassification
+  data := treeShapeGradedIncidenceData
+  boundary_iff := by
+    intro atom
+    cases atom <;>
+      simp [IncidenceBoundaryValuation, treeBisimulationQuotientClassification,
+        treeToShape, treeIncidence, treeBoundary,
+        treeShapeGradedIncidenceData, GradedIncidenceData.toIncidence, treeShapeBoundary]
+
+def treeQuotientIncidencePresentation :
+    BisimulationQuotientIncidencePresentation
+      (Q := TreeShape) (QR := TernaryRole) (QT := GraphType)
+      treeIncidence :=
+  treeGradedQuotientPresentation.toPresentation
+
+theorem treeQuotientPresentation_equivalence :
+    Nonempty (IncTypeEquivalence
+      (IncidenceQuotient treeIncidence) TreeShape) :=
+  ⟨treeQuotientIncidencePresentation.quotientEquivalence⟩
+
+/- Honest check (task step (d), not assumed): is `treeToShape` a
+   `glue`-homomorphism between `treeIncidence` and `treeShapeIncidence`?
+   Exactly the same mismatch cycles 41/51 found for `simplexIncidence`/
+   `pathIncidence`: both `glue`s share the "absorb at the unit" shape
+   (`if i = unit then some j else some i`), but `treeIncidence.glue`
+   special-cases the literal representative `leaf 0`, not the whole
+   `≈`-class of leaves -- `leaf 0 ≈ leaf 1` (same class), yet gluing each
+   against a fixed non-leaf node produces different shapes. -/
+theorem treeClassification_glue_not_invariant :
+    ¬ treeBisimulationQuotientClassification.GlueInvariant := by
+  intro invariant
+  have leavesBisimilar : approxBisim treeIncidence (TreeId.leaf 0) (TreeId.leaf 1) :=
+    (treeToShape_iff_approxBisim (TreeId.leaf 0) (TreeId.leaf 1)).mp rfl
+  have equalMappedGlue := invariant leavesBisimilar
+    (approxBisim_refl treeIncidence
+      (TreeId.node (TreeId.leaf 0) (TreeId.leaf 1) (TreeId.leaf 2)))
+  have hlhs : treeBisimulationQuotientClassification.mappedSourceGlue
+      (TreeId.leaf 0) (TreeId.node (TreeId.leaf 0) (TreeId.leaf 1) (TreeId.leaf 2)) =
+      some (TreeShape.node TreeShape.leaf TreeShape.leaf TreeShape.leaf) := by
+    simp [BisimulationQuotientClassification.mappedSourceGlue,
+      treeBisimulationQuotientClassification, treeToShape, treeIncidence]
+  have hrhs : treeBisimulationQuotientClassification.mappedSourceGlue
+      (TreeId.leaf 1) (TreeId.node (TreeId.leaf 0) (TreeId.leaf 1) (TreeId.leaf 2)) =
+      some TreeShape.leaf := by
+    simp [BisimulationQuotientClassification.mappedSourceGlue,
+      treeBisimulationQuotientClassification, treeToShape, treeIncidence]
+  rw [hlhs, hrhs] at equalMappedGlue
+  exact absurd equalMappedGlue (by decide)
+
+/- The strictly stronger, "no escape hatch" closure -- available in the
+   SAME cycle the quotient itself was constructed (as for `pathIncidence`,
+   cycle 51), since `glueRealization_iff_invariant` was already generic
+   reusable infrastructure by the time this cycle started. -/
+theorem treeShape_glue_not_realizable :
+    ¬ treeBisimulationQuotientClassification.GlueRealization :=
+  fun realization =>
+    treeClassification_glue_not_invariant
+      ((BisimulationQuotientClassification.glueRealization_iff_invariant
+        treeBisimulationQuotientClassification).mp realization)
+
+theorem treeToShape_no_glue_homomorphism_exists :
+    ¬ ∃ glue' : TreeShape → TreeShape → Option TreeShape,
+      ∀ x y : TreeId,
+        glue' (treeToShape x) (treeToShape y) =
+          (treeIncidence.glue x y).map treeToShape :=
+  treeShape_glue_not_realizable
 
 end IncidenceCore

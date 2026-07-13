@@ -5476,6 +5476,37 @@ theorem boundaryMatched_of_two_entries {I R T : Type u} [DecidableEq I]
     · subst he'; exact ⟨e1, by simp, hc1, hr1⟩
     · subst he'; exact ⟨e2, by simp, hc2, hr2⟩
 
+/- Research cycle 52 (see RESEARCH_LOG.md): the natural 3-entry
+   generalization of `boundaryMatched_of_two_entries` above, needed for
+   `treeIncidence`'s (and its quotient `treeShapeIncidence`'s) genuinely
+   ternary boundaries -- both have exactly 3 role-tagged entries per
+   non-leaf element, unlike `pathIncidence`/`simplexIncidence.edgeShape`'s
+   2-entry boundaries. Same "caller supplies the witnesses directly"
+   shape, one more conjunct. -/
+theorem boundaryMatched_of_three_entries {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (rel : I → I → Prop) (i j : I)
+  (e1 e2 e3 f1 f2 f3 : Endpoint I R)
+  (hbi : inc.boundary i = [e1, e2, e3]) (hbj : inc.boundary j = [f1, f2, f3])
+  (hc1 : boundaryCompatible inc e1 f1) (hr1 : rel e1.i f1.i)
+  (hc2 : boundaryCompatible inc e2 f2) (hr2 : rel e2.i f2.i)
+  (hc3 : boundaryCompatible inc e3 f3) (hr3 : rel e3.i f3.i) :
+  boundaryMatched inc rel i j := by
+  unfold boundaryMatched
+  rw [hbi, hbj]
+  constructor
+  · intro e he
+    simp only [List.mem_cons, List.not_mem_nil, or_false] at he
+    rcases he with he | he | he
+    · subst he; exact ⟨f1, by simp, hc1, hr1⟩
+    · subst he; exact ⟨f2, by simp, hc2, hr2⟩
+    · subst he; exact ⟨f3, by simp, hc3, hr3⟩
+  · intro e' he'
+    simp only [List.mem_cons, List.not_mem_nil, or_false] at he'
+    rcases he' with he' | he' | he'
+    · subst he'; exact ⟨e1, by simp, hc1, hr1⟩
+    · subst he'; exact ⟨e2, by simp, hc2, hr2⟩
+    · subst he'; exact ⟨e3, by simp, hc3, hr3⟩
+
 /- `boundaryMatched` at `(i, j)` gives `boundaryMatched` at `(j, i)` for
    free once `rel` is known symmetric -- halves the casework needed for
    a symmetric relation over several elements (only the "canonical"
