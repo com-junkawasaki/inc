@@ -3027,4 +3027,100 @@ theorem realCauchy_tailSup_close
   refine ⟨threshold, ?_⟩
   exact realDist_le_of_le_of_le_add radius sequenceBelowSup supBelow
 
+def RealLowerBound (family : IncReal → Prop) (lower : IncReal) : Prop :=
+  ∀ value, family value → realLE lower value
+
+def RealNegFamily (family : IncReal → Prop) (value : IncReal) : Prop :=
+  ∃ original, family original ∧ value = realNeg original
+
+theorem realNegFamily_nonempty {family : IncReal → Prop}
+    (nonempty : ∃ value, family value) :
+    ∃ value, RealNegFamily family value := by
+  obtain ⟨value, member⟩ := nonempty
+  exact ⟨realNeg value, value, member, rfl⟩
+
+theorem realNegFamily_bounded {family : IncReal → Prop}
+    (bounded : ∃ lower, RealLowerBound family lower) :
+    ∃ upper, RealUpperBound (RealNegFamily family) upper := by
+  obtain ⟨lower, isLower⟩ := bounded
+  refine ⟨realNeg lower, ?_⟩
+  intro value member
+  obtain ⟨original, originalMember, equal⟩ := member
+  subst value
+  exact realNeg_order_reverse (isLower original originalMember)
+
+/-- Infimum derived from the already checked Dedekind supremum by order
+duality through real negation. -/
+noncomputable def realInf (family : IncReal → Prop)
+    (nonempty : ∃ value, family value)
+    (bounded : ∃ lower, RealLowerBound family lower) : IncReal :=
+  realNeg (realSup (RealNegFamily family)
+    (realNegFamily_nonempty nonempty) (realNegFamily_bounded bounded))
+
+theorem realInf_is_lower_bound (family : IncReal → Prop)
+    (nonempty : ∃ value, family value)
+    (bounded : ∃ lower, RealLowerBound family lower) :
+    RealLowerBound family (realInf family nonempty bounded) := by
+  intro value member
+  have negBelowSup := realSup_is_upper_bound (RealNegFamily family)
+    (realNegFamily_nonempty nonempty) (realNegFamily_bounded bounded)
+    (realNeg value) ⟨value, member, rfl⟩
+  have reversed := realNeg_order_reverse negBelowSup
+  simpa [realInf, realNeg_neg] using reversed
+
+theorem realInf_is_greatest (family : IncReal → Prop)
+    (nonempty : ∃ value, family value)
+    (bounded : ∃ lower, RealLowerBound family lower)
+    {lower : IncReal} (isLower : RealLowerBound family lower) :
+    realLE lower (realInf family nonempty bounded) := by
+  have supBelow : realLE
+      (realSup (RealNegFamily family)
+        (realNegFamily_nonempty nonempty) (realNegFamily_bounded bounded))
+      (realNeg lower) := by
+    apply realSup_is_least (RealNegFamily family)
+      (realNegFamily_nonempty nonempty) (realNegFamily_bounded bounded)
+    intro value member
+    obtain ⟨original, originalMember, equal⟩ := member
+    subst value
+    exact realNeg_order_reverse (isLower original originalMember)
+  have reversed := realNeg_order_reverse supBelow
+  simpa [realInf, realNeg_neg] using reversed
+
+def RealCauchyTailSupFamily (sequence : RealSequence)
+    (cauchy : RealSequenceCauchy sequence) (value : IncReal) : Prop :=
+  ∃ start, realCauchyTailSup sequence cauchy start = value
+
+theorem realCauchyTailSupFamily_nonempty
+    (sequence : RealSequence) (cauchy : RealSequenceCauchy sequence) :
+    ∃ value, RealCauchyTailSupFamily sequence cauchy value :=
+  ⟨realCauchyTailSup sequence cauchy 0, 0, rfl⟩
+
+theorem realCauchyTailSupFamily_bounded_below
+    (sequence : RealSequence) (cauchy : RealSequenceCauchy sequence) :
+    ∃ lower, RealLowerBound (RealCauchyTailSupFamily sequence cauchy) lower := by
+  obtain ⟨lower, sequenceLower⟩ := realSequenceCauchy_bounded_below cauchy
+  refine ⟨lower, ?_⟩
+  intro value member
+  obtain ⟨start, equal⟩ := member
+  subst value
+  exact realLE_trans (sequenceLower start)
+    (realSequence_le_tailSup (realSequenceCauchy_bounded_above cauchy)
+      (Nat.le_refl start))
+
+noncomputable def realCauchyLimitCandidate
+    (sequence : RealSequence) (cauchy : RealSequenceCauchy sequence) : IncReal :=
+  realInf (RealCauchyTailSupFamily sequence cauchy)
+    (realCauchyTailSupFamily_nonempty sequence cauchy)
+    (realCauchyTailSupFamily_bounded_below sequence cauchy)
+
+theorem realCauchyLimitCandidate_le_tailSup
+    (sequence : RealSequence) (cauchy : RealSequenceCauchy sequence)
+    (start : Nat) :
+    realLE (realCauchyLimitCandidate sequence cauchy)
+      (realCauchyTailSup sequence cauchy start) := by
+  apply realInf_is_lower_bound (RealCauchyTailSupFamily sequence cauchy)
+    (realCauchyTailSupFamily_nonempty sequence cauchy)
+    (realCauchyTailSupFamily_bounded_below sequence cauchy)
+  exact ⟨start, rfl⟩
+
 end IncidenceCore

@@ -214,7 +214,10 @@ Checked constructions include:
   selected upper bounds, and every Cauchy sequence is globally bounded above
   and below; every tail therefore has a Dedekind supremum, these suprema form a
   decreasing sequence, and each Cauchy radius bounds the distance between a
-  suitable sequence term and its corresponding tail supremum;
+  suitable sequence term and its corresponding tail supremum; order duality
+  through negation constructs arbitrary nonempty bounded infima with their
+  greatest-lower-bound law, and the Cauchy limit candidate is now defined as
+  the infimum of the tail-supremum family;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets

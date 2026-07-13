@@ -226,7 +226,9 @@ case where the selector is complete and resonance has no unselected modes.
   the lower bound, so every Cauchy sequence is two-sided bounded. Dedekind
   completeness then constructs the supremum of every tail; later tails have
   smaller suprema, and the Cauchy radius bounds each selected term-to-tail-sup
-  distance.
+  distance. Negation duality derives general infima and their greatest-lower-
+  bound law. The candidate Cauchy limit is the infimum of all tail suprema and
+  is checked below each member of that family.
 
 ### Non-normative physical intuition
 
