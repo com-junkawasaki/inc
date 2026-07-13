@@ -4024,6 +4024,81 @@ theorem nonnegativeRealPow_value (base : NonnegativeReal) (exponent : Nat) :
         (nonnegativeRealPow base exponent).value base.value
         (nonnegativeRealPow base exponent).nonnegative base.nonnegative]
 
+theorem nonnegativeRealPow_one (exponent : Nat) :
+    nonnegativeRealPow nonnegativeOne exponent = nonnegativeOne := by
+  induction exponent with
+  | zero => rfl
+  | succ exponent induction =>
+      rw [nonnegativeRealPow, induction,
+        nonnegativeRealMul_one_right_bundle]
+
+theorem nonnegativeRealPow_add
+    (base : NonnegativeReal) (left right : Nat) :
+    nonnegativeRealPow base (left + right) =
+      nonnegativeRealMul (nonnegativeRealPow base left)
+        (nonnegativeRealPow base right) := by
+  apply NonnegativeReal.ext
+  rw [nonnegativeRealPow_value, realPow_add]
+  rw [← nonnegativeRealPow_value base left,
+    ← nonnegativeRealPow_value base right]
+  rw [realMul_of_nonnegative
+    (nonnegativeRealPow base left).value
+    (nonnegativeRealPow base right).value
+    (nonnegativeRealPow base left).nonnegative
+    (nonnegativeRealPow base right).nonnegative]
+
+theorem nonnegativeRealPow_monotone_base
+    {left right : NonnegativeReal}
+    (ordered : realLE left.value right.value) (exponent : Nat) :
+    realLE (nonnegativeRealPow left exponent).value
+      (nonnegativeRealPow right exponent).value := by
+  induction exponent with
+  | zero => exact realLE_refl _
+  | succ exponent induction =>
+      rw [nonnegativeRealPow, nonnegativeRealPow]
+      exact nonnegativeRealMul_monotone induction ordered
+
+theorem nonnegativeRealPow_one_le
+    {base : NonnegativeReal} (oneBelow : realLE nonnegativeOne.value base.value)
+    (exponent : Nat) :
+    realLE nonnegativeOne.value (nonnegativeRealPow base exponent).value := by
+  have powered := nonnegativeRealPow_monotone_base oneBelow exponent
+  rw [nonnegativeRealPow_one] at powered
+  exact powered
+
+theorem nonnegativeRealPow_monotone_exponent
+    {base : NonnegativeReal} (oneBelow : realLE nonnegativeOne.value base.value)
+    {first second : Nat} (ordered : first ≤ second) :
+    realLE (nonnegativeRealPow base first).value
+      (nonnegativeRealPow base second).value := by
+  obtain ⟨difference, equal⟩ := Nat.le.dest ordered
+  subst second
+  rw [nonnegativeRealPow_add]
+  have extraOne := nonnegativeRealPow_one_le oneBelow difference
+  have multiplied := nonnegativeRealMul_monotone_right
+    (left := nonnegativeRealPow base first) extraOne
+  rw [nonnegativeRealMul_one_right_bundle] at multiplied
+  exact multiplied
+
+theorem nonnegativeReal_one_add_pow_eventually_above
+    (value : NonnegativeReal) (valueNonzero : value.value ≠ realZero)
+    (target : IncReal) :
+    ∃ threshold : Nat, ∀ exponent, threshold ≤ exponent →
+      realLT target
+        (nonnegativeRealPow
+          (nonnegativeRealAdd nonnegativeOne value) exponent).value := by
+  obtain ⟨threshold, thresholdAbove⟩ :=
+    nonnegativeReal_one_add_pow_unbounded value valueNonzero target
+  let base := nonnegativeRealAdd nonnegativeOne value
+  have oneBelowBase : realLE nonnegativeOne.value base.value := by
+    have added := realAdd_monotone_right
+      (left := nonnegativeOne.value) value.nonnegative
+    simpa [realAdd_zero_right] using added
+  refine ⟨threshold, ?_⟩
+  intro exponent exponentLarge
+  exact realLT_of_lt_of_le thresholdAbove
+    (nonnegativeRealPow_monotone_exponent oneBelowBase exponentLarge)
+
 theorem realAbs_pow (base : IncReal) (exponent : Nat) :
     realAbs (realPow base exponent) = nonnegativeRealPow (realAbs base) exponent := by
   induction exponent with

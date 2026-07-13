@@ -1625,6 +1625,10 @@ Archimedean 上界、`x < y` を主有理実数で分離する Dedekind cut 分�
 ついて、任意の構成実数 target を上回る `(1+x)^n` が存在することを、主有理内部点、
 有理 Archimedean steps、Bernoulli の合成として検査した。残件は指数方向の単調性で
 この存在評価を tail 評価へ強化し、逆数冪の 0 収束へ反転することである。
+非負冪について底の単調性、指数加法則、`1 ≤ base` の下での指数単調性も証明し、
+正の非零 `x` に対して閾値以降の全ての指数で `(1+x)^n` が target を上回る tail
+発散定理を得た。従って残件は tail 評価の不足ではなく、逆数と冪の可換性および
+正元上の逆順序性を用いて、この tail 発散を 0 への tail 収束へ反転する段階である。
 
 cycle 41時点の「土台固め」評価からは大きく進み、現在はchecked incidence core、
 bisimulation/quotient理論、多数の具体モデル、命題内部論理のsoundness・完全性、
