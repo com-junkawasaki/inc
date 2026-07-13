@@ -213,6 +213,10 @@ case where the selector is complete and resonance has no unselected modes.
   negative magnitudes. It is negation-invariant, detects zero exactly, bounds
   both signs, and satisfies the triangle inequality. Absolute difference gives
   a nonnegative symmetric separated distance satisfying its triangle law.
+- Real-sequence convergence and Cauchy predicates quantify over positive
+  reconstructed rational radii. Rational inverse resonance constructs an exact
+  positive half-radius, so the metric triangle law proves every convergent
+  sequence Cauchy; constant sequences supply the initial checked examples.
 
 ### Non-normative physical intuition
 

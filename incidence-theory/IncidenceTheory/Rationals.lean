@@ -1031,6 +1031,52 @@ theorem rationalLT_mul_positive_approx_right
   rw [restore] at multiplied
   exact multiplied
 
+theorem rational_exists_positive_half {value : IncRational}
+    (positive : rationalLT (rationalOfInteger 0) value) :
+    ∃ half, rationalLT (rationalOfInteger 0) half ∧
+      rationalAdd half half = value := by
+  have twoNonzero : rationalOfInteger 2 ≠ rationalOfInteger 0 := fun equal => by
+    have impossible := rationalOfInteger_injective equal
+    omega
+  obtain ⟨halfFactor, halfFactorLaw⟩ :=
+    rational_nonzero_has_mul_inverse twoNonzero
+  have twoPositive :
+      rationalLT (rationalOfInteger 0) (rationalOfInteger 2) := by
+    exact ⟨(rationalOfInteger_le_iff 0 2).mpr (by omega), fun equal => by
+      have impossible := rationalOfInteger_injective equal
+      omega⟩
+  have halfFactorPositive :
+      rationalLT (rationalOfInteger 0) halfFactor := by
+    apply rationalMul_positive_reflect_right twoPositive
+    rw [halfFactorLaw]
+    exact rational_zero_lt_one
+  have oneAddOne :
+      rationalAdd (rationalOfInteger 1) (rationalOfInteger 1) =
+        rationalOfInteger 2 := by
+    apply Quotient.sound
+    change (1 * 1 + 1 * 1) * 1 = 2 * (1 * 1)
+    omega
+  let half := rationalMul value halfFactor
+  refine ⟨half, rationalMul_positive positive halfFactorPositive, ?_⟩
+  calc
+    rationalAdd half half =
+        rationalMul value (rationalAdd halfFactor halfFactor) := by
+      rw [rationalMul_add]
+    _ = rationalMul value
+        (rationalMul (rationalOfInteger 2) halfFactor) := by
+      congr 1
+      calc
+        rationalAdd halfFactor halfFactor =
+            rationalMul halfFactor
+              (rationalAdd (rationalOfInteger 1) (rationalOfInteger 1)) := by
+          rw [rationalMul_add, rationalMul_one_right]
+        _ = rationalMul halfFactor (rationalOfInteger 2) := by
+          rw [oneAddOne]
+        _ = rationalMul (rationalOfInteger 2) halfFactor :=
+          rationalMul_comm _ _
+    _ = rationalMul value (rationalOfInteger 1) := by rw [halfFactorLaw]
+    _ = value := rationalMul_one_right value
+
 theorem rationalOfInteger_add (left right : Int) :
     rationalOfInteger (left + right) =
       rationalAdd (rationalOfInteger left) (rationalOfInteger right) := by

@@ -2572,4 +2572,68 @@ theorem realDist_triangle (first second third : IncReal) :
   rw [differenceDecompose]
   exact realAbs_add_le _ _
 
+abbrev RealSequence := Nat → IncReal
+
+/-- Metric convergence, quantified over reconstructed positive rational
+radii. This keeps the definition internal to the rational/real tower. -/
+def RealSequenceConverges (sequence : RealSequence) (limit : IncReal) : Prop :=
+  ∀ epsilon : IncRational,
+    rationalLT (rationalOfInteger 0) epsilon →
+      ∃ threshold : Nat, ∀ index, threshold ≤ index →
+        realLE (realDist (sequence index) limit).value
+          (rationalToReal epsilon)
+
+def RealSequenceCauchy (sequence : RealSequence) : Prop :=
+  ∀ epsilon : IncRational,
+    rationalLT (rationalOfInteger 0) epsilon →
+      ∃ threshold : Nat, ∀ left right,
+        threshold ≤ left → threshold ≤ right →
+          realLE (realDist (sequence left) (sequence right)).value
+            (rationalToReal epsilon)
+
+theorem realSequenceConverges_const (value : IncReal) :
+    RealSequenceConverges (fun _ => value) value := by
+  intro epsilon epsilonPositive
+  refine ⟨0, ?_⟩
+  intro index _
+  rw [realDist_self]
+  change realLE realZero (rationalToReal epsilon)
+  exact (rationalToReal_le_iff _ _).mpr epsilonPositive.1
+
+theorem realSequenceCauchy_const (value : IncReal) :
+    RealSequenceCauchy (fun _ => value) := by
+  intro epsilon epsilonPositive
+  refine ⟨0, ?_⟩
+  intro left right _ _
+  rw [realDist_self]
+  change realLE realZero (rationalToReal epsilon)
+  exact (rationalToReal_le_iff _ _).mpr epsilonPositive.1
+
+theorem realSequenceConverges_cauchy
+    {sequence : RealSequence} {limit : IncReal}
+    (converges : RealSequenceConverges sequence limit) :
+    RealSequenceCauchy sequence := by
+  intro epsilon epsilonPositive
+  obtain ⟨half, halfPositive, halfAdd⟩ :=
+    rational_exists_positive_half epsilonPositive
+  obtain ⟨threshold, eventuallyClose⟩ := converges half halfPositive
+  refine ⟨threshold, ?_⟩
+  intro left right leftLarge rightLarge
+  have leftBound := eventuallyClose left leftLarge
+  have rightBound := eventuallyClose right rightLarge
+  have rightBound' : realLE (realDist limit (sequence right)).value
+      (rationalToReal half) := by
+    rw [realDist_comm]
+    exact rightBound
+  have triangle := realDist_triangle (sequence left) limit (sequence right)
+  have summed := realAdd_monotone leftBound rightBound'
+  have bounded := realLE_trans triangle summed
+  change realLE (realDist (sequence left) (sequence right)).value
+    (rationalToReal epsilon)
+  calc
+    realLE (realDist (sequence left) (sequence right)).value
+        (realAdd (rationalToReal half) (rationalToReal half)) := bounded
+    _ = rationalToReal epsilon := by
+      rw [realAdd_rationalToReal, halfAdd]
+
 end IncidenceCore
