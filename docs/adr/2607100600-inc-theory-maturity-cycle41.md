@@ -2159,3 +2159,52 @@ idx`/`k ∈ idx` 制限つきの正の系4件）+ その制限が構造的に必
 （`RESEARCH_LOG.md` cycle 63 の Next hypothesis に記録済み）。項目8の記述は「部分
 完了」のまま維持し、パーセンテージ（本文59行目、40%/55–60%）も本追補では動かさない
 ——cycle 60–62 追補と同じ保守的判断を一貫して適用する。
+
+## 2026-07-14 追補（cycle 64: `idx ++ idx'` 分割律の新設と、cycle 62(c) の
+「idx 可変」8件負例の完全解消——ただし一枚岩の理由ではなく三系統に分解）
+
+本追補は `RESEARCH_LOG.md` cycle 64 の結果を反映する。cycle 63 が自ら次サイクルの
+候補として挙げたうち cycle 62 のフォールバック(a)——`Matrix.mul`/`intListSum` の
+総和対象リストが連結 `idx ++ idx'` として分割される一般法則の有無——を主対象として
+取り組んだ。
+
+新設した一般補題は2件: `intListSum_append (xs ys : List α) (f) : intListSum
+(xs ++ ys) f = intListSum xs f + intListSum ys f`（`intListSum` ライブラリ、
+`xs` に関する4行の帰納法）と、その `Matrix` 層への持ち上げ `Matrix.mul_append
+(idx idx' : List n) (A) (B) : mul (idx ++ idx') A B = add (mul idx A B) (mul
+idx' A B)`（`intListSum_append` への直接適用2行）。あわせて退化ケースの相棒
+`Matrix.mul_nil : mul ([] : List n) A B = fun _ _ => 0`（`rfl`）も追加した。
+
+cycle 62(c) が「idx 可変」として一括りにした8件の負例（`laplacian_append`/
+`_cons`/`_empty`/`_diagonal_monotone_append`/`_diagonal_monotone_cons`/
+`_diagonal_strict_monotone_append`/`_diagonal_increment_append`/`_of_empty_
+boundaries`）を精読した結果、実際には理由が三系統に分かれることが判明した——
+一枚岩の「idx 可変だから簡約されない」という cycle 62(c) 自身の分類が、この
+サブグループ内部では粗すぎたことになる（cycle 63 が cycle 62(c) の分類自体に
+見出した「第五の軸」と同種の、分類の精密化）。(1) 6件（`append` 本体・`cons`・
+4件の単調性/増分系列）は真に `idx ++ idx'` の分割を必要とし、`Matrix.mul_append`
+で `_via_matrix` 系として簡約した（原証明は保持）。(2) `laplacian_empty` は分割
+対象の第二のリストを持たない退化ケースで、`Matrix.mul_nil` という別の（分割律
+ではない）相棒事実で簡約した。(3) `laplacian_of_empty_boundaries` は実は `idx`
+の分割/延長と無関係で、`hempty` が `boundaryMatrix` を各点で零にするという事実
+のみに依存し、本サイクル以前から存在した `intListSum_eq_zero_of_mem` だけで
+簡約できる——cycle 62(c) がこれを「idx 可変」8件に含めたのは分類ミスであり、
+本サイクルはこれを訂正した上で簡約した。
+
+これにより項目8の評価を「... + ∂²=0 定理群の `Matrix.mul` 再定式化（cycle 63）」
+から「+ `idx` の list 構造（連結・空リスト）についての初の `Matrix` 層一般事実
+（`intListSum_append`/`Matrix.mul_append`/`Matrix.mul_nil`）+ それによる cycle
+62(c) の『idx 可変』8件負例の完全な簡約（ただし三系統の異なる理由に分解して
+記録——6件は分割律、1件は空リスト相棒事実、1件は分割と無関係な既存語彙のみ）」
+へ更新する。この結果、cycle 62(c) が特定した4系統の負例のうち「idx 可変」系統
+（旧8件）は解消し、残るのは (ii) `Incidence` 合同（`boundaryMatrix_congr` 系列
+3件）・(iii) 行/列総和（`laplacian_rowSum_zero_of_boundaryRowBalanced` 系列2件）・
+(iv) `Endpoint`/`Sign` 単位の場合分け（`boundaryMatrix_two_link` 系列7件）の
+3系統・計12件のみとなった。ただし依然として: (a) 階数・行列式・固有値・逆行列は
+未着手、(b) 抽象代数・位相・測度論は cycle 60 追補時点の記述から変化なし、(c) 上記
+残り12件を埋める一般語彙、および cycle 62 のフォールバック(c)（行列ベクトル積の
+一般化——`laplacianRowSum`/`ColumnSum`/`GraphModel.finiteLApply` の統一）は
+cycle 65 以降の課題として残る（`RESEARCH_LOG.md` cycle 64 の Next hypothesis に
+記録済み）。項目8の記述は「部分完了」のまま維持し、パーセンテージ（本文59行目、
+40%/55–60%）も本追補では動かさない——cycle 60–63 追補と同じ保守的判断を一貫して
+適用する。

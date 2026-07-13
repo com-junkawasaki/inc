@@ -6751,3 +6751,185 @@ well-scoped extension; (c) cycle 62's own still-open fallback (c): a general
 `GraphModel.finiteLApply`, likewise unclaimed. (b) and (c) are the more
 substantial, library-growing continuations; (a) is a smaller, audit-shaped
 task in the spirit of this cycle's own precision about restriction axes.
+
+## Cycle 64
+
+**Hypothesis**: cycle 63's own "Next hypothesis" queue named cycle 62's still-
+unclaimed fallback (b) as PRIMARY for this cycle, per the orchestrating task's
+explicit framing: does `Matrix.mul`/`intListSum` admit a general fact about
+the summation index list splitting as a concatenation `idx ++ idx'` (e.g.
+`intListSum (idx ++ idx') f = intListSum idx f + intListSum idx' f`), and does
+this let cycle 62(c)'s 8 "idx-variation" negatives -- `laplacian_append`,
+`laplacian_cons`, `laplacian_empty`, `laplacian_diagonal_monotone_append`,
+`laplacian_diagonal_monotone_cons`, `laplacian_diagonal_strict_monotone_append`,
+`laplacian_diagonal_increment_append`, `laplacian_of_empty_boundaries` --
+reduce to corollaries of the `Matrix` layer? Fallback if this proves
+intractable or the 8 turn out not to need it: cycle 62's still-open fallback
+(c), a general "matrix-vector product" abstraction unifying
+`laplacianRowSum`/`ColumnSum` and `GraphModel.finiteLApply`.
+
+**Method**: re-read cycle 62's own section in full to recover the EXACT 8
+theorem names (not from memory/summary), confirming the list above verbatim
+against `IncidenceTheory.lean` (`laplacian_append` L1066, `laplacian_cons`
+L1099+40≈, `laplacian_empty`, `laplacian_diagonal_monotone_append`,
+`laplacian_diagonal_monotone_cons`, `laplacian_of_empty_boundaries`, then
+later `laplacian_diagonal_strict_monotone_append`/`laplacian_diagonal_
+increment_append`, all originally at L1066-1248). Read every one of the 8
+theorems' full current statements and proofs before writing anything, plus
+the complete `intListSum` library (L663-792: `intListSum_acc`/`_cons`/`_add`/
+`_mul_left`/`_zero`/`_eq_zero_of_mem`/`_nonneg` (cycle 62)/`_gram_row_swap`/
+`_mul_right`/`_comm`) and the first `Matrix` block (L807-921: `add`/`add_comm`/
+`add_assoc`/`transpose`/`transpose_transpose`/`transpose_add`/`mul`/`mul_add`/
+`add_mul`/`transpose_mul`/`mul_assoc`/`mul_transpose_self_diag_nonneg`
+(cycle 62)) -- confirmed by grep that no `_append`-named lemma existed
+anywhere in either library before this cycle, matching cycle 62(c)'s own
+finding that this fact was simply absent. Noticed, reading the 8 closely
+(the task's explicit instruction to check before assuming the primary lemma
+is the blocker for all 8): 6 of the 8 (`laplacian_append` itself, `_cons`,
+`_diagonal_monotone_append`, `_diagonal_monotone_cons`, `_diagonal_strict_
+monotone_append`, `_diagonal_increment_append`) genuinely need an
+`idx ++ idx'` splitting fact -- `_cons`/the four monotonicity/increment
+theorems all already reduce, in their EXISTING hand-written proofs, to a
+one-line rewrite through `laplacian_append` itself (not independent fold
+inductions), so unblocking `laplacian_append` unblocks all five for free.
+`laplacian_empty` is different in kind: it has no second list to split
+against (`idx := []` is the base case, already `rfl`), so it needs a
+degenerate companion fact (`Matrix.mul` at `idx = []`), not literally the
+append law. `laplacian_of_empty_boundaries` is different again: on close
+reading its content has NOTHING to do with splitting or extending `idx` --
+it is universally quantified over a SINGLE `idx`, and the actual content is
+that `hempty : ∀ i, inc.boundary i = []` forces `boundaryMatrix` to be the
+zero matrix pointwise, which the pre-existing `intListSum_eq_zero_of_mem`
+(present since before this cycle) already suffices to reduce, no new lemma
+needed at all -- cycle 62 bucketed it under "idx-variation" by proximity to
+the other 7 in the source file, but it is actually closer to cycle 62's own
+category (i) (pointwise-in-`idx`, like `laplacian_diagonal_nonnegative`) with
+an extra hypothesis on `inc`, a categorization the task's own instruction to
+"check if this specific lemma is genuinely the blocker" was designed to catch.
+
+**Result**: **all three sub-mechanisms landed, `./verify.sh` clean on the
+first `lake build` attempt with zero tactic-level fixes needed, giving all 8
+of cycle 62(c)'s "idx-variation" negatives a `Matrix`-layer `_via_matrix`
+corollary (originals byte-for-byte unchanged) -- but via three genuinely
+different justifications, reported separately rather than rounded up to one
+flat "8/8 reduces via the new lemma."**
+
+- **The primary lemma** (`intListSum` library, added directly after
+  `intListSum_add`): `intListSum_append (xs ys : List α) (f : α → Int) :
+  intListSum (xs ++ ys) f = intListSum xs f + intListSum ys f`, a four-line
+  induction on `xs` reusing `intListSum_cons`/`Int.add_assoc` (no
+  `List.foldl`-level reasoning re-derived from scratch, matching this
+  library's established style). Its `Matrix`-layer lift (first `namespace
+  Matrix` block, added directly after `mul_transpose_self_diag_nonneg`):
+  `Matrix.mul_append (idx idx' : List n) (A : Matrix m n Int) (B : Matrix n p
+  Int) : mul (idx ++ idx') A B = add (mul idx A B) (mul idx' A B)`, a
+  two-line `funext` + direct application of `intListSum_append`. Also added
+  the degenerate companion `Matrix.mul_nil (A : Matrix m n Int) (B : Matrix n
+  p Int) : mul ([] : List n) A B = fun _ _ => 0 := rfl` (needed for
+  `laplacian_empty`, not derived from `mul_append` since `[]` has no second
+  list to split against -- proved directly from `intListSum`'s own `nil` base
+  case, `rfl`).
+- **6 theorems unblocked BY the append law** (`laplacian_append_via_matrix`,
+  `laplacian_cons_via_matrix`, `laplacian_diagonal_monotone_append_via_
+  matrix`, `laplacian_diagonal_monotone_cons_via_matrix`, `laplacian_
+  diagonal_strict_monotone_append_via_matrix`, `laplacian_diagonal_
+  increment_append_via_matrix`, each placed directly after its original):
+  `laplacian_append_via_matrix` rewrites through `laplacian_eq_transpose_mul_
+  boundaryMatrix` at all three of `idx`, `extra`, `idx ++ extra` (using
+  `boundaryMatrix_index_irrel`'s underlying fact -- `boundaryMatrix` does not
+  depend on its `idx` argument at all, so all three instances share the
+  identical underlying matrix `B` by `rfl`), then applies `Matrix.mul_append`
+  directly -- no fold-level tactic work at all, versus the original's
+  ~30-line hand-written `fold_add` induction. The other 5 are one-line
+  substitutions of `laplacian_append_via_matrix`/`laplacian_cons_via_matrix`/
+  `laplacian_diagonal_nonnegative_via_matrix` (cycle 62) for their
+  hand-proved counterparts inside otherwise-identical proofs, since the
+  originals were already thin corollaries of `laplacian_append`/`_cons`, not
+  independent inductions.
+- **1 theorem unblocked by the degenerate companion, not the append law
+  itself** (`laplacian_empty_via_matrix`): `rw [laplacian_eq_transpose_mul_
+  boundaryMatrix, Matrix.mul_nil]`, two lines, versus the original's `rfl`
+  (already maximally cheap) -- included for completeness of the `Matrix`-layer
+  picture, not because it was expensive to begin with.
+- **1 theorem that reduces via PRE-EXISTING vocabulary alone, needing
+  neither of this cycle's new lemmas** (`laplacian_of_empty_boundaries_via_
+  matrix`): `rw [laplacian_eq_transpose_mul_boundaryMatrix]` then `apply
+  intListSum_eq_zero_of_mem` (a lemma already in the file before this cycle)
+  with `boundaryMatrix inc idx k i = 0` established from `hempty k` by
+  `simp [boundaryMatrix, hempty k]` -- three lines, no `mul_append`/`mul_nil`
+  anywhere in the proof term. Confirms this theorem was always reducible;
+  cycle 62's sweep simply grouped it with its 7 textually-adjacent siblings
+  under "idx-variation" without checking its content independently.
+
+`#print axioms` (via a scratch `lake env lean` check file outside the
+project, deleted after use) on all 11 new declarations
+(`intListSum_append`, `Matrix.mul_append`, `Matrix.mul_nil`, and the 8
+`laplacian_*_via_matrix` corollaries): `intListSum_append` needs `[propext]`
+only (no `Quot.sound` -- it has no `funext` in its own proof term, unlike
+its callers); `Matrix.mul_nil` needs NO axioms at all (pure `rfl`); every
+other declaration needs `[propext, Quot.sound]` or a subset, identical to
+the axiom sets cycles 60-63 already established for this file's `funext`-
+based `Matrix`-layer proofs. No new axiom anywhere. Full `./verify.sh`
+(clean `lake clean` rebuild, example run, repo-wide `axiom`/`sorry`/`sorryAx`
+grep) passes end to end with all 11 new declarations present alongside every
+prior cycle's material, originals untouched.
+
+**Synthesis**: the primary hypothesis is confirmed for 6 of the 8 theorems
+cycle 62(c) flagged, but the full picture is more precise than "the append
+law closes the gap" -- it required distinguishing THREE different reasons a
+theorem resisted reduction, where cycle 62(c) had reported one undifferentiated
+reason ("idx-variation"). This is the same kind of taxonomy-refinement cycle
+63 performed on cycle 62(c)'s own categories (the "fifth axis" finding): just
+as cycle 63 discovered `boundary_operator_square_zero`'s restriction was on
+the ROW/COLUMN index rather than the SUMMED index (a distinction cycle 62(c)'s
+scheme did not draw), this cycle discovers that `laplacian_of_empty_
+boundaries` was never actually an idx-splitting fact at all -- it was
+miscategorized by textual proximity in cycle 62(c)'s sweep, not by content.
+Concretely, the corrected picture: (a) 6 theorems (`append`/`cons`/the 4
+monotonicity-and-increment family) are genuinely about splitting `idx` and
+needed the new `intListSum_append`/`Matrix.mul_append` pair -- these are the
+"true idx-variation" family the task's framing anticipated; (b) 1 theorem
+(`empty`) is about the degenerate `idx = []` case, adjacent to but distinct
+from splitting, needing only the cheap `Matrix.mul_nil` companion; (c) 1
+theorem (`of_empty_boundaries`) is not about `idx`'s list-structure at all,
+and reduces via tools that predate this cycle entirely. Per this project's
+established culture (cycles 38-40/45-63), reporting this three-way split
+honestly is more valuable than a headline "8/8, the append law worked" that
+would misattribute (c)'s reduction to a lemma it does not use. Combined with
+cycle 62(c)'s own 1-of-21 reduction and cycle 63's 1-conditional-plus-1-
+refutation, this closes out cycle 62(c)'s entire 22-theorem negative sweep:
+of the original 22, 1 (`laplacian_diagonal_nonnegative`) reduced in cycle 62
+itself, 4 (`boundary_operator_square_zero`-family) got a conditional
+`Matrix`-layer recast in cycle 63, and now all 8 of the "idx-variation" bucket
+reduce here -- leaving only the 3 `_congr` (inc-variation), 2 row/column-sum
+(cross-summation), and 7 ∂²/`Endpoint`-level (per-endpoint case structure)
+theorems from cycle 62(c)'s taxonomy as the project's current, precisely
+delimited boundary of what the `Matrix` layer does not reach. Per cycle
+60-63's own precedent (ADR addendum for genuine new-construction progress on
+item 8, not for confirmatory-only results), this cycle warrants a further
+ADR addendum: `intListSum_append`/`Matrix.mul_append`/`Matrix.mul_nil` are
+real new general-layer vocabulary (the first `Matrix`-layer fact about `idx`'s
+LIST STRUCTURE rather than a pointwise value law), and the 8-theorem closure
+plus the taxonomy refinement are a meaningful completion of cycle 62(c)'s own
+sweep, not merely incremental corollaries.
+
+**Next hypothesis (cycle 65, not yet attempted)**: with the "idx-variation"
+bucket now fully closed, two candidates remain from cycle 62(c)'s original
+taxonomy, both still unclaimed: (a) cycle 62's own fallback (c)/cycle 63's
+option (c): a general "matrix-vector product" abstraction unifying
+`laplacianRowSum`/`ColumnSum` and `GraphModel.finiteLApply` (L388, an ad hoc
+`idx.foldl`-based matrix-vector application predating any general vocabulary
+for it) -- distinct from `Matrix.mul` (matrix-matrix), and the natural next
+extension now that `mul`'s own `add`/`transpose`/`one`/`append`/`nil` law set
+is comparatively mature; (b) the row/column-sum family itself
+(`laplacian_rowSum_zero_of_boundaryRowBalanced`/`_columnSum_...`, cycle
+62(c)'s category (iv)) uses `intListSum_gram_row_swap` to swap summation
+order -- does EITHER of these two remaining theorems reduce once a
+matrix-vector abstraction exists, the way this cycle's `mul_append` closed
+out category (ii)? (a) and (b) are really the same thread: building the
+matrix-vector abstraction is the natural vehicle for checking (b). A smaller,
+audit-shaped alternative in the spirit of cycle 63's "fifth axis" and this
+cycle's own `laplacian_of_empty_boundaries` finding: sweep the 3 `_congr`
+(inc-variation) and 7 ∂²/`Endpoint`-level theorems once more with the SAME
+"check the actual content, don't trust the textual bucket" discipline this
+cycle applied, in case another miscategorized theorem is hiding among them.

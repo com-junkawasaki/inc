@@ -687,6 +687,23 @@ theorem intListSum_add {α : Type u} (xs : List α) (f g : α → Int) :
     rw [intListSum_cons, intListSum_cons, intListSum_cons, ih]
     simp only [Int.add_assoc, Int.add_left_comm]
 
+/- Cycle 64: a finite sum over a CONCATENATED list splits into the sum over
+   each half. `intListSum_add` above splits a sum over one fixed list into
+   two sums of different SUMMANDS (`f x + g x`); this is the orthogonal
+   split -- one summand `f`, but the INDEX LIST `xs ++ ys` divided in two.
+   Not previously in the `intListSum` library (checked: no `_append`-named
+   lemma existed anywhere in the file before this cycle, confirmed by cycle
+   62(c)'s own sweep, which found `laplacian_append`/`_cons`/`_empty`/the
+   monotonicity family resisted `Matrix`-layer reduction for exactly this
+   missing fact). Proved by plain induction on `xs`, reusing `intListSum_cons`
+   (no `List.foldl`-level reasoning re-derived from scratch). -/
+theorem intListSum_append {α : Type u} (xs ys : List α) (f : α → Int) :
+    intListSum (xs ++ ys) f = intListSum xs f + intListSum ys f := by
+  induction xs with
+  | nil => simp [intListSum]
+  | cons x xs ih =>
+    rw [List.cons_append, intListSum_cons, intListSum_cons, ih, Int.add_assoc]
+
 theorem intListSum_mul_left {α : Type u} (a : Int) (xs : List α) (f : α → Int) :
     intListSum xs (fun x => a * f x) = a * intListSum xs f := by
   induction xs with
@@ -918,6 +935,32 @@ theorem mul_transpose_self_diag_nonneg {p q : Type u} (idx : List p)
   · rw [← Int.neg_mul_neg]
     exact Int.mul_nonneg (Int.neg_nonneg_of_nonpos h) (Int.neg_nonneg_of_nonpos h)
 
+/- Cycle 64 PRIMARY: `Matrix.mul`'s summation index list splits over `++`
+   exactly as `intListSum` does (immediate corollary of `intListSum_append`
+   just added to that library, applied under the `fun k => A i k * B k j`
+   summand). This is the missing general fact cycle 62(c)/63's "next
+   hypothesis" queue named: a general `idx ++ idx'` splitting law for
+   `Matrix.mul`, motivated by `laplacian_append`'s own hand-written fold
+   induction (`IncidenceTheory.lean`, `laplacian_append` below) predating
+   this vocabulary entirely. -/
+theorem mul_append {m : Type u} {n : Type v} {p : Type w} (idx idx' : List n)
+    (A : Matrix m n Int) (B : Matrix n p Int) :
+    mul (idx ++ idx') A B = add (mul idx A B) (mul idx' A B) := by
+  funext i j
+  show intListSum (idx ++ idx') (fun k => A i k * B k j) =
+      intListSum idx (fun k => A i k * B k j) + intListSum idx' (fun k => A i k * B k j)
+  exact intListSum_append idx idx' (fun k => A i k * B k j)
+
+/- Companion degenerate case of `mul_append` (summing over the empty
+   observation list): `Matrix.mul` with `idx := []` is the zero matrix,
+   directly by unfolding `intListSum`'s own base case -- needed for
+   `laplacian_empty`'s `Matrix`-layer counterpart below, the one member of
+   cycle 62(c)'s 8 "idx-variation" negatives that is about the EMPTY list
+   rather than an append. -/
+theorem mul_nil {m : Type u} {n : Type v} {p : Type w}
+    (A : Matrix m n Int) (B : Matrix n p Int) :
+    mul ([] : List n) A B = fun _ _ => 0 := rfl
+
 end Matrix
 
 /- The concrete `A17` payoff: `IncidenceTheory/Axioms/A14_A17.lean` L16
@@ -1095,6 +1138,30 @@ theorem laplacian_append {I R T : Type u} [DecidableEq I]
               exact congrArg (fun z => acc + z) (ih _).symm
   rw [List.foldl_append, fold_add]
 
+/- Cycle 64: does `laplacian_append` reduce to a corollary of the `Matrix`
+   layer now that `Matrix.mul_append` exists, the way cycle 61(b)/62(c)
+   reduced `laplacian_symmetric`/`laplacian_diagonal_nonnegative`? Yes --
+   `laplacian inc idx = Bᵀ * B` for EVERY choice of observation list
+   (`laplacian_eq_transpose_mul_boundaryMatrix`), and `boundaryMatrix` itself
+   does not depend on its `idx` argument at all (`boundaryMatrix_index_irrel`,
+   `rfl`), so `Bᵀ * B` computed against `idx`, `extra`, and `idx ++ extra` all
+   share the identical underlying matrix `B`; `Matrix.mul_append` then
+   splits the combined product directly. The original `laplacian_append`
+   (just above) is unchanged. -/
+theorem laplacian_append_via_matrix {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx extra : List I) (i j : I) :
+    laplacian inc (idx ++ extra) i j =
+      laplacian inc idx i j + laplacian inc extra i j := by
+  have hcombo := laplacian_eq_transpose_mul_boundaryMatrix inc (idx ++ extra)
+  have hidx := laplacian_eq_transpose_mul_boundaryMatrix inc idx
+  have hextra := laplacian_eq_transpose_mul_boundaryMatrix inc extra
+  have hBI : boundaryMatrix inc (idx ++ extra) = boundaryMatrix inc idx := rfl
+  have hBE : boundaryMatrix inc extra = boundaryMatrix inc idx := rfl
+  rw [hcombo, hidx, hextra, hBI, hBE,
+      Matrix.mul_append idx extra
+        (Matrix.transpose (boundaryMatrix inc idx)) (boundaryMatrix inc idx)]
+  rfl
+
 /- A single observed row contributes its outer product to `BᵀB`. -/
 theorem laplacian_cons {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (k : I) (idx : List I) (i j : I) :
@@ -1103,9 +1170,28 @@ theorem laplacian_cons {I R T : Type u} [DecidableEq I]
         laplacian inc idx i j := by
   simpa [laplacian] using laplacian_append inc [k] idx i j
 
+/- Cycle 64: same reduction as `laplacian_cons` above, but riding on the
+   `Matrix`-layer `laplacian_append_via_matrix` instead of the original
+   hand-proved `laplacian_append`. -/
+theorem laplacian_cons_via_matrix {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (k : I) (idx : List I) (i j : I) :
+    laplacian inc (k :: idx) i j =
+      boundaryMatrix inc idx k i * boundaryMatrix inc idx k j +
+        laplacian inc idx i j := by
+  simpa [laplacian] using laplacian_append_via_matrix inc [k] idx i j
+
 theorem laplacian_empty {I R T : Type u} [DecidableEq I]
     (inc : Incidence I R T) (i j : I) : laplacian inc [] i j = 0 := by
   rfl
+
+/- Cycle 64: `laplacian_empty`'s `Matrix`-layer counterpart, via the
+   `mul_nil` degenerate case (not `mul_append` itself -- `laplacian_empty`
+   has no second list to split against, so it is the base case of the same
+   "how does `Matrix.mul` see the list-structure of `idx`" question, not an
+   instance of the append law proper). -/
+theorem laplacian_empty_via_matrix {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (i j : I) : laplacian inc [] i j = 0 := by
+  rw [laplacian_eq_transpose_mul_boundaryMatrix, Matrix.mul_nil]
 
 /- Adding observed rows can only increase a diagonal entry.  This is the
    finite positive-semidefinite monotonicity of the derived `BᵀB` data; no
@@ -1117,6 +1203,16 @@ theorem laplacian_diagonal_monotone_append {I R T : Type u} [DecidableEq I]
   exact Int.le_add_of_nonneg_right
     (laplacian_diagonal_nonnegative inc extra i)
 
+/- Cycle 64: same statement, but composed purely from the `Matrix`-layer
+   corollaries (`laplacian_append_via_matrix`, cycle 62(c)'s
+   `laplacian_diagonal_nonnegative_via_matrix`) rather than the originals. -/
+theorem laplacian_diagonal_monotone_append_via_matrix {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx extra : List I) (i : I) :
+    laplacian inc idx i i ≤ laplacian inc (idx ++ extra) i i := by
+  rw [laplacian_append_via_matrix]
+  exact Int.le_add_of_nonneg_right
+    (laplacian_diagonal_nonnegative_via_matrix inc extra i)
+
 /- In particular, a single additional row adds a nonnegative square to the
    diagonal. -/
 theorem laplacian_diagonal_monotone_cons {I R T : Type u} [DecidableEq I]
@@ -1125,6 +1221,16 @@ theorem laplacian_diagonal_monotone_cons {I R T : Type u} [DecidableEq I]
   rw [laplacian_cons]
   have hrow : 0 ≤ boundaryMatrix inc idx k i * boundaryMatrix inc idx k i := by
     simpa [laplacian] using laplacian_diagonal_nonnegative inc [k] i
+  exact Int.le_add_of_nonneg_left hrow
+
+/- Cycle 64: `Matrix`-layer counterpart, via `laplacian_cons_via_matrix`/
+   `laplacian_diagonal_nonnegative_via_matrix`. -/
+theorem laplacian_diagonal_monotone_cons_via_matrix {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (k : I) (idx : List I) (i : I) :
+    laplacian inc idx i i ≤ laplacian inc (k :: idx) i i := by
+  rw [laplacian_cons_via_matrix]
+  have hrow : 0 ≤ boundaryMatrix inc idx k i * boundaryMatrix inc idx k i := by
+    simpa [laplacian] using laplacian_diagonal_nonnegative_via_matrix inc [k] i
   exact Int.le_add_of_nonneg_left hrow
 
 /- If all observed boundary rows vanish, the complete derived Laplacian is
@@ -1138,6 +1244,32 @@ theorem laplacian_of_empty_boundaries {I R T : Type u} [DecidableEq I]
     | nil => rfl
     | cons _ xs ih => exact ih
   simpa [laplacian, boundaryMatrix, hempty] using hfold idx
+
+/- Cycle 64: cycle 62(c) bucketed this theorem under its "idx-variation"
+   negatives (grouped with `laplacian_append`/`_cons`/`_empty`/the
+   monotonicity family), but on close reading its content does NOT involve
+   two different `idx` lists or splitting `idx` at all -- it is universally
+   quantified over a SINGLE `idx`, and its actual content is that `inc`'s
+   boundary structure is pointwise zero (`hempty`), making `boundaryMatrix`
+   the zero matrix regardless of which observation list is chosen. This
+   refines cycle 62's taxonomy the same way cycle 63's "fifth axis" refined
+   it: this theorem is really a `boundaryMatrix`-VALUE fact (closer to
+   cycle 62's category (i), pointwise-in-`idx`), not an idx-splitting fact,
+   and it reduces to a `Matrix`-layer corollary using ONLY pre-existing
+   general vocabulary (`laplacian_eq_transpose_mul_boundaryMatrix`,
+   cycle 60's bridge, plus `intListSum_eq_zero_of_mem`, present since before
+   this cycle) -- no new lemma from THIS cycle's `mul_append`/`mul_nil` is
+   needed, unlike the other 7. -/
+theorem laplacian_of_empty_boundaries_via_matrix {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (hempty : ∀ i, inc.boundary i = [])
+    (i j : I) : laplacian inc idx i j = 0 := by
+  rw [laplacian_eq_transpose_mul_boundaryMatrix]
+  show intListSum idx (fun k => boundaryMatrix inc idx k i * boundaryMatrix inc idx k j) = 0
+  apply intListSum_eq_zero_of_mem
+  intro k _
+  have hzero : boundaryMatrix inc idx k i = 0 := by
+    simp [boundaryMatrix, hempty k]
+  rw [hzero, Int.zero_mul]
 
 /- The observation list is a row selector for `laplacian`; it does not alter
    the boundary row itself.  Keeping this fact explicit is useful when a
@@ -1234,6 +1366,14 @@ theorem laplacian_diagonal_strict_monotone_append {I R T : Type u} [DecidableEq 
   rw [laplacian_append]
   exact Int.lt_add_of_pos_right _ hpositive
 
+/- Cycle 64: `Matrix`-layer counterpart, via `laplacian_append_via_matrix`. -/
+theorem laplacian_diagonal_strict_monotone_append_via_matrix {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx extra : List I) (i : I)
+    (hpositive : 0 < laplacian inc extra i i) :
+    laplacian inc idx i i < laplacian inc (idx ++ extra) i i := by
+  rw [laplacian_append_via_matrix]
+  exact Int.lt_add_of_pos_right _ hpositive
+
 /- Equivalently, the increment is exactly the Laplacian of the appended
    observation rows. -/
 theorem laplacian_diagonal_increment_append {I R T : Type u} [DecidableEq I]
@@ -1241,6 +1381,18 @@ theorem laplacian_diagonal_increment_append {I R T : Type u} [DecidableEq I]
     laplacian inc (idx ++ extra) i i - laplacian inc idx i i =
       laplacian inc extra i i := by
   rw [laplacian_append]
+  calc
+    laplacian inc idx i i + laplacian inc extra i i - laplacian inc idx i i =
+        laplacian inc extra i i + laplacian inc idx i i - laplacian inc idx i i := by
+          rw [Int.add_comm]
+    _ = laplacian inc extra i i := Int.add_sub_cancel _ _
+
+/- Cycle 64: `Matrix`-layer counterpart, via `laplacian_append_via_matrix`. -/
+theorem laplacian_diagonal_increment_append_via_matrix {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx extra : List I) (i : I) :
+    laplacian inc (idx ++ extra) i i - laplacian inc idx i i =
+      laplacian inc extra i i := by
+  rw [laplacian_append_via_matrix]
   calc
     laplacian inc idx i i + laplacian inc extra i i - laplacian inc idx i i =
         laplacian inc extra i i + laplacian inc idx i i - laplacian inc idx i i := by
