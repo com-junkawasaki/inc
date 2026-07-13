@@ -3291,3 +3291,136 @@ three cycles now, still flagged as needing its own scope-down step. (c) Cycle
 41's option (b): whether a less naive `shapeIncidence.glue` could make
 `simplexToShape` a genuine glue-homomorphism, or whether that is structurally
 impossible — still unattempted, still a short focused check.
+
+## Cycle 44
+
+**Hypothesis**: pursue thread (a) from cycle 43's queue — the general Mean
+Value Theorem — since `real_rolle` (cycle 43) plus the existing derivative
+arithmetic (`realHasDerivativeAt_affine`, `realHasDerivativeAt_sub`) make the
+standard auxiliary-function proof directly reachable, exactly as cycle 43's
+own note described: build `h(x) = f(x) - secant(x)` where `secant` is the
+line through `(lower, f lower)` and `(upper, f upper)`, check `h` vanishes at
+both endpoints, apply `real_rolle` to `h`, then unwind the resulting `h' = 0`
+back into `f'(point) = slope`. Threads (b) and (c) from cycle 43's queue
+remain untouched, deprioritized again for the same tractability reason cycles
+42/43 already used.
+
+**Method**: grepped `Reals.lean` for the real-number division/inverse
+infrastructure the task flagged as a likely gap, and found it already fully
+built (unlike cycle 42's rational reciprocal, which had to be constructed
+from scratch): `realInv value nonzero` (signed multiplicative inverse),
+`realInvOrZero` (its junk-value-at-zero totalization), `realDiv := fun n d =>
+realMul n (realInvOrZero d)`, and the cancellation facts `realMul_inv`/
+`realInv_mul` (`value * inv value = 1` both orders) plus `realMul_cancel_left`/
+`realMul_cancel_right`/`real_eq_of_add_neg_eq_zero` (the last one is exactly
+the "difference is zero implies equal" step the final unwinding needs). With
+that confirmed, worked in four layers. (1) Nonzero-ness of the endpoint gap:
+`lower < upper` (`ordered`) already gives `realAdd_neg_pos_of_lt ordered :
+0 < upper - lower`, whose `.2` component (`0 ≠ gap`) flips via `fun h => ...
+h.symm` into `gap ≠ 0` — no new order lemma needed, cycle 43's sign-algebra
+layer already covers this. (2) Built `slope := deltaF * (inv gap gapNonzero)`
+where `deltaF := f(upper) - f(lower)`, then `offset := f(lower) - slope *
+lower` and `secant x := slope * x + offset` (exactly `realHasDerivativeAt_affine`'s
+shape) and `h x := f(x) - secant(x)` (exactly `realHasDerivativeAt_sub`'s
+shape) as a chain of local `let`s. (3) Proved `secant lower = f(lower)` and
+`secant upper = f(upper)` by pure algebraic rewriting (`realAdd_assoc`/
+`realAdd_comm`/`realAdd_neg`/`realMul_add`/`realMul_neg_right`), the second
+one routing through a `slopeDistribute`/`slopeGapEq` pair showing `slope *
+gap = deltaF` (via `realMul_assoc` + `realInv_mul` + `realMul_one_right` —
+exactly the reciprocal-cancellation identity flagged as the risk in the
+task), from which both endpoints of `h` vanish
+(`hLowerZero`/`hUpperZero`/`hEndpoints`). (4) Built `RealDifferentiableOn h`
+directly from `RealDifferentiableOn function` via `realHasDerivativeAt_sub`
++ `realHasDerivativeAt_affine` at each domain point, then noticed
+`RealContinuousOn h` doesn't need any separate argument at all —
+`realDifferentiableOn_continuousOn` (cycle 42, used internally by
+`real_polynomial_continuousOn`) turns the differentiability just built
+directly into continuity, so `real_mvt`'s hypotheses only need to state
+`RealDifferentiableOn function domain`, not a redundant extra
+`RealContinuousOn function domain` the way `real_rolle` itself still
+requires (a small, deliberate divergence from cycle 43's own signature shape,
+recorded rather than silently done). Applied `real_rolle` to `h` to get an
+interior point and `RealHasDerivativeAt h 0 point`; independently rebuilt
+`RealHasDerivativeAt h (d - slope) point` from `function`'s own derivative `d`
+at that point (via the same `realHasDerivativeAt_sub`/`_affine` combination);
+`realHasDerivativeAt_unique` on these two facts about the same function `h`
+at the same point gives `d - slope = 0`, and `real_eq_of_add_neg_eq_zero`
+turns that into `d = slope` — the entire MVT conclusion, with no new
+uniqueness or cancellation lemma needed beyond what cycles 1-43 already
+built.
+
+**Result**: **confirmed, fully, sorry-free.** One new theorem in
+`Reals.lean`, `real_mvt`: for `lower < upper` and `function` differentiable
+on `[lower, upper]`, `∃ point, lower < point ∧ point < upper ∧
+RealHasDerivativeAt function (realDiv (f upper - f lower) (upper - lower))
+point`. No new supporting lemmas were required at all — every piece
+(`realInv`/`realDiv` algebra, `realHasDerivativeAt_affine`/`_sub`,
+`realHasDerivativeAt_unique`, `real_eq_of_add_neg_eq_zero`,
+`realDifferentiableOn_continuousOn`, `real_rolle` itself) already existed;
+this cycle's contribution is purely the auxiliary-function construction and
+its bookkeeping. `#print axioms real_mvt` (checked via a scratch file fed to
+`lake env lean`, then deleted): `propext, Classical.choice, Quot.sound` —
+this project's standing profile, no new axiom. `lake build`: all 21 modules
+including the example binary. `verify.sh` (clean `lake clean && lake build`,
+example run, repo-wide unproved-declaration grep): passes end to end.
+
+One implementation snag worth recording, a new variety distinct from cycles
+42/43's `omega`/`by_contra` notes: a bridging lemma stated using a local
+`let`-abbreviation (`gap := upper - lower`) as an argument, e.g. `realDiv
+deltaF gap = slope`, is defeq-equal but NOT syntactically identical to the
+theorem's actual stated goal (which spells out `realAdd upper (realNeg
+lower)` literally, since `gap` doesn't exist at the theorem-statement scope).
+`rw` matches by a syntactic/keyed search (`kabstract`), not a blanket
+`isDefEq` check, so a bridging `have` needs to be stated using the SAME
+literal expression the target goal uses, not the shorthand `let`-name, or the
+final `rw` risks silently failing to find its target. Separately (and
+non-obviously): even a plain `show` to restate the goal via defeq does NOT
+bridge `realInvOrZero gap` and `realInv gap gapNonzero` — although
+`realInvOrZero` is *defined* via a `dite` that looks like it should unfold,
+its branch is selected through a `Classical.propDecidable`-style instance
+obtained via `classical`, which is opaque to defeq/`show`; only the actual
+proved lemma `realInvOrZero_of_ne` (a `dif_pos` rewrite) can perform that
+step. Both of these were caught by the type-checker rejecting the naive
+first draft, not by reading the source — reinforcing cycle 43's point that
+this project's loop leans on `lake build`'s actual feedback for exactly this
+class of near-miss.
+
+**Synthesis**: this closes the ADR roadmap's item 4 (Rolle/MVT pairing)
+completely — Rolle's theorem (cycle 43) plus the general MVT (this cycle)
+together were the item's full stated scope, and unlike cycles 41-43's
+pattern of needing one genuinely new supporting layer (sign algebra, a
+rational reciprocal sequence, a quotient bijection), this cycle needed *zero*
+new supporting infrastructure: the entire proof is a composition of already-
+proved pieces, the purest instance yet of this project's recurring
+observation that most of the real work predates the cycle that "closes" a
+roadmap item. The one substantive design choice made rather than found —
+dropping `real_rolle`'s redundant explicit `RealContinuousOn` hypothesis in
+favor of deriving it from `RealDifferentiableOn` via
+`realDifferentiableOn_continuousOn` — is a small but genuine improvement on
+the precedent, and is recorded explicitly rather than silently presented as
+if `real_rolle`'s own (also legitimate) choice were the only option. The
+`let`-vs-literal `rw` snag is worth flagging forward: any future cycle
+building an auxiliary object via local `let`s and then trying to relate it
+back to a theorem statement's own literal terms via `rw` (as opposed to
+`show`, which handles zeta/beta/delta but not classical-instance-gated
+`dite`s) should state the bridging lemma in the statement's own literal
+vocabulary from the start, not the cycle's internal shorthand.
+
+**Next hypothesis (cycle 45, not yet attempted)**: with roadmap item 4 (Rolle
++ MVT) now fully closed, two live threads remain, both queued since cycle 41
+without a single attempt across cycles 42-44 (three cycles running past due
+to the recurring tractability-over-size argument favoring the real-analysis
+thread; that thread is now exhausted for the roadmap's item 4, so one of
+these should be picked next barring a newer, more concretely-scoped item
+surfacing from the ADR). (a) Cycle 41's option (c) (= cycle 37's option (b)):
+the internal-logic distributivity direction relating
+`incidenceProd`/`incidenceSum` — the largest, most open item, still needing
+its own scope-down step (e.g. checking whether a natural map between the two
+carrier types even exists and is well-typed before attempting any
+bisimulation result) before it can be attempted directly. (b) Cycle 41's
+option (b): whether a less naive `shapeIncidence.glue` could make
+`simplexToShape` a genuine glue-homomorphism, or whether that is structurally
+impossible for the same reason cycle 38 found `glue` doesn't respect `≈` in
+general — still flagged as a short, focused check, and given (a)'s repeated
+deferral for being under-scoped, (b) may be the more immediately tractable
+pick for cycle 45 specifically because it needs no scoping pass of its own.

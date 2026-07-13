@@ -8637,4 +8637,103 @@ theorem real_rolle
     rw [dZero] at hasD
     exact ⟨maximizer, interiorLower, interiorUpper, hasD⟩
 
+/-! ### The Mean Value Theorem -/
+
+/-- The Mean Value Theorem: a function differentiable on the closed interval
+`[lower, upper]` (`lower < upper`) has, at some interior point, a derivative
+equal to the slope of the secant line through the two endpoints. Proved by
+applying Rolle's theorem to the auxiliary function `h(x) = f(x) - (secant
+line through (lower, f lower) and (upper, f upper))`, which vanishes at both
+endpoints by construction, so an interior zero of `h'` unwinds to `f'(point)
+= (f(upper) - f(lower)) / (upper - lower)`. Unlike `real_rolle`, no separate
+continuity hypothesis is taken: `RealDifferentiableOn` already gives
+continuity of both `function` and the auxiliary `h` via
+`realDifferentiableOn_continuousOn`, so re-demanding it explicitly would be
+redundant. -/
+theorem real_mvt
+    {function : IncReal → IncReal} {lower upper : IncReal}
+    (ordered : realLT lower upper)
+    (differentiable : RealDifferentiableOn function (RealClosedInterval lower upper)) :
+    ∃ point, realLT lower point ∧ realLT point upper ∧
+      RealHasDerivativeAt function
+        (realDiv (realAdd (function upper) (realNeg (function lower)))
+          (realAdd upper (realNeg lower)))
+        point := by
+  let gap := realAdd upper (realNeg lower)
+  have gapPos : realLT realZero gap := realAdd_neg_pos_of_lt ordered
+  have gapNonzero : gap ≠ realZero := fun h => gapPos.2 h.symm
+  let slope := realMul (realAdd (function upper) (realNeg (function lower)))
+    (realInv gap gapNonzero)
+  let offset := realAdd (function lower) (realNeg (realMul slope lower))
+  let secant : IncReal → IncReal := fun x => realAdd (realMul slope x) offset
+  let h : IncReal → IncReal := fun x => realAdd (function x) (realNeg (secant x))
+  -- The secant's slope times the endpoint gap recovers the endpoint drop.
+  have slopeGapEq : realMul slope gap =
+      realAdd (function upper) (realNeg (function lower)) := by
+    show realMul
+        (realMul (realAdd (function upper) (realNeg (function lower)))
+          (realInv gap gapNonzero)) gap =
+      realAdd (function upper) (realNeg (function lower))
+    rw [realMul_assoc, realInv_mul, realMul_one_right]
+  have slopeDistribute : realMul slope gap =
+      realAdd (realMul slope upper) (realNeg (realMul slope lower)) := by
+    show realMul slope (realAdd upper (realNeg lower)) =
+      realAdd (realMul slope upper) (realNeg (realMul slope lower))
+    rw [realMul_add, realMul_neg_right]
+  have slopeDiff : realAdd (realMul slope upper) (realNeg (realMul slope lower)) =
+      realAdd (function upper) (realNeg (function lower)) := by
+    rw [← slopeDistribute, slopeGapEq]
+  -- The secant line passes through both endpoints of `function`'s graph.
+  have secantLower : secant lower = function lower := by
+    show realAdd (realMul slope lower)
+        (realAdd (function lower) (realNeg (realMul slope lower))) = function lower
+    rw [← realAdd_assoc, realAdd_comm (realMul slope lower) (function lower),
+      realAdd_assoc, realAdd_neg, realAdd_zero_right]
+  have secantUpper : secant upper = function upper := by
+    show realAdd (realMul slope upper)
+        (realAdd (function lower) (realNeg (realMul slope lower))) = function upper
+    rw [realAdd_comm (function lower) (realNeg (realMul slope lower)),
+      ← realAdd_assoc, slopeDiff, realAdd_assoc, realAdd_neg_left, realAdd_zero_right]
+  -- Hence the auxiliary function `h` vanishes at both endpoints.
+  have hLowerZero : h lower = realZero := by
+    show realAdd (function lower) (realNeg (secant lower)) = realZero
+    rw [secantLower, realAdd_neg]
+  have hUpperZero : h upper = realZero := by
+    show realAdd (function upper) (realNeg (secant upper)) = realZero
+    rw [secantUpper, realAdd_neg]
+  have hEndpoints : h lower = h upper := hLowerZero.trans hUpperZero.symm
+  -- `h` is differentiable (hence continuous) everywhere `function` is.
+  have hDifferentiable : RealDifferentiableOn h (RealClosedInterval lower upper) := by
+    intro x member
+    obtain ⟨d, hasD⟩ := differentiable x member
+    exact ⟨realAdd d (realNeg slope),
+      realHasDerivativeAt_sub hasD (realHasDerivativeAt_affine slope offset x)⟩
+  have hContinuous : RealContinuousOn h (RealClosedInterval lower upper) :=
+    realDifferentiableOn_continuousOn hDifferentiable
+  -- Rolle's theorem on `h` locates an interior zero of `h'`.
+  obtain ⟨point, lowerPoint, pointUpper, hHasDerivative⟩ :=
+    real_rolle ordered hContinuous hDifferentiable hEndpoints
+  -- Unwind `h' = 0` back into `function' = slope` at that same point.
+  obtain ⟨d, hasD⟩ := differentiable point ⟨lowerPoint.1, pointUpper.1⟩
+  have hHasDerivative' : RealHasDerivativeAt h (realAdd d (realNeg slope)) point :=
+    realHasDerivativeAt_sub hasD (realHasDerivativeAt_affine slope offset point)
+  have derivativeZero : realAdd d (realNeg slope) = realZero :=
+    realHasDerivativeAt_unique hHasDerivative' hHasDerivative
+  have derivativeEq : d = slope := real_eq_of_add_neg_eq_zero derivativeZero
+  rw [derivativeEq] at hasD
+  -- Bridge back from `slope` (built from `realInv`) to the theorem's stated
+  -- `realDiv`, matching the literal endpoint expressions in the goal so the
+  -- final `rw` finds its target syntactically (not merely up to unfolding
+  -- the local `gap`/`slope` abbreviations).
+  have slopeEq : realDiv (realAdd (function upper) (realNeg (function lower)))
+      (realAdd upper (realNeg lower)) = slope := by
+    show realMul (realAdd (function upper) (realNeg (function lower)))
+        (realInvOrZero (realAdd upper (realNeg lower))) =
+      realMul (realAdd (function upper) (realNeg (function lower)))
+        (realInv (realAdd upper (realNeg lower)) gapNonzero)
+    rw [realInvOrZero_of_ne (realAdd upper (realNeg lower)) gapNonzero]
+  refine ⟨point, lowerPoint, pointUpper, ?_⟩
+  rw [slopeEq]
+  exact hasD
+
 end IncidenceCore

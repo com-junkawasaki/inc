@@ -1905,3 +1905,39 @@ sorry-free に証明し、これを既存の閉区間点列コンパクト性・
 （ロルの定理が閉じ、一般の平均値定理まで残り一段になったため）。他の評価値
 （incidence/resonance 約90%、内部論理約90%、翻訳・保存層約85%、依存型層約75%、
 既存数学全体の再構成約40%、最終目標約55–60%）は変更しない。
+
+## 2026-07-13 追補（cycle 44: 平均値定理）
+
+本追補は cycle 44（`RESEARCH_LOG.md`）の結果を反映し、上記「完成へ向けた9項目
+ロードマップ」項目4の状態と「現時点の実務的評価」のうち一件のみを更新する
+（他の項目・本文・これより上の追補は変更しない）。
+
+`incidence-theory/IncidenceTheory/Reals.lean` に、直前の追補（cycle 43・ロルの
+定理）が予告したとおりの経路で、一般の平均値定理そのもの（`real_mvt` —
+`lower < upper` かつ `function` が閉区間 `[lower, upper]` 上で微分可能という
+前提から、ある内点で導関数が割線の傾き `(f(upper) - f(lower)) / (upper - lower)`
+に等しいことを結論する）を sorry-free に証明した。証明は割線を引いた補助関数
+`h(x) = f(x) - (secant x)`（`secant` は `(lower, f lower)` と `(upper, f upper)`
+を通る一次関数）を構成し、両端点で `h` が零になることを代数的に確認した上で
+`real_rolle` を `h` に適用して内点での `h' = 0` を得て、`function` 自身の導関数
+から独立に構成した `h` の導関数表現との一致を `realHasDerivativeAt_unique` で
+突き合わせることで解ける。この cycle は既存インフラのみの組み合わせで完結し
+（実数の逆数・除算 `realInv`/`realDiv` とその打消し補題 `realMul_inv`/`realInv_mul`、
+導関数の加減法則 `realHasDerivativeAt_sub`・アフィン関数則
+`realHasDerivativeAt_affine`、一意性 `realHasDerivativeAt_unique`、微分可能性から
+連続性を導く `realDifferentiableOn_continuousOn` はすべて cycle 43 以前から
+既存）、新規の補助定理は一切追加していない。`#print axioms real_mvt`（`propext`・
+`Classical.choice`・`Quot.sound` のみ、既存プロファイルと同一）・`lake build` 全体・
+`verify.sh`（clean rebuild・example 実行・repo 全体の未証明宣言 grep）をすべて
+確認済み。
+
+これにより、9項目ロードマップの項目4「Rolle・平均値定理」は
+**部分完了 → 完了** に更新する: 前回追補が残した最後の一段（割線を引いた補助関数を
+構成しロルの定理を適用する段）が本cycleで閉じ、極値定理（cycle 42）・フェルマーの
+内点極値定理・ロルの定理（cycle 43）・一般の平均値定理（本cycle）という項目4の
+想定ルート全体が sorry-free に完成した。
+
+現時点の実務的評価のうち「構成実数と初等解析」を約88%から約90%に更新する
+（項目4が完全に完了したため）。他の評価値（incidence/resonance 約90%、内部論理
+約90%、翻訳・保存層約85%、依存型層約75%、既存数学全体の再構成約40%、最終目標
+約55–60%）は変更しない。
