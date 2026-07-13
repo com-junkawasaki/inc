@@ -5,6 +5,60 @@
 - **Context repo**: `com-junkawasaki/inc`（plain-git、west管理下ではない独立リポジトリ）
 - **Source of truth**: `RESEARCH_LOG.md`（cycle 1–41、仮説/手法/結果/統合を毎サイクル記録）
 
+## 2026-07-13 現行到達点（authoritative summary）
+
+cycle 41 本文と後続の時系列追補は研究履歴として保持するが、現行 `main` の成熟度を読む
+場合は本節を入口とする。設計直感として inc は生成と関係を中心に対象を捉え、その関係的
+生成の合成を三項 primitive `resonance i j k` として扱う。物理学の resonance / excitation
+は直感を与えるが、現行の形式定理は物理理論そのものを公理化したものではない。
+
+現在の checked core は次を含む。
+
+- incidence / resonance、bisimulation、translation、product、sum、条件付き quotient と
+  canonical descent。
+- 任意 atom carrier の直観主義内部論理、Kripke soundness / completeness、consistency と
+  model existence / countermodel の対応。
+- semantic dependent Pi / Sigma / Id、context substitution、および独立 raw dependent syntax の
+  renaming / substitution preservation 層。
+- Peano 自然数、整数、有理数、Dedekind 実数、順序完備性、絶対値距離、Cauchy 完備性。
+- 級数、絶対収束、比較判定、比判定、一般幾何級数。
+- ε–δ 関数極限、連続性、導関数の存在と一意性、和・差・定数倍・積・合成・逆数・商則。
+- 自然数冪、多項式、形式微分係数、高階多項式微分と有限消滅。
+- 閉区間、部分列、有界単調収束、単調部分列抽出、Bolzano–Weierstrass、閉区間の点列
+  コンパクト性、および点列コンパクト性の連続像保存。
+
+この段階で Lean の全ビルド、実行例、未証明宣言検査は通過し、`sorry` / `sorryAx` に依存する
+公開定理はない。これは inc が「非自明で機械検査された基礎理論」であることを支持するが、
+「既存数学全体を基礎づける完成理論」であることまでは意味しない。
+
+### 完成へ向けた9項目ロードマップ
+
+1. **単調部分列抽出と Bolzano–Weierstrass: 完了。** peak / non-peak 分岐で単調部分列を
+   構成し、上下有界列の収束部分列存在へ接続した。
+2. **閉区間の点列コンパクト性: 完了。** 増加・減少部分列の極限を明示し、端点間に残る
+   ことを証明した。連続像の点列コンパクト性も検査済み。
+3. **極値定理: 進行中。** 残件は非空点列コンパクト実数集合の上下有界性と `sup` / `inf`
+   の達成を一般化し、閉区間の連続像へ適用すること。
+4. **Rolle・平均値定理: 未完。** 極値定理、内点極値での導関数零、補助関数構成の順に進める。
+5. **一様連続性・積分・微積分学の基本定理: 未完。** 閉区間コンパクト性を一様連続性へ
+   接続後、分割・Riemann 和・積分・FTC を構成する。
+6. **dependent raw syntax の完全な意味論的 soundness: 部分完了。** raw renaming / typed
+   substitution preservation は広く検査済み。dependent raw judgment から semantic
+   Pi / Sigma / Id context calculus への全 interpretation / soundness bridge が残る。
+7. **incidence / resonance と内部論理・解析構造の統合: 部分完了。** 各層は checked だが、
+   resonance を中心とする生成・合成が内部論理モデルと構成実数解析を一つの普遍的解釈定理で
+   結ぶ段階は未完。
+8. **線形代数・抽象代数・位相・測度論等の再構成: 部分完了。** 算術・順序・初等解析は
+   大きく進展したが、これら四領域の体系的ライブラリと主要定理群は未構成。
+9. **保守拡大・解釈可能性レベルの最終定理: 未完。** 「既存数学全体を表現できる」という
+   主張には、対象となる基礎体系を明示し、その syntax / semantics の解釈、定理保存、必要なら
+   反映または保守性を証明する必要がある。
+
+現時点の実務的評価は、incidence / resonance checked core が約 90%、内部論理が約 90%、
+翻訳・保存層が約 85%、依存型層が約 75%、構成実数と初等解析が約 80% である。一方、既存
+数学全体の体系的再構成は約 40%、「既存数学全体を基礎づける完成理論」という最終目標は
+約 55–60% と評価する。単純平均ではなく、未構成領域と最終解釈定理の重みを大きく取った評価である。
+
 ## 2026-07-11 追補（現行 main）
 
 この文書の本文は cycle 41 時点の歴史的スナップショットとして保持する。ただし、
