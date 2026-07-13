@@ -186,7 +186,9 @@ Checked constructions include:
   laws; canonical positive and negative parts reconstruct every real exactly,
   and their four-term signed product is commutative, has principal one as its
   identity, absorbs zero, and agrees exactly with the nonnegative cut product
-  on nonnegative inputs;
+  on nonnegative inputs; all four input-sign quadrants reduce exactly to a
+  nonnegative product or its additive negation, providing the case interface
+  for signed associativity and distributivity;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets

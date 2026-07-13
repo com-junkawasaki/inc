@@ -192,7 +192,8 @@ case where the selector is complete and resonance has no unselected modes.
   prove both distributive laws. The signed extension is now constructed by
   canonical positive/negative parts and the four-term product expansion; its
   signed decomposition, commutativity, principal-one identity, zero absorption,
-  and exact restriction to nonnegative multiplication are checked. Associativity,
+  exact restriction to nonnegative multiplication, and reduction of all four
+  sign quadrants to nonnegative multiplication or its negation are checked. Associativity,
   distributivity, and inverse laws remain subsequent obligations.
 
 ### Non-normative physical intuition

@@ -1455,6 +1455,28 @@ theorem realNegativePart_of_nonnegative (value : IncReal)
   classical
   simp [realNegativePart, nonnegative, nonnegativeZero]
 
+theorem realPositivePart_of_not_nonnegative (value : IncReal)
+    (notNonnegative : ¬ realLE realZero value) :
+    realPositivePart value = nonnegativeZero := by
+  apply NonnegativeReal.ext
+  classical
+  simp [realPositivePart, notNonnegative, nonnegativeZero]
+
+theorem realNegativePart_of_not_nonnegative (value : IncReal)
+    (notNonnegative : ¬ realLE realZero value) :
+    realNegativePart value =
+      { value := realNeg value
+        nonnegative := by
+          have valueNonpositive : realLE value realZero := by
+            rcases realLE_total value realZero with ordered | reverse
+            · exact ordered
+            · exact False.elim (notNonnegative reverse)
+          have reversed := (realNeg_order_iff value realZero).mpr valueNonpositive
+          simpa [realNeg_zero] using reversed } := by
+  apply NonnegativeReal.ext
+  classical
+  simp [realNegativePart, notNonnegative]
+
 /-- Signed multiplication reconstructed from the nonnegative semiring by the
 identity `(p-n)(q-m) = (pq+nm) - (pm+nq)`. -/
 noncomputable def realMul (left right : IncReal) : IncReal :=
@@ -1516,6 +1538,96 @@ theorem realMul_of_nonnegative (left right : IncReal)
     nonnegativeRealMul_zero_left_bundle]
   change realAdd _ (realNeg realZero) = _
   rw [realNeg_zero, realAdd_zero_right]
+
+theorem realMul_of_nonnegative_not_nonnegative
+    (left right : IncReal)
+    (leftNonnegative : realLE realZero left)
+    (rightNotNonnegative : ¬ realLE realZero right) :
+    realMul left right = realNeg
+      (nonnegativeRealMul
+        ⟨left, leftNonnegative⟩
+        { value := realNeg right
+          nonnegative := by
+            have rightNonpositive : realLE right realZero := by
+              rcases realLE_total right realZero with ordered | reverse
+              · exact ordered
+              · exact False.elim (rightNotNonnegative reverse)
+            have reversed :=
+              (realNeg_order_iff right realZero).mpr rightNonpositive
+            simpa [realNeg_zero] using reversed }).value := by
+  rw [realMul,
+    realPositivePart_of_nonnegative left leftNonnegative,
+    realNegativePart_of_nonnegative left leftNonnegative,
+    realPositivePart_of_not_nonnegative right rightNotNonnegative,
+    realNegativePart_of_not_nonnegative right rightNotNonnegative,
+    nonnegativeRealMul_zero_right_bundle,
+    nonnegativeRealMul_zero_left_bundle,
+    nonnegativeRealAdd_zero_left,
+    nonnegativeRealMul_zero_left_bundle,
+    nonnegativeRealAdd_zero_right]
+  change realAdd realZero (realNeg _) = _
+  rw [realAdd_zero_left]
+
+theorem realMul_of_not_nonnegative_nonnegative
+    (left right : IncReal)
+    (leftNotNonnegative : ¬ realLE realZero left)
+    (rightNonnegative : realLE realZero right) :
+    realMul left right = realNeg
+      (nonnegativeRealMul
+        { value := realNeg left
+          nonnegative := by
+            have leftNonpositive : realLE left realZero := by
+              rcases realLE_total left realZero with ordered | reverse
+              · exact ordered
+              · exact False.elim (leftNotNonnegative reverse)
+            have reversed :=
+              (realNeg_order_iff left realZero).mpr leftNonpositive
+            simpa [realNeg_zero] using reversed }
+        ⟨right, rightNonnegative⟩).value := by
+  rw [realMul_comm]
+  simpa [nonnegativeRealMul_comm] using
+    realMul_of_nonnegative_not_nonnegative right left
+      rightNonnegative leftNotNonnegative
+
+theorem realMul_of_not_nonnegative
+    (left right : IncReal)
+    (leftNotNonnegative : ¬ realLE realZero left)
+    (rightNotNonnegative : ¬ realLE realZero right) :
+    realMul left right =
+      (nonnegativeRealMul
+        { value := realNeg left
+          nonnegative := by
+            have leftNonpositive : realLE left realZero := by
+              rcases realLE_total left realZero with ordered | reverse
+              · exact ordered
+              · exact False.elim (leftNotNonnegative reverse)
+            have reversed :=
+              (realNeg_order_iff left realZero).mpr leftNonpositive
+            simpa [realNeg_zero] using reversed }
+        { value := realNeg right
+          nonnegative := by
+            have rightNonpositive : realLE right realZero := by
+              rcases realLE_total right realZero with ordered | reverse
+              · exact ordered
+              · exact False.elim (rightNotNonnegative reverse)
+            have reversed :=
+              (realNeg_order_iff right realZero).mpr rightNonpositive
+            simpa [realNeg_zero] using reversed }).value := by
+  rw [realMul,
+    realPositivePart_of_not_nonnegative left leftNotNonnegative,
+    realNegativePart_of_not_nonnegative left leftNotNonnegative,
+    realPositivePart_of_not_nonnegative right rightNotNonnegative,
+    realNegativePart_of_not_nonnegative right rightNotNonnegative,
+    nonnegativeRealMul_zero_left_bundle,
+    nonnegativeRealAdd_zero_left,
+    nonnegativeRealMul_zero_left_bundle,
+    nonnegativeRealMul_zero_right_bundle,
+    nonnegativeRealAdd_zero_left]
+  change realAdd _ (realNeg realZero) = _
+  exact calc
+    realAdd _ (realNeg realZero) = realAdd _ realZero :=
+      congrArg _ realNeg_zero
+    _ = _ := realAdd_zero_right _
 
 theorem realMul_zero_left (value : IncReal) :
     realMul realZero value = realZero := by
