@@ -2746,3 +2746,74 @@ cycle 60-70 の保守的規律を踏襲し、項目7の記述（「部分完了�
 `ResonantQuotientEquivalenceCriterion`（推奨デフォルト、具体的に
 scope 済み）、(b) 項目7自身の残作業である単一の普遍的解釈定理への
 本格着手（cycle 68-71 のスレッドより難度が高い）。
+
+## 2026-07-14 追補（cycle 72: `ResonantQuotientEquivalenceCriterion` を新設——
+cycle 67 が名指しし cycle 68-71 が繰り越した残タスクを閉じる。resonance 層
+特有の追加前提を発見・明記）
+
+本追補は `RESEARCH_LOG.md` cycle 72 の結果を反映する。cycle 71 が推奨した
+選択肢 (a)、cycle 67 以来 4 サイクル繰り越されてきた
+`ResonantQuotientEquivalenceCriterion`（`BehavioralQuotientEquivalenceCriterion`
+——`IncidenceTheory.lean` L8938-9127、embedding + essential-surjectivity の
+組から `quotientMap_bijective`/`quotientEquivalence`/`identity`/`comp` 等を
+導く構造——の resonance 層類似構造）に取り組んだ。
+
+精読の結果、cycle 67 自身の `ResonantBehavioralEmbedding`（L9902 以降）が
+`ResonantBehavioralTranslation` を直接拡張しており（`reflectsResonance` の
+み追加）、`BehavioralBoundaryShapeEmbedding` のように
+`reflectsBisimulation` を持たないという非対称性を確認した。
+`IncidenceQuotient` は純粋に bisimulation（`approxBisimSetoid`）で定義される
+ため、この非対称性は「resonance 層の embedding だけでは量子写像の単射性を
+導けない」という、`BehavioralQuotientEquivalenceCriterion` には存在しない
+本物のギャップを意味する。既存の `ResonantBehavioralEmbedding` に新規
+必須フィールドを後付けする（cycle 67 の2つのコンストラクタと
+`ResonantBehavioralEquivalence.toEmbedding` を巻き込む非加算的変更）のでは
+なく、`ResonantQuotientEquivalenceCriterion` 構造体自身に
+`reflectsBisimulation` を並列フィールドとして明示することでこのギャップを
+埋めた（追加のみ規律を維持）。
+
+木全体を事前に grep したところ、`quotientResonance`/
+`QuotientResonanceCongruent`（L1845-1897、cycle 60 以前から存在）という、
+三項関係 `resonance` を quotient へ降下させる既存の装置が見つかった——
+これを使い、`quotientResonance_forward`（前進方向、無条件で成立）と
+`quotientResonance_iff`（逆方向、`QuotientResonanceCongruent target` という
+明示的な追加前提つき）の2定理を新設した。逆方向が無条件では成立しない
+ことを手で確認済み: target 側の代表元 `a,b,c` は embed 像と bisimilar な
+だけで embed 像そのものではなく、`target.resonance a b c` を
+`target.resonance (embed i)(embed j)(embed k)` に変換してから
+`reflectsResonance` を適用する必要があり、その変換にはまさに
+`QuotientResonanceCongruent target` が要る。これは
+`BehavioralQuotientEquivalenceCriterion` には存在しない、resonance 層
+特有の本物の追加証明義務であり、本タスクのブリーフが事前に想定していた
+「素朴な並行構築では済まない可能性」が実際に的中した例である。
+
+新設12件（`ResonantQuotientEquivalenceCriterion`本体、
+`.toBehavioralEmbedding`/`.toBehavioralCriterion`（既存の behavioral 層
+機構をそのまま再利用するための downcast）、`.identity`/`.comp`、
+`.quotientMap_bijective`/`.quotientEquivalence`/
+`.quotientEquivalence_forward`/`_identity`/`_comp`（behavioral 層と同型の
+証明）、そして新規の `.quotientResonance_forward`/`.quotientResonance_iff`）
+は初回の `lake build` で型検査を通過し、`./verify.sh`（完全リビルド、
+実行例、`axiom`/`sorry`/`sorryAx` の全木 grep）はクリーンに通過した。
+scratch `lake env lean` 検査（使用後削除）で12件全ての `#print axioms` を
+確認: 純粋に構造的な4件は公理に一切依存せず、`quotientMap_bijective` は
+`[propext, Quot.sound]`（`Classical.choice` 不要、behavioral 層自身の
+既存の知見と一致）、`noncomputable quotientEquivalence` を経由する残り7件は
+`[propext, Classical.choice, Quot.sound]`——cycle 68-71 の内部論理層の
+系がすでに使っているのと同一の3公理で、新規公理は皆無。
+
+これにより cycle 67 が名指しし cycle 68-71 が繰り越してきた残タスクは
+閉じた。ただし本タスクは並行構築（API 完備化）に加え、resonance 層
+特有の本物の追加証明義務（`QuotientResonanceCongruent` という条件付き
+逆方向）を発見・明記したという点で、cycle 67 自身の純粋な API 複製とは
+性質が異なる——とはいえこれも新しい数学的内容というより、既存の
+`quotientResonance`/`QuotientResonanceCongruent` 装置（cycle 60 以前から
+存在）を新しい文脈で組み合わせた結果であり、項目7が明示する残課題
+（resonance 駆動の生成・合成を内部論理モデルと構成実数解析の両方に
+一結果で結ぶ単一の普遍的解釈定理）には引き続き到達しない。したがって
+cycle 60-71 の保守的規律を踏襲し、項目7の記述（「部分完了」）と
+パーセンテージ（本文57–58行目、翻訳・保存層約85%）は本追補でも動かさない。
+`RESEARCH_LOG.md` cycle 72 の Next hypothesis は、(a) 本cycleが新設した
+`quotientResonance_iff` の追加前提 `QuotientResonanceCongruent` を実際に
+満たす具体的インスタンスがあるか確認する続き（推奨）と、(b) 項目7自身の
+普遍的解釈定理への本格着手の両方を判断材料つきで cycle 73 に委ねている。

@@ -10112,6 +10112,204 @@ def ResonantBehavioralEquivalence.toBehavioralBoundaryShapeEquivalence
   inv_hom := equivalence.inv_hom
   hom_inv := equivalence.hom_inv
 
+/- `ResonantQuotientEquivalenceCriterion` is the resonance-level analogue of
+   `BehavioralQuotientEquivalenceCriterion` (declared above in this
+   namespace): the latter packages a `BehavioralBoundaryShapeEmbedding` plus
+   essential surjectivity into a criterion for the induced bisimulation-
+   quotient map (`mapBisimulationQuotient`) to be bijective.
+
+   The naive direct analogue would package a `ResonantBehavioralEmbedding`
+   the same way, but `ResonantBehavioralEmbedding` (cycle 67, declared above)
+   branches directly off `ResonantBehavioralTranslation`, not off
+   `BehavioralBoundaryShapeEmbedding` -- unlike its sibling at the weaker
+   tier, it carries `reflectsResonance` but NOT `reflectsBisimulation`.
+   Since `IncidenceQuotient` is defined purely by bisimulation
+   (`approxBisimSetoid`), injectivity of the induced quotient map genuinely
+   needs bisimulation-reflection, which a bare `ResonantBehavioralEmbedding`
+   does not supply -- a real asymmetry `BehavioralQuotientEquivalenceCriterion`
+   never has to confront, since its embedding field already bundles that
+   obligation. Rather than retrofitting a new required field onto cycle 67's
+   already-closed `ResonantBehavioralEmbedding` (which would force revisiting
+   its two existing constructors and `ResonantBehavioralEquivalence.toEmbedding`),
+   this criterion states the missing obligation explicitly as a sibling
+   field, `reflectsBisimulation`, alongside the `ResonantBehavioralEmbedding`. -/
+structure ResonantQuotientEquivalenceCriterion
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    (source : Incidence I R₁ T₁) (target : Incidence J R₂ T₂) where
+  embedding : ResonantBehavioralEmbedding source target
+  reflectsBisimulation : ∀ {i j}, approxBisim target (embedding.map i) (embedding.map j) →
+    approxBisim source i j
+  essentiallySurjective : BehaviorallyEssentiallySurjective
+    embedding.toBehavioralBoundaryShapeTranslation
+
+/- Downcast the bundled resonance-reflecting embedding plus the explicit
+   bisimulation-reflection obligation into an ordinary
+   `BehavioralBoundaryShapeEmbedding`, so the whole existing behavioral-level
+   quotient machinery (`mapBisimulationQuotient_injective`,
+   `mapBisimulationQuotient_surjective`, `quotientEquivalence`, ...) applies
+   to a `ResonantQuotientEquivalenceCriterion` unchanged. -/
+def ResonantQuotientEquivalenceCriterion.toBehavioralEmbedding
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (criterion : ResonantQuotientEquivalenceCriterion source target) :
+    BehavioralBoundaryShapeEmbedding source target where
+  toBehavioralBoundaryShapeTranslation :=
+    criterion.embedding.toBehavioralBoundaryShapeTranslation
+  reflectsBisimulation := criterion.reflectsBisimulation
+
+def ResonantQuotientEquivalenceCriterion.toBehavioralCriterion
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (criterion : ResonantQuotientEquivalenceCriterion source target) :
+    BehavioralQuotientEquivalenceCriterion source target where
+  embedding := criterion.toBehavioralEmbedding
+  essentiallySurjective := criterion.essentiallySurjective
+
+def ResonantQuotientEquivalenceCriterion.identity
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    ResonantQuotientEquivalenceCriterion inc inc where
+  embedding := ResonantBehavioralEmbedding.identity inc
+  reflectsBisimulation := fun bisimilar => bisimilar
+  essentiallySurjective := by
+    intro i
+    exact ⟨i, approxBisim_refl inc i⟩
+
+def ResonantQuotientEquivalenceCriterion.comp
+    {I J K R₁ T₁ R₂ T₂ R₃ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (secondCriterion : ResonantQuotientEquivalenceCriterion second third)
+    (firstCriterion : ResonantQuotientEquivalenceCriterion first second) :
+    ResonantQuotientEquivalenceCriterion first third where
+  embedding := secondCriterion.embedding.comp firstCriterion.embedding
+  reflectsBisimulation := fun bisimilar =>
+    firstCriterion.reflectsBisimulation
+      (secondCriterion.reflectsBisimulation bisimilar)
+  essentiallySurjective := by
+    intro k
+    obtain ⟨j, secondBisimilar⟩ := secondCriterion.essentiallySurjective k
+    obtain ⟨i, firstBisimilar⟩ := firstCriterion.essentiallySurjective j
+    refine ⟨i, approxBisim_trans ?_ secondBisimilar⟩
+    exact secondCriterion.embedding.preservesBisimulation firstBisimilar
+
+theorem ResonantQuotientEquivalenceCriterion.quotientMap_bijective
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (criterion : ResonantQuotientEquivalenceCriterion source target) :
+    (∀ {left right : IncidenceQuotient source},
+      BehavioralBoundaryShapeTranslation.mapBisimulationQuotient
+          criterion.embedding.toBehavioralBoundaryShapeTranslation left =
+        BehavioralBoundaryShapeTranslation.mapBisimulationQuotient
+          criterion.embedding.toBehavioralBoundaryShapeTranslation right →
+      left = right) ∧
+    (∀ targetClass : IncidenceQuotient target,
+      ∃ sourceClass : IncidenceQuotient source,
+        BehavioralBoundaryShapeTranslation.mapBisimulationQuotient
+          criterion.embedding.toBehavioralBoundaryShapeTranslation sourceClass =
+            targetClass) :=
+  criterion.toBehavioralCriterion.quotientMap_bijective
+
+noncomputable def ResonantQuotientEquivalenceCriterion.quotientEquivalence
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (criterion : ResonantQuotientEquivalenceCriterion source target) :
+    IncTypeEquivalence (IncidenceQuotient source) (IncidenceQuotient target) :=
+  criterion.toBehavioralCriterion.quotientEquivalence
+
+theorem ResonantQuotientEquivalenceCriterion.quotientEquivalence_forward
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (criterion : ResonantQuotientEquivalenceCriterion source target) :
+    criterion.quotientEquivalence.forward =
+      BehavioralBoundaryShapeTranslation.mapBisimulationQuotient
+        criterion.embedding.toBehavioralBoundaryShapeTranslation :=
+  criterion.toBehavioralCriterion.quotientEquivalence_forward
+
+theorem ResonantQuotientEquivalenceCriterion.quotientEquivalence_identity
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    (ResonantQuotientEquivalenceCriterion.identity inc).quotientEquivalence =
+      IncTypeEquivalence.refl (IncidenceQuotient inc) := by
+  apply IncTypeEquivalence.ext_forward
+  exact BehavioralBoundaryShapeTranslation.mapBisimulationQuotient_identity inc
+
+theorem ResonantQuotientEquivalenceCriterion.quotientEquivalence_comp
+    {I J K R₁ T₁ R₂ T₂ R₃ T₃ : Type u}
+    [DecidableEq I] [DecidableEq J] [DecidableEq K]
+    {first : Incidence I R₁ T₁} {second : Incidence J R₂ T₂}
+    {third : Incidence K R₃ T₃}
+    (secondCriterion : ResonantQuotientEquivalenceCriterion second third)
+    (firstCriterion : ResonantQuotientEquivalenceCriterion first second) :
+    (secondCriterion.comp firstCriterion).quotientEquivalence =
+      secondCriterion.quotientEquivalence.trans
+        firstCriterion.quotientEquivalence := by
+  apply IncTypeEquivalence.ext_forward
+  exact BehavioralBoundaryShapeTranslation.mapBisimulationQuotient_comp
+    secondCriterion.embedding.toBehavioralBoundaryShapeTranslation
+    firstCriterion.embedding.toBehavioralBoundaryShapeTranslation
+
+/- Beyond bijectivity of the plain quotient map (the whole content of
+   `BehavioralQuotientEquivalenceCriterion`), this criterion's embedding
+   additionally preserves resonance, so it is natural to ask whether the
+   induced quotient equivalence transports the pre-existing quotient-level
+   relation `quotientResonance` (declared far above this namespace, alongside
+   `QuotientResonanceCongruent`, predating this cycle) across
+   `criterion.quotientEquivalence`. This direction holds unconditionally: it
+   only uses that the embedding preserves both bisimulation and resonance
+   (both already fields of `ResonantBehavioralTranslation`), transporting
+   witnessing representatives forward along the embedding. -/
+theorem ResonantQuotientEquivalenceCriterion.quotientResonance_forward
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (criterion : ResonantQuotientEquivalenceCriterion source target)
+    {qi qj qk : IncidenceQuotient source}
+    (resonant : quotientResonance source qi qj qk) :
+    quotientResonance target
+      (criterion.quotientEquivalence.forward qi)
+      (criterion.quotientEquivalence.forward qj)
+      (criterion.quotientEquivalence.forward qk) := by
+  obtain ⟨i, j, k, hi, hj, hk, sourceResonant⟩ := resonant
+  subst hi
+  subst hj
+  subst hk
+  rw [criterion.quotientEquivalence_forward]
+  exact quotientResonance_of_resonance (criterion.embedding.preservesResonance sourceResonant)
+
+/- The reverse direction -- descending a *target*-side quotient-resonance
+   fact back to the source -- is NOT free the way the forward direction is.
+   `quotientResonance target ...` only witnesses SOME representatives
+   bisimilar to the embedded images, not the images themselves, so pulling
+   that fact back to `target.resonance (embed i) (embed j) (embed k)` (where
+   `criterion.embedding.reflectsResonance` can fire) needs resonance to be
+   well-behaved along bisimulation in `target` -- exactly
+   `QuotientResonanceCongruent target`. This hypothesis has no counterpart
+   anywhere in `BehavioralQuotientEquivalenceCriterion`, which never needs to
+   transport a second relation across the quotient it builds; it is the
+   genuine extra proof obligation the resonance level introduces on top of a
+   direct structural copy of the behavioral-level criterion. -/
+theorem ResonantQuotientEquivalenceCriterion.quotientResonance_iff
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (criterion : ResonantQuotientEquivalenceCriterion source target)
+    (targetCongruent : QuotientResonanceCongruent target)
+    {qi qj qk : IncidenceQuotient source} :
+    quotientResonance target
+      (criterion.quotientEquivalence.forward qi)
+      (criterion.quotientEquivalence.forward qj)
+      (criterion.quotientEquivalence.forward qk) ↔
+    quotientResonance source qi qj qk := by
+  constructor
+  · refine Quotient.inductionOn₃ qi qj qk ?_
+    intro i j k targetQuotientResonant
+    rw [criterion.quotientEquivalence_forward] at targetQuotientResonant
+    have targetResonant : target.resonance
+        (criterion.embedding.map i) (criterion.embedding.map j)
+          (criterion.embedding.map k) :=
+      (quotientResonance_mk_iff targetCongruent).mp targetQuotientResonant
+    exact quotientResonance_of_resonance
+      (criterion.embedding.reflectsResonance targetResonant)
+  · exact criterion.quotientResonance_forward
+
 end TranslationPreservation
 
 end IncidenceCore

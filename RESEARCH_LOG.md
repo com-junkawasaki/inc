@@ -8184,3 +8184,164 @@ attempting this directly is high-risk/high-reward compared to (a)'s
 concretely-scoped, already-templated shape, so (a) is the recommended
 default unless a future cycle judges the project newly ready for item 7's
 harder synthesis.
+
+## Cycle 72
+
+**Hypothesis**: this cycle claims cycle 71's recommended default (a), itself
+carried forward unclaimed since cycle 67 first named it: build
+`ResonantQuotientEquivalenceCriterion`, the resonance-level analogue of
+`BehavioralQuotientEquivalenceCriterion` (an embedding + essential-
+surjectivity packaging that certifies two `Incidence` instances have
+equivalent bisimulation quotients), following the same parallel-
+construction pattern cycle 67 used to build out `ResonantBehavioralEmbedding`/
+`ResonantBehavioralEquivalence` by direct structural analogy to the weaker
+translation levels' already-complete API. The task brief flagged, up front,
+that a straightforward copy might not be possible and that a genuine extra
+difficulty, if found, should be reported honestly rather than forced.
+
+**Method**: re-read cycle 67's `RESEARCH_LOG.md` section in full and the
+current `BehavioralQuotientEquivalenceCriterion` (grep-confirmed still at
+`IncidenceTheory.lean` L8938-9127, essentially unmoved since cycle 67's own
+L8938-9127 estimate). Its actual content: a `structure` bundling (1) a
+`BehavioralBoundaryShapeEmbedding` (a translation that both preserves and
+*reflects* bisimulation), and (2) `BehaviorallyEssentiallySurjective` (every
+target index is bisimilar to some image), from which `quotientMap_bijective`,
+a `noncomputable quotientEquivalence : IncTypeEquivalence (IncidenceQuotient
+source) (IncidenceQuotient target)` (built via `Classical.choose` on the
+surjectivity witness), `identity`/`comp`, `quotientEquivalence_identity`/
+`_comp`, and two existence-quantified `_iff` theorems (criterion-exists ↔
+quotient-map-bijective; criterion-exists ↔ quotient-equivalence-exists) are
+all derived.
+
+Re-read cycle 67's actual `ResonantBehavioralEmbedding`/
+`ResonantBehavioralEquivalence` declarations (now at L9902-10113, past
+where cycle 67 itself inserted them) to fix the exact shape of the hierarchy:
+`BehavioralBoundaryShapeTranslation` (+ preserves bisimulation) ⊂
+`ResonantBehavioralTranslation` (+ preserves the ternary `resonance`
+relation) ⊂ `ResonantBehavioralEmbedding` (+ `reflectsResonance` only).
+Cross-checking this against `BehavioralBoundaryShapeEmbedding` (+
+`reflectsBisimulation`, extending `BehavioralBoundaryShapeTranslation`
+directly) surfaced the concrete asymmetry the task brief anticipated:
+`ResonantBehavioralEmbedding` branches off `ResonantBehavioralTranslation`,
+*not* off `BehavioralBoundaryShapeEmbedding` -- it reflects resonance but
+carries no `reflectsBisimulation` obligation at all. Since `IncidenceQuotient`
+is defined purely by bisimulation (`approxBisimSetoid`, confirmed by reading
+its definition at L166-167), injectivity of the induced quotient map cannot
+be derived from a bare `ResonantBehavioralEmbedding` -- a genuine gap with
+no counterpart in `BehavioralQuotientEquivalenceCriterion`'s ingredients
+(whose embedding field already bundles bisimulation-reflection).
+
+Before assuming a blank slate, grepped the whole tree (not just
+`IncidenceTheory.lean`) for `ResonantQuotient`/`ResonanceQuotient`/
+`QuotientResonanceCongruent`/`BisimulationResonanceSpec`: all four hits were
+confined to `IncidenceTheory.lean` itself, and `ResonantQuotientEquivalence
+Criterion`/`ResonanceQuotientEquivalenceCriterion` had zero declarations --
+no partially-built piece to complete, confirming cycle 67's and 71's own
+"does not exist" framing still holds. This grep did turn up real,
+directly relevant prior art, though: `quotientResonance`/
+`QuotientResonanceCongruent`/`quotientResonance_of_resonance`/
+`quotientResonance_mk_iff` (L1845-1897, predating even cycle 60), an
+already-built apparatus for descending the ternary `resonance` relation
+itself to `IncidenceQuotient` -- exactly the missing piece needed to state
+something *stronger* than mere bijectivity for the resonance-level criterion.
+
+Design chosen: (1) `ResonantQuotientEquivalenceCriterion` bundles
+`embedding : ResonantBehavioralEmbedding`, an explicit sibling field
+`reflectsBisimulation` (stating what `ResonantBehavioralEmbedding` itself
+does not, deliberately NOT retrofitted as a new required field onto cycle
+67's already-closed structure and its two existing constructors plus
+`ResonantBehavioralEquivalence.toEmbedding`, to keep this cycle strictly
+additive), and `essentiallySurjective`. (2) `toBehavioralEmbedding`/
+`toBehavioralCriterion` downcasts let the entire existing behavioral-level
+machinery (`quotientMap_bijective`, `quotientEquivalence`,
+`quotientEquivalence_forward/_identity/_comp`) be reused verbatim rather than
+re-derived. (3) `.identity`/`.comp` mirror the behavioral level's proofs
+exactly (same tactic scripts, `ResonantBehavioralEmbedding.preservesBisimulation`
+in place of `BehavioralBoundaryShapeEmbedding.preservesBisimulation`). (4) two
+new theorems go beyond API parity: `quotientResonance_forward` (unconditional
+-- for any criterion, `quotientResonance source qi qj qk` transports to
+`quotientResonance target` along `criterion.quotientEquivalence.forward`,
+proved by unfolding to representatives and chaining `preservesBisimulation`
++ `preservesResonance`, no extra hypothesis needed) and
+`quotientResonance_iff` (the reflect direction, gated behind an explicit
+`targetCongruent : QuotientResonanceCongruent target` hypothesis -- checked
+by hand that this gate is load-bearing, not decorative: the reflect direction
+needs to turn `target.resonance a b c`, for representatives `a b c` merely
+*bisimilar* to the embedded images `embed i, embed j, embed k`, into
+`target.resonance (embed i) (embed j) (embed k)` before
+`reflectsResonance` can fire, and that step is precisely what
+`QuotientResonanceCongruent target` supplies via `quotientResonance_mk_iff` --
+there is no way to close this without either that hypothesis or something
+equivalent to it).
+
+**Result**: **all 12 new declarations
+(`ResonantQuotientEquivalenceCriterion`, `.toBehavioralEmbedding`,
+`.toBehavioralCriterion`, `.identity`, `.comp`, `.quotientMap_bijective`,
+`.quotientEquivalence`, `.quotientEquivalence_forward`,
+`.quotientEquivalence_identity`, `.quotientEquivalence_comp`,
+`.quotientResonance_forward`, `.quotientResonance_iff`) type-check on the
+first `lake build` attempt; `./verify.sh` (clean `lake clean` + `lake
+build`, example run, repo-wide `axiom`/`sorry`/`sorryAx` grep) passes end to
+end.** A scratch `lake env lean` check file (`open
+IncidenceCore.TranslationPreservation`, deleted after use) confirmed
+`#print axioms` on all 12: the 4 purely structural ones
+(`toBehavioralEmbedding`/`toBehavioralCriterion`/`identity`/`comp`) depend on
+no axioms at all; `quotientMap_bijective` depends on `[propext, Quot.sound]`
+(no `Classical.choice`, matching the behavioral level's own finding that
+bijectivity alone needs no choice); the remaining 7 (everything routing
+through the `noncomputable quotientEquivalence`, i.e. `Classical.choose` on
+essential surjectivity) depend on `[propext, Classical.choice, Quot.sound]`
+-- the same three axioms cycles 68-71's internal-logic corollaries already
+use, no new axiom of any kind.
+
+**Synthesis**: this closes cycle 67's own four-cycle-old open item exactly
+as cycle 71 scoped it, and confirms the task brief's own hedge was the right
+call: a literal field-for-field copy of `BehavioralQuotientEquivalenceCriterion`
+was NOT possible, because `ResonantBehavioralEmbedding` (cycle 67) is not
+built on top of `BehavioralBoundaryShapeEmbedding` the way the naming
+suggests -- it skips straight to `ResonantBehavioralTranslation` and adds
+only resonance-reflection, leaving bisimulation-reflection absent. This
+cycle's criterion repairs that gap explicitly (as a sibling field, not a
+retrofit) rather than silently assuming it or leaving it as an unstated
+side condition. Beyond that repair, the construction is a faithful parallel
+of the behavioral level's identity/comp/bijectivity/quotient-equivalence API,
+reusing every applicable existing lemma rather than re-deriving. What goes
+strictly beyond the behavioral level -- and could not have gone beyond it,
+since the behavioral criterion has no second relation to transport -- is the
+pair of `quotientResonance_forward`/`quotientResonance_iff` theorems: the
+forward transport is free, but the full iff genuinely needs an extra
+hypothesis (`QuotientResonanceCongruent target`) that has no behavioral-level
+counterpart. This is exactly the kind of "genuine extra difficulty, found
+and reported rather than papered over" result this project's culture (cycles
+38-40, 45-71) treats as a legitimate, non-inflated outcome: not a `sorry`,
+not an artificially-forced unconditional theorem, but a precisely-scoped
+conditional one with the gating hypothesis's necessity checked by hand. As
+with cycle 67's own precedent for this exact kind of API-parity work, this
+does not by itself complete roadmap item 7's stated remaining content (the
+single universal interpretation theorem connecting resonance-driven
+generation/composition to the internal-logic model and constructive real
+analysis); the ADR addendum below records the finding without moving item
+7's existing percentage figures.
+
+**Next hypothesis (cycle 73, not yet attempted)**: with cycle 67's
+`ResonantQuotientEquivalenceCriterion` gap now closed (this cycle) and the
+internal-logic-connection audit already closed (cycles 68-71), the two
+honest options this cycle's own reading surfaces are: (a) put
+`quotientResonance_iff`'s new gating hypothesis, `QuotientResonanceCongruent`,
+to use -- check whether any of this project's concrete `*ResonanceSpec`
+instances (`natIncidence`/`integerIncidence`/`rationalIncidence`/
+`realIncidence`/`finiteIncidence`) actually satisfies
+`QuotientResonanceCongruent`, which would let a concrete instance pair use
+`quotientResonance_iff` at full strength rather than only its unconditional
+forward half (this is a natural, concretely-scoped continuation of THIS
+cycle's own new machinery, not yet attempted here since this cycle's budget
+went to the criterion itself); (b) roadmap item 7's own remaining content,
+the single universal interpretation theorem, now that both the API-parity
+thread (cycles 60-61, 67, this cycle) and the per-instance internal-logic
+audit (cycles 68-71) are closed and item 7's harder synthesis has no more
+concretely-scoped smaller pieces obviously queued ahead of it. (a) is lower-
+risk and directly buildable on this cycle's own new theorems; (b) is the
+project's standing harder target. Either is legitimate; this cycle's own
+reading leans toward (a) as the more conservative next step, consistent with
+this project's established discipline of exhausting concretely-scoped
+continuations before attempting the harder unclaimed synthesis.
