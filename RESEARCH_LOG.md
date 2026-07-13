@@ -5140,3 +5140,217 @@ re-deriving from what already exists. (a) is the lower-risk, narrower
 next step (audit only, reusing `Sum.lean`'s existing non-permissive
 witnesses like `finiteIncidenceNeverGuards`); (b) is the higher-payoff
 one flagged repeatedly since cycle 54 without yet being attempted.
+
+## Cycle 56
+
+**Hypothesis**: option (b) from cycle 55's queue (= cycle 54's item (c)),
+picked as the higher-payoff primary thread over the lower-risk `prodGuards`
+audit (option (a), still open): is there a genuinely THIRD collapse regime,
+distinct from both (i) cycles 41/51/52's "well-founded grading survives
+collapse-within-grade" (simplex/path/tree -- the quotient's `Incidence`
+succeeds, only `glue` realization fails) and (ii) cycles 38/39/54's "total
+collapse forces a `Subsingleton`, `well_founded` fails EVERYWHERE"
+(`cycleIncidence`)? Concretely: a PARTIAL quotient (more than one class,
+fewer than all elements) where the source's grading itself degenerates --
+develops a genuine `canonicalBoundary` self-loop -- but confined to ONE
+class, while every OTHER class stays perfectly well-founded. Per the task's
+own framing, an honest "this notion is vacuous/impossible" finding was to
+be treated as equally legitimate as a positive construction.
+
+**Method**: first checked whether any EXISTING graded instance
+(`simplexIncidence`/`pathIncidence`/`treeIncidence`) could exhibit this via
+a "different, coarser bisimulation collapse" of the SAME source, as the
+task's framing suggested trying first. Read `BisimulationQuotientClassification`'s
+exact fields (`Quotient.lean`) and `approxBisim`'s definition (`IncidenceTheory.lean:64`,
+`∃ rel, IsBisimulation inc rel ∧ rel i j`) closely: `classification.reflects`
+forces `classify`'s kernel to equal `≈` EXACTLY, and `≈` is *already* the
+union of every bisimulation on a given source (any witnessing `rel` for
+`IsBisimulation` trivially implies `approxBisim` pointwise, by definition),
+hence the unique coarsest one obtainable from ANY bisimulation. So a
+"different collapse of an existing instance" is not merely untried but
+STRUCTURALLY UNAVAILABLE -- confirmed this is a real dead end, not an
+oversight, before looking for a workaround. This meant a genuinely NEW
+source instance had to be built, not a reinterpretation of one already in
+the codebase.
+
+Designed the construction from the mechanism, not from a carrier shape:
+re-examined `canonicalBoundary_self_loop_of_subsingleton` (cycle 54) and
+noticed its actual proof only ever uses `Subsingleton.elim` to get ONE
+specific fact -- that a boundary entry's remapped target lands back in the
+SAME class as the point whose boundary it's attached to. `Subsingleton`
+is a sufficient but not necessary way to produce that fact; the natural
+generalization is a LOCAL condition on a single element `x`, independent
+of how many classes the rest of the quotient has. Built the general lemma
+(`canonicalBoundary_self_loop_of_boundary_within_class`) first, purely
+from this observation, before writing any concrete instance. Then designed
+the minimal witness for the local condition holding at exactly one class
+while genuinely failing to hold globally: cycle 26's 4-cycle (`cycleIncidence`)
+already demonstrated that a closed cycle's raw `well_founded` field (only
+forbids a *direct* self-loop, `e.i = i`) is satisfiable by a structure with
+no base case at all -- scaled that mechanism down to its minimal case (2
+elements mutually referencing each other) and combined it, for the first
+time, with a structurally DISJOINT well-behaved leaf, to force a genuinely
+PARTIAL classification rather than cycle 26's total collapse.
+
+**Result**: **a genuine third regime, confirmed via both a general lemma
+and a concrete witness, sorry-free, first `lake build` attempt after two
+small fixes (both diagnosed immediately: `Nat.lt_trans` instead of
+`.trans` for `<`, and marking the witnessing relation `abbrev` instead of
+`def` so `Decidable` instances for `by decide` goals could see through
+it).**
+
+(1) `mirrorIncidence : Incidence MirrorId MirrorRole GraphType` (new,
+`Quotient.lean`), carrier `MirrorId := m0 | m1 | u`: `m0`/`m1` mutually
+reference each other (single boundary entry each, pointing at the other),
+`u` is a genuine disjoint leaf (empty boundary). `mirrorIncidence_no_valid_grading`
+confirms, as a real non-existence theorem (not merely asserted by
+analogy to cycle 26): `{m0, m1}` admits NO `Nat`-valued strictly-decreasing
+grading at all -- any such grading would need `grade m1 < grade m0` (from
+`m0`'s boundary) AND `grade m0 < grade m1` (from `m1`'s) simultaneously,
+`Nat.lt_trans`/`Nat.lt_irrefl` closing the contradiction directly. This
+sharpens cycle 26's informal "no base case" observation into an actual
+proof that this instance's raw `well_founded` field (satisfied, since
+`m0 ≠ m1`) and genuine `GradedIncidenceData`-style well-foundedness
+(Nat-gradeable) are DIFFERENT properties -- the first cycle to prove this
+gap as a theorem rather than note it in prose.
+
+(2) `mirrorToShape_iff_approxBisim` (via `mirrorRel`, a hand-built
+bisimulation combining cycle 51/52's "flat relation on a grade" style with
+the new `boundaryMatched_of_one_entry` root-file helper, the natural
+1-entry generalization of `boundaryMatched_of_two_entries`/`_of_three_entries`
+that no prior single-entry instance had needed as reusable
+infrastructure): exactly TWO classes over THREE elements, `{m0, m1}`
+(`pairShape`) and `{u}` (`leafShape`) -- a genuinely PARTIAL quotient,
+matching cycles 41/51/52's cardinality profile (more than one, fewer than
+all) but built from a source with NO valid grading at all, not a
+well-founded one.
+
+(3) `mirrorBisimulationQuotientClassification_boundaryInvariant`: `BoundaryInvariant`
+HOLDS (both `m0`/`m1` produce syntactically identical remapped boundaries
+once classified) -- confirming, exactly as cycle 54 found for `cycleIncidence`,
+that the obstruction this cycle finds is NOT a `BoundaryInvariant` failure
+(cycle 38's mechanism); it lives one level up, at `well_founded`.
+
+(4) The headline general theorem, `canonicalBoundary_self_loop_of_boundary_within_class`:
+for ANY `Incidence`/classification, if some element `x` has a boundary
+entry `e` with `classify e.i = classify x` (`e.i` lands in `x`'s OWN
+class -- whether `e.i = x` literally or a distinct bisimilar partner),
+`canonicalBoundary` self-loops AT `classify x` SPECIFICALLY, regardless of
+how many other classes exist. Cycle 54's own theorem
+(`canonicalBoundary_self_loop_of_subsingleton`) is re-derived from this as
+`canonicalBoundary_self_loop_of_subsingleton_via_local`, confirming the
+generalization is genuine (not merely analogous): `Subsingleton` just
+forces the local hypothesis to hold at EVERY point via `Subsingleton.elim`,
+recovering cycle 54's global conclusion as a special case.
+
+(5) The concrete closing theorem, `mirrorBisimulationQuotientClassification_no_coherence`:
+NO `CanonicalQuotientIncidenceCoherence` can be completed for
+`mirrorBisimulationQuotientClassification` -- but this time the
+classification genuinely has two classes over three elements, not a
+`Subsingleton`. The self-loop is confined to `pairShape` (`m0`'s boundary
+entry points to `m1`, and `m1 ≈ m0`, so `classify m1 = classify m0`,
+`within` closing by `rfl`); `leafShape` (`{u}`) is completely untouched,
+its `canonicalBoundary` is `[]`, perfectly well-founded. Since
+`CanonicalQuotientIncidenceCoherence` requires `boundary_no_self` to hold
+at EVERY class, failing at just the one is already enough to rule out the
+whole structure -- the genuinely PARTIAL analogue of cycle 39/54's
+total-collapse self-loop this cycle's task asked about.
+
+`lake build IncidenceTheory.Quotient`: succeeded on the second attempt (two
+small, immediately-diagnosed fixes noted above), 24/24 jobs. `#print axioms`
+on all eight new headline declarations (checked via a scratch file fed to
+`lake env lean`, then deleted, and cross-checked against an EXISTING cycle
+38 theorem in the same file to confirm the axiom profile is this project's
+standing baseline, not an anomaly): `propext`/`Quot.sound` for the
+non-`Classical.choice`-involving ones (`mirrorIncidence_no_valid_grading`,
+`mirrorRel_isBisimulation`, `mirrorToShape_iff_approxBisim`,
+`mirrorBisimulationQuotientClassification_boundaryInvariant`), plus
+`Classical.choice` additionally for the `canonicalBoundary`/representative-based
+ones (`canonicalBoundary_self_loop_of_boundary_within_class` and its three
+downstream uses) -- fully within this project's accepted axiom set, no new
+axiom introduced anywhere. Full `./verify.sh` (`lake clean && lake build`,
+example binary run, repo-wide `axiom`/`sorry`/`sorryAx` grep): passes end
+to end. Also added `boundaryMatched_of_one_entry` to the root file
+(`IncidenceTheory.lean`, immediately after cycle 52's `boundaryMatched_of_three_entries`),
+a small, natural, reusable addition to the existing 2-entry/3-entry helper
+family.
+
+**Synthesis**: the third regime this project's task briefing hypothesized
+is REAL, not vacuous -- but it required building a genuinely new instance,
+not reinterpreting an existing one, for a reason worth stating precisely:
+`BisimulationQuotientClassification.reflects` pins `classify`'s kernel to
+`≈` exactly, and `≈` (`approxBisim`) is *by construction* the union of
+every bisimulation on a fixed source (the largest one obtainable), so
+there is no way to "try a coarser collapse" of `simplexIncidence`/
+`pathIncidence`/`treeIncidence` within this project's own quotient
+framework -- their quotients are each unique up to relabeling
+(`targetEquivalence`), a fact this cycle made explicit rather than assumed.
+This closes off half of the task's suggested search space with a clean
+structural reason, mirroring this project's culture of checking a
+prerequisite before searching blind (cycles 38, 45, 53 all did this same
+move). The instance that DOES witness the third regime confirms the
+cycle 54/55 contrast's own deeper logic rather than complicating it:
+cycle 54 showed `well_founded` is orthogonal to the congruence laws
+(`BoundaryInvariant`/`GlueInvariant`) -- a classification can perfectly
+respect `≈` and still admit no quotient `Incidence`, because self-loop-freeness
+is a SHAPE constraint, not an agreement constraint. This cycle shows that
+shape constraint is not an all-or-nothing property of the WHOLE
+classification either -- it can fail LOCALLY, at exactly the classes
+descending from an ungraded (cyclic) piece of the source, while other
+classes descending from genuinely well-founded pieces stay fine
+simultaneously, in the SAME classification. The general lemma
+(`canonicalBoundary_self_loop_of_boundary_within_class`) makes this
+precise: cycle 54's Subsingleton finding was always the "every point"
+special case of a fact that is fundamentally local, and this cycle is the
+first to state and use the local version, then confirm cycle 54's
+own theorem is recoverable from it (not merely similar in spirit). The
+construction method is also worth naming: rather than search the existing
+codebase for a naturally-occurring third-regime instance (which the
+prerequisite check above shows cannot exist among the graded instances,
+and no other project instance combines an ungraded cyclic sub-structure
+with a disjoint well-founded one), the general mechanism was isolated
+FIRST, then the minimal instance was built FROM the mechanism's exact
+hypotheses -- a "design from the lemma" approach distinct from cycles
+41/51/52's "audit an existing instance, then build the machinery to match"
+pattern, closer in spirit to cycle 53's "state the general theorem, then
+show existing counterexamples are instances of it" but applied to a
+genuinely fresh construction rather than three pre-existing ones.
+
+This is not merely a fourth instance alongside `simplexIncidence`/
+`pathIncidence`/`treeIncidence`/`cycleIncidence` -- it is a genuinely
+different POINT in the space cycles 38-55 have been mapping: those four
+instances are each either fully graded-and-partial (i)-type, or fully
+ungraded-and-total (ii)-type; `mirrorIncidence` is the first instance
+that is PARTIAL like (i) while containing an ungraded sub-structure like
+(ii), and the self-loop obstruction tracks the ungraded piece specifically,
+not the partial/total distinction itself. This does not change the
+9-item roadmap's percentages (it is squarely a continuation of the
+"third generic constructor" / quotient-construction thread cycles 38-55
+have mapped, the same scope cycles 45-55 judged did not warrant an ADR
+addendum) but it does close a genuine gap in that thread's own
+completeness: cycle 55's queue explicitly flagged this combination as
+"no existing instance... has this specific combination," and it is now
+resolved rather than left as a standing open question.
+
+**Next hypothesis (cycle 57, not yet attempted)**: two live threads. (a)
+cycle 50/53/54/55's still-untouched item: does `incidenceProd`'s own
+`guards` (`prodGuards`) have a blind spot analogous to `incidenceSum`'s
+(cycles 46-50) when built from a genuinely NON-constant factor guard --
+cycle 55 established `prodGuards` of two CONSTANT factors stays constant
+(trivially `GuardInvariant`-respecting), but never constructed or audited
+a `prodGuards` instance from a non-constant factor, a different question
+from anything checked in cycles 46-55. This remains the lower-risk,
+narrower option, now the ONLY item left on cycle 53's original three-item
+queue (`GlueInvariant` generalization done cycle 53; Subsingleton contrast
+done cycle 54; `GuardInvariant` done cycle 55; the third collapse regime
+done this cycle). (b) a natural follow-up this cycle's general lemma
+surfaces: `canonicalBoundary_self_loop_of_boundary_within_class`'s
+hypothesis (`classify e.i = classify x`) is about ONE boundary entry --
+does an analogous LOCAL fact hold for `GlueInvariant`/`GlueRealization`
+(cycle 53's mechanism), i.e. is there a "local" refinement of cycle 53's
+own general lemma the way this cycle's finding refines cycle 54's, or
+does `GlueInvariant`'s two-argument, congruence-shaped obligation resist
+the same kind of localization `BoundaryInvariant`'s single-argument,
+shape-shaped one admits -- worth a focused check before assuming either
+way, given this cycle's own finding that "local" and "global" versions of
+a `well_founded`-style obstruction can differ substantially in scope.

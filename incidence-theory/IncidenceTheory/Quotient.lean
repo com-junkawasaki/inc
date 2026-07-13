@@ -2959,4 +2959,295 @@ theorem cycleBisimulationQuotientClassification_guardRealization :
     cycleBisimulationQuotientClassification.GuardRealization :=
   guardRealization_of_permissive cycleBisimulationQuotientClassification rfl
 
+/- Research cycle 56 (see RESEARCH_LOG.md): cycle 54's queued item (c) /
+   cycle 55's item (b) -- is there a genuinely THIRD collapse regime,
+   distinct from both (i) cycles 41/51/52's "well-founded grading
+   survives collapse-within-grade" (simplex/path/tree -- the quotient's
+   `Incidence` succeeds, only `glue` realization fails) and (ii) cycles
+   38/39/54's "total collapse forces a Subsingleton, `well_founded` fails
+   EVERYWHERE" (`cycleIncidence`)? Concretely: a PARTIAL quotient (more
+   than one class, fewer than all elements) where the source's grading
+   itself degenerates -- develops a genuine `canonicalBoundary` self-loop
+   -- but confined to ONE class, while every OTHER class stays perfectly
+   well-founded.
+
+   First isolated the mechanism at the right level of generality, rather
+   than building an instance first and hoping: `canonicalBoundary_self_
+   loop_of_subsingleton` (cycle 54) is really the "every point" special
+   case of a sharper LOCAL fact -- whenever some single source element
+   `x` has a boundary entry whose target `z` lands in `x`'s OWN `≈`-class
+   (whether `z = x`, forced trivially by Subsingleton, or a genuinely
+   DISTINCT bisimilar partner `z ≠ x`), `canonicalBoundary` self-loops
+   specifically at `classify x` -- regardless of how many OTHER classes
+   the quotient has. Cycle 54's theorem is the "holds for every x" case
+   forced by Subsingleton; this cycle asks whether "holds for SOME x but
+   not all" is separately witnessable, i.e. whether the self-loop
+   mechanism can be genuinely PARTIAL.
+
+   Confirmed it can, via a new minimal instance built for exactly this
+   question (checked, per the task's own instruction, that no existing
+   graded instance -- `simplexIncidence`/`pathIncidence`/`treeIncidence`
+   -- could exhibit this: `BisimulationQuotientClassification.reflects`
+   forces `classify`'s kernel to equal `≈` EXACTLY for a given source, so
+   there is no "different, coarser bisimulation collapse" of an EXISTING
+   instance to try -- `≈` (`approxBisim`) is already, by its own
+   definition as `∃ rel, IsBisimulation rel ∧ rel i j`, the union of every
+   bisimulation on that source, hence the unique coarsest one; a genuinely
+   new source had to be built instead). `MirrorId := m0 | m1 | u`:
+   `m0`/`m1` mutually reference each other (a 2-element closed cycle,
+   cycle 26's 4-cycle mechanism scaled down to its minimal case), while
+   `u` is a genuine, structurally disjoint leaf (empty boundary).
+   `mirrorIncidence.well_founded` holds (`m0 ≠ m1`, no *literal* self-
+   loop at either element) -- but exactly as cycle 26 already observed
+   for the 4-cycle, that raw field only forbids DIRECT self-reference,
+   not a 2-cycle; checked directly (not assumed) that `{m0, m1}` admits
+   NO valid `Nat`-valued strictly-decreasing grading at all (any such
+   grading needs `grade m1 < grade m0` from `m0`'s boundary AND
+   `grade m0 < grade m1` from `m1`'s -- immediate contradiction), so this
+   really is a genuinely UNGRADED sub-structure, unlike simplex/path/
+   tree's uniformly graded carriers. -/
+
+inductive MirrorRole where | link
+deriving DecidableEq, Repr
+
+inductive MirrorId where | m0 | m1 | u
+deriving DecidableEq, Repr
+
+def mirrorBoundary : MirrorId → Boundary MirrorId MirrorRole
+  | .m0 => [{ i := .m1, role := MirrorRole.link, sign := Sign.neg, mult := 1 }]
+  | .m1 => [{ i := .m0, role := MirrorRole.link, sign := Sign.neg, mult := 1 }]
+  | .u  => []
+
+/- Same "absorb at a fixed literal unit representative" `glue` shape
+   every prior instance in this project uses (cycle 53's `absorbing`
+   formula) -- not load-bearing for this cycle's finding (which is about
+   `boundary`/`well_founded`, not `glue`), kept only for consistency with
+   the rest of the project's style. -/
+def mirrorIncidence : Incidence MirrorId MirrorRole GraphType where
+  boundary := mirrorBoundary
+  typeFunc := fun _ => GraphType.unit
+  glue := fun i j => if i = MirrorId.u then some j else some i
+  unit := MirrorId.u
+  guards := Guards.permissive MirrorId
+  type_consistent := fun _ _ _ => rfl
+  sign_rules := fun _ e _ => by cases e.sign <;> simp
+  multiplicities := fun _ e _ => e.mult_pos
+  well_founded := by
+    rintro i ⟨e, he, hei⟩
+    cases i <;> simp [mirrorBoundary] at he <;> subst he <;> simp_all
+  unit_left := by intro i; simp
+  unit_right := by intro i; by_cases h : i = MirrorId.u <;> simp [h]
+  type_preserve := fun _ _ => rfl
+
+/- Confirms the `{m0, m1}` sub-structure genuinely has no valid
+   `Nat`-valued strictly-decreasing grading -- unlike `simplexIncidence`/
+   `pathIncidence`/`treeIncidence`, `GradedIncidenceData`'s
+   `boundary_decreases` obligation could never be discharged for
+   `mirrorIncidence` even restricted to just these two elements, since it
+   would demand `grade m1 < grade m0` and `grade m0 < grade m1`
+   simultaneously. This is the formal confirmation of cycle 26's
+   informal observation (the 4-cycle "has no base case") sharpened into
+   an actual non-existence theorem, and the precise sense in which this
+   instance's `well_founded` field (satisfied) and genuine well-
+   foundedness (Nat-gradeable, NOT satisfied) come apart. -/
+theorem mirrorIncidence_no_valid_grading :
+    ¬ ∃ grade : MirrorId → Nat,
+      ∀ q e, e ∈ mirrorBoundary q → grade e.i < grade q := by
+  rintro ⟨grade, decreases⟩
+  have h01 : grade MirrorId.m1 < grade MirrorId.m0 :=
+    decreases MirrorId.m0 { i := MirrorId.m1, role := MirrorRole.link, sign := Sign.neg, mult := 1 }
+      (by simp [mirrorBoundary])
+  have h10 : grade MirrorId.m0 < grade MirrorId.m1 :=
+    decreases MirrorId.m1 { i := MirrorId.m0, role := MirrorRole.link, sign := Sign.neg, mult := 1 }
+      (by simp [mirrorBoundary])
+  exact absurd (Nat.lt_trans h01 h10) (Nat.lt_irrefl _)
+
+/- The bisimulation relation witnessing the partial collapse: `m0`/`m1`
+   are mutually related (both directions, both "self" pairs), `u` is
+   related only to itself -- exactly the shape `mirrorToShape` (below)
+   is meant to characterize. -/
+abbrev mirrorRel (a b : MirrorId) : Prop :=
+  (a = MirrorId.m0 ∨ a = MirrorId.m1) ∧ (b = MirrorId.m0 ∨ b = MirrorId.m1) ∨
+  (a = MirrorId.u ∧ b = MirrorId.u)
+
+theorem mirrorRel_isBisimulation : IsBisimulation mirrorIncidence mirrorRel := by
+  intro i j hij
+  refine ⟨rfl, ?_⟩
+  rcases hij with ⟨hi, hj⟩ | ⟨hu, hu'⟩
+  · rcases hi with hi | hi <;> subst hi <;> rcases hj with hj | hj <;> subst hj
+    · exact boundaryMatched_of_one_entry mirrorIncidence mirrorRel MirrorId.m0 MirrorId.m0
+        { i := MirrorId.m1, role := MirrorRole.link, sign := Sign.neg, mult := 1 }
+        { i := MirrorId.m1, role := MirrorRole.link, sign := Sign.neg, mult := 1 }
+        rfl rfl ⟨rfl, rfl, rfl⟩ (by decide)
+    · exact boundaryMatched_of_one_entry mirrorIncidence mirrorRel MirrorId.m0 MirrorId.m1
+        { i := MirrorId.m1, role := MirrorRole.link, sign := Sign.neg, mult := 1 }
+        { i := MirrorId.m0, role := MirrorRole.link, sign := Sign.neg, mult := 1 }
+        rfl rfl ⟨rfl, rfl, rfl⟩ (by decide)
+    · exact boundaryMatched_of_one_entry mirrorIncidence mirrorRel MirrorId.m1 MirrorId.m0
+        { i := MirrorId.m0, role := MirrorRole.link, sign := Sign.neg, mult := 1 }
+        { i := MirrorId.m1, role := MirrorRole.link, sign := Sign.neg, mult := 1 }
+        rfl rfl ⟨rfl, rfl, rfl⟩ (by decide)
+    · exact boundaryMatched_of_one_entry mirrorIncidence mirrorRel MirrorId.m1 MirrorId.m1
+        { i := MirrorId.m0, role := MirrorRole.link, sign := Sign.neg, mult := 1 }
+        { i := MirrorId.m0, role := MirrorRole.link, sign := Sign.neg, mult := 1 }
+        rfl rfl ⟨rfl, rfl, rfl⟩ (by decide)
+  · subst hu; subst hu'
+    simp [boundaryMatched, mirrorIncidence, mirrorBoundary]
+
+theorem mirrorIncidence_m0_not_bisim_u : ¬ approxBisim mirrorIncidence MirrorId.m0 MirrorId.u :=
+  not_approxBisim_empty_nonempty mirrorIncidence MirrorId.m0 MirrorId.u rfl
+    { i := MirrorId.m1, role := MirrorRole.link, sign := Sign.neg, mult := 1 }
+    (by simp [mirrorIncidence, mirrorBoundary])
+
+theorem mirrorIncidence_m1_not_bisim_u : ¬ approxBisim mirrorIncidence MirrorId.m1 MirrorId.u :=
+  not_approxBisim_empty_nonempty mirrorIncidence MirrorId.m1 MirrorId.u rfl
+    { i := MirrorId.m0, role := MirrorRole.link, sign := Sign.neg, mult := 1 }
+    (by simp [mirrorIncidence, mirrorBoundary])
+
+inductive MirrorShape where | pairShape | leafShape
+deriving DecidableEq, Repr
+
+def mirrorToShape : MirrorId → MirrorShape
+  | .m0 => .pairShape
+  | .m1 => .pairShape
+  | .u  => .leafShape
+
+theorem mirrorToShape_reflects (x y : MirrorId) (h : mirrorToShape x = mirrorToShape y) :
+    approxBisim mirrorIncidence x y := by
+  cases x <;> cases y <;> simp [mirrorToShape] at h <;>
+    exact ⟨mirrorRel, mirrorRel_isBisimulation, by decide⟩
+
+theorem mirrorToShape_distinguishes (x y : MirrorId) (h : approxBisim mirrorIncidence x y) :
+    mirrorToShape x = mirrorToShape y := by
+  cases x <;> cases y <;> simp only [mirrorToShape] <;>
+    first
+    | rfl
+    | exact absurd h mirrorIncidence_m0_not_bisim_u
+    | exact absurd h mirrorIncidence_m1_not_bisim_u
+    | exact absurd (approxBisim_symm h) mirrorIncidence_m0_not_bisim_u
+    | exact absurd (approxBisim_symm h) mirrorIncidence_m1_not_bisim_u
+
+/- The exhaustive characterization: exactly two classes over three
+   elements -- `{m0, m1}` and `{u}` -- a genuinely PARTIAL quotient
+   (more than one class, fewer than all elements), matching cycle
+   41/51/52's simplex/path/tree cardinality profile in COUNT, but built
+   from a source with no valid grading at all rather than a well-founded
+   one. -/
+theorem mirrorToShape_iff_approxBisim (x y : MirrorId) :
+    mirrorToShape x = mirrorToShape y ↔ approxBisim mirrorIncidence x y :=
+  ⟨mirrorToShape_reflects x y, mirrorToShape_distinguishes x y⟩
+
+def mirrorBisimulationQuotientClassification :
+    BisimulationQuotientClassification (Q := MirrorShape) mirrorIncidence :=
+  bisimulationQuotientClassificationOfKernel mirrorIncidence mirrorToShape
+    mirrorToShape_iff_approxBisim
+    (fun shape => by
+      cases shape with
+      | pairShape => exact ⟨MirrorId.m0, rfl⟩
+      | leafShape => exact ⟨MirrorId.u, rfl⟩)
+
+/- `BoundaryInvariant` HOLDS -- `mappedSourceBoundary` is well-defined on
+   both classes (`{m0, m1}`'s two elements produce syntactically the same
+   remapped boundary, `[{i := pairShape, ...}]`, since `classify m0 =
+   classify m1 = pairShape`; `{u}` trivially has none). This is exactly
+   the prerequisite cycle 41/51/52's positive constructions needed, and
+   it holds here too -- the obstruction this cycle finds is NOT a
+   `BoundaryInvariant` failure (unlike cycle 38's raw, unindexed
+   `cycleIncidence` finding), it is what happens ONE LEVEL UP, at
+   `well_founded`, exactly mirroring cycle 54's contrast with cycle 53. -/
+theorem mirrorBisimulationQuotientClassification_boundaryInvariant :
+    mirrorBisimulationQuotientClassification.BoundaryInvariant := by
+  intro x y hxy
+  cases x <;> cases y <;>
+    first
+    | rfl
+    | exact absurd hxy mirrorIncidence_m0_not_bisim_u
+    | exact absurd hxy mirrorIncidence_m1_not_bisim_u
+    | exact absurd (approxBisim_symm hxy) mirrorIncidence_m0_not_bisim_u
+    | exact absurd (approxBisim_symm hxy) mirrorIncidence_m1_not_bisim_u
+
+/- The general, instance-independent mechanism this cycle isolates:
+   `canonicalBoundary_self_loop_of_subsingleton` (cycle 54) is the
+   "holds at EVERY point" special case, forced by `Subsingleton`, of this
+   sharper LOCAL fact -- whenever some single source element `x` has a
+   boundary entry `e` whose target `e.i` lands in `x`'s OWN `≈`-class
+   (`classify e.i = classify x`, whether because `e.i = x` literally or
+   because `e.i` is merely a DISTINCT bisimilar partner of `x`),
+   `canonicalBoundary` self-loops specifically at `classify x` --
+   regardless of how many OTHER classes the quotient has, and regardless
+   of whether `classify` is (as here) genuinely non-injective on other
+   elements too. This is the key structural difference from cycle 54's
+   theorem: THAT theorem quantifies over every `q` (forced, since
+   `Subsingleton` makes every `q` equal); THIS theorem is local to
+   whichever single class the witnessing `x` happens to land in. -/
+theorem canonicalBoundary_self_loop_of_boundary_within_class
+    {I R T Q : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (invariant : classification.BoundaryInvariant)
+    {x : I} {e : Endpoint I R} (member : e ∈ inc.boundary x)
+    (within : classification.classify e.i = classification.classify x) :
+    ∃ e' ∈ classification.canonicalBoundary invariant (classification.classify x),
+      e'.i = classification.classify x := by
+  refine ⟨{ e with i := classification.classify e.i }, ?_, within⟩
+  rw [classification.canonicalBoundary_classify]
+  exact List.mem_map.mpr ⟨e, member, rfl⟩
+
+/- Cycle 54's own theorem re-derived as a special case of the general
+   local fact above, confirming this cycle's generalization is genuine
+   (not merely analogous in spirit): `Subsingleton` forces `within` to
+   hold trivially (`Subsingleton.elim`) for EVERY `x`/`q` pair at once,
+   recovering the "self-loop everywhere" conclusion cycle 54 proved by a
+   direct, instance-shaped argument. -/
+theorem canonicalBoundary_self_loop_of_subsingleton_via_local
+    {I R T Q : Type u} [DecidableEq I] [Subsingleton Q] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (invariant : classification.BoundaryInvariant)
+    {x : I} (nonempty : inc.boundary x ≠ []) (q : Q) :
+    ∃ e ∈ classification.canonicalBoundary invariant q, e.i = q := by
+  have hq : q = classification.classify x := Subsingleton.elim _ _
+  subst hq
+  match h : inc.boundary x, nonempty with
+  | e :: _, _ =>
+    exact canonicalBoundary_self_loop_of_boundary_within_class classification invariant
+      (e := e) (by simp [h]) (Subsingleton.elim _ _)
+
+/- The concrete witness: `m0`'s single boundary entry points to `m1`,
+   and `m1 ≈ m0` (same `pairShape` class) -- `within` holds via `rfl`,
+   since `mirrorToShape m1 = mirrorToShape m0 = pairShape` definitionally.
+   This produces a genuine self-loop AT THE `pairShape` CLASS SPECIFICALLY
+   -- `leafShape` (the OTHER class, `{u}`) is untouched, still perfectly
+   well-founded (`canonicalBoundary leafShape = []`, no entries at all).
+   This is the genuinely PARTIAL analogue of cycle 39/54's total-collapse
+   self-loop: the obstruction is confined to exactly the class descending
+   from the source's ungraded `{m0, m1}` sub-structure. -/
+theorem mirrorPairShape_canonicalBoundary_self_loop
+    (invariant : mirrorBisimulationQuotientClassification.BoundaryInvariant) :
+    ∃ e ∈ mirrorBisimulationQuotientClassification.canonicalBoundary invariant
+        (mirrorBisimulationQuotientClassification.classify MirrorId.m0),
+      e.i = mirrorBisimulationQuotientClassification.classify MirrorId.m0 :=
+  canonicalBoundary_self_loop_of_boundary_within_class
+    mirrorBisimulationQuotientClassification invariant
+    (x := MirrorId.m0)
+    (e := { i := MirrorId.m1, role := MirrorRole.link, sign := Sign.neg, mult := 1 })
+    (by simp [mirrorIncidence, mirrorBoundary]) rfl
+
+/- Consequently, NO `CanonicalQuotientIncidenceCoherence` can ever be
+   completed for `mirrorBisimulationQuotientClassification`, exactly
+   mirroring cycle 54's closing theorem for `cycleIncidence` -- but this
+   time the classification is genuinely PARTIAL (two classes, `pairShape`
+   and `leafShape`, over three elements), not a `Subsingleton`. The
+   obstruction is confined to `pairShape`; `boundary_no_self` still has to
+   hold at EVERY class for a `CanonicalQuotientIncidenceCoherence` to
+   exist at all, so failing at just one class is already enough to rule
+   out the whole structure -- the third regime this cycle's task asked
+   about. -/
+theorem mirrorBisimulationQuotientClassification_no_coherence :
+    ¬ Nonempty (CanonicalQuotientIncidenceCoherence
+      mirrorBisimulationQuotientClassification) := by
+  rintro ⟨coherence⟩
+  obtain ⟨e', mem, heq⟩ :=
+    mirrorPairShape_canonicalBoundary_self_loop coherence.boundaryInvariant
+  exact coherence.boundary_no_self
+    (mirrorBisimulationQuotientClassification.classify MirrorId.m0) ⟨e', mem, heq⟩
+
 end IncidenceCore

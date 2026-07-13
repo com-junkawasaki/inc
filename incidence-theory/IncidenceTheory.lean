@@ -5507,6 +5507,30 @@ theorem boundaryMatched_of_three_entries {I R T : Type u} [DecidableEq I]
     · subst he'; exact ⟨e2, by simp, hc2, hr2⟩
     · subst he'; exact ⟨e3, by simp, hc3, hr3⟩
 
+/- Research cycle 56 (see RESEARCH_LOG.md): the natural 1-entry
+   generalization of `boundaryMatched_of_two_entries`/`_of_three_entries`
+   above -- neither prior helper covers a SINGLE-entry boundary (every
+   instance built so far with single-entry boundaries, `natIncidence`/
+   `cycleIncidence`/`pathIncidence`'s edges, proved `boundaryMatched`
+   directly by hand instead). Needed for `mirrorIncidence`'s minimal
+   2-element mutual-reference pair, where both sides have exactly one
+   entry. Same "caller supplies the witnesses directly" shape. -/
+theorem boundaryMatched_of_one_entry {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (rel : I → I → Prop) (i j : I)
+  (e f : Endpoint I R)
+  (hbi : inc.boundary i = [e]) (hbj : inc.boundary j = [f])
+  (hc : boundaryCompatible inc e f) (hr : rel e.i f.i) :
+  boundaryMatched inc rel i j := by
+  unfold boundaryMatched
+  rw [hbi, hbj]
+  constructor
+  · intro e' he'
+    simp only [List.mem_cons, List.not_mem_nil, or_false] at he'
+    subst he'; exact ⟨f, by simp, hc, hr⟩
+  · intro f' hf'
+    simp only [List.mem_cons, List.not_mem_nil, or_false] at hf'
+    subst hf'; exact ⟨e, by simp, hc, hr⟩
+
 /- `boundaryMatched` at `(i, j)` gives `boundaryMatched` at `(j, i)` for
    free once `rel` is known symmetric -- halves the casework needed for
    a symmetric relation over several elements (only the "canonical"
