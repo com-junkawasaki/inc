@@ -3677,6 +3677,169 @@ theorem realSequentiallyContinuousAt_comp
   intro sequence converges
   exact secondContinuous _ (firstContinuous _ converges)
 
+def realPartialSum (terms : RealSequence) : RealSequence
+  | 0 => realZero
+  | Nat.succ count => realAdd (realPartialSum terms count) (terms count)
+
+@[simp] theorem realPartialSum_zero (terms : RealSequence) :
+    realPartialSum terms 0 = realZero := rfl
+
+@[simp] theorem realPartialSum_succ (terms : RealSequence) (count : Nat) :
+    realPartialSum terms (Nat.succ count) =
+      realAdd (realPartialSum terms count) (terms count) := rfl
+
+def RealSeriesConverges (terms : RealSequence) (sum : IncReal) : Prop :=
+  RealSequenceConverges (realPartialSum terms) sum
+
+def RealSeriesSummable (terms : RealSequence) : Prop :=
+  ∃ sum, RealSeriesConverges terms sum
+
+theorem realSequenceConverges_shift
+    {sequence : RealSequence} {limit : IncReal}
+    (converges : RealSequenceConverges sequence limit) :
+    RealSequenceConverges (fun index => sequence (Nat.succ index)) limit := by
+  intro epsilon epsilonPositive
+  obtain ⟨threshold, eventuallyClose⟩ := converges epsilon epsilonPositive
+  refine ⟨threshold, ?_⟩
+  intro index indexLarge
+  exact eventuallyClose (Nat.succ index)
+    (Nat.le_trans indexLarge (Nat.le_succ index))
+
+theorem realPartialSum_increment (terms : RealSequence) (index : Nat) :
+    realAdd (realPartialSum terms (Nat.succ index))
+        (realNeg (realPartialSum terms index)) = terms index := by
+  rw [realPartialSum_succ]
+  calc
+    realAdd (realAdd (realPartialSum terms index) (terms index))
+        (realNeg (realPartialSum terms index)) =
+      realAdd (terms index)
+        (realAdd (realPartialSum terms index)
+          (realNeg (realPartialSum terms index))) := by
+            rw [realAdd_comm (realPartialSum terms index) (terms index),
+              realAdd_assoc]
+    _ = terms index := by rw [realAdd_neg, realAdd_zero_right]
+
+theorem realSeriesConverges_terms_zero
+    {terms : RealSequence} {sum : IncReal}
+    (converges : RealSeriesConverges terms sum) :
+    RealSequenceConverges terms realZero := by
+  have shifted : RealSequenceConverges
+      (fun index => realPartialSum terms (Nat.succ index)) sum :=
+    realSequenceConverges_shift converges
+  have differences := realSequenceConverges_sub shifted converges
+  have differenceLimit : realAdd sum (realNeg sum) = realZero :=
+    realAdd_neg sum
+  rw [differenceLimit] at differences
+  intro epsilon epsilonPositive
+  obtain ⟨threshold, eventuallyClose⟩ :=
+    differences epsilon epsilonPositive
+  refine ⟨threshold, ?_⟩
+  intro index indexLarge
+  change realLE (realDist (terms index) realZero).value
+    (rationalToReal epsilon)
+  rw [← realPartialSum_increment terms index]
+  exact eventuallyClose index indexLarge
+
+theorem realSeriesSummable_terms_zero
+    {terms : RealSequence} (summable : RealSeriesSummable terms) :
+    RealSequenceConverges terms realZero := by
+  obtain ⟨sum, converges⟩ := summable
+  exact realSeriesConverges_terms_zero converges
+
+theorem realPartialSum_add
+    (left right : RealSequence) (count : Nat) :
+    realPartialSum (fun index => realAdd (left index) (right index)) count =
+      realAdd (realPartialSum left count) (realPartialSum right count) := by
+  induction count with
+  | zero => rw [realPartialSum_zero, realPartialSum_zero,
+      realPartialSum_zero, realAdd_zero_left]
+  | succ count induction =>
+      rw [realPartialSum_succ, realPartialSum_succ, realPartialSum_succ,
+        induction]
+      calc
+        realAdd
+            (realAdd (realPartialSum left count) (realPartialSum right count))
+            (realAdd (left count) (right count)) =
+          realAdd (realPartialSum left count)
+            (realAdd (realPartialSum right count)
+              (realAdd (left count) (right count))) :=
+            realAdd_assoc _ _ _
+        _ = realAdd (realPartialSum left count)
+            (realAdd (left count)
+              (realAdd (realPartialSum right count) (right count))) := by
+              apply congrArg (realAdd (realPartialSum left count))
+              rw [← realAdd_assoc,
+                realAdd_comm (realPartialSum right count) (left count),
+                realAdd_assoc]
+        _ = realAdd
+            (realAdd (realPartialSum left count) (left count))
+            (realAdd (realPartialSum right count) (right count)) :=
+              (realAdd_assoc _ _ _).symm
+
+theorem realPartialSum_neg (terms : RealSequence) (count : Nat) :
+    realPartialSum (fun index => realNeg (terms index)) count =
+      realNeg (realPartialSum terms count) := by
+  induction count with
+  | zero => rw [realPartialSum_zero, realPartialSum_zero, realNeg_zero]
+  | succ count induction =>
+      rw [realPartialSum_succ, realPartialSum_succ, induction, realNeg_add]
+
+theorem realPartialSum_mul_const
+    (factor : IncReal) (terms : RealSequence) (count : Nat) :
+    realPartialSum (fun index => realMul factor (terms index)) count =
+      realMul factor (realPartialSum terms count) := by
+  induction count with
+  | zero => rw [realPartialSum_zero, realPartialSum_zero, realMul_zero_right]
+  | succ count induction =>
+      rw [realPartialSum_succ, realPartialSum_succ, induction, realMul_add]
+
+theorem realSeriesConverges_add
+    {left right : RealSequence} {leftSum rightSum : IncReal}
+    (leftConverges : RealSeriesConverges left leftSum)
+    (rightConverges : RealSeriesConverges right rightSum) :
+    RealSeriesConverges (fun index => realAdd (left index) (right index))
+      (realAdd leftSum rightSum) := by
+  have combined := realSequenceConverges_add leftConverges rightConverges
+  intro epsilon epsilonPositive
+  obtain ⟨threshold, eventuallyClose⟩ :=
+    combined epsilon epsilonPositive
+  refine ⟨threshold, ?_⟩
+  intro index indexLarge
+  rw [realPartialSum_add]
+  exact eventuallyClose index indexLarge
+
+theorem realSeriesConverges_neg
+    {terms : RealSequence} {sum : IncReal}
+    (converges : RealSeriesConverges terms sum) :
+    RealSeriesConverges (fun index => realNeg (terms index)) (realNeg sum) := by
+  have negated := realSequenceConverges_neg converges
+  intro epsilon epsilonPositive
+  obtain ⟨threshold, eventuallyClose⟩ := negated epsilon epsilonPositive
+  refine ⟨threshold, ?_⟩
+  intro index indexLarge
+  rw [realPartialSum_neg]
+  exact eventuallyClose index indexLarge
+
+theorem realSeriesConverges_mul_const
+    (factor : IncReal) {terms : RealSequence} {sum : IncReal}
+    (converges : RealSeriesConverges terms sum) :
+    RealSeriesConverges (fun index => realMul factor (terms index))
+      (realMul factor sum) := by
+  have scaled := realSequenceConverges_mul_const (factor := factor) converges
+  intro epsilon epsilonPositive
+  obtain ⟨threshold, eventuallyClose⟩ := scaled epsilon epsilonPositive
+  refine ⟨threshold, ?_⟩
+  intro index indexLarge
+  rw [realPartialSum_mul_const]
+  exact eventuallyClose index indexLarge
+
+theorem realSeriesConverges_sum_unique
+    {terms : RealSequence} {firstSum secondSum : IncReal}
+    (first : RealSeriesConverges terms firstSum)
+    (second : RealSeriesConverges terms secondSum) :
+    firstSum = secondSum :=
+  realSequence_limit_unique first second
+
 theorem real_finite_sequence_upper_bound
     (sequence : RealSequence) (count : Nat) :
     ∃ upper : IncReal, ∀ index, index < count →
@@ -4049,5 +4212,15 @@ theorem real_metric_complete (sequence : RealSequence) :
   intro cauchy
   exact ⟨realCauchyLimitCandidate sequence cauchy,
     realSequenceCauchy_converges cauchy⟩
+
+theorem realSeriesSummable_iff_partialSum_cauchy (terms : RealSequence) :
+    RealSeriesSummable terms ↔ RealSequenceCauchy (realPartialSum terms) := by
+  constructor
+  · intro summable
+    obtain ⟨sum, converges⟩ := summable
+    exact realSequenceConverges_cauchy converges
+  · intro cauchy
+    obtain ⟨sum, converges⟩ := real_metric_complete (realPartialSum terms) cauchy
+    exact ⟨sum, converges⟩
 
 end IncidenceCore
