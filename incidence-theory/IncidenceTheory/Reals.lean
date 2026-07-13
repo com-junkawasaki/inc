@@ -7219,4 +7219,126 @@ theorem realSeries_ratio_test
   exact realSeries_absolute_comparison
     majorantNonnegative dominated majorantSummable
 
+def RealClosedInterval (lower upper value : IncReal) : Prop :=
+  realLE lower value ∧ realLE value upper
+
+theorem realClosedInterval_nonempty
+    {lower upper : IncReal} (ordered : realLE lower upper) :
+    ∃ value, RealClosedInterval lower upper value :=
+  ⟨lower, realLE_refl lower, ordered⟩
+
+theorem realClosedInterval_contains_lower
+    {lower upper : IncReal} (ordered : realLE lower upper) :
+    RealClosedInterval lower upper lower :=
+  ⟨realLE_refl lower, ordered⟩
+
+theorem realClosedInterval_contains_upper
+    {lower upper : IncReal} (ordered : realLE lower upper) :
+    RealClosedInterval lower upper upper :=
+  ⟨ordered, realLE_refl upper⟩
+
+theorem realClosedInterval_bounded_above
+    (lower upper : IncReal) :
+    ∃ bound, RealUpperBound (RealClosedInterval lower upper) bound := by
+  refine ⟨upper, ?_⟩
+  intro value member
+  exact member.2
+
+theorem realClosedInterval_bounded_below
+    (lower upper : IncReal) :
+    ∃ bound, RealLowerBound (RealClosedInterval lower upper) bound := by
+  refine ⟨lower, ?_⟩
+  intro value member
+  exact member.1
+
+noncomputable def realClosedIntervalSup
+    (lower upper : IncReal) (ordered : realLE lower upper) : IncReal :=
+  realSup (RealClosedInterval lower upper)
+    (realClosedInterval_nonempty ordered)
+    (realClosedInterval_bounded_above lower upper)
+
+noncomputable def realClosedIntervalInf
+    (lower upper : IncReal) (ordered : realLE lower upper) : IncReal :=
+  realInf (RealClosedInterval lower upper)
+    (realClosedInterval_nonempty ordered)
+    (realClosedInterval_bounded_below lower upper)
+
+theorem realClosedIntervalSup_eq_upper
+    (lower upper : IncReal) (ordered : realLE lower upper) :
+    realClosedIntervalSup lower upper ordered = upper := by
+  apply realLE_antisymm
+  · apply realSup_is_least
+    intro value member
+    exact member.2
+  · apply realSup_is_upper_bound
+    exact realClosedInterval_contains_upper ordered
+
+theorem realClosedIntervalInf_eq_lower
+    (lower upper : IncReal) (ordered : realLE lower upper) :
+    realClosedIntervalInf lower upper ordered = lower := by
+  apply realLE_antisymm
+  · apply realInf_is_lower_bound
+    exact realClosedInterval_contains_lower ordered
+  · apply realInf_is_greatest
+    intro value member
+    exact member.1
+
+theorem realClosedInterval_nested
+    {outerLower innerLower innerUpper outerUpper value : IncReal}
+    (lowerOrdered : realLE outerLower innerLower)
+    (upperOrdered : realLE innerUpper outerUpper)
+    (member : RealClosedInterval innerLower innerUpper value) :
+    RealClosedInterval outerLower outerUpper value :=
+  ⟨realLE_trans lowerOrdered member.1,
+    realLE_trans member.2 upperOrdered⟩
+
+theorem realClosedInterval_antisymm
+    {lower upper : IncReal} (ordered : realLE lower upper)
+    {value : IncReal}
+    (member : RealClosedInterval upper lower value) :
+    lower = upper := by
+  exact realLE_antisymm ordered (realLE_trans member.1 member.2)
+
+def RealContinuousOn
+    (function : IncReal → IncReal) (domain : IncReal → Prop) : Prop :=
+  ∀ point, domain point → RealContinuousAt function point
+
+def RealDifferentiableOn
+    (function : IncReal → IncReal) (domain : IncReal → Prop) : Prop :=
+  ∀ point, domain point → RealDifferentiableAt function point
+
+theorem realDifferentiableOn_continuousOn
+    {function : IncReal → IncReal} {domain : IncReal → Prop}
+    (differentiable : RealDifferentiableOn function domain) :
+    RealContinuousOn function domain := by
+  intro point member
+  obtain ⟨derivative, hasDerivative⟩ := differentiable point member
+  exact realHasDerivativeAt_continuousAt hasDerivative
+
+theorem realPolynomial_differentiable
+    (coefficients : List IncReal) :
+    RealDifferentiable (realPolynomialEval coefficients) := by
+  intro point
+  exact ⟨realPolynomialDerivativeEval coefficients point,
+    realHasDerivativeAt_polynomial coefficients point⟩
+
+theorem realPolynomial_differentiableOn
+    (coefficients : List IncReal) (domain : IncReal → Prop) :
+    RealDifferentiableOn (realPolynomialEval coefficients) domain := by
+  intro point _
+  exact realPolynomial_differentiable coefficients point
+
+theorem realPolynomial_continuousOn
+    (coefficients : List IncReal) (domain : IncReal → Prop) :
+    RealContinuousOn (realPolynomialEval coefficients) domain :=
+  realDifferentiableOn_continuousOn
+    (realPolynomial_differentiableOn coefficients domain)
+
+theorem realPolynomial_continuousOn_closedInterval
+    (coefficients : List IncReal) (lower upper : IncReal) :
+    RealContinuousOn (realPolynomialEval coefficients)
+      (RealClosedInterval lower upper) :=
+  realPolynomial_continuousOn coefficients
+    (RealClosedInterval lower upper)
+
 end IncidenceCore
