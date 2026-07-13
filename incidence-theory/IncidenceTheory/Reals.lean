@@ -5247,6 +5247,88 @@ theorem nonnegativeRealNatScale_succ
     nonnegativeRealNatScale (Nat.succ count) value =
       nonnegativeRealAdd (nonnegativeRealNatScale count value) value := rfl
 
+noncomputable def realNatCoefficient (count : Nat) : IncReal :=
+  (nonnegativeRealNatScale count nonnegativeOne).value
+
+@[simp] theorem realNatCoefficient_zero :
+    realNatCoefficient 0 = realZero := rfl
+
+theorem realNatCoefficient_succ (count : Nat) :
+    realNatCoefficient (Nat.succ count) =
+      realAdd (realNatCoefficient count) realOne := by
+  rw [realNatCoefficient, realNatCoefficient,
+    nonnegativeRealNatScale_succ]
+  rfl
+
+noncomputable def realPowFormalDerivative (base : IncReal) : Nat → IncReal
+  | 0 => realZero
+  | Nat.succ exponent =>
+      realAdd (realMul (realPowFormalDerivative base exponent) base)
+        (realPow base exponent)
+
+@[simp] theorem realPowFormalDerivative_zero (base : IncReal) :
+    realPowFormalDerivative base 0 = realZero := rfl
+
+@[simp] theorem realPowFormalDerivative_succ
+    (base : IncReal) (exponent : Nat) :
+    realPowFormalDerivative base (Nat.succ exponent) =
+      realAdd (realMul (realPowFormalDerivative base exponent) base)
+        (realPow base exponent) := rfl
+
+theorem realHasDerivativeAt_pow
+    (exponent : Nat) (point : IncReal) :
+    RealHasDerivativeAt (fun value => realPow value exponent)
+      (realPowFormalDerivative point exponent) point := by
+  induction exponent with
+  | zero =>
+      simpa only [realPow_zero, realPowFormalDerivative_zero] using
+        realHasDerivativeAt_const realOne point
+  | succ exponent induction =>
+      simpa only [realPow_succ, realPowFormalDerivative_succ,
+        realMul_one_right] using
+        realHasDerivativeAt_mul induction (realHasDerivativeAt_id point)
+
+theorem realPowFormalDerivative_closed_succ
+    (base : IncReal) (previous : Nat) :
+    realPowFormalDerivative base (Nat.succ previous) =
+      realMul (realNatCoefficient (Nat.succ previous))
+        (realPow base previous) := by
+  induction previous with
+  | zero =>
+      rw [realPowFormalDerivative_succ,
+        realPowFormalDerivative_zero, realMul_zero_left,
+        realAdd_zero_left, realPow_zero,
+        realNatCoefficient_succ, realNatCoefficient_zero,
+        realAdd_zero_left, realMul_one_right]
+  | succ previous induction =>
+      rw [realPowFormalDerivative_succ, induction,
+        realPow_succ, realMul_assoc,
+        realNatCoefficient_succ (Nat.succ previous), realAdd_mul,
+        realMul_one_left]
+
+theorem realPowFormalDerivative_closed
+    (base : IncReal) (exponent : Nat) :
+    realPowFormalDerivative base exponent =
+      match exponent with
+      | 0 => realZero
+      | Nat.succ previous =>
+          realMul (realNatCoefficient (Nat.succ previous))
+            (realPow base previous) := by
+  cases exponent with
+  | zero => rfl
+  | succ previous => exact realPowFormalDerivative_closed_succ base previous
+
+theorem realHasDerivativeAt_pow_closed
+    (exponent : Nat) (point : IncReal) :
+    RealHasDerivativeAt (fun value => realPow value exponent)
+      (match exponent with
+       | 0 => realZero
+       | Nat.succ previous =>
+           realMul (realNatCoefficient (Nat.succ previous))
+             (realPow point previous)) point := by
+  rw [← realPowFormalDerivative_closed]
+  exact realHasDerivativeAt_pow exponent point
+
 theorem nonnegativeRealNatScale_rationalToReal
     (count : Nat) {value : IncRational}
     (nonnegative : rationalLE (rationalOfInteger 0) value) :
