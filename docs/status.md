@@ -173,7 +173,8 @@ Checked constructions include:
   principal rational negation, and supplies additive inverses for every cut;
   an explicit Archimedean finite-step theorem and minimal boundary-exit
   construction provide the approximation needed by the general inverse proof;
-  the nonnegative cone is bundled and closed under a well-formed cut product;
+  the nonnegative cone is bundled and closed under cut addition, forming a
+  commutative additive monoid, and is closed under a well-formed cut product;
   this product is a commutative monoid with principal one, absorbs zero, and is
   monotone in both inputs, based on checked strict multiplication monotonicity
   and positivity reflection for positive rationals;
