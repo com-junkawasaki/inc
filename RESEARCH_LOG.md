@@ -3541,3 +3541,163 @@ picking a thread, cycle 46 should also do a quick repo-wide sweep for other
 this cycle found for 2026-07-11) that might have already resolved other
 items this log still lists as open, to avoid re-deriving already-settled
 ground a second time.
+
+## Cycle 46
+
+**Audit note (cycle 45's requested sweep, done first, kept brief per
+scope)**: reran `git log --oneline` over the whole repo (786 commits vs.
+45 logged cycles -- expected, since most cycles bundle many small commits,
+not a 1:1 ratio) and specifically re-examined the exact `c6c7610..1c07128`
+range cycle 45 flagged as an undocumented 2026-07-11 batch.
+`git log --oneline c6c7610..1c07128 | wc -l` gives **282**, not the "~24"
+cycle 45 estimated -- the gap is materially larger than previously
+reported, and covers far more than the `GlueInvariant`/`GlueRealization`
+material cycle 45 examined: propositional-logic quotient laws, "coherent
+incidence layer" constructions, dependent-product/family semantics,
+canonical boundary/glue/guard descent conditions, and more, per this
+batch's own commit subjects. However, this is confirmed to be the SAME
+single gap window cycle 45 already identified (bounded by the
+`0a17bb4`/`91746c3` "merge: integrate cycle41 proof development" /
+"merge: complete Inc proof development" commits just before it, and by
+the docs/README-split and "make ternary resonance the central
+interaction" commits that lead into the dated 2026-07-13 real-analysis
+thread just after it), not a second, independent desync elsewhere in
+history -- no other `git log` merge-style or batch-shaped commit cluster
+outside this window was found lacking a `## Cycle N` entry. Also
+confirmed the batch is not entirely unlogged in this repo: the ADR's
+`## 2026-07-11 追補（現行 main）` section (`docs/adr/2607100600-...md`,
+line 62) already prose-summarizes most of this batch's content in detail
+(including, notably, "汎用 `incidenceProd` と `incidenceSum` はこの
+パッケージを合成し、自然数 Incidence の積・和で検証済み" and a description
+of the `natIncidence × trivialIncidence Bool` coherence example -- direct
+leads for this cycle's own main thread, below). Net correction for cycle
+47+: treat cycle 45's "~24 commits" figure as superseded by this cycle's
+282, and treat the 2026-07-11 gap as "ADR-documented but cycle-unlogged"
+rather than fully undocumented -- but do not assume every claim in that
+ADR prose has a correspondingly named theorem; check the source, as both
+this cycle and cycle 45 did.
+
+**Hypothesis**: cycle 45's own next-hypothesis (= cycle 41/42's queue
+item (a) = cycle 39's item (c) = cycle 37's queue item (b), the
+longest-lived open thread in this log, named the "internal-logic
+distributivity direction relating `incidenceProd`/`incidenceSum`" and
+repeatedly flagged since cycle 37 as needing a scope-down FIRST step
+before any bisimulation/homomorphism/distributivity attempt: does a
+natural, well-typed map exist between `incidenceProd inc1 inc2`'s
+carrier and `incidenceSum inc1 inc2`'s carrier, for the SAME `inc1`,
+`inc2`? Per the task's own tractability ranking and cycle 45's explicit
+recommendation, this cycle attempts ONLY that scope-down question --
+no bisimulation, homomorphism, or distributivity claim about any map
+found.
+
+**Method**: read the actual definitions before guessing at shapes.
+`Product.lean`'s `incidenceProd {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq
+I1] [DecidableEq I2] (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2
+T2) : Incidence (I1 × I2) (R1 ⊕ R2) (T1 × T2)` -- carrier `I1 × I2`.
+`Sum.lean`'s `incidenceSum` with the same type parameters -- carrier
+`I1 ⊕ I2`. Grepped `incidenceProd`/`incidenceSum` for every concrete
+existing application (not just the constructors) across the tree: the
+only concretely-applied instances are `incidenceProd natIncidence
+natIncidence` (`CrossInstance.lean`'s dependent identity family),
+`incidenceProd natIncidence finiteIncidence`, and `NatBoolProductIncidence
+:= incidenceProd natIncidence trivialIncidence` (`Quotient.lean`, carrier
+`Nat × Bool`) -- **`incidenceSum` has ZERO concretely-applied instances
+anywhere outside `Sum.lean` itself** (only its own header example,
+`incidenceSum finiteIncidence finiteIncidence`, and a code comment citing
+`incidenceSum natIncidence natIncidence`). Also re-read cycles 37/39/41's
+exact framing (as instructed) and found the thread has actually drifted
+across cycles: cycle 37's ORIGINAL queue item (b) was the
+*distributive-law* shape, `incidenceProd inc1 (incidenceSum inc2 inc3)`
+vs. `incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)`
+(three incidence structures) -- but cycle 41/42/45's restatements
+simplified it to "a map between the two carrier types" without
+respecifying which pairing, and the task briefing for this cycle (and
+cycle 45's own next-hypothesis) explicitly resolved that ambiguity to the
+same-`(A,B)` two-argument comparison. Treated that resolution as
+authoritative for what to test this cycle, but recorded the drift plainly
+(see Synthesis) rather than silently picking one reading.
+
+**Result**: **answered, sorry-free, first attempt -- a clean three-part
+negative for the same-`(A,B)` framing.** Added to `Sum.lean` (after
+adding `import IncidenceTheory.Product`, since `Sum.lean` did not
+previously import it): (1) `prodToSumCarrier`/`prodToSumCarrier'` --
+`I1 × I2 → I1 ⊕ I2` exists unconditionally for any `I1`, `I2` (project-
+then-inject on either side), but `prodToSumCarrier_ne_prodToSumCarrier'`
+proves the two are genuinely distinct at a concrete input
+(`prodToSumCarrier (5,true) = Sum.inl 5 ≠ Sum.inr true =
+prodToSumCarrier' (5,true)`, via `Sum.noConfusion`) -- so a map exists in
+this direction but is not canonical. (2)
+`sum_to_prod_carrier_map_impossible_in_general : ¬ Nonempty ((Empty ⊕
+Unit) → (Empty × Unit))` -- proves the OTHER direction fails outright for
+at least one instantiation: applying any such hypothetical function to
+`Sum.inr ()` would have to produce an `Empty` value, impossible
+(`(f (Sum.inr ())).1.elim`), regardless of classical choice (choice picks
+among existing witnesses, it cannot conjure a term of an uninhabited
+type). (3) `sumToProdNatCarrier`/`sumToProdNatCarrier_basepoint_dependent`
+-- restricting to this project's actual nonempty concrete carrier
+(`Nat`), an ad hoc `Nat ⊕ Nat → Nat × Nat` IS constructible via a chosen
+basepoint, but is genuinely basepoint-dependent, not canonical:
+`sumToProdNatCarrier 0 (Sum.inl 7) ≠ sumToProdNatCarrier 1 (Sum.inl 7)`
+(two equally reasonable defaults disagree on the same input).
+`lake build`: 62/62 jobs. `#print axioms` on all three new theorems
+(scratch file, deleted after use, exactly cycle 45's method):
+`prodToSumCarrier_ne_prodToSumCarrier'` and
+`sum_to_prod_carrier_map_impossible_in_general` need NO axioms at all;
+`sumToProdNatCarrier_basepoint_dependent` needs only `propext` -- within
+or below this project's standing profile. Full `./verify.sh` (clean
+`lake clean && lake build`, example binary, repo-wide unproved-
+declaration grep): passes end to end.
+
+**Synthesis**: this closes the scope-down question exactly as posed --
+NO natural/canonical map exists between `incidenceProd A B`'s carrier and
+`incidenceSum A B`'s carrier, for the same `A`, `B`, in either direction,
+that could serve as a non-arbitrary basis for a subsequent bisimulation/
+homomorphism/distributivity claim comparing the two constructors
+directly. Unlike cycles 38-40's negative results (which closed off entire
+construction *families*), this is a narrower, purely carrier-level
+finding -- but it is exactly the "first move" cycle 41/42/45 asked for,
+and it is genuinely negative rather than an artificially forced
+construction, consistent with this project's standing view (cycles
+38-40) that a clean negative is fully legitimate cycle output. The more
+important finding for cycle 47, though, is the drift surfaced during
+Method: cycle 37's ORIGINAL motivating question was never this same-
+`(A,B)` comparison -- it was the distributive-law shape over THREE
+incidence structures, `incidenceProd inc1 (incidenceSum inc2 inc3)` vs.
+`incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)`, whose
+underlying carrier types, `I1 × (I2 ⊕ I3)` vs. `(I1 × I2) ⊕ (I1 × I3)`,
+DO have a standard, canonical, natural bijection in `Type`/`Set`
+(distributivity of product over coproduct -- `Type` is a distributive
+category, the standard map being `fun (a, x) => x.elim (fun b => .inl
+(a,b)) (fun c => .inr (a,c))` and its evident inverse). That comparison
+was deliberately NOT tested this cycle (out of scope, per the task's
+explicit same-`(A,B)` framing and cycle 45's own phrasing), but it is a
+substantially more promising candidate for an actual POSITIVE carrier-
+level map than the question this cycle answered, and this cycle's
+negative result should not be read as closing the distributivity thread
+overall -- only this one (mis-simplified, across cycles 41-45) framing
+of its first step. Separately, the near-total asymmetry noted during
+Method -- `incidenceProd` has three concrete applied instances in this
+codebase, `incidenceSum` has zero outside its own definition file -- is
+itself worth flagging: any future cycle attempting the THREE-argument
+distributive law will need to either build a first concrete
+`incidenceSum`-based instance to test against, or work at the fully
+generic level from the start.
+
+**Next hypothesis (cycle 47, not yet attempted)**: re-scope the
+distributivity thread to the shape cycle 37 actually asked for, now that
+this cycle has separated it from the carrier-map dead end: does the
+canonical `I1 × (I2 ⊕ I3) ≃ (I1 × I2) ⊕ (I1 × I3)` bijection (construct
+it explicitly first, as this cycle's `prodToSumCarrier`-style small
+combinators were built, before anything else) extend to a genuine
+`Incidence`-structure-level statement relating `incidenceProd inc1
+(incidenceSum inc2 inc3)` and `incidenceSum (incidenceProd inc1 inc2)
+(incidenceProd inc1 inc3)` -- e.g. is the bijection a `glue`-homomorphism,
+a `boundary`-homomorphism, both, or neither? Scope down again if this
+still proves too large: first just check whether the two `Incidence`
+structures' `boundary`/`glue`/`guards` fields even have the same SHAPE
+under the bijection (a definitional/computational check, no homomorphism
+claim yet) before attempting any theorem. As a fallback if that also
+proves too large for one cycle, cycle 39's still-open item (b) remains
+queued: does any existing instance in this project have a `≈`-quotient
+in the genuinely interesting middle ground beyond `simplexIncidence`
+(cycle 41's only example so far)?

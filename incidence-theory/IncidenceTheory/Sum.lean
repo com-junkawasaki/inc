@@ -1,5 +1,6 @@
 import IncidenceTheory.Peano
 import IncidenceTheory.Cycle
+import IncidenceTheory.Product
 
 /- Merkle-ID: implementation.graph_model.sum
    story.jsonnet → implementation.nodes.sum
@@ -745,5 +746,94 @@ example {a b : Nat ⊕ Nat}
     approxBisim (incidenceSum natIncidence natIncidence) a b :=
   incidenceSum_translation_reflects natIncidence natIncidence natToFiniteSet natToFiniteSet
     (fun _ _ => natToFiniteSet_reflects_approxBisim) (fun _ _ => natToFiniteSet_reflects_approxBisim) h
+
+/- Cycle 46 (see RESEARCH_LOG.md): cycle 41's queue (= cycle 37's own
+   queue item (b), restated through cycles 39/42/44/45) named the
+   remaining largest open thread as "the internal-logic distributivity
+   direction relating `incidenceProd`/`incidenceSum`" and, since cycle
+   37, has repeatedly flagged it as needing a scope-down FIRST STEP
+   before any bisimulation/homomorphism/distributivity attempt: does a
+   natural, well-typed map exist at all between `incidenceProd inc1
+   inc2`'s carrier (`I1 × I2`, `Product.lean`'s `incidenceProd`) and
+   `incidenceSum inc1 inc2`'s carrier (`I1 ⊕ I2`, this file's
+   `incidenceSum`) for the SAME `inc1 : Incidence I1 R1 T1`,
+   `inc2 : Incidence I2 R2 T2`? Both constructors are stated fully
+   generically over `{I1 R1 T1 I2 R2 T2 : Type u}` with NO cardinality
+   hypothesis on `I1`/`I2` at all -- so a *generic* carrier-comparison
+   combinator, usable for every `incidenceProd`/`incidenceSum` pair this
+   project could ever build (not only the specific instances already
+   used elsewhere, e.g. `natIncidence`/`finiteIncidence`/
+   `trivialIncidence` via `NatBoolProductIncidence` in `Quotient.lean`),
+   would itself need to typecheck for every possible `I1`, `I2` -- the
+   same discipline cycle 37 used when testing `prodCollapseTrivial`
+   against a deliberately adversarial case rather than trusting a
+   structural argument by inspection alone.
+
+   Finding, in three parts. (1) `I1 × I2 → I1 ⊕ I2` exists
+   unconditionally and generically (no hypothesis on `I1`/`I2` needed),
+   but is NOT canonical: there are at least two equally well-typed,
+   provably DISTINCT candidates (`prodToSumCarrier`/
+   `prodToSumCarrier'` below, projecting then injecting on either
+   side), and nothing in either `Incidence` structure singles one out;
+   both discard one whole component's worth of data. (2)
+   `I1 ⊕ I2 → I1 × I2` does NOT exist generically at all --
+   `sum_to_prod_carrier_map_impossible_in_general` proves this
+   concretely by instantiating `I1 := Empty`: any
+   `Empty ⊕ Unit → Empty × Unit` would have to conjure an `Empty` value
+   out of `Sum.inr ()`, which is impossible regardless of classical
+   choice (there is no term of an uninhabited type to return; choice
+   only selects among already-existing witnesses). (3) Restricting to
+   this project's actual concrete, non-`Empty` carriers (e.g. `Nat`,
+   via `natIncidence`) does make an AD HOC `I1 ⊕ I2 → I1 × I2` possible,
+   but `sumToProdNatCarrier_basepoint_dependent` shows it is genuinely
+   basepoint-dependent, not canonical: two equally reasonable defaults
+   (`0` vs `1`) disagree on the very same input.
+
+   Conclusion for the scope-down question: NO natural/canonical map
+   exists between `incidenceProd A B`'s carrier and `incidenceSum A B`'s
+   carrier, for the same `A`, `B`, in EITHER direction, that could serve
+   as a non-arbitrary basis for a subsequent bisimulation/homomorphism/
+   distributivity claim comparing the two constructors directly. This
+   is a clean negative scope-down result, in this project's established
+   style (cycles 38-40): it closes this particular framing of the
+   question rather than opening new ground.
+
+   Recorded separately for cycle 47 (out of scope to pursue this
+   cycle): the ORIGINAL cycle 37 phrasing of this thread's underlying
+   motivation was not this same-`(A,B)` comparison at all, but the
+   *distributive-law* shape `incidenceProd inc1 (incidenceSum inc2
+   inc3)` vs `incidenceSum (incidenceProd inc1 inc2)
+   (incidenceProd inc1 inc3)` -- a genuinely different comparison, over
+   THREE incidence structures, whose underlying carrier types
+   (`I1 × (I2 ⊕ I3)` vs `(I1 × I2) ⊕ (I1 × I3)`) DO have a standard,
+   canonical, natural bijection (`Type`/`Set` is a distributive
+   category: pairing distributes over disjoint union, unlike the
+   reverse direction). That comparison was never actually tested here
+   (this cycle deliberately tested only the same-`(A,B)` framing, per
+   cycle 45's own next-hypothesis and this cycle's task scope) and
+   remains open -- and is a much more promising candidate for an actual
+   positive carrier-level map than the question this cycle answered. -/
+
+def prodToSumCarrier {I1 I2 : Type u} (p : I1 × I2) : I1 ⊕ I2 := Sum.inl p.1
+
+def prodToSumCarrier' {I1 I2 : Type u} (p : I1 × I2) : I1 ⊕ I2 := Sum.inr p.2
+
+theorem prodToSumCarrier_ne_prodToSumCarrier' :
+    prodToSumCarrier (I1 := Nat) (I2 := Bool) (5, true) ≠
+      prodToSumCarrier' (I1 := Nat) (I2 := Bool) (5, true) :=
+  fun h => Sum.noConfusion h
+
+theorem sum_to_prod_carrier_map_impossible_in_general :
+    ¬ Nonempty ((Empty ⊕ Unit) → (Empty × Unit)) := by
+  rintro ⟨f⟩
+  exact (f (Sum.inr ())).1.elim
+
+def sumToProdNatCarrier (basepoint : Nat) : Nat ⊕ Nat → Nat × Nat
+  | Sum.inl n => (n, basepoint)
+  | Sum.inr n => (basepoint, n)
+
+theorem sumToProdNatCarrier_basepoint_dependent :
+    sumToProdNatCarrier 0 (Sum.inl 7) ≠ sumToProdNatCarrier 1 (Sum.inl 7) := by
+  simp [sumToProdNatCarrier]
 
 end IncidenceCore
