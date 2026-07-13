@@ -212,7 +212,9 @@ Checked constructions include:
   sequences remain convergent under termwise negation, addition, and subtraction;
   distance control yields order control, finite prefixes admit inductively
   selected upper bounds, and every Cauchy sequence is globally bounded above
-  and below;
+  and below; every tail therefore has a Dedekind supremum, these suprema form a
+  decreasing sequence, and each Cauchy radius bounds the distance between a
+  suitable sequence term and its corresponding tail supremum;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets

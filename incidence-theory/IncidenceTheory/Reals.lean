@@ -2807,6 +2807,42 @@ theorem real_le_add_of_dist_le {left right radius : IncReal}
   rw [restore, realAdd_comm radius right] at translated
   exact translated
 
+theorem realDist_le_of_le_of_le_add
+    {left right : IncReal} (radius : NonnegativeReal)
+    (leftRight : realLE left right)
+    (rightBound : realLE right (realAdd left radius.value)) :
+    realLE (realDist left right).value radius.value := by
+  let difference := realAdd left (realNeg right)
+  have differenceNonpositive : realLE difference realZero := by
+    have translated := realAdd_monotone_left
+      (right := realNeg right) leftRight
+    rw [realAdd_neg] at translated
+    exact translated
+  by_cases differenceNonnegative : realLE realZero difference
+  · have differenceZero := realLE_antisymm differenceNonnegative
+      differenceNonpositive
+    change realLE (realAbs difference).value radius.value
+    rw [← differenceZero, realAbs_zero]
+    exact radius.nonnegative
+  · change realLE (realAbs difference).value radius.value
+    rw [realAbs_of_not_nonnegative difference differenceNonnegative,
+      realNegativePart_of_not_nonnegative difference differenceNonnegative]
+    have translated := realAdd_monotone_left
+      (right := realNeg left) rightBound
+    have leftRestore : realAdd (realAdd left radius.value)
+        (realNeg left) = radius.value := by
+      calc
+        _ = realAdd radius.value (realAdd left (realNeg left)) := by
+          rw [realAdd_comm left radius.value, realAdd_assoc]
+        _ = radius.value := by rw [realAdd_neg, realAdd_zero_right]
+    rw [leftRestore] at translated
+    have negDifference : realNeg difference =
+        realAdd right (realNeg left) := by
+      rw [realNeg_add, realNeg_neg, realAdd_comm]
+    change realLE (realNeg difference) radius.value
+    rw [negDifference]
+    exact translated
+
 theorem real_finite_sequence_upper_bound
     (sequence : RealSequence) (count : Nat) :
     ∃ upper : IncReal, ∀ index, index < count →
@@ -2892,5 +2928,103 @@ theorem realSequenceCauchy_bounded
       ∃ upper, RealSequenceUpperBound sequence upper :=
   ⟨realSequenceCauchy_bounded_below cauchy,
     realSequenceCauchy_bounded_above cauchy⟩
+
+def RealSequenceTail (sequence : RealSequence) (start : Nat)
+    (value : IncReal) : Prop :=
+  ∃ index, start ≤ index ∧ sequence index = value
+
+theorem realSequenceTail_nonempty (sequence : RealSequence) (start : Nat) :
+    ∃ value, RealSequenceTail sequence start value :=
+  ⟨sequence start, start, Nat.le_refl start, rfl⟩
+
+theorem realSequenceTail_bounded
+    {sequence : RealSequence}
+    (bounded : ∃ upper, RealSequenceUpperBound sequence upper)
+    (start : Nat) :
+    ∃ upper, RealUpperBound (RealSequenceTail sequence start) upper := by
+  obtain ⟨upper, isUpper⟩ := bounded
+  refine ⟨upper, ?_⟩
+  intro value member
+  obtain ⟨index, _, equal⟩ := member
+  subst value
+  exact isUpper index
+
+noncomputable def realSequenceTailSup
+    (sequence : RealSequence) (start : Nat)
+    (bounded : ∃ upper, RealSequenceUpperBound sequence upper) : IncReal :=
+  realSup (RealSequenceTail sequence start)
+    (realSequenceTail_nonempty sequence start)
+    (realSequenceTail_bounded bounded start)
+
+theorem realSequence_le_tailSup
+    {sequence : RealSequence}
+    (bounded : ∃ upper, RealSequenceUpperBound sequence upper)
+    {start index : Nat} (indexLarge : start ≤ index) :
+    realLE (sequence index) (realSequenceTailSup sequence start bounded) := by
+  apply realSup_is_upper_bound
+    (RealSequenceTail sequence start)
+    (realSequenceTail_nonempty sequence start)
+    (realSequenceTail_bounded bounded start)
+  exact ⟨index, indexLarge, rfl⟩
+
+theorem realSequenceTailSup_monotone
+    {sequence : RealSequence}
+    (bounded : ∃ upper, RealSequenceUpperBound sequence upper)
+    {start later : Nat} (ordered : start ≤ later) :
+    realLE (realSequenceTailSup sequence later bounded)
+      (realSequenceTailSup sequence start bounded) := by
+  apply realSup_is_least
+    (RealSequenceTail sequence later)
+    (realSequenceTail_nonempty sequence later)
+    (realSequenceTail_bounded bounded later)
+  intro value member
+  obtain ⟨index, laterIndex, equal⟩ := member
+  subst value
+  exact realSequence_le_tailSup bounded
+    (Nat.le_trans ordered laterIndex)
+
+noncomputable def realCauchyTailSup
+    (sequence : RealSequence) (cauchy : RealSequenceCauchy sequence)
+    (start : Nat) : IncReal :=
+  realSequenceTailSup sequence start
+    (realSequenceCauchy_bounded_above cauchy)
+
+theorem realCauchyTailSup_monotone
+    {sequence : RealSequence} (cauchy : RealSequenceCauchy sequence)
+    {start later : Nat} (ordered : start ≤ later) :
+    realLE (realCauchyTailSup sequence cauchy later)
+      (realCauchyTailSup sequence cauchy start) :=
+  realSequenceTailSup_monotone
+    (realSequenceCauchy_bounded_above cauchy) ordered
+
+theorem realCauchy_tailSup_close
+    {sequence : RealSequence} (cauchy : RealSequenceCauchy sequence)
+    {epsilon : IncRational}
+    (epsilonPositive : rationalLT (rationalOfInteger 0) epsilon) :
+    ∃ threshold, realLE
+      (realDist (sequence threshold)
+        (realCauchyTailSup sequence cauchy threshold)).value
+      (rationalToReal epsilon) := by
+  obtain ⟨threshold, tailClose⟩ := cauchy epsilon epsilonPositive
+  have bounded := realSequenceCauchy_bounded_above cauchy
+  have sequenceBelowSup : realLE (sequence threshold)
+      (realCauchyTailSup sequence cauchy threshold) :=
+    realSequence_le_tailSup bounded (Nat.le_refl threshold)
+  have supBelow : realLE (realCauchyTailSup sequence cauchy threshold)
+      (realAdd (sequence threshold) (rationalToReal epsilon)) := by
+    apply realSup_is_least
+      (RealSequenceTail sequence threshold)
+      (realSequenceTail_nonempty sequence threshold)
+      (realSequenceTail_bounded bounded threshold)
+    intro value member
+    obtain ⟨index, indexLarge, equal⟩ := member
+    subst value
+    exact real_le_add_of_dist_le
+      (tailClose index threshold indexLarge (Nat.le_refl threshold))
+  let radius : NonnegativeReal :=
+    { value := rationalToReal epsilon
+      nonnegative := (rationalToReal_le_iff _ _).mpr epsilonPositive.1 }
+  refine ⟨threshold, ?_⟩
+  exact realDist_le_of_le_of_le_add radius sequenceBelowSup supBelow
 
 end IncidenceCore

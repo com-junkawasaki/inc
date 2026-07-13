@@ -223,7 +223,10 @@ case where the selector is complete and resonance has no unselected modes.
   convergence through negation, addition, and subtraction. A distance bound
   gives an order bound; finite prefixes have bounds by total-order induction,
   while a Cauchy tail is bounded by one fixed-radius ball. Negation supplies
-  the lower bound, so every Cauchy sequence is two-sided bounded.
+  the lower bound, so every Cauchy sequence is two-sided bounded. Dedekind
+  completeness then constructs the supremum of every tail; later tails have
+  smaller suprema, and the Cauchy radius bounds each selected term-to-tail-sup
+  distance.
 
 ### Non-normative physical intuition
 
