@@ -3250,4 +3250,168 @@ theorem mirrorBisimulationQuotientClassification_no_coherence :
   exact coherence.boundary_no_self
     (mirrorBisimulationQuotientClassification.classify MirrorId.m0) ⟨e', mem, heq⟩
 
+/- Research cycle 57 (see RESEARCH_LOG.md): the last remaining item from
+   cycle 53's original three-item queue, deferred through cycles 54
+   (Subsingleton `well_founded`), 55 (`GuardInvariant`'s constancy
+   mechanism), and 56 (the third, local-collapse regime) -- each of
+   which picked a DIFFERENT item off that queue. Cycle 55's own
+   next-hypothesis states it precisely: `prodGuards` (`Product.lean`,
+   cycle 31) of two CONSTANT-guards factors was shown to stay constant
+   (hence trivially `GuardInvariant`-respecting, via
+   `guardInvariant_of_constantGuards`), but "never constructed or
+   audited a `prodGuards` instance built from a NON-constant factor
+   guard" -- and cycle 55 also confirmed, by reading every `guards :=`
+   field in the project, that EVERY existing classified instance's
+   guards is constant (`Guards.permissive` or equivalent), so this is a
+   genuinely untested case, not a re-derivation.
+
+   Read `Product.lean`'s `prodGuards` directly first (not assumed):
+   `allow := fun (i1, i2) (j1, j2) => inc1.guards.allow i1 j1 &&
+   inc2.guards.allow i2 j2` -- a literal, unconditional componentwise
+   `Bool.and`, already the "naive expected" definition itself (unlike
+   `incidenceSum`'s guards, cycle 46/47/50's finding, which is the
+   CONSTANT `Guards.permissive` regardless of either factor -- the
+   asymmetry cycle 47 first named). So there is no scope, even in
+   principle, for `prodGuards`'s TOP-LEVEL `allow` value to diverge from
+   componentwise `&&` the way `incidenceSum`'s diverges from
+   `sumGuardsExpected` -- that question was already closed by cycle 47's
+   reading of the source. The genuinely open question, per cycle 55's
+   framing, is one level up: does this componentwise `&&` correctly
+   TRANSPORT `GuardInvariant` (guards respecting `≈`) from the factors to
+   the product, for a factor whose own guards is NOT constant -- or does
+   the combination introduce some new blind spot of its own?
+
+   Built the required non-constant witness fresh, per cycle 55's own
+   audit (no existing instance qualifies): `Guards.diag`, `allow i j :=
+   decide (i = j)`, and `mirrorDiagGuards` -- cycle 56's `mirrorIncidence`
+   with ONLY the `guards` field swapped, everything else (including
+   `type_preserve := fun _ _ => rfl`) copied verbatim, exactly cycle 50's
+   `finiteIncidenceNeverGuards` recipe: `mirrorIncidence.typeFunc` is the
+   constant `GraphType.unit`, so `type_preserve` never actually depended
+   on its `guards.allow` hypothesis, and the same proof term typechecks
+   unchanged against ANY replacement `guards`. Picked `mirrorIncidence`
+   deliberately over a fresh from-scratch instance because it is the
+   project's only carrier with a genuinely NON-TRIVIAL `≈` collapse
+   (`m0 ≈ m1`, cycle 56) -- `natIncidence`/`finiteIncidence`-style fully
+   faithful carriers (`≈ ↔ =`) would make the guard-invariance question
+   VACUOUS (any function of two arguments trivially respects `=`), so
+   they cannot exercise the property being tested at all. -/
+
+def Guards.diag (I : Type u) [DecidableEq I] : Guards I :=
+  { allow := fun i j => decide (i = j) }
+
+/- `mirrorIncidence` (cycle 56) with only `guards` replaced -- `boundary`/
+   `typeFunc`/`glue`/`unit` copied verbatim, so `IsBisimulation`/
+   `approxBisim` (defined in `IncidenceTheory.lean` purely in terms of
+   `typeFunc`/`boundary`, never `guards`) are UNCHANGED by the swap. -/
+def mirrorDiagGuards : Incidence MirrorId MirrorRole GraphType where
+  boundary := mirrorBoundary
+  typeFunc := fun _ => GraphType.unit
+  glue := fun i j => if i = MirrorId.u then some j else some i
+  unit := MirrorId.u
+  guards := Guards.diag MirrorId
+  type_consistent := fun _ _ _ => rfl
+  sign_rules := fun _ e _ => by cases e.sign <;> simp
+  multiplicities := fun _ e _ => e.mult_pos
+  well_founded := by
+    rintro i ⟨e, he, hei⟩
+    cases i <;> simp [mirrorBoundary] at he <;> subst he <;> simp_all
+  unit_left := by intro i; simp
+  unit_right := by intro i; by_cases h : i = MirrorId.u <;> simp [h]
+  type_preserve := fun _ _ => rfl
+
+/- `mirrorRel_isBisimulation` (cycle 56) typechecks directly at
+   `mirrorDiagGuards` with no new proof at all -- confirming, not merely
+   asserting, that the guards swap leaves `IsBisimulation`/`mirrorRel`
+   completely untouched (`IsBisimulation`'s definition never mentions
+   `guards`, so the exact same proof term is accepted against either
+   incidence). -/
+theorem mirrorRel_isBisimulation_diag : IsBisimulation mirrorDiagGuards mirrorRel :=
+  mirrorRel_isBisimulation
+
+theorem approxBisim_mirrorDiagGuards_m0_m1 :
+    approxBisim mirrorDiagGuards MirrorId.m0 MirrorId.m1 :=
+  ⟨mirrorRel, mirrorRel_isBisimulation_diag, by decide⟩
+
+/- The concrete failure: `mirrorDiagGuards`'s OWN guards do not respect
+   its OWN `≈` -- `m0 ≈ m1` (just above), yet `allow m0 m0 ≠ allow m1 m0`,
+   `decide`-checked directly against the computed `Bool` values. This is
+   the first hand-built `GuardInvariant` FAILURE in this project's
+   history: cycle 55 showed every existing classified instance's guards
+   trivially satisfies `GuardInvariant` because every one is constant;
+   this confirms a genuinely non-constant guards value is not merely a
+   definitional curiosity but can actually break the property, PROVIDED
+   the underlying `≈` is non-trivial (a fully faithful carrier could
+   never witness this, as noted above). -/
+theorem mirrorDiagGuards_not_guardInvariant :
+    mirrorDiagGuards.guards.allow MirrorId.m0 MirrorId.m0 = true ∧
+      mirrorDiagGuards.guards.allow MirrorId.m1 MirrorId.m0 = false ∧
+      approxBisim mirrorDiagGuards MirrorId.m0 MirrorId.m1 :=
+  ⟨by decide, by decide, approxBisim_mirrorDiagGuards_m0_m1⟩
+
+/- The headline generic theorem answering cycle 55's queued question:
+   `prodGuards`'s componentwise `&&`, combined with
+   `incidenceProd_approxBisim_iff` (cycle 32: `≈` on the product is
+   EXACTLY componentwise `≈`, no more and no less), transports
+   `GuardInvariant` from the two factors to the product UNCONDITIONALLY
+   -- no constancy hypothesis on either factor's `guards` at all. This is
+   strictly more general than cycle 55's `guardInvariant_of_constantGuards`
+   (which only covers the special case where each factor's `allow`
+   ignores its arguments entirely; a constant function trivially
+   satisfies the hypotheses `h1`/`h2` below, so that theorem is the
+   special case of this one, not an alternative to it). -/
+theorem incidenceProd_guardInvariant_of_factors
+    {I1 R1 T1 I2 R2 T2 Q : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (classification :
+      BisimulationQuotientClassification (Q := Q) (incidenceProd inc1 inc2))
+    (h1 : ∀ ⦃x x' y y' : I1⦄, approxBisim inc1 x x' → approxBisim inc1 y y' →
+        inc1.guards.allow x y = inc1.guards.allow x' y')
+    (h2 : ∀ ⦃x x' y y' : I2⦄, approxBisim inc2 x x' → approxBisim inc2 y y' →
+        inc2.guards.allow x y = inc2.guards.allow x' y') :
+    classification.GuardInvariant := by
+  rintro ⟨p1, p2⟩ ⟨p1', p2'⟩ ⟨q1, q2⟩ ⟨q1', q2'⟩ hp hq
+  rw [incidenceProd_approxBisim_iff] at hp hq
+  simp only [incidenceProd, prodGuards]
+  rw [h1 hp.1 hq.1, h2 hp.2 hq.2]
+
+/- The concrete confirmation, mirroring cycle 50's `_diverges_concrete`
+   pattern: `incidenceProd mirrorDiagGuards natIncidence`'s ACTUAL guards
+   (the literal `&&` computed from `mirrorDiagGuards`'s own
+   `GuardInvariant`-violating guards, cycle 50's `Guards.permissive`
+   right factor contributing nothing but `true`) diverges on exactly the
+   pair the theorem above predicts it must -- `prodGuards` neither hides
+   nor amplifies the factor's own blind spot, it PROPAGATES it exactly,
+   with no independent defect of its own. This is the honest converse of
+   `incidenceProd_guardInvariant_of_factors`: since `mirrorDiagGuards`
+   fails hypothesis `h1`, the product's `GuardInvariant` fails too, and
+   both failures are the SAME divergence (`allow m0 m0 = true`,
+   `allow m1 m0 = false`, `m0 ≈ m1`), witnessed here componentwise via
+   `natIncidence`'s permissive right factor contributing a constant
+   `true` that changes nothing. -/
+theorem incidenceProd_mirrorDiagGuards_nat_guardInvariant_fails :
+    approxBisim (incidenceProd mirrorDiagGuards natIncidence)
+        (MirrorId.m0, (0 : Nat)) (MirrorId.m0, (0 : Nat)) ∧
+      approxBisim (incidenceProd mirrorDiagGuards natIncidence)
+        (MirrorId.m0, (0 : Nat)) (MirrorId.m1, (0 : Nat)) ∧
+      (incidenceProd mirrorDiagGuards natIncidence).guards.allow
+          (MirrorId.m0, (0 : Nat)) (MirrorId.m0, (0 : Nat)) = true ∧
+      (incidenceProd mirrorDiagGuards natIncidence).guards.allow
+          (MirrorId.m1, (0 : Nat)) (MirrorId.m0, (0 : Nat)) = false := by
+  refine ⟨approxBisim_refl _ _, ?_, by decide, by decide⟩
+  rw [incidenceProd_approxBisim_iff]
+  exact ⟨approxBisim_mirrorDiagGuards_m0_m1, approxBisim_refl _ _⟩
+
+/- Synthesis recorded here rather than only in RESEARCH_LOG.md, matching
+   this file's convention of stating the closing contrast alongside the
+   theorems: `prodGuards` has NO blind spot of its own, in sharp asymmetry
+   with `incidenceSum` (cycles 46/47/50) -- `incidenceSum`'s guards
+   DISCARD both factors' guards entirely (a constant `Guards.permissive`
+   regardless of what `inc1`/`inc2` supply), while `prodGuards`'s literal
+   componentwise `&&` transports `GuardInvariant` faithfully from the
+   factors, PROVEN generically (`incidenceProd_guardInvariant_of_factors`)
+   and confirmed against the first genuinely non-constant guards witness
+   this project has built (`mirrorDiagGuards`), not merely against the
+   constant guards every prior instance happened to use. -/
+
 end IncidenceCore

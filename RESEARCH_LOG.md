@@ -5354,3 +5354,144 @@ the same kind of localization `BoundaryInvariant`'s single-argument,
 shape-shaped one admits -- worth a focused check before assuming either
 way, given this cycle's own finding that "local" and "global" versions of
 a `well_founded`-style obstruction can differ substantially in scope.
+
+## Cycle 57
+
+**Hypothesis**: cycle 56's queued item (a) = cycle 55's own next-hypothesis
+= the last remaining item from cycle 53's original three-item queue,
+untouched for three cycles running (54 took the Subsingleton contrast, 55
+took `GuardInvariant`'s constancy mechanism, 56 took the third collapse
+regime) -- does `incidenceProd`'s own `guards` (`prodGuards`, `Product.lean`,
+cycle 31) have a blind spot analogous to `incidenceSum`'s (cycles 46/47/50),
+now tested against a GENUINELY NON-CONSTANT factor guard for the first
+time, since cycle 55 confirmed every `Guards` value this project has ever
+attached to a classified instance is constant?
+
+**Method**: read `Product.lean`'s `prodGuards` directly, not assumed:
+`allow := fun (i1, i2) (j1, j2) => inc1.guards.allow i1 j1 &&
+inc2.guards.allow i2 j2` -- a literal, unconditional componentwise
+`Bool.and`, confirming cycle 47's own reading (`prodGuards` "genuinely
+conjoins") and closing off any possibility that the TOP-LEVEL `allow`
+value itself could diverge from componentwise `&&` the way
+`incidenceSum`'s (a hardcoded `Guards.permissive`, discarding both
+factors entirely) diverges from `sumGuardsExpected` -- that specific
+question was already answered by inspection, before writing anything.
+The genuinely open question, per cycle 55's framing, sits one level up:
+does this componentwise `&&` correctly TRANSPORT `GuardInvariant` (guards
+respecting `≈`) from the factors to the product for a NON-constant
+factor, or does the combination introduce a new blind spot of its own?
+Built the required witness fresh (cycle 55's own audit: no existing
+instance qualifies) rather than reusing `Guards.never`/
+`finiteIncidenceNeverGuards` (cycle 50) as the task's initial framing
+suggested -- checked first and rejected: `Guards.never`'s `allow := fun
+_ _ => false` is ITSELF constant (the polar opposite of
+`Guards.permissive`, not a non-constant function), so it would only
+re-derive cycle 55's already-closed constant-guards case, not test
+anything new. Built `Guards.diag` instead (`allow i j := decide (i =
+j)`), genuinely argument-dependent, and `mirrorDiagGuards` -- cycle 56's
+`mirrorIncidence` with ONLY `guards` swapped, everything else (including
+`type_preserve := fun _ _ => rfl`) copied verbatim, following cycle 50's
+`finiteIncidenceNeverGuards` recipe exactly (`mirrorIncidence.typeFunc` is
+the constant `GraphType.unit`, so `type_preserve` never depended on its
+guard hypothesis and the same proof term typechecks against any
+replacement `guards`). Picked `mirrorIncidence` deliberately over a
+from-scratch carrier because it is the project's only instance with a
+genuinely NON-TRIVIAL `≈` collapse (`m0 ≈ m1`, cycle 56) -- a fully
+faithful carrier (`natIncidence`, `cycleIncidenceFixed`, `≈ ↔ =`) would
+make the guard-invariance question VACUOUS, since any function of two
+arguments trivially respects plain equality, so it could never exercise
+the property under test at all.
+
+**Result**: **prodGuards has NO blind spot of its own -- proven
+generically, then confirmed against the concrete non-constant witness,
+sorry-free, first `lake build` attempt.** Added to `Quotient.lean`, after
+cycle 56's closing theorem (8 new declarations): (1) `Guards.diag` and
+`mirrorDiagGuards`. (2) `mirrorRel_isBisimulation_diag`: cycle 56's own
+`mirrorRel_isBisimulation` proof term typechecks UNCHANGED at
+`mirrorDiagGuards` with no new proof at all, confirming (not merely
+asserting) that `IsBisimulation`/`approxBisim` (`IncidenceTheory.lean`)
+are defined purely via `typeFunc`/`boundary` and never reference `guards`
+-- the guards swap is completely invisible to `≈`. (3)
+`mirrorDiagGuards_not_guardInvariant`: the concrete failure this cycle
+needed to exist before testing the product -- `m0 ≈ m1` yet `allow m0 m0
+= true ≠ false = allow m1 m0`, `decide`-checked. This is the first
+hand-built `GuardInvariant` FAILURE in this project's history (cycle 55
+showed every existing classified instance's guards trivially satisfies it
+because every one is constant); confirms a non-constant guards value can
+genuinely break the property, given a non-trivial `≈` to violate. (4) The
+headline generic theorem, `incidenceProd_guardInvariant_of_factors`: for
+ANY two factors (no constancy hypothesis at all), if each factor's own
+guards respects its own `≈`, then ANY classification over their product
+has `GuardInvariant` -- proved directly from `incidenceProd_approxBisim_iff`
+(cycle 32: `≈` on the product is EXACTLY componentwise `≈`) plus
+`prodGuards`'s literal `&&`. Strictly more general than cycle 55's
+`guardInvariant_of_constantGuards` (a constant function trivially
+satisfies this theorem's hypotheses, so that theorem is the special case,
+not an alternative). (5)
+`incidenceProd_mirrorDiagGuards_nat_guardInvariant_fails`: the concrete
+converse confirmation, mirroring cycle 50's `_diverges_concrete` pattern
+-- `incidenceProd mirrorDiagGuards natIncidence`'s ACTUAL guards diverge
+on exactly the pair the theorem predicts (`natIncidence`'s permissive
+right factor contributes a constant `true`, changing nothing), showing
+`prodGuards` PROPAGATES a factor's pre-existing blind spot transparently
+rather than hiding or amplifying it. `lake build IncidenceTheory.Quotient`:
+24/24 jobs, clean on the first attempt, no fixes needed. `#print axioms`
+on all seven new declarations plus `mirrorDiagGuards` itself (scratch file
+fed to `lake env lean`, then deleted): all reduce to `propext`/`Quot.sound`
+(plus `Classical.choice` for the one existential/`approxBisim`-witness
+construction), matching this project's standing accepted axiom set
+exactly, no new axiom anywhere. Full `./verify.sh` (`lake clean && lake
+build`, 24/24 jobs, example binary run, repo-wide `axiom`/`sorry`/`sorryAx`
+grep): passes end to end.
+
+**Synthesis**: this closes the last item of cycle 53's original
+three-item queue with a genuinely POSITIVE, asymmetric finding --
+`incidenceProd` and `incidenceSum`, this project's two generic
+constructors, now have PROVEN opposite behavior at the guards layer, not
+merely at the top-level `allow` value (cycle 47's finding) but at the
+deeper `GuardInvariant`-transport level cycle 55's queue asked about:
+`incidenceSum`'s hardcoded `Guards.permissive` discards both factors'
+guards unconditionally (cycles 46/47/50), so its `GuardInvariant`
+behavior has nothing to do with the factors at all; `prodGuards`'s
+literal componentwise `&&` transports `GuardInvariant` faithfully FROM
+the factors, with no independent defect, proven for arbitrary (not merely
+constant) factor guards. The task explicitly allowed for an honest
+"no blind spot" finding to be as legitimate as a divergence, and that is
+the honest result here -- but it required actually building the
+non-constant witness cycle 55 flagged as missing (`mirrorDiagGuards`) to
+confirm it rather than merely re-observing the already-closed
+constant-guards case. A secondary methodological note worth recording:
+the task's own suggested reuse of `Guards.never`/`finiteIncidenceNeverGuards`
+(cycle 50) as "the non-constant guards factor" was checked and rejected
+before use -- `Guards.never` is constant (always `false`), the mirror
+image of `Guards.permissive`, not a counterexample to constancy at all;
+cycle 50 built it to test `incidenceSum`'s top-level discarding behavior,
+a different property than the argument-DEPENDENCE this cycle needed to
+test `GuardInvariant`-transport, so a fresh witness (`Guards.diag`) had to
+be built rather than reused, mirroring cycle 55's own "checked, not
+assumed" methodology. Since the result is a narrow, confirmatory audit
+(closing an already-scoped queue item with a positive finding, not
+altering the project's overall shape) it does not warrant an ADR
+addendum, matching the judgment cycles 45-56 already established for
+comparable narrower/positive results.
+
+**Next hypothesis (cycle 58, not yet attempted)**: with all three items
+of cycle 53's original queue now closed (`GlueInvariant` generalization,
+cycle 53; Subsingleton `well_founded` contrast, cycle 54;
+`GuardInvariant` constancy, cycle 55; `prodGuards` non-constant audit,
+this cycle) plus cycle 56's independently-surfaced third collapse
+regime, the one live thread still queued is cycle 56's item (b): does
+cycle 53's `GlueInvariant`-failure mechanism (the absorbing-unit formula)
+admit an analogous LOCAL refinement the way cycle 56's
+`canonicalBoundary_self_loop_of_boundary_within_class` refined cycle 54's
+GLOBAL Subsingleton self-loop theorem -- i.e. is there a version of cycle
+53's theorem that applies to a class-LOCAL absorbing pattern rather than
+requiring the specific global `unit_left`/`unit_right` law, mirroring the
+global→local generalization pattern cycle 56 established for the OTHER
+(boundary/well-foundedness) mechanism? `GlueInvariant` is a TWO-argument,
+congruence-shaped obligation (`x ≈ x' → y ≈ y' → glue x y` compatible with
+`glue x' y'`) unlike `BoundaryInvariant`'s single-argument, shape-shaped
+one, so the localization may not transfer mechanically -- worth checking
+directly, per this cycle's own experience that reusing a queued framing
+without re-verifying its exact shape (`Guards.never`'s constancy, above)
+can be a dead end that only a direct read catches.
