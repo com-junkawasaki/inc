@@ -4844,3 +4844,134 @@ infrastructure) -- worth checking whether any EXISTING guard definition in
 this project actually has an "absorbing" shape before assuming the
 analogy transfers, rather than building speculative infrastructure for a
 pattern that may not occur.
+
+## Cycle 54
+
+**Hypothesis**: option (a) from cycle 53's queue -- does the SAME
+mechanism that explains simplex/path/tree's `GlueInvariant` failure
+(cycle 53: the universal `unit_left` law plus a non-singleton
+`≈`-class containing `unit`, witnessed against some `j` OUTSIDE that
+class) ALSO explain `cycleIncidence`'s ORIGINAL `boundary`-failure
+(cycle 38, `cycleIncidence_boundary_not_approxBisim_invariant`)? Or is
+`cycleIncidence`'s case -- the Subsingleton, fully-collapsed extreme --
+a genuinely different obstruction, as cycle 39's synthesis already
+flagged when it separated "fully collapsed" from "partial middle
+ground" as qualitatively different regimes? Read cycle 38's raw finding,
+`cycleIncidence`'s actual definition (`Cycle.lean`), and
+`BoundaryInvariant`'s definition (`Quotient.lean`, `mappedSourceBoundary`)
+in full before assuming either answer, per this cycle's brief.
+
+**Method**: read cycle 38's exact statement first --
+`cycleIncidence_boundary_not_approxBisim_invariant` is a claim about the
+RAW field (`∀ i j, i ≈ j → inc.boundary i = inc.boundary j`), proved
+false via `c0`/`c1`'s literally different `Endpoint` lists (predecessors
+`c3` vs. `c0`). This is a different (stronger, unindexed) statement than
+`BoundaryInvariant` (`Quotient.lean`), which only asks for agreement
+of `mappedSourceBoundary` -- `inc.boundary` with each entry's `.i` field
+already remapped through a chosen `classify : I → Q` -- so cycle 38's raw
+finding does not by itself say anything about whether `BoundaryInvariant`
+holds for any *particular* classification of `cycleIncidence`. No such
+classification had been built yet in this project (unlike
+`natBoolProductClassification`/`simplexBisimulationQuotientClassification`/
+etc.), so built the missing one: `cycleBisimulationQuotientClassification`,
+target `Unit` (the only possible target up to equivalence, since
+`cycleIncidence_all_collapse` makes `≈` relate every pair), via
+`bisimulationQuotientClassificationOfKernel` + the existing
+`cycleIncidence_all_collapse` proof as the kernel condition. Then checked
+`BoundaryInvariant`/`GlueInvariant` directly against it, and separately
+checked whether cycle 53's own hypothesis (`jOutsideUnitClass : classify
+j ≠ classify unit`) can even be stated non-vacuously when the target is
+`Subsingleton`.
+
+**Result**: **the two mechanisms are opposites, not the same mechanism
+in different clothes -- confirmed on the first attempt, six new
+theorems, no new casework needed anywhere.** `cycleBisimulationQuotientClassification.BoundaryInvariant`
+and `.GlueInvariant` both **HOLD** (`cycleBisimulationQuotientClassification_boundaryInvariant`,
+`_glueInvariant`, each closed by `fun _ _ _ => rfl` / `fun _ _ _ _ _ _ =>
+rfl` -- no case split on `CycleId` at all, since `classify` is constant
+on a `Unit` target and `cycleBoundary`/`cycleIncidence.glue` are already
+uniform in shape across every element, cycle 26's own "uniform boundary"
+observation doing the work here). Both `BoundaryRealization`/
+`GlueRealization` follow immediately from the already-generic
+`_iff_invariant` lemmas (`cycleBisimulationQuotientClassification_boundaryRealization`,
+`_glueRealization`). Separately, `no_jOutsideUnitClass_of_subsingleton`
+proves cycle 53's own hypothesis is **unsatisfiable by construction**
+whenever the target is `Subsingleton` (`Subsingleton.elim` alone, no
+fact about `inc` needed), instantiated against `cycleBisimulationQuotientClassification`
+as `cycleBisimulationQuotientClassification_unit_class_witness_vacuous`.
+So cycle 53's mechanism does not merely fail to apply to `cycleIncidence`
+by coincidence -- it structurally cannot apply to ANY totally-collapsed
+quotient. The actual obstruction lives one level up, in `well_founded`
+specifically: `canonicalBoundary_self_loop_of_subsingleton` (general,
+`Subsingleton`-target + source point with nonempty boundary ⟹
+`canonicalBoundary` has a self-loop at EVERY quotient point, since
+`Subsingleton.elim` collapses each boundary entry's remapped index onto
+the very point whose boundary it is attached to) combined with
+`no_canonicalQuotientIncidenceCoherence_of_subsingleton_target` (general
+corollary: no `CanonicalQuotientIncidenceCoherence` -- the actual
+target-`Incidence`-assembling route cycles 41-53 use -- can ever be
+completed under those conditions, `BoundaryInvariant`/`GlueInvariant`
+notwithstanding) together re-derive cycle 38's original finding as
+`cycleBisimulationQuotientClassification_no_coherence`, a one-line
+corollary exactly mirroring cycle 53's own specialization pattern but
+for the dual mechanism. `#print axioms` on all nine new declarations:
+`no_jOutsideUnitClass_of_subsingleton` needs nothing; the rest need only
+`propext`/`Quot.sound`(/`Classical.choice` for the `Realization`- and
+`canonicalBoundary`-involving ones) -- fully within this project's
+accepted axiom set. Full `lake build`: 62/62 jobs. `./verify.sh`: passes
+end to end (build, example binary, repo-wide `sorry`/`axiom` grep).
+Repo-wide `sorry`-as-tactic grep: none.
+
+**Synthesis**: this cycle answers cycle 53's queued question with a
+clean **no, these do not unify -- and here is precisely why, in the same
+formal vocabulary cycle 53 used**, which this project's culture (cycles
+38-40, 45-53) treats as fully legitimate rather than an artificial
+unification to force through. The two negative results that look
+superficially similar ("some quotient invariant fails, `Incidence`
+instance involved") are actually dual in every load-bearing respect:
+cycle 53's mechanism needs a **partial** collapse (at least two
+distinguishable classes, one of them a non-singleton class containing
+`unit`) and indicts a **congruence** law (`unit_left`, `glue`-level);
+this cycle's mechanism needs a **total** collapse (`Subsingleton`,
+zero distinguishable classes) and indicts a **shape** law
+(`well_founded`, which has no congruence-style analogue among
+`GlueInvariant`/`BoundaryInvariant`/`GuardInvariant` at all, since none
+of those ever ask about self-loop-freeness). A classification can be
+perfectly congruence-respecting (`BoundaryInvariant` AND `GlueInvariant`
+both true, as proven here) and still admit no actual quotient
+`Incidence`, because `well_founded` is orthogonal to congruence -- it
+constrains the *shape* of whatever boundary function is chosen, not its
+*agreement* across `≈`-classes. This sharpens (rather than merely
+repeats) cycle 39's synthesis: cycle 39 established Subsingleton
+quotients are dead via `well_founded` alone; this cycle establishes
+*why the natural competing explanation (cycle 53's mechanism) cannot
+be the reason instead* -- closing the possibility, left open by cycle
+53's phrasing, that the two negative results were secretly one
+phenomenon. The methodological point: cycle 53's own two-layer pattern
+(general lemma, then instance corollaries) transfers cleanly to state
+the *contrast* just as rigorously as it stated the *unification* --
+generality is not intrinsically tied to a positive/unifying answer.
+
+**Next hypothesis (cycle 55, not yet attempted)**: with `GlueInvariant`
+(cycle 53) and the Subsingleton/`well_founded` obstruction (this cycle)
+both now generalized, three live threads remain. (a) `GuardInvariant`/
+`GuardRealization` (cycle 53's queued item (c), still untouched): does
+any EXISTING guard definition in this project (`Guards.permissive`,
+`prodGuards`, `sumGuards`) have an "absorbing"-style shape analogous to
+`glue`'s, worth checking concretely before assuming either the cycle 53
+pattern or this cycle's dual pattern transfers -- `Guards.permissive`
+(used by `simplexIncidence`/`pathIncidence`/`treeIncidence`) looks
+trivially total/non-absorbing by construction, so this may resolve
+quickly as "the analogy doesn't apply because the hypothesis pattern
+itself doesn't occur," which would itself be worth recording. (b) cycle
+50's still-untouched option (i): does `incidenceProd`'s own `guards`
+(`prodGuards`) have a blind spot analogous to `incidenceSum`'s (cycles
+46-50)? (c) a genuinely new angle this cycle's contrast surfaced: is
+there a THIRD regime -- a partial (non-Subsingleton, non-faithful)
+collapse where `BoundaryInvariant` or `GlueInvariant` fails not via the
+absorbing-unit mechanism but via something closer to this cycle's
+shape-based obstruction (e.g. a grading that's well-founded on the
+source but degenerates under collapse) -- no existing instance has been
+audited for this specific combination, and it would test whether cycle
+53's and cycle 54's mechanisms are truly exhaustive of the failure modes
+or merely the two most obvious ones.

@@ -2665,4 +2665,163 @@ theorem treeShape_glue_not_realizable_of_general :
     (j := TreeId.node (TreeId.leaf 0) (TreeId.leaf 1) (TreeId.leaf 2))
     (jOutsideUnitClass := by decide)
 
+/- Research cycle 54 (see RESEARCH_LOG.md): cycle 53's own queued primary
+   next-hypothesis -- does the SAME mechanism that explains
+   simplex/path/tree's `GlueInvariant` failure (`glueInvariant_fails_of_unit_class_witness`,
+   cycle 53: one universal `Incidence` law, `unit_left`, plus a
+   non-singleton `≈`-class containing `unit` witnessed against some `j`
+   OUTSIDE that class) ALSO explain `cycleIncidence`'s ORIGINAL
+   `boundary`-failure (cycle 38, `cycleIncidence_boundary_not_approxBisim_invariant`)?
+
+   Read cycle 38's raw finding, `cycleIncidence`'s definition
+   (`Cycle.lean`, `cycleIncidence_all_collapse`: ALL FOUR elements
+   `≈`-related, the total-collapse extreme), and `BoundaryInvariant`'s
+   definition (`mappedSourceBoundary` above, which -- unlike cycle 38's
+   raw `∀ i j, i ≈ j → inc.boundary i = inc.boundary j` -- only asks for
+   agreement AFTER remapping indices through `classify`) side by side,
+   rather than assuming either answer.
+
+   The two turn out to be OPPOSITES, not the same mechanism in different
+   clothes. Cycle 53's argument needs a witness `j` with `classify j ≠
+   classify unit` -- i.e. the classification must have AT LEAST TWO
+   distinguishable classes for the statement to even be satisfiable.
+   `cycleIncidence`'s quotient is the opposite extreme: `≈` relates
+   EVERY pair (`cycleIncidence_all_collapse`), so ANY classification
+   target is forced `Subsingleton` -- no `j` "outside" any class can
+   exist, `jOutsideUnitClass` is unsatisfiable by construction, not
+   merely false in this instance. Checked this isn't a vacuous-hypothesis
+   technicality but a genuine semantic fact by building the concrete
+   classification the cycle 38-53 framework never instantiated for
+   `cycleIncidence` (`cycleBisimulationQuotientClassification`, target
+   `Unit`, via `bisimulationQuotientClassificationOfKernel` +
+   `cycleIncidence_all_collapse`) and checking `BoundaryInvariant`/
+   `GlueInvariant` directly against it. -/
+
+/- The instance this project's `BisimulationQuotientClassification`
+   framework never built for `cycleIncidence`: since every pair is `≈`-
+   related, the only possible (up to `IncTypeEquivalence`) target is a
+   one-point type, `Unit`. The kernel condition is exactly
+   `cycleIncidence_all_collapse`, already proven in cycle 26. -/
+def cycleBisimulationQuotientClassification :
+    BisimulationQuotientClassification (Q := Unit) cycleIncidence :=
+  bisimulationQuotientClassificationOfKernel cycleIncidence (fun _ => ())
+    (fun x y => ⟨fun _ => cycleIncidence_all_collapse x y, fun _ => rfl⟩)
+    (fun q => ⟨CycleId.c0, by cases q; rfl⟩)
+
+/- `BoundaryInvariant` HOLDS here -- the opposite of simplex/path/tree's
+   `GlueInvariant`. `classify` is constant (`Unit` has one point), so
+   `mappedSourceBoundary x` collapses every element's boundary-entry
+   index to that same point regardless of `x`; since `cycleBoundary`
+   gives every element the identical `role`/`sign`/`mult` shape
+   (cycle 26's own "uniform boundary" observation), the two sides are
+   syntactically identical -- no case split on `x`/`y` needed at all. -/
+theorem cycleBisimulationQuotientClassification_boundaryInvariant :
+    cycleBisimulationQuotientClassification.BoundaryInvariant :=
+  fun _ _ _ => rfl
+
+/- `GlueInvariant` HOLDS too, for the identical reason: `cycleIncidence.glue`
+   is total (`fun i j => some (cycleAdd i j)`, cycle 26), so
+   `mappedSourceGlue x y` is `some ()` for EVERY `x y` once mapped
+   through the constant `classify` -- there is no "absorbing element"
+   phenomenon to even test, since the target has no room for a second
+   class to be absorbing *against*. -/
+theorem cycleBisimulationQuotientClassification_glueInvariant :
+    cycleBisimulationQuotientClassification.GlueInvariant :=
+  fun _ _ _ _ _ _ => rfl
+
+/- Both realizations follow immediately from the already-generic
+   `_iff_invariant` lemmas (cycle 51/53's reusable infrastructure). -/
+theorem cycleBisimulationQuotientClassification_boundaryRealization :
+    cycleBisimulationQuotientClassification.BoundaryRealization :=
+  (cycleBisimulationQuotientClassification.boundaryRealization_iff_invariant).mpr
+    cycleBisimulationQuotientClassification_boundaryInvariant
+
+theorem cycleBisimulationQuotientClassification_glueRealization :
+    cycleBisimulationQuotientClassification.GlueRealization :=
+  (cycleBisimulationQuotientClassification.glueRealization_iff_invariant).mpr
+    cycleBisimulationQuotientClassification_glueInvariant
+
+/- The general, instance-independent confirmation that cycle 53's
+   negative mechanism cannot fire at total collapse: whenever the target
+   `Q` is a `Subsingleton`, `jOutsideUnitClass` (cycle 53's key
+   hypothesis) is unsatisfiable for ANY classification, by
+   `Subsingleton.elim` alone -- no fact about `inc` is needed. This is
+   the precise, formal sense in which the two mechanisms are opposites
+   rather than instances of one general theorem. -/
+theorem no_jOutsideUnitClass_of_subsingleton
+    {I R T Q : Type u} [DecidableEq I] [Subsingleton Q] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc) :
+    ¬ ∃ j : I, classification.classify j ≠ classification.classify inc.unit :=
+  fun ⟨_, hne⟩ => hne (Subsingleton.elim _ _)
+
+theorem cycleBisimulationQuotientClassification_unit_class_witness_vacuous :
+    ¬ ∃ j : CycleId, cycleBisimulationQuotientClassification.classify j ≠
+      cycleBisimulationQuotientClassification.classify cycleIncidence.unit :=
+  no_jOutsideUnitClass_of_subsingleton cycleBisimulationQuotientClassification
+
+/- The genuinely different obstruction, stated at the same level of
+   generality as cycle 53's theorems (general lemma, then a
+   `cycleIncidence`-specific corollary): whenever the target is a
+   `Subsingleton` AND the source has *some* point with nonempty
+   boundary, `canonicalBoundary` is forced into a literal self-loop at
+   EVERY point of the quotient -- not because `BoundaryInvariant` fails
+   (it doesn't -- proven above), but because `Subsingleton` collapses
+   every boundary entry's remapped index onto the very point whose
+   boundary it is attached to. This is the exact obstruction
+   `incidence_subsingleton_boundary_empty` (cycle 39) rules out for any
+   *well-founded* boundary -- so it is a fact about `well_founded`
+   specifically, a law with no analogue in `GlueInvariant`/
+   `BoundaryInvariant` at all (those only ever ask for congruence across
+   `≈`-classes, never for self-loop-freeness). -/
+theorem canonicalBoundary_self_loop_of_subsingleton
+    {I R T Q : Type u} [DecidableEq I] [Subsingleton Q] {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    (invariant : classification.BoundaryInvariant)
+    {x : I} (nonempty : inc.boundary x ≠ []) (q : Q) :
+    ∃ e ∈ classification.canonicalBoundary invariant q, e.i = q := by
+  have hq : q = classification.classify x := Subsingleton.elim _ _
+  subst hq
+  rw [classification.canonicalBoundary_classify]
+  match h : inc.boundary x, nonempty with
+  | e :: rest, _ =>
+    refine ⟨{ e with i := classification.classify e.i }, ?_, Subsingleton.elim _ _⟩
+    simp [BisimulationQuotientClassification.mappedSourceBoundary, h]
+
+/- Consequently, NO `CanonicalQuotientIncidenceCoherence` -- the
+   congruence-respecting route this project's quotient constructor
+   (cycles 41-53) uses to actually assemble a target `Incidence` --
+   can ever be completed for a totally-collapsed classification whose
+   source has nonempty boundary anywhere, regardless of whether
+   `BoundaryInvariant`/`GlueInvariant` hold. -/
+theorem no_canonicalQuotientIncidenceCoherence_of_subsingleton_target
+    {I R T Q : Type u} [DecidableEq I] [DecidableEq Q] [Subsingleton Q]
+    {inc : Incidence I R T}
+    (classification : BisimulationQuotientClassification (Q := Q) inc)
+    {x : I} (nonempty : inc.boundary x ≠ []) :
+    ¬ Nonempty (CanonicalQuotientIncidenceCoherence classification) := by
+  rintro ⟨coherence⟩
+  exact coherence.boundary_no_self (classification.classify x)
+    (canonicalBoundary_self_loop_of_subsingleton classification
+      coherence.boundaryInvariant nonempty _)
+
+/- Cycle 38's original finding, re-derived: `cycleIncidence`'s
+   `boundary`-obstruction is not the `unit_left`/absorbing-element
+   mechanism (cycle 53) applied to a new instance -- it is this dual,
+   `well_founded`-anchored mechanism, here specialized to the concrete
+   classification built above with a one-line application, exactly
+   mirroring cycle 53's own specialization pattern
+   (`glueRealization_fails_of_absorbingUnitGlue` applied to
+   `simplexBisimulationQuotientClassification` etc.). Confirms, rather
+   than contradicts, cycle 39's synthesis that the fully-collapsed
+   (Subsingleton) case is a qualitatively different regime from the
+   partial, "middle-ground" collapse simplex/path/tree exhibit --
+   `well_founded` is the load-bearing law here, not any congruence law
+   `GlueInvariant`/`BoundaryInvariant` police. -/
+theorem cycleBisimulationQuotientClassification_no_coherence :
+    ¬ Nonempty (CanonicalQuotientIncidenceCoherence
+      cycleBisimulationQuotientClassification) :=
+  no_canonicalQuotientIncidenceCoherence_of_subsingleton_target
+    cycleBisimulationQuotientClassification
+    (x := CycleId.c0) (by simp [cycleIncidence, cycleBoundary])
+
 end IncidenceCore
