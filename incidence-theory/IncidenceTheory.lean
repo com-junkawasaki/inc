@@ -5924,6 +5924,62 @@ theorem boundary_operator_square_zero {I R T : Type u} [DecidableEq I]
   have hk' := List.all_eq_true.mp hi' k hk
   exact of_decide_eq_true hk'
 
+/- Cycle 63 (primary hypothesis, option (ii) from cycle 62's queue): recast
+   `boundary_operator_square_zero`'s ∂² = 0 conclusion via the `Matrix`
+   bridge (`boundary_composition_eq_matrix_mul_self` just above) as a
+   `Matrix.mul` statement, rather than the bare `boundary_composition` fold.
+   Since that bridge is a *function* equality (`boundary_composition inc idx
+   = Matrix.mul idx B B`, proved by `funext i k; rfl`), this is a direct
+   substitution into an already-proved fact, not new algebraic content --
+   the `show` below succeeds purely by unfolding both sides to the identical
+   `idx.foldl`. The `i ∈ idx`/`k ∈ idx` restriction is carried over
+   UNCHANGED from `boundary_operator_square_zero`: it is not an artifact of
+   this recast but a genuine limitation of `verify_boundary_composition`
+   itself, which only samples pairs drawn from `idx`. See `Peano.lean`'s
+   `boundary_operator_square_zero_matrix_unrestricted_fails` for a concrete
+   countermodel showing the UNRESTRICTED reading (no `i ∈ idx`/`k ∈ idx`
+   hypothesis at all, i.e. literally "= the zero matrix" over all of `I`)
+   does NOT follow and is genuinely false for at least one model. -/
+theorem boundary_operator_square_zero_matrix {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I)
+  (hcheck : verify_boundary_composition inc idx = true) :
+  ∀ i k : I, i ∈ idx → k ∈ idx →
+    Matrix.mul idx (boundaryMatrix inc idx) (boundaryMatrix inc idx) i k = 0 := by
+  intro i k hi hk
+  show boundary_composition inc idx i k = 0
+  exact boundary_operator_square_zero inc idx hcheck i k hi hk
+
+/- `boundarySquareZero`/`BoundarySquareZeroEverywhere` (L1250-1262, the
+   `ChainComplexPushoutIncidence` field's own vocabulary, predating both
+   `boundary_composition` and the `Matrix` layer) turn out to share their
+   fold body VERBATIM with `boundary_composition`: both are literally
+   `idx.foldl (fun acc j => acc + boundaryMatrix inc idx i j *
+   boundaryMatrix inc idx j k) 0`. So the connection to `Matrix.mul` is not
+   merely provable but definitional in both directions -- the two
+   vocabularies were always the same statement under two different names,
+   once the `Matrix` bridge exists to say so. -/
+theorem boundarySquareZero_iff_matrix_mul_self_zero {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) :
+  boundarySquareZero inc idx ↔
+    ∀ i k : I, i ∈ idx → k ∈ idx →
+      Matrix.mul idx (boundaryMatrix inc idx) (boundaryMatrix inc idx) i k = 0 := by
+  constructor
+  · intro h i k hi hk
+    exact h i k hi hk
+  · intro h i k hi hk
+    exact h i k hi hk
+
+/- `empty_boundaries_square_zero` (L1269-1278) recast the same way: an
+   empty-boundary incidence's `Matrix.mul idx B B` vanishes at every
+   idx-drawn entry, via the `Iff` bridge just proved rather than a fresh
+   induction over `idx`. -/
+theorem empty_boundaries_square_zero_matrix {I R T : Type u} [DecidableEq I]
+  (inc : Incidence I R T) (idx : List I) (hempty : ∀ i, inc.boundary i = []) :
+  ∀ i k : I, i ∈ idx → k ∈ idx →
+    Matrix.mul idx (boundaryMatrix inc idx) (boundaryMatrix inc idx) i k = 0 :=
+  (boundarySquareZero_iff_matrix_mul_self_zero inc idx).mp
+    (empty_boundaries_square_zero inc idx hempty)
+
 /- The chain-complex part of `ChainComplexPushoutIncidence` is now exposed in
    the same computational form as the ordinary boundary operator. -/
 theorem ChainComplexPushoutIncidence.boundary_composition_zero

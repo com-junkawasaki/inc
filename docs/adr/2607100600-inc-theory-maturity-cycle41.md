@@ -2117,3 +2117,45 @@ of_boundaryRowBalanced` 系列2件）、(iv) `Endpoint`/`Sign` 単位の場合�
 課題として残る（`RESEARCH_LOG.md` cycle 62 の Next hypothesis に記録済み）。項目8の
 記述は「部分完了」のまま維持し、パーセンテージ（本文59行目、40%/55–60%）も本追補
 では動かさない——cycle 60/61 追補と同じ保守的判断を一貫して適用する。
+
+## 2026-07-14 追補（cycle 63: ∂²=0 の `Matrix.mul` 再定式化——idx制限つき正の系、および無制限読みが偽であることの反例証明）
+
+本追補は `RESEARCH_LOG.md` cycle 63 の結果を反映する。cycle 62 が自ら次サイクルの
+候補として挙げた三案のうち (b)——既存の ∂²=0 定理群（`boundary_operator_square_
+zero`/`empty_boundaries_square_zero`、および `ChainComplexPushoutIncidence` が使う
+`boundarySquareZero`/`BoundarySquareZeroEverywhere`）を cycle 62 の橋渡し定理
+`boundary_composition_eq_matrix_mul_self` 経由で `Matrix.mul idx B B = 0` として
+再定式化できるか——を主対象として取り組んだ。
+
+結果は単純な可否ではなく、`i ∈ idx`/`k ∈ idx` という一線に沿ってきれいに二分した。
+(1) **正の系**: `boundary_operator_square_zero_matrix`（`IncidenceTheory.lean`、
+`boundary_operator_square_zero` 直後）は、`i ∈ idx`/`k ∈ idx` という元の仮説の制限を
+そのまま引き継いだ上で結論を `Matrix.mul idx (boundaryMatrix inc idx) (boundaryMatrix
+inc idx) i k = 0` に置き換える3行の系——`boundary_composition`/`Matrix.mul` 双方が
+同一の `idx.foldl` に展開されることによる直接代入。あわせて `boundarySquareZero_iff_
+matrix_mul_self_zero`（`Iff`、両ベクトル語彙が常に同一命題だったことの確認）と
+`empty_boundaries_square_zero_matrix`（その `Iff` の1行系）も追加し、
+`ChainComplexPushoutIncidence` 側の語彙にも同じ再定式化を及ぼした。
+(2) **反例による否定的発見**: 制限を外した素朴な読み（"`Matrix.mul idx B B = 0` を
+`I` 全体に対する無制限な関数等式として"）は `hcheck`/`boundary_operator_square_zero`
+からは導けず、実際に偽であることを `Peano.lean` に具体的に証明した——`natIncidence`
+（cycle 4/8/9 由来）に対し単集合 `idx = [1]` を取ると、`{1}` に制限した検査は自明に
+通る（`natIncidence_idx1_check_passes`）が、`idx` の外側の対 `i=2, k=0` では
+`boundary_composition natIncidence [1] 2 0 = 1 ≠ 0`
+（`natIncidence_idx1_outside_pair_nonzero`）——閉じの meta 定理
+`boundary_operator_square_zero_matrix_unrestricted_fails` として記録した。
+cycle 8/9 が `natIdx6`（6要素）で示した反例を、検査対象がその対とは無関係な単一
+要素だけであっても失敗が生き残ることを示す形へ強化している。
+
+これにより項目8の評価を「... + ∂²（`boundary_composition`）の `Matrix.mul` 接続
+（cycle 62）」から「+ その接続を用いた ∂²=0 定理群の `Matrix.mul` 再定式化（`i ∈
+idx`/`k ∈ idx` 制限つきの正の系4件）+ その制限が構造的に必要であることの反例による
+確認（この制限を外すと偽になる具体モデルを提示——`Matrix` 層が自身の適用範囲を
+反例つきで明示的に画定した最初のケース）」へ更新する。ただし依然として: (a) 階数・
+行列式・固有値・逆行列は未着手、(b) 抽象代数・位相・測度論は cycle 60 追補時点の
+記述から変化なし、(c) cycle 62 が特定した3系統（`idx` 可変・`Incidence` 合同・行/列
+総和）を埋める一般語彙、および今回開かず残した cycle 62 のフォールバック案(a)/(c)
+（`idx ++ idx'` 分割・行列ベクトル積の一般化）は cycle 64 以降の課題として残る
+（`RESEARCH_LOG.md` cycle 63 の Next hypothesis に記録済み）。項目8の記述は「部分
+完了」のまま維持し、パーセンテージ（本文59行目、40%/55–60%）も本追補では動かさない
+——cycle 60–62 追補と同じ保守的判断を一貫して適用する。

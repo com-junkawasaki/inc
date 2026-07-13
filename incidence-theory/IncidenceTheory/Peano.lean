@@ -379,6 +379,51 @@ theorem incidence_axioms_do_not_imply_unconditional_boundarySquareZero :
   intro hall
   exact natIncidence_not_boundarySquareZeroEverywhere (hall natIncidence)
 
+/- Research cycle 63 (see RESEARCH_LOG.md): the root file's
+   `boundary_operator_square_zero_matrix` recasts ∂² = 0 as `Matrix.mul idx
+   (boundaryMatrix inc idx) (boundaryMatrix inc idx) i k = 0`, but keeps the
+   `i ∈ idx`/`k ∈ idx` restriction from the original `boundary_operator_
+   square_zero`. Is that restriction load-bearing, or just cycle 9's own
+   conservative phrasing carried over unnecessarily? `verify_boundary_
+   composition inc idx` only samples pairs `(i, k)` BOTH drawn from `idx`
+   (`idx.all (fun i => idx.all (fun k => ...))`), so a priori it says
+   nothing about `boundary_composition`/`Matrix.mul idx B B` at any `(i, k)`
+   outside `idx`. This is not merely unproven -- it is FALSE in general,
+   witnessed here by `natIncidence` (the very instance cycle 8/9 already
+   used above) with the SINGLETON index list `[1]`: the check restricted to
+   `{1}` passes trivially (`boundaryMatrix natIncidence _ 1 1 = 0`, since 1's
+   boundary points to 0, not to itself, so the lone checked pair `(1, 1)` is
+   a product of a nonzero value with itself only along the WRONG diagonal --
+   concretely `0 * 0`), yet `boundary_composition natIncidence [1] 2 0 = 1 ≠
+   0` for `i = 2, k = 0`, BOTH outside `[1]` -- the same nonzero witness
+   cycle 8/9 found for the larger `natIdx6`, now shown to survive even when
+   the decidable check over a strictly smaller window is satisfied. So the
+   naive UNRESTRICTED reading of cycle 62's queued option (ii) -- "`Matrix.mul
+   idx (boundaryMatrix inc idx) (boundaryMatrix inc idx) = 0` as a full
+   function/zero-matrix equality, with no `i ∈ idx`/`k ∈ idx` hypothesis at
+   all" -- does NOT follow from `verify_boundary_composition`/`boundary_
+   operator_square_zero` and is genuinely false for at least one model of the
+   axioms; the restriction carried over unchanged into `boundary_operator_
+   square_zero_matrix` is load-bearing, not cosmetic. -/
+def natIdx1 : List Nat := [1]
+
+theorem natIncidence_idx1_check_passes :
+  verify_boundary_composition natIncidence natIdx1 = true := by decide
+
+theorem natIncidence_idx1_outside_pair_nonzero :
+  boundary_composition natIncidence natIdx1 2 0 = 1 := by decide
+
+theorem boundary_operator_square_zero_matrix_unrestricted_fails :
+    ¬ (∀ {I R T : Type} [DecidableEq I] (inc : Incidence I R T) (idx : List I),
+        verify_boundary_composition inc idx = true →
+        ∀ i k : I,
+          Matrix.mul idx (boundaryMatrix inc idx) (boundaryMatrix inc idx) i k = 0) := by
+  intro hall
+  have h := hall natIncidence natIdx1 natIncidence_idx1_check_passes 2 0
+  change boundary_composition natIncidence natIdx1 2 0 = 0 at h
+  rw [natIncidence_idx1_outside_pair_nonzero] at h
+  omega
+
 /- Research cycle 9 (see RESEARCH_LOG.md): classical simplicial homology
    fixes exactly cycle 8's failure by *alternating* the boundary sign by
    degree parity. `altIncidence` tests that directly: `n+1 → n` is

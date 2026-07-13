@@ -6588,3 +6588,166 @@ general vocabulary for it) under one new abstraction? All three are
 well-scoped extensions rather than further audits, since (c)'s own sweep this
 cycle exhausted what the CURRENT lemma set can explain about the EXISTING
 theorem set.
+
+## Cycle 63
+
+**Hypothesis**: cycle 62's own "Next hypothesis" queue named three candidates;
+this cycle takes up (b) as PRIMARY, per this cycle's orchestrating instructions:
+does recasting `boundary_operator_square_zero`/`empty_boundaries_square_zero`
+(`IncidenceTheory.lean` L1250-1278/L5917-5925, the project's ∂²=0 theorems) via
+`boundary_composition_eq_matrix_mul_self` (cycle 62's bonus bridge) let ∂²=0 be
+stated and proved as `Matrix.mul idx (boundaryMatrix inc idx) (boundaryMatrix
+inc idx) = 0` (the zero matrix), rather than (or in addition to) the original
+`boundary_composition inc idx i k = 0` fold form? Fallback options if (b)
+proves intractable or already-satisfied-by-inspection: (a) a general
+`Matrix.mul` fact about `idx ++ idx'` splitting; (c) a general "matrix-vector
+product" abstraction unifying `laplacianRowSum`/`ColumnSum` and
+`GraphModel.finiteLApply`.
+
+**Method**: read, in full before writing anything: `boundarySquareZero`/
+`BoundarySquareZeroEverywhere` (L1250-1262, the `ChainComplexPushoutIncidence`
+field's own vocabulary) and `empty_boundaries_square_zero` (L1269-1278); the
+full `Matrix` section (`add`/`mul`/`transpose`/`one`, L807-919 and L6007-6068);
+`boundary_composition`/`verify_boundary_composition`/`boundary_composition_eq_
+matrix_mul_self`/`boundary_operator_square_zero` (L5876-5925); and
+`ChainComplexPushoutIncidence.boundary_composition_zero` (L5929-5934). Found
+`boundarySquareZero`'s definition (`idx.foldl (fun acc j => acc + boundaryMatrix
+inc idx i j * boundaryMatrix inc idx j k) 0 = 0`, quantified `∀ i k, i ∈ idx →
+k ∈ idx → ...`) is syntactically IDENTICAL in fold-shape to `boundary_
+composition`'s own body — the two vocabularies (one predating `boundary_
+composition`, cycle-era ~pre-9; the other cycle-9-era) were always the same
+statement under two names, so the `Matrix` bridge connects both at once, not
+just `boundary_operator_square_zero`. Before writing the positive corollary,
+checked precisely what `boundary_operator_square_zero`'s conclusion actually
+quantifies: `∀ i k : I, i ∈ idx → k ∈ idx → boundary_composition inc idx i k =
+0`, GATED on `i ∈ idx`/`k ∈ idx` — traced this back to `verify_boundary_
+composition`'s own definition, `idx.all (fun i => idx.all (fun k => decide
+(boundary_composition inc idx i k = 0)))`, which by construction only samples
+pairs BOTH drawn from `idx`. This raised the precise question the task asked
+to check carefully: does the literal, UNRESTRICTED reading of "`Matrix.mul idx
+B B = 0`" (as a full function/zero-matrix equality over ALL of `I`, no `i ∈
+idx`/`k ∈ idx` hypothesis) actually follow from `hcheck`, or only the
+idx-gated version? Worked out on paper, using `natIncidence` (already in the
+project from cycles 4/8/9, chain boundary `n+1 ↦ n-1` with `Sign.neg`) with a
+SINGLETON `idx = [1]`: the check restricted to `{1}` only verifies `(1, 1)`,
+and `boundaryMatrix natIncidence _ 1 1 = 0` (1's boundary points to 0, not to
+itself) makes that pair trivially zero, so `hcheck` should hold — while
+`boundary_composition natIncidence [1] 2 0` sums only over `j = 1`, giving
+`boundaryMatrix _ 2 1 * boundaryMatrix _ 1 0 = (-1) * (-1) = 1 ≠ 0`, for `i =
+2, k = 0` both OUTSIDE `idx`. Hand-verified this arithmetic against `boundary
+Matrix`'s exact fold definition (not assumed) before writing any Lean, then
+planned to confirm it with `decide` (mirroring the project's existing
+`natIncidence_boundary_composition_witness`/`natIncidence_not_boundary_square_
+zero`, both `decide`-based facts about the SAME instance for the larger
+`natIdx6`).
+
+**Result**: **the recast splits cleanly into a genuine positive corollary (the
+idx-gated form the task's fallback framing anticipated as "the correspondence
+line up") plus a precise, Lean-verified negative finding (the naive
+unrestricted form does NOT follow and is actually false) — both landed
+sorry-free, `./verify.sh` clean on the first `lake build` attempt with zero
+tactic-level fixes needed.**
+
+- **Positive corollary** (`IncidenceTheory.lean`, added directly after
+  `boundary_operator_square_zero`): `boundary_operator_square_zero_matrix`,
+  concluding `∀ i k, i ∈ idx → k ∈ idx → Matrix.mul idx (boundaryMatrix inc idx)
+  (boundaryMatrix inc idx) i k = 0` from the same `hcheck` hypothesis, proved
+  in three tactic lines (`intro`, `show boundary_composition inc idx i k = 0`,
+  `exact boundary_operator_square_zero inc idx hcheck i k hi hk`) — the `show`
+  succeeds purely by unfolding both `Matrix.mul`/`intListSum` and `boundary_
+  composition` to the identical `idx.foldl`, confirming this is direct
+  substitution through cycle 62's bridge, not new algebraic work. Also added
+  `boundarySquareZero_iff_matrix_mul_self_zero` (an `Iff`, both directions
+  closed by `exact h i k hi hk`, reflecting the two vocabularies' shared fold
+  body found in Method) and `empty_boundaries_square_zero_matrix` (a one-line
+  `.mp` application of that `Iff` to the existing `empty_boundaries_square_
+  zero`), giving the `ChainComplexPushoutIncidence`-facing vocabulary
+  (`boundarySquareZero`/`BoundarySquareZeroEverywhere`) the same `Matrix.mul`
+  restatement as the `boundary_composition`-facing one, for free.
+- **Negative finding** (`Peano.lean`, added directly after the existing cycle
+  8/9 refutation block, before the cycle-9 `altIncidence` comment): confirmed
+  the hand-worked-out countermodel by `decide` exactly as planned —
+  `natIdx1 := [1]`; `natIncidence_idx1_check_passes : verify_boundary_
+  composition natIncidence natIdx1 = true`; `natIncidence_idx1_outside_pair_
+  nonzero : boundary_composition natIncidence natIdx1 2 0 = 1`; and the
+  closing meta-theorem `boundary_operator_square_zero_matrix_unrestricted_
+  fails : ¬ (∀ {I R T : Type} [DecidableEq I] (inc : Incidence I R T) (idx :
+  List I), verify_boundary_composition inc idx = true → ∀ i k : I, Matrix.mul
+  idx (boundaryMatrix inc idx) (boundaryMatrix inc idx) i k = 0)`, proved by
+  instantiating at `natIncidence`/`natIdx1`/`2`/`0`, `change`-ing to the
+  `boundary_composition` form (defeq, mirroring `natIncidence_not_
+  boundarySquareZeroEverywhere`'s existing proof shape at L368-374), rewriting
+  with the nonzero witness, and closing by `omega`. All arithmetic matched the
+  paper computation on the first attempt — no sign or fold-direction mistake.
+  `#print axioms` on all six new declarations: `boundary_operator_square_zero_
+  matrix` needs `[propext, Quot.sound]`; `boundarySquareZero_iff_matrix_mul_
+  self_zero` needs no axioms at all (both directions are `exact` on
+  already-defeq terms); `empty_boundaries_square_zero_matrix` needs `[Quot.
+  sound]`; the three `Peano.lean` declarations (two `decide`-based, one the
+  closing meta-theorem) need `[propext, Classical.choice, Quot.sound]` —
+  cross-checked against the PRE-EXISTING `natIncidence_boundary_composition_
+  witness`/`natIncidence_not_boundary_square_zero` (also `decide`-based, same
+  file), which carry the IDENTICAL axiom set, confirming no new axiom
+  dependency beyond this file's established `decide` baseline. Full
+  `./verify.sh` (clean `lake clean` rebuild, example run, repo-wide `axiom`/
+  `sorry`/`sorryAx` grep) passes end to end with all six declarations present.
+
+**Synthesis**: this cycle's finding is more precise than a flat "yes, it
+recasts cleanly" or "no, structural mismatch" — it is BOTH, cleanly separated
+along exactly the `i ∈ idx`/`k ∈ idx` line that `boundary_operator_square_
+zero`'s own signature already drew. The task's hypothesis (ii) as literally
+phrased ("`Matrix.mul idx B B = 0`, the zero matrix") is ambiguous between two
+readings that happen to coincide for `laplacian_eq_transpose_mul_
+boundaryMatrix` (cycle 60) and `mul_transpose_self_diag_nonneg`
+(cycle 62(c)) — both of THOSE are unconditional over all `i, j : I`, because
+`laplacian`/`Matrix.mul`'s ROW and COLUMN indices are never restricted, only
+the SUMMED index ranges over `idx`. `boundary_operator_square_zero` is
+different in kind: its restriction isn't on the summed index (which is `idx`
+in both cases) but on the ROW/COLUMN indices `i, k` themselves, inherited from
+`verify_boundary_composition`'s `idx.all (fun i => idx.all (fun k => ...))`
+shape, which only ever samples entries drawn from `idx`. This is a genuinely
+different, finer distinction than cycle 62(c)'s own taxonomy (pointwise vs.
+idx-varying vs. inc-varying vs. cross-summation) — a FIFTH axis: whether a
+theorem's hypothesis constrains the same index set its conclusion quantifies
+over. Concretely, the countermodel shows this is not a hypothetical concern:
+`natIncidence`'s single-face chain (cycles 8/9's own instance) supplies a
+strictly SMALLER witness than `natIdx6` was — a singleton index list already
+suffices to pass the check while failing off-window, sharpening cycles 8/9's
+original finding ("`boundary_composition natIncidence natIdx6 2 0 = 1 ≠ 0`,
+2 and 0 both IN the 6-element checked window") into a strictly stronger one
+("the failure survives even when the checked window is reduced to a single,
+self-consistent element that has NOTHING to do with the failing pair"). Per
+this project's established culture (cycles 38-40/45-62), a rigorously
+delimited "this recasts, but only under the SAME restriction the original
+already had, and here is a concrete proof the restriction cannot be dropped"
+is exactly as informative a research output as an unconditional positive
+result, and more informative than either a bare "yes" or a bare "structural
+mismatch, pivoting to fallback" would have been, since the fallback options
+(a)/(c) were not needed at all. Per cycle 60-62's own precedent (ADR addendum
+for genuine new-construction progress on item 8, not for confirmatory-only
+results), this cycle warrants a further ADR addendum: the positive corollary
+adds a fourth "Matrix.mul-recast" fact to a hand-proved/definitional pair
+(joining cycle 61(b)'s `laplacian_symmetric_via_matrix` and cycle 62(c)'s
+`laplacian_diagonal_nonnegative_via_matrix`), and the negative countermodel is
+the FIRST time this project's `Matrix` layer has needed to precisely delimit
+its own reach with a concrete Lean witness (rather than a taxonomic "this
+category doesn't apply" argument) — new methodological content, not just a new
+theorem.
+
+**Next hypothesis (cycle 64, not yet attempted)**: three candidates surface,
+none requiring fresh scoping: (a) this cycle's "fifth axis" finding (whether a
+theorem's hypothesis-index-set matches its conclusion-index-set) suggests
+auditing whether any OTHER existing `Matrix`-adjacent theorem shares
+`boundary_operator_square_zero`'s shape (conclusion gated on `i ∈ idx`/`k ∈
+idx` rather than unconditional over all `i, k : I`) — a systematic check,
+analogous to cycle 62(c)'s sweep but along this NEW axis rather than the four
+already catalogued; (b) cycle 62's own still-open fallback (a): does
+`Matrix.mul` admit a general fact about `idx ++ idx'` splitting, which would
+let `laplacian_append`/`_cons`/`_empty`/the monotonicity family (cycle 62(c)'s
+8 "idx-variation" negatives) reduce to corollaries — unclaimed by this cycle,
+since (b) was taken as primary per the task's framing, so this remains a live,
+well-scoped extension; (c) cycle 62's own still-open fallback (c): a general
+"matrix-vector product" abstraction unifying `laplacianRowSum`/`ColumnSum` and
+`GraphModel.finiteLApply`, likewise unclaimed. (b) and (c) are the more
+substantial, library-growing continuations; (a) is a smaller, audit-shaped
+task in the spirit of this cycle's own precision about restriction axes.
