@@ -5164,6 +5164,44 @@ noncomputable def CountableAtomCoding.prod {Left Right : Type u}
     · simp [diagonalIndex_pair, left.decode_code]
     · simp [diagonalRemainder_pair, right.decode_code]
 
+/- A canonical representative of a `Quotient` class -- the generic form of
+   cycle 39's `quotOut` (`Quotient.lean`, specialized there to a fixed
+   `approxBisimSetoid inc`) and of cycle 69's bespoke
+   `IncRational.outRepresentative` (`Rationals.lean`, specialized there to
+   `rationalRepresentativeSetoid`). This project has no `mathlib`
+   dependency, so core Lean's `Quotient.out` is not directly usable
+   notation; `Quotient.exists_rep` (core) combined with `Classical.choice`
+   is the same underlying construction upstream `Quotient.out` is built
+   from, generalized here to an arbitrary `Setoid`, not tied to any one
+   quotient. -/
+noncomputable def Quotient.outRep {A : Type u} (s : Setoid A)
+    (value : Quotient s) : A :=
+  Classical.choose (Quotient.exists_rep value)
+
+theorem Quotient.outRep_spec {A : Type u} (s : Setoid A) (value : Quotient s) :
+    Quotient.mk s (Quotient.outRep s value) = value :=
+  Classical.choose_spec (Quotient.exists_rep value)
+
+/- Lift any `CountableAtomCoding A` through a `Quotient s : Setoid A` to a
+   `CountableAtomCoding (Quotient s)`, by coding a canonical representative
+   (`Quotient.outRep`) of each class and decoding back into a class via
+   `Quotient.mk`. This is the reusable generalization of cycle 69's
+   `IncRational`-specific composition
+   (`rationalRepresentativeAtomCoding` + `IncRational.outRepresentative` +
+   `rationalCode`/`rationalDecode`/`rationalDecode_code`), following the
+   same "combinator built from smaller `CountableAtomCoding`s" shape as
+   `CountableAtomCoding.sum`/`.prod` above, rather than leaving the
+   quotient-lift technique as a one-off tied to rationals specifically. -/
+noncomputable def CountableAtomCoding.ofQuotient {A : Type u} (s : Setoid A)
+    (coding : CountableAtomCoding A) : CountableAtomCoding (Quotient s) where
+  decode index := Quotient.mk s (coding.decode index)
+  code value := coding.code (Quotient.outRep s value)
+  decode_code := by
+    intro value
+    show Quotient.mk s (coding.decode (coding.code (Quotient.outRep s value))) = value
+    rw [coding.decode_code]
+    exact Quotient.outRep_spec s value
+
 theorem CountableAtomCoding.kripke_complete {Atom : Type u}
     (coding : CountableAtomCoding Atom)
     (context : List (Formula Atom)) (formula : Formula Atom) :

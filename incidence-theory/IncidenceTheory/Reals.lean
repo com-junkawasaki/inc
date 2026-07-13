@@ -8736,4 +8736,44 @@ theorem real_mvt
   rw [slopeEq]
   exact hasD
 
+/- Cycle 70: `realIncidence` cannot receive `CountablyPresentedIncidence`
+   directly (cycle 68's permanent finding: `IncReal` is classically
+   uncountable, so no `CountableAtomCoding IncReal` -- i.e. no injection
+   `IncReal ↪ Nat` -- can exist). But `Logic.lean`'s
+   `Incidence.internalLogic_complete_arbitrary` /
+   `Incidence.internalLogic_consistent_iff_model_arbitrary` (added
+   2026-07-11, "close arbitrary-carrier completeness", predating cycles
+   68-69 but never instantiated for any concrete `Incidence` in this
+   project until now) are a genuinely WEAKER, unconditional bridge: they
+   hold for *every* `Incidence I R T` given only `[DecidableEq I]` -- no
+   coding, no countability, not even a `BEq`/`LawfulBEq` instance to
+   supply by hand (Lean core derives both from `DecidableEq`
+   automatically). The trick that makes this possible without
+   contradicting cycle 68's cardinality obstruction: soundness/
+   completeness for a *fixed* finite `context`/`formula` only needs the
+   finitely many atoms actually occurring in it to be nameable, not the
+   whole carrier type to be countable -- `kripke_entails_iff_derives_of_
+   nonempty_atoms` builds that per-query finite-support coding instead of
+   a global one. `IncReal` already has the one instance this needs,
+   `noncomputable instance : DecidableEq IncReal := Classical.
+   typeDecidableEq IncReal` (above), so the corollaries below are direct
+   applications, no new proof technique. What they do NOT give, unlike
+   `CountablyPresentedIncidence`: an explicit `FormulaEnumeration IncReal`,
+   or the specific named `canonicalKripkeModel IncReal` with `PrimeTheory
+   IncReal` worlds -- only the existence of *some* Kripke model/countermodel.
+   Cycle 68's negative result about direct `CountableAtomCoding IncReal`
+   therefore stands exactly as proved; this closes the different, weaker
+   question cycle 69 queued as option (a) ("is any bridge available at
+   all"), with a real "yes" rather than routing around the cardinality
+   obstruction. -/
+theorem realIncidence_internalLogic_complete_arbitrary
+    (context : List (Formula IncReal)) (formula : Formula IncReal) :
+    KripkeEntails.{0, 0} context formula ↔ Derives context formula :=
+  realIncidence.internalLogic_complete_arbitrary context formula
+
+theorem realIncidence_internalLogic_consistent_iff_model_arbitrary
+    (context : List (Formula IncReal)) :
+    DerivationallyConsistent context ↔ KripkeSatisfiable context :=
+  realIncidence.internalLogic_consistent_iff_model_arbitrary context
+
 end IncidenceCore

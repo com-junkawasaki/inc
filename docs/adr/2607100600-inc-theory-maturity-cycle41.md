@@ -2581,3 +2581,94 @@ cycle 68 の選択肢 (b)（`Reals.lean` 自身の構成を全文精読し、離
 可能にする小さな副次選択肢、および cycle 67 がまだ手つかずのまま残した
 `ResonantQuotientEquivalenceCriterion` フォールバックを、cycle 70 に
 委ねている。
+
+## 2026-07-14 追補（cycle 70: `realIncidence` を「弱い」internal-logic
+bridge へ接続——`_arbitrary` 完全性が既に無条件で存在していたことを
+確認し、同時に `CountableAtomCoding.ofQuotient` 一般コンビネータを新設）
+
+本追補は `RESEARCH_LOG.md` cycle 70 の結果を反映する。cycle 69 が主候補
+として残した選択肢 (a) ——`Reals.lean` の実数構成を全文精読し、
+`realIncidence` への弱い bridge の可能性を探る——に取り組んだ。
+
+`Reals.lean`（8739行）を全文精読し、`IncReal`（L7-14）が `IncRational` 上の
+Dedekind cut（`lower : IncRational → Prop` が `inhabited`/`proper`/
+`downward`/`rounded` を満たす構造）であることを確認した——cycle 68/69が
+推測した「有理数からの可算近似構成」の正体が Dedekind cut であることの
+確定である。`realIncidence : Incidence IncReal RealRole GraphType`
+（L641）が実際の instance 名であることも確認した。
+
+`Logic.lean` を completeness/consistency 機構について全文精読したところ、
+`CountableAtomCoding` より真に弱い、既に存在する機構を発見した:
+`Incidence.internalLogic_complete_arbitrary`/
+`Incidence.internalLogic_consistent_iff_model_arbitrary`（L5832-5899）。
+`git log --follow -S` で辿ると commit `9161da5`
+（"feat(inc): close arbitrary-carrier completeness"、2026-07-11 23:42、
+本文書自身の「2026-07-11 追補（現行 main）」節に記載済み）に由来し、
+cycle 68/69（いずれも本文書上「2026-07-14 追補」）より時系列的に**前**に
+main へ入っていたにもかかわらず、`RESEARCH_LOG.md` 全体を
+`grep -n "arbitrary"` しても cycle 68/69 のどちらの記述にも一度も
+言及がないことを確認した——存在していたが、どのインスタンスにも
+一度も具体的に接続されていなかった、という発見である。
+
+この `_arbitrary` 系がなぜ cycle 68 の非可算性障害と矛盾しないかを
+機構レベルで確認した: `[DecidableEq I]` だけを要求し（`[BEq I]`/
+`[LawfulBEq I]` は core Lean が `DecidableEq` から自動導出——
+`Init/Prelude.lean:1032`/`Init/Core.lean:813` の汎用 `(priority := 500)`
+instance で確認済み）、符号化関数を一切要求しない。これが可能な理由は、
+根底にある `kripke_entails_iff_derives_of_nonempty_atoms` が carrier
+全体の大域的な符号化ではなく、**固定された1つの `context`/`formula` に
+実際に現れる有限個の atom だけ**を `Nat` へ対応させる per-query な
+有限-support 符号化を構築するからである。cycle 68 の障害は
+「`IncReal` 全体から `Nat` への大域的単射が存在しない」ことについてで
+あり、`_arbitrary` はその大域的単射を回避する——迂回であって反証では
+ない。`CountablyPresentedIncidence` と違い `_arbitrary` が与えないもの:
+明示的な `FormulaEnumeration IncReal` や、`canonicalKripkeModel IncReal`
+上の具体的な `PrimeTheory IncReal` countermodel——与えるのは「何らかの」
+モデル/countermodel の存在のみ。
+
+scratch `lake env lean` 検査（使用後削除）で `realIncidence.
+internalLogic_complete_arbitrary`/`.internalLogic_consistent_iff_
+model_arbitrary` が `IncReal` の既存 `DecidableEq` instance に対して
+そのまま型検査を通ることを確認した上で、`Reals.lean` の
+`end IncidenceCore` 直前に系として追加した:
+`realIncidence_internalLogic_complete_arbitrary`/
+`realIncidence_internalLogic_consistent_iff_model_arbitrary`。
+
+選択肢 (a) が具体的な結果を伴って解決したため、cycle 69 の副次選択肢 (b)
+も併せて完了させた: `Logic.lean` の `.prod` 直後に
+`CountableAtomCoding.ofQuotient`（任意の `CountableAtomCoding A` を
+`Quotient s : Setoid A` 経由で `CountableAtomCoding (Quotient s)` へ
+持ち上げる一般コンビネータ）を新設し、`Quotient.outRep`/
+`Quotient.outRep_spec`（cycle 39 の `quotOut` を特定の
+`approxBisimSetoid` から任意の `Setoid` へ一般化したもの）で支えた。
+`Rationals.lean` に `rationalAtomCoding_ofQuotient :=
+rationalRepresentativeAtomCoding.ofQuotient rationalRepresentativeSetoid`
+を追加し、これの `decode`/`code`/構造全体が cycle 69 の手書き
+`rationalAtomCoding` と `rfl` で文字通り一致することを証明した——
+一般化が「それらしく見える」だけでなく実際に正しいことの確認である。
+
+新規9宣言（`Logic.lean` に3、`Rationals.lean` に4、`Reals.lean` に2）は
+初回の `lake build` で全て型検査を通過し、`./verify.sh`（完全リビルド、
+実行例、`axiom`/`sorry`/`sorryAx` の全木 grep）はクリーンに通過した。
+scratch 検査で全ての新規宣言が `[propext, Classical.choice, Quot.sound]`
+——project 標準の3公理——にのみ依存し、新規公理が皆無であることを
+確認した。
+
+これにより: 項目7の「resonance ↔内部論理」という一辺は、`realIncidence`
+についても閉じた——ただし `_arbitrary` が与える弱いレベル（Kripke
+entailment/derivation の同値と consistency/model-existence の同値のみ、
+`Nat`/`Int`/`Rational` が持つ明示的 canonical countermodel ではない）で
+ある。cycle 68 の「`realIncidence` への直接の `CountableAtomCoding` は
+恒久的に不可能」という結果はそのまま正しく残り、迂回されても反証されても
+いない——これは別の、より弱い問いに対する具体的な "yes" である。
+とはいえ項目7が明示する単一の普遍的解釈定理そのものには遠く及ばないため、
+cycle 60-69 の保守的規律どおり、項目7の記述（「部分完了」）と
+パーセンテージ（本文57–58行目）は本追補では動かさない。
+`RESEARCH_LOG.md` cycle 70 の Next hypothesis は、(a) `_arbitrary` 系を
+`natIncidence`/`integerIncidence`/`rationalIncidence`/`finiteIncidence`
+にも機械的に追加する小さな一般化（優先度低——既により強い
+`CountablyPresentedIncidence` 系を持つため）と、(b) `finiteIncidence`
+（cycle 68 の監査で唯一まだ内部論理層に無接続のまま残ったインスタンス、
+有限ゆえ自明に可算)への直接の強い bridge 構築を、cycle 67 がまだ
+手つかずのまま残した `ResonantQuotientEquivalenceCriterion`
+フォールバックと共に、cycle 71 に委ねている。

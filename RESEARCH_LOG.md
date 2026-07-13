@@ -7881,3 +7881,166 @@ reusable generic combinator ("lift any `CountableAtomCoding A` through a
 existing `CountableAtomCoding.sum`/`.prod` combinators in `Logic.lean`")
 is a smaller, well-scoped side option if the `Real` thread proves
 unready to attempt yet again.
+
+## Cycle 70
+
+**Hypothesis**: cycle 69's queued primary thread, carried unattempted since
+cycle 68 posed it: read `Reals.lean`'s full construction of `realIncidence`
+to judge whether its underlying representation supplies -- or could be
+made to supply -- a genuinely WEAKER-than-`CountableAtomCoding` bridge
+from `realIncidence` to the internal-logic layer, given cycle 68's
+permanent finding that direct `CountableAtomCoding IncReal` is impossible
+(ℝ's uncountability is a hard obstruction, not to be routed around).
+Secondary, per cycle 69's own closing note: generalize cycle 69's bespoke
+`IncRational` quotient-lift coding into a reusable
+`CountableAtomCoding.ofQuotient`-style combinator, analogous to the
+existing `.sum`/`.prod`.
+
+**Method**: read `Reals.lean` in full (8739 lines; previously read in this
+project only to its `*ResonanceSpec` block headers, per cycle 69's own
+admission). Confirmed the carrier precisely: `IncReal` (L7-14) is a
+Dedekind cut of `IncRational` -- a structure `lower : IncRational → Prop`
+satisfying `inhabited`/`proper`/`downward`/`rounded` -- with
+`rationalToReal`/`realLE`/`realAdd`/`realSup`/... built directly on top of
+it (matching the task's own guess exactly: constructive reals built as a
+countable-approximation scheme over the rationals, specifically Dedekind
+cuts, not Cauchy sequences). `realIncidence : Incidence IncReal RealRole
+GraphType` (L641) is confirmed as the actual name of the `Incidence`
+instance on reals. `IncReal` already carries
+`noncomputable instance : DecidableEq IncReal :=
+Classical.typeDecidableEq IncReal` (L608), pre-existing from long before
+this cycle.
+
+Read `Logic.lean`'s completeness/consistency machinery end to end looking
+for a genuinely weaker, well-typed notion than `CountableAtomCoding`, as
+the task framed option (a). Found one already built and merged, but never
+once instantiated for any concrete `Incidence` in the project:
+`Incidence.internalLogic_complete_arbitrary` /
+`Incidence.internalLogic_consistent_iff_model_arbitrary` (L5832-5899).
+`git log --follow -S` traced these to commit `9161da5`
+("feat(inc): close arbitrary-carrier completeness", 2026-07-11 23:42),
+documented in this ADR's own "2026-07-11 追補（現行 main）" section --
+chronologically BEFORE cycles 68/69 (both dated "2026-07-14 追補" in the
+same ADR) -- yet a `grep -n "arbitrary"` over the whole of
+`RESEARCH_LOG.md` before this cycle returns zero hits: neither cycle 68's
+nor cycle 69's own research-log entries mention this machinery at all,
+despite it already answering the exact question cycle 68 posed.
+
+Worked out precisely why `_arbitrary` is strictly weaker than
+`CountablyPresentedIncidence` and does not contradict cycle 68's
+cardinality obstruction: it requires only `[DecidableEq I]` (Lean core
+auto-derives `[BEq I]`/`[LawfulBEq I]` from any `DecidableEq` instance,
+confirmed against the actual toolchain source,
+`Init/Prelude.lean:1032`/`Init/Core.lean:813`, both generic
+`(priority := 500)` instances) -- no coding function of any kind. The
+reason this is possible at all: `kripke_entails_iff_derives_of_
+nonempty_atoms` (which `_arbitrary` bottoms out in) builds a per-query
+*finite-support* coding -- only the finitely many atoms actually occurring
+in the one fixed `context`/`formula` being asked about need to be
+nameable via `Nat`, via `List.idxOf`/`List.getD` over that finite list --
+not a single global injection of the WHOLE carrier into `Nat`. Cycle 68's
+obstruction is specifically about the latter (a global `IncReal ↪ Nat`,
+which cannot exist), so the two are not in tension: `_arbitrary` sidesteps
+the obstruction rather than disproving it. What `_arbitrary` does NOT
+give, unlike `CountablyPresentedIncidence`: an explicit
+`FormulaEnumeration IncReal`, or the specific named
+`canonicalKripkeModel IncReal` with `PrimeTheory IncReal` worlds as the
+countermodel -- only the abstract existence of *some* Kripke model or
+countermodel.
+
+Verified with a scratch `lake env lean` check file (deleted after use,
+per this project's established practice) that `realIncidence.
+internalLogic_complete_arbitrary` / `.internalLogic_consistent_iff_
+model_arbitrary` type-check directly against `IncReal`'s pre-existing
+`DecidableEq` instance, with zero new proof content beyond the
+application itself, before writing them into `Reals.lean` as named
+corollaries (`realIncidence_internalLogic_complete_arbitrary` /
+`realIncidence_internalLogic_consistent_iff_model_arbitrary`, placed
+directly before `end IncidenceCore`, mirroring the placement convention
+`Peano.lean`/`Integers.lean`/`Rationals.lean` already use for their own
+`_internalLogic_complete`/`_internalLogic_consistent_iff_model`
+corollaries).
+
+With (a) answered concretely, also completed cycle 69's own secondary
+thread (b): built `CountableAtomCoding.ofQuotient` (`Logic.lean`, directly
+after `.prod`) -- lifts any `CountableAtomCoding A` through a
+`Quotient s : Setoid A` via two new generic helpers,
+`Quotient.outRep`/`Quotient.outRep_spec`, the same
+`Classical.choose (Quotient.exists_rep ·)` idiom cycle 39's `quotOut`
+uses, generalized from `quotOut`'s hardcoded `approxBisimSetoid inc` to an
+arbitrary `Setoid`. Re-derived cycle 69's `rationalAtomCoding` in
+`Rationals.lean` as `rationalRepresentativeAtomCoding.ofQuotient
+rationalRepresentativeSetoid` (`rationalAtomCoding_ofQuotient`) and proved
+by `rfl` -- not merely argued by analogy -- that its `decode`, its `code`,
+and the whole `CountableAtomCoding` structure are literally identical to
+cycle 69's hand-built construction
+(`rationalAtomCoding_ofQuotient_decode_eq`/`_code_eq`/`_eq`).
+
+**Result**: **all 9 new declarations across 3 files type-check on the
+first `lake build` attempt** (`Quotient.outRep`/`Quotient.outRep_spec`/
+`CountableAtomCoding.ofQuotient` in `Logic.lean`;
+`rationalAtomCoding_ofQuotient`/`_decode_eq`/`_code_eq`/`_eq` in
+`Rationals.lean`; `realIncidence_internalLogic_complete_arbitrary`/
+`_consistent_iff_model_arbitrary` in `Reals.lean`); **`./verify.sh`
+(clean `lake clean` + `lake build`, example run, repo-wide
+`axiom`/`sorry`/`sorryAx` grep) passes end to end.** Scratch
+`lake env lean` checks (deleted after use) confirm every substantive new
+declaration depends on exactly `[propext, Classical.choice, Quot.sound]`
+-- this project's standing three axioms, no new commitment -- including,
+notably, the two `realIncidence` corollaries, whose axiom footprint turns
+out identical to `Nat`/`Int`/`Rational`'s much heavier
+`CountableAtomCoding`-based bridges despite needing none of that
+machinery.
+
+**Synthesis**: this cycle closes both threads cycle 69 queued, in the
+order cycle 69 itself prioritized. On (a): the honest finding is that
+`Reals.lean`'s OWN discrete/rational-approximating structure (the
+Dedekind cut over `IncRational`) turned out NOT to be the source of the
+weaker bridge cycles 68/69 speculated about -- no bridge was built by
+routing through the rationals or the cycle-69 `rationalIncidence`
+connection. Instead, the weaker bridge already existed as fully general,
+carrier-agnostic machinery, built two cycles' worth of project-time
+*before* cycle 68 even posed the question, and simply had never been
+connected to any concrete instance in the project at all -- not `Real`,
+but also not `Nat`/`Int`/`Rational`/the finite graph model either. This
+means item 7's "resonance ↔ internal logic" leg is now closed for
+`realIncidence` too, but at the strictly WEAKER level `_arbitrary`
+provides (Kripke entailment/derivation duality and
+consistency/model-existence duality, not the explicit canonical
+countermodel `CountablyPresentedIncidence` gives `Nat`/`Int`/`Rational`) --
+cycle 68's negative result about the STRONGER canonical-model route
+stands exactly as proved, not contradicted and not routed around: this is
+a genuinely different, weaker question, answered "yes" on its own terms.
+On (b): the generalization is confirmed correct by the strongest
+available check, not mere plausibility -- `rfl` equality of the general
+combinator's output against cycle 69's hand-built one, on both component
+functions and the whole structure, the same standard this project has
+used before (e.g. cycle 39's `quotOut` concrete complement to its abstract
+`Subsingleton` finding) to distinguish "looks right" from "is right." Per
+this project's cycles 60-69 conservative convention, the ADR addendum
+below records both findings without moving item 7's existing percentage
+figures -- a leg of the triangle item 7 envisions is now closed at a
+specified, weaker strength for every countable-or-not instance in the
+project, not the single universal interpretation theorem itself.
+
+**Next hypothesis (cycle 71, not yet attempted)**: two threads, neither
+urgent-blocking, both concretely scoped. (a) This cycle's synthesis
+surfaced that `_arbitrary` corollaries were never instantiated for
+`natIncidence`/`integerIncidence`/`rationalIncidence`/`finiteIncidence`
+either (only `realIncidence`, this cycle) -- a small, mechanical sweep to
+add them for uniformity, though low-value on its own since those three
+already have the STRICTLY STRONGER `CountablyPresentedIncidence`-based
+corollaries; worth doing only if bundled with something else. (b)
+`finiteIncidence` (`GraphModel.lean`) is the one remaining
+`*ResonanceSpec`-bearing instance from cycle 68's audit with NO
+internal-logic connection of any kind, strong or weak -- it is finite
+hence trivially countable, so unlike `Real` it could receive a direct
+`CountableAtomCoding`/`CountablyPresentedIncidence` (the strong route, not
+just the `_arbitrary` fallback this cycle used for `Real`), completing
+the strong bridge for every instance cycle 68 didn't rule out
+permanently -- the one gap cycle 68's own audit named but deprioritized
+(because `finiteIncidence`'s `AssociativeResonanceSpec` fails on its
+self-sum, per its own negative theorem
+`finiteIncidenceSum_not_associativeResonance`, so it looked less rich than
+`Int`/`Rational` at the time). Fallback, still unclaimed since cycle 67:
+`ResonantQuotientEquivalenceCriterion`.

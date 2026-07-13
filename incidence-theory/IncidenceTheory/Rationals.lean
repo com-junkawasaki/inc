@@ -1636,4 +1636,25 @@ theorem rationalIncidence_internalLogic_consistent_iff_model
     DerivationallyConsistent context ↔ KripkeSatisfiable context :=
   rationalCountablyPresentedIncidence.internalLogic_consistent_iff_model context
 
+/- Cycle 70 confirmation: `rationalAtomCoding` above (`rationalCode`/
+   `rationalDecode`/`rationalDecode_code`, built by hand) is exactly what
+   `CountableAtomCoding.ofQuotient` (`Logic.lean`) produces when applied to
+   `rationalRepresentativeAtomCoding` and `rationalRepresentativeSetoid` --
+   not merely an analogous-looking construction, but the identical one,
+   confirmed here by `rfl` on both component functions and on the whole
+   structure. This is the check that the general combinator actually
+   generalizes cycle 69's bespoke quotient lift correctly, rather than
+   only being plausible-looking. -/
+noncomputable def rationalAtomCoding_ofQuotient : CountableAtomCoding IncRational :=
+  rationalRepresentativeAtomCoding.ofQuotient rationalRepresentativeSetoid
+
+theorem rationalAtomCoding_ofQuotient_decode_eq :
+    rationalAtomCoding_ofQuotient.decode = rationalDecode := rfl
+
+theorem rationalAtomCoding_ofQuotient_code_eq :
+    rationalAtomCoding_ofQuotient.code = rationalCode := rfl
+
+theorem rationalAtomCoding_ofQuotient_eq :
+    rationalAtomCoding_ofQuotient = rationalAtomCoding := rfl
+
 end IncidenceCore
