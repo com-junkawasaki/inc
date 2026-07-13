@@ -3828,6 +3828,338 @@ theorem realSequentiallyContinuousAt_comp
   intro sequence converges
   exact secondContinuous _ (firstContinuous _ converges)
 
+def RealFunctionLimitAt
+    (function : IncReal → IncReal) (point limit : IncReal) : Prop :=
+  ∀ epsilon : IncRational,
+    rationalLT (rationalOfInteger 0) epsilon →
+    ∃ delta : IncRational,
+      rationalLT (rationalOfInteger 0) delta ∧
+      ∀ input, realLE (realDist input point).value (rationalToReal delta) →
+        realLE (realDist (function input) limit).value
+          (rationalToReal epsilon)
+
+def RealContinuousAt (function : IncReal → IncReal) (point : IncReal) : Prop :=
+  RealFunctionLimitAt function point (function point)
+
+theorem realFunctionLimitAt_const (constant point : IncReal) :
+    RealFunctionLimitAt (fun _ => constant) point constant := by
+  intro epsilon epsilonPositive
+  refine ⟨epsilon, epsilonPositive, ?_⟩
+  intro input _
+  rw [realDist_self]
+  exact (rationalToReal_le_iff _ _).mpr epsilonPositive.1
+
+theorem realFunctionLimitAt_id (point : IncReal) :
+    RealFunctionLimitAt (fun value => value) point point := by
+  intro epsilon epsilonPositive
+  exact ⟨epsilon, epsilonPositive, fun input close => close⟩
+
+theorem realContinuousAt_const (constant point : IncReal) :
+    RealContinuousAt (fun _ => constant) point :=
+  realFunctionLimitAt_const constant point
+
+theorem realContinuousAt_id (point : IncReal) :
+    RealContinuousAt (fun value => value) point :=
+  realFunctionLimitAt_id point
+
+theorem realFunctionLimitAt_comp
+    {first second : IncReal → IncReal}
+    {point middle limit : IncReal}
+    (firstLimit : RealFunctionLimitAt first point middle)
+    (secondLimit : RealFunctionLimitAt second middle limit) :
+    RealFunctionLimitAt (fun value => second (first value)) point limit := by
+  intro epsilon epsilonPositive
+  obtain ⟨middleRadius, middleRadiusPositive, secondClose⟩ :=
+    secondLimit epsilon epsilonPositive
+  obtain ⟨inputRadius, inputRadiusPositive, firstClose⟩ :=
+    firstLimit middleRadius middleRadiusPositive
+  exact ⟨inputRadius, inputRadiusPositive, fun input close =>
+    secondClose (first input) (firstClose input close)⟩
+
+theorem realFunctionLimitAt_add
+    {left right : IncReal → IncReal}
+    {point leftLimit rightLimit : IncReal}
+    (leftConverges : RealFunctionLimitAt left point leftLimit)
+    (rightConverges : RealFunctionLimitAt right point rightLimit) :
+    RealFunctionLimitAt (fun value => realAdd (left value) (right value))
+      point (realAdd leftLimit rightLimit) := by
+  intro epsilon epsilonPositive
+  obtain ⟨half, halfPositive, halfAdd⟩ :=
+    rational_exists_positive_half epsilonPositive
+  obtain ⟨leftRadius, leftRadiusPositive, leftClose⟩ :=
+    leftConverges half halfPositive
+  obtain ⟨rightRadius, rightRadiusPositive, rightClose⟩ :=
+    rightConverges half halfPositive
+  rcases rationalLE_total leftRadius rightRadius with ordered | reverse
+  · refine ⟨leftRadius, leftRadiusPositive, ?_⟩
+    intro input inputClose
+    have rightInputClose : realLE (realDist input point).value
+        (rationalToReal rightRadius) :=
+      realLE_trans inputClose ((rationalToReal_le_iff _ _).mpr ordered)
+    have distanceBound := realDist_add_le
+      (left input) (right input) leftLimit rightLimit
+    have summed := realAdd_monotone
+      (leftClose input inputClose) (rightClose input rightInputClose)
+    have result := realLE_trans distanceBound summed
+    rw [realAdd_rationalToReal, halfAdd] at result
+    exact result
+  · refine ⟨rightRadius, rightRadiusPositive, ?_⟩
+    intro input inputClose
+    have leftInputClose : realLE (realDist input point).value
+        (rationalToReal leftRadius) :=
+      realLE_trans inputClose ((rationalToReal_le_iff _ _).mpr reverse)
+    have distanceBound := realDist_add_le
+      (left input) (right input) leftLimit rightLimit
+    have summed := realAdd_monotone
+      (leftClose input leftInputClose) (rightClose input inputClose)
+    have result := realLE_trans distanceBound summed
+    rw [realAdd_rationalToReal, halfAdd] at result
+    exact result
+
+theorem realFunctionLimitAt_neg
+    {function : IncReal → IncReal} {point limit : IncReal}
+    (converges : RealFunctionLimitAt function point limit) :
+    RealFunctionLimitAt (fun value => realNeg (function value))
+      point (realNeg limit) := by
+  intro epsilon epsilonPositive
+  obtain ⟨delta, deltaPositive, eventuallyClose⟩ :=
+    converges epsilon epsilonPositive
+  refine ⟨delta, deltaPositive, ?_⟩
+  intro input inputClose
+  rw [realDist_neg]
+  exact eventuallyClose input inputClose
+
+noncomputable def realDifferenceQuotient
+    (function : IncReal → IncReal) (point derivative increment : IncReal) : IncReal :=
+  if increment = realZero then derivative
+  else realDiv
+    (realAdd (function (realAdd point increment)) (realNeg (function point)))
+    increment
+
+def RealHasDerivativeAt
+    (function : IncReal → IncReal) (derivative point : IncReal) : Prop :=
+  RealFunctionLimitAt
+    (realDifferenceQuotient function point derivative) realZero derivative
+
+theorem realDifferenceQuotient_const
+    (constant derivative point increment : IncReal)
+    (derivativeZero : derivative = realZero) :
+    realDifferenceQuotient (fun _ => constant) point derivative increment =
+      realZero := by
+  classical
+  by_cases incrementZero : increment = realZero
+  · rw [realDifferenceQuotient, if_pos incrementZero, derivativeZero]
+  · rw [realDifferenceQuotient, if_neg incrementZero,
+      realAdd_neg, realDiv, realMul_zero_left]
+
+theorem realHasDerivativeAt_const (constant point : IncReal) :
+    RealHasDerivativeAt (fun _ => constant) realZero point := by
+  intro epsilon epsilonPositive
+  refine ⟨epsilon, epsilonPositive, ?_⟩
+  intro increment _
+  rw [realDifferenceQuotient_const constant realZero point increment rfl,
+    realDist_self]
+  exact (rationalToReal_le_iff _ _).mpr epsilonPositive.1
+
+theorem realDifferenceQuotient_id (point increment : IncReal) :
+    realDifferenceQuotient (fun value => value) point realOne increment =
+      realOne := by
+  classical
+  by_cases incrementZero : increment = realZero
+  · rw [realDifferenceQuotient, if_pos incrementZero]
+  · rw [realDifferenceQuotient, if_neg incrementZero]
+    have numerator : realAdd (realAdd point increment) (realNeg point) =
+        increment := by
+      calc
+        _ = realAdd increment (realAdd point (realNeg point)) := by
+          rw [realAdd_comm point increment, realAdd_assoc]
+        _ = increment := by rw [realAdd_neg, realAdd_zero_right]
+    rw [numerator, realDiv, realInvOrZero_of_ne increment incrementZero,
+      realMul_inv]
+
+theorem realHasDerivativeAt_id (point : IncReal) :
+    RealHasDerivativeAt (fun value => value) realOne point := by
+  intro epsilon epsilonPositive
+  refine ⟨epsilon, epsilonPositive, ?_⟩
+  intro increment _
+  rw [realDifferenceQuotient_id, realDist_self]
+  exact (rationalToReal_le_iff _ _).mpr epsilonPositive.1
+
+theorem realDifferenceQuotient_mul_left
+    (factor point increment : IncReal) :
+    realDifferenceQuotient (fun value => realMul factor value)
+      point factor increment = factor := by
+  classical
+  by_cases incrementZero : increment = realZero
+  · rw [realDifferenceQuotient, if_pos incrementZero]
+  · rw [realDifferenceQuotient, if_neg incrementZero]
+    have numerator : realAdd
+        (realMul factor (realAdd point increment))
+        (realNeg (realMul factor point)) = realMul factor increment := by
+      rw [realMul_add]
+      calc
+        realAdd
+            (realAdd (realMul factor point) (realMul factor increment))
+            (realNeg (realMul factor point)) =
+          realAdd (realMul factor increment)
+            (realAdd (realMul factor point)
+              (realNeg (realMul factor point))) := by
+                rw [realAdd_comm (realMul factor point)
+                  (realMul factor increment), realAdd_assoc]
+        _ = realMul factor increment := by
+              rw [realAdd_neg, realAdd_zero_right]
+    rw [numerator, realDiv, realInvOrZero_of_ne increment incrementZero,
+      realMul_assoc, realMul_inv, realMul_one_right]
+
+theorem realHasDerivativeAt_mul_left (factor point : IncReal) :
+    RealHasDerivativeAt (fun value => realMul factor value) factor point := by
+  intro epsilon epsilonPositive
+  refine ⟨epsilon, epsilonPositive, ?_⟩
+  intro increment _
+  rw [realDifferenceQuotient_mul_left, realDist_self]
+  exact (rationalToReal_le_iff _ _).mpr epsilonPositive.1
+
+theorem realAdd_sub_add_cancel_right
+    (left right offset : IncReal) :
+    realAdd (realAdd left offset) (realNeg (realAdd right offset)) =
+      realAdd left (realNeg right) := by
+  rw [realNeg_add]
+  calc
+    realAdd (realAdd left offset)
+        (realAdd (realNeg right) (realNeg offset)) =
+      realAdd left
+        (realAdd offset (realAdd (realNeg right) (realNeg offset))) :=
+          realAdd_assoc _ _ _
+    _ = realAdd left
+        (realAdd (realNeg right)
+          (realAdd offset (realNeg offset))) := by
+            apply congrArg (realAdd left)
+            rw [← realAdd_assoc, realAdd_comm offset (realNeg right),
+              realAdd_assoc]
+    _ = realAdd left (realNeg right) := by
+          rw [realAdd_neg, realAdd_zero_right]
+
+theorem realDifferenceQuotient_affine
+    (factor offset point increment : IncReal) :
+    realDifferenceQuotient
+      (fun value => realAdd (realMul factor value) offset)
+      point factor increment = factor := by
+  classical
+  by_cases incrementZero : increment = realZero
+  · rw [realDifferenceQuotient, if_pos incrementZero]
+  · rw [realDifferenceQuotient, if_neg incrementZero,
+      realAdd_sub_add_cancel_right]
+    have scalarQuotient := realDifferenceQuotient_mul_left
+      factor point increment
+    rw [realDifferenceQuotient, if_neg incrementZero] at scalarQuotient
+    exact scalarQuotient
+
+theorem realHasDerivativeAt_affine
+    (factor offset point : IncReal) :
+    RealHasDerivativeAt
+      (fun value => realAdd (realMul factor value) offset) factor point := by
+  intro epsilon epsilonPositive
+  refine ⟨epsilon, epsilonPositive, ?_⟩
+  intro increment _
+  rw [realDifferenceQuotient_affine, realDist_self]
+  exact (rationalToReal_le_iff _ _).mpr epsilonPositive.1
+
+theorem realAdd_sub_add_distribute
+    (leftNow rightNow leftThen rightThen : IncReal) :
+    realAdd (realAdd leftThen rightThen)
+        (realNeg (realAdd leftNow rightNow)) =
+      realAdd (realAdd leftThen (realNeg leftNow))
+        (realAdd rightThen (realNeg rightNow)) := by
+  rw [realNeg_add]
+  calc
+    realAdd (realAdd leftThen rightThen)
+        (realAdd (realNeg leftNow) (realNeg rightNow)) =
+      realAdd leftThen
+        (realAdd rightThen
+          (realAdd (realNeg leftNow) (realNeg rightNow))) :=
+        realAdd_assoc _ _ _
+    _ = realAdd leftThen
+        (realAdd (realNeg leftNow)
+          (realAdd rightThen (realNeg rightNow))) := by
+            apply congrArg (realAdd leftThen)
+            rw [← realAdd_assoc, realAdd_comm rightThen (realNeg leftNow),
+              realAdd_assoc]
+    _ = realAdd (realAdd leftThen (realNeg leftNow))
+        (realAdd rightThen (realNeg rightNow)) :=
+      (realAdd_assoc _ _ _).symm
+
+theorem realDifferenceQuotient_add
+    (left right : IncReal → IncReal)
+    (leftDerivative rightDerivative point increment : IncReal) :
+    realDifferenceQuotient (fun value => realAdd (left value) (right value))
+        point (realAdd leftDerivative rightDerivative) increment =
+      realAdd (realDifferenceQuotient left point leftDerivative increment)
+        (realDifferenceQuotient right point rightDerivative increment) := by
+  classical
+  by_cases incrementZero : increment = realZero
+  · simp only [realDifferenceQuotient, if_pos incrementZero]
+  · simp only [realDifferenceQuotient, if_neg incrementZero]
+    rw [realAdd_sub_add_distribute]
+    rw [realDiv, realDiv, realDiv, realAdd_mul]
+
+theorem realHasDerivativeAt_add
+    {left right : IncReal → IncReal}
+    {leftDerivative rightDerivative point : IncReal}
+    (leftDifferentiable : RealHasDerivativeAt left leftDerivative point)
+    (rightDifferentiable : RealHasDerivativeAt right rightDerivative point) :
+    RealHasDerivativeAt (fun value => realAdd (left value) (right value))
+      (realAdd leftDerivative rightDerivative) point := by
+  have added := realFunctionLimitAt_add leftDifferentiable rightDifferentiable
+  intro epsilon epsilonPositive
+  obtain ⟨delta, deltaPositive, eventuallyClose⟩ :=
+    added epsilon epsilonPositive
+  refine ⟨delta, deltaPositive, ?_⟩
+  intro increment incrementClose
+  rw [realDifferenceQuotient_add]
+  exact eventuallyClose increment incrementClose
+
+theorem realDifferenceQuotient_neg
+    (function : IncReal → IncReal) (derivative point increment : IncReal) :
+    realDifferenceQuotient (fun value => realNeg (function value))
+        point (realNeg derivative) increment =
+      realNeg (realDifferenceQuotient function point derivative increment) := by
+  classical
+  by_cases incrementZero : increment = realZero
+  · simp only [realDifferenceQuotient, if_pos incrementZero]
+  · simp only [realDifferenceQuotient, if_neg incrementZero]
+    have numeratorNeg : realAdd
+        (realNeg (function (realAdd point increment)))
+        (realNeg (realNeg (function point))) =
+      realNeg (realAdd (function (realAdd point increment))
+        (realNeg (function point))) := by
+      rw [realNeg_neg, realNeg_add, realNeg_neg]
+    rw [numeratorNeg, realDiv, realDiv, realMul_neg_left]
+
+theorem realHasDerivativeAt_neg
+    {function : IncReal → IncReal} {derivative point : IncReal}
+    (differentiable : RealHasDerivativeAt function derivative point) :
+    RealHasDerivativeAt (fun value => realNeg (function value))
+      (realNeg derivative) point := by
+  have negated := realFunctionLimitAt_neg differentiable
+  intro epsilon epsilonPositive
+  obtain ⟨delta, deltaPositive, eventuallyClose⟩ :=
+    negated epsilon epsilonPositive
+  refine ⟨delta, deltaPositive, ?_⟩
+  intro increment incrementClose
+  rw [realDifferenceQuotient_neg]
+  exact eventuallyClose increment incrementClose
+
+theorem realHasDerivativeAt_sub
+    {left right : IncReal → IncReal}
+    {leftDerivative rightDerivative point : IncReal}
+    (leftDifferentiable : RealHasDerivativeAt left leftDerivative point)
+    (rightDifferentiable : RealHasDerivativeAt right rightDerivative point) :
+    RealHasDerivativeAt
+      (fun value => realAdd (left value) (realNeg (right value)))
+      (realAdd leftDerivative (realNeg rightDerivative)) point :=
+  realHasDerivativeAt_add leftDifferentiable
+    (realHasDerivativeAt_neg rightDifferentiable)
+
 noncomputable def realPow (base : IncReal) : Nat → IncReal
   | 0 => realOne
   | Nat.succ exponent => realMul (realPow base exponent) base
