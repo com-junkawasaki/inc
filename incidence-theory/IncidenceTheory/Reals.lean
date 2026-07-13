@@ -2440,4 +2440,136 @@ noncomputable def realOrderedFieldResonanceSpec :
     exact (nonnegativeRealMul ⟨i, iNonnegative⟩
       ⟨j, jNonnegative⟩).nonnegative
 
+/-- Absolute value as the sum of the canonical positive and negative
+magnitudes. Exactly one part is nonzero away from the origin. -/
+noncomputable def realAbs (value : IncReal) : NonnegativeReal :=
+  nonnegativeRealAdd (realPositivePart value) (realNegativePart value)
+
+theorem realAbs_of_nonnegative (value : IncReal)
+    (nonnegative : realLE realZero value) :
+    realAbs value = ⟨value, nonnegative⟩ := by
+  rw [realAbs, realPositivePart_of_nonnegative value nonnegative,
+    realNegativePart_of_nonnegative value nonnegative,
+    nonnegativeRealAdd_zero_right]
+
+theorem realAbs_of_not_nonnegative (value : IncReal)
+    (notNonnegative : ¬ realLE realZero value) :
+    realAbs value = realNegativePart value := by
+  rw [realAbs, realPositivePart_of_not_nonnegative value notNonnegative,
+    nonnegativeRealAdd_zero_left]
+
+theorem realAbs_neg (value : IncReal) :
+    realAbs (realNeg value) = realAbs value := by
+  change nonnegativeRealAdd (realPositivePart (realNeg value))
+    (realNegativePart (realNeg value)) =
+      nonnegativeRealAdd (realPositivePart value) (realNegativePart value)
+  rw [realPositivePart_neg, realNegativePart_neg,
+    nonnegativeRealAdd_comm]
+
+theorem realAbs_zero : realAbs realZero = nonnegativeZero := by
+  rw [realAbs_of_nonnegative realZero (realLE_refl _)]
+  rfl
+
+theorem realAbs_eq_zero_iff (value : IncReal) :
+    (realAbs value).value = realZero ↔ value = realZero := by
+  constructor
+  · intro absoluteZero
+    by_cases nonnegative : realLE realZero value
+    · rw [realAbs_of_nonnegative value nonnegative] at absoluteZero
+      exact absoluteZero
+    · rw [realAbs_of_not_nonnegative value nonnegative,
+        realNegativePart_of_not_nonnegative value nonnegative] at absoluteZero
+      have restored := congrArg realNeg absoluteZero
+      simpa [realNeg_neg, realNeg_zero] using restored
+  · intro valueZero
+    subst value
+    exact congrArg NonnegativeReal.value realAbs_zero
+
+theorem real_le_abs (value : IncReal) :
+    realLE value (realAbs value).value := by
+  by_cases nonnegative : realLE realZero value
+  · rw [realAbs_of_nonnegative value nonnegative]
+    exact realLE_refl value
+  · rw [realAbs_of_not_nonnegative value nonnegative]
+    have valueNonpositive : realLE value realZero := by
+      rcases realLE_total value realZero with ordered | reverse
+      · exact ordered
+      · exact False.elim (nonnegative reverse)
+    exact realLE_trans valueNonpositive (realNegativePart value).nonnegative
+
+theorem real_neg_le_abs (value : IncReal) :
+    realLE (realNeg value) (realAbs value).value := by
+  have bounded := real_le_abs (realNeg value)
+  rw [realAbs_neg] at bounded
+  exact bounded
+
+theorem realAbs_add_le (left right : IncReal) :
+    realLE (realAbs (realAdd left right)).value
+      (nonnegativeRealAdd (realAbs left) (realAbs right)).value := by
+  let sum := realAdd left right
+  by_cases sumNonnegative : realLE realZero sum
+  · rw [realAbs_of_nonnegative sum sumNonnegative]
+    exact realAdd_monotone (real_le_abs left) (real_le_abs right)
+  · rw [realAbs_of_not_nonnegative sum sumNonnegative,
+      realNegativePart_of_not_nonnegative sum sumNonnegative]
+    change realLE (realNeg (realAdd left right))
+      (realAdd (realAbs left).value (realAbs right).value)
+    rw [realNeg_add]
+    exact realAdd_monotone (real_neg_le_abs left) (real_neg_le_abs right)
+
+/-- The order-valued metric candidate induced by absolute difference. -/
+noncomputable def realDist (left right : IncReal) : NonnegativeReal :=
+  realAbs (realAdd left (realNeg right))
+
+theorem realDist_self (value : IncReal) :
+    realDist value value = nonnegativeZero := by
+  rw [realDist, realAdd_neg, realAbs_zero]
+
+theorem realDist_comm (left right : IncReal) :
+    realDist left right = realDist right left := by
+  rw [realDist, realDist]
+  have differenceNeg :
+      realNeg (realAdd left (realNeg right)) =
+        realAdd right (realNeg left) := by
+    rw [realNeg_add, realNeg_neg, realAdd_comm]
+  rw [← differenceNeg, realAbs_neg]
+
+theorem realDist_eq_zero_iff (left right : IncReal) :
+    (realDist left right).value = realZero ↔ left = right := by
+  rw [realDist, realAbs_eq_zero_iff]
+  constructor
+  · exact real_eq_of_add_neg_eq_zero
+  · intro equal
+    subst right
+    exact realAdd_neg left
+
+theorem realDist_triangle (first second third : IncReal) :
+    realLE (realDist first third).value
+      (nonnegativeRealAdd (realDist first second)
+        (realDist second third)).value := by
+  have differenceDecompose :
+      realAdd first (realNeg third) =
+        realAdd (realAdd first (realNeg second))
+          (realAdd second (realNeg third)) := by
+    symm
+    calc
+      realAdd (realAdd first (realNeg second))
+          (realAdd second (realNeg third)) =
+        realAdd first
+          (realAdd (realNeg second) (realAdd second (realNeg third))) :=
+        realAdd_assoc _ _ _
+      _ = realAdd first
+          (realAdd (realAdd (realNeg second) second) (realNeg third)) := by
+        exact congrArg (realAdd first)
+          (realAdd_assoc (realNeg second) second (realNeg third)).symm
+      _ = realAdd first (realNeg third) := by
+        rw [realAdd_neg_left, realAdd_zero_left]
+  change realLE
+    (realAbs (realAdd first (realNeg third))).value
+    (nonnegativeRealAdd
+      (realAbs (realAdd first (realNeg second)))
+      (realAbs (realAdd second (realNeg third)))).value
+  rw [differenceDecompose]
+  exact realAbs_add_le _ _
+
 end IncidenceCore

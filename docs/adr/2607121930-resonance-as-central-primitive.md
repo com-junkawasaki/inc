@@ -209,6 +209,10 @@ case where the selector is complete and resonance has no unselected modes.
   nonzero real. `realMulResonance` consequently instantiates
   `DistributiveResonanceSpec`, `FieldResonanceSpec`, and
   `OrderedFieldResonanceSpec` over the Dedekind-complete real incidence.
+- The first analysis layer defines absolute value from canonical positive and
+  negative magnitudes. It is negation-invariant, detects zero exactly, bounds
+  both signs, and satisfies the triangle inequality. Absolute difference gives
+  a nonnegative symmetric separated distance satisfying its triangle law.
 
 ### Non-normative physical intuition
 

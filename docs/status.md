@@ -201,6 +201,9 @@ Checked constructions include:
   approximation; signed extension supplies left/right inverses for every
   nonzero real, and `realMulResonance` instantiates distributive, field, and
   ordered-field resonance specifications on the Dedekind-complete real order;
+  canonical positive/negative magnitudes define absolute value with exact zero
+  and triangle laws, while absolute difference defines a symmetric, separated,
+  triangle-bounded nonnegative real distance;
   a value-observed real incidence is faithful, quotient-congruent, and connected
   to normalized dependent resonance completion
 - hereditary finite sets
@@ -211,7 +214,7 @@ Checked constructions include:
 
 Major remaining areas include a canonical reduced-fraction boundary and
 computational reciprocal selector, extension of nonnegative cut multiplication
-of real analysis beyond the completed Dedekind ordered-field layer,
+of convergence, continuity, and completeness in the real metric analysis layer,
 real analysis, broader algebra, and a larger categorical library. Rational
 incidence is now observationally faithful:
 zero has an empty boundary and every nonzero rational has a one-step boundary
