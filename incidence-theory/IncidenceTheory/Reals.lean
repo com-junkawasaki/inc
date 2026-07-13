@@ -8181,4 +8181,460 @@ theorem realContinuousOn_closedInterval_attains_min
   rw [← minimizerEq] at infBelowPoint
   exact infBelowPoint
 
+/-! ### Order/sign lemmas needed for Fermat's interior extremum theorem
+
+The extreme value theorem above locates a maximizer/minimizer; to show the
+derivative vanishes there we need a handful of sign-manipulation facts about
+`realLE`/`realLT`/`realMul` that no earlier cycle needed (limits, sequences
+and the field structure never required reasoning about the *sign* of a
+product or a difference in this generality). -/
+
+theorem realLT_of_not_le {left right : IncReal} (notLE : ¬ realLE left right) :
+    realLT right left := by
+  rcases realLE_total left right with le | ge
+  · exact absurd le notLE
+  · refine ⟨ge, ?_⟩
+    intro equal
+    apply notLE
+    subst equal
+    exact realLE_refl _
+
+/-- If `left < right` then `right - left` is (strictly) positive. -/
+theorem realAdd_neg_pos_of_lt {left right : IncReal} (strict : realLT left right) :
+    realLT realZero (realAdd right (realNeg left)) := by
+  refine ⟨?_, ?_⟩
+  · have monotone := realAdd_monotone_left (right := realNeg left) strict.1
+    rwa [realAdd_neg] at monotone
+  · intro equal
+    apply strict.2
+    have shifted : realAdd realZero left =
+        realAdd (realAdd right (realNeg left)) left := by rw [equal]
+    rw [realAdd_zero_left, realAdd_assoc, realAdd_neg_left,
+      realAdd_zero_right] at shifted
+    exact shifted
+
+/-- If `bound < -left` then `left + bound < 0`. -/
+theorem realAdd_lt_zero_of_lt_neg {left bound : IncReal}
+    (strict : realLT bound (realNeg left)) :
+    realLT (realAdd left bound) realZero := by
+  refine ⟨?_, ?_⟩
+  · have monotone := realAdd_monotone_right (left := left) strict.1
+    rwa [realAdd_neg] at monotone
+  · intro equal
+    apply strict.2
+    have shifted : realAdd (realNeg left) (realAdd left bound) =
+        realAdd (realNeg left) realZero := by rw [equal]
+    rw [← realAdd_assoc, realAdd_neg_left, realAdd_zero_left,
+      realAdd_zero_right] at shifted
+    exact shifted
+
+theorem realLT_neg_of_pos {value : IncReal} (positive : realLT realZero value) :
+    realLT (realNeg value) realZero := by
+  have monotone := realNeg_order_reverse positive.1
+  rw [realNeg_zero] at monotone
+  refine ⟨monotone, ?_⟩
+  intro equal
+  have shifted := congrArg realNeg equal
+  rw [realNeg_neg, realNeg_zero] at shifted
+  exact positive.2 shifted.symm
+
+theorem realLT_pos_of_neg {value : IncReal} (negative : realLT value realZero) :
+    realLT realZero (realNeg value) := by
+  have monotone := realNeg_order_reverse negative.1
+  rw [realNeg_zero] at monotone
+  refine ⟨monotone, ?_⟩
+  intro equal
+  have shifted := congrArg realNeg equal
+  rw [realNeg_neg, realNeg_zero] at shifted
+  exact negative.2 shifted.symm
+
+/-- Product of two (strictly) positive reals is (strictly) positive. -/
+theorem realMul_pos_of_pos_pos {left right : IncReal}
+    (leftPositive : realLT realZero left) (rightPositive : realLT realZero right) :
+    realLT realZero (realMul left right) := by
+  let leftPart : NonnegativeReal := ⟨left, leftPositive.1⟩
+  let rightPart : NonnegativeReal := ⟨right, rightPositive.1⟩
+  have eq : realMul left right = (nonnegativeRealMul leftPart rightPart).value :=
+    realMul_of_nonnegative left right leftPositive.1 rightPositive.1
+  rw [eq]
+  refine ⟨(nonnegativeRealMul leftPart rightPart).nonnegative, ?_⟩
+  intro zeroEq
+  exact (nonnegativeRealMul_ne_zero leftPart rightPart
+    (fun h => leftPositive.2 h.symm) (fun h => rightPositive.2 h.symm)) zeroEq.symm
+
+/-- If a product with a positive factor is `≤ 0`, the other factor is `≤ 0`. -/
+theorem realLE_zero_of_mul_le_zero_of_pos {factor value : IncReal}
+    (factorPositive : realLT realZero factor)
+    (productNonpos : realLE (realMul factor value) realZero) :
+    realLE value realZero := by
+  apply Classical.byContradiction
+  intro notNonpos
+  have valuePositive : realLT realZero value := realLT_of_not_le notNonpos
+  have productPositive := realMul_pos_of_pos_pos factorPositive valuePositive
+  exact productPositive.2 (realLE_antisymm productNonpos productPositive.1).symm
+
+/-- If a product with a positive factor is `≥ 0`, the other factor is `≥ 0`. -/
+theorem realLE_zero_of_zero_le_mul_of_pos {factor value : IncReal}
+    (factorPositive : realLT realZero factor)
+    (productNonneg : realLE realZero (realMul factor value)) :
+    realLE realZero value := by
+  apply Classical.byContradiction
+  intro notNonneg
+  have valueNegative : realLT value realZero := realLT_of_not_le notNonneg
+  have negValuePositive := realLT_pos_of_neg valueNegative
+  have productPositive := realMul_pos_of_pos_pos factorPositive negValuePositive
+  rw [realMul_neg_right] at productPositive
+  have productNegative := realLT_neg_of_pos productPositive
+  rw [realNeg_neg] at productNegative
+  exact productNegative.2 (realLE_antisymm productNegative.1 productNonneg)
+
+/-- Given a positive rational radius and a positive real gap, produces a
+positive rational `step` that is both `≤ radius` (as rationals) and whose
+real image is `< gap`. Used to pick an increment simultaneously small enough
+for an epsilon-delta bound and small enough to stay inside a domain. -/
+theorem real_exists_rational_step_le_lt
+    {radius : IncRational} (radiusPositive : rationalLT (rationalOfInteger 0) radius)
+    {gap : IncReal} (gapPositive : realLT realZero gap) :
+    ∃ step : IncRational, rationalLT (rationalOfInteger 0) step ∧
+      rationalLE step radius ∧ realLT (rationalToReal step) gap := by
+  let gapPart : NonnegativeReal := ⟨gap, gapPositive.1⟩
+  obtain ⟨gapRational, gapMember, gapRationalPositive⟩ :=
+    gapPart.exists_positive_member (fun h => gapPositive.2 h.symm)
+  rcases rationalLE_total radius gapRational with ordered | reverse
+  · refine ⟨radius, radiusPositive, rationalLE_refl radius, ?_⟩
+    exact realLT_of_le_of_lt ((rationalToReal_le_iff radius gapRational).mpr ordered)
+      (rationalToReal_lt_of_lower gap gapMember)
+  · exact ⟨gapRational, gapRationalPositive, reverse,
+      rationalToReal_lt_of_lower gap gapMember⟩
+
+/-! ### Fermat's interior extremum theorem -/
+
+/-- Fermat's interior extremum theorem, maximum case: if `function` attains a
+global maximum over `[lower, upper]` at an interior point, and has a
+derivative there, that derivative is zero. -/
+theorem realHasDerivativeAt_zero_of_interior_max
+    {function : IncReal → IncReal} {lower upper point derivative : IncReal}
+    (lowerPoint : realLT lower point) (pointUpper : realLT point upper)
+    (isMax : ∀ x, RealClosedInterval lower upper x →
+      realLE (function x) (function point))
+    (hasDerivative : RealHasDerivativeAt function derivative point) :
+    derivative = realZero := by
+  have nonpos : realLE derivative realZero := by
+    apply Classical.byContradiction
+    intro notNonpos
+    have derivativePositive : realLT realZero derivative :=
+      realLT_of_not_le notNonpos
+    let derivativePart : NonnegativeReal := ⟨derivative, derivativePositive.1⟩
+    obtain ⟨epsilon0, epsilon0Member, epsilon0Positive⟩ :=
+      derivativePart.exists_positive_member (fun h => derivativePositive.2 h.symm)
+    have epsilon0Below : realLT (rationalToReal epsilon0) derivative :=
+      rationalToReal_lt_of_lower derivative epsilon0Member
+    obtain ⟨radius1, radius1Positive, eventuallyClose⟩ :=
+      hasDerivative epsilon0 epsilon0Positive
+    have gapPositive := realAdd_neg_pos_of_lt pointUpper
+    obtain ⟨step, stepPositive, stepBelowRadius, stepBelowGap⟩ :=
+      real_exists_rational_step_le_lt radius1Positive gapPositive
+    have incrementPositive : realLT realZero (rationalToReal step) :=
+      rationalToReal_lt_preserves stepPositive
+    have incrementCloseToPoint : realLE
+        (realDist (rationalToReal step) realZero).value (rationalToReal radius1) := by
+      rw [realDist_zero_right,
+        realAbs_of_nonnegative (rationalToReal step) incrementPositive.1]
+      exact (rationalToReal_le_iff step radius1).mpr stepBelowRadius
+    have quotientClose := eventuallyClose (rationalToReal step) incrementCloseToPoint
+    have flipped : realLE (realDist derivative
+        (realDifferenceQuotient function point derivative
+          (rationalToReal step))).value (rationalToReal epsilon0) := by
+      rw [realDist_comm]
+      exact quotientClose
+    have lowerBoundOnQuotient : realLE
+        (realAdd derivative (realNeg (rationalToReal epsilon0)))
+        (realDifferenceQuotient function point derivative (rationalToReal step)) :=
+      realAdd_neg_le_of_le_add (real_le_add_of_dist_le flipped)
+    have quotientPositive : realLT realZero
+        (realDifferenceQuotient function point derivative (rationalToReal step)) :=
+      realLT_of_lt_of_le (realAdd_neg_pos_of_lt epsilon0Below) lowerBoundOnQuotient
+    have memberInterval : RealClosedInterval lower upper
+        (realAdd point (rationalToReal step)) := by
+      refine ⟨?_, ?_⟩
+      · have base : realLE point (realAdd point (rationalToReal step)) := by
+          have monotone := realAdd_monotone_right
+            (left := point) incrementPositive.1
+          rwa [realAdd_zero_right] at monotone
+        exact realLE_trans lowerPoint.1 base
+      · have le1 : realLE (realAdd point (rationalToReal step))
+            (realAdd point (realAdd upper (realNeg point))) :=
+          realAdd_monotone_right stepBelowGap.1
+        have restore : realAdd point (realAdd upper (realNeg point)) = upper := by
+          rw [← realAdd_assoc, realAdd_comm point upper, realAdd_assoc,
+            realAdd_neg, realAdd_zero_right]
+        rwa [restore] at le1
+    have maxProp := isMax (realAdd point (rationalToReal step)) memberInterval
+    have diffNonpos : realLE (realAdd
+        (function (realAdd point (rationalToReal step)))
+        (realNeg (function point))) realZero := by
+      have m := realAdd_monotone_left (right := realNeg (function point)) maxProp
+      rwa [realAdd_neg] at m
+    have quotientEqDiff :=
+      realMul_differenceQuotient function point derivative (rationalToReal step)
+    have quotientNonpos : realLE
+        (realDifferenceQuotient function point derivative (rationalToReal step))
+        realZero := by
+      apply realLE_zero_of_mul_le_zero_of_pos incrementPositive
+      rw [quotientEqDiff]
+      exact diffNonpos
+    exact quotientPositive.2
+      (realLE_antisymm quotientNonpos quotientPositive.1).symm
+  have nonneg : realLE realZero derivative := by
+    apply Classical.byContradiction
+    intro notNonneg
+    have derivativeNegative : realLT derivative realZero :=
+      realLT_of_not_le notNonneg
+    have negDerivativePositive := realLT_pos_of_neg derivativeNegative
+    let negDerivativePart : NonnegativeReal :=
+      ⟨realNeg derivative, negDerivativePositive.1⟩
+    obtain ⟨epsilon1, epsilon1Member, epsilon1Positive⟩ :=
+      negDerivativePart.exists_positive_member
+        (fun h => negDerivativePositive.2 h.symm)
+    have epsilon1Below : realLT (rationalToReal epsilon1) (realNeg derivative) :=
+      rationalToReal_lt_of_lower (realNeg derivative) epsilon1Member
+    obtain ⟨radius2, radius2Positive, eventuallyClose⟩ :=
+      hasDerivative epsilon1 epsilon1Positive
+    have gapPositive := realAdd_neg_pos_of_lt lowerPoint
+    obtain ⟨step, stepPositive, stepBelowRadius, stepBelowGap⟩ :=
+      real_exists_rational_step_le_lt radius2Positive gapPositive
+    have stepRealPositive : realLT realZero (rationalToReal step) :=
+      rationalToReal_lt_preserves stepPositive
+    have incrementCloseToPoint : realLE
+        (realDist (realNeg (rationalToReal step)) realZero).value
+        (rationalToReal radius2) := by
+      rw [realDist_zero_right, realAbs_neg (rationalToReal step),
+        realAbs_of_nonnegative (rationalToReal step) stepRealPositive.1]
+      exact (rationalToReal_le_iff step radius2).mpr stepBelowRadius
+    have quotientClose :=
+      eventuallyClose (realNeg (rationalToReal step)) incrementCloseToPoint
+    have upperBoundOnQuotient : realLE
+        (realDifferenceQuotient function point derivative
+          (realNeg (rationalToReal step)))
+        (realAdd derivative (rationalToReal epsilon1)) :=
+      real_le_add_of_dist_le quotientClose
+    have epsilonSumNegative : realLT
+        (realAdd derivative (rationalToReal epsilon1)) realZero :=
+      realAdd_lt_zero_of_lt_neg epsilon1Below
+    have quotientNegative : realLT
+        (realDifferenceQuotient function point derivative
+          (realNeg (rationalToReal step))) realZero :=
+      realLT_of_le_of_lt upperBoundOnQuotient epsilonSumNegative
+    have lowerBound : realLE lower
+        (realAdd point (realNeg (rationalToReal step))) := by
+      have stepPlusLowerLEPoint :
+          realLE (realAdd (rationalToReal step) lower) point := by
+        have m := realAdd_monotone_left (right := lower) stepBelowGap.1
+        have restore :
+            realAdd (realAdd point (realNeg lower)) lower = point := by
+          rw [realAdd_assoc, realAdd_neg_left, realAdd_zero_right]
+        rwa [restore] at m
+      have m := realAdd_monotone_left
+        (right := realNeg (rationalToReal step)) stepPlusLowerLEPoint
+      have restore : realAdd (realAdd (rationalToReal step) lower)
+          (realNeg (rationalToReal step)) = lower := by
+        rw [realAdd_comm (rationalToReal step) lower, realAdd_assoc,
+          realAdd_neg, realAdd_zero_right]
+      rw [restore] at m
+      exact m
+    have upperBound : realLE (realAdd point (realNeg (rationalToReal step)))
+        upper := by
+      have incrementNonpos : realLE (realNeg (rationalToReal step)) realZero := by
+        have m := realNeg_order_reverse stepRealPositive.1
+        rwa [realNeg_zero] at m
+      have m := realAdd_monotone_right (left := point) incrementNonpos
+      rw [realAdd_zero_right] at m
+      exact realLE_trans m pointUpper.1
+    have memberInterval : RealClosedInterval lower upper
+        (realAdd point (realNeg (rationalToReal step))) :=
+      ⟨lowerBound, upperBound⟩
+    have maxProp :=
+      isMax (realAdd point (realNeg (rationalToReal step))) memberInterval
+    have diffNonpos : realLE (realAdd
+        (function (realAdd point (realNeg (rationalToReal step))))
+        (realNeg (function point))) realZero := by
+      have m := realAdd_monotone_left
+        (right := realNeg (function point)) maxProp
+      rwa [realAdd_neg] at m
+    have quotientEqDiff := realMul_differenceQuotient function point derivative
+      (realNeg (rationalToReal step))
+    rw [realMul_neg_left] at quotientEqDiff
+    have stepQuotientEq : realMul (rationalToReal step)
+        (realDifferenceQuotient function point derivative
+          (realNeg (rationalToReal step))) =
+        realNeg (realAdd
+          (function (realAdd point (realNeg (rationalToReal step))))
+          (realNeg (function point))) := by
+      have shifted := congrArg realNeg quotientEqDiff
+      rwa [realNeg_neg] at shifted
+    have negDiffNonneg : realLE realZero (realNeg (realAdd
+        (function (realAdd point (realNeg (rationalToReal step))))
+        (realNeg (function point)))) := by
+      have m := realNeg_order_reverse diffNonpos
+      rwa [realNeg_zero] at m
+    have productNonneg : realLE realZero
+        (realMul (rationalToReal step)
+          (realDifferenceQuotient function point derivative
+            (realNeg (rationalToReal step)))) := by
+      rw [stepQuotientEq]
+      exact negDiffNonneg
+    have quotientNonneg : realLE realZero
+        (realDifferenceQuotient function point derivative
+          (realNeg (rationalToReal step))) :=
+      realLE_zero_of_zero_le_mul_of_pos stepRealPositive productNonneg
+    exact quotientNegative.2
+      (realLE_antisymm quotientNegative.1 quotientNonneg)
+  exact realLE_antisymm nonpos nonneg
+
+/-- Fermat's interior extremum theorem, minimum case: derived from the
+maximum case by negation (minimizing `function` is maximizing `-function`). -/
+theorem realHasDerivativeAt_zero_of_interior_min
+    {function : IncReal → IncReal} {lower upper point derivative : IncReal}
+    (lowerPoint : realLT lower point) (pointUpper : realLT point upper)
+    (isMin : ∀ x, RealClosedInterval lower upper x →
+      realLE (function point) (function x))
+    (hasDerivative : RealHasDerivativeAt function derivative point) :
+    derivative = realZero := by
+  have negHasDerivative : RealHasDerivativeAt
+      (fun value => realNeg (function value)) (realNeg derivative) point :=
+    realHasDerivativeAt_neg hasDerivative
+  have negIsMax : ∀ x, RealClosedInterval lower upper x →
+      realLE (realNeg (function x)) (realNeg (function point)) := by
+    intro x member
+    exact realNeg_order_reverse (isMin x member)
+  have negZero := realHasDerivativeAt_zero_of_interior_max
+    lowerPoint pointUpper negIsMax negHasDerivative
+  have restored := congrArg realNeg negZero
+  rwa [realNeg_neg, realNeg_zero] at restored
+
+/-! ### Rolle's theorem -/
+
+/-- Adding a fixed positive offset to a base value strictly increases it. -/
+theorem realLT_add_right_of_pos {base offset : IncReal}
+    (positive : realLT realZero offset) :
+    realLT base (realAdd base offset) := by
+  refine ⟨?_, ?_⟩
+  · have m := realAdd_monotone_right (left := base) positive.1
+    rwa [realAdd_zero_right] at m
+  · intro equal
+    have shifted := congrArg (realAdd (realNeg base)) equal
+    rw [realAdd_neg_left, ← realAdd_assoc, realAdd_neg_left,
+      realAdd_zero_left] at shifted
+    exact positive.2 shifted
+
+/-- Adding a fixed real to both sides of a strict inequality preserves it. -/
+theorem realAdd_lt_monotone_left (offset : IncReal) {left right : IncReal}
+    (strict : realLT left right) :
+    realLT (realAdd offset left) (realAdd offset right) := by
+  refine ⟨realAdd_monotone_right strict.1, ?_⟩
+  intro equal
+  apply strict.2
+  have shifted := congrArg (realAdd (realNeg offset)) equal
+  rw [← realAdd_assoc, realAdd_neg_left, realAdd_zero_left,
+    ← realAdd_assoc, realAdd_neg_left, realAdd_zero_left] at shifted
+  exact shifted
+
+/-- Rolle's theorem: a function continuous on `[lower, upper]`, differentiable
+everywhere on that closed interval (a slightly stronger hypothesis than the
+textbook "differentiable on the open interval", adopted since this codebase
+has no separate open-interval domain predicate), and agreeing at the two
+endpoints, has a derivative of zero at some interior point. The extreme value
+theorem locates a maximizer and a minimizer; if either is interior, Fermat's
+theorem finishes it directly. If both coincide with the shared endpoint
+value, the function is constant on the whole interval and any freshly
+manufactured interior point works (it is trivially its own local extremum). -/
+theorem real_rolle
+    {function : IncReal → IncReal} {lower upper : IncReal}
+    (ordered : realLT lower upper)
+    (continuous : RealContinuousOn function (RealClosedInterval lower upper))
+    (differentiable : RealDifferentiableOn function (RealClosedInterval lower upper))
+    (equalEndpoints : function lower = function upper) :
+    ∃ point, realLT lower point ∧ realLT point upper ∧
+      RealHasDerivativeAt function realZero point := by
+  obtain ⟨maximizer, maximizerMem, maximizerMax⟩ :=
+    realContinuousOn_closedInterval_attains_max ordered.1 continuous
+  obtain ⟨minimizer, minimizerMem, minimizerMin⟩ :=
+    realContinuousOn_closedInterval_attains_min ordered.1 continuous
+  by_cases maxEqLower : function maximizer = function lower
+  · by_cases minEqLower : function minimizer = function lower
+    · -- Constant case: manufacture a genuine interior point and use it.
+      have constantOnDomain : ∀ x, RealClosedInterval lower upper x →
+          function x = function lower := by
+        intro x member
+        have upperBound := maximizerMax x member
+        have lowerBound := minimizerMin x member
+        rw [maxEqLower] at upperBound
+        rw [minEqLower] at lowerBound
+        exact realLE_antisymm upperBound lowerBound
+      have gapPositive := realAdd_neg_pos_of_lt ordered
+      let gapPart : NonnegativeReal := ⟨realAdd upper (realNeg lower), gapPositive.1⟩
+      obtain ⟨step, gapMember, stepPositive⟩ :=
+        gapPart.exists_positive_member (fun h => gapPositive.2 h.symm)
+      have stepBelowGap : realLT (rationalToReal step) (realAdd upper (realNeg lower)) :=
+        rationalToReal_lt_of_lower (realAdd upper (realNeg lower)) gapMember
+      have stepRealPositive : realLT realZero (rationalToReal step) :=
+        rationalToReal_lt_preserves stepPositive
+      have lowerLtPoint0 : realLT lower (realAdd lower (rationalToReal step)) :=
+        realLT_add_right_of_pos stepRealPositive
+      have pointLtUpper : realLT (realAdd lower (rationalToReal step)) upper := by
+        have m := realAdd_lt_monotone_left lower stepBelowGap
+        have restore : realAdd lower (realAdd upper (realNeg lower)) = upper := by
+          rw [← realAdd_assoc, realAdd_comm lower upper, realAdd_assoc,
+            realAdd_neg, realAdd_zero_right]
+        rwa [restore] at m
+      have memberPoint0 : RealClosedInterval lower upper
+          (realAdd lower (rationalToReal step)) :=
+        ⟨lowerLtPoint0.1, pointLtUpper.1⟩
+      have isMaxAtPoint0 : ∀ x, RealClosedInterval lower upper x →
+          realLE (function x)
+            (function (realAdd lower (rationalToReal step))) := by
+        intro x member
+        rw [constantOnDomain x member, constantOnDomain _ memberPoint0]
+        exact realLE_refl _
+      obtain ⟨d, hasD⟩ :=
+        differentiable (realAdd lower (rationalToReal step)) memberPoint0
+      have dZero := realHasDerivativeAt_zero_of_interior_max
+        lowerLtPoint0 pointLtUpper isMaxAtPoint0 hasD
+      rw [dZero] at hasD
+      exact ⟨realAdd lower (rationalToReal step), lowerLtPoint0, pointLtUpper, hasD⟩
+    · -- The minimizer differs from the shared endpoint value, so it is interior.
+      have minimizerNeLower : minimizer ≠ lower := by
+        intro h
+        exact minEqLower (congrArg function h)
+      have minimizerNeUpper : minimizer ≠ upper := by
+        intro h
+        apply minEqLower
+        rw [congrArg function h, equalEndpoints]
+      have interiorLower : realLT lower minimizer :=
+        ⟨minimizerMem.1, fun h => minimizerNeLower h.symm⟩
+      have interiorUpper : realLT minimizer upper :=
+        ⟨minimizerMem.2, minimizerNeUpper⟩
+      obtain ⟨d, hasD⟩ := differentiable minimizer minimizerMem
+      have dZero := realHasDerivativeAt_zero_of_interior_min
+        interiorLower interiorUpper minimizerMin hasD
+      rw [dZero] at hasD
+      exact ⟨minimizer, interiorLower, interiorUpper, hasD⟩
+  · -- The maximizer differs from the shared endpoint value, so it is interior.
+    have maximizerNeLower : maximizer ≠ lower := by
+      intro h
+      exact maxEqLower (congrArg function h)
+    have maximizerNeUpper : maximizer ≠ upper := by
+      intro h
+      apply maxEqLower
+      rw [congrArg function h, equalEndpoints]
+    have interiorLower : realLT lower maximizer :=
+      ⟨maximizerMem.1, fun h => maximizerNeLower h.symm⟩
+    have interiorUpper : realLT maximizer upper :=
+      ⟨maximizerMem.2, maximizerNeUpper⟩
+    obtain ⟨d, hasD⟩ := differentiable maximizer maximizerMem
+    have dZero := realHasDerivativeAt_zero_of_interior_max
+      interiorLower interiorUpper maximizerMax hasD
+    rw [dZero] at hasD
+    exact ⟨maximizer, interiorLower, interiorUpper, hasD⟩
+
 end IncidenceCore

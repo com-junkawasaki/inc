@@ -3145,3 +3145,149 @@ its own scope-down step. (c) Cycle 41's option (b): whether a less naive
 glue-homomorphism, or whether that is structurally impossible for the same
 reason cycle 38 found `glue` doesn't respect `≈` in general — still
 unattempted, still flagged as a short, focused check.
+
+## Cycle 43
+
+**Hypothesis**: pursue thread (a) from cycle 42's queue — roadmap item 4
+(Rolle's theorem / mean value theorem) — since the extreme value theorem
+(cycle 42) plus the already-complete first-order differential calculus
+(sum/product/quotient/chain rules, polynomial derivatives, all in
+`Reals.lean`) make Fermat's interior extremum theorem (derivative vanishes at
+an interior local/global extremum) directly reachable, and Rolle's theorem
+follows from Fermat's theorem plus EVT by a case split on whether the
+extremum sits at an interior point or an endpoint. Threads (b) and (c) from
+cycle 42's queue remain untouched but were deprioritized again in favor of
+this more concretely pre-scoped target, matching the tractability-over-size
+selection rationale cycle 42 itself used.
+
+**Method**: read the existing derivative API (`RealHasDerivativeAt`,
+`realDifferenceQuotient`, `realHasDerivativeAt_neg`, `realDerivativeAt_spec`)
+and the `RealClosedInterval`/`RealContinuousOn`/`RealDifferentiableOn`
+definitions, then worked in three layers. (1) A handful of order/sign lemmas
+this project had never needed before: limits, sequences and the field
+structure only ever needed non-strict monotonicity of `+`, never the sign of
+a *difference* or a *product* in the generality Fermat's proof needs.
+Built from scratch: `realLT_of_not_le` (double-negation elimination for the
+strict order, since this project has no `LinearOrder` typeclass machinery to
+draw it from), `realAdd_neg_pos_of_lt`/`realAdd_lt_zero_of_lt_neg`
+(difference-of-a-strict-inequality is signed), `realLT_neg_of_pos`/
+`realLT_pos_of_neg` (negation flips strict sign), `realMul_pos_of_pos_pos`
+(built from the already-existing `realMul_of_nonnegative` bundle plus
+`nonnegativeRealMul_ne_zero`), and the two cancellation lemmas
+`realLE_zero_of_mul_le_zero_of_pos`/`realLE_zero_of_zero_le_mul_of_pos` (a
+positive factor's sign transfers to the other factor of a signed product) —
+these compose into `realMul_differenceQuotient`'s algebraic identity
+(`increment * quotient = f(point+increment) - f(point)`, already proved
+in a prior cycle) to read off the *sign* of the quotient from the sign of the
+increment and the sign of the numerator. (2) A reusable epsilon-delta helper,
+`real_exists_rational_step_le_lt`: given a positive rational radius (from an
+epsilon-delta closeness witness) and a positive real gap (the distance from a
+point to a domain boundary), produces a single positive rational simultaneously
+`≤` the radius and (as a real) `<` the gap — needed because Fermat's proof
+must pick an increment small enough for the derivative's epsilon-delta bound
+AND small enough to keep `point + increment` inside `[lower, upper]`, two
+independent smallness constraints from different sources (one rational, one
+real). (3) The two headline theorems:
+`realHasDerivativeAt_zero_of_interior_max` (both directions worked
+separately — right-hand/positive increments force the derivative `≤ 0` via
+`isMax`, left-hand/negative increments force it `≥ 0` — then
+`realLE_antisymm`), and `realHasDerivativeAt_zero_of_interior_min`, obtained
+for free from the max case by negation (`realHasDerivativeAt_neg` plus
+`realNeg_order_reverse` transports a minimizer of `function` to a maximizer of
+`-function`), avoiding writing the whole two-sided argument a second time.
+(4) Pushed forward into Rolle's theorem itself (`real_rolle`): EVT (cycle 42)
+locates a maximizer and minimizer over `[lower, upper]`; case-split on whether
+either differs from the shared endpoint value `function lower = function
+upper`. If the maximizer's value differs, it cannot coincide with either
+endpoint (their values are fixed at the shared endpoint value), so it is
+interior and Fermat's max theorem finishes it directly; symmetrically for the
+minimizer via Fermat's min theorem. If *neither* differs — both extrema equal
+the shared endpoint value — then since every domain value is sandwiched
+between the min and max, the function is provably constant on the whole
+interval, and a genuine interior point is manufactured from scratch (the
+same `real_exists_rational_step_le_lt`-style positive-rational-below-a-gap
+construction, applied to the gap `upper - lower`), which is then trivially
+its own local extremum (constancy) so Fermat's max theorem applies there too.
+
+**Result**: **confirmed, fully, sorry-free.** Eleven new declarations in
+`Reals.lean`, all downstream of no new axioms: the eight sign/order lemmas
+above, `real_exists_rational_step_le_lt`, and the three headline theorems
+`realHasDerivativeAt_zero_of_interior_max`, `realHasDerivativeAt_zero_of_interior_min`,
+and `real_rolle` (statement: `lower < upper`, `function` continuous on
+`[lower, upper]`, differentiable on all of `[lower, upper]` — see honest
+scoping note below — and `function lower = function upper`, conclude
+`∃ point, lower < point ∧ point < upper ∧ RealHasDerivativeAt function 0
+point`). `#print axioms` on all three headline theorems:
+`propext, Classical.choice, Quot.sound` — exactly this project's standing
+axiom profile, nothing new. `lake build`: all 21 modules including the
+example binary. `verify.sh` (clean `lake clean && lake build`, example run,
+repo-wide unproved-declaration grep): passes end to end.
+
+Two implementation snags worth recording alongside cycle 42's `omega` note.
+First, `by_contra` is not an available tactic in this project's bare Lean 4
+setup (no Mathlib/Std import) — every prior cycle's contradiction proofs use
+`apply Classical.byContradiction; intro h` instead, which this cycle had
+initially missed (four uses of `by_contra` all failed with "unknown tactic");
+fixed by switching to the project's own established idiom. Second, a `rw`
+subtlety: when a hypothesis's *both* sides match the same rewrite pattern but
+with different metavariable instantiations (e.g. `realAdd (-c) (realAdd c a)
+= realAdd (-c) (realAdd c b)`, rewriting `← realAdd_assoc` on both occurrences
+to cancel `c`), a single pass through the rewrite list only fires on the
+first-matched instantiation, silently leaving the other side untouched —
+`realAdd_lt_monotone_left`'s proof needed the same three-lemma rewrite chain
+listed *twice* to simplify both sides of the derived equation. Neither snag
+is deep, but both cost real debugging cycles against the actual `lake build`
+output rather than being visible from reading the source alone — reinforcing
+cycle 42's point that this project's proof-writing loop leans on the checker,
+not on offline verification, for exactly this class of mistake.
+
+One honest scoping note: `real_rolle`'s hypothesis is `RealDifferentiableOn
+function (RealClosedInterval lower upper)` — differentiable on the *closed*
+interval including endpoints, not just the open interval as in the textbook
+statement. This project has no `RealOpenInterval` domain predicate yet, and
+introducing one was judged out of scope for this cycle; the stronger
+hypothesis is harmless for every use this project is likely to make of
+Rolle's theorem (all differentiability hypotheses elsewhere in `Reals.lean`
+are already stated over closed-interval domains) but is worth flagging
+explicitly rather than silently presenting it as the textbook-general form.
+Per the task's own framing and this project's culture (cycles 38-40), the
+general Mean Value Theorem (subtracting the secant line) was deliberately
+left for a future cycle rather than attempted in the same sitting — Rolle's
+theorem alone was already a substantial, self-contained result built on top
+of Fermat's theorem, and stopping here keeps the sign-lemma infrastructure
+above legible instead of burying it under a second large construction.
+
+**Synthesis**: this closes the ADR roadmap's item 4 (Rolle's theorem) outright
+via item 3's route exactly as cycle 42's queue predicted, and does so by
+building a small, previously-nonexistent layer of real-number sign algebra
+(lemmas 1-8 above) that no earlier cycle needed because nothing before this
+one required reading a *sign* off an epsilon-delta bound rather than just a
+*bound*. The pattern from cycles 41/42 continues: the majority of the proof
+weight was already sitting in the codebase (EVT itself, the full derivative
+calculus, `realMul_differenceQuotient`'s algebraic identity connecting
+multiplication and the difference quotient, `realHasDerivativeAt_neg` for the
+free min-from-max transport) — this cycle's genuine new content is the sign
+algebra plus the epsilon-delta bookkeeping to route an increment through two
+independent smallness constraints at once, plus recognizing that the
+degenerate "both extrema at the endpoints" case reduces to manufacturing an
+arbitrary interior point and reusing Fermat's theorem rather than needing any
+separate "constant function has zero derivative" lemma.
+
+**Next hypothesis (cycle 44, not yet attempted)**: three live threads.
+(a) **[recommended]** The general Mean Value Theorem is now very directly
+reachable from `real_rolle`: define the secant-subtracted auxiliary function
+`h(x) = f(x) - f(a) - ((f(b) - f(a)) / (b - a)) * (x - a)` (an affine
+function subtracted from `f`, using the already-proved
+`realHasDerivativeAt_affine`/`realHasDerivativeAt_sub` to get `h`'s
+derivative for free as `f'(x) - (f(b)-f(a))/(b-a)`), check `h(a) = h(b) = 0`
+by construction, apply `real_rolle` to `h` to get an interior point where
+`h`'s derivative is zero, and unpack that into `f'(point) = (f(b)-f(a))/(b-a)`
+— this is exactly the auxiliary-function step the ADR's original roadmap
+note (2607100600, addendum) named as the last piece after Fermat's theorem,
+now that both Fermat's theorem and Rolle's theorem are in hand. (b) Cycle 41's
+option (c) (= cycle 37's option (b)): the internal-logic distributivity
+direction relating `incidenceProd`/`incidenceSum`, still unattempted across
+three cycles now, still flagged as needing its own scope-down step. (c) Cycle
+41's option (b): whether a less naive `shapeIncidence.glue` could make
+`simplexToShape` a genuine glue-homomorphism, or whether that is structurally
+impossible — still unattempted, still a short focused check.
