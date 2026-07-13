@@ -3701,3 +3701,178 @@ proves too large for one cycle, cycle 39's still-open item (b) remains
 queued: does any existing instance in this project have a `≈`-quotient
 in the genuinely interesting middle ground beyond `simplexIncidence`
 (cycle 41's only example so far)?
+
+## Cycle 47
+
+**Hypothesis**: cycle 46's own next-hypothesis -- re-scope the
+distributivity thread to the shape cycle 37 ORIGINALLY asked for (the
+three-argument distributive law, `incidenceProd inc1 (incidenceSum inc2
+inc3)` vs. `incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1
+inc3)`), not the same-`(A,B)` two-argument carrier-map comparison cycle
+46 closed negatively (a drift cycle 46 itself identified and explicitly
+deferred to this cycle). Per the task's explicit scope-down instruction:
+construct the canonical `I1 × (I2 ⊕ I3) ≃ (I1 × I2) ⊕ (I1 × I3)`
+bijection first (a standard, always-true `Type`-level fact, unlike
+cycle 46's carrier-map question which had no general fact in either
+direction), then check DEFINITIONALLY -- not via a full homomorphism or
+bisimulation proof -- whether it aligns the `boundary`/`glue`/`guards`
+structure of the two composite `Incidence`s, for concrete already-
+existing instances.
+
+**Method**: read `Product.lean`'s `incidenceProd`/`prodBoundary`/
+`prodGlue`/`prodGuards` and `Sum.lean`'s `incidenceSum`/`sumBoundary`/
+`sumGlue` definitions directly (not from memory), plus the base
+`Incidence` structure in `Axioms.lean` (fields: `boundary`, `typeFunc`,
+`glue`, `resonance`, `unit`, `guards`, plus the proof obligations --
+confirms the task's own "boundary/glue/guards" naming is correct, all
+three exist as literal field/definition names, not renamed). Per cycle
+46's own asymmetry finding (`incidenceProd` has three concretely-applied
+instances in this codebase -- `natIncidence × natIncidence`,
+`natIncidence × finiteIncidence`, `natIncidence × trivialIncidence Bool`
+-- `incidenceSum` has ZERO outside its own file's header example,
+`incidenceSum finiteIncidence finiteIncidence`), picked `inc1 :=
+natIncidence`, `inc2 := inc3 := finiteIncidence` -- reusing both existing
+applied instances rather than inventing new ones, exactly as the task
+required. Built the bijection as explicit forward/backward functions
+plus round-trip lemmas (`prodSumDistribForward`/`prodSumDistribBackward`/
+`prodSumDistrib_left_inverse`/`_right_inverse`) rather than a bundled
+`Equiv`-style abstraction, since a grep confirms this project has no
+existing `Equiv`-like convention to reuse (matching cycle 41's own
+injective/surjective-pair style). For the definitional alignment check,
+worked out the general algebra by hand first (which unit-absorption
+conditions fire on which side, for arbitrary `inc1`/`inc2`/`inc3`) before
+picking concrete numbers, then verified every prediction with `#eval` in
+a scratch file (deleted after use) before transcribing anything as a
+`theorem`, exactly cycle 41's discipline for concrete counterexamples.
+
+**Result**: **a genuine three-part mixed finding -- `boundary` aligns
+(generic positive), `glue` does not (concrete negative counterexample),
+`guards` has an unwitnessed-but-real structural asymmetry.** Added to
+`Sum.lean` (12 new declarations, no new imports needed -- already imports
+`Product.lean` since cycle 46).
+
+(1) **`boundary` aligns, generically** (not merely for the two chosen
+instances): `prodBoundary_sum_{left,right}_length` and
+`sumBoundary_prod_{left,right}_length` show both composite structures'
+boundary at corresponding elements have equal LENGTH, for ANY `inc1`,
+`inc2`, `inc3` -- a direct consequence of `prodBoundary`'s `++`/
+`List.map` shape and `sumBoundary`'s `List.map` shape composing the same
+way regardless of which constructor is outermost, needing nothing about
+the factors' internals beyond `List.length_map`/`List.length_append`.
+Combined into the headline `incidenceProd_incidenceSum_boundary_length_
+aligned_{left,right}`, stated directly against the two composite
+`Incidence`s' own `.boundary` field and the bijection itself. (A full
+entry-level correspondence, not just length, also holds by direct
+unfolding -- worked out by hand during Method -- but is not stated as a
+separate theorem, per the task's explicit "definitionally first, no
+homomorphism proof yet" scope; the length results are the concrete,
+decidable witness asked for.)
+
+(2) **`glue` does NOT align -- a concrete, decidable counterexample**,
+`incidenceProd_incidenceSum_distrib_glue_misaligned`. Mechanism:
+`incidenceSum`'s unit-absorbing `glue` (cycle 33) tests its OWN
+designated unit exactly. On the LHS (`incidenceProd inc1 (incidenceSum
+inc2 inc3)`), the INNER sum's absorption test inspects only the `I2 ⊕
+I3` component, entirely independent of `i1` -- so it can fire (returning
+the other side's element unchanged) even when `i1 ≠ inc1.unit`, provided
+`inc1.glue i1 j1` still succeeds. On the RHS (`incidenceSum (incidenceProd
+inc1 inc2) (incidenceProd inc1 inc3)`), the OUTER sum's absorption test
+requires the FULL pair `(i1, i2)` to equal `(inc1.unit, inc2.unit)` --
+strictly narrower. Verified concretely with `inc1 := natIncidence` (whose
+`glue` is total addition, never `none`) and `inc2 := inc3 :=
+finiteIncidence`: at `(i1, x) := (2, Sum.inl FiniteIncidence.leaf)`
+(`leaf = finiteIncidence.unit`, so the inner absorption fires) and
+`(j1, y) := (3, Sum.inr FiniteIncidence.root)` (opposite side, `2` and
+`3` both `≠ 0 = natIncidence.unit`) -- the LHS glues to `some (Sum.inr
+(5, FiniteIncidence.root))` (`5 = 2+3`) mapped through the bijection,
+while the RHS glue is `none` (opposite tags after the bijection, neither
+element is the RHS's exact designated unit `Sum.inl (0, leaf)`). `#eval`
+confirmed both values first; `decide` closes the formal inequality.
+
+(3) **`guards`: real structural asymmetry, but not concretely
+witnessed** -- every applied concrete instance in this project
+(`natIncidence`, `finiteIncidence`, `trivialIncidence`) uses
+`Guards.permissive` (always `true`), so no EXISTING instance can
+concretely witness a disagreement without inventing a new non-permissive
+one, which the task's tractability scope disallows (and which this
+cycle declined to do, to avoid fabricating a misleading "concrete"
+result). The asymmetry is nonetheless real and proved generically:
+`incidenceSum_prod_guards_always_permissive` shows the RHS's top-level
+`guards.allow` is unconditionally `true` for every pair (cycle 33's
+`incidenceSum` always sets `guards := Guards.permissive`, discarding
+whatever guards its two arguments actually carry), while
+`incidenceProd_sum_guards_depends_on_inc1_only` shows the LHS's top-level
+`guards.allow (i1,x) (j1,y)` reduces to exactly `inc1.guards.allow i1
+j1` (cycle 31's `incidenceProd` genuinely conjoins both factors' guards,
+and the inner sum's own permissive guards cancel out of the `&&`). These
+are not the same function in general and would diverge the moment any
+future instance in this project used a non-trivial `Guards` -- flagged
+as an open item for whichever future cycle builds one, not resolved here.
+
+`lake build`: 62/62 jobs. `#print axioms` (scratch file, deleted after
+use): `prodSumDistrib_left_inverse`/`_right_inverse` need NO axioms at
+all (pure `rfl`/`cases`); all four boundary-length lemmas, both combined
+boundary theorems, and both guards theorems need only `propext`/
+`Quot.sound`; `incidenceProd_incidenceSum_distrib_glue_misaligned` needs
+`propext`/`Classical.choice`/`Quot.sound` -- verified this is
+`natIncidence`'s OWN standing baseline, not something this cycle's proof
+introduces (`theorem t : natIncidence.glue 2 3 = some 5 := rfl` alone,
+with none of this cycle's new code, already carries `Classical.choice`,
+consistent with cycle 37's note that `natIncidence`-involving facts have
+carried it since cycle 4). Full `./verify.sh` (clean `lake clean && lake
+build`, example binary run, repo-wide unproved-declaration grep): passes
+end to end.
+
+**Synthesis**: this closes the multi-cycle-deferred original cycle-37
+distributivity thread's first concrete test with a mixed, honest result
+-- not a clean win, but a genuinely informative one, entirely consistent
+with this project's standing view (cycles 38-40, 45, 46) that a
+part-positive-part-negative finding is fully legitimate cycle output.
+The headline lesson: `incidenceProd`/`incidenceSum`'s DATA-level carrier
+distributes exactly as `Type`/`Set` predicts (part 1), but the
+ALGEBRAIC structure built on top does not distribute along with it,
+because `incidenceSum`'s unit-absorption and `guards`-discarding are
+BOTH defined relative to the sum's own immediate two arguments' units,
+not aware of any "outer" structure a `glue`/`guards` might be nested
+inside via `incidenceProd`. This is the same family of finding as cycle
+41's `simplexToShape_not_glue_hom` and cycle 45's strengthening of it
+(`glue` does not commute with a carrier-level map/quotient in general) --
+but this is the first time the SPECIFIC obstruction has been pinned to
+`incidenceSum`'s absorption mechanism interacting with an ENCLOSING
+`incidenceProd`, rather than a quotient/classification map. It also
+means: any future attempt at a genuine distributivity THEOREM (glue-
+homomorphism or bisimulation-respecting) for this specific pairing is
+now known to be FALSE as stated for the naive bijection -- a full
+positive result would need either a weaker notion of "aligns" (e.g. up
+to `≈`, not on-the-nose equality) or a restricted hypothesis ruling out
+the exact absorption-under-non-unit-`i1` scenario found here. Cycle 46's
+"boundary/guards would need checking too" caution (implicit in its own
+scope-down) turns out to have been well-founded: the three fields
+genuinely behave differently under this comparison, and lumping them
+together would have obscured a real, task-relevant distinction.
+
+**Next hypothesis (cycle 48, not yet attempted)**: three live threads,
+in decreasing order of promise. (a) Given this cycle's concrete `glue`
+counterexample turns on ordinary (on-the-nose) equality after the
+bijection, does the WEAKER statement -- `glue`-results agree up to `≈`
+(`approxBisim`) rather than exact equality -- hold instead? This is the
+natural next scope-down the task itself anticipated ("only pursue a
+general theorem in a LATER cycle if this cycle's concrete check
+succeeds" implicitly allows a WEAKENED theorem attempt when the strict
+one fails, per this project's standing pattern of retrying a failed
+exact-equality claim as an up-to-`≈` claim, e.g. cycles 31→32's
+one-directional-then-iff arc). Concretely: is `incidenceProd
+natIncidence (incidenceSum finiteIncidence finiteIncidence)`'s glue
+result on the counterexample pair `≈`-related (in the SUM's own
+approxBisim, after transport) to whatever the RHS's `none` would need to
+"mean" -- likely requires first deciding what `≈`-relatedness even means
+when one side's glue is `none` and the other is `some x` (does `none`
+have a canonical `≈`-partner, or does the comparison only make sense
+when BOTH sides succeed?). (b) Build a first concrete instance actually
+USING `incidenceSum` with a non-permissive `guards`, to convert this
+cycle's part-(3) structural-but-unwitnessed guards asymmetry into an
+actual concrete counterexample (or discover it does NOT concretely
+manifest even then, which would itself be a finding worth having). (c)
+cycle 39's still-open item, still queued three cycles running: does any
+existing instance have a `≈`-quotient in the middle ground beyond
+`simplexIncidence` (cycle 41's only example)?

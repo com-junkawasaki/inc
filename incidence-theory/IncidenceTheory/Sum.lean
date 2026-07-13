@@ -836,4 +836,241 @@ theorem sumToProdNatCarrier_basepoint_dependent :
     sumToProdNatCarrier 0 (Sum.inl 7) ≠ sumToProdNatCarrier 1 (Sum.inl 7) := by
   simp [sumToProdNatCarrier]
 
+/- Cycle 47 (see RESEARCH_LOG.md): cycle 46's own next-hypothesis, re-scoping
+   the distributivity thread to the shape cycle 37 ORIGINALLY asked for (not
+   the same-`(A,B)` carrier-map comparison cycle 46 closed negatively, which
+   was a drift cycle 46 itself identified and explicitly set aside for this
+   cycle): does the canonical `I1 × (I2 ⊕ I3) ≃ (I1 × I2) ⊕ (I1 × I3)`
+   bijection -- `Type`/`Set` genuinely IS a distributive category, unlike the
+   carrier-map question cycle 46 closed -- align the `boundary`/`glue`/
+   `guards` structure of `incidenceProd inc1 (incidenceSum inc2 inc3)` with
+   `incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)`,
+   definitionally, for concrete already-existing instances? Per the task's
+   explicit scope-down: construct the bijection first, then check
+   definitionally -- no bisimulation/homomorphism/general-distributivity
+   theorem attempted this cycle.
+
+   Concrete instances reused (per cycle 46's own asymmetry finding --
+   `incidenceProd` has three applied instances in this codebase,
+   `incidenceSum` has none outside its own file's header example): `inc1 :=
+   natIncidence`, `inc2 := inc3 := finiteIncidence` -- `incidenceSum
+   finiteIncidence finiteIncidence` is literally this file's own header
+   example (`incidenceSum_preserves_unselected_resonance_mode`, above), and
+   `incidenceProd natIncidence finiteIncidence` is `CrossInstance.lean`'s
+   `natFiniteProdNormalizedResonanceCompletion`'s underlying instance -- no
+   new instance invented.
+
+   Finding, in three parts, mirroring the task's structure exactly.
+
+   (1) `boundary` ALIGNS, generically (not just for these instances): both
+   composite structures' boundary at corresponding elements have the SAME
+   LENGTH (`prodBoundary_sum_{left,right}_length` /
+   `sumBoundary_prod_{left,right}_length`, combined into
+   `incidenceProd_incidenceSum_boundary_length_aligned_{left,right}`) --
+   `prodBoundary`'s `++`/`List.map` shape and `sumBoundary`'s `List.map`
+   shape compose the same way regardless of which constructor sits on the
+   outside, because `List.length` is a `List.map`/`List.append`
+   congruence, not a fact needing `inc1`/`inc2`/`inc3`'s internals at all.
+   (A full ENTRY-level correspondence -- not just length -- also holds by
+   direct unfolding of `prodBoundary`/`sumBoundary`/`sumInlEndpoint`/
+   `sumInrEndpoint`, but is not separately stated as a theorem here, per the
+   task's explicit "definitionally first, no homomorphism proof yet" scope;
+   the length results are the concrete, decidable-in-principle witness the
+   task asked for.)
+
+   (2) `glue` does NOT align -- a concrete, decidable counterexample,
+   `incidenceProd_incidenceSum_distrib_glue_misaligned` below. The
+   mechanism: `incidenceSum`'s `glue` (cycle 33) absorbs against its OWN
+   designated unit exactly (`Sum.inl inc2.unit` for the inner sum inside
+   `incidenceProd inc1 (incidenceSum inc2 inc3)`; `Sum.inl
+   (incidenceProd inc1 inc2).unit = Sum.inl (inc1.unit, inc2.unit)` for the
+   outer sum in `incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1
+   inc3)`). On the LHS, the inner sum's absorption test only inspects the
+   `I2 ⊕ I3` component (`x`/`y`), completely independent of `i1` -- so it can
+   fire (returning the OTHER side's element unchanged) even when `i1 ≠
+   inc1.unit`, provided `inc1.glue i1 j1` still succeeds (as it always does
+   for `natIncidence`, whose `glue` is total addition). On the RHS, the
+   outer sum's absorption test requires the FULL pair `(i1, i2)` to equal
+   `(inc1.unit, inc2.unit)` -- strictly narrower, since it also demands
+   `i1 = inc1.unit`. When `i1 ≠ inc1.unit` and the two arguments land on
+   OPPOSITE `I2 ⊕ I3` sides, the LHS still glues successfully (via the inner
+   absorption) while the RHS's same-side/cross-side match falls through to
+   `none` (opposite tags, neither side is the exact designated unit).
+   Verified concretely: at `i1 := 2`, `j1 := 3` (both `≠ 0 = natIncidence.unit`),
+   `x := Sum.inl FiniteIncidence.leaf` (`= finiteIncidence.unit`, so the inner
+   sum's absorption fires), `y := Sum.inr FiniteIncidence.root` (opposite
+   side) -- `#eval` first (scratch, not committed), then transcribed as a
+   `decide`-checked theorem: LHS glue maps to `some (Sum.inr (5, root))`
+   (`5 = 2 + 3` via `natIncidence.glue`'s addition, passed through cleanly),
+   RHS glue is `none`. Genuinely different Lean values, not merely
+   non-obviously-equal.
+
+   (3) `guards`: not concretely counterexampled (every applied concrete
+   instance in this project -- `natIncidence`, `finiteIncidence`,
+   `trivialIncidence` -- uses `Guards.permissive`, i.e. always `true`, so no
+   existing instance can concretely witness a disagreement without
+   inventing a new one, which the task's tractability scope disallows).
+   But the STRUCTURAL asymmetry is real and provable generically:
+   `incidenceSum`'s `guards` field (cycle 33) is unconditionally
+   `Guards.permissive`, discarding whatever guards its two arguments
+   actually carry (`incidenceSum_prod_guards_always_permissive`: the RHS's
+   top-level `guards.allow` is `true` for every pair, full stop) -- whereas
+   `incidenceProd`'s `guards` (cycle 31) genuinely conjoins its two factors'
+   guards (`incidenceProd_sum_guards_depends_on_inc1_only`: the LHS's
+   top-level `guards.allow (i1,x) (j1,y)` reduces to exactly
+   `inc1.guards.allow i1 j1`, since the inner sum's own guards are
+   permissive and cancel out of the `&&`). For this project's actual
+   instances `inc1.guards.allow i1 j1` is always `true` too, so no
+   observable disagreement exists YET -- but the two formulas are not the
+   same function in general, and would diverge the moment any future
+   instance in this project used a non-trivial `Guards`.
+   `lake build`: 62/62 jobs (`lake clean && lake build`, matching
+   `verify.sh`). `#print axioms` (scratch file, deleted after use, exactly
+   cycles 45/46's method) on the new theorems: `prodSumDistrib_left_inverse`/
+   `prodSumDistrib_right_inverse` need no axioms at all (pure `rfl`/`cases`);
+   the four boundary-length lemmas and both guards lemmas need only
+   `propext`/`Quot.sound`; `incidenceProd_incidenceSum_distrib_glue_misaligned`
+   needs `propext`/`Classical.choice`/`Quot.sound` -- but this is
+   `natIncidence`'s OWN standing baseline, not something this cycle's proof
+   introduces: even `theorem t : natIncidence.glue 2 3 = some 5 := rfl`
+   alone (checked in the same scratch file, with none of this cycle's new
+   code) already carries `Classical.choice`, consistent with cycle 37's own
+   note that `natIncidence`-involving facts have carried it since cycle 4. -/
+
+/- The canonical distributive-law bijection at the carrier level -- always
+   well-typed for ANY `I1`, `I2`, `I3` (no instance/cardinality hypothesis),
+   unlike cycle 46's same-`(A,B)` carrier-map question which had none in
+   either direction. Both directions given explicitly, plus round-trip
+   lemmas, in place of `Equiv` (this project has no existing `Equiv`-style
+   bundled-bijection abstraction to reuse -- checked by grep -- so this
+   follows the plainer "explicit forward/backward plus round-trip lemmas"
+   convention the task itself suggested). -/
+def prodSumDistribForward {I1 I2 I3 : Type u} (p : I1 × (I2 ⊕ I3)) :
+    (I1 × I2) ⊕ (I1 × I3) :=
+  match p with
+  | (i1, Sum.inl i2) => Sum.inl (i1, i2)
+  | (i1, Sum.inr i3) => Sum.inr (i1, i3)
+
+def prodSumDistribBackward {I1 I2 I3 : Type u} (q : (I1 × I2) ⊕ (I1 × I3)) :
+    I1 × (I2 ⊕ I3) :=
+  match q with
+  | Sum.inl (i1, i2) => (i1, Sum.inl i2)
+  | Sum.inr (i1, i3) => (i1, Sum.inr i3)
+
+theorem prodSumDistrib_left_inverse {I1 I2 I3 : Type u}
+    (p : I1 × (I2 ⊕ I3)) :
+    prodSumDistribBackward (prodSumDistribForward p) = p := by
+  obtain ⟨i1, x⟩ := p
+  cases x <;> rfl
+
+theorem prodSumDistrib_right_inverse {I1 I2 I3 : Type u}
+    (q : (I1 × I2) ⊕ (I1 × I3)) :
+    prodSumDistribForward (prodSumDistribBackward q) = q := by
+  cases q with
+  | inl a => obtain ⟨i1, i2⟩ := a; rfl
+  | inr a => obtain ⟨i1, i3⟩ := a; rfl
+
+/- Part (1): `boundary` aligns, generically, in the sense of matching
+   cardinality under the bijection -- proved directly from `prodBoundary`'s
+   `++`/`List.map` shape and `sumBoundary`'s `List.map` shape, needing
+   nothing about `inc1`/`inc2`/`inc3` beyond their existence. -/
+theorem prodBoundary_sum_left_length
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 : I1) (i2 : I2) :
+    (prodBoundary inc1 (incidenceSum inc2 inc3) (i1, Sum.inl i2)).length =
+      (inc1.boundary i1).length + (inc2.boundary i2).length := by
+  simp [prodBoundary, incidenceSum, sumBoundary]
+
+theorem prodBoundary_sum_right_length
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 : I1) (i3 : I3) :
+    (prodBoundary inc1 (incidenceSum inc2 inc3) (i1, Sum.inr i3)).length =
+      (inc1.boundary i1).length + (inc3.boundary i3).length := by
+  simp [prodBoundary, incidenceSum, sumBoundary]
+
+theorem sumBoundary_prod_left_length
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 : I1) (i2 : I2) :
+    (sumBoundary (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)
+      (Sum.inl (i1, i2))).length =
+      (inc1.boundary i1).length + (inc2.boundary i2).length := by
+  simp [sumBoundary, incidenceProd, prodBoundary]
+
+theorem sumBoundary_prod_right_length
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 : I1) (i3 : I3) :
+    (sumBoundary (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)
+      (Sum.inr (i1, i3))).length =
+      (inc1.boundary i1).length + (inc3.boundary i3).length := by
+  simp [sumBoundary, incidenceProd, prodBoundary]
+
+/- The headline alignment statement, stated directly in terms of the two
+   composite `Incidence` structures' own `.boundary` field (not the raw
+   `prodBoundary`/`sumBoundary` helpers) and the bijection itself, matching
+   exactly the shape the task posed the question in. -/
+theorem incidenceProd_incidenceSum_boundary_length_aligned_left
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 : I1) (i2 : I2) :
+    ((incidenceProd inc1 (incidenceSum inc2 inc3)).boundary (i1, Sum.inl i2)).length =
+      ((incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).boundary
+        (prodSumDistribForward (i1, Sum.inl i2))).length := by
+  simp [incidenceProd, incidenceSum, prodBoundary, sumBoundary, prodSumDistribForward]
+
+theorem incidenceProd_incidenceSum_boundary_length_aligned_right
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 : I1) (i3 : I3) :
+    ((incidenceProd inc1 (incidenceSum inc2 inc3)).boundary (i1, Sum.inr i3)).length =
+      ((incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).boundary
+        (prodSumDistribForward (i1, Sum.inr i3))).length := by
+  simp [incidenceProd, incidenceSum, prodBoundary, sumBoundary, prodSumDistribForward]
+
+/- Part (2): `glue` does NOT align -- a concrete, decidable counterexample
+   using this project's own existing `natIncidence`/`finiteIncidence`
+   instances (no new instance invented). See the doc comment above for the
+   mechanism (inner-sum absorption ignoring `i1` vs. outer-sum absorption
+   requiring the full pair to match its unit). -/
+theorem incidenceProd_incidenceSum_distrib_glue_misaligned :
+    ((incidenceProd natIncidence (incidenceSum finiteIncidence finiteIncidence)).glue
+        (2, Sum.inl FiniteIncidence.leaf) (3, Sum.inr FiniteIncidence.root)).map
+      (prodSumDistribForward (I1 := Nat) (I2 := FiniteIncidence) (I3 := FiniteIncidence)) ≠
+    (incidenceSum (incidenceProd natIncidence finiteIncidence)
+        (incidenceProd natIncidence finiteIncidence)).glue
+      (prodSumDistribForward (I1 := Nat) (I2 := FiniteIncidence) (I3 := FiniteIncidence)
+        (2, Sum.inl FiniteIncidence.leaf))
+      (prodSumDistribForward (I1 := Nat) (I2 := FiniteIncidence) (I3 := FiniteIncidence)
+        (3, Sum.inr FiniteIncidence.root)) := by decide
+
+/- Part (3): the structural (not concretely-witnessed) `guards` asymmetry --
+   `incidenceSum`'s top-level guards are unconditionally permissive,
+   `incidenceProd`'s genuinely depend on `inc1`. See the doc comment above. -/
+theorem incidenceSum_prod_guards_always_permissive
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (p q : (I1 × I2) ⊕ (I1 × I3)) :
+    (incidenceSum (incidenceProd inc1 inc2) (incidenceProd inc1 inc3)).guards.allow p q =
+      true := by
+  simp [incidenceSum, Guards.permissive]
+
+theorem incidenceProd_sum_guards_depends_on_inc1_only
+    {I1 R1 T1 I2 R2 T2 I3 R3 T3 : Type u}
+    [DecidableEq I1] [DecidableEq I2] [DecidableEq I3]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) (inc3 : Incidence I3 R3 T3)
+    (i1 j1 : I1) (x y : I2 ⊕ I3) :
+    (incidenceProd inc1 (incidenceSum inc2 inc3)).guards.allow (i1, x) (j1, y) =
+      inc1.guards.allow i1 j1 := by
+  simp [incidenceProd, prodGuards, incidenceSum, Guards.permissive]
+
 end IncidenceCore
