@@ -563,4 +563,36 @@ theorem integerQuotientResonance_neg_iff (i j k : Int) :
       (qk := Quotient.mk (approxBisimSetoid integerIncidence) k)
   exact h
 
+/-- The `integerIncidence` negation self-map is a
+`TranslationPreservation.BoundaryShapeTranslation`
+(`integerNegationBoundaryShapeTranslation`, cycle 73), so cycle 75's generic
+`TranslationPreservation.BoundaryShapeTranslation.toIncidenceBoundaryObservationEmbedding`
+(`Coherent.lean`) converts it directly into an
+`IncidenceBoundaryObservationEmbedding integerIncidence integerIncidence` --
+the first connection in this project between the `TranslationPreservation`
+hierarchy and the boundary-observation internal-logic layer
+(`IncidenceBoundaryEntails`, `Logic.lean`). Negating every index in a context
+and formula together leaves `integerIncidence`'s boundary-observation
+entailment invariant. -/
+theorem integerNegation_incidenceBoundaryEntails_iff
+    (context : List (Formula Int)) (formula : Formula Int) :
+    IncidenceBoundaryEntails integerIncidence
+        (Formula.mapContext (fun value => -value) context)
+        (formula.map (fun value => -value)) ↔
+      IncidenceBoundaryEntails integerIncidence context formula :=
+  integerNegationBoundaryShapeTranslation.toIncidenceBoundaryObservationEmbedding.entails_iff
+    context formula
+
+/-- The `IncidenceLeafEntails` (rather than `IncidenceBoundaryEntails`)
+counterpart of `integerNegation_incidenceBoundaryEntails_iff`, from the same
+embedding via `IncidenceBoundaryObservationEmbedding.leafEntails_iff`. -/
+theorem integerNegation_incidenceLeafEntails_iff
+    (context : List (Formula Int)) (formula : Formula Int) :
+    IncidenceLeafEntails integerIncidence
+        (Formula.mapContext (fun value => -value) context)
+        (formula.map (fun value => -value)) ↔
+      IncidenceLeafEntails integerIncidence context formula :=
+  integerNegationBoundaryShapeTranslation.toIncidenceBoundaryObservationEmbedding.leafEntails_iff
+    context formula
+
 end IncidenceCore

@@ -1776,4 +1776,31 @@ theorem rationalQuotientResonance_neg_iff (i j k : IncRational) :
       (qk := Quotient.mk (approxBisimSetoid rationalIncidence) k)
   exact h
 
+/-- The `Integers.lean` boundary-observation-entailment bridge (cycle 75),
+transported field-for-field: `rationalNegationBoundaryShapeTranslation`
+(cycle 74) converts via `TranslationPreservation.BoundaryShapeTranslation.
+toIncidenceBoundaryObservationEmbedding` (`Coherent.lean`) into an
+`IncidenceBoundaryObservationEmbedding rationalIncidence rationalIncidence`,
+so negating every index in a context and formula together leaves
+`rationalIncidence`'s boundary-observation entailment invariant. -/
+theorem rationalNegation_incidenceBoundaryEntails_iff
+    (context : List (Formula IncRational)) (formula : Formula IncRational) :
+    IncidenceBoundaryEntails rationalIncidence
+        (Formula.mapContext rationalNeg context)
+        (formula.map rationalNeg) ↔
+      IncidenceBoundaryEntails rationalIncidence context formula :=
+  rationalNegationBoundaryShapeTranslation.toIncidenceBoundaryObservationEmbedding.entails_iff
+    context formula
+
+/-- The `IncidenceLeafEntails` counterpart of
+`rationalNegation_incidenceBoundaryEntails_iff`, from the same embedding. -/
+theorem rationalNegation_incidenceLeafEntails_iff
+    (context : List (Formula IncRational)) (formula : Formula IncRational) :
+    IncidenceLeafEntails rationalIncidence
+        (Formula.mapContext rationalNeg context)
+        (formula.map rationalNeg) ↔
+      IncidenceLeafEntails rationalIncidence context formula :=
+  rationalNegationBoundaryShapeTranslation.toIncidenceBoundaryObservationEmbedding.leafEntails_iff
+    context formula
+
 end IncidenceCore

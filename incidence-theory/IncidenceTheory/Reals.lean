@@ -8894,4 +8894,32 @@ theorem realQuotientResonance_neg_iff (i j k : IncReal) :
       (qk := Quotient.mk (approxBisimSetoid realIncidence) k)
   exact h
 
+/-- The `Integers.lean`/`Rationals.lean` boundary-observation-entailment
+bridge (cycle 75), transported field-for-field a third time:
+`realNegationBoundaryShapeTranslation` (cycle 74) converts via
+`TranslationPreservation.BoundaryShapeTranslation.
+toIncidenceBoundaryObservationEmbedding` (`Coherent.lean`) into an
+`IncidenceBoundaryObservationEmbedding realIncidence realIncidence`, so
+negating every index in a context and formula together leaves
+`realIncidence`'s boundary-observation entailment invariant. -/
+theorem realNegation_incidenceBoundaryEntails_iff
+    (context : List (Formula IncReal)) (formula : Formula IncReal) :
+    IncidenceBoundaryEntails realIncidence
+        (Formula.mapContext realNeg context)
+        (formula.map realNeg) ↔
+      IncidenceBoundaryEntails realIncidence context formula :=
+  realNegationBoundaryShapeTranslation.toIncidenceBoundaryObservationEmbedding.entails_iff
+    context formula
+
+/-- The `IncidenceLeafEntails` counterpart of
+`realNegation_incidenceBoundaryEntails_iff`, from the same embedding. -/
+theorem realNegation_incidenceLeafEntails_iff
+    (context : List (Formula IncReal)) (formula : Formula IncReal) :
+    IncidenceLeafEntails realIncidence
+        (Formula.mapContext realNeg context)
+        (formula.map realNeg) ↔
+      IncidenceLeafEntails realIncidence context formula :=
+  realNegationBoundaryShapeTranslation.toIncidenceBoundaryObservationEmbedding.leafEntails_iff
+    context formula
+
 end IncidenceCore

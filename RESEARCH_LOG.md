@@ -8725,3 +8725,256 @@ API-parity and instantiation work), so cycle 75 should either attempt item
 cycle, identify and name a genuinely new smaller decomposition of it rather
 than continuing to defer to "the standing harder target" without further
 progress on breaking it down.
+
+## Cycle 75
+
+**Hypothesis**: per cycle 74's own handoff, this cycle first re-reads the ADR's
+item 7 in full (every dated addendum mentioning it, not just the summary) and
+the cycle 41/68/70/72/74 `RESEARCH_LOG.md` sections to reconstruct exactly what
+"resonance ↔ internal-logic ↔ constructive-real-analysis" infrastructure now
+exists, then judges honestly whether item 7's own single universal
+interpretation theorem is attemptable directly, or whether a new, smaller,
+previously-unnamed decomposition of it can be found and proved instead. Two
+starting candidates from the task brief were flagged for checking rather than
+assuming: (a) does `realIncidence`'s `internalLogic_complete_arbitrary` (cycle
+70) connect meaningfully to its `ResonantQuotientEquivalenceCriterion`/negation
+automorphism (cycle 74)? (b) does a `ResonantBehavioralEmbedding` between two
+`*ResonanceSpec`-carrying instances automatically preserve the spec's algebraic
+laws (associativity/distributivity/etc.)?
+
+**Method**: read the ADR body (L34-60, the 9-item roadmap and item 7's original
+statement) and every one of its "追補" sections that mention item 7 by number or
+discuss "universal"/"interpretation" (cycles 67 through 74, `docs/adr/2607100600-...md`
+L2355-2971) in full, not just grepped fragments. Then read `RESEARCH_LOG.md`
+cycles 41 (closes an unrelated quotient thread but is the cycle the ADR itself
+is named after, confirming it is a pure historical-snapshot anchor, not
+item-7-specific), 68, 70, 72, 74 in full (Hypothesis through Next-hypothesis).
+
+With that context fixed, read the ACTUAL current code for every "internal
+logic" mechanism in the project, not just the ones cycles 68-71 exercised, to
+find what item 7's two legs ("internal-logic model" and "resonance-driven
+generation/composition") actually connect to today:
+
+1. `CountablyPresentedIncidence`/`internalLogic_complete`/`_arbitrary`
+   (`Logic.lean` L5328-5668, 5870-5990, the cycles 68-71 bridge): re-read the
+   *statement*, not just the existence, of `internalLogic_complete`. It is
+   `presentation.atoms.kripke_complete` -- i.e. `KripkeEntails ↔ Derives` over
+   `Formula I`, proved purely from the `CountableAtomCoding I` and otherwise
+   **independent of `presentation.incidence` entirely** (the `incidence` field
+   of `CountablyPresentedIncidence` is never read by either headline theorem).
+   Same for `internalLogic_complete_arbitrary`: it only needs `[DecidableEq I]`,
+   no valuation of any kind. This is a load-bearing discovery for candidate (a):
+   these are syntactic completeness facts about the propositional calculus
+   *indexed by* the carrier, not semantic facts *about* the incidence's
+   boundary or resonance structure.
+2. `IncidenceBoundaryValuation`/`IncidenceLeafValuation`/`IncidenceBoundaryEntails`/
+   `IncidenceLeafEntails`/`IncidenceBoundaryObservationEmbedding` (`Logic.lean`
+   L5332-5719, predates the cycle-numbered log): a genuinely
+   incidence-*semantic* internal logic -- an atom `i` is "true" exactly when
+   `i` has nonempty boundary (or, dually, is a leaf). `IncidenceBoundaryObservationEmbedding`
+   requires exactly one obligation, `boundary_iff : ∀ atom, IncidenceBoundaryValuation
+   target (map atom) ↔ IncidenceBoundaryValuation source atom`, and is already used
+   (built ad hoc, field-by-field, never from a `TranslationPreservation` object) in
+   `Quotient.lean`'s `BisimulationQuotientIncidencePresentation` and
+   `CrossInstance.lean`'s `natIncidence → pathIncidenceChained` bridge.
+3. `ResonanceAtom`/`resonanceValuation`/`resonanceFormula`/`FinitePhysicalResonanceLogic`/
+   `ResonanceHomomorphism.preservesFormula` (`Logic.lean` L6115-6259, `Coherent.lean`
+   L14-34): a genuinely resonance-*semantic* internal logic (atoms are
+   `ResonanceAtom I` triples, valuation is literally `inc.resonance i j k`).
+   Grepped the whole tree for `ResonanceAtom`/`FinitePhysicalResonanceLogic`: the
+   **only** concrete instantiation in the project is `finiteResonanceAtomCoding`/
+   `finitePhysicalResonanceLogic` (`GraphModel.lean` L705-854), and a comment there
+   states this coding was "built ... years before this cycle" -- i.e. it predates
+   even the cycle-numbering convention and was never connected to
+   `natIncidence`/`integerIncidence`/`rationalIncidence`/`realIncidence`.
+4. `CoherentIncidence`/`CoherentQuotient`/`CoherentQuotientLogicalRetract`
+   (`Coherent.lean`, whole file, doc comment: "the formal home for the strong Inc
+   theorems"): the richest existing bridge -- bundles a chain-complex/pushout
+   structure (`ChainComplexPushoutIncidence`, requiring
+   `BoundarySquareZeroEverywhere`/`GluePushoutSpec`) with a
+   `CompletePropositionalInternalLogic`, and proves that when a
+   `CoherentQuotient`'s classifier has a `CoherentQuotientLogicalRetract` (which
+   `coherentQuotient_has_logicalRetract_iff_source_bisim_faithful` shows is
+   *equivalent* to the source's `≈` being faithful), the source's and quotient's
+   internal logics are related by a **full Heyting-algebra isomorphism**
+   (`CoherentQuotient.logicalHeytingIsomorphism`) -- strictly stronger than
+   anything cycles 68-74 built. Grepped the whole tree for `CoherentIncidence`:
+   the only concrete instance is `terminalCoherentIncidence : CoherentIncidence
+   Unit GraphRole GraphType` (`GraphModel.lean` L2876-2918), the trivial
+   one-point terminal model, together with a `CoherentQuotient (Q := Unit)`
+   built on top of it -- **never instantiated on any of the 5 substantive
+   concrete instances** (`natIncidence`/`integerIncidence`/`rationalIncidence`/
+   `realIncidence`/`finiteIncidence`). Checked why `natIncidence` in particular
+   could not receive this treatment even if attempted: `Peano.lean` L356-380
+   already proves `natIncidence_not_boundarySquareZeroEverywhere` (a concrete
+   witness, `natIdx6`, refutes `∂² = 0`) -- a permanent obstruction, for the
+   same "unbounded chain" reason documented there (`natIncidence`'s boundary
+   reaches arbitrarily deep, unlike a 2-graded structure where composition
+   trivially lands outside the structure).
+
+With all four mechanisms read, evaluated the two starting candidates honestly:
+
+- **(a) checked and found vacuous.** Because `internalLogic_complete_arbitrary`
+  (mechanism 1) is entirely independent of any valuation of `realIncidence` --
+  it holds unconditionally for `IncReal` and, separately and just as
+  unconditionally, for any other carrier with `DecidableEq` -- pairing it with
+  the negation automorphism produces no new content: both instances of the
+  completeness theorem are true regardless of what self-map exists between them,
+  so there is no meaningful sense in which "resonance-equivalence corresponds to
+  logical equivalence" here. This confirms, precisely rather than by assumption,
+  why cycle 70 itself called `_arbitrary` "weak" -- weak enough that it cannot
+  be the target of a nontrivial transport theorem at all.
+- **(b) checked and found not concretely closable this cycle, for a specific,
+  identified reason.** All `ResonantQuotientEquivalenceCriterion` instances this
+  project has ever built (cycles 72-74: `integerIncidence`/`rationalIncidence`/
+  `realIncidence`'s negation automorphisms) are **self-maps** (`source = target`),
+  so any `*ResonanceSpec` the target carries is just the source's own spec,
+  unconditionally true independent of the embedding -- the question is vacuous
+  for every instance that currently exists. Stating and proving the *general*
+  abstract theorem (for a genuine `source ≠ target` criterion) would need
+  transporting a spec's laws (e.g. `AssociativeResonanceSpec.reassociate`, a
+  bi-implication quantified over *all* `i j k out` in the target's carrier) across
+  an embedding that is only essentially-surjective *up to bisimulation* -- this
+  needs `resonance` itself to respect bisimulation congruence in a stronger,
+  fully general sense than `QuotientResonanceCongruent` supplies (cycle 72's
+  device only transports membership of the ternary relation across
+  bisimilar-but-unequal representatives for one fixed triple, not universally
+  quantified derived laws built from it). No cross-instance criterion exists in
+  the project to even test this against (cycle 73 explicitly noted essential
+  surjectivity is structurally blocked between differently-sized carriers in
+  this project's instance family, e.g. `Nat ↪ Int`). Recording this as a genuine
+  "checked, found genuinely open and not small enough for one cycle" result,
+  not a fabricated attempt.
+
+Given both starting candidates were checked and ruled out as this cycle's brick
+(one vacuous, one genuinely open but too large), looked for a third, smaller
+connection the reading itself surfaced: mechanism 2's `BoundaryShapeTranslation`
+(the *base* of the entire `TranslationPreservation` hierarchy every translation
+in cycles 67, 72-74 extends) has `preservesReflectsNullary : ∀ i, source.boundary
+i = [] ↔ target.boundary (map i) = []` -- and mechanism 2's own
+`incidenceBoundaryValuation_iff_not_leaf` (`Logic.lean` L5358-5374) already
+proves `IncidenceBoundaryValuation inc atom ↔ ¬ IncidenceLeafValuation inc atom`.
+Composing these two facts (a contrapositive-negation rewrite) converts *any*
+`BoundaryShapeTranslation` directly into an `IncidenceBoundaryObservationEmbedding`
+-- and no declaration anywhere in the tree already does this (grepped
+`IncidenceBoundaryObservationEmbedding` across the whole tree: it is built only
+ad hoc, directly against a `BisimulationQuotientClassification`, in
+`Quotient.lean`/`CrossInstance.lean`; grepped `TranslationPreservation` near it:
+zero overlap). This is exactly the kind of "genuinely new smaller decomposition"
+the task brief asked for if the two starting candidates didn't pan out: it
+connects the `TranslationPreservation` hierarchy (used throughout cycles 67,
+72-74 to build resonance-preserving self-maps and equivalences) to mechanism 2's
+boundary-observation internal logic (which, unlike mechanism 1, is genuinely
+tied to the incidence's own semantics) -- for the first time in the project.
+
+Built the conversion generically in `Coherent.lean` (the file whose own doc
+comment already names it as the bridge layer, and which already has the
+directly analogous `ResonanceHomomorphism.preservesFormula` for mechanism 3):
+`TranslationPreservation.BoundaryShapeTranslation.toIncidenceBoundaryObservationEmbedding`.
+Then instantiated it concretely, not just abstractly, against the one family of
+non-`identity` `TranslationPreservation` objects the project actually has --
+cycles 73-74's negation automorphisms on `integerIncidence`/`rationalIncidence`/
+`realIncidence` -- by applying the generic `IncidenceBoundaryObservationEmbedding.entails_iff`/
+`.leafEntails_iff` (already proved generically in `Logic.lean`, reused verbatim,
+no new generic lemma needed beyond the one conversion) to
+`integerNegationBoundaryShapeTranslation`/`rationalNegationBoundaryShapeTranslation`/
+`realNegationBoundaryShapeTranslation`. Checked before writing that this is
+non-vacuous the same way cycle 73 checked its own `.identity`-degeneracy risk:
+both sides of each corollary are about the *same* incidence, with the context
+and formula genuinely transformed by negation, not a trivial self-loop.
+
+**Result**: **8 new declarations across 4 files, all type-check on the first
+`lake build` attempt; `./verify.sh` (clean `lake clean && lake build`, example
+run, repo-wide `axiom`/`sorry`/`sorryAx` grep) passes end to end.**
+`Coherent.lean`: 1 new definition
+(`TranslationPreservation.BoundaryShapeTranslation.toIncidenceBoundaryObservationEmbedding`).
+`Integers.lean`/`Rationals.lean`/`Reals.lean`: 2 new corollaries each
+(`<name>Negation_incidenceBoundaryEntails_iff`/`<name>Negation_incidenceLeafEntails_iff`).
+A scratch `lake env lean` check file (`import IncidenceTheory.Reals`, deleted
+after use) confirmed `#print axioms` on all 7 substantive declarations: the
+generic conversion itself depends only on `[propext]` (pure propositional
+rewriting, no choice or quotient reasoning); all 6 concrete corollaries depend
+on `[propext, Classical.choice, Quot.sound]` -- this project's standing
+baseline throughout cycles 68-74, no new axiom of any kind.
+
+**Synthesis**: this cycle's primary payoff is the scoping work itself, not the
+brick's size. Both candidates the task brief offered as starting hypotheses
+were checked against the actual code (not assumed) and both were honestly ruled
+out for identified, specific reasons -- (a) is vacuous because mechanism 1 is
+valuation-independent by construction; (b) is genuinely open but requires
+either a stronger bisimulation-congruence result than `QuotientResonanceCongruent`
+supplies or a cross-instance criterion the project doesn't yet have, either of
+which is plausibly its own multi-cycle thread, not a checkable one-cycle brick.
+The reading that ruled these out also surfaced that item 7's "internal-logic"
+leg is not one mechanism but (at least) four, of increasing semantic strength
+and decreasing instantiation coverage: (1) `CountablyPresentedIncidence`
+(syntactic, covers 4/5 instances + `realIncidence`'s weak fallback, cycles
+68-71), (2) boundary-observation (semantic, covers `natIncidence` + ad hoc
+quotient/cross-instance bridges, and as of this cycle also
+`integerIncidence`/`rationalIncidence`/`realIncidence`'s negation
+automorphisms), (3) resonance-native (semantic, covers only `finiteIncidence`,
+built pre-cycle-numbering and never extended), (4) coherent/chain-complex
+(strongest -- a full internal-logic isomorphism across a quotient -- covers
+only the trivial `Unit` terminal model). This cycle's brick closes a genuine,
+previously-unnoticed gap between mechanism 2 and the `TranslationPreservation`
+hierarchy, but -- exactly as cycles 67-74's own conservative self-assessments
+recorded for their respective bricks -- this does not by itself complete item
+7's stated remaining content (the single universal interpretation theorem
+connecting resonance-driven generation/composition, the internal-logic model,
+and constructive real analysis); the ADR addendum below records the finding
+without moving item 7's existing percentage figures (roadmap item 7 "部分完了",
+incidence/resonance ~90%, internal logic ~90%, translation/preservation ~85%).
+
+The most significant scoping finding for cycle 76 specifically is mechanism 4
+(`CoherentIncidence`): it is by far the strongest existing bridge (a full
+Heyting-algebra isomorphism of internal logics across a bisimulation quotient),
+it is completely unexercised beyond the trivial one-point model, and this
+project has *already separately established* (cycle 73's own audit, needed to
+justify scoping cycles 73-74's negation construction to self-maps) that
+**`finiteIncidence`'s bisimulation quotient is faithful** -- which is *exactly*
+the hypothesis `coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`
+needs to produce a `CoherentQuotientLogicalRetract` for free, which in turn
+would yield the full `logicalHeytingIsomorphism` with no further proof
+obligations beyond that one retract. The one missing ingredient is a
+`CoherentIncidence FiniteIncidence GraphRole GraphType` itself: its
+`completeLogic : CompletePropositionalInternalLogic FiniteIncidence` field is
+already available for free (`finiteIncidenceAtomCoding.completeLogic`, reusing
+cycle 71's coding), but its `chainPushout : ChainComplexPushoutIncidence
+FiniteIncidence GraphRole GraphType` field -- specifically
+`BoundarySquareZeroEverywhere finiteIncidence` and `GluePushoutSpec
+finiteIncidence` -- has never been checked for `finiteIncidence` and is a
+genuinely open question, not assumed to succeed: `natIncidence` is *proved* to
+fail the analogous property (`natIncidence_not_boundarySquareZeroEverywhere`,
+`Peano.lean` L356-380) for an "unbounded chain" reason that plausibly also
+blocks `integerIncidence`/`rationalIncidence`/`realIncidence` (all likewise
+unbounded in both directions), whereas `finiteIncidence`'s `leaf`/`root`
+2-graded structure is the one candidate structurally analogous to
+`simplexIncidence`'s well-founded shape-grading (cycle 41: a bounded grading
+survived a construction an unbounded/flat structure could not) and to
+`terminalCoherentIncidence`'s already-successful (if trivial) `Unit` case.
+
+**Next hypothesis (cycle 76, not yet attempted)**: **investigate, not assume,**
+whether `finiteIncidence` (`GraphModel.lean`'s actual `leaf`/`root` structure,
+not the `Unit` terminal model) satisfies `BoundarySquareZeroEverywhere
+finiteIncidence` and `GluePushoutSpec finiteIncidence`. If both hold: build
+`CoherentIncidence FiniteIncidence GraphRole GraphType` (reusing
+`finiteIncidenceAtomCoding.completeLogic` for the logic half), then a
+`CoherentQuotient` on it, then invoke
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful` against cycle
+73's already-proved faithfulness fact to obtain a `CoherentQuotientLogicalRetract`
+for free, and finally `CoherentQuotient.logicalHeytingIsomorphism` -- which
+would be the first full Heyting-algebra-isomorphism instantiation of item 7's
+strongest existing bridge on any non-trivial concrete carrier, a genuinely
+larger and more central brick than this cycle's own. If
+`BoundarySquareZeroEverywhere`/`GluePushoutSpec` turn out to fail for
+`finiteIncidence` too (a real possible outcome, not to be papered over if
+found), prove the negative concretely (as `Peano.lean` already did for
+`natIncidence`) and report which of the two obligations blocks it and why --
+either outcome narrows item 7 further. Lower-priority fallback, not urgent:
+this cycle's own `toIncidenceBoundaryObservationEmbedding` bridge is generic
+over the *whole* `TranslationPreservation` hierarchy (confirmed by grep that
+`Cycle.lean`'s `BoundaryShapeEquivalence` on `cycleIncidence`/`shapeIncidence`
+also extends `BoundaryShapeTranslation`), so it could also be instantiated
+there for a second, unrelated concrete corollary -- available if cycle 76's
+primary `CoherentIncidence` investigation turns out to need a smaller
+consolation brick instead.

@@ -33,6 +33,38 @@ theorem ResonanceHomomorphism.preservesFormula
       ((resonanceFormula i j k).map (resonanceAtomMap hom.toFun)) :=
   resonanceFormula_preserved hom.toFun hom.preserves satisfied
 
+/- Every level of the `TranslationPreservation` hierarchy (cycles 67, 72-74:
+`BoundaryShapeTranslation ⊂ BehavioralBoundaryShapeTranslation ⊂
+ResonantBehavioralTranslation ⊂ ResonantBehavioralEmbedding ⊂
+ResonantQuotientEquivalenceCriterion`) already carries a
+`BoundaryShapeTranslation` at its base (`preservesReflectsNullary : ∀ i,
+source.boundary i = [] ↔ target.boundary (map i) = []`). This is, up to the
+leaf/non-leaf polarity flip already proved by
+`incidenceBoundaryValuation_iff_not_leaf` (`Logic.lean`), exactly the
+hypothesis `IncidenceBoundaryObservationEmbedding.boundary_iff` needs.
+Converting one into the other connects the `TranslationPreservation`
+hierarchy -- used throughout cycles 67, 72-74 to build resonance-preserving
+self-maps and equivalences on the concrete `*Incidence` instances -- to the
+boundary-observation internal-logic layer (`IncidenceBoundaryEntails`/
+`IncidenceLeafEntails`, `Logic.lean`), which unlike `CountablyPresentedIncidence`'s
+purely syntactic completeness (cycles 68-71, generic over any valuation) is
+tied to the incidence's own boundary semantics. No prior declaration in this
+project performs this specific conversion (`IncidenceBoundaryObservationEmbedding`
+is otherwise only built ad hoc, directly against a `BisimulationQuotientClassification`
+in `Quotient.lean`/`CrossInstance.lean`, never from a `TranslationPreservation`
+translation). -/
+def TranslationPreservation.BoundaryShapeTranslation.toIncidenceBoundaryObservationEmbedding
+    {I J R₁ T₁ R₂ T₂ : Type u} [DecidableEq I] [DecidableEq J]
+    {source : Incidence I R₁ T₁} {target : Incidence J R₂ T₂}
+    (translation : TranslationPreservation.BoundaryShapeTranslation source target) :
+    IncidenceBoundaryObservationEmbedding source target where
+  map := translation.map
+  boundary_iff := fun atom => by
+    rw [incidenceBoundaryValuation_iff_not_leaf, incidenceBoundaryValuation_iff_not_leaf]
+    unfold IncidenceLeafValuation
+    exact ⟨mt (translation.preservesReflectsNullary atom).mp,
+      mt (translation.preservesReflectsNullary atom).mpr⟩
+
 universe u
 
 structure CoherentIncidence (I R T : Type u) [DecidableEq I] where

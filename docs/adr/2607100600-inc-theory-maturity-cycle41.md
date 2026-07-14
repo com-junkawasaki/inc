@@ -2969,3 +2969,97 @@ non-nullary）の不一致による、より原始的なブロックである。
 criterion」という具体的にスコープされた小テーマ自体は、5インスタンス
 全件について肯定・否定いずれかで決着したため、この特定のスレッド内には
 これ以上の小さな継続が残っていない。
+
+## 2026-07-14 追補（cycle 75: 項目7の普遍的解釈定理を精読で二候補とも棄却
+——`TranslationPreservation` 階層と境界観測内部論理を繋ぐ新しい小さな橋を発見・証明。
+`CoherentIncidence` 層の完全な未接続を発見し cycle 76 へ具体的に引き継ぐ）
+
+本追補は `RESEARCH_LOG.md` cycle 75 の結果を反映する。cycle 74 が項目7自身の
+普遍的解釈定理への本格着手を推奨したのを受け、本文の項目7記述（L48-50）と
+その後の全追補（cycle 67-74、いずれも項目7に言及）を精読し直した上で、
+task brief が提示した2つの出発仮説——(a) `realIncidence` の
+`internalLogic_complete_arbitrary`（cycle 70）と `ResonantQuotientEquivalenceCriterion`/
+符号反転（cycle 74）が意味のある形で繋がるか、(b) `ResonantBehavioralEmbedding` は
+`*ResonanceSpec` の代数法則（結合律・分配律等）を自動的に保存するか——を、
+仮定せず実際のコードに照らして検証した。
+
+検証の結果、両方とも今サイクルの一手としては採用できないと判明した:
+(a) `internalLogic_complete_arbitrary` は `presentation.incidence` を一切
+参照せず（`CountablyPresentedIncidence.internalLogic_complete` も同様）、
+いかなる valuation にも依存しない——resonance-equivalence と組み合わせても、
+両辺が写像の中身と無関係に無条件で真であるため意味のある主張にならない
+（空虚）。(b) この project で今まで構築された `ResonantQuotientEquivalenceCriterion`
+は全て自己写像（`source = target`、cycle 72-74 の符号反転）であり、target の
+`*ResonanceSpec` は embedding と無関係にそもそも成り立つため、この形では
+恒に空虚。一般（`source ≠ target`）の場合を述べるには `QuotientResonanceCongruent`
+（cycle 72）より強い、`resonance` から導出される全称量化された法則
+（`AssociativeResonanceSpec.reassociate` 等）がbisimulation合同を尊重すること
+を要し、かつ project 内に cross-instance の criterion が一つも存在しない
+（cycle 73 が essential surjectivity の構造的障害を明記済み）ため、この
+cycle 内では閉じられない未解決課題として正直に記録した。
+
+精読の副産物として、項目7の「内部論理」脚が単一の機構ではなく、意味論的な
+強さと具体化の網羅度が異なる4層——① `CountablyPresentedIncidence`（構文的、
+cycle 68-71 で5インスタンス全カバー）、② 境界観測 valuation
+（`IncidenceBoundaryValuation`/`IncidenceBoundaryEntails`、意味論的、
+`natIncidence` と `Quotient.lean`/`CrossInstance.lean` の ad hoc 橋のみ）、
+③ resonance-native valuation（`ResonanceAtom`/`FinitePhysicalResonanceLogic`、
+意味論的、`finiteIncidence` のみ、cycle 番号制以前に構築されたまま拡張
+されていない）、④ `CoherentIncidence`/`CoherentQuotient`（chain-complex +
+完全論理のバンドル、bisim-faithful なら内部論理の**完全な Heyting 代数
+同型**まで証明する project 最強の橋だが、`Unit` の自明な terminal model
+以外に一度も具体化されていない）——であることを発見した。
+
+この発見から、②と `TranslationPreservation` 階層（cycle 67, 72-74 が
+resonance 保存自己写像・同値を構築するのに使ってきた階層）の間に、
+これまで一度も繋がれていなかった具体的な欠落を特定した:
+`BoundaryShapeTranslation`（階層全体の最も基底の層）の
+`preservesReflectsNullary` と、②の `IncidenceBoundaryObservationEmbedding`
+が要求する `boundary_iff` は、`incidenceBoundaryValuation_iff_not_leaf`
+（既存、`Logic.lean`）による極性反転を介して論理的に同値——にもかかわらず、
+この変換を行う宣言が木全体に一つも存在しなかった（`IncidenceBoundaryObservationEmbedding`
+は `Quotient.lean`/`CrossInstance.lean` で毎回 ad hoc に手書きされている）。
+
+この欠落を埋めるため: `Coherent.lean`（②③を繋ぐ既存の
+`ResonanceHomomorphism.preservesFormula` と同じ「橋」の役割を担うファイル）に
+汎用変換 `TranslationPreservation.BoundaryShapeTranslation.
+toIncidenceBoundaryObservationEmbedding` を新設し、`Integers.lean`/
+`Rationals.lean`/`Reals.lean` の cycle 73-74 符号反転自己準同型
+（`integerNegationBoundaryShapeTranslation` 等）にそれぞれ具体化して、
+`IncidenceBoundaryEntails`/`IncidenceLeafEntails`（各 incidence 自身の
+境界観測内部論理エンテイルメント）が符号反転で不変であることを示す
+具体的系を各ファイルに2件ずつ追加した。
+
+新設8件（`Coherent.lean` に1、`Integers.lean`/`Rationals.lean`/`Reals.lean`
+に各2）は初回の `lake build` で型検査を通過し、`./verify.sh`（`lake clean &&
+lake build` を含む完全リビルド、実行例、`axiom`/`sorry`/`sorryAx` の全木 grep）
+はクリーンに通過した。scratch `lake env lean` 検査（使用後削除）で確認:
+汎用変換自体は `[propext]` のみ（純粋な命題変形で choice/quotient 不要）、
+6件の具体系は cycle 68-74 と同一の `[propext, Classical.choice, Quot.sound]`
+——新規公理は皆無。
+
+これにより項目7の「resonance 駆動の生成・合成」（`TranslationPreservation`
+階層の resonance 保存自己写像）と「内部論理モデル」の一枝（②の境界観測
+valuation、`CountablyPresentedIncidence` とは異なり実際に incidence の
+意味論に紐づく）が、project 史上初めて接続された。とはいえこれも cycle
+67・72 と同種の「並行接続・API 橋渡し」であって項目7が明示する単一の
+普遍的解釈定理そのものには到達しないため、cycle 60-74 の保守的規律を
+踏襲し、項目7の記述（「部分完了」）とパーセンテージ（本文57-58行目）は
+本追補でも動かさない。
+
+本cycle最大の scoping 成果は cycle 76 への引き継ぎ: ④ `CoherentIncidence`
+は project 最強の橋でありながら `Unit` の自明例以外に一度も具体化されて
+いない。一方 cycle 73 は「`finiteIncidence` の bisimulation quotient は
+既に faithful」であることを別目的（符号反転構築のスコープ限定の根拠）で
+既に証明済みであり、これは `coherentQuotient_has_logicalRetract_iff_
+source_bisim_faithful` が `CoherentQuotientLogicalRetract`（→ 完全な
+Heyting 代数同型）を無償で導出するのに必要な条件そのものである。唯一
+欠けているのは `CoherentIncidence FiniteIncidence GraphRole GraphType`
+自身——`completeLogic` 半分は `finiteIncidenceAtomCoding.completeLogic`
+（cycle 71）で無償だが、`chainPushout`（`BoundarySquareZeroEverywhere`/
+`GluePushoutSpec`）半分は `finiteIncidence` に対して一度も検査されて
+いない、真に未解決の問い（`natIncidence` は同種の性質を「非有界な鎖」
+という理由で恒久的に反証済み——`Peano.lean` L356-380——であり、
+`finiteIncidence` の leaf/root 2段グレーディングが cycle 41 の
+「有界なグレーディングは崩壊を生き延びる」パターンの再来候補として
+最有力だが、成功を前提にはしない）。
