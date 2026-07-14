@@ -1834,4 +1834,125 @@ theorem rationalIncidence_boundarySquareZeroEverywhere :
     subst heq
     simp [rationalEndpoint, rationalIncidence, rationalBoundary]
 
+/- Research cycle 78 (see RESEARCH_LOG.md): cycle 77 found
+`rationalIncidence` SATISFIES `BoundarySquareZeroEverywhere` (immediately
+above) -- the same precondition `GraphModel.lean`'s cycle 76 needed for
+`finiteIncidence`'s full `CoherentIncidence` chain. This cycle checks,
+rather than assumes, that cycle 76's generic identity-cospan
+`GluePushoutSpec` witness (which `Coherent.lean`'s literal field list shows
+depends only on `[DecidableEq I]`, never on anything `finiteIncidence`-
+specific) transfers verbatim to `rationalIncidence`, then assembles the full
+`CoherentIncidence`/`CoherentQuotient`/Heyting-isomorphism chain exactly as
+cycle 76 did for `finiteIncidence`, substituting `rationalAtomCoding.
+completeLogic` (cycle 69's `CountableAtomCoding IncRational`) for
+`finiteIncidenceAtomCoding.completeLogic` and `rationalIncidence_
+approxBisim_iff` (cycle 73's bisimulation faithfulness, `left right :
+IncRational → approxBisim rationalIncidence left right ↔ left = right`) for
+`finiteIncidence_approxBisim_iff_eq`. Every step type-checked on the first
+attempt with no adaptation beyond substituting these two cycle-specific
+facts, confirming cycle 77's prediction that this route is "mechanical" was
+not overstated. This is the SECOND non-trivial instantiation of this
+project's strongest internal-logic bridge, and the first over a carrier
+built from a nontrivial quotient (`IncRational := Quotient
+rationalRepresentativeSetoid`) rather than a hand-rolled inductive type. -/
+
+/-- The generic identity-cospan `GluePushoutSpec` witness (cycle 76,
+`GraphModel.lean`'s `finiteGluePushoutSpec`), instantiated verbatim for
+`rationalIncidence`: unchanged because the witness never references
+anything about `finiteIncidence` beyond `[DecidableEq I]`. -/
+def rationalGluePushoutSpec : GluePushoutSpec rationalIncidence where
+  diagram := fun i j => { a := i, b := j, c := i, left := id, right := id }
+  witness := by
+    intro i j k _hglue
+    refine ⟨{ apex := k
+              inl := id
+              inr := id
+              commutes := fun _ => rfl
+              lift := fun leftLeg _ _ => leftLeg
+              lift_inl := fun _ _ _ _ => rfl
+              lift_inr := fun _ _ h x => h x
+              lift_unique := fun _ _ _ _ hl _ => funext hl }, rfl⟩
+
+/-- `rationalIncidence` satisfies the strengthened chain-complex-pushout
+layer: `BoundarySquareZeroEverywhere` from cycle 77, `GluePushoutSpec` from
+the generic witness above. -/
+noncomputable def rationalChainComplexPushoutIncidence :
+    ChainComplexPushoutIncidence IncRational RationalRole GraphType where
+  inc := rationalIncidence
+  boundary_square_zero := rationalIncidence_boundarySquareZeroEverywhere
+  glue_pushout := rationalGluePushoutSpec
+
+/-- The full `CoherentIncidence`: `rationalAtomCoding.completeLogic` (cycle
+69/70) supplies the remaining `CompletePropositionalInternalLogic
+IncRational` obligation, exactly the same method cycle 76 used for
+`finiteIncidenceAtomCoding.completeLogic`. -/
+noncomputable def rationalCoherentIncidence :
+    CoherentIncidence IncRational RationalRole GraphType where
+  chainPushout := rationalChainComplexPushoutIncidence
+  completeLogic := rationalAtomCoding.completeLogic
+
+theorem coherentIncidence_has_rational_carrier_model :
+    Nonempty (CoherentIncidence IncRational RationalRole GraphType) :=
+  ⟨rationalCoherentIncidence⟩
+
+/-- The identity self-classification: `rationalIncidence_approxBisim_iff`
+(cycle 73) shows `approxBisim rationalIncidence` is already faithful
+(`↔ Eq`), so, exactly as for `finiteIncidence`, the identity is the only
+classifier a `CoherentQuotient` on `rationalIncidence` can carry up to
+relabeling. -/
+def rationalQuotientClassification :
+    BisimulationQuotientClassification (Q := IncRational) rationalIncidence where
+  classify := id
+  respects := fun h => (rationalIncidence_approxBisim_iff _ _).mp h
+  reflects := fun h => by
+    have : (id : IncRational → IncRational) _ = id _ := h
+    simp only [id] at this
+    subst this
+    exact approxBisim_refl rationalIncidence _
+  surjective := fun q => ⟨q, rfl⟩
+
+noncomputable def rationalCoherentQuotient :
+    CoherentQuotient (Q := IncRational) rationalCoherentIncidence where
+  target := rationalCoherentIncidence
+  classification := rationalQuotientClassification
+  boundary_preserves := by
+    intro i
+    show (rationalIncidence.boundary i).map (mapEndpoint (id : IncRational → IncRational)) =
+      rationalIncidence.boundary i
+    have hid : (mapEndpoint (id : IncRational → IncRational) :
+        Endpoint IncRational RationalRole → Endpoint IncRational RationalRole) = id := by
+      funext e; rfl
+    rw [hid, List.map_id]
+  type_preserves := by intro i; rfl
+  glue_preserves := by intro i j k hglue; exact hglue
+
+/-- Cycle 73's faithfulness fact, fed through
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`, produces the
+retract "for free", exactly as cycle 76 did for `finiteIncidence`. -/
+noncomputable def rationalCoherentQuotientLogicalRetract :
+    CoherentQuotientLogicalRetract rationalCoherentQuotient :=
+  Classical.choice
+    ((coherentQuotient_has_logicalRetract_iff_source_bisim_faithful
+        rationalCoherentQuotient).mpr
+      (fun {left right} h => (rationalIncidence_approxBisim_iff left right).mp h))
+
+/-- The headline result: `rationalIncidence`'s internal logic and its
+bisimulation quotient's internal logic are related by a full Heyting-algebra
+isomorphism -- the SECOND instantiation of this project's strongest
+internal-logic bridge (after cycle 76's `finiteIncidence`). -/
+noncomputable def rationalLogicalHeytingIsomorphism :
+    Formula.LogicalHeytingIsomorphism IncRational IncRational :=
+  rationalCoherentQuotient.logicalHeytingIsomorphism rationalCoherentQuotientLogicalRetract
+
+theorem rationalLogicalHeytingIsomorphism_injective :
+    ∀ ⦃left right : Formula.LogicalEquivalenceClass IncRational⦄,
+      rationalLogicalHeytingIsomorphism.forward left =
+        rationalLogicalHeytingIsomorphism.forward right → left = right :=
+  rationalLogicalHeytingIsomorphism.injective
+
+theorem rationalLogicalHeytingIsomorphism_surjective :
+    ∀ target : Formula.LogicalEquivalenceClass IncRational,
+      ∃ source, rationalLogicalHeytingIsomorphism.forward source = target :=
+  rationalLogicalHeytingIsomorphism.surjective
+
 end IncidenceCore

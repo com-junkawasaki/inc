@@ -3206,3 +3206,90 @@ cycle9→反証への欠けていた接続を初めて汎用定理として梱�
 cycle 60-76 の保守的規律を踏襲し、項目7の記述（「部分完了」）とパーセンテージ
 （本文57-58行目、incidence/resonance 約90%、内部論理約90%、翻訳・保存層
 約85%）は本追補でも動かさない。
+
+## 2026-07-14 追補（cycle 78: `CoherentIncidence` を `rationalIncidence` 上にも
+具体化——project 最強の内部論理の橋の SECOND non-trivial インスタンス化。
+`realIncidence` は `ChainComplexPushoutIncidence` までは到達するが
+`completeLogic` フィールドで cycle 68 の非可算性障害に正確にぶつかり停止）
+
+本追補は `RESEARCH_LOG.md` cycle 78 の結果を反映する。cycle 77 が引き継いだ
+2本のスレッド——(1) `GluePushoutSpec`/`ChainComplexPushoutIncidence` を
+`rationalIncidence`/`realIncidence` に具体化すること、(2)
+`rationalAtomCoding`（cycle 69/70）が `CompletePropositionalInternalLogic
+IncRational` を cycle 76 と同じ `.completeLogic` 経路で無償供給するか
+検証すること——を両方とも実施した。
+
+`rationalGluePushoutSpec`/`realGluePushoutSpec` は cycle 76 の恒等 cospan
+witness を型名だけ差し替えてそのまま再利用でき、witness 本体は一字も
+変更不要だった——cycle 77 の「mechanical」という予測を裏付ける。ただし
+`finiteIncidence` にはなかった一段の摩擦が見つかった:
+`rationalIncidence`/`realIncidence` 自体が `noncomputable def`（`DecidableEq`
+インスタンスが `Classical.typeDecidableEq` 経由）であるため、それらを値として
+埋め込む `ChainComplexPushoutIncidence` の定義自体も `noncomputable` と
+明示する必要があった（`finiteChainComplexPushoutIncidence` は計算可能な
+`finiteIncidence` を埋め込むため不要だった一手間）。witness 自体は
+`Prop` 型のフィールドで incidence の値に言及するだけなので、この明示は
+不要だった。
+
+`rationalIncidence` については、`rationalAtomCoding.completeLogic`
+（cycle 69/70 の `CountableAtomCoding IncRational`、当時は無関係な目的
+——`CountablyPresentedIncidence` への接続——のために構築されたもの）が
+そのまま再利用でき、`rationalIncidence_approxBisim_iff`（cycle 73/74 の
+bisimulation faithfulness）と組み合わせて `rationalCoherentIncidence`・
+`rationalQuotientClassification`（恒等自己分類）・`rationalCoherentQuotient`・
+`rationalCoherentQuotientLogicalRetract`（`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`
+の `.mpr` + `Classical.choice`、cycle 76 と同一経路）を経て
+`rationalLogicalHeytingIsomorphism : Formula.LogicalHeytingIsomorphism
+IncRational IncRational` を得た——project 最強の内部論理の橋の、`Unit`
+terminal model・`finiteIncidence`（cycle 76）に続く3件目の具体化にして、
+quotient carrier（`IncRational := Quotient rationalRepresentativeSetoid`）
+上での初めての具体化。`boundary_preserves` の証明は cycle 76 の
+`cases i with | leaf | root => rfl`（`IncRational` には直接パターン
+マッチできる構成子がないため使えない）の代わりに、`mapEndpoint (id :
+IncRational → IncRational) = id` を `funext`/構造 eta で一度示し
+`List.map_id` で閉じる、より carrier に依存しない形で通した。
+
+`realIncidence` については、`CoherentIncidence.completeLogic` フィールドの
+型が文字通り `CompletePropositionalInternalLogic IncReal` であり、その
+唯一のフィールド `FormulaEnumeration IncReal` の `exhaustive` 義務が
+`Formula IncReal` の全要素（`Formula.atom : IncReal → Formula IncReal`
+という構成子を含む）を尽くすことを要求する以上、`Nat → IncReal` の
+全射、すなわち `IncReal` 自体の可算性を要求することを確認した——これは
+cycle 70 の弱い `_arbitrary` 橋（`Incidence.internalLogic_complete_arbitrary`、
+固定された有限 `context`/`formula` ごとの per-query 主張であり、大域的な
+`FormulaEnumeration` を一切生成しない）では代替できない、cycle 68 が
+既に証明済みの非可算性障害と全く同じ制約である。したがって
+`realIncidence` は `realGluePushoutSpec`/`realChainComplexPushoutIncidence`
+までで意図的に停止し、`CoherentIncidence`/`CoherentQuotient` は
+（部分的にも）試みていない。`realIncidence_approxBisim_iff`（cycle 74）で
+bisimulation は既に faithful であることを再確認しており、残る欠落は
+`completeLogic` フィールド一点に正確に切り分けられている。
+
+新設は `Rationals.lean` 10件（`rationalGluePushoutSpec`、
+`rationalChainComplexPushoutIncidence`、`rationalCoherentIncidence`、
+`coherentIncidence_has_rational_carrier_model`、
+`rationalQuotientClassification`、`rationalCoherentQuotient`、
+`rationalCoherentQuotientLogicalRetract`、`rationalLogicalHeytingIsomorphism`、
+その2系）、`Reals.lean` 3件（`realGluePushoutSpec`、
+`realChainComplexPushoutIncidence`、
+`chainComplexPushoutIncidence_has_real_carrier_model`）の計13件、全て初回の
+`lake build` で型検査を通過し（`noncomputable` 追加の1回のみ修正）、
+`./verify.sh`（`lake clean && lake build` を含む完全リビルド、実行例、
+`axiom`/`sorry`/`sorryAx` の全木 grep）はクリーンに通過した。scratch
+`lake env lean` 検査（使用後削除）で確認: 非自明な新設11件全てが
+`[propext, Classical.choice, Quot.sound]`——cycle 68-77 と同一の
+ベースラインで、新規公理は皆無。
+
+この結果は project 最強の内部論理機構の2件目の非自明インスタンス化
+という点で cycle 76 と並ぶ実質的な成果だが、項目7が明示する残課題
+（resonance 駆動の生成・合成を内部論理モデルと構成実数解析の両方に一結果で
+結ぶ単一の普遍的解釈定理）にはやはり到達しない——`CoherentIncidence`
+機構自体は「内部論理」脚の一機構の追加インスタンス化であって、resonance
+駆動の生成・合成の脚や構成実数解析への接続を新たに提供するものではない。
+したがって cycle 60-77 の保守的規律を踏襲し、項目7の記述（「部分完了」）と
+パーセンテージ（本文57-58行目、incidence/resonance 約90%、内部論理約90%、
+翻訳・保存層約85%）は本追補でも動かさない。`realIncidence` の
+`completeLogic` 障害を回避する別経路（`CoherentIncidence` 自体を弱める
+変種など）が見つからない限り、この5インスタンスの `CoherentIncidence`
+監査は本追補で事実上完結したものとして扱う（`RESEARCH_LOG.md` cycle 78
+の Next hypothesis 参照）。

@@ -8955,4 +8955,86 @@ theorem realIncidence_boundarySquareZeroEverywhere :
     subst heq
     simp [realEndpoint, realIncidence, realBoundary]
 
+/- Research cycle 78 (see RESEARCH_LOG.md): `realIncidence` also satisfies
+`BoundarySquareZeroEverywhere` (immediately above), and the generic
+identity-cospan `GluePushoutSpec` witness (cycle 76, `GraphModel.lean`)
+transfers to it too, verbatim, for the same reason it transferred to
+`rationalIncidence` (`Rationals.lean`, this cycle): the witness depends
+only on `[DecidableEq IncReal]` (the `noncomputable instance : DecidableEq
+IncReal` above), never on anything about `IncReal`'s Dedekind-cut internals.
+So the `ChainComplexPushoutIncidence`-level construction assembles exactly
+as cleanly as `rationalIncidence`'s did.
+
+The full `CoherentIncidence` chain does NOT extend to `realIncidence`, and
+this is checked here rather than assumed: `CoherentIncidence`'s remaining
+field is `completeLogic : CompletePropositionalInternalLogic IncReal`, and
+`CompletePropositionalInternalLogic`'s only field, `FormulaEnumeration
+IncReal`, demands `enumerate : Nat → Formula IncReal` `exhaustive` over
+every formula -- since `Formula.atom : IncReal → Formula IncReal` is one of
+`Formula`'s constructors (`Logic.lean` L14), exhaustiveness over `Formula
+IncReal` entails a surjection `Nat → IncReal`, i.e. countability of
+`IncReal` itself. This is exactly cycle 68's already-proved permanent
+obstruction ("`IncReal` is classically uncountable, so no
+`CountableAtomCoding IncReal` -- i.e. no injection `IncReal ↪ Nat` -- can
+exist", L8739-8768 above): the SAME cardinality fact blocks
+`CompletePropositionalInternalLogic IncReal` directly, not merely the
+`CountableAtomCoding`-mediated route cycle 77 flagged as the likely failure
+point. So `realIncidence`'s logic gap is not a matter of picking a
+different construction path: it is a genuine, structural dead end for THIS
+bridge specifically, and this cycle stops at
+`realChainComplexPushoutIncidence`, deliberately not attempting
+`CoherentIncidence`/`CoherentQuotient` for `realIncidence`.
+
+Checked, not assumed, that cycle 70's weaker `_arbitrary` bridge cannot
+substitute: `realIncidence_internalLogic_complete_arbitrary`/
+`..._consistent_iff_model_arbitrary` (above) prove `KripkeEntails ↔
+Derives` / `DerivationallyConsistent ↔ KripkeSatisfiable` per FIXED finite
+`context`/`formula` (via a per-query finite-support coding, not a global
+enumeration) -- a strictly different (and strictly weaker) statement shape
+than `CompletePropositionalInternalLogic IncReal`'s single global object.
+`CoherentIncidence.completeLogic`'s field type is literally
+`CompletePropositionalInternalLogic IncReal`, not an arbitrary proof of the
+per-query statement, so there is no way to discharge the field with the
+`_arbitrary` corollaries without begging the question (turning them into a
+`FormulaEnumeration` would still need the same global enumeration that
+cannot exist). Interestingly, `realIncidence_approxBisim_iff` (cycle 74)
+shows `realIncidence`'s bisimulation IS already faithful, exactly like
+`rationalIncidence`'s -- so if `CompletePropositionalInternalLogic IncReal`
+ever became available by some other route, the `CoherentQuotient`/retract
+half of the chain would transfer immediately with no further obstruction;
+the entire gap is the logic-completeness field, isolated precisely rather
+than papered over. -/
+
+/-- The generic identity-cospan `GluePushoutSpec` witness (cycle 76),
+instantiated verbatim for `realIncidence`. -/
+def realGluePushoutSpec : GluePushoutSpec realIncidence where
+  diagram := fun i j => { a := i, b := j, c := i, left := id, right := id }
+  witness := by
+    intro i j k _hglue
+    refine ⟨{ apex := k
+              inl := id
+              inr := id
+              commutes := fun _ => rfl
+              lift := fun leftLeg _ _ => leftLeg
+              lift_inl := fun _ _ _ _ => rfl
+              lift_inr := fun _ _ h x => h x
+              lift_unique := fun _ _ _ _ hl _ => funext hl }, rfl⟩
+
+/-- `realIncidence` satisfies the strengthened chain-complex-pushout layer
+(`BoundarySquareZeroEverywhere` from cycle 77, `GluePushoutSpec` from the
+generic witness above) -- but, per the discussion above, this is as far as
+the `Coherent.lean` bridge goes for `realIncidence` this cycle: the further
+`CompletePropositionalInternalLogic IncReal` obligation `CoherentIncidence`
+needs is blocked by cycle 68's cardinality obstruction, not merely
+unattempted. -/
+noncomputable def realChainComplexPushoutIncidence :
+    ChainComplexPushoutIncidence IncReal RealRole GraphType where
+  inc := realIncidence
+  boundary_square_zero := realIncidence_boundarySquareZeroEverywhere
+  glue_pushout := realGluePushoutSpec
+
+theorem chainComplexPushoutIncidence_has_real_carrier_model :
+    Nonempty (ChainComplexPushoutIncidence IncReal RealRole GraphType) :=
+  ⟨realChainComplexPushoutIncidence⟩
+
 end IncidenceCore

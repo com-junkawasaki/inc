@@ -9323,3 +9323,209 @@ certainly cannot go this route (the reals are uncountable), so a full
 route to `CompletePropositionalInternalLogic` or may be a genuine dead end
 for this project's current internal-logic layer -- worth stating precisely
 as a negative if so, rather than left unexamined.
+
+## Cycle 78
+
+**Hypothesis**: per cycle 77's queued thread (1), build `GluePushoutSpec
+rationalIncidence`/`GluePushoutSpec realIncidence` by reusing cycle 76's
+generic identity-cospan witness verbatim, pair each with cycle 77's
+`rationalIncidence_boundarySquareZeroEverywhere`/
+`realIncidence_boundarySquareZeroEverywhere` to assemble
+`ChainComplexPushoutIncidence` for both, then attempt thread (2): check
+whether `rationalAtomCoding` (cycle 69/70's `CountableAtomCoding
+IncRational`) supplies `CompletePropositionalInternalLogic IncRational` via
+the same `.completeLogic` method cycle 76 used for `finiteIncidence`, and if
+so build the FULL `CoherentIncidence`/`CoherentQuotient`/Heyting-isomorphism
+chain for `rationalIncidence`, mirroring cycle 76's construction exactly.
+For `realIncidence`, confirm (not assume) that this route genuinely fails
+per cycle 68's uncountability obstruction, and do not force a
+`CoherentIncidence` construction for it via this or any other route this
+cycle -- checking briefly whether `CoherentIncidence`'s actual required
+hypothesis is exactly `CompletePropositionalInternalLogic` (as opposed to
+something cycle 70's weaker `_arbitrary` bridge might satisfy) before
+declaring the stop.
+
+**Method**: read `GraphModel.lean`'s cycle 76 construction in full
+(L3089-3199: `finiteGluePushoutSpec` through
+`finiteLogicalHeytingIsomorphism_surjective`) as the literal template, plus
+`Coherent.lean` in full (`CoherentIncidence`, `CoherentQuotient`,
+`CoherentQuotientLogicalRetract`,
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`) and
+`IncidenceTheory.lean`'s literal `Cospan`/`PushoutWitness`/`GluePushoutSpec`/
+`ChainComplexPushoutIncidence` definitions (L2013-2053) to re-confirm cycle
+76's reading that the identity-cospan witness needs only `[DecidableEq I]`,
+not paraphrased from memory. Read `Rationals.lean`'s `rationalIncidence`
+definition (L1308-1329, confirming `glue` is total, matching
+`finiteIncidence`'s shape) and its `rationalAtomCoding`
+(L1612-1615)/`rationalIncidence_approxBisim_iff` (L1479-1487, bisimulation
+faithfulness) in full. Read `Reals.lean`'s `realIncidence` definition
+(L641-661) and confirmed `realIncidence_approxBisim_iff` (L729-742) also
+holds (real's bisimulation is faithful too, even though this cycle does not
+end up needing it). Read `Logic.lean`'s `CompletePropositionalInternalLogic`
+(L5102-5104) and `FormulaEnumeration` (L2522-2524) literal field lists to
+check thread (2)'s premise precisely: `CompletePropositionalInternalLogic
+Atom`'s only field is a `FormulaEnumeration Atom`, whose `exhaustive`
+obligation ranges over every `Formula Atom`, and `Formula.atom : Atom →
+Formula Atom` (`Logic.lean` L14) is one of `Formula`'s constructors -- so
+exhaustiveness over `Formula Atom` entails a surjection `Nat → Atom`,
+i.e. genuine countability of `Atom` itself, not merely of some auxiliary
+per-query fragment. Re-read cycle 68's `Reals.lean` L8739-8768 comment (the
+`CountableAtomCoding IncReal`/`_arbitrary`-bridge discussion already in the
+file) to confirm its exact scope before relying on it.
+
+Built `rationalGluePushoutSpec`/`realGluePushoutSpec` first, both literally
+copy-pasted from `finiteGluePushoutSpec` with only the incidence name
+changed in the type signature -- confirming cycle 77's "mechanical, reuse
+cycle 76's generic identity-cospan witness" prediction was not overstated:
+zero adaptation was needed to the witness body itself. Both
+`rationalChainComplexPushoutIncidence`/`realChainComplexPushoutIncidence`
+needed one adaptation cycle 76's `finiteChainComplexPushoutIncidence`
+did not: `lake build` rejected both as stated (`def ... := ... rationalIncidence
+...`/`... realIncidence ...`) with "consider marking it as 'noncomputable'
+because it depends on 'rationalIncidence'/'realIncidence', which is
+'noncomputable'" -- `finiteIncidence` is a plain computable definition, but
+`rationalIncidence`/`realIncidence` are themselves `noncomputable def`
+(their `DecidableEq` instances route through `Classical.typeDecidableEq`),
+so anything embedding them as a literal field value must be marked
+`noncomputable` too. Fixed by adding `noncomputable` to both definitions;
+`rationalGluePushoutSpec`/`realGluePushoutSpec` themselves needed no such
+marking (their bodies only ever *mention* the incidence in a `Prop`-valued
+field type, never embed its value).
+
+For `rationalIncidence`, built the remaining chain exactly mirroring cycle
+76, substituting only the two cycle-specific facts: `rationalCoherentIncidence`
+(pairing `rationalChainComplexPushoutIncidence` with
+`rationalAtomCoding.completeLogic` for the `completeLogic` field),
+`rationalQuotientClassification` (the identity self-classification, using
+`rationalIncidence_approxBisim_iff` for `respects`/`approxBisim_refl` for
+`reflects`), `rationalCoherentQuotient` (`boundary_preserves` proved via a
+small generalization of cycle 76's approach -- rather than `cases i with
+| leaf | root => rfl`, which does not apply since `IncRational` has no
+directly matchable constructors, proved `mapEndpoint (id : IncRational →
+IncRational) = id` once by `funext`/`rfl`, structure eta, then closed with
+`List.map_id`; this argument is actually carrier-agnostic and would have
+worked for `finiteIncidence` too), `rationalCoherentQuotientLogicalRetract`
+(via `coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`'s
+`.mpr` applied to `rationalIncidence_approxBisim_iff`, then
+`Classical.choice`, identical route to cycle 76), and finally
+`rationalLogicalHeytingIsomorphism : Formula.LogicalHeytingIsomorphism
+IncRational IncRational` plus its two corollaries.
+
+For `realIncidence`, checked thread (2)'s premise before writing any
+construction: `CoherentIncidence`'s `completeLogic` field type is literally
+`CompletePropositionalInternalLogic IncReal`, not the weaker per-query
+`_arbitrary` statement shape (`Incidence.internalLogic_complete_arbitrary`
+proves `KripkeEntails ↔ Derives` for one FIXED `context`/`formula` pair via
+a per-query finite-support coding, never producing a `FormulaEnumeration`
+value) -- so there is no way to discharge the field with the `_arbitrary`
+corollaries without a global enumeration, which is exactly what cycle 68's
+cardinality argument already rules out. This is not merely "the
+`CountableAtomCoding` route fails" (cycle 77's flag) but "the field
+`CoherentIncidence` actually asks for cannot exist for `IncReal`, by the
+same cardinality fact, independent of which route is attempted." Stopped
+here as instructed: built only `realGluePushoutSpec`/
+`realChainComplexPushoutIncidence`, and recorded the precise reason the
+chain does not continue, in a comment, rather than attempting any
+`CoherentIncidence`/`CoherentQuotient realIncidence`.
+
+**Result**: **both `GluePushoutSpec`/`ChainComplexPushoutIncidence`
+transferred mechanically to `rationalIncidence` and `realIncidence` exactly
+as cycle 77 predicted (modulo the one `noncomputable` adaptation), and
+`rationalIncidence` received the FULL `CoherentIncidence`/`CoherentQuotient`/
+Heyting-isomorphism chain -- the SECOND non-trivial instantiation of this
+project's strongest internal-logic bridge, after cycle 76's
+`finiteIncidence`.** Ten new declarations in `Rationals.lean`
+(`rationalGluePushoutSpec`, `rationalChainComplexPushoutIncidence`,
+`rationalCoherentIncidence`, `coherentIncidence_has_rational_carrier_model`,
+`rationalQuotientClassification`, `rationalCoherentQuotient`,
+`rationalCoherentQuotientLogicalRetract`, `rationalLogicalHeytingIsomorphism`,
+`rationalLogicalHeytingIsomorphism_injective`,
+`rationalLogicalHeytingIsomorphism_surjective`) and three new declarations in
+`Reals.lean` (`realGluePushoutSpec`, `realChainComplexPushoutIncidence`,
+`chainComplexPushoutIncidence_has_real_carrier_model`), all type-check;
+`./verify.sh` (clean `lake clean && lake build`, example run, repo-wide
+`axiom`/`sorry`/`sorryAx` grep) passes end to end. A scratch `lake env lean`
+check (`AxiomCheckCycle78.lean`, deleted after use) confirmed `#print axioms`
+on all eleven `Rationals.lean`/`Reals.lean` non-trivial new declarations:
+every one depends on exactly `[propext, Classical.choice, Quot.sound]` --
+the same standing baseline as cycles 68-77, no new axiom of any kind.
+`realIncidence` stops at `ChainComplexPushoutIncidence`; no
+`CoherentIncidence realIncidence` (partial or otherwise) was attempted.
+
+**Synthesis**: cycle 77's "mechanical" prediction for `GluePushoutSpec` was
+correct about the substantive content (the witness itself needed literally
+zero adaptation) but missed one boilerplate-level friction cycle 76 never
+had to face: `finiteIncidence` is computable, `rationalIncidence`/
+`realIncidence` are not, so anything embedding them as a value (not merely
+mentioning them in a type) needs its own `noncomputable` annotation -- a
+one-line fix each time, but worth recording as a genuine (if minor)
+correction to "mechanical" meaning "textually identical," since the two
+`ChainComplexPushoutIncidence` definitions are NOT byte-for-byte copies of
+`finiteChainComplexPushoutIncidence` for this reason. More substantively,
+`rationalIncidence` reaching the full Heyting-isomorphism chain confirms
+cycle 77's "plausible but unchecked" framing was, this time, exactly right:
+`rationalAtomCoding` (built two cycles before `CoherentIncidence` existed as
+a target, for the unrelated purpose of connecting `rationalIncidence` to
+`CountablyPresentedIncidence`) turned out to be exactly reusable, with no
+new coding work, the same way `finiteIncidenceAtomCoding` was for
+`finiteIncidence`. This is the project's first case of the strongest bridge
+being instantiated on a carrier built from a genuine `Quotient` (`IncRational
+:= Quotient rationalRepresentativeSetoid`) rather than a hand-rolled
+inductive type, and the one place this showed up in the proof itself
+(`boundary_preserves`) was handled by a slightly more general argument
+(`mapEndpoint id = id` via `funext`/structure-eta, then `List.map_id`) than
+cycle 76's constructor-case-split, because `IncRational` has no constructors
+to case on. `realIncidence`'s stop is now characterized as precisely as
+`integerIncidence`'s cycle-77 negative: not "we didn't get to it" but "the
+specific field `CoherentIncidence.completeLogic` asks for
+(`CompletePropositionalInternalLogic IncReal`, which structurally requires
+countability of `IncReal` via `FormulaEnumeration`'s `exhaustive` clause
+ranging over `Formula.atom`) is blocked by the same cardinality fact cycle
+68 already established, and no alternate route (in particular not cycle
+70's `_arbitrary` bridge, which proves a strictly weaker per-query
+statement shape that cannot produce the required global object) changes
+that." The isolation is precise: `realIncidence`'s bisimulation IS already
+faithful (`realIncidence_approxBisim_iff`, cycle 74, reconfirmed this
+cycle), so the entire remaining gap for `realIncidence` is exactly the one
+field, not a diffuse cluster of missing pieces -- if
+`CompletePropositionalInternalLogic IncReal` (or a relaxed variant of
+`CoherentIncidence` not requiring a global `FormulaEnumeration`) ever became
+available by a genuinely different mechanism, the `CoherentQuotient`/retract
+half would transfer immediately, unchanged, from this cycle's
+`rationalIncidence` construction.
+
+**Next hypothesis (cycle 79, not yet attempted)**: item 7's `CoherentIncidence`
+thread is now fully populated across this project's five concrete instances:
+two positive (`finiteIncidence` cycle 76, `rationalIncidence` this cycle),
+two structurally negative at the `BoundarySquareZeroEverywhere` stage
+(`natIncidence`/`integerIncidence`, cycle 77), and one (`realIncidence`)
+negative specifically at the `completeLogic` stage despite satisfying both
+`ChainComplexPushoutIncidence` obligations -- a genuinely different kind of
+"no" than the other two, worth keeping distinct rather than lumping all
+three non-`CoherentIncidence` instances together as "the same failure."
+Three threads worth considering: (1) is there a MEANINGFULLY weaker variant
+of `CoherentIncidence` that relaxes `completeLogic`'s
+`CompletePropositionalInternalLogic` requirement to something
+`Incidence.internalLogic_complete_arbitrary`-shaped (per-query rather than
+global), that would still support a genuine (if per-query-scoped) Heyting
+isomorphism for `realIncidence` -- checking whether `CoherentQuotient`'s
+downstream theorems (`logicalHeytingIsomorphism` etc.) actually NEED the
+global `FormulaEnumeration`, or whether a per-query relaxation could be
+threaded through, is a real, currently-unexamined question, not a foregone
+"of course it needs the global one." (2) `integerIncidence` and
+`natIncidence` are ruled out from `CoherentIncidence` specifically because
+of `BoundarySquareZeroEverywhere`'s failure, not because of `completeLogic`
+-- both already have `CountableAtomCoding`/`CountablyPresentedIncidence`
+(cycle 68), so it may be worth checking precisely which of item 7's other
+scoped questions (the resonance-driven generation/composition leg, per
+cycles 75-77's running notes) remains genuinely open now that the
+internal-logic leg is this thoroughly mapped. (3) `Sum.lean`/`Product.lean`'s
+generic `incidenceSum`/`incidenceProd` combinators have never been checked
+against `BoundarySquareZeroEverywhere`/`GluePushoutSpec` at all -- given how
+generic `GluePushoutSpec` turned out to be (cycle 76) and how instance-
+specific `BoundarySquareZeroEverywhere` turned out to be (cycle 77), whether
+the chain-complex-pushout property is preserved, reflected, or neither
+across these two constructors (mirroring the cycles 32/33/35/36
+faithfulness-transport asymmetry already mapped for the same two
+constructors) is a concrete, currently unexamined question with a real
+chance of yet another genuine contrast between the two connectives.
