@@ -423,4 +423,144 @@ theorem integerIncidence_internalLogic_consistent_iff_model
     DerivationallyConsistent context ↔ KripkeSatisfiable context :=
   integerCountablyPresentedIncidence.internalLogic_consistent_iff_model context
 
+/- Research cycle 73 (see RESEARCH_LOG.md): cycle 72 built
+`TranslationPreservation.ResonantQuotientEquivalenceCriterion` and its
+`quotientResonance_iff` theorem, gated behind an explicit
+`QuotientResonanceCongruent target` hypothesis, but left the theorem wholly
+uninstantiated: no concrete (non-`identity`) `ResonantQuotientEquivalenceCriterion`
+between any pair of this project's `Incidence` instances existed anywhere in
+the tree, confirmed by grep, so the reflect direction had never actually been
+exercised on a real pair. Cycle 72's own next-hypothesis framing asked
+whether ANY of `natIncidence`/`integerIncidence`/`rationalIncidence`/
+`realIncidence`/`finiteIncidence` satisfies `QuotientResonanceCongruent` at
+all, as if this were open. Re-grepping this cycle found it was not: this
+file already proves `integerQuotientResonanceCongruent` (above), and the
+parallel `natQuotientResonanceCongruent` (`Peano.lean`),
+`rationalQuotientResonanceCongruent` (`Rationals.lean`),
+`realQuotientResonanceCongruent` (`Reals.lean`), and
+`finiteQuotientResonanceCongruent` (`GraphModel.lean`) already exist too --
+all five instances satisfy the hypothesis, each via
+`quotientResonanceCongruent_of_faithful` (all five carriers have faithful
+bisimulation, `≈ ↔ =`, except `Nat`'s which is proved by direct induction),
+established long before cycle 60 (`git log -S`-confirmed: predates even the
+numbered-cycle `RESEARCH_LOG.md` scheme) and already reused by the
+`IncDepRawNormalizedResonanceCompletion` bundle in `CrossInstance.lean`.
+Cycle 72's own tree-wide grep for the string `QuotientResonanceCongruent`
+should have surfaced these; it evidently did not (an error in that cycle's
+own report, corrected here rather than silently reproduced). So the actual
+gap was never "does any instance satisfy the hypothesis" -- it was "has the
+hypothesis, known to hold for all five, ever been paired with a genuine
+non-`identity` criterion so `quotientResonance_iff` fires for real": no.
+
+This cycle closes that gap on `integerIncidence`. Negation (`x ↦ -x`) is a
+non-`identity` self-map of `Int` that preserves *and* reflects resonance
+(`i + j = k ↔ (-i) + (-j) = (-k)`, pure ring cancellation, `omega`-decidable)
+and preserves *and* reflects bisimulation (immediate from faithfulness,
+`integerIncidence_approxBisim_iff`, since negation is a self-bijection), and
+is essentially surjective (it is a bijection, witness `-j` maps to `j`).
+Bundling these into a genuine
+`ResonantQuotientEquivalenceCriterion integerIncidence integerIncidence` and
+feeding it to `quotientResonance_iff` together with the already-available
+`integerQuotientResonanceCongruent` witness yields a new concrete corollary:
+quotient-level resonance on `integerIncidence` is invariant under negating
+all three representatives -- `quotientResonance_iff`'s full two-directional
+strength exercised on a real pair for the first time (the forward half was
+already unconditionally free via `quotientResonance_forward`; only the
+reflect half needed the gate, and cycle 72 hand-checked that gate is
+load-bearing, not decorative). -/
+
+theorem integerBoundary_eq_nil_iff (value : Int) :
+    integerIncidence.boundary value = [] ↔ value = 0 := by
+  show integerBoundary value = [] ↔ value = 0
+  cases value with
+  | ofNat n =>
+      cases n with
+      | zero => simp
+      | succ n =>
+          rw [integerBoundary_ofNat_succ]
+          constructor
+          · intro h; exact absurd h (List.cons_ne_nil _ _)
+          · intro h
+            exact absurd (show (n : Int) + 1 = 0 from h) (by omega)
+  | negSucc n =>
+      rw [integerBoundary_negSucc]
+      constructor
+      · intro h; exact absurd h (List.cons_ne_nil _ _)
+      · intro h; exact absurd h (by omega)
+
+def integerNegationBoundaryShapeTranslation :
+    TranslationPreservation.BoundaryShapeTranslation
+      integerIncidence integerIncidence where
+  map := fun value => -value
+  preservesReflectsNullary := by
+    intro value
+    rw [integerBoundary_eq_nil_iff, integerBoundary_eq_nil_iff]
+    omega
+
+def integerNegationBehavioralTranslation :
+    TranslationPreservation.BehavioralBoundaryShapeTranslation
+      integerIncidence integerIncidence where
+  toBoundaryShapeTranslation := integerNegationBoundaryShapeTranslation
+  preservesBisimulation := by
+    intro i j bisimilar
+    have hij := (integerIncidence_approxBisim_iff i j).mp bisimilar
+    exact (integerIncidence_approxBisim_iff (-i) (-j)).mpr (by omega)
+
+def integerNegationResonantTranslation :
+    TranslationPreservation.ResonantBehavioralTranslation
+      integerIncidence integerIncidence where
+  toBehavioralBoundaryShapeTranslation := integerNegationBehavioralTranslation
+  preservesResonance := by
+    intro i j k resonant
+    have hk : i + j = k := by simpa [integerIncidence] using resonant
+    have hneg : (-i) + (-j) = (-k) := by omega
+    simpa [integerIncidence] using hneg
+
+def integerNegationEmbedding :
+    TranslationPreservation.ResonantBehavioralEmbedding
+      integerIncidence integerIncidence where
+  toResonantBehavioralTranslation := integerNegationResonantTranslation
+  reflectsResonance := by
+    intro i j k resonant
+    have hk : (-i) + (-j) = (-k) := by simpa [integerIncidence] using resonant
+    have hpos : i + j = k := by omega
+    simpa [integerIncidence] using hpos
+
+/-- The concrete, non-`identity` `ResonantQuotientEquivalenceCriterion` this
+cycle builds: negation as a self-equivalence of `integerIncidence`. -/
+def integerNegationQuotientCriterion :
+    TranslationPreservation.ResonantQuotientEquivalenceCriterion
+      integerIncidence integerIncidence where
+  embedding := integerNegationEmbedding
+  reflectsBisimulation := by
+    intro i j bisimilar
+    have hij := (integerIncidence_approxBisim_iff (-i) (-j)).mp bisimilar
+    exact (integerIncidence_approxBisim_iff i j).mpr (by omega)
+  essentiallySurjective := by
+    intro j
+    refine ⟨-j, ?_⟩
+    exact (integerIncidence_approxBisim_iff (-(-j)) j).mpr (by omega)
+
+/-- The concrete corollary: `quotientResonance_iff` instantiated (for the
+first time in the project) against a genuine non-`identity` criterion,
+combined with the pre-existing `integerQuotientResonanceCongruent` witness.
+Quotient-level resonance on `integerIncidence` is invariant under negating
+all three representatives. -/
+theorem integerQuotientResonance_neg_iff (i j k : Int) :
+    quotientResonance integerIncidence
+      (Quotient.mk (approxBisimSetoid integerIncidence) (-i))
+      (Quotient.mk (approxBisimSetoid integerIncidence) (-j))
+      (Quotient.mk (approxBisimSetoid integerIncidence) (-k)) ↔
+    quotientResonance integerIncidence
+      (Quotient.mk (approxBisimSetoid integerIncidence) i)
+      (Quotient.mk (approxBisimSetoid integerIncidence) j)
+      (Quotient.mk (approxBisimSetoid integerIncidence) k) := by
+  have h :=
+    integerNegationQuotientCriterion.quotientResonance_iff
+      integerQuotientResonanceCongruent
+      (qi := Quotient.mk (approxBisimSetoid integerIncidence) i)
+      (qj := Quotient.mk (approxBisimSetoid integerIncidence) j)
+      (qk := Quotient.mk (approxBisimSetoid integerIncidence) k)
+  exact h
+
 end IncidenceCore

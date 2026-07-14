@@ -8345,3 +8345,170 @@ project's standing harder target. Either is legitimate; this cycle's own
 reading leans toward (a) as the more conservative next step, consistent with
 this project's established discipline of exhausting concretely-scoped
 continuations before attempting the harder unclaimed synthesis.
+
+## Cycle 73
+
+**Hypothesis**: this cycle claims cycle 72's own recommended option (a):
+check whether any of this project's five concrete `Incidence` instances
+(`natIncidence`/`integerIncidence`/`rationalIncidence`/`realIncidence`/
+`finiteIncidence`) satisfies `QuotientResonanceCongruent`, the gating
+hypothesis cycle 72's `quotientResonance_iff` needs for its reflect
+direction, so that the theorem can be exercised at full strength on a
+concrete instance rather than remaining purely general.
+
+**Method**: read `QuotientResonanceCongruent`'s exact definition
+(`IncidenceTheory.lean` L1845-1850: for all `i₁ i₂ j₁ j₂ k₁ k₂`, if each pair
+is `approxBisim`-related then `inc.resonance i₁ j₁ k₁ ↔ inc.resonance i₂ j₂
+k₂` -- extensionality of resonance along bisimulation in all three
+positions) and `quotientResonance_iff`'s exact statement (L10290-10311,
+cycle 72's `TranslationPreservation` section: needs a
+`criterion : ResonantQuotientEquivalenceCriterion source target` plus
+`targetCongruent : QuotientResonanceCongruent target`). Also read
+`quotientResonanceCongruent_of_faithful` (L1852-1863): a sufficient
+condition -- if an instance's `approxBisim` coincides exactly with `=`
+("faithful"), `QuotientResonanceCongruent` follows trivially since bisimilar
+representatives are literally equal.
+
+Before checking each instance by hand, grepped the whole tree for
+`QuotientResonanceCongruent` to see what, if anything, already existed.
+This immediately surfaced a correction to cycle 72's own report: cycle 72
+stated its tree-wide grep found this identifier "confined to
+`IncidenceTheory.lean` itself." That is not the case. `Integers.lean`
+(L236-239), `Peano.lean` (L278-287), `Rationals.lean` (L1489-1492),
+`Reals.lean` (L739-742), and `GraphModel.lean` (L161-162) each already
+prove `<name>QuotientResonanceCongruent : QuotientResonanceCongruent
+<name>Incidence` for all five instances -- `natQuotientResonanceCongruent`
+by direct induction, the other four via
+`quotientResonanceCongruent_of_faithful` composed with each instance's own
+pre-existing faithfulness theorem (`integerIncidence_approxBisim_iff`,
+`rationalIncidence_approxBisim_iff`, `realIncidence_approxBisim_iff`,
+`finiteIncidence_approxBisim_iff_eq`). `git log -S` confirms these predate
+even the numbered-cycle `RESEARCH_LOG.md` scheme (the integer one, e.g.,
+was reconstructed early in the project's history, well before cycle 60),
+and `CrossInstance.lean`'s `IncDepRawNormalizedResonanceCompletion` bundle
+already reuses all five as a `quotientCongruent` field. So the honest
+answer to this cycle's own hypothesis is: **all five instances satisfy
+`QuotientResonanceCongruent`**, and this was never actually in doubt --
+cycle 72's grep undercounted (an error in that report, corrected here
+rather than silently reproduced).
+
+Given that, the real remaining gap was not "does any instance satisfy the
+hypothesis" but "has the hypothesis, known to hold for all five, ever been
+paired with a genuine criterion so `quotientResonance_iff` actually fires."
+Grepped for `ResonantBehavioralEmbedding`/`ResonantQuotientEquivalenceCriterion`
+outside the core file: zero hits anywhere. The only existing instantiation
+of `ResonantQuotientEquivalenceCriterion` at all is cycle 72's own
+`.identity` constructor -- and feeding `.identity` to `quotientResonance_iff`
+degenerates: since `.identity`'s `quotientEquivalence` is provably `refl`
+(`quotientEquivalence_identity`), the theorem collapses to `Iff.rfl` and
+exercises neither direction meaningfully. So the theorem, despite type-
+checking since cycle 72, had never been instantiated on anything that
+tests its actual content.
+
+This cycle builds a genuine, non-`identity` criterion to close that gap:
+negation (`x ↦ -x`) on `integerIncidence`. Checked by hand that this
+qualifies on every required obligation: it preserves and reflects
+`boundary`-nullary shape (`0` is the unique nullary point and `-0 = 0`,
+built via a new helper `integerBoundary_eq_nil_iff : integerBoundary value =
+[] ↔ value = 0`); it preserves and reflects bisimulation (immediate from
+`integerIncidence_approxBisim_iff`, since negation is a self-bijection of
+`Int`, hence trivially injective/surjective on the faithful `≈`); it
+preserves and reflects resonance (`i + j = k ↔ (-i) + (-j) = (-k)`, pure
+ring cancellation); and it is essentially surjective (a bijection, witness
+`-j ↦ j`). Built the full chain
+(`BoundaryShapeTranslation` → `BehavioralBoundaryShapeTranslation` →
+`ResonantBehavioralTranslation` → `ResonantBehavioralEmbedding` →
+`ResonantQuotientEquivalenceCriterion`) as five new definitions in
+`Integers.lean`, then instantiated `quotientResonance_iff` against it with
+`integerQuotientResonanceCongruent` as the `targetCongruent` witness.
+
+Hit two mechanical snags worth recording since they cost real iteration:
+(1) `integerIncidence.resonance i j k` unfolds to `some (i+j) = some k`, not
+`i + j = k` directly -- a bare `show`-chain to the arithmetic fact fails
+(`Option.some` equality is not definitionally the same proposition as
+equality of the wrapped values); fixed by following the file's own existing
+`simpa [integerIncidence] using ...` idiom (already used by
+`integerIncidence_additive_inverse`) rather than `show`. (2) `omega` proved
+unable to discharge goals stated with a raw `Int.ofNat (Nat.succ n)` /
+`Int.negSucc n` head applied directly to a `Nat` variable (`Int.ofNat
+(Nat.succ n) ≠ 0` failed with "no usable constraints found") but succeeds
+immediately once the term is phrased through the `(n : Int)` cast notation
+(`(n : Int) + 1 ≠ 0` succeeds) -- confirmed this is a real, narrow
+`omega` preprocessing gap (not specific to this file) with a standalone
+scratch check, and worked around it locally via `show (n : Int) + 1 = 0
+from h` rather than fighting `omega` on the raw constructor form.
+
+**Result**: seven new declarations in `Integers.lean`
+(`integerBoundary_eq_nil_iff`, `integerNegationBoundaryShapeTranslation`,
+`integerNegationBehavioralTranslation`, `integerNegationResonantTranslation`,
+`integerNegationEmbedding`, `integerNegationQuotientCriterion`,
+`integerQuotientResonance_neg_iff`) type-check, and `./verify.sh` (clean
+`lake clean && lake build`, example run, repo-wide `axiom`/`sorry`/`sorryAx`
+grep) passes end to end. A scratch `lake env lean` check file (deleted
+after use) confirmed `#print axioms` on all seven: `[propext,
+Classical.choice, Quot.sound]` throughout -- matching the same baseline
+already carried by pre-existing lemmas in this file (e.g.
+`integerQuotientResonanceCongruent`, `integerBoundary_decreases` show the
+identical three-axiom footprint), confirming no new axiom of any kind, only
+the project's standing baseline.
+
+The headline corollary, `integerQuotientResonance_neg_iff`, states: for any
+`i j k : Int`, `quotientResonance integerIncidence (mk (-i)) (mk (-j)) (mk
+(-k)) ↔ quotientResonance integerIncidence (mk i) (mk j) (mk k)` -- quotient-
+level resonance on `integerIncidence` is invariant under negating all three
+representatives, with both directions of the iff genuinely exercised
+through `quotientResonance_iff`'s criterion + congruence machinery (the
+forward half through `quotientResonance_forward`'s free transport, the
+reflect half through the `QuotientResonanceCongruent` gate cycle 72 proved
+load-bearing).
+
+**Synthesis**: this cycle both answers its own named hypothesis and
+corrects a factual error in the prior cycle's report along the way -- worth
+stating plainly rather than glossing over, since this project's culture
+(cycles 38-40, 45-72) treats honest correction of a prior cycle's own
+mistake as exactly as legitimate an outcome as a fresh result. All five
+concrete instances already satisfied `QuotientResonanceCongruent`, and had
+for a long time; cycle 72's framing of this as an open question was itself
+the gap, not the instances. The genuinely new content this cycle adds is
+narrower and more concrete than "does an instance satisfy the hypothesis":
+it is the first non-degenerate instantiation of cycle 72's
+`ResonantQuotientEquivalenceCriterion`/`quotientResonance_iff` machinery
+anywhere in the project, chosen specifically because `.identity` (the only
+prior instantiation) cannot exercise the theorem's real content. Negation
+on `integerIncidence` was picked over attempting a criterion *between* two
+different concrete instances (e.g. `natIncidence` embedded in
+`integerIncidence`) because every one of the five instances' bisimulation
+quotients is already faithful (`IncidenceQuotient <inc> ≅ <carrier>`, a
+consequence of the very faithfulness theorems used to prove
+`QuotientResonanceCongruent` in the first place) -- so `essentiallySurjective`
+between two genuinely different carriers of different cardinality/algebraic
+shape (e.g. `Nat ↪ Int` misses all negatives) cannot hold, ruling out cross-
+instance criteria among this family without a further embedding-shrinking
+move not attempted here. A self-map automorphism was therefore the natural,
+honestly-scoped choice, and negation is the simplest one that is
+provably non-`identity`. This does not touch roadmap item 7's stated
+remaining content (the single universal interpretation theorem); the ADR
+addendum below records the finding without moving item 7's existing
+percentage figures.
+
+**Next hypothesis (cycle 74, not yet attempted)**: two natural
+continuations surface from this cycle's own work: (a) repeat this cycle's
+negation-automorphism construction for the other four instances where an
+analogous non-`identity` self-map exists and is checkable
+(`rationalIncidence`/`realIncidence` both admit the same additive negation
+automorphism as `integerIncidence`, likely with a similar proof shape;
+`natIncidence` has no additive negation since `Nat` isn't closed under it,
+so would need a different self-map or may genuinely have none, an honest
+negative worth checking rather than assuming; `finiteIncidence`'s bare
+`ResonanceSpec` -- no `FunctionalResonanceSpec` -- may or may not admit a
+nontrivial automorphism at all, worth checking directly rather than
+assuming), broadening the one worked example into a small family; (b)
+roadmap item 7's own remaining content, the single universal interpretation
+theorem, now that this specific machinery has at least one real
+instantiation to build on/generalize from. (a) is the lower-risk,
+concretely-scoped continuation in this project's established style; (b)
+remains the standing harder target with no smaller queued step ahead of it
+that this cycle's reading surfaced. This cycle's own reading leans toward
+(a) (specifically the rational/real repeats, since they are the closest
+structural analogues already checked to share `integerIncidence`'s
+faithfulness + additive-group shape) as the more conservative next step.

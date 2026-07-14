@@ -2817,3 +2817,81 @@ cycle 60-71 の保守的規律を踏襲し、項目7の記述（「部分完了�
 `quotientResonance_iff` の追加前提 `QuotientResonanceCongruent` を実際に
 満たす具体的インスタンスがあるか確認する続き（推奨）と、(b) 項目7自身の
 普遍的解釈定理への本格着手の両方を判断材料つきで cycle 73 に委ねている。
+
+## 2026-07-14 追補（cycle 73: 5具体インスタンス全てが
+`QuotientResonanceCongruent` を満たすことを確認——cycle 72 自身の grep
+誤りを訂正し、`quotientResonance_iff` を非自明なインスタンスで初めて
+具体化）
+
+本追補は `RESEARCH_LOG.md` cycle 73 の結果を反映する。cycle 72 が推奨した
+選択肢 (a)——`natIncidence`/`integerIncidence`/`rationalIncidence`/
+`realIncidence`/`finiteIncidence` のいずれかが `QuotientResonanceCongruent`
+を満たすか確認する——に取り組んだ。
+
+木全体の再 grep により、cycle 72 自身の報告（「`QuotientResonanceCongruent`
+の hit は `IncidenceTheory.lean` 自身に限られる」）が誤りだったことが判明
+した: `Integers.lean`/`Peano.lean`/`Rationals.lean`/`Reals.lean`/
+`GraphModel.lean` の各ファイルに、5インスタンス全てについて
+`<name>QuotientResonanceCongruent : QuotientResonanceCongruent
+<name>Incidence` がすでに証明済みで存在する（`natQuotientResonanceCongruent`
+は直接帰納法、残り4件は各インスタンス既存の faithfulness 定理
+（`≈ ↔ =`）と `quotientResonanceCongruent_of_faithful` の合成）。`git log -S`
+で確認した限り、これらは cycle 60 よりずっと以前——番号付き cycle 方式が
+始まる前——から存在し、`CrossInstance.lean` の
+`IncDepRawNormalizedResonanceCompletion` バンドルがすでに5件全てを
+`quotientCongruent` フィールドとして再利用している。cycle 72 自身の grep
+がこれを見落としたのは、その cycle の報告における誤りであり、本追補は
+それを黙って繰り返さず訂正する。
+
+したがって cycle 73 自身の問い（5インスタンスのいずれかが条件を満たすか）
+への誠実な答えは「5件全てが満たす、それも以前から」であり、実際に開いて
+いた問いはむしろ「5件全てで成立が既知のこの前提を、`quotientResonance_iff`
+を実際に発火させる具体的な `ResonantQuotientEquivalenceCriterion` と
+組み合わせたことが一度でもあったか」だった——木全体を grep した限り皆無
+（cycle 72 自身の `.identity` インスタンス化のみが存在するが、これは
+`quotientEquivalence = refl` に潰れるため定理を `Iff.rfl` に退化させ、
+両方向とも実質的な内容を検査しない）。
+
+本cycleはこのギャップを埋める: `integerIncidence` 上の非自明な自己準同型
+——符号反転 `x ↦ -x`——を構築した。境界の空/非空形状の保存・反射
+（`0` が唯一の nullary 点であり `-0=0`、新設ヘルパー
+`integerBoundary_eq_nil_iff` で確立）、bisimulation の保存・反射
+（`integerIncidence_approxBisim_iff` から自明、符号反転は `Int` 上の自己
+全単射）、resonance の保存・反射（`i+j=k ↔ (-i)+(-j)=(-k)`、純粋な環の
+簡約）、essential surjectivity（全単射、`-j ↦ j`）の全義務を検査済みで
+`Integers.lean` に5件の新規定義（`BoundaryShapeTranslation` →
+`BehavioralBoundaryShapeTranslation` → `ResonantBehavioralTranslation` →
+`ResonantBehavioralEmbedding` → `ResonantQuotientEquivalenceCriterion` の
+全鎖）として構築し、既存の `integerQuotientResonanceCongruent` を
+`targetCongruent` として `quotientResonance_iff` に適用した。得られた
+具体的系 `integerQuotientResonance_neg_iff` は「`integerIncidence` の
+quotient-level resonance は3つの代表元全ての符号反転で不変」という主張で、
+`quotientResonance_iff` の両方向（前進は cycle 72 の
+`quotientResonance_forward` 経由で無条件、逆方向は
+`QuotientResonanceCongruent` ゲート経由）を初めて非自明なペアで実地に
+検査した。
+
+新設7件全ての `#print axioms` を scratch 検査（使用後削除）で確認:
+`[propext, Classical.choice, Quot.sound]`——本ファイル既存の証明
+（`integerQuotientResonanceCongruent` 等）と同一のベースラインで、新規
+公理は皆無。`./verify.sh`（完全リビルド、実行例、`axiom`/`sorry`/`sorryAx`
+の全木 grep）はクリーンに通過した。
+
+`integerIncidence` を選んだのは、5インスタンス全ての bisimulation
+quotient がすでに faithful（`IncidenceQuotient <inc> ≅ <carrier>`——
+`QuotientResonanceCongruent` を証明するのに使った faithfulness 定理自体の
+帰結）であるため、異なる carrier 間（例: `Nat ↪ Int`）の criterion は
+essential surjectivity が構造的に成立し得ず（負の整数が像に入らない等）、
+このファミリー内での cross-instance criterion は本cycleでは追求しな
+かったため。自己準同型が誠実にスコープされた選択であり、符号反転は
+非`identity`であることが明白な最小の例である。
+
+この結果は項目7が明示する残課題（resonance 駆動の生成・合成を内部論理
+モデルと構成実数解析の両方に一結果で結ぶ単一の普遍的解釈定理）には到達
+しない。したがって cycle 60-72 の保守的規律を踏襲し、項目7の記述
+（「部分完了」）とパーセンテージ（本文57–58行目、翻訳・保存層約85%）は
+本追補でも動かさない。`RESEARCH_LOG.md` cycle 73 の Next hypothesis は、
+(a) 本cycleの符号反転構築を `rationalIncidence`/`realIncidence`（同じ加法
+群構造を持つ近い類似）や `finiteIncidence`（非自明な自己準同型の有無自体
+が未検査）へ広げる続きと、(b) 項目7自身の普遍的解釈定理への本格着手の
+両方を判断材料つきで cycle 74 に委ねている。
