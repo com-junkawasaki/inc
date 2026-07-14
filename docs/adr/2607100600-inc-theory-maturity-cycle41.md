@@ -3293,3 +3293,82 @@ bisimulation は既に faithful であることを再確認しており、残る
 変種など）が見つからない限り、この5インスタンスの `CoherentIncidence`
 監査は本追補で事実上完結したものとして扱う（`RESEARCH_LOG.md` cycle 78
 の Next hypothesis 参照）。
+
+## 2026-07-14 追補（cycle 79: `BoundarySquareZeroEverywhere`/`GluePushoutSpec`
+の generic combinator 透過性——`incidenceSum`/`incidenceProd` で
+faithfulness-transport 非対称性（cycle 32/33/35/36）と正反対の極性）
+
+本追補は `RESEARCH_LOG.md` cycle 79 の結果を反映する。cycle 78 が引き継いだ
+スレッド (3)——`Sum.lean`/`Product.lean` の generic constructor
+（`incidenceSum`/`incidenceProd`）が `CoherentIncidence` の2つの前提
+（`BoundarySquareZeroEverywhere`/`GluePushoutSpec`）を factors から
+保存・反映するかは未検証だった——を検証した。cycle 32/33/35/36 の既存の
+非対称性（`incidenceProd` は faithfulness を無償で transport するが
+`incidenceSum` は cross-side の leaf 衝突で transport しない、少なくとも
+無条件では）を予断とせず、直接計算で確認した。
+
+`GluePushoutSpec` は cycle 76 の恒等 cospan witness がそのまま両方の
+combinator に転用できることを確認した（`sumGluePushoutSpec`/
+`prodGluePushoutSpec`、`[DecidableEq I]` のみを要求する構造上、`I1 ⊕ I2`/
+`I1 × I2` も自動的に満たすため）——予測どおり高速な確認で終わった。
+
+`BoundarySquareZeroEverywhere` は、cycle 32/33 の faithfulness 非対称性と
+**正反対の極性**で分岐することが判明した。**`incidenceSum` は無条件で
+transport する**（`incidenceSum_boundarySquareZeroEverywhere_of_boundarySquareZeroEverywhere`、
+`Sum.lean`）——`sumBoundary` が `Sum.inl`/`Sum.inr` のタグを跨いで
+boundary を伸ばすことは構造的に決してないため（cycle 32/35 が faithfulness
+のために使ったのと同じタグ整合性の事実）、cross-tag の合成は前提なしに
+恒等的に消え、same-tag の合成は対応する factor 自身の `boundary_composition`
+に厳密に帰着する（index list を `sumIdxLeft`/`sumIdxRight` でタグ射影
+した上で）。faithfulness の transport（cycle 35）より強い結果——leafless
+側の追加前提すら不要。**`incidenceProd` は transport しない**
+（`incidenceProd_not_boundarySquareZeroEverywhere_of_single_link_star`、
+`Product.lean`、任意の instance 対に適用できる一般定理）——`prodBoundary`
+の「box product」形（`(∂i1,i2)`/`(i1,∂i2)` の連結）は通常のホモロジー代数で
+テンソル積の微分に必要な Koszul 符号を一切持たない（`sign := e.sign` を
+無変換のまま両側にコピーするだけ）ため、両 factor が「単一の非零符号
+リンクで leaf に届く」形（`finiteIncidence`/`rationalIncidence`/
+`realIncidence` の非-leaf 要素の実際の形、cycle 76-78）を持てば、
+`(i1,i2)` の `∂²` は `(j1,j2)` で `v1*v2 + v2*v1 = 2*v1*v2 ≠ 0` となり
+恒等的に破れる。`finiteIncidence × finiteIncidence`/`finiteIncidence ⊕
+finiteIncidence` という同一 factor 対で対比が具体的に確認できる
+（`incidenceSum_finiteIncidence_boundarySquareZeroEverywhere` は成立し、
+`incidenceProd_finiteIncidence_not_boundarySquareZeroEverywhere` は反証する）。
+
+新設は `Product.lean` 4件（`foldl_add_four`、
+`incidenceProd_not_boundarySquareZeroEverywhere_of_single_link_star`、
+`incidenceProd_finiteIncidence_not_boundarySquareZeroEverywhere`、
+`prodGluePushoutSpec`）、`Sum.lean` 14件（`sumIdxLeft`/`sumIdxRight`、
+`mem_sumIdxLeft`/`mem_sumIdxRight`、`boundary_composition_eq_intListSum`、
+`boundaryMatrix_idx_irrelevant`、`boundary_composition_cons`、
+`sumBoundaryMatrix_inl_inr_zero`/`_inr_inl_zero`、`sumBoundaryMatrix_inl_inl`/
+`_inr_inr`、`sum_boundary_composition_cross_inl_inr`/`_cross_inr_inl`、
+`sum_boundary_composition_inl`/`_inr`、
+`incidenceSum_boundarySquareZeroEverywhere_of_boundarySquareZeroEverywhere`、
+`incidenceSum_finiteIncidence_boundarySquareZeroEverywhere`、
+`sumGluePushoutSpec`）の計18件、全て型検査を通過し、`./verify.sh`
+（`lake clean && lake build` を含む完全リビルド、実行例、
+`axiom`/`sorry`/`sorryAx` の全木 grep）はクリーンに通過した。scratch
+`lake env lean` 検査（使用後削除）で確認: 全18件が高々
+`[propext, Quot.sound]`——`Classical.choice` は一切不要で、cycle 68-78の
+標準ベースライン（`[propext, Classical.choice, Quot.sound]`）より
+constructive な足跡。
+
+この結果は項目7の resonance/内部論理の枠を超えた新しい知見: 同じ2つの
+generic connective が、`ChainComplexPushoutIncidence` の2つの前提条件の
+うち片方（`GluePushoutSpec`）では区別がつかず、もう片方
+（`BoundarySquareZeroEverywhere`）では faithfulness の場合と正反対の
+方向に非対称——「どちらの combinator が優れているか」という単純な
+順序付けはできず、どの性質を保存したいかで選ぶべき connective が変わる
+ことを、cycle 33 自身の方法論的指摘（"どの connective を選ぶかで、どの
+性質が生き残るかが変わる"）の第二の独立な実例として確認した。実用上は、
+`incidenceSum finiteIncidence finiteIncidence` が `ChainComplexPushoutIncidence`
+まで（本追補の transport 定理 + cycle 76 の既存事実だけで、新規の
+per-instance 証明なしに）到達可能になった——本 project 初の、combinator
+から構築された instance が `ChainComplexPushoutIncidence` を「無償で」
+継承した例。ただし `CoherentIncidence` の残るフィールド
+（`completeLogic` / `CompletePropositionalInternalLogic`）が
+`incidenceSum` を通じて同様に transport するかは本cycleでは未検証のまま
+残しており、項目7の記述（「部分完了」）とパーセンテージ（本文57-58行目、
+incidence/resonance 約90%、内部論理約90%、翻訳・保存層約85%）は本追補でも
+動かさない（`RESEARCH_LOG.md` cycle 79 の Next hypothesis 参照）。

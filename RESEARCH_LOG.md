@@ -9529,3 +9529,189 @@ across these two constructors (mirroring the cycles 32/33/35/36
 faithfulness-transport asymmetry already mapped for the same two
 constructors) is a concrete, currently unexamined question with a real
 chance of yet another genuine contrast between the two connectives.
+
+## Cycle 79
+
+**Hypothesis**: per cycle 78's queued thread (3), do `CoherentIncidence`'s
+two `ChainComplexPushoutIncidence` obligations (`BoundarySquareZeroEverywhere`,
+`GluePushoutSpec`) transport through the generic `incidenceSum`/`incidenceProd`
+combinators (`Sum.lean`/`Product.lean`), mirroring the faithfulness-transport
+asymmetry cycles 32/33/35/36 already mapped for these same two constructors?
+That precedent: `incidenceProd` transports faithfulness UNCONDITIONALLY for
+free (cycle 32, `incidenceProd_faithful_of_faithful`), while `incidenceSum`
+does NOT (cycle 33, `incidenceSum_leaves_cross_natIncidence` -- any two
+leaves from either side collapse into one `≈`-class, since `boundaryMatched`
+is vacuously satisfied for two empty boundaries regardless of tag), needing
+cycle 35's extra "at least one side is leafless" hypothesis
+(`incidenceSum_faithful_of_faithful_no_shared_leaves`) to recover a
+conditional positive. Going in, the question was genuinely open which way
+(if either) `BoundarySquareZeroEverywhere`/`GluePushoutSpec` would split
+across the same two connectives -- not assumed to repeat the faithfulness
+pattern.
+
+**Method**: read `Coherent.lean` in full (`CoherentIncidence`,
+`ChainComplexPushoutIncidence`'s two fields) and the root file's literal
+`BoundarySquareZeroEverywhere`/`boundarySquareZero`/`boundary_composition`/
+`GluePushoutSpec`/`Cospan`/`PushoutWitness` definitions (L1609-1621, L2013-2061,
+L6238-6267) to have the exact obligations fresh, plus `Sum.lean`'s
+`sumBoundary`/`sumGlue`/`incidenceSum` and `Product.lean`'s `prodBoundary`/
+`prodGlue`/`incidenceProd` (their `boundary` fields specifically, since both
+target properties are boundary-shaped). Checked `GluePushoutSpec` first,
+since cycle 76 already established it holds for ANY `[DecidableEq I]`
+instance via a generic "identity cospan" witness (`diagram i j := ⟨i,j,i,id,id⟩`,
+`inl:=inr:=id`, `lift := fun leftLeg _ _ => leftLeg`) that never inspects
+`i`/`j`/`k` -- confirmed by direct compilation (not just re-reading the
+argument) that this exact witness transfers verbatim to both
+`incidenceSum inc1 inc2` (carrier `I1 ⊕ I2`) and `incidenceProd inc1 inc2`
+(carrier `I1 × I2`), both of which inherit `DecidableEq` from
+`[DecidableEq I1] [DecidableEq I2]` already required by each combinator's own
+signature. Zero adaptation needed (`sumGluePushoutSpec`/`prodGluePushoutSpec`),
+exactly cycle 76's mechanism, exactly as fast a check as the task predicted.
+
+For `BoundarySquareZeroEverywhere`, worked out both directions on paper
+before writing Lean, using `boundary_composition_zero_of_leaf_boundary`
+(cycle 10) and `two_link_composition_value`/`boundaryMatrix_single_link`
+(cycles 9/17) as the existing linear-algebra toolkit, rather than guessing.
+**`incidenceSum`**: `sumBoundary (Sum.inl i1) = (inc1.boundary i1).map
+sumInlEndpoint`, and `sumInlEndpoint`'s `.i` field is always `Sum.inl _` --
+so a `Sum.inl`-tagged element's boundary can NEVER reach a `Sum.inr`-tagged
+target, the identical tag-matching fact cycles 32/35 already used for
+faithfulness, but now checked for what it implies about `boundary_composition`
+specifically: cross-tag compositions vanish structurally (every term in the
+fold is forced to `0` by this same fact, no hypothesis on `inc1`/`inc2`
+needed), and same-tag compositions should reduce EXACTLY to the corresponding
+factor's own `boundary_composition` over the tag-projected index list (signs/
+mults carried unchanged by `sumInlEndpoint`/`sumInrEndpoint`). This predicted
+`BoundarySquareZeroEverywhere` transports through `incidenceSum`
+UNCONDITIONALLY -- no leafless-side hypothesis needed, unlike cycle 35's
+faithfulness result, because there is no cross-tag term to fail to vanish in
+the first place. **`incidenceProd`**: `prodBoundary (i1,i2)` is the standard
+"box product" shape (`(∂i1,i2)` entries tagged `Sum.inl`, `(i1,∂i2)` entries
+tagged `Sum.inr`, concatenated) -- the chain-complex tensor-product
+differential, which in ordinary homological algebra needs a Koszul sign
+(alternating by degree) on the second factor for `∂² = 0` to survive; checking
+`prodBoundary`'s actual sign field (`sign := e.sign`, carried over verbatim
+on both halves, no flip) predicted the SAME failure would recur here: if `i1`
+reaches leaf `j1` via one nonzero link in `inc1` and `i2` reaches leaf `j2`
+via one nonzero link in `inc2` (exactly `finiteIncidence`/`rationalIncidence`/
+`realIncidence`'s own shape at every non-leaf element, cycles 76-78), then
+`(i1,i2)`'s boundary is `[(j1,i2), (i1,j2)]`, each with one further link back
+to `(j1,j2)`, giving `∂²` at `((i1,i2),(j1,j2)) = v1*v2 + v2*v1 = 2*v1*v2`,
+nonzero since `v1`,`v2` are both nonzero. Checked by hand-calculation on
+`incidenceProd finiteIncidence finiteIncidence` at `(root,root)`/`(leaf,leaf)`
+before writing any Lean (predicted value `2`, confirmed by `#eval` against the
+concrete instance before building the general theorem).
+
+Built the `incidenceSum` positive theorem via induction on the index list,
+peeling one element at a time (`boundary_composition_cons`, a generic
+`intListSum_cons`-repackaging of `boundary_composition` itself, since
+`boundary_composition inc idx i k` and `intListSum idx (fun j => ...)` are
+literally the same fold by `rfl`) and projecting to a same-tag sublist via
+two hand-rolled recursive helpers (`sumIdxLeft`/`sumIdxRight`, since this
+project has no `List.filterMap`/Mathlib dependency to reach for). Built the
+`incidenceProd` negative theorem by direct computation on an explicit
+4-element index list `[(i1,i2),(j1,i2),(i1,j2),(j1,j2)]`, reusing
+`boundaryMatrix_two_link`/`boundaryMatrix_single_link` (cycles 9/17) rather
+than `two_link_composition_value`'s `List.count`-based closed form -- an
+early attempt using the `count`-based route hit a real Lean gotcha worth
+recording: `List.count`'s `[BEq I]` instance, synthesized independently at
+the `two_link_composition_value` call site versus at a hand-typed `have`
+elsewhere, produced syntactically distinct (though propositionally equal)
+terms that `rw`/`generalize`/`simp only [...]` all failed to unify, even
+though both printed identically. Diagnosed by isolating a minimal
+reproduction (`List.count` rewrite across two independently-elaborated
+sites) before concluding it was a genuine instance-resolution divergence,
+not a mistake in the surrounding proof; worked around by never invoking a
+`List.count`-producing lemma more than once for what should be "the same"
+value, using the pointwise `boundaryMatrix_two_link`/`_single_link` witnesses
+directly instead. A second, milder version of the same phenomenon: two
+independently-typed `match e.sign with ...` expressions (one from the
+library's `boundaryMatrix_single_link`, one hand-typed in a `have`) were
+similarly not `rfl`-provable against each other despite printing identically
+-- avoided by never restating a value produced by a rewrite, only ever using
+whatever term the rewrite itself produces.
+
+**Result**: **`GluePushoutSpec` confirmed to transfer trivially to both
+combinators (`sumGluePushoutSpec`, `prodGluePushoutSpec`), and
+`BoundarySquareZeroEverywhere` splits with the EXACT OPPOSITE polarity from
+cycles 32/33's faithfulness-transport asymmetry.** `incidenceSum` transports
+`BoundarySquareZeroEverywhere` UNCONDITIONALLY
+(`incidenceSum_boundarySquareZeroEverywhere_of_boundarySquareZeroEverywhere`,
+`Sum.lean`) -- stronger than faithfulness's conditional transport (cycle 35),
+not weaker, and with no analogue of cycle 33's collapse mechanism anywhere in
+sight. `incidenceProd` FAILS to transport it
+(`incidenceProd_not_boundarySquareZeroEverywhere_of_single_link_star`,
+`Product.lean`, a general theorem parametrized by any "single nonzero link to
+a leaf" shape on both factors, not an ad hoc single instance) -- the reverse
+of cycle 32's unconditional faithfulness transport. Concrete instantiations
+on the same pair of factors make the contrast vivid:
+`incidenceSum_finiteIncidence_boundarySquareZeroEverywhere` holds while
+`incidenceProd_finiteIncidence_not_boundarySquareZeroEverywhere` refutes it,
+both for `finiteIncidence × finiteIncidence`/`finiteIncidence ⊕ finiteIncidence`
+built from the exact same cycle-76 factor. `#print axioms` on all eighteen
+new declarations across both files: every one depends on at most
+`[propext, Quot.sound]` -- several (`boundary_composition_eq_intListSum`,
+`boundaryMatrix_idx_irrelevant`) depend on NO axioms at all, and none need
+`Classical.choice`, a cleaner constructive footprint than this project's
+usual `[propext, Classical.choice, Quot.sound]` baseline (cycles 68-78),
+since nothing here routes through a `CoherentQuotientLogicalRetract`.
+`./verify.sh` (clean `lake clean && lake build`, example run, repo-wide
+`axiom`/`sorry`/`sorryAx` grep) passes end to end.
+
+**Synthesis**: the headline finding is that this project's two "generic
+constructor" connectives are asymmetric in OPPOSITE directions for two
+different properties of the same underlying obligation
+(`ChainComplexPushoutIncidence`), and the mechanism generating each asymmetry
+is legible and different: faithfulness's `incidenceSum` failure (cycle 33) is
+about `≈` itself being definable by an EXISTENTIAL witness that can
+vacuously satisfy "no boundary to check" across a tag boundary (a semantic,
+relational collapse), while `BoundarySquareZeroEverywhere`'s `incidenceProd`
+failure (this cycle) is about a purely ARITHMETIC composition failing to
+cancel for lack of an alternating sign (a numeric, not relational,
+obstruction) -- the same "tensor product needs a Koszul sign" fact that
+makes naive chain-complex products fail `∂² = 0` in ordinary homological
+algebra, now demonstrated as a real, checked fact about this project's
+`Incidence` interface rather than an analogy borrowed from outside it. This
+means `incidenceSum`/`incidenceProd` cannot be ranked "one is simply better
+behaved than the other" -- each is the right choice depending on which
+property downstream code needs preserved, exactly cycle 33's own
+methodological point ("which connective you choose changes which properties
+survive") now sharpened with a second, independently-discovered example
+pointing the opposite way. Practically, this closes cycle 78's item 7 thread
+(3) with a genuine, non-obvious contrast rather than a repeat of cycles
+32/33's shape: `CoherentIncidence FiniteIncidence ⊕ FiniteIncidence` (via
+`incidenceSum`) is now reachable at the `ChainComplexPushoutIncidence` layer
+without a fresh per-instance proof, using ONLY this cycle's transport theorem
+plus cycle 76's existing `finiteIncidence` facts -- the first demonstration
+that a combinator-built instance can inherit `ChainComplexPushoutIncidence`
+"for free" in this project, though completing the FULL `CoherentIncidence`
+(the `completeLogic`/`CompletePropositionalInternalLogic` field) for such a
+combined instance remains unattempted this cycle and is a natural next
+target, not a foregone conclusion (`CountableAtomCoding`/`FormulaEnumeration`
+transport through `incidenceSum` was not examined here at all). `incidenceProd`,
+by contrast, is now confirmed to have NO route to `ChainComplexPushoutIncidence`
+via this project's current combinator toolkit whenever both factors have the
+single-link-to-leaf shape -- a genuine, general negative, not merely
+"unchecked."
+
+**Next hypothesis (cycle 80, not yet attempted)**: three threads are open.
+(1) Does `CompletePropositionalInternalLogic` (the `completeLogic` field
+`CoherentIncidence` still needs beyond `ChainComplexPushoutIncidence`)
+transport through `incidenceSum` the way `BoundarySquareZeroEverywhere` just
+did? If `CountableAtomCoding`/`FormulaEnumeration` pairs cleanly across
+`Sum.map`-style atom combination (cycle 36's translation-pairing precedent
+for `incidenceSum` is suggestive but was about `≈`-reflection, not logical
+completeness), completing the FULL `CoherentIncidence (I1 ⊕ I2) ...` chain
+for `incidenceSum finiteIncidence finiteIncidence` (or any two of the five
+known instances) would be the natural payoff of this cycle's transport
+theorem, and the first `CoherentIncidence` instance built from a combinator
+rather than a hand-rolled carrier. (2) Cycle 78's queued option (1): does a
+genuinely WEAKER `CoherentIncidence` variant (relaxing `completeLogic` to
+something `Incidence.internalLogic_complete_arbitrary`-shaped, per-query
+rather than global) still support a meaningful Heyting-isomorphism-like
+statement for `realIncidence`, whose `ChainComplexPushoutIncidence` half is
+already fully proved (cycle 78) and blocked ONLY at the `completeLogic`
+field? (3) Cycle 78's queued option (2): now that the internal-logic leg is
+mapped across all five concrete instances AND (as of this cycle) the two
+generic combinators, re-scope item 7's remaining "resonance-driven
+generation/composition" leg, mirroring cycle 75's scoping-only cycle.

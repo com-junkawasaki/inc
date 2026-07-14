@@ -1930,4 +1930,345 @@ theorem incidenceSum_guards_diverges_cross_side_permissive_factors :
         (Sum.inl natIncidence.unit) (Sum.inl 1) (Sum.inr 1) = false := by
   decide
 
+/- Research cycle 79 (see RESEARCH_LOG.md): does `CoherentIncidence`'s
+   `BoundarySquareZeroEverywhere` obligation transport through `incidenceSum`
+   the way it fails to transport for faithfulness (cycle 33: cross-side
+   leaves collapse), or does the same tag-separation that made faithfulness
+   FAIL here instead make `BoundarySquareZeroEverywhere` SUCCEED? `sumBoundary`
+   never lets a `Sum.inl`-tagged element's boundary reach a `Sum.inr`-tagged
+   target (cycles 32/35's tag-matching fact, reused here) -- so
+   `incidenceSum`'s boundary structure genuinely SPLITS into two
+   non-interacting halves, each an exact copy of one factor's own boundary
+   structure (signs/mults unchanged, cf. `sumInlEndpoint`/`sumInrEndpoint`).
+   `BoundarySquareZeroEverywhere` transports CLEANLY and UNCONDITIONALLY (no
+   analogue of cycle 35's "leafless side" hypothesis needed for faithfulness):
+   cross-tag compositions vanish structurally (no hypothesis needed at all),
+   and same-tag compositions reduce exactly to the corresponding factor's own
+   `boundary_composition` on the tag-projected index list. This is the exact
+   MIRROR IMAGE of `Product.lean`'s cycle 79 finding: there the SUM's
+   tag-separation was already known (cycle 33) to make faithfulness collapse
+   at shared leaves, while the PRODUCT transported faithfulness for free
+   (cycle 32) -- but for `BoundarySquareZeroEverywhere`, the polarity flips:
+   the PRODUCT fails (the "box product" cross term has no Koszul sign to
+   cancel two real paths) while the SUM succeeds (there is no cross term at
+   all to fail to cancel, by the same tag-separation that broke
+   faithfulness). Two different properties of the same pair of connectives,
+   two different asymmetries, in opposite directions -- confirmed by direct
+   calculation on both sides, not assumed from either cycle 32/33's
+   faithfulness precedent alone. -/
+
+/-- Project the `Sum.inl`-tagged elements of an index list down to their
+underlying `I1` values, dropping every `Sum.inr`-tagged element. The
+"tag-projection" needed to state the same-tag `boundary_composition`
+reduction below. -/
+def sumIdxLeft {I1 I2 : Type u} : List (I1 ⊕ I2) → List I1
+  | [] => []
+  | (Sum.inl x1) :: xs => x1 :: sumIdxLeft xs
+  | (Sum.inr _) :: xs => sumIdxLeft xs
+
+/-- Mirror image of `sumIdxLeft`, projecting onto the `Sum.inr`-tagged
+elements. -/
+def sumIdxRight {I1 I2 : Type u} : List (I1 ⊕ I2) → List I2
+  | [] => []
+  | (Sum.inl _) :: xs => sumIdxRight xs
+  | (Sum.inr x2) :: xs => x2 :: sumIdxRight xs
+
+theorem mem_sumIdxLeft {I1 I2 : Type u} (idx : List (I1 ⊕ I2)) (x1 : I1) :
+    x1 ∈ sumIdxLeft idx ↔ Sum.inl x1 ∈ idx := by
+  induction idx with
+  | nil => simp [sumIdxLeft]
+  | cons hd tl ih =>
+    cases hd with
+    | inl y1 =>
+      simp only [sumIdxLeft, List.mem_cons, ih]
+      constructor
+      · rintro (rfl | h)
+        · left; rfl
+        · right; exact h
+      · rintro (h | h)
+        · left; exact Sum.inl.inj h
+        · right; exact h
+    | inr y2 =>
+      simp only [sumIdxLeft, List.mem_cons, ih]
+      constructor
+      · intro h; right; exact h
+      · rintro (h | h)
+        · exact absurd h (by simp)
+        · exact h
+
+theorem mem_sumIdxRight {I1 I2 : Type u} (idx : List (I1 ⊕ I2)) (x2 : I2) :
+    x2 ∈ sumIdxRight idx ↔ Sum.inr x2 ∈ idx := by
+  induction idx with
+  | nil => simp [sumIdxRight]
+  | cons hd tl ih =>
+    cases hd with
+    | inl y1 =>
+      simp only [sumIdxRight, List.mem_cons, ih]
+      constructor
+      · intro h; right; exact h
+      · rintro (h | h)
+        · exact absurd h (by simp)
+        · exact h
+    | inr y2 =>
+      simp only [sumIdxRight, List.mem_cons, ih]
+      constructor
+      · rintro (rfl | h)
+        · left; rfl
+        · right; exact h
+      · rintro (h | h)
+        · left; exact Sum.inr.inj h
+        · right; exact h
+
+/-- `boundary_composition` is literally the same fold shape as `intListSum`
+(same underlying `List.foldl (fun acc x => acc + f x) 0`), just under a
+different name predating the `intListSum` library -- so it is directly
+reusable via `rfl`, not merely provably equal. Generic, not `incidenceSum`
+specific. -/
+theorem boundary_composition_eq_intListSum {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx : List I) (i k : I) :
+    boundary_composition inc idx i k =
+      intListSum idx (fun j => boundaryMatrix inc idx i j * boundaryMatrix inc idx j k) := rfl
+
+/-- `boundaryMatrix` ignores its `idx` argument entirely (a "compatibility
+slot" default the derived interface never reads, per `Axioms.lean`'s own
+comment on the field) -- so swapping which list is passed to it changes
+nothing. Generic, not `incidenceSum` specific. -/
+theorem boundaryMatrix_idx_irrelevant {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (idx1 idx2 : List I) (i j : I) :
+    boundaryMatrix inc idx1 i j = boundaryMatrix inc idx2 i j := by
+  unfold boundaryMatrix
+  rfl
+
+/-- Peeling one element off the front of `boundary_composition`'s index list:
+the head's own contribution, plus the composition over the tail. Generic,
+not `incidenceSum` specific -- the key induction step for any argument that
+needs to walk `boundary_composition`'s index list one element at a time. -/
+theorem boundary_composition_cons {I R T : Type u} [DecidableEq I]
+    (inc : Incidence I R T) (x : I) (xs : List I) (i k : I) :
+    boundary_composition inc (x :: xs) i k =
+      boundaryMatrix inc (x :: xs) i x * boundaryMatrix inc (x :: xs) x k +
+        boundary_composition inc xs i k := by
+  rw [boundary_composition_eq_intListSum, intListSum_cons, boundary_composition_eq_intListSum]
+  congr 1
+
+/-- A `Sum.inl`-tagged element's boundary row never reaches a `Sum.inr`
+target: `sumBoundary (Sum.inl i1)` is `(inc1.boundary i1).map sumInlEndpoint`,
+and `sumInlEndpoint`'s `.i` field is always `Sum.inl _`, never equal to any
+`Sum.inr x2` by constructor disjointness alone. -/
+theorem sumBoundaryMatrix_inl_inr_zero {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (idx : List (I1 ⊕ I2)) (i1 : I1) (x2 : I2) :
+    boundaryMatrix (incidenceSum inc1 inc2) idx (Sum.inl i1) (Sum.inr x2) = 0 := by
+  have hb : (incidenceSum inc1 inc2).boundary (Sum.inl i1) = (inc1.boundary i1).map sumInlEndpoint := rfl
+  rw [boundaryMatrix_eq_foldl, hb]
+  generalize (inc1.boundary i1) = entries
+  induction entries with
+  | nil => rfl
+  | cons hd tl ih =>
+    simp only [List.map_cons, List.foldl_cons, sumInlEndpoint]
+    rw [if_neg (by simp)]
+    exact ih
+
+/-- Mirror image of `sumBoundaryMatrix_inl_inr_zero` for the `Sum.inr` side. -/
+theorem sumBoundaryMatrix_inr_inl_zero {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (idx : List (I1 ⊕ I2)) (i2 : I2) (x1 : I1) :
+    boundaryMatrix (incidenceSum inc1 inc2) idx (Sum.inr i2) (Sum.inl x1) = 0 := by
+  have hb : (incidenceSum inc1 inc2).boundary (Sum.inr i2) = (inc2.boundary i2).map sumInrEndpoint := rfl
+  rw [boundaryMatrix_eq_foldl, hb]
+  generalize (inc2.boundary i2) = entries
+  induction entries with
+  | nil => rfl
+  | cons hd tl ih =>
+    simp only [List.map_cons, List.foldl_cons, sumInrEndpoint]
+    rw [if_neg (by simp)]
+    exact ih
+
+/-- Same-side pointwise correspondence: `incidenceSum`'s `boundaryMatrix` at
+two `Sum.inl`-tagged elements is EXACTLY `inc1`'s own `boundaryMatrix`
+(signs/mults carried unchanged by `sumInlEndpoint`, and `boundaryMatrix`
+itself ignores its `idx` argument on both sides). -/
+theorem sumBoundaryMatrix_inl_inl {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (idxS : List (I1 ⊕ I2)) (idx1 : List I1) (i1 j1 : I1) :
+    boundaryMatrix (incidenceSum inc1 inc2) idxS (Sum.inl i1) (Sum.inl j1) =
+      boundaryMatrix inc1 idx1 i1 j1 := by
+  have hb : (incidenceSum inc1 inc2).boundary (Sum.inl i1) = (inc1.boundary i1).map sumInlEndpoint := rfl
+  rw [boundaryMatrix_eq_foldl, hb, boundaryMatrix_eq_foldl]
+  generalize (inc1.boundary i1) = entries
+  suffices h : ∀ acc : Int,
+      (entries.map sumInlEndpoint).foldl
+        (fun a e => if e.i = Sum.inl j1 then a + (match e.sign with
+          | Sign.neg => -(Int.ofNat e.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e.mult) else a) acc =
+      entries.foldl
+        (fun a e => if e.i = j1 then a + (match e.sign with
+          | Sign.neg => -(Int.ofNat e.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e.mult) else a) acc
+      from h 0
+  induction entries with
+  | nil => intro acc; rfl
+  | cons hd tl ih =>
+    intro acc
+    simp only [List.map_cons, List.foldl_cons, sumInlEndpoint]
+    by_cases h : hd.i = j1
+    · rw [if_pos (by simp [h]), if_pos h, ih]
+    · rw [if_neg (by simp [h]), if_neg h, ih]
+
+/-- Mirror image of `sumBoundaryMatrix_inl_inl` for the `Sum.inr` side. -/
+theorem sumBoundaryMatrix_inr_inr {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (idxS : List (I1 ⊕ I2)) (idx2 : List I2) (i2 j2 : I2) :
+    boundaryMatrix (incidenceSum inc1 inc2) idxS (Sum.inr i2) (Sum.inr j2) =
+      boundaryMatrix inc2 idx2 i2 j2 := by
+  have hb : (incidenceSum inc1 inc2).boundary (Sum.inr i2) = (inc2.boundary i2).map sumInrEndpoint := rfl
+  rw [boundaryMatrix_eq_foldl, hb, boundaryMatrix_eq_foldl]
+  generalize (inc2.boundary i2) = entries
+  suffices h : ∀ acc : Int,
+      (entries.map sumInrEndpoint).foldl
+        (fun a e => if e.i = Sum.inr j2 then a + (match e.sign with
+          | Sign.neg => -(Int.ofNat e.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e.mult) else a) acc =
+      entries.foldl
+        (fun a e => if e.i = j2 then a + (match e.sign with
+          | Sign.neg => -(Int.ofNat e.mult) | Sign.zero => 0 | Sign.pos => Int.ofNat e.mult) else a) acc
+      from h 0
+  induction entries with
+  | nil => intro acc; rfl
+  | cons hd tl ih =>
+    intro acc
+    simp only [List.map_cons, List.foldl_cons, sumInrEndpoint]
+    by_cases h : hd.i = j2
+    · rw [if_pos (by simp [h]), if_pos h, ih]
+    · rw [if_neg (by simp [h]), if_neg h, ih]
+
+/-- Cross-tag `boundary_composition` vanishes UNCONDITIONALLY (no
+`BoundarySquareZeroEverywhere` hypothesis on `inc1`/`inc2` needed at all):
+every intermediate `j` is either `Sum.inl`- or `Sum.inr`-tagged, and either
+way one of the two factors in `B[i,j] * B[j,k]` is forced to `0` by
+`sumBoundaryMatrix_inl_inr_zero`. -/
+theorem sum_boundary_composition_cross_inl_inr {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (idx : List (I1 ⊕ I2)) (i1 : I1) (k2 : I2) :
+    boundary_composition (incidenceSum inc1 inc2) idx (Sum.inl i1) (Sum.inr k2) = 0 := by
+  unfold boundary_composition
+  apply foldl_add_zero_of_all_zero
+  intro j _
+  cases j with
+  | inl j1 => rw [sumBoundaryMatrix_inl_inr_zero]; simp
+  | inr j2 => rw [sumBoundaryMatrix_inl_inr_zero]; simp
+
+/-- Mirror image of `sum_boundary_composition_cross_inl_inr`. -/
+theorem sum_boundary_composition_cross_inr_inl {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (idx : List (I1 ⊕ I2)) (i2 : I2) (k1 : I1) :
+    boundary_composition (incidenceSum inc1 inc2) idx (Sum.inr i2) (Sum.inl k1) = 0 := by
+  unfold boundary_composition
+  apply foldl_add_zero_of_all_zero
+  intro j _
+  cases j with
+  | inl j1 => rw [sumBoundaryMatrix_inr_inl_zero]; simp
+  | inr j2 => rw [sumBoundaryMatrix_inr_inl_zero]; simp
+
+/-- The same-tag reduction: `incidenceSum`'s `boundary_composition` between
+two `Sum.inl`-tagged elements is EXACTLY `inc1`'s own `boundary_composition`
+over the `Sum.inl`-projected index list -- by induction on `idx`, peeling one
+element at a time (`boundary_composition_cons`) and discharging the
+`Sum.inr`-tagged case via the cross-zero fact. -/
+theorem sum_boundary_composition_inl {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (idx : List (I1 ⊕ I2)) (i1 k1 : I1) :
+    boundary_composition (incidenceSum inc1 inc2) idx (Sum.inl i1) (Sum.inl k1) =
+      boundary_composition inc1 (sumIdxLeft idx) i1 k1 := by
+  induction idx with
+  | nil => rfl
+  | cons x xs ih =>
+    rw [boundary_composition_cons]
+    cases x with
+    | inl x1 =>
+      simp only [sumIdxLeft]
+      rw [boundary_composition_cons, sumBoundaryMatrix_inl_inl inc1 inc2 _ _ i1 x1,
+          sumBoundaryMatrix_inl_inl inc1 inc2 _ _ x1 k1, ih]
+    | inr x2 =>
+      simp only [sumIdxLeft]
+      rw [sumBoundaryMatrix_inl_inr_zero, Int.zero_mul, Int.zero_add, ih]
+
+/-- Mirror image of `sum_boundary_composition_inl` for the `Sum.inr` side. -/
+theorem sum_boundary_composition_inr {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (idx : List (I1 ⊕ I2)) (i2 k2 : I2) :
+    boundary_composition (incidenceSum inc1 inc2) idx (Sum.inr i2) (Sum.inr k2) =
+      boundary_composition inc2 (sumIdxRight idx) i2 k2 := by
+  induction idx with
+  | nil => rfl
+  | cons x xs ih =>
+    rw [boundary_composition_cons]
+    cases x with
+    | inr x2 =>
+      simp only [sumIdxRight]
+      rw [boundary_composition_cons, sumBoundaryMatrix_inr_inr inc1 inc2 _ _ i2 x2,
+          sumBoundaryMatrix_inr_inr inc1 inc2 _ _ x2 k2, ih]
+    | inl x1 =>
+      simp only [sumIdxRight]
+      rw [sumBoundaryMatrix_inr_inl_zero, Int.zero_mul, Int.zero_add, ih]
+
+/-- The headline positive transport theorem: `BoundarySquareZeroEverywhere`
+transports through `incidenceSum` UNCONDITIONALLY, given both factors satisfy
+it -- in sharp contrast to `Product.lean`'s cycle 79 negative finding for
+`incidenceProd`, and also in contrast to this same file's OWN cycle 33
+finding that faithfulness does NOT transport through `incidenceSum`
+unconditionally (needing cycle 35's "leafless side" hypothesis). Every case
+of `boundary_composition (incidenceSum inc1 inc2) idx i k` is either
+cross-tag (vanishes structurally, no hypothesis needed) or same-tag (reduces
+to the corresponding factor's own `boundary_composition`, closed by `h1`/`h2`
+applied at the tag-projected index list). -/
+theorem incidenceSum_boundarySquareZeroEverywhere_of_boundarySquareZeroEverywhere
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (h1 : BoundarySquareZeroEverywhere inc1) (h2 : BoundarySquareZeroEverywhere inc2) :
+    BoundarySquareZeroEverywhere (incidenceSum inc1 inc2) := by
+  intro idx i k hi hk
+  show boundary_composition (incidenceSum inc1 inc2) idx i k = 0
+  cases i with
+  | inl i1 =>
+    cases k with
+    | inl k1 =>
+      rw [sum_boundary_composition_inl]
+      exact h1 (sumIdxLeft idx) i1 k1 ((mem_sumIdxLeft idx i1).mpr hi) ((mem_sumIdxLeft idx k1).mpr hk)
+    | inr k2 => exact sum_boundary_composition_cross_inl_inr inc1 inc2 idx i1 k2
+  | inr i2 =>
+    cases k with
+    | inl k1 => exact sum_boundary_composition_cross_inr_inl inc1 inc2 idx i2 k1
+    | inr k2 =>
+      rw [sum_boundary_composition_inr]
+      exact h2 (sumIdxRight idx) i2 k2 ((mem_sumIdxRight idx i2).mpr hi) ((mem_sumIdxRight idx k2).mpr hk)
+
+/-- Concrete instantiation on `finiteIncidence` (cycle 76): `incidenceSum
+finiteIncidence finiteIncidence` satisfies `BoundarySquareZeroEverywhere`,
+by the general transport theorem applied twice to
+`finiteIncidence_boundarySquareZeroEverywhere` -- in sharp contrast to
+`Product.lean`'s `incidenceProd_finiteIncidence_not_boundarySquareZeroEverywhere`
+on the exact same factors. -/
+theorem incidenceSum_finiteIncidence_boundarySquareZeroEverywhere :
+    BoundarySquareZeroEverywhere (incidenceSum finiteIncidence finiteIncidence) :=
+  incidenceSum_boundarySquareZeroEverywhere_of_boundarySquareZeroEverywhere
+    finiteIncidence finiteIncidence
+    finiteIncidence_boundarySquareZeroEverywhere finiteIncidence_boundarySquareZeroEverywhere
+
+/-- Generic identity-cospan `GluePushoutSpec` witness (cycle 76's mechanism),
+confirmed here to transfer to `incidenceSum` with zero adaptation: the
+witness needs only `[DecidableEq I]` on the combined carrier, which
+`I1 ⊕ I2` already has. -/
+def sumGluePushoutSpec {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) :
+    GluePushoutSpec (incidenceSum inc1 inc2) where
+  diagram := fun i j => { a := i, b := j, c := i, left := id, right := id }
+  witness := by
+    intro i j k _hglue
+    refine ⟨{ apex := k
+              inl := id
+              inr := id
+              commutes := fun _ => rfl
+              lift := fun leftLeg _ _ => leftLeg
+              lift_inl := fun _ _ _ _ => rfl
+              lift_inr := fun _ _ h x => h x
+              lift_unique := fun _ _ _ _ hl _ => funext hl }, rfl⟩
+
 end IncidenceCore

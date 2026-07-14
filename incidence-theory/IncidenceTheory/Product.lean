@@ -614,4 +614,194 @@ theorem prodCollapseTrivial_not_reflects :
     natIncidence_approxBisim_iff natIncidence_approxBisim_iff]
   simp
 
+/- Research cycle 79 (see RESEARCH_LOG.md): does `CoherentIncidence`'s
+   `BoundarySquareZeroEverywhere` obligation transport through `incidenceProd`
+   the way faithfulness does (cycle 32: unconditional yes) or fail the way
+   faithfulness fails through `incidenceSum` (cycle 33)? `GluePushoutSpec`
+   transfers trivially for the structural reason cycle 76 found: it needs
+   only `[DecidableEq I]`, and `incidenceProd`'s carrier `I1 × I2` inherits
+   that from `[DecidableEq I1] [DecidableEq I2]` already required by
+   `incidenceProd`'s own signature -- confirmed below, no dependency on
+   `inc1`/`inc2` at all. `BoundarySquareZeroEverywhere` is the substantive
+   question, and the answer is NO: `prodBoundary`'s "box product" shape
+   (`(i1,i2)`'s boundary reaches BOTH `(∂i1,i2)` and `(i1,∂i2)`, the standard
+   tensor-product-of-chain-complexes differential) carries no Koszul sign to
+   make the two length-2 paths back to a shared target cancel -- they ADD.
+   Concretely: if `i1` reaches leaf `j1` via one nonzero-signed link in
+   `inc1`, and `i2` reaches leaf `j2` via one nonzero-signed link in `inc2`
+   (exactly the shape `finiteIncidence`/`rationalIncidence`/`realIncidence`
+   all have at their non-leaf elements, cycles 76-78), then in the product
+   `(i1,i2)`'s boundary is `[(j1,i2), (i1,j2)]`, each of which has a SINGLE
+   further link back to `(j1,j2)` with signed value `v2`/`v1` respectively
+   (borrowed unchanged from the other factor's own link, since
+   `prodBoundary`'s sign field is `e.sign` verbatim, never flipped) -- so
+   `∂²` at `((i1,i2),(j1,j2))` is `v1*v2 + v2*v1 = 2*v1*v2 ≠ 0` (both `v1`,
+   `v2` nonzero). This is the mirror image of cycles 32/33's asymmetry: there
+   the PRODUCT was the well-behaved connective and the SUM collapsed;
+   here the roles invert -- `incidenceProd` is the one that fails to
+   transport `BoundarySquareZeroEverywhere`, for a reason with no analogue in
+   the faithfulness story (a genuine two-path composition, not a
+   leaf-collapse). Proved as one general theorem (mirroring cycle 77's
+   `not_boundarySquareZeroEverywhere_of_single_link_chain`, which packaged
+   the single-link-chain negative once rather than reproving it per
+   instance) so it applies uniformly to ANY pair of instances with this
+   "single nonzero link to a leaf" shape -- not just the one concrete
+   instantiation checked below (`finiteIncidence × finiteIncidence`), but
+   equally `rationalIncidence`/`realIncidence` paired with themselves or each
+   other, since all three already have exactly this shape (cycles 76-78). -/
+
+/-- Generic identity-cospan `GluePushoutSpec` witness (cycle 76's mechanism),
+confirmed here to transfer to `incidenceProd` with zero adaptation: the
+witness needs only `[DecidableEq I]` on the combined carrier, which
+`I1 × I2` already has. -/
+def prodGluePushoutSpec {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) :
+    GluePushoutSpec (incidenceProd inc1 inc2) where
+  diagram := fun i j => { a := i, b := j, c := i, left := id, right := id }
+  witness := by
+    intro i j k _hglue
+    refine ⟨{ apex := k
+              inl := id
+              inr := id
+              commutes := fun _ => rfl
+              lift := fun leftLeg _ _ => leftLeg
+              lift_inl := fun _ _ _ _ => rfl
+              lift_inr := fun _ _ h x => h x
+              lift_unique := fun _ _ _ _ hl _ => funext hl }, rfl⟩
+
+/-- Purely arithmetic helper: a `foldl` over an explicit 4-element list is
+just the sum of the summand applied to each element, in order. Generic over
+any carrier `I`, not specific to `incidenceProd`. -/
+theorem foldl_add_four {I : Type u} (a b c d : I) (f : I → Int) :
+    ([a,b,c,d] : List I).foldl (fun acc x => acc + f x) 0 =
+      f a + f b + f c + f d := by
+  simp [List.foldl_cons, List.foldl_nil]
+
+/-- The negative result: if `i1` reaches a leaf `j1` of `inc1` via a single
+nonzero-signed boundary link, and `i2` reaches a leaf `j2` of `inc2`
+similarly, then `incidenceProd inc1 inc2` does NOT satisfy
+`BoundarySquareZeroEverywhere` -- the two length-2 paths `(i1,i2) →
+(j1,i2)/(i1,j2) → (j1,j2)` compose to `2 * (signed value of the i1-link) *
+(signed value of the i2-link) ≠ 0`, witnessed on the 4-element index list
+`[(i1,i2),(j1,i2),(i1,j2),(j1,j2)]`. Note this is a genuinely different
+failure mode than cycle 33's `incidenceSum` leaf-collapse: here `(i1,i2)`
+is NOT itself a leaf of the product (its boundary has two entries), and no
+two DISTINCT elements become `≈`-related -- the failure is a real nonzero
+double-boundary composition, the same "tensor product needs a Koszul sign"
+phenomenon that makes naive chain-complex products fail `∂² = 0` in
+ordinary homological algebra. -/
+theorem incidenceProd_not_boundarySquareZeroEverywhere_of_single_link_star
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    {i1 j1 : I1} {e1 : Endpoint I1 R1}
+    (hb1 : inc1.boundary i1 = [e1]) (he1i : e1.i = j1) (he1s : e1.sign ≠ Sign.zero)
+    (hleaf1 : inc1.boundary j1 = [])
+    {i2 j2 : I2} {e2 : Endpoint I2 R2}
+    (hb2 : inc2.boundary i2 = [e2]) (he2i : e2.i = j2) (he2s : e2.sign ≠ Sign.zero)
+    (hleaf2 : inc2.boundary j2 = []) :
+    ¬ BoundarySquareZeroEverywhere (incidenceProd inc1 inc2) := by
+  intro hall
+  have hj1i1 : j1 ≠ i1 := by
+    intro heq
+    exact inc1.well_founded i1 ⟨e1, hb1 ▸ List.mem_singleton_self e1, heq ▸ he1i⟩
+  have hj2i2 : j2 ≠ i2 := by
+    intro heq
+    exact inc2.well_founded i2 ⟨e2, hb2 ▸ List.mem_singleton_self e2, heq ▸ he2i⟩
+  have hi1j1 : i1 ≠ j1 := Ne.symm hj1i1
+  have hi2j2 : i2 ≠ j2 := Ne.symm hj2i2
+  have hne : (j1, i2) ≠ (i1, j2) := fun heq => hj1i1 (congrArg Prod.fst heq)
+  have hi : ((i1,i2) : I1 × I2) ∈ [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] := by simp
+  have hk : ((j1,j2) : I1 × I2) ∈ [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] := by simp
+  have hzero := hall [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (i1,i2) (j1,j2) hi hk
+  change boundary_composition (incidenceProd inc1 inc2)
+    [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (i1,i2) (j1,j2) = 0 at hzero
+  have hbprod : (incidenceProd inc1 inc2).boundary (i1,i2) =
+      [ ({ i := (j1,i2), role := Sum.inl e1.role, sign := e1.sign, mult := e1.mult,
+           mult_pos := e1.mult_pos } : Endpoint (I1 × I2) (R1 ⊕ R2)),
+        ({ i := (i1,j2), role := Sum.inr e2.role, sign := e2.sign, mult := e2.mult,
+           mult_pos := e2.mult_pos } : Endpoint (I1 × I2) (R1 ⊕ R2)) ] := by
+    show prodBoundary inc1 inc2 (i1, i2) = _
+    simp [prodBoundary, hb1, hb2, he1i, he2i]
+  have hbjj1 : (incidenceProd inc1 inc2).boundary (j1,i2) =
+      [ ({ i := (j1,j2), role := Sum.inr e2.role, sign := e2.sign, mult := e2.mult,
+           mult_pos := e2.mult_pos } : Endpoint (I1 × I2) (R1 ⊕ R2)) ] := by
+    show prodBoundary inc1 inc2 (j1, i2) = _
+    simp [prodBoundary, hleaf1, hb2, he2i]
+  have hbjj2 : (incidenceProd inc1 inc2).boundary (i1,j2) =
+      [ ({ i := (j1,j2), role := Sum.inl e1.role, sign := e1.sign, mult := e1.mult,
+           mult_pos := e1.mult_pos } : Endpoint (I1 × I2) (R1 ⊕ R2)) ] := by
+    show prodBoundary inc1 inc2 (i1, j2) = _
+    simp [prodBoundary, hb1, hleaf2, he1i]
+  have hexpand : boundary_composition (incidenceProd inc1 inc2)
+      [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (i1,i2) (j1,j2) =
+      boundaryMatrix (incidenceProd inc1 inc2) [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (i1,i2) (i1,i2) *
+        boundaryMatrix (incidenceProd inc1 inc2) [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (i1,i2) (j1,j2) +
+      (boundaryMatrix (incidenceProd inc1 inc2) [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (i1,i2) (j1,i2) *
+        boundaryMatrix (incidenceProd inc1 inc2) [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (j1,i2) (j1,j2) +
+      (boundaryMatrix (incidenceProd inc1 inc2) [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (i1,i2) (i1,j2) *
+        boundaryMatrix (incidenceProd inc1 inc2) [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (i1,j2) (j1,j2) +
+      (boundaryMatrix (incidenceProd inc1 inc2) [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (i1,i2) (j1,j2) *
+        boundaryMatrix (incidenceProd inc1 inc2) [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (j1,j2) (j1,j2)))) := by
+    show ([(i1,i2), (j1,i2), (i1,j2), (j1,j2)] : List (I1 × I2)).foldl
+      (fun acc j => acc + boundaryMatrix (incidenceProd inc1 inc2)
+        [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (i1,i2) j *
+        boundaryMatrix (incidenceProd inc1 inc2) [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] j (j1,j2)) 0 = _
+    rw [foldl_add_four]
+    omega
+  rw [hexpand] at hzero
+  rw [boundaryMatrix_two_link (incidenceProd inc1 inc2)
+        [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (i1,i2) (j1,i2) (i1,j2) _ _ hbprod rfl rfl hne (i1,i2),
+      boundaryMatrix_two_link (incidenceProd inc1 inc2)
+        [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (i1,i2) (j1,i2) (i1,j2) _ _ hbprod rfl rfl hne (j1,i2),
+      boundaryMatrix_two_link (incidenceProd inc1 inc2)
+        [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (i1,i2) (j1,i2) (i1,j2) _ _ hbprod rfl rfl hne (i1,j2),
+      boundaryMatrix_two_link (incidenceProd inc1 inc2)
+        [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (i1,i2) (j1,i2) (i1,j2) _ _ hbprod rfl rfl hne (j1,j2),
+      boundaryMatrix_single_link (incidenceProd inc1 inc2)
+        [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (j1,i2) (j1,j2) _ hbjj1 rfl (j1,j2),
+      boundaryMatrix_single_link (incidenceProd inc1 inc2)
+        [(i1,i2), (j1,i2), (i1,j2), (j1,j2)] (i1,j2) (j1,j2) _ hbjj2 rfl (j1,j2)] at hzero
+  have h1 : ((i1,i2) : I1 × I2) ≠ (j1,i2) := fun h => hi1j1 (congrArg Prod.fst h)
+  have h2 : ((i1,i2) : I1 × I2) ≠ (i1,j2) := fun h => hi2j2 (congrArg Prod.snd h)
+  have h3 : ((j1,j2) : I1 × I2) ≠ (j1,i2) := fun h => hi2j2 (congrArg Prod.snd h).symm
+  have h4 : ((j1,j2) : I1 × I2) ≠ (i1,j2) := fun h => hi1j1 (congrArg Prod.fst h).symm
+  simp only [h1, h2, h3, h4, hne, hne.symm, if_neg, if_pos, not_false_eq_true] at hzero
+  have hm1 : e1.mult ≥ 1 := inc1.multiplicities i1 e1 (hb1 ▸ List.mem_singleton_self e1)
+  have hm2 : e2.mult ≥ 1 := inc2.multiplicities i2 e2 (hb2 ▸ List.mem_singleton_self e2)
+  have hpos1 : (0:Int) < Int.ofNat e1.mult := by
+    have h : (0:Int) < (e1.mult:Int) := by exact_mod_cast hm1
+    simpa using h
+  have hpos2 : (0:Int) < Int.ofNat e2.mult := by
+    have h : (0:Int) < (e2.mult:Int) := by exact_mod_cast hm2
+    simpa using h
+  have hprod : (0:Int) < Int.ofNat e1.mult * Int.ofNat e2.mult := Int.mul_pos hpos1 hpos2
+  have hprod' : (0:Int) < Int.ofNat e2.mult * Int.ofNat e1.mult := Int.mul_pos hpos2 hpos1
+  simp only [Int.zero_add, Int.add_zero, Int.zero_mul, Int.mul_zero] at hzero
+  cases hs1 : e1.sign <;> cases hs2 : e2.sign <;>
+    simp only [hs1, hs2, Int.neg_mul, Int.mul_neg] at hzero <;>
+    first
+      | exact absurd hs1 he1s
+      | exact absurd hs2 he2s
+      | omega
+
+/-- Concrete instantiation on `finiteIncidence` (cycle 76's own instance,
+already known to individually satisfy `BoundarySquareZeroEverywhere`):
+`root`'s single link to `leaf` supplies exactly the "single nonzero link to
+a leaf" shape on both factors, so `incidenceProd finiteIncidence
+finiteIncidence` fails `BoundarySquareZeroEverywhere` even though
+`finiteIncidence` itself does not. The same argument applies verbatim to
+`rationalIncidence`/`realIncidence` (cycles 77-78 established they have the
+identical single-link-to-leaf shape at every nonzero element), so this is
+not a `finiteIncidence`-specific accident. -/
+theorem incidenceProd_finiteIncidence_not_boundarySquareZeroEverywhere :
+    ¬ BoundarySquareZeroEverywhere (incidenceProd finiteIncidence finiteIncidence) :=
+  incidenceProd_not_boundarySquareZeroEverywhere_of_single_link_star
+    finiteIncidence finiteIncidence
+    (i1 := .root) (j1 := .leaf)
+    (e1 := { i := .leaf, role := .src, sign := .pos, mult := 1, mult_pos := by omega })
+    rfl rfl (by decide) rfl
+    (i2 := .root) (j2 := .leaf)
+    (e2 := { i := .leaf, role := .src, sign := .pos, mult := 1, mult_pos := by omega })
+    rfl rfl (by decide) rfl
+
 end IncidenceCore
