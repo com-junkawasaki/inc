@@ -2271,4 +2271,137 @@ def sumGluePushoutSpec {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableE
               lift_inr := fun _ _ h x => h x
               lift_unique := fun _ _ _ _ hl _ => funext hl }, rfl⟩
 
+/- Research cycle 80 (see RESEARCH_LOG.md): per cycle 79's own
+   next-hypothesis thread (1), does `CompletePropositionalInternalLogic`
+   (`CoherentIncidence`'s remaining field beyond `ChainComplexPushoutIncidence`)
+   transport through `incidenceSum` the same way `BoundarySquareZeroEverywhere`
+   just did (cycle 79)? `Logic.lean`'s `CountableAtomCoding.sum` already
+   answers this unconditionally -- it was built earlier (for
+   `countablyPresentedIncidenceSum`'s `atoms` field, this same file, cycle
+   pre-46) and pairs any two `CountableAtomCoding`s into one on the sum
+   carrier with zero new proof needed, so `.completeLogic` applied to it
+   immediately supplies `CompletePropositionalInternalLogic (I1 ⊕ I2)`.
+   Combined with cycle 79's `incidenceSum_finiteIncidence_boundarySquareZeroEverywhere`
+   and `sumGluePushoutSpec`, this gives the FIRST fully combinator-built
+   `CoherentIncidence` instance in this project
+   (`incidenceSum_finiteIncidence_coherentIncidence` below): assembled
+   entirely from generic transport theorems, unlike cycles 76/78's
+   `finiteIncidence`/`rationalIncidence`, each proved by hand for that
+   specific carrier.
+
+   The chain does NOT continue past this point, however, and this was
+   checked precisely rather than assumed to work "the same way" cycles
+   76/78 did. The `CoherentQuotient`/`CoherentQuotientLogicalRetract`/
+   Heyting-isomorphism layer needs `incidenceSum finiteIncidence
+   finiteIncidence` to be bisimulation-FAITHFUL
+   (`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`,
+   `Coherent.lean` -- an iff that holds for ANY choice of `Q`/classifier a
+   `CoherentQuotient` picks, not merely the identity one cycles 76/78 used,
+   so no cleverer quotient choice can route around it), and this fails:
+   `finiteIncidence` has a leaf (`.leaf`), so cycle 33's cross-side collapse
+   mechanism (`incidenceSum_leaves_collapse`) applies directly -- `Sum.inl
+   .leaf ≈ Sum.inr .leaf` in the sum, despite being distinct elements of
+   `FiniteIncidence ⊕ FiniteIncidence` (`Sum.inl _ ≠ Sum.inr _`
+   unconditionally). This is not a limitation of `finiteIncidence`
+   specifically: EVERY `BoundarySquareZeroEverywhere`-satisfying instance
+   this project has built (`finiteIncidence` cycle 76, `rationalIncidence`/
+   `realIncidence` cycle 78) is a "radius-1 star" with EXACTLY one leaf --
+   the point `boundary_composition_zero_of_leaf_boundary`'s argument
+   terminates at -- while the one LEAFLESS instance this project has built
+   (`cycleIncidenceFixed`, cycle 27) already has a proven concrete
+   counterexample to `BoundarySquareZeroEverywhere` (`Cycle.lean`:
+   `boundary_composition cycleIncidenceFixed idx CycleId.c0 CycleId.c2 ≠ 0`).
+   So pairing ANY two of this project's `BoundarySquareZeroEverywhere`-
+   satisfying instances via `incidenceSum` (not only `finiteIncidence ⊕
+   finiteIncidence`, e.g. `finiteIncidence ⊕ rationalIncidence` would fail
+   identically, since `rationalOfInteger 0` is `rationalIncidence`'s own
+   unique leaf) hits the same obstruction -- proved below as one general
+   theorem (`incidenceSum_no_coherentQuotientLogicalRetract_of_both_have_leaf`)
+   rather than as an isolated fact about one pair, closing off this entire
+   avenue rather than only the specific instance this cycle builds. -/
+
+noncomputable def finiteIncidenceSumAtomCoding :
+    CountableAtomCoding (FiniteIncidence ⊕ FiniteIncidence) :=
+  finiteIncidenceAtomCoding.sum finiteIncidenceAtomCoding
+
+/-- `ChainComplexPushoutIncidence` for the combinator-built sum, assembled
+purely from cycle 79's two transport theorems -- no per-carrier proof. -/
+def incidenceSum_finiteIncidence_chainComplexPushoutIncidence :
+    ChainComplexPushoutIncidence (FiniteIncidence ⊕ FiniteIncidence)
+      (GraphRole ⊕ GraphRole) GraphType where
+  inc := incidenceSum finiteIncidence finiteIncidence
+  boundary_square_zero := incidenceSum_finiteIncidence_boundarySquareZeroEverywhere
+  glue_pushout := sumGluePushoutSpec finiteIncidence finiteIncidence
+
+/-- The headline positive result: the first `CoherentIncidence` instance in
+this project assembled entirely from generic combinator-transport theorems
+(`incidenceSum_finiteIncidence_chainComplexPushoutIncidence` above,
+`CountableAtomCoding.sum`) rather than a bespoke per-carrier proof. -/
+noncomputable def incidenceSum_finiteIncidence_coherentIncidence :
+    CoherentIncidence (FiniteIncidence ⊕ FiniteIncidence)
+      (GraphRole ⊕ GraphRole) GraphType where
+  chainPushout := incidenceSum_finiteIncidence_chainComplexPushoutIncidence
+  completeLogic := finiteIncidenceSumAtomCoding.completeLogic
+
+theorem coherentIncidence_has_combinatorBuilt_carrier_model :
+    Nonempty (CoherentIncidence (FiniteIncidence ⊕ FiniteIncidence)
+      (GraphRole ⊕ GraphRole) GraphType) :=
+  ⟨incidenceSum_finiteIncidence_coherentIncidence⟩
+
+/-- If both factors have some designated leaf, the sum is never fully
+bisimulation-faithful -- any two such leaves collapse (cycle 33's mechanism,
+`incidenceSum_leaves_collapse`) despite being distinct elements of `I1 ⊕ I2`
+(`Sum.inl _ ≠ Sum.inr _` unconditionally). Generalizes
+`incidenceSum_leaves_cross_natIncidence` (cycle 33) beyond one specific
+instance pair. -/
+theorem incidenceSum_not_bisim_faithful_of_both_have_leaf
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    {a : I1} {b : I2} (ha : inc1.boundary a = []) (hb : inc2.boundary b = []) :
+    ∃ p q : I1 ⊕ I2, p ≠ q ∧ approxBisim (incidenceSum inc1 inc2) p q :=
+  ⟨Sum.inl a, Sum.inr b, by simp, incidenceSum_leaves_collapse inc1 inc2 ha hb⟩
+
+/-- The precise obstruction blocking the Heyting-isomorphism layer for any
+`incidenceSum`-built `CoherentIncidence` whose factors both have a leaf: by
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`
+(`Coherent.lean`), a `CoherentQuotientLogicalRetract` exists for a given
+quotient IFF the *source* incidence is bisimulation-faithful -- an
+equivalence that holds regardless of which `Q`/classifier the quotient
+picks, so no cleverer choice of quotient can route around it. Combined with
+the fact above, this rules out the retract (hence the Heyting isomorphism)
+for EVERY quotient of EVERY `incidenceSum inc1 inc2` where both factors have
+a leaf, not merely for the specific pair this cycle instantiates below. -/
+theorem incidenceSum_no_coherentQuotientLogicalRetract_of_both_have_leaf
+    {I1 R1 T1 I2 R2 T2 Q : Type u} [DecidableEq I1] [DecidableEq I2] [DecidableEq Q]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    {a : I1} {b : I2} (ha : inc1.boundary a = []) (hb : inc2.boundary b = [])
+    {source : CoherentIncidence (I1 ⊕ I2) (R1 ⊕ R2) GraphType}
+    (hsource : source.chainPushout.inc = incidenceSum inc1 inc2)
+    (quotient : CoherentQuotient (Q := Q) source) :
+    ¬ Nonempty (CoherentQuotientLogicalRetract quotient) := by
+  rw [coherentQuotient_has_logicalRetract_iff_source_bisim_faithful]
+  intro hfaithful
+  have hbisim : approxBisim (incidenceSum inc1 inc2) (Sum.inl a) (Sum.inr b) :=
+    incidenceSum_leaves_collapse inc1 inc2 ha hb
+  rw [← hsource] at hbisim
+  exact absurd (hfaithful hbisim) (by simp)
+
+/-- Concrete instantiation: the first combinator-built `CoherentIncidence`
+(`incidenceSum_finiteIncidence_coherentIncidence` above) has NO
+`CoherentQuotientLogicalRetract` on ANY quotient -- both factors are
+`finiteIncidence`, which has exactly one leaf (`.leaf`), so cycle 33's
+collapse mechanism applies directly. This is the honest stopping point of
+this cycle's construction: the `ChainComplexPushoutIncidence`/`completeLogic`
+half is fully combinator-built and complete, but the Heyting-isomorphism
+half is structurally unreachable for this (or any two-leafed-factor) pair. -/
+theorem incidenceSum_finiteIncidence_no_coherentQuotientLogicalRetract
+    {Q : Type} [DecidableEq Q]
+    (quotient : CoherentQuotient (Q := Q) incidenceSum_finiteIncidence_coherentIncidence) :
+    ¬ Nonempty (CoherentQuotientLogicalRetract quotient) :=
+  incidenceSum_no_coherentQuotientLogicalRetract_of_both_have_leaf
+    finiteIncidence finiteIncidence
+    (a := FiniteIncidence.leaf) (b := FiniteIncidence.leaf)
+    (source := incidenceSum_finiteIncidence_coherentIncidence)
+    rfl rfl rfl quotient
+
 end IncidenceCore

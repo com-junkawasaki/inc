@@ -9715,3 +9715,218 @@ field? (3) Cycle 78's queued option (2): now that the internal-logic leg is
 mapped across all five concrete instances AND (as of this cycle) the two
 generic combinators, re-scope item 7's remaining "resonance-driven
 generation/composition" leg, mirroring cycle 75's scoping-only cycle.
+
+## Cycle 80
+
+**Hypothesis**: per cycle 79's queued thread (1), does
+`CompletePropositionalInternalLogic` (`CoherentIncidence`'s remaining field
+beyond `ChainComplexPushoutIncidence`) transport through `incidenceSum` the
+way `BoundarySquareZeroEverywhere` just did (cycle 79)? If so, complete the
+FULL `CoherentIncidence`/`CoherentQuotient`/Heyting-isomorphism chain for
+`incidenceSum finiteIncidence finiteIncidence` -- the first fully
+combinator-built `CoherentIncidence` instance, unlike cycles 76/78's
+per-carrier bespoke proofs. Per the task framing, this required first
+checking (not assuming) whether `Logic.lean` already has a
+`CountableAtomCoding.sum`/`.prod` combinator sibling to cycle 70's
+`.ofQuotient`, and second checking carefully whether the faithfulness
+hypothesis cycle 35's `incidenceSum_faithful_of_faithful_no_shared_leaves`
+needs (at least one leafless factor) is actually satisfiable for
+`finiteIncidence ⊕ finiteIncidence` given `finiteIncidence` has a leaf, or
+whether a different factor pair (e.g. `finiteIncidence ⊕ rationalIncidence`)
+would be needed instead, reporting honestly either way rather than forcing a
+construction.
+
+**Method**: read `Sum.lean`'s cycle 79 transport theorems
+(`incidenceSum_boundarySquareZeroEverywhere_of_boundarySquareZeroEverywhere`,
+`sumGluePushoutSpec`) in full as the combinator-transport template. Read
+`Logic.lean`'s `CountableAtomCoding` section in full (L5117-5322) rather than
+grepping fragments: found `CountableAtomCoding.sum` (L5138-5154) and
+`.prod` (L5155-5165) ALREADY exist, predating this cycle (built for
+`countablyPresentedIncidenceSum`'s `atoms` field, `Sum.lean` L243-249,
+`left.atoms.sum right.atoms`) -- confirmed by reading the actual
+implementation (a `Nat`-parity tagging scheme, even indices to `.inl`, odd to
+`.inr`, `decode_code` closed via `omega` on the odd case) rather than
+trusting cycle 70's own report that these "might already exist." Read
+`Coherent.lean` in full (`CoherentIncidence`, `CoherentQuotient`,
+`CoherentQuotientLogicalRetract`,
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`'s exact
+statement and proof) and cycles 76/78's full construction pattern in
+`GraphModel.lean`/`Rationals.lean` as the literal template for what a
+concrete instance needs. Checked cycle 78's own audit
+(`rationalBoundary_eq_nil_iff`, `Rationals.lean`) and `Cycle.lean`'s
+`cycleIncidenceFixed` (the project's one leafless instance) to determine
+precisely which named instances are leafless -- rather than assuming the
+task's own suggested alternative (`finiteIncidence ⊕ rationalIncidence`)
+would obviously work.
+
+Built, in order: `finiteIncidenceSumAtomCoding := finiteIncidenceAtomCoding.sum
+finiteIncidenceAtomCoding` (zero new coding work, reusing cycle 71's
+`finiteIncidenceAtomCoding` on both sides through the pre-existing `.sum`
+combinator), `incidenceSum_finiteIncidence_chainComplexPushoutIncidence`
+(pairing cycle 79's two transport theorems, applied to `finiteIncidence`
+twice), and `incidenceSum_finiteIncidence_coherentIncidence` (pairing the
+above with `finiteIncidenceSumAtomCoding.completeLogic`) -- **the first
+fully combinator-built `CoherentIncidence` instance**, confirming thread
+(1)'s hypothesis positively: `CompletePropositionalInternalLogic` transports
+through `incidenceSum` exactly as smoothly as `BoundarySquareZeroEverywhere`
+did, because `CountableAtomCoding.sum` already existed as a pre-built,
+independently-motivated combinator (not because anything new needed proving
+this cycle).
+
+For thread (2) -- the `CoherentQuotient`/retract layer -- checked the
+faithfulness hypothesis directly rather than assuming cycle 76/78's identity-
+self-quotient recipe would transfer. `finiteIncidence`'s only leaf is `.leaf`
+(`finiteBoundary .leaf = []`, `GraphModel.lean`), so cycle 33's cross-side
+collapse mechanism (`incidenceSum_leaves_collapse`) applies directly:
+`Sum.inl .leaf ≈ Sum.inr .leaf` in `incidenceSum finiteIncidence
+finiteIncidence`, despite these being distinct elements of `FiniteIncidence ⊕
+FiniteIncidence` (`Sum.inl _ ≠ Sum.inr _` unconditionally). So the identity
+self-classification cycles 76/78 used is not merely inconvenient here -- it
+cannot exist, because NO classifier at all can be both `respects`/`reflects`-
+compatible and injective on a non-faithful source. Checked the task's own
+suggested escape hatch (a different factor pair, e.g. `finiteIncidence ⊕
+rationalIncidence`) before giving up on it: `rationalBoundary_eq_nil_iff`
+(`Rationals.lean`, cycle 78) shows `rationalIncidence` ALSO has exactly one
+leaf (`rationalOfInteger 0`), so this pair fails identically, for the same
+reason. Broadened the check to every `BoundarySquareZeroEverywhere`-
+satisfying instance this project has (`finiteIncidence` cycle 76,
+`rationalIncidence`/`realIncidence` cycle 78): all three are "radius-1
+stars" with exactly one leaf, the specific shape
+`boundary_composition_zero_of_leaf_boundary`'s argument needs to terminate.
+The one LEAFLESS instance this project has built, `cycleIncidenceFixed`
+(cycle 27), already has a proven concrete counterexample to
+`BoundarySquareZeroEverywhere` in `Cycle.lean`
+(`boundary_composition cycleIncidenceFixed idx CycleId.c0 CycleId.c2 ≠ 0`).
+So no currently-known pair of `BoundarySquareZeroEverywhere`-satisfying
+factors can supply the leafless side cycle 35's faithfulness-transport
+theorem needs -- this is a genuine structural tension between the two halves
+of `CoherentIncidence`, not a gap in this cycle's search.
+
+Proved this precisely rather than leaving it as a hand-wavy stop: built
+`incidenceSum_not_bisim_faithful_of_both_have_leaf` (a general theorem: any
+two factors with a leaf on each side make the sum non-faithful, generalizing
+cycle 33's `incidenceSum_leaves_cross_natIncidence` beyond one instance), then
+`incidenceSum_no_coherentQuotientLogicalRetract_of_both_have_leaf` (combining
+the above with `coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`,
+whose iff holds for ANY quotient/classifier a `CoherentQuotient` could pick --
+not just the identity one -- so no cleverer choice of `Q` routes around the
+obstruction), and finally the concrete instantiation
+`incidenceSum_finiteIncidence_no_coherentQuotientLogicalRetract`, ruling out a
+`CoherentQuotientLogicalRetract` on `incidenceSum_finiteIncidence_coherentIncidence`
+for every possible quotient, not merely the one construction attempted.
+
+One genuine Lean elaboration gotcha hit while stating the concrete negative
+corollary, worth recording: `CoherentQuotientLogicalRetract quotient`'s
+implicit `{I R T Q : Type u}` failed to elaborate ("typeclass instance
+problem is stuck ... DecidableEq ?m.1") when `I`/`R`/`T` were fixed to the
+concrete, non-universe-polymorphic types `FiniteIncidence`/`GraphRole`/
+`GraphType` (all literally `Type`, not `Type u`) while the corollary's own
+`Q` was left `{Q : Type u}` -- mixing a genuinely universe-polymorphic
+binder with concrete `Type 0` arguments left a universe metavariable
+unresolved before instance search ran. Isolated via a minimal scratch
+reproduction (confirmed the SAME abstract shape works fine when `I R T Q`
+are ALL left as abstract `{... : Type u}` binders, or when `Q` is narrowed to
+plain `{Q : Type}` to match `I R T`'s concrete level) before concluding it
+was a universe issue rather than a mistake in the surrounding argument;
+fixed by stating `Q : Type` in the concrete corollary.
+
+**Result**: **thread (1) confirmed positively -- `CompletePropositionalInternalLogic`
+transports through `incidenceSum` via the pre-existing `CountableAtomCoding.sum`,
+yielding `incidenceSum_finiteIncidence_coherentIncidence`, the first fully
+combinator-built `CoherentIncidence` instance in this project's history.
+Thread (2) is a genuine, precisely-located negative: NO `CoherentQuotientLogicalRetract`
+exists for this instance, on ANY quotient, proved generally
+(`incidenceSum_no_coherentQuotientLogicalRetract_of_both_have_leaf`) rather
+than merely unattempted.** Six new declarations in `Sum.lean`
+(`finiteIncidenceSumAtomCoding`, `incidenceSum_finiteIncidence_chainComplexPushoutIncidence`,
+`incidenceSum_finiteIncidence_coherentIncidence`,
+`coherentIncidence_has_combinatorBuilt_carrier_model`,
+`incidenceSum_not_bisim_faithful_of_both_have_leaf`,
+`incidenceSum_no_coherentQuotientLogicalRetract_of_both_have_leaf`,
+`incidenceSum_finiteIncidence_no_coherentQuotientLogicalRetract` -- seven,
+correcting the count), all type-check; `./verify.sh` (clean `lake clean &&
+lake build`, example run, repo-wide `axiom`/`sorry`/`sorryAx` grep) passes
+end to end. A scratch `lake env lean` check (deleted after use) confirmed
+`#print axioms` on all seven: the five not touching the retract layer
+(`finiteIncidenceSumAtomCoding` through
+`incidenceSum_not_bisim_faithful_of_both_have_leaf`) depend on only
+`[propext, Quot.sound]`; the two negative theorems about
+`CoherentQuotientLogicalRetract`
+(`incidenceSum_no_coherentQuotientLogicalRetract_of_both_have_leaf`,
+`incidenceSum_finiteIncidence_no_coherentQuotientLogicalRetract`) depend on
+`[propext, Classical.choice, Quot.sound]` (routing through
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`'s own
+`Classical.choice` use) -- this project's standing baseline throughout
+cycles 68-79, no new axiom of any kind.
+
+**Synthesis**: this cycle closes cycle 79's thread (1) with a genuinely mixed
+but precisely-characterized result, not a clean "yes" or "no" -- exactly the
+kind of finding this project's culture (cycles 38-40, 45-79) treats as fully
+legitimate. The `ChainComplexPushoutIncidence`/`completeLogic` half of
+`CoherentIncidence` transports through `incidenceSum` completely for free
+(both cycle 79's transport theorem and a pre-existing `CountableAtomCoding.sum`
+combinator this cycle merely had to locate, not build), delivering the first
+combinator-built `CoherentIncidence` instance this project has ever produced.
+But the SECOND half -- the `CoherentQuotient`/retract/Heyting-isomorphism
+layer that made cycles 76/78's `finiteIncidence`/`rationalIncidence`
+constructions the project's "strongest bridge" -- is now known to be
+categorically UNREACHABLE via `incidenceSum` for any pairing of this
+project's currently-known `BoundarySquareZeroEverywhere`-satisfying
+instances, for a structural reason that generalizes past this specific pair:
+every known instance satisfying `BoundarySquareZeroEverywhere` does so BY
+BEING a radius-1 star around a single leaf (the mechanism
+`boundary_composition_zero_of_leaf_boundary` needs), and `incidenceSum`
+always collapses any two same-side-or-cross-side leaves into one
+bisimulation class (cycle 33) -- so pairing any two such instances
+necessarily breaks faithfulness, and a non-faithful source can never admit a
+`CoherentQuotientLogicalRetract` on any quotient at all (a fact intrinsic to
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`, independent
+of how cleverly the quotient is chosen). This means the task's own suggested
+escape hatch (try a different, possibly-leafless factor) is not merely
+unexplored but genuinely closed for every instance this project has built so
+far: the ONLY leafless instance (`cycleIncidenceFixed`) fails
+`BoundarySquareZeroEverywhere` itself, so it can never even enter a
+`CoherentIncidence` combinator construction in the first place. Reaching a
+combinator-built instance with the FULL Heyting-isomorphism chain would need
+a genuinely NEW instance this project has not yet built -- one that is BOTH
+leafless AND satisfies `BoundarySquareZeroEverywhere` by some mechanism other
+than leaf-termination (plausible in principle, since chain-complex ∂²=0 can
+hold via algebraic cancellation rather than termination, but no such instance
+exists in this codebase today). This does not move item 7's existing
+percentage figures (main body L57-58: incidence/resonance ~90%, internal
+logic ~90%, translation/preservation layer ~85%) -- the internal-logic leg
+gained a genuine new *kind* of instance (combinator-built rather than
+per-carrier) but not a new capability beyond what cycles 76/78 already
+established, and the retract-layer negative, while now general rather than
+ad hoc, was already implicit in cycles 33/35's transport asymmetry.
+
+**Next hypothesis (cycle 81, not yet attempted)**: three threads are open.
+(1) Does `incidenceProd` fare any better than `incidenceSum` for the
+Heyting-isomorphism-completing layer, given cycle 32's UNCONDITIONAL
+faithfulness transport (no leafless-side hypothesis needed at all, unlike
+`incidenceSum`)? The obstruction this cycle found is specific to
+`incidenceSum`'s leaf-collapse mechanism -- `incidenceProd finiteIncidence
+finiteIncidence` might be fully faithful for free via cycle 32's
+`incidenceProd_faithful_of_faithful`, which would let the `CoherentQuotient`/
+retract layer close immediately IF `incidenceProd` also inherited
+`ChainComplexPushoutIncidence`. But cycle 79 already proved the opposite:
+`incidenceProd_not_boundarySquareZeroEverywhere_of_single_link_star` shows
+`incidenceProd finiteIncidence finiteIncidence` FAILS `BoundarySquareZeroEverywhere`
+outright -- so `incidenceProd` cannot even reach `CoherentIncidence` in the
+first place for this factor pair. This makes the two constructors'
+`CoherentIncidence`-completability a real, currently-unproven-either-way
+question worth stating precisely rather than assuming symmetric failure:
+`incidenceSum` reaches `CoherentIncidence` but not the retract;
+`incidenceProd` may reach the retract (if faithful) but not
+`CoherentIncidence` itself -- an exact converse trade-off, if confirmed, that
+would be a clean, notable capstone to the cycles 32/33/35/36/79/80
+combinator-asymmetry thread. (2) Whether an instance that is BOTH leafless
+AND satisfies `BoundarySquareZeroEverywhere` (via algebraic cancellation
+rather than leaf-termination) can be built at all in this project's
+framework -- a genuinely new instance-construction question, not a
+combinator-transport one, that this cycle's synthesis newly identifies as
+the precise missing piece for ANY combinator-built instance to ever reach
+the full Heyting-isomorphism chain via `incidenceSum`. (3) Cycle 78's still-
+open thread: a weaker `CoherentIncidence` variant relaxing `completeLogic` to
+a per-query shape, that might support `realIncidence` despite its
+uncountability.

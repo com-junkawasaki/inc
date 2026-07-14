@@ -3372,3 +3372,77 @@ per-instance 証明なしに）到達可能になった——本 project 初の�
 残しており、項目7の記述（「部分完了」）とパーセンテージ（本文57-58行目、
 incidence/resonance 約90%、内部論理約90%、翻訳・保存層約85%）は本追補でも
 動かさない（`RESEARCH_LOG.md` cycle 79 の Next hypothesis 参照）。
+
+## 2026-07-14 追補（cycle 80: 本 project 初の combinator-built
+`CoherentIncidence` インスタンス達成、ただし Heyting 同型層は
+`incidenceSum` では構造的に到達不能と一般証明）
+
+本追補は `RESEARCH_LOG.md` cycle 80 の結果を反映する。cycle 79 が引き継いだ
+スレッド (1)——`CoherentIncidence` の残るフィールド `completeLogic`
+（`CompletePropositionalInternalLogic`）が `BoundarySquareZeroEverywhere`
+と同様に `incidenceSum` を通じて transport するか——を検証した。
+
+**前半（肯定的結果）**: `Logic.lean` を精読し、`CountableAtomCoding.sum`
+（cycle 70 の `.ofQuotient` の姉妹コンビネータ）が本cycle以前から既に
+存在する（`countablyPresentedIncidenceSum` の `atoms` フィールド用に
+built 済み、`Nat` の偶奇でタグ分けする素朴だが正しいコーディング）ことを
+grep で確認した（存在を仮定せず）。これと cycle 79 の transport 定理
+（`incidenceSum_finiteIncidence_boundarySquareZeroEverywhere`、
+`sumGluePushoutSpec`）を組み合わせ、`incidenceSum_finiteIncidence_coherentIncidence`
+——本 project 史上初の、**combinator のみから組み立てられた
+`CoherentIncidence` インスタンス**（cycle 76/78 の `finiteIncidence`/
+`rationalIncidence` はいずれも carrier 固有の手書き証明）を構築した。
+新規の証明は一切不要——既存の2つの transport 経路を組み合わせるだけで
+到達した。
+
+**後半（一般化された否定的結果）**: `CoherentQuotient`/
+`CoherentQuotientLogicalRetract`/Heyting 同型層は、`finiteIncidence` の
+唯一の leaf（`.leaf`）により cycle 33 の cross-side collapse（`Sum.inl
+.leaf ≈ Sum.inr .leaf`）が発生するため到達不能であることを確認した。
+task が提案した代替 factor 対（`finiteIncidence ⊕ rationalIncidence`）も
+検証したが、`rationalIncidence`（cycle 78, `rationalBoundary_eq_nil_iff`）
+も唯一の leaf（`rationalOfInteger 0`）を持つため同一の理由で失敗する。
+この project が持つ `BoundarySquareZeroEverywhere` 充足インスタンス
+（`finiteIncidence`/`rationalIncidence`/`realIncidence`）は全て「leaf 1個の
+radius-1 star」形であり、唯一の leafless インスタンス
+（`cycleIncidenceFixed`、cycle 27）は逆に `BoundarySquareZeroEverywhere`
+自体の反例が既に証明済み（`Cycle.lean`）——つまり **この project が現在
+持つどの2インスタンスの組でも `incidenceSum` 経由で Heyting 同型層まで
+到達することは構造的に不可能**である。この事実は個別インスタンスの
+話に留めず、一般定理として証明した
+（`incidenceSum_no_coherentQuotientLogicalRetract_of_both_have_leaf`:
+両 factor が leaf を持てば、どの `Q`/分類子を選んだ `CoherentQuotient`
+であっても `CoherentQuotientLogicalRetract` は存在しない——
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful` が
+quotient の選び方に依らず source 自体の bisimulation-faithfulness と
+同値であるため、より賢い quotient の選択でも回避できない）。
+
+新設は `Sum.lean` 7件（`finiteIncidenceSumAtomCoding`、
+`incidenceSum_finiteIncidence_chainComplexPushoutIncidence`、
+`incidenceSum_finiteIncidence_coherentIncidence`、
+`coherentIncidence_has_combinatorBuilt_carrier_model`、
+`incidenceSum_not_bisim_faithful_of_both_have_leaf`、
+`incidenceSum_no_coherentQuotientLogicalRetract_of_both_have_leaf`、
+`incidenceSum_finiteIncidence_no_coherentQuotientLogicalRetract`）、全て
+型検査を通過し、`./verify.sh`（`lake clean && lake build` を含む完全
+リビルド、実行例、`axiom`/`sorry`/`sorryAx` の全木 grep）はクリーンに
+通過した。scratch `lake env lean` 検査（使用後削除）で確認: 5件は
+`[propext, Quot.sound]` のみ、retract 層に触れる2件
+（`_of_both_have_leaf`/`_no_coherentQuotientLogicalRetract`）は
+`[propext, Classical.choice, Quot.sound]`——cycle 68-79 の標準ベース
+ラインどおり、新規 axiom は一切なし。
+
+この結果は項目7の評価を変えない：内部論理脚は「combinator から
+組み立てられた」という新しい**種類**のインスタンスを獲得したが、
+cycle 76/78 が既に確立した能力を超えるものではなく、retract 層の否定的
+結果も cycle 33/35 の transport 非対称性から既に推論可能だった内容を
+一般定理として確定させたに留まる。したがって本文57-58行目の記述
+（incidence/resonance 約90%、内部論理約90%、翻訳・保存層約85%）は本追補
+でも動かさない。次の cycle 候補として、`incidenceProd`（cycle 32 により
+無条件で faithfulness を transport するが、cycle 79 により
+`BoundarySquareZeroEverywhere` 自体を落とすことが判明済み）が逆の
+trade-off を持つかどうかの確認、および「leafless かつ
+`BoundarySquareZeroEverywhere` を満たす」インスタンスがこの project の
+枠組みで構築可能かという、combinator-transport ではなくインスタンス
+構築そのものの問いが残る（`RESEARCH_LOG.md` cycle 80 の Next hypothesis
+参照）。
