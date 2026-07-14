@@ -9930,3 +9930,239 @@ the full Heyting-isomorphism chain via `incidenceSum`. (3) Cycle 78's still-
 open thread: a weaker `CoherentIncidence` variant relaxing `completeLogic` to
 a per-query shape, that might support `realIncidence` despite its
 uncountability.
+
+## Cycle 81
+
+**Hypothesis**: per cycle 80's queued thread (1), the primary target: does
+`incidenceProd` fare oppositely from `incidenceSum` at the
+`CoherentIncidence`/retract layer, exactly mirroring but inverting cycle
+80's finding? Cycle 32 already proved `incidenceProd` transports
+faithfulness UNCONDITIONALLY (no leafless-side hypothesis, unlike
+`incidenceSum`'s cycle 35 conditional); cycle 79 already separately proved
+`incidenceProd finiteIncidence finiteIncidence` FAILS
+`BoundarySquareZeroEverywhere` outright. The task was not to re-derive
+either fact but to CONFIRM, as one explicit rigorous construction rather
+than an assumed inference from the two separate pieces, that
+`incidenceProd`'s faithfulness-transport genuinely combines with a concrete
+factor pair to satisfy the retract-eligibility criterion
+(`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`'s
+hypothesis), while checking -- not assuming -- that `CoherentIncidence`'s
+OTHER required field (`completeLogic`) isn't hiding a second, unrelated
+obstruction alongside `boundary_square_zero`. Secondary, time-permitting:
+briefly scope (not build) cycle 80's thread (2), whether a leafless
+instance satisfying `BoundarySquareZeroEverywhere` via genuine algebraic
+cancellation (rather than leaf-termination) could exist in this project's
+framework at all.
+
+**Method**: read `Product.lean`'s cycle 32 theorem
+(`incidenceProd_faithful_of_faithful`, L487-497) and cycle 79 theorem
+(`incidenceProd_not_boundarySquareZeroEverywhere_of_single_link_star`,
+L693-785, plus its `finiteIncidence` instantiation
+`incidenceProd_finiteIncidence_not_boundarySquareZeroEverywhere`, L796-805)
+in full, confirming exactly which hypotheses each needs (cycle 32: none
+beyond the two factors' own faithfulness; cycle 79: a "single nonzero link
+to a leaf" shape on both factors, satisfied by `finiteIncidence` at
+`.root`/`.leaf`). Read `Coherent.lean` in full rather than just the one
+named theorem: `CoherentIncidence` (L70-72) bundles `chainPushout :
+ChainComplexPushoutIncidence I R T` and `completeLogic :
+CompletePropositionalInternalLogic I` as its only two fields, and
+`ChainComplexPushoutIncidence` (`IncidenceTheory.lean` L2050-2053) bundles
+`boundary_square_zero : BoundarySquareZeroEverywhere inc` as a literal
+field alongside `inc`/`glue_pushout` -- this is the concrete mechanism by
+which cycle 79's negative theorem forecloses `CoherentIncidence`
+construction entirely, not merely makes some later step harder: any
+attempt to supply `coherent.chainPushout.boundary_square_zero` for
+`coherent.chainPushout.inc = incidenceProd finiteIncidence finiteIncidence`
+IS a term of the negated proposition cycle 79 proved. Read
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful` (L489-499)
+and `CoherentQuotient`'s full field list (L185-198) to confirm its
+hypothesis is exactly `∀ {left right}, approxBisim source.chainPushout.inc
+left right → left = right` -- nothing in `CoherentQuotient`'s own fields
+(`target`, `boundary_preserves`, `type_preserves`, `glue_preserves`)
+mentions `completeLogic` directly (only `target : CoherentIncidence Q R T`
+requires ITS OWN `completeLogic` for `Q`, supplied by whatever `quotient`
+value is given as a hypothesis, not something the capstone theorem needs
+to construct itself) -- ruling out the task's flagged risk that the
+retract-eligibility criterion might secretly need something from
+`completeLogic` beyond what cycle 32's faithfulness already supplies.
+Cross-checked whether `completeLogic` itself could still be an
+UNRELATED second obstruction for this exact carrier (a possibility cycle
+79/80's framing didn't rule out for `incidenceProd` specifically, even
+though cycle 80 confirmed it transports fine for `incidenceSum`): grepped
+`Logic.lean`'s `CountableAtomCoding.prod` (L5155-5165), confirmed
+pre-existing (built alongside `.sum`, used elsewhere in `GraphModel.lean`
+L744-745 for an unrelated triple-coding, not previously applied to
+`FiniteIncidence × FiniteIncidence` itself) and unconditional -- no
+leafless/faithfulness hypothesis of any kind, unlike `boundary_square_zero`.
+
+Built four declarations in `Product.lean`, in dependency order: (1)
+`finiteIncidenceProdAtomCoding := finiteIncidenceAtomCoding.prod
+finiteIncidenceAtomCoding` and `finiteIncidenceProdCompleteLogic :=
+finiteIncidenceProdAtomCoding.completeLogic`, confirming `completeLogic`
+transports for free (zero new proof content, mirroring cycle 80's
+`finiteIncidenceSumAtomCoding` exactly) -- settling that `completeLogic` is
+NOT part of the obstruction. (2)
+`incidenceProd_finiteIncidence_bisim_faithful`, the concrete instantiation
+of cycle 32's general theorem against `finiteIncidence_approxBisim_iff_eq`
+(cycle 73) on both factors, stated as the full iff (mirroring the existing
+`natIncidence × natIncidence` `example` at L502-504 but for the
+`BoundarySquareZeroEverywhere`-failing factor). (3)
+`incidenceProd_finiteIncidence_no_coherentIncidence`: for ANY `coherent :
+CoherentIncidence (FiniteIncidence × FiniteIncidence) (GraphRole ⊕
+GraphRole) (GraphType × GraphType)`, `coherent.chainPushout.inc ≠
+incidenceProd finiteIncidence finiteIncidence` -- one line
+(`rw [← hinc]; exact coherent.chainPushout.boundary_square_zero`) feeding
+cycle 79's negative straight through the field projection, making the
+"opposite end of the chain" location precise at the type level rather than
+left as prose. (4) The capstone,
+`incidenceProd_finiteIncidence_retract_of_hypothetical_source`: takes as
+hypotheses a `source : CoherentIncidence ...` and `hsource :
+source.chainPushout.inc = incidenceProd finiteIncidence finiteIncidence`
+(exactly what (3) proves can never be discharged) plus an arbitrary
+`quotient : CoherentQuotient (Q := Q) source`, and derives `Nonempty
+(CoherentQuotientLogicalRetract quotient)` via
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`'s `.mpr`
+fed by (2) (after `rw [hsource] at hbisim`) -- deliberately checked that
+this proof never touches (3) or derives `False` from `hsource` anywhere, so
+it is a genuine, non-vacuous witness that retract-eligibility holds
+whenever the (unreachable) premise is granted, not a disguised
+`False.elim`. Hit one universe-elaboration decision point cycle 80 already
+flagged (mixing a universe-polymorphic `{Q : Type u}` with concrete
+`Type`-level `I R T` can stick typeclass search on a metavariable): stated
+`{Q : Type}` directly in the capstone theorem's binder from the start
+(rather than discovering the same gotcha fresh), and it elaborated cleanly
+on the first attempt.
+
+For the secondary thread, re-examined `single_link_composition_ne_zero`
+(the cycle 9 theorem cycle 79 itself cites as the general "no cancellation"
+fact for single-face chains) to check precisely how much ground it covers:
+its proof reduces `boundary_composition` at a single-link pair to a bare
+product of two nonzero signed values (`Int.mul_ne_zero`), with no `List`
+fold of more than one nonzero term at all -- meaning it rules out cycle 80's
+target (leafless + `BoundarySquareZeroEverywhere` via cancellation) for
+EVERY single-face-per-element instance in this project, cyclic or acyclic,
+`cycleIncidence`/`cycleIncidenceFixed` included, not merely the acyclic
+chains it was originally built to refute (cycle 26 confirms `cycleIncidence`
+is exactly single-face-per-element). Checked `prodBoundary`'s shape again
+under this lens: it is the ONLY construction in this project's current
+toolkit producing a genuine multi-term `boundary_composition` sum
+(branching boundaries reconverging on a shared target), and cycle 79
+diagnosed exactly why it doesn't cancel (`sign := e.sign` copied verbatim
+on both tagged halves, no Koszul-style parity flip).
+
+**Result**: **the primary hypothesis is confirmed precisely, as an explicit
+construction rather than an unverified inference, and the task's flagged
+risk (a hidden `completeLogic` obstruction) is ruled out.**
+`incidenceProd_finiteIncidence_bisim_faithful` confirms the
+retract-eligibility criterion's hypothesis holds unconditionally for
+`incidenceProd finiteIncidence finiteIncidence`.
+`incidenceProd_finiteIncidence_no_coherentIncidence` confirms the chain is
+foreclosed strictly earlier, at `ChainComplexPushoutIncidence`'s
+`boundary_square_zero` field, before `CoherentQuotient`/the retract
+criterion can even be stated for this instance.
+`incidenceProd_finiteIncidence_retract_of_hypothetical_source` is the
+capstone connecting them: GRANTING the (separately-proved-impossible)
+premise, the retract exists unconditionally for any quotient, via a proof
+that never appeals to that impossibility -- a genuine confirmation that
+`incidenceProd`'s obstruction sits at the OPPOSITE end of the
+`CoherentIncidence`→retract chain from `incidenceSum`'s (cycle 80:
+source reachable, retract blocked; this cycle: retract would be
+unconditional, source unreachable).
+`finiteIncidenceProdAtomCoding`/`finiteIncidenceProdCompleteLogic` confirm
+`completeLogic` is fully constructible for this exact carrier with zero new
+proof content, so the block really is confined to `boundary_square_zero`
+alone, exactly as hypothesized, not a two-obstruction situation the task
+was right to ask about checking rather than assuming. Five new declarations
+in `Product.lean`, all type-checking on the first `lake build` attempt
+(no intermediate `sorry` needed at any point); `#print axioms` (scratch
+`lake env lean` check, file deleted after use) confirms
+`incidenceProd_finiteIncidence_bisim_faithful`,
+`incidenceProd_finiteIncidence_no_coherentIncidence`,
+`finiteIncidenceProdAtomCoding`, and `finiteIncidenceProdCompleteLogic` all
+depend on only `[propext, Quot.sound]`;
+`incidenceProd_finiteIncidence_retract_of_hypothetical_source` depends on
+`[propext, Classical.choice, Quot.sound]` (routing through
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`'s own
+`Classical.choice` use, per `CoherentQuotientLogicalRetract.of_source_bisim_faithful`)
+-- exactly this project's cycles 68-80 standing baseline, no new axiom of
+any kind. `./verify.sh` (`lake clean && lake build`, full rebuild across
+all 62 jobs, example execution, repo-wide `axiom`/`sorry`/`sorryAx` grep)
+passes end to end.
+
+The secondary thread yields a genuine, if partial, scoping refinement of
+cycle 80's open question, not a construction: `single_link_composition_ne_zero`'s
+proof shape shows leaflessness alone was never going to be enough --
+EVERY single-face-per-element instance (leafless or not, cyclic or not)
+fails `BoundarySquareZeroEverywhere` for the same reason (a bare product of
+two nonzero values, no sum to cancel within). A genuinely
+algebraically-cancelling instance therefore needs BRANCHING boundaries
+(≥2 entries reconverging on a shared target) to get a multi-term sum at
+all -- and `incidenceProd`'s box product is the only construction in this
+project's current toolkit with that shape, but it fails to cancel for lack
+of a Koszul-style sign flip (cycle 79). This sharpens cycle 80's open
+question into a concrete, still-unattempted construction target: a
+Koszul-sign-graded VARIANT of `incidenceProd` (flipping the sign on one
+tagged half by the parity of some notion of "degree") is the one plausible
+route this project's toolkit suggests -- but building it would need (a) a
+degree/grading notion `Incidence` does not currently carry as a field, (b)
+a new combinator (not a transport theorem on the existing one), and (c) a
+fresh check that the sign flip doesn't break any of the OTHER six
+`Incidence` obligations, and that the resulting instance is still leafless.
+This is a genuinely open, non-trivial construction task, correctly scoped
+this cycle rather than attempted -- consistent with the task's own
+instruction to treat it as exploratory only.
+
+**Synthesis**: this cycle closes the primary capstone item of the
+cycles 32/33/35/36/79/80/81 sum/product asymmetry thread with a precise,
+doubly-checked confirmation rather than a repeat of an already-known
+inference: `incidenceSum` reaches `CoherentIncidence` (both fields
+transport, cycle 79/80) but is then blocked at the
+`CoherentQuotient`/retract layer by cross-side leaf collapse (cycle 80);
+`incidenceProd` would clear the retract layer unconditionally and for free
+(this cycle, both halves of `CoherentIncidence`'s remaining obligations
+checked, not just `chainPushout`) but never reaches `CoherentIncidence` in
+the first place, blocked strictly at `boundary_square_zero` (cycle 79).
+The two combinators are now confirmed, not merely conjectured, to fail at
+literally opposite ends of the same four-stage chain
+(`ChainComplexPushoutIncidence` obligations → `completeLogic` →
+`CoherentQuotient` → `CoherentQuotientLogicalRetract`), for two
+structurally unrelated reasons (a relational leaf-collapse for the sum, an
+arithmetic Koszul-sign-shaped non-cancellation for the product) -- a clean,
+symmetric-opposite capstone, exactly what cycle 80 hypothesized and asked
+this cycle to verify rather than assume. This does not move item 7's
+existing percentage figures (main body L57-58: incidence/resonance ~90%,
+internal logic ~90%, translation/preservation layer ~85%): no new
+capability was added beyond what cycles 76-80 already established, only a
+precise confirmation of a structural relationship between two already-known
+results, plus a ruled-out risk (`completeLogic` was checked and is not a
+second obstruction). The secondary scoping is a genuine, if modest, forward
+step on cycle 80's remaining open question: it does not build the missing
+instance, but it narrows "does a leafless+cancelling instance exist" down
+to a specific, well-characterized construction target (a Koszul-sign
+`incidenceProd` variant) rather than leaving it as an unscoped open
+question, and honestly flags that this is a NEW combinator-construction
+task, not a transport-checking one -- a different kind of work than any of
+cycles 76-81 did.
+
+**Next hypothesis (cycle 82, not yet attempted)**: the cycles 32-81
+sum/product transport-asymmetry thread is now genuinely closed as a
+transport-checking program -- both combinators' full four-stage behavior
+(`ChainComplexPushoutIncidence`, `completeLogic`, `CoherentQuotient`,
+`CoherentQuotientLogicalRetract`) is now mapped precisely for both
+`incidenceSum` and `incidenceProd`, with no open transport question
+remaining for either. Two directions are visible, of different character:
+(1) the secondary thread's concrete target -- attempt (or further scope) a
+Koszul-sign-graded variant of `incidenceProd` (a new combinator, requiring
+a degree/grading notion this project's `Incidence` interface does not yet
+have as a field), to determine whether a genuinely algebraically-cancelling
+leafless instance is buildable at all; this is a real construction
+project, not a quick transport check, so it may warrant its own dedicated
+scoping cycle before an implementation attempt. (2) pivot away from the
+sum/product thread entirely and return to cycle 80's thread (3)/cycle 78's
+still-open thread: a weaker `CoherentIncidence` variant relaxing
+`completeLogic` to a per-query shape, that might support `realIncidence`
+despite its uncountability -- this has been queued since cycle 78 and
+deferred at every subsequent cycle (79, 80) in favor of the sum/product
+thread, which is now closed. Recommendation: (2) is likely the better use
+of a cycle unless there is specific appetite for the more open-ended
+grading-combinator construction of (1).

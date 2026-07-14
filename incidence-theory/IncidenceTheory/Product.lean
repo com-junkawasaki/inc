@@ -804,4 +804,162 @@ theorem incidenceProd_finiteIncidence_not_boundarySquareZeroEverywhere :
     (e2 := { i := .leaf, role := .src, sign := .pos, mult := 1, mult_pos := by omega })
     rfl rfl (by decide) rfl
 
+/- Research cycle 81 (see RESEARCH_LOG.md): cycle 80 closed the
+   `incidenceSum` side of the sum/product asymmetry thread (cycles
+   32/33/35/36/79/80) with a precise negative -- `incidenceSum` reaches
+   `CoherentIncidence` but the retract/Heyting-isomorphism layer is
+   categorically unreachable, because every `BoundarySquareZeroEverywhere`-
+   satisfying instance in this project is a one-leaf "star" and `incidenceSum`
+   always collapses cross-side leaves. Cycle 80 queued the converse question
+   as the natural capstone: `incidenceProd` transports faithfulness
+   UNCONDITIONALLY (cycle 32, no "leafless side" hypothesis needed, unlike
+   `incidenceSum`'s cycle 35 conditional), so if `incidenceProd` also reached
+   `ChainComplexPushoutIncidence`, the retract layer would close immediately.
+   But cycle 79 already separately proved the opposite blocking fact:
+   `incidenceProd finiteIncidence finiteIncidence` FAILS
+   `BoundarySquareZeroEverywhere` outright
+   (`incidenceProd_finiteIncidence_not_boundarySquareZeroEverywhere`, just
+   above). The task this cycle set out to do was CONFIRM this precise
+   converse relationship rigorously, not merely infer it from the two
+   separately-proved pieces: verify that cycle 32's faithfulness-transport
+   genuinely combines with a concrete factor pair to satisfy the
+   retract-eligibility criterion
+   (`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`, whose
+   hypothesis is exactly `∀ {left right}, approxBisim source.chainPushout.inc
+   left right → left = right`), while the SEPARATE `boundary_square_zero`
+   field is what genuinely blocks the chain from ever reaching that
+   criterion's statement in the first place -- and to check, rather than
+   assume, that `CoherentIncidence`'s OTHER required field
+   (`completeLogic`) is not hiding a second obstruction alongside
+   `boundary_square_zero`.
+
+   `finiteIncidenceProdAtomCoding`/`finiteIncidenceProdCompleteLogic` settle
+   the `completeLogic` question first: `Logic.lean`'s `CountableAtomCoding.prod`
+   (used by cycle 80 for `.sum`, confirmed pre-existing rather than newly
+   built there) pairs `finiteIncidenceAtomCoding` with itself exactly as
+   `.sum` did, producing a genuine `CompletePropositionalInternalLogic
+   (FiniteIncidence × FiniteIncidence)` with zero new proof content -- so
+   `completeLogic` transports through `incidenceProd finiteIncidence
+   finiteIncidence` just as cleanly as it did through the sum (cycle 80
+   thread 1). This rules out the task's flagged risk: the block is not a
+   `completeLogic` subtlety, it really is `boundary_square_zero` alone.
+
+   `incidenceProd_finiteIncidence_bisim_faithful` is the concrete
+   instantiation of cycle 32's `incidenceProd_faithful_of_faithful` against
+   `finiteIncidence_approxBisim_iff_eq` (cycle 73) applied to both factors --
+   `incidenceProd finiteIncidence finiteIncidence`'s bisimulation genuinely
+   is `=`, unconditionally, mirroring the `natIncidence × natIncidence`
+   instantiation already in this file (L502-504) but for the factor whose
+   product fails `BoundarySquareZeroEverywhere`.
+
+   `incidenceProd_finiteIncidence_no_coherentIncidence` makes the blocking
+   fact precise at the level `CoherentIncidence` itself is stated: since
+   `ChainComplexPushoutIncidence` bundles `boundary_square_zero :
+   BoundarySquareZeroEverywhere inc` as a literal field
+   (`IncidenceTheory.lean` L2050-2053), no `coherent : CoherentIncidence
+   (FiniteIncidence × FiniteIncidence) (GraphRole ⊕ GraphRole) (GraphType ×
+   GraphType)` can have `coherent.chainPushout.inc = incidenceProd
+   finiteIncidence finiteIncidence` -- attempting to supply one immediately
+   yields a term of the negated proposition cycle 79 already proved. This is
+   the precise sense in which `incidenceProd`'s obstruction sits at the
+   OPPOSITE end of the chain from `incidenceSum`'s: `incidenceSum`'s source
+   is a genuine, constructible `CoherentIncidence`
+   (`incidenceSum_finiteIncidence_coherentIncidence`, `Sum.lean` cycle 80)
+   and the retract fails afterward; `incidenceProd`'s source cannot even be
+   packaged as a `CoherentIncidence` in the first place.
+
+   `incidenceProd_finiteIncidence_retract_of_hypothetical_source` is the
+   capstone: it grants, as a hypothesis, exactly the thing
+   `incidenceProd_finiteIncidence_no_coherentIncidence` proves is
+   unsatisfiable (a `source : CoherentIncidence ...` whose
+   `chainPushout.inc` equals `incidenceProd finiteIncidence finiteIncidence`)
+   and, under that counterfactual alone, derives
+   `Nonempty (CoherentQuotientLogicalRetract quotient)` for ANY
+   `CoherentQuotient` of it -- using only
+   `coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`'s `.mpr`
+   fed by `incidenceProd_finiteIncidence_bisim_faithful`, exactly the shape
+   cycles 76/78's `finiteCoherentQuotientLogicalRetract`/
+   `rationalCoherentQuotientLogicalRetract` used. This is not a vacuous
+   `False.elim` dressed up as a theorem: its proof never uses
+   `incidenceProd_finiteIncidence_no_coherentIncidence` or any contradiction
+   from `hsource`, only genuine faithfulness -- so it is a real witness that
+   the retract-eligibility criterion's hypothesis holds for this instance,
+   independently of the fact (proved separately, one theorem above) that its
+   own premise can never be discharged. Together the two theorems confirm,
+   rather than merely infer, cycle 80's queued converse: `incidenceProd`
+   would clear the retract/Heyting-isomorphism layer with no further work
+   needed IF it could reach `CoherentIncidence` at all, but it cannot, for a
+   reason entirely confined to `boundary_square_zero` -- the exact mirror
+   image of `incidenceSum`'s "reaches `CoherentIncidence`, blocked at the
+   retract" shape. -/
+
+/-- `completeLogic` transports through `incidenceProd` exactly as cleanly as
+cycle 80 found for `incidenceSum`: `CountableAtomCoding.prod` (pre-existing,
+`Logic.lean`) pairs `finiteIncidenceAtomCoding` with itself, needing no new
+proof content. Confirms `completeLogic` is NOT part of the obstruction. -/
+noncomputable def finiteIncidenceProdAtomCoding :
+    CountableAtomCoding (FiniteIncidence × FiniteIncidence) :=
+  finiteIncidenceAtomCoding.prod finiteIncidenceAtomCoding
+
+/-- A genuine `CompletePropositionalInternalLogic (FiniteIncidence ×
+FiniteIncidence)`, built from `finiteIncidenceProdAtomCoding` alone -- the
+`completeLogic` field a `CoherentIncidence` on this carrier would need is
+fully constructible; only `boundary_square_zero` is not. -/
+noncomputable def finiteIncidenceProdCompleteLogic :
+    CompletePropositionalInternalLogic (FiniteIncidence × FiniteIncidence) :=
+  finiteIncidenceProdAtomCoding.completeLogic
+
+/-- Concrete instantiation of cycle 32's `incidenceProd_faithful_of_faithful`
+against `finiteIncidence_approxBisim_iff_eq` (cycle 73) on both factors:
+`incidenceProd finiteIncidence finiteIncidence`'s bisimulation is exactly
+`=`, unconditionally -- the retract-eligibility criterion's hypothesis,
+verified directly rather than left as an inference from the general
+theorem. -/
+theorem incidenceProd_finiteIncidence_bisim_faithful :
+    ∀ p q : FiniteIncidence × FiniteIncidence,
+      approxBisim (incidenceProd finiteIncidence finiteIncidence) p q ↔ p = q :=
+  incidenceProd_faithful_of_faithful finiteIncidence finiteIncidence
+    finiteIncidence_approxBisim_iff_eq finiteIncidence_approxBisim_iff_eq
+
+/-- The precise location of the block: `ChainComplexPushoutIncidence`
+bundles `boundary_square_zero : BoundarySquareZeroEverywhere inc` as a
+literal field, so no `CoherentIncidence` on this carrier can have
+`incidenceProd finiteIncidence finiteIncidence` as its underlying incidence
+-- attempting to supply one directly contradicts cycle 79's negative
+theorem. This is the opposite end of the chain from `incidenceSum`'s
+obstruction: there the source is constructible and the retract fails;
+here the source itself cannot be constructed. -/
+theorem incidenceProd_finiteIncidence_no_coherentIncidence
+    (coherent : CoherentIncidence (FiniteIncidence × FiniteIncidence)
+      (GraphRole ⊕ GraphRole) (GraphType × GraphType))
+    (hinc : coherent.chainPushout.inc = incidenceProd finiteIncidence finiteIncidence) :
+    False := by
+  apply incidenceProd_finiteIncidence_not_boundarySquareZeroEverywhere
+  rw [← hinc]
+  exact coherent.chainPushout.boundary_square_zero
+
+/-- The capstone: GRANTING, purely hypothetically, that a `source :
+CoherentIncidence ...` with `incidenceProd finiteIncidence finiteIncidence`
+as its underlying incidence existed (impossible per
+`incidenceProd_finiteIncidence_no_coherentIncidence` above), the
+retract-eligibility criterion is satisfied unconditionally for ANY
+`CoherentQuotient` of it, via cycle 32's faithfulness alone -- the proof
+below never invokes the impossibility of `hsource`, only genuine
+faithfulness, so this is a real confirmation that `incidenceProd`'s
+faithfulness-transport combines with retract-eligibility, not a vacuous
+`False.elim` in disguise. Confirms cycle 80's queued converse precisely:
+`incidenceProd` is blocked at the OPPOSITE end of the
+`CoherentIncidence`/retract chain from `incidenceSum`. -/
+theorem incidenceProd_finiteIncidence_retract_of_hypothetical_source
+    {Q : Type} [DecidableEq Q]
+    (source : CoherentIncidence (FiniteIncidence × FiniteIncidence)
+      (GraphRole ⊕ GraphRole) (GraphType × GraphType))
+    (hsource : source.chainPushout.inc = incidenceProd finiteIncidence finiteIncidence)
+    (quotient : CoherentQuotient (Q := Q) source) :
+    Nonempty (CoherentQuotientLogicalRetract quotient) := by
+  apply (coherentQuotient_has_logicalRetract_iff_source_bisim_faithful quotient).mpr
+  intro left right hbisim
+  rw [hsource] at hbisim
+  exact (incidenceProd_finiteIncidence_bisim_faithful left right).mp hbisim
+
 end IncidenceCore

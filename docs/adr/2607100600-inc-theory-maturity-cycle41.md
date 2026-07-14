@@ -3446,3 +3446,97 @@ trade-off を持つかどうかの確認、および「leafless かつ
 枠組みで構築可能かという、combinator-transport ではなくインスタンス
 構築そのものの問いが残る（`RESEARCH_LOG.md` cycle 80 の Next hypothesis
 参照）。
+
+## 2026-07-14 追補（cycle 81: `incidenceSum`/`incidenceProd` 非対称性スレッド
+（cycle 32/33/35/36/79/80）の capstone——`incidenceProd` は retract 層を
+無条件でクリアするが `CoherentIncidence` 自体に到達できない、という
+「逆側で詰まる」構造を厳密に確認し、`completeLogic` が隠れた第二の障害
+ではないことも確認。スレッドを transport-checking プログラムとして
+一旦クローズ）
+
+本追補は `RESEARCH_LOG.md` cycle 81 の結果を反映する。cycle 80 が
+capstone 候補として名指ししたスレッド (1)——`incidenceProd` は cycle 32 の
+無条件 faithfulness-transport により retract 層を無償でクリアするはずだが、
+cycle 79 は `incidenceProd finiteIncidence finiteIncidence` が
+`BoundarySquareZeroEverywhere` 自体で落ちることを既に証明済み——という
+「逆側で詰まる」正確な関係を、2つの既存事実からの推論のまま残さず、
+明示的な構築として検証した。あわせて、`CoherentIncidence` のもう一方の
+必須フィールド `completeLogic` が、`incidenceProd` に固有の未検証の
+第二障害を隠していないかも仮定せず確認した。
+
+`Coherent.lean` を精読し、`ChainComplexPushoutIncidence`
+（`IncidenceTheory.lean` L2050-2053）が `boundary_square_zero :
+BoundarySquareZeroEverywhere inc` を `inc`/`glue_pushout` と並ぶ**そのまま
+の field** として束ねていることを確認した——これが cycle 79 の否定的定理を
+「後段のどこかを難しくする」話ではなく「`CoherentIncidence` の構築自体を
+封鎖する」話にする具体的機構である。`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`
+と `CoherentQuotient` の全フィールド列（L185-198）も精読し、retract-eligibility
+の前提が `completeLogic` に一切依存しないこと（`CoherentQuotient` 自身の
+フィールドは `target`/`boundary_preserves`/`type_preserves`/`glue_preserves`
+のみで、`completeLogic` は `target : CoherentIncidence Q R T` 経由で
+quotient 側にのみ必要——今回の capstone 定理は `quotient` を仮説として
+受け取るだけで自分で構築しないため無関係）を確認した。念のため
+`completeLogic` 自体が `incidenceProd` 固有の別障害でないかも独立に検証:
+`Logic.lean` の `CountableAtomCoding.prod`（cycle 80 が `.sum` について
+確認したのと同じく既存、`GraphModel.lean` の無関係な triple-coding 用途で
+既に使われていた）は無条件（leafless 等の前提なし）で
+`FiniteIncidence × FiniteIncidence` を coding できることを確認した。
+
+`Product.lean` に5件新設した:
+(1) `finiteIncidenceProdAtomCoding`/`finiteIncidenceProdCompleteLogic`——
+`completeLogic` が新規証明ゼロで transport することの具体的確認（cycle 80
+の `finiteIncidenceSumAtomCoding` と同型）。(2)
+`incidenceProd_finiteIncidence_bisim_faithful`——cycle 32 の一般定理を
+`finiteIncidence_approxBisim_iff_eq`（cycle 73）に具体化した iff、
+L502-504 の `natIncidence × natIncidence` の `example` と同型だが
+`BoundarySquareZeroEverywhere` が落ちる factor に対して。(3)
+`incidenceProd_finiteIncidence_no_coherentIncidence`——任意の `coherent :
+CoherentIncidence (FiniteIncidence × FiniteIncidence) ...` について
+`coherent.chainPushout.inc ≠ incidenceProd finiteIncidence finiteIncidence`、
+cycle 79 の否定的定理を型レベルの field 射影に直結させ、「逆側で詰まる」
+所在を散文でなく定理として確定。(4) capstone
+`incidenceProd_finiteIncidence_retract_of_hypothetical_source`——
+（(3) により決して充足され得ない）`source`/`hsource` を仮説として与え、
+任意の `CoherentQuotient` に対し `Nonempty (CoherentQuotientLogicalRetract
+quotient)` を、(2) を `coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`
+の `.mpr` に通すだけで導く。この証明が `hsource` の非充足可能性
+（(3)）を一切経由しないことを確認済み——見せかけの `False.elim` ではなく、
+retract-eligibility が genuinely 成立することの実証。
+
+全5件が初回 `lake build` で型検査を通過し、scratch `lake env lean`
+確認（使用後削除）では4件が `[propext, Quot.sound]` のみ、capstone
+（`Classical.choice` を使う `coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`
+経由）が `[propext, Classical.choice, Quot.sound]`——cycle 68-80 の
+標準ベースラインどおり新規 axiom なし。`./verify.sh`（`lake clean && lake
+build` を含む全62ジョブの完全リビルド、実行例、
+`axiom`/`sorry`/`sorryAx` の全木 grep）はクリーンに通過した。
+
+副次スレッド（leafless かつ代数的相殺で `BoundarySquareZeroEverywhere`
+を満たすインスタンスの探索、cycle 80 の thread 2）は構築ではなく
+scoping に留めた: `single_link_composition_ne_zero`（cycle 9）の証明形が
+「単一リンクの合成は2つの非零値の単純積で、相殺しうる複数項の和に
+そもそもならない」ことを示すため、leafless か否かに関わらず
+single-face-per-element の instance（`cycleIncidence`/`cycleIncidenceFixed`
+含む）は全て同じ理由で `BoundarySquareZeroEverywhere` に失敗すると判明——
+真に代数的な相殺には分岐する境界（複数リンクが1点に収束する形）が必須で、
+この project の現行 toolkit で複数項の和になる構成は `incidenceProd` の
+box product だけだが、これは cycle 79 が診断した通り Koszul 符号の欠如で
+相殺しない。次の具体的な構築候補は `incidenceProd` の
+Koszul-符号版バリアント（degree の偶奇でどちらかの tagged half の符号を
+反転する新しい combinator）だが、これには `Incidence` が現在持たない
+degree/grading の notion が要る——本cycleでは構築せず、次点候補として
+明示するに留めた。
+
+この結果は項目7の記述（本文57-58行目、incidence/resonance 約90%、内部
+論理約90%、翻訳・保存層約85%）を動かさない——新しい能力ではなく、
+cycle 76-80 が既に確立した2つの結果の正確な関係の確認と、想定されうる
+リスク（`completeLogic` の隠れた障害）の排除に留まる。ただし cycles
+32/33/35/36/79/80/81 にわたる sum/product 非対称性スレッドは、
+transport-checking のプログラムとしては本cycleで一旦クローズしたと
+判断する——次の cycle 候補は、(1) 副次スレッドの Koszul-符号
+combinator 構築（新しい construction project、transport 確認とは
+性質が異なる）と、(2) cycle 78 以来 cycle 79/80 で繰り返し後回しにして
+きた「`completeLogic` を per-query 形に弱めた `CoherentIncidence`
+variant で `realIncidence` の非可算性を回避できるか」の再開——後者を
+より妥当な選択として推奨する（`RESEARCH_LOG.md` cycle 81 の Next
+hypothesis 参照）。
