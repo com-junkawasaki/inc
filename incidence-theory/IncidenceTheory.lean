@@ -6557,6 +6557,51 @@ theorem single_link_composition_ne_zero {I R T : Type u} [DecidableEq I]
   simp only [Int.zero_add, hBij, hBjk]
   exact Int.mul_ne_zero (by omega) (Int.mul_ne_zero hne1 hne2)
 
+/- Research cycle 77 (see RESEARCH_LOG.md): cycle 76's own queued hypothesis
+   asked whether ONE general theorem could settle `BoundarySquareZeroEverywhere`
+   for `integerIncidence`/`rationalIncidence`/`realIncidence` at once, framing
+   all three as sharing `natIncidence`'s "unbounded chain" shape. Close
+   reading of `Integers.lean`/`Rationals.lean`/`Reals.lean` (rather than
+   assuming the framing) shows it is only half right: `integerIncidence`
+   genuinely has two `natIncidence`-shaped single-face chains (the positive
+   successor chain `0 ← 1 ← 2 ← ...` embedded via `.ofNat`, mirrored by a
+   negative predecessor chain `0 ← -1 ← -2 ← ...` via `.negSucc`), so the
+   SAME `single_link_composition_ne_zero` (cycle 9) that refutes
+   `natIncidence` applies to it directly. But `rationalIncidence`/
+   `realIncidence` are NOT chains at all: every nonzero value's boundary is a
+   single endpoint pointing directly at the zero element
+   (`rationalEndpoint`/`realEndpoint`), and the zero element's own boundary is
+   empty -- a radius-1 "star", structurally identical to `finiteIncidence`'s
+   `root → leaf` shape (cycle 76), not to `natIncidence`'s unbounded descent.
+   So no single "unbounded chain ⟹ ∂² ≠ 0" theorem can cover all three,
+   because two of them are not unbounded chains to begin with -- they fall
+   under the OPPOSITE existing general theorem
+   (`boundary_composition_zero_of_leaf_boundary`, cycle 10 below) and
+   actually SATISFY `BoundarySquareZeroEverywhere` (see
+   `rationalIncidence_boundarySquareZeroEverywhere`/
+   `realIncidence_boundarySquareZeroEverywhere`, `Rationals.lean`/
+   `Reals.lean`). What DOES generalize cleanly, and had never been packaged
+   before this cycle, is the missing link from `single_link_composition_ne_zero`
+   to `BoundarySquareZeroEverywhere` itself: every prior single-face-chain
+   countermodel in this project (`natIncidence` via a raw `decide` over
+   `natIdx6`, `altIncidence`, `cycleIncidence`) re-derived this contrapositive
+   step ad hoc rather than stating it once. Packaged here so
+   `integerIncidence`'s countermodel (`Integers.lean`) and a fresh
+   re-derivation of `natIncidence`'s (`Peano.lean`) both instantiate it
+   directly instead of repeating cycle 8/9's `decide`-based argument. -/
+theorem not_boundarySquareZeroEverywhere_of_single_link_chain
+  {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) (idx : List I)
+  (i j k : I) (e1 e2 : Endpoint I R)
+  (hb1 : inc.boundary i = [e1]) (he1i : e1.i = j) (he1s : e1.sign ≠ Sign.zero)
+  (hb2 : inc.boundary j = [e2]) (he2i : e2.i = k) (he2s : e2.sign ≠ Sign.zero)
+  (hi : i ∈ idx) (hj : j ∈ idx) (hk : k ∈ idx) :
+  ¬ BoundarySquareZeroEverywhere inc := by
+  intro hall
+  have hzero := hall idx i k hi hk
+  change boundary_composition inc idx i k = 0 at hzero
+  exact single_link_composition_ne_zero inc idx i j k e1 e2
+    hb1 he1i he1s hb2 he2i he2s hj hzero
+
 /- Research cycle 10 (see RESEARCH_LOG.md): cycle 9 proved single-face
    chains can *never* satisfy ∂²=0. This is the converse-flavored
    question: what *is* a sufficient condition? Answer: if `i`'s boundary

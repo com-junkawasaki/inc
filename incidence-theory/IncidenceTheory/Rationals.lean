@@ -1803,4 +1803,35 @@ theorem rationalNegation_incidenceLeafEntails_iff
   rationalNegationBoundaryShapeTranslation.toIncidenceBoundaryObservationEmbedding.leafEntails_iff
     context formula
 
+/- Research cycle 77 (see RESEARCH_LOG.md): cycle 76 hypothesized
+   `rationalIncidence` would need a `natIncidence`-style "unbounded chain"
+   countermodel to refute `BoundarySquareZeroEverywhere`, the same as
+   `integerIncidence` (see `Integers.lean`). Checked directly against
+   `rationalBoundary`'s actual definition rather than assumed: it is NOT a
+   chain at all. Every nonzero `value`'s sole boundary endpoint
+   (`rationalEndpoint value`) points directly at `rationalOfInteger 0`, and
+   `rationalOfInteger 0` is itself the unique leaf
+   (`rationalBoundary_eq_nil_iff`) -- a radius-1 "star", structurally
+   identical to `finiteIncidence`'s `root → leaf` shape (cycle 76's
+   `finiteIncidence_boundarySquareZeroEverywhere`), not to `natIncidence`'s
+   unbounded descent. So every element's boundary reaches only leaves, and
+   the existing general theorem `boundary_composition_zero_of_leaf_boundary`
+   (root file, cycle 10) applies uniformly. Contrary to cycle 76's working
+   hypothesis, `rationalIncidence` in fact SATISFIES
+   `BoundarySquareZeroEverywhere` -- the opposite conclusion from
+   `integerIncidence`'s countermodel, despite both instances sharing the
+   same underlying carrier construction up to this point in the file. -/
+theorem rationalIncidence_boundarySquareZeroEverywhere :
+    BoundarySquareZeroEverywhere rationalIncidence := by
+  intro idx i k _hi _hk
+  show boundary_composition rationalIncidence idx i k = 0
+  apply boundary_composition_zero_of_leaf_boundary
+  intro e he
+  by_cases hz : i = rationalOfInteger 0
+  · simp [rationalIncidence, rationalBoundary, hz] at he
+  · have heq : e = rationalEndpoint i := by
+      simpa [rationalIncidence, rationalBoundary, hz] using he
+    subst heq
+    simp [rationalEndpoint, rationalIncidence, rationalBoundary]
+
 end IncidenceCore

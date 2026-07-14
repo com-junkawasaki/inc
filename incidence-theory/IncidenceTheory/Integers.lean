@@ -595,4 +595,43 @@ theorem integerNegation_incidenceLeafEntails_iff
   integerNegationBoundaryShapeTranslation.toIncidenceBoundaryObservationEmbedding.leafEntails_iff
     context formula
 
+/- Research cycle 77 (see RESEARCH_LOG.md): cycle 76 flagged
+   `BoundarySquareZeroEverywhere` as the sole remaining obstruction to
+   instantiating `CoherentIncidence` on `integerIncidence`, and hypothesized
+   it would fail for the same "unbounded chain" reason `natIncidence` does.
+   Checked directly rather than assumed: `integerIncidence`'s positive side
+   IS literally `natIncidence`'s chain re-embedded via `.ofNat`
+   (`integerBoundary_ofNat_succ` has the identical shape as `peanoBoundary`'s
+   successor case), so the same chain link `2 ← 1 ← 0` cycle 8/9 used for
+   `natIncidence` witnesses the failure here too -- via the newly packaged
+   general theorem `not_boundarySquareZeroEverywhere_of_single_link_chain`
+   (root file) rather than a fresh `decide`-based countermodel. -/
+theorem integerIncidence_not_boundarySquareZeroEverywhere :
+    ¬ BoundarySquareZeroEverywhere integerIncidence :=
+  not_boundarySquareZeroEverywhere_of_single_link_chain integerIncidence
+    [(2 : Int), 1, 0] 2 1 0
+    (positiveIntegerEndpoint 1) (positiveIntegerEndpoint 0)
+    (by simpa using integerBoundary_ofNat_succ 1) rfl (by decide)
+    (by simpa using integerBoundary_ofNat_succ 0) rfl (by decide)
+    (by decide) (by decide) (by decide)
+
+/- The mirror-image witness on the negative side: `integerIncidence`'s
+   negative chain `0 ← -1 ← -2 ← ...` (`integerBoundary_negSucc`,
+   `negativeIntegerEndpoint`) has exactly the same single-face shape, so the
+   same general theorem applies to the chain link `-2 ← -1 ← 0`. This is a
+   SECOND, independent witness to the same conclusion
+   (`integerIncidence_not_boundarySquareZeroEverywhere` above already
+   suffices on its own) -- recorded to confirm `integerIncidence`'s
+   "two-directional unboundedness" is genuinely symmetric, not just
+   positive-side, before concluding anything about which structural shape is
+   doing the work. -/
+theorem integerIncidence_not_boundarySquareZeroEverywhere_negative_chain :
+    ¬ BoundarySquareZeroEverywhere integerIncidence :=
+  not_boundarySquareZeroEverywhere_of_single_link_chain integerIncidence
+    [(-2 : Int), -1, 0] (-2) (-1) 0
+    (negativeIntegerEndpoint 1) (negativeIntegerEndpoint 0)
+    (by simpa using integerBoundary_negSucc 1) rfl (by decide)
+    (by simpa using integerBoundary_negSucc 0) rfl (by decide)
+    (by decide) (by decide) (by decide)
+
 end IncidenceCore

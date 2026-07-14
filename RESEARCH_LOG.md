@@ -9154,3 +9154,172 @@ than three separate ad hoc countermodels? Either a clean general negative
 theorem or, if one of the three surprises by satisfying it, a second
 non-trivial `CoherentIncidence` instance would both be genuine progress on
 item 7's strongest bridge.
+
+## Cycle 77
+
+**Hypothesis**: per cycle 76's queued next-hypothesis, determine whether
+`integerIncidence`/`rationalIncidence`/`realIncidence` genuinely share
+`natIncidence`'s "unbounded chain" structural shape that makes its
+`BoundarySquareZeroEverywhere` countermodel work, and if so, prove ONE
+general theorem covering all three at once rather than three separate ad hoc
+countermodels (following `Peano.lean`'s existing `natIncidence` negative
+proof as the template for what a per-instance countermodel looks like if
+unification fails). Going in, the working assumption inherited from cycle 76
+was that all three would fail for the same reason `natIncidence` does.
+
+**Method**: read `Peano.lean`'s existing
+`natIncidence_not_boundarySquareZeroEverywhere` (L368-374) in full, together
+with cycle 8/9's original commentary above it, to see precisely what it
+exploits: `natIdx6 = [0..5]`, `i = 2`, `k = 0`, and the raw witness
+`natIncidence_boundary_composition_witness : boundary_composition
+natIncidence natIdx6 2 0 = 1`, checked by `decide` rather than derived from
+any general lemma. Grepped the whole root file for anything more general
+already covering this shape, and found two pre-existing cycle-9/10-era
+theorems that predate this project's own awareness of them being relevant
+here: `single_link_composition_ne_zero` (root file L6525-6558, cycle 9 --
+"no choice of nonzero signs on a single-face chain can make two consecutive
+links compose to zero," fully general over any `Incidence`, needing only
+`i`'s boundary to be the nonzero-signed singleton `[e1]` targeting `j`, and
+`j`'s boundary the nonzero-signed singleton `[e2]` targeting `k`, with `j ∈
+idx`) and `boundary_composition_zero_of_leaf_boundary` (root file L6654-6665,
+cycle 10 -- the exact converse: if `i`'s boundary reaches only leaves, ∂²
+vanishes at `i` unconditionally). Cycle 76 had already reused the cycle-10
+theorem for `finiteIncidence`'s *positive* result; the cycle-9 theorem had
+been reused for `altIncidence`/`cycleIncidence` but never connected, as a
+named corollary, to `BoundarySquareZeroEverywhere` itself -- every existing
+negative instance (`natIncidence` included) re-derived that connective step
+ad hoc.
+
+Read `integerIncidence`'s actual `boundary` (`Integers.lean` L23-27,
+`integerBoundary`) rather than assuming it mirrors `natIncidence`: for
+`n : Nat`, `integerBoundary (Int.ofNat (n+1)) = [positiveIntegerEndpoint n]`
+(`.i = Int.ofNat n`, sign `neg`) and `integerBoundary (Int.negSucc n) =
+[negativeIntegerEndpoint n]` (`.i = Int.negSucc (n-1)` or `0` at `n = 0`,
+sign `neg`) -- literally `natIncidence`'s single-face successor chain,
+duplicated once via `.ofNat` for the positive side and once via `.negSucc`
+for the negative side, glued at `0`. This is exactly the cycle-9 single-face
+shape, twice over.
+
+Read `rationalIncidence`'s and `realIncidence`'s actual `boundary`
+(`Rationals.lean` L1290-1292 `rationalBoundary`; `Reals.lean` L624-625
+`realBoundary`) with the same "read before assuming" discipline, expecting
+another chain. Found the opposite: `rationalBoundary value = if value =
+rationalOfInteger 0 then [] else [rationalEndpoint value]`, where
+`rationalEndpoint value` always targets `rationalOfInteger 0` itself --
+*every* nonzero rational's boundary reaches the SAME single leaf directly,
+never a predecessor with its own further boundary. `realBoundary`/
+`realEndpoint`/`realZero` are definitionally identical in shape. This is not
+a chain at all; it is the exact radius-1 "star" shape cycle 76 found for
+`finiteIncidence`'s `root → leaf`, just with every nonzero element playing
+`root`'s role simultaneously and `0` playing `leaf`'s.
+
+Packaged the missing connective step once, in the root file, as
+`not_boundarySquareZeroEverywhere_of_single_link_chain`: given `i`'s
+boundary is `[e1]` targeting `j` (nonzero sign), `j`'s boundary is `[e2]`
+targeting `k` (nonzero sign), and `i, j, k ∈ idx`, concludes `¬
+BoundarySquareZeroEverywhere inc` by applying `hall idx i k` to get
+`boundary_composition inc idx i k = 0`, contradicting
+`single_link_composition_ne_zero`'s `≠ 0`. Instantiated it three times: (1)
+`natIncidence_not_boundarySquareZeroEverywhere_via_single_link` (`Peano.lean`),
+reusing the identical chain link `2 ← 1 ← 0` cycle 8/9 already found, as an
+independent re-derivation of the existing `decide`-based result -- to
+confirm the generalization actually reconstructs cycle 8/9's countermodel
+rather than merely resembling it; (2)
+`integerIncidence_not_boundarySquareZeroEverywhere` (`Integers.lean`), same
+chain link embedded via `.ofNat`; (3)
+`integerIncidence_not_boundarySquareZeroEverywhere_negative_chain`
+(`Integers.lean`), the mirror-image witness on the `.negSucc` side (`-2 ← -1
+← 0`), recorded as a second independent witness to confirm the "two
+directions" really are symmetric rather than trusting the `.ofNat` case
+alone to represent both. Then, separately, instantiated the cycle-10
+leaf-boundary theorem for the star-shaped instances:
+`rationalIncidence_boundarySquareZeroEverywhere` (`Rationals.lean`) and
+`realIncidence_boundarySquareZeroEverywhere` (`Reals.lean`), each by
+`by_cases value = 0`/`= rationalOfInteger 0`/`= realZero`, mirroring the
+existing `rationalBoundary_decreases`/`realBoundary_decreases` case-split
+already in each file rather than inventing a new proof shape.
+
+**Result**: **the "one general theorem for all three" hypothesis is only
+half right, for a real structural reason, not a proof-effort shortfall: two
+distinct existing general theorems (cycle 9 and cycle 10), each already
+proved before this cycle, together settle all three instances with zero new
+countermodel-search, but they split the three into two families rather than
+unifying them into one.** `integerIncidence` genuinely fails
+`BoundarySquareZeroEverywhere` (two independent witnesses, positive and
+negative chain) via the SAME theorem that (newly) re-derives `natIncidence`'s
+failure. `rationalIncidence` and `realIncidence` instead SATISFY
+`BoundarySquareZeroEverywhere` unconditionally, via the cycle-10 theorem --
+the opposite conclusion from what cycle 76's carried-over framing expected.
+Six new declarations, all type-check on the first `lake build` attempt after
+the initial edit-and-build cycle for each file; `./verify.sh` (clean `lake
+clean && lake build`, example run, repo-wide `axiom`/`sorry`/`sorryAx` grep)
+passes end to end. A scratch `lake env lean` check (`AxiomCheckCycle77.lean`,
+deleted after use) confirmed `#print axioms` on all six new declarations:
+all depend on exactly `[propext, Classical.choice, Quot.sound]` -- the same
+standing baseline as cycles 68-76, no new axiom of any kind (the
+`Classical.choice` dependency is inherited transitively rather than
+introduced by these proofs themselves, which are otherwise elementary
+`rfl`/`decide`/case-split arguments).
+
+**Synthesis**: cycle 76's own framing -- carried over verbatim into this
+cycle's starting hypothesis -- assumed `integerIncidence`/
+`rationalIncidence`/`realIncidence` would need the same treatment
+`natIncidence` did, because all three are "unbounded" in the sense of having
+infinitely many distinct elements. Checking the actual `boundary` fields
+directly (rather than reasoning from carrier cardinality) shows
+"unbounded carrier" and "unbounded chain" are not the same property:
+`integerIncidence` really does have an unbounded *chain* (each element's
+boundary reaches another element with its own nonempty further boundary,
+without limit), which is what `single_link_composition_ne_zero` needs and
+what actually drives `natIncidence`'s failure -- but `rationalIncidence`/
+`realIncidence`, despite having unbounded (indeed uncountable, for
+`IncReal`) carriers, have boundary structures of bounded DEPTH: every
+nonzero element is exactly one step from the unique leaf `0`, no matter how
+large or how densely packed the carrier is. Depth, not cardinality, is what
+`BoundarySquareZeroEverywhere` actually tracks, and this project's five
+concrete instances now populate both sides of that distinction with checked
+(not assumed) examples: bounded-depth (`finiteIncidence` cycle 76,
+`rationalIncidence`/`realIncidence` this cycle) satisfies it; unbounded-depth
+single-face chains (`natIncidence`, `integerIncidence`) refute it. This also
+means a single uniform "unbounded chain ⟹ ∂² ≠ 0" theorem parametrized only
+by carrier size, as cycle 76's framing speculated, could never have been the
+right generalization no matter how it was phrased -- the honest unification
+is at the level of the two EXISTING opposite-polarity theorems (cycle 9 and
+cycle 10), each reused rather than reinvented, not a single new theorem
+spanning both polarities. Combined with cycle 76's `GluePushoutSpec`
+finding (holds generically for any `[DecidableEq I]` instance), this means
+`rationalIncidence` and `realIncidence` now have BOTH
+`ChainComplexPushoutIncidence` obligations available in principle -- the
+same position `finiteIncidence` was in immediately before cycle 76 built its
+full `CoherentIncidence` -- while `integerIncidence` (like `natIncidence`)
+is now confirmed to have no route to `ChainComplexPushoutIncidence` at all
+via this project's current `Incidence` interface. Building the actual
+`ChainComplexPushoutIncidence`/`CoherentIncidence` instances for
+`rationalIncidence`/`realIncidence` is deliberately left to a future cycle
+(scope discipline: this cycle's task was `BoundarySquareZeroEverywhere`
+specifically, and `CompletePropositionalInternalLogic`'s availability for
+`IncRational`/`IncReal` -- cycle 76 used `CountableAtomCoding`, which needs a
+countable atom type, true for `IncRational` but NOT for `IncReal` -- is a
+separate, unchecked question that deserves its own cycle rather than a
+rushed extension of this one).
+
+**Next hypothesis (cycle 78, not yet attempted)**: two threads are now open.
+(1) Build `GluePushoutSpec rationalIncidence`/`GluePushoutSpec realIncidence`
+(mechanical, reusing cycle 76's generic identity-cospan witness verbatim)
+and pair each with this cycle's
+`rationalIncidence_boundarySquareZeroEverywhere`/
+`realIncidence_boundarySquareZeroEverywhere` to obtain
+`ChainComplexPushoutIncidence` for both -- the two structurally-easy
+obligations of `CoherentIncidence` are then both discharged for two more
+concrete instances. (2) The harder, genuinely open question this surfaces:
+does `CompletePropositionalInternalLogic IncRational` exist? `rationalIncidence`'s
+carrier `IncRational` is countable in principle (a quotient of pairs of
+integers), so cycle 71's `CountableAtomCoding`-based route (reused as-is by
+cycle 76 for `finiteIncidence`) is plausible but UNCHECKED -- a genuine
+countability witness for `IncRational` would need to be built or located,
+not assumed from "rationals are countable" folklore. `IncReal` almost
+certainly cannot go this route (the reals are uncountable), so a full
+`CoherentIncidence realIncidence` either needs a different, non-countable
+route to `CompletePropositionalInternalLogic` or may be a genuine dead end
+for this project's current internal-logic layer -- worth stating precisely
+as a negative if so, rather than left unexamined.

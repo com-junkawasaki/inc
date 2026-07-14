@@ -379,6 +379,24 @@ theorem incidence_axioms_do_not_imply_unconditional_boundarySquareZero :
   intro hall
   exact natIncidence_not_boundarySquareZeroEverywhere (hall natIncidence)
 
+/- Research cycle 77 (see RESEARCH_LOG.md): independent re-derivation of the
+   theorem just above, this time via the newly packaged general theorem
+   `not_boundarySquareZeroEverywhere_of_single_link_chain` (root file) rather
+   than a raw `decide` over `natIdx6` -- confirming that cycle 9's
+   `single_link_composition_ne_zero` generalization correctly reconstructs
+   `natIncidence`'s original cycle 8 countermodel as a special case (the same
+   chain link `2 ← 1 ← 0` cycle 8/9 already used). This is the base case the
+   new theorem's `integerIncidence` instantiation (`Integers.lean`) mirrors
+   via `.ofNat`. -/
+theorem natIncidence_not_boundarySquareZeroEverywhere_via_single_link :
+    ¬ BoundarySquareZeroEverywhere natIncidence :=
+  not_boundarySquareZeroEverywhere_of_single_link_chain natIncidence natIdx6 2 1 0
+    { i := 1, role := PeanoRole.pred, sign := Sign.neg, mult := 1 }
+    { i := 0, role := PeanoRole.pred, sign := Sign.neg, mult := 1 }
+    rfl rfl (by decide)
+    rfl rfl (by decide)
+    (by decide) (by decide) (by decide)
+
 /- Research cycle 63 (see RESEARCH_LOG.md): the root file's
    `boundary_operator_square_zero_matrix` recasts ∂² = 0 as `Matrix.mul idx
    (boundaryMatrix inc idx) (boundaryMatrix inc idx) i k = 0`, but keeps the

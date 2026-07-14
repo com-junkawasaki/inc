@@ -8922,4 +8922,37 @@ theorem realNegation_incidenceLeafEntails_iff
   realNegationBoundaryShapeTranslation.toIncidenceBoundaryObservationEmbedding.leafEntails_iff
     context formula
 
+/- Research cycle 77 (see RESEARCH_LOG.md): the same check as
+   `rationalIncidence_boundarySquareZeroEverywhere` (`Rationals.lean`),
+   carried over to `realIncidence` -- cycle 76's working hypothesis was that
+   `integerIncidence`/`rationalIncidence`/`realIncidence` would all need a
+   `natIncidence`-style unbounded-chain countermodel. `realBoundary` is,
+   like `rationalBoundary`, a radius-1 star: every nonzero `value`'s sole
+   boundary endpoint (`realEndpoint value`) points directly at `realZero`,
+   and `realZero` is itself the unique leaf (`realBoundary_eq_nil_iff`). So
+   every element's boundary reaches only leaves, and
+   `boundary_composition_zero_of_leaf_boundary` (root file, cycle 10)
+   applies uniformly -- `realIncidence`, too, SATISFIES
+   `BoundarySquareZeroEverywhere`, the same conclusion as
+   `rationalIncidence` and the opposite of `natIncidence`/
+   `integerIncidence`. Since `realIncidence`'s underlying carrier
+   (`IncReal`, Dedekind cuts of `IncRational`) is a much heavier
+   construction than `rationalIncidence`'s, this is not a foregone
+   conclusion carried over for free -- it is `realBoundary`'s definition
+   (not `IncReal`'s internal Dedekind-cut structure) that determines the
+   answer, and that definition turns out to have exactly the same star
+   shape as the rational case. -/
+theorem realIncidence_boundarySquareZeroEverywhere :
+    BoundarySquareZeroEverywhere realIncidence := by
+  intro idx i k _hi _hk
+  show boundary_composition realIncidence idx i k = 0
+  apply boundary_composition_zero_of_leaf_boundary
+  intro e he
+  by_cases hz : i = realZero
+  · simp [realIncidence, realBoundary, hz] at he
+  · have heq : e = realEndpoint i := by
+      simpa [realIncidence, realBoundary, hz] using he
+    subst heq
+    simp [realEndpoint, realIncidence, realBoundary]
+
 end IncidenceCore

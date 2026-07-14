@@ -3141,3 +3141,68 @@ cycle 76 の Next hypothesis として cycle 77 に引き継がれる:
 残る問いは `integerIncidence`/`rationalIncidence`/`realIncidence` が
 （`natIncidence` と同じ「非有界な鎖」の理由で失敗するか、意外にも
 成功するか）`BoundarySquareZeroEverywhere` を満たすかに一本化される。
+
+## 2026-07-14 追補（cycle 77: `BoundarySquareZeroEverywhere` を
+`integerIncidence`/`rationalIncidence`/`realIncidence` の全てで解決——
+「非有界な鎖」という cycle 76 の想定は3分の1でしか成立せず、残り2つは
+逆に成立することを発見）
+
+本追補は `RESEARCH_LOG.md` cycle 77 の結果を反映する。cycle 76 が引き継いだ
+問い——`natIncidence` の「非有界な鎖」反例が `integerIncidence`/
+`rationalIncidence`/`realIncidence` にも一様に一般化できるか——を、
+各インスタンスの `boundary` 定義を実際に読んでから検証した（carrier の
+濃度から類推せず）。
+
+`integerIncidence`（`Integers.lean`）は `natIncidence` と文字通り同じ
+単一面の鎖構造を、`.ofNat` 側（正の後続鎖）と `.negSucc` 側（負の先行鎖）の
+二重に持つ。既存の cycle 9 期一般定理 `single_link_composition_ne_zero`
+（「単一面の鎖に境界を持つ要素2つが連鎖すれば、符号の選び方に関わらず
+∂² は非零」）がそのまま適用でき、`BoundarySquareZeroEverywhere
+integerIncidence` は（両方向とも独立に）失敗する。
+
+一方 `rationalIncidence`（`Rationals.lean`）と `realIncidence`
+（`Reals.lean`）は、想定に反して鎖構造を持たない: 非零の要素は全て
+「`rationalOfInteger 0`/`realZero` という単一の leaf を直接指す」半径1の
+「星」型であり、cycle 76 が `finiteIncidence` で見出した `root → leaf`
+形状と構造的に同一である。既存の cycle 10 期一般定理
+`boundary_composition_zero_of_leaf_boundary`（「`i` の境界が leaf のみに
+到達するなら ∂² は無条件に消える」）がそのまま適用でき、
+`BoundarySquareZeroEverywhere rationalIncidence`/
+`BoundarySquareZeroEverywhere realIncidence` は（`natIncidence`/
+`integerIncidence` と正反対に）**成立する**。
+
+「一本化できるか」という cycle 76 の問い自体への答えは「一つの新しい
+一般定理」ではなく「2つの既存の一般定理（cycle 9・cycle 10、方向は正反対）
+の再利用で全てが割り切れ、単一の一般化は最初から存在し得なかった」という
+もの——carrier の濃度（可算/非可算/連続体）ではなく境界の「深さ」
+（bounded か unbounded か）が `BoundarySquareZeroEverywhere` を決めることが
+5インスタンス全てで裏付けられた。新設6件
+（`not_boundarySquareZeroEverywhere_of_single_link_chain`（root file、
+cycle9→反証への欠けていた接続を初めて汎用定理として梱包）、
+`natIncidence_not_boundarySquareZeroEverywhere_via_single_link`（`Peano.lean`、
+既存の `decide` 反証を一般定理から独立に再導出し一致を確認）、
+`integerIncidence_not_boundarySquareZeroEverywhere`/
+`_negative_chain`（`Integers.lean`）、
+`rationalIncidence_boundarySquareZeroEverywhere`（`Rationals.lean`）、
+`realIncidence_boundarySquareZeroEverywhere`（`Reals.lean`）) は初回の
+`lake build` で型検査を通過し、`./verify.sh`（`lake clean && lake build`を
+含む完全リビルド、実行例、`axiom`/`sorry`/`sorryAx` の全木 grep）はクリーンに
+通過した。scratch `lake env lean` 検査（使用後削除）で確認: 全6件とも
+`[propext, Classical.choice, Quot.sound]`——cycle 68-76 と同一のベースラインで、
+新規公理は皆無。
+
+この結果は cycle 76 の副産物発見（`GluePushoutSpec` が任意の
+`[DecidableEq I]` インスタンスに無償で成り立つ）と組み合わせると、
+`rationalIncidence`/`realIncidence` は `finiteIncidence` が cycle 76 で
+`CoherentIncidence` を得る直前と同じ位置（`ChainComplexPushoutIncidence`
+の両要件が原理上揃う）に立つ一方、`integerIncidence` は `natIncidence` と
+同様に現行 `Incidence` インターフェース上では `ChainComplexPushoutIncidence`
+への経路がないことが確定した。ただし本サイクルの意図的なスコープは
+`BoundarySquareZeroEverywhere` の解決のみであり、`GluePushoutSpec` の
+`rationalIncidence`/`realIncidence` への具体化、および
+`CompletePropositionalInternalLogic IncRational`/`IncReal` の存否
+（`IncReal` は非可算なので cycle 76 が使った `CountableAtomCoding` 経路は
+そのままでは使えない可能性が高い）は未着手のまま cycle 78 に残す。したがって
+cycle 60-76 の保守的規律を踏襲し、項目7の記述（「部分完了」）とパーセンテージ
+（本文57-58行目、incidence/resonance 約90%、内部論理約90%、翻訳・保存層
+約85%）は本追補でも動かさない。
