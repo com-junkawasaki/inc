@@ -3021,4 +3021,180 @@ theorem finiteBoundaryShapeTranslation_forces_identity
   | leaf => exact finiteBoundaryShapeTranslation_map_leaf translation
   | root => exact finiteBoundaryShapeTranslation_map_root translation
 
+/- Research cycle 76 (see RESEARCH_LOG.md): cycle 75's own scoping found
+`CoherentIncidence`/`CoherentQuotient` (`Coherent.lean`) is the strongest
+existing internal-logic bridge (a full Heyting-algebra isomorphism across a
+bisimulation quotient) but had only ever been instantiated on the trivial
+one-point `Unit` terminal model (`terminalCoherentIncidence` above), and
+flagged `finiteIncidence` as the one candidate structurally analogous to a
+well-founded, boundedly-graded shape (unlike `natIncidence`, proved in
+`Peano.lean` to fail `BoundarySquareZeroEverywhere` for an "unbounded chain"
+reason). This cycle checks, rather than assumes, both of
+`ChainComplexPushoutIncidence`'s obligations for `finiteIncidence`.
+
+`BoundarySquareZeroEverywhere finiteIncidence` holds, and for exactly the
+reason cycle 75 anticipated: `finiteBoundary` gives `leaf` empty boundary and
+`root` a single endpoint pointing at `leaf`, so EVERY element's boundary
+endpoints point only at leaves (vacuously for `leaf`, and directly for
+`root`, whose only endpoint targets the true leaf `leaf`). The existing
+general lemma `boundary_composition_zero_of_leaf_boundary` (root file,
+cycle-10-era: "if `i`'s boundary only reaches leaves, ∂² vanishes at `i`,
+for any index set and any target") therefore applies uniformly to both
+elements, with no need for a fresh countermodel search the way `Peano.lean`
+needed one for `natIncidence`'s genuinely unbounded chain.
+
+`GluePushoutSpec finiteIncidence` also holds, but for a reason not
+anticipated by cycle 75's framing: re-reading `PushoutWitness`'s own field
+list (`IncidenceTheory.lean` L2020-2031) shows `apex : I` is a bare field
+never referenced by `commutes`/`lift`/`lift_inl`/`lift_inr`/`lift_unique`'s
+*types* -- those five fields depend only on `diagram.left`/`diagram.right`
+(via `inl`/`inr`), never on `diagram.a`/`.b`/`.c` either. So a single
+"identity cospan" witness (`diagram i j := ⟨i, j, i, id, id⟩`, paired with
+`inl := inr := id`, `lift := fun leftLeg _ _ => leftLeg`) discharges every
+structural obligation for ANY total pair of legs, and `apex` can then be set
+to whatever `k` the hypothesis `glue i j = some k` supplies, independent of
+the rest of the witness. This is not special to `finiteIncidence`: it works
+for any `Incidence` with `[DecidableEq I]` at all, and retroactively
+explains why `Peano.lean`'s existing `natIncidence` negative proof never
+needed to touch `GluePushoutSpec` -- the obligation was never the blocking
+one for any instance in this project; `BoundarySquareZeroEverywhere` alone
+carries all the content `ChainComplexPushoutIncidence` restricts. Checked
+this reading is not a misparse by compiling the construction below and
+confirming it type-checks against the literal field list, not by assuming
+the structure must be more restrictive than it reads.
+
+With both obligations verified, cycle 75's remaining claims were checked one
+by one rather than trusted: (1) `finiteIncidenceAtomCoding.completeLogic`
+(cycle 71's coding, `CountableAtomCoding.completeLogic`, `Logic.lean`
+L5134-5136) genuinely supplies `CompletePropositionalInternalLogic
+FiniteIncidence` for free -- confirmed by reading `CountableAtomCoding`'s
+definition, not just its name. (2) cycle 73's `finiteIncidence_approxBisim_iff_eq`
+genuinely states bisimulation faithfulness (`approxBisim finiteIncidence i j
+↔ i = j`) in exactly the shape
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful` needs.
+Composing these: `finiteCoherentIncidence` (the full `CoherentIncidence`),
+`finiteCoherentQuotient` (the identity self-quotient -- the only shape
+possible here, since faithful bisimulation forces any compatible classifier
+to be injective, hence essentially the identity, mirroring
+`terminalCoherentQuotient`'s pattern one carrier size up), and
+`finiteCoherentQuotientLogicalRetract` (obtained via
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`'s `.mpr`
+applied to the faithfulness fact, then `Classical.choice`, exactly cycle 75's
+proposed route) all type-check on the first `lake build` attempt, yielding
+`finiteLogicalHeytingIsomorphism : Formula.LogicalHeytingIsomorphism
+FiniteIncidence FiniteIncidence` -- the first instantiation of this
+project's strongest internal-logic bridge on a carrier with more than one
+element. -/
+
+/-- The generic identity-cospan `GluePushoutSpec` witness: for any pair whose
+`glue` result is `k`, the trivial cospan `⟨i, j, i, id, id⟩` together with
+`inl := inr := id` already satisfies every `PushoutWitness` obligation
+(`apex` is unconstrained by the rest of the structure, so it can simply be
+set to `k`). This does not use anything specific to `finiteIncidence`. -/
+def finiteGluePushoutSpec : GluePushoutSpec finiteIncidence where
+  diagram := fun i j => { a := i, b := j, c := i, left := id, right := id }
+  witness := by
+    intro i j k _hglue
+    refine ⟨{ apex := k
+              inl := id
+              inr := id
+              commutes := fun _ => rfl
+              lift := fun leftLeg _ _ => leftLeg
+              lift_inl := fun _ _ _ _ => rfl
+              lift_inr := fun _ _ h x => h x
+              lift_unique := fun _ _ _ _ hl _ => funext hl }, rfl⟩
+
+/-- `finiteIncidence` satisfies the chain-complex law unconditionally: every
+element's boundary reaches only leaves (`leaf` vacuously, `root` because its
+one endpoint targets `leaf`), so `boundary_composition_zero_of_leaf_boundary`
+applies uniformly. -/
+theorem finiteIncidence_boundarySquareZeroEverywhere :
+    BoundarySquareZeroEverywhere finiteIncidence := by
+  intro idx i k _hi _hk
+  show boundary_composition finiteIncidence idx i k = 0
+  apply boundary_composition_zero_of_leaf_boundary
+  intro e he
+  cases i with
+  | leaf => simp [finiteIncidence, finiteBoundary] at he
+  | root =>
+    simp only [finiteIncidence, finiteBoundary, List.mem_singleton] at he
+    subst he
+    simp [finiteIncidence, finiteBoundary]
+
+/-- The strengthened layer is inhabited on `finiteIncidence`: its boundary
+has `∂² = 0` over every finite observation (both structural obligations
+checked above, not assumed), and its gluing has a genuine (if degenerate)
+pushout witness at every glued pair. -/
+def finiteChainComplexPushoutIncidence :
+    ChainComplexPushoutIncidence FiniteIncidence GraphRole GraphType where
+  inc := finiteIncidence
+  boundary_square_zero := finiteIncidence_boundarySquareZeroEverywhere
+  glue_pushout := finiteGluePushoutSpec
+
+noncomputable def finiteCoherentIncidence :
+    CoherentIncidence FiniteIncidence GraphRole GraphType where
+  chainPushout := finiteChainComplexPushoutIncidence
+  completeLogic := finiteIncidenceAtomCoding.completeLogic
+
+theorem coherentIncidence_has_nontrivial_carrier_model :
+    Nonempty (CoherentIncidence FiniteIncidence GraphRole GraphType) :=
+  ⟨finiteCoherentIncidence⟩
+
+/-- The identity self-classification: since `finiteIncidence`'s bisimulation
+is already faithful (`finiteIncidence_approxBisim_iff_eq`, cycle 73), this is
+the only classifier a `CoherentQuotient` on `finiteIncidence` can carry up to
+relabeling (any classifier compatible with `respects`/`reflects` collapses
+exactly as much as `approxBisim` does, which here is nothing). -/
+def finiteQuotientClassification :
+    BisimulationQuotientClassification (Q := FiniteIncidence) finiteIncidence where
+  classify := id
+  respects := fun h => (finiteIncidence_approxBisim_iff_eq _ _).mp h
+  reflects := fun h => by
+    have : (id : FiniteIncidence → FiniteIncidence) _ = id _ := h
+    simp only [id] at this
+    subst this
+    exact approxBisim_refl finiteIncidence _
+  surjective := fun q => ⟨q, rfl⟩
+
+noncomputable def finiteCoherentQuotient :
+    CoherentQuotient (Q := FiniteIncidence) finiteCoherentIncidence where
+  target := finiteCoherentIncidence
+  classification := finiteQuotientClassification
+  boundary_preserves := by
+    intro i
+    cases i with
+    | leaf => rfl
+    | root => rfl
+  type_preserves := by intro i; rfl
+  glue_preserves := by intro i j k hglue; exact hglue
+
+/-- Cycle 73's faithfulness fact, fed through
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`, produces the
+retract "for free" exactly as cycle 75 proposed. -/
+noncomputable def finiteCoherentQuotientLogicalRetract :
+    CoherentQuotientLogicalRetract finiteCoherentQuotient :=
+  Classical.choice
+    ((coherentQuotient_has_logicalRetract_iff_source_bisim_faithful
+        finiteCoherentQuotient).mpr
+      (fun {left right} h => (finiteIncidence_approxBisim_iff_eq left right).mp h))
+
+/-- The headline result: `finiteIncidence`'s internal logic and its
+bisimulation quotient's internal logic are related by a full
+Heyting-algebra isomorphism -- the first instantiation of this bridge on a
+non-trivial (more-than-one-element) concrete carrier. -/
+noncomputable def finiteLogicalHeytingIsomorphism :
+    Formula.LogicalHeytingIsomorphism FiniteIncidence FiniteIncidence :=
+  finiteCoherentQuotient.logicalHeytingIsomorphism finiteCoherentQuotientLogicalRetract
+
+theorem finiteLogicalHeytingIsomorphism_injective :
+    ∀ ⦃left right : Formula.LogicalEquivalenceClass FiniteIncidence⦄,
+      finiteLogicalHeytingIsomorphism.forward left =
+        finiteLogicalHeytingIsomorphism.forward right → left = right :=
+  finiteLogicalHeytingIsomorphism.injective
+
+theorem finiteLogicalHeytingIsomorphism_surjective :
+    ∀ target : Formula.LogicalEquivalenceClass FiniteIncidence,
+      ∃ source, finiteLogicalHeytingIsomorphism.forward source = target :=
+  finiteLogicalHeytingIsomorphism.surjective
+
 end IncidenceCore

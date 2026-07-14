@@ -3063,3 +3063,81 @@ Heyting 代数同型）を無償で導出するのに必要な条件そのもの
 `finiteIncidence` の leaf/root 2段グレーディングが cycle 41 の
 「有界なグレーディングは崩壊を生き延びる」パターンの再来候補として
 最有力だが、成功を前提にはしない）。
+
+## 2026-07-14 追補（cycle 76: `CoherentIncidence` を `finiteIncidence` 上に
+初めて非自明な carrier で具体化——project 最強の内部論理の橋の初の
+non-trivial インスタンス化。副産物として `GluePushoutSpec` が実は
+project 内のどのインスタンスに対しても常に無償で成り立つことを発見）
+
+本追補は `RESEARCH_LOG.md` cycle 76 の結果を反映する。cycle 75 が具体的に
+引き継いだ問い——`finiteIncidence` が `ChainComplexPushoutIncidence` の
+2つの要件 `BoundarySquareZeroEverywhere`/`GluePushoutSpec` を満たすか——を
+仮定せず検証した。
+
+`BoundarySquareZeroEverywhere finiteIncidence` は cycle 75 が予想した
+とおりの構造的理由で成立する: `leaf` は空境界、`root` の唯一の境界エントリは
+`leaf`（真の leaf）を指すため、全要素の境界が leaf のみに到達する
+（cycle-10era の既存補題 `boundary_composition_zero_of_leaf_boundary` が
+そのまま両要素に適用できる）——`natIncidence`（`Peano.lean`）の非有界な鎖と
+対照的な、cycle 41 の `shapeIncidence` と同型の有界グレーディング。
+
+`GluePushoutSpec finiteIncidence` も成立するが、理由は cycle 75 の想定と
+異なっていた: `PushoutWitness` の `apex` フィールドを改めて精読すると、
+`commutes`/`lift`/`lift_inl`/`lift_inr`/`lift_unique` のいずれの型からも
+参照されない、構造的に無制約なフィールドだと判明した（`Cospan` の
+`a`/`b`/`c` も同様にどのフィールドからも参照されない）。したがって
+「恒等 cospan」（`diagram i j := ⟨i, j, i, id, id⟩`、`inl := inr := id`）は
+どんな `i`/`j`/`k` に対しても構造的義務を全て満たし、`apex` は
+`glue i j = some k` が与える `k` へ自由に設定できる。これは
+`finiteIncidence` 固有の性質ではなく `[DecidableEq I]` を持つ任意の
+`Incidence` に対して成り立つ——`Peano.lean` の既存 `natIncidence` 反証が
+`GluePushoutSpec` に一度も触れていない理由を遡って説明する（触れる必要が
+なかった。`BoundarySquareZeroEverywhere` だけが実質的な制約だった）。
+
+両要件の確認後、cycle 75 の「無償」主張も検証した:
+`finiteIncidenceAtomCoding.completeLogic`（cycle 71 の coding を再利用、
+`CountableAtomCoding.completeLogic`、`Logic.lean` L5134-5136）は実際に
+`CompletePropositionalInternalLogic FiniteIncidence` を無償で供給する。
+cycle 73 の `finiteIncidence_approxBisim_iff_eq` は
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful` が
+要求する形そのもの。これらを組み合わせ、`finiteCoherentIncidence`
+（完全な `CoherentIncidence`）・`finiteCoherentQuotient`（恒等自己
+quotient——bisimulation が既に faithful なので、これが唯一可能な形）・
+`finiteCoherentQuotientLogicalRetract`（上記の iff 定理の `.mpr` + 
+`Classical.choice` で無償導出、cycle 75 が提案した経路そのもの）を構築し、
+`finiteLogicalHeytingIsomorphism : Formula.LogicalHeytingIsomorphism
+FiniteIncidence FiniteIncidence` を得た——project 最強の内部論理の橋
+（quotient を跨いだ完全な Heyting 代数同型）の、`Unit` の自明な
+一点 terminal model を超えた初めての具体化。
+
+新設11件（`finiteGluePushoutSpec`、`finiteIncidence_boundarySquareZeroEverywhere`、
+`finiteChainComplexPushoutIncidence`、`finiteCoherentIncidence`、
+`coherentIncidence_has_nontrivial_carrier_model`、
+`finiteQuotientClassification`、`finiteCoherentQuotient`、
+`finiteCoherentQuotientLogicalRetract`、`finiteLogicalHeytingIsomorphism`、
+その2系）は初回の `lake build` で型検査を通過し、`./verify.sh`（`lake
+clean && lake build` を含む完全リビルド、実行例、`axiom`/`sorry`/`sorryAx`
+の全木 grep）はクリーンに通過した。scratch `lake env lean` 検査（使用後
+削除）で確認: `Classical.choice` に触れない7件は `[propext, Quot.sound]`、
+retract 以降の4件は `[propext, Classical.choice, Quot.sound]`——cycle
+68-75 と同一のベースラインで、新規公理は皆無。
+
+この結果は project 最強の内部論理機構を初めて非自明な carrier で動かした
+点で cycle 75 自身が「genuinely larger and more central brick than this
+cycle's own」と評した通りの成果だが、項目7が明示する残課題（resonance
+駆動の生成・合成を内部論理モデルと構成実数解析の両方に一結果で結ぶ単一の
+普遍的解釈定理）にはやはり到達しない——`CoherentIncidence` 機構自体は
+「内部論理」脚の一機構の強化であって、resonance 駆動の生成・合成の脚や
+構成実数解析への接続を新たに提供するものではない。したがって cycle
+60-75 の保守的規律を踏襲し、項目7の記述（「部分完了」）とパーセンテージ
+（本文57-58行目、incidence/resonance 約90%、内部論理約90%、翻訳・
+保存層約85%）は本追補でも動かさない。
+
+副産物として発見した `GluePushoutSpec` の一般的無償性は、`RESEARCH_LOG.md`
+cycle 76 の Next hypothesis として cycle 77 に引き継がれる:
+`natIncidence`/`integerIncidence`/`rationalIncidence`/`realIncidence` も
+同じ恒等 cospan witness で `GluePushoutSpec` 自体は満たすはずなので
+（`natIncidence` は既に `BoundarySquareZeroEverywhere` で反証済みだが）、
+残る問いは `integerIncidence`/`rationalIncidence`/`realIncidence` が
+（`natIncidence` と同じ「非有界な鎖」の理由で失敗するか、意外にも
+成功するか）`BoundarySquareZeroEverywhere` を満たすかに一本化される。

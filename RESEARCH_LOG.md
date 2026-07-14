@@ -8978,3 +8978,179 @@ also extends `BoundaryShapeTranslation`), so it could also be instantiated
 there for a second, unrelated concrete corollary -- available if cycle 76's
 primary `CoherentIncidence` investigation turns out to need a smaller
 consolation brick instead.
+
+## Cycle 76
+
+**Hypothesis**: per cycle 75's own next-hypothesis, **investigate, not
+assume**, whether `finiteIncidence` (`GraphModel.lean`'s concrete `leaf`/`root`
+structure) satisfies `BoundarySquareZeroEverywhere finiteIncidence` and
+`GluePushoutSpec finiteIncidence` -- the two obligations
+`ChainComplexPushoutIncidence` bundles. If both hold, build the full
+`CoherentIncidence FiniteIncidence GraphRole GraphType`, then a
+`CoherentQuotient` on it, then invoke
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful` against
+cycle 73's already-proved bisimulation-faithfulness fact
+(`finiteIncidence_approxBisim_iff_eq`) to obtain a
+`CoherentQuotientLogicalRetract` "for free," yielding the first full
+Heyting-algebra-isomorphism instantiation of `Coherent.lean`'s strongest
+bridge on a non-trivial (more-than-one-element) concrete carrier. If either
+obligation fails, prove the negative concretely, following `Peano.lean`'s
+existing `natIncidence_not_boundarySquareZeroEverywhere` as the template for
+how a clean negative in this project looks.
+
+**Method**: read `Coherent.lean` in full (not grepped fragments) before
+touching any code -- `CoherentIncidence`, `CoherentQuotient`,
+`CoherentQuotientLogicalRetract`, and
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`'s full
+statement and proof. Then read `IncidenceTheory.lean`'s literal definitions
+of `BoundarySquareZeroEverywhere` (L1619-1621), `GluePushoutSpec`
+(L2034-2037), `Cospan`/`PushoutWitness` (L2013-2031), and
+`ChainComplexPushoutIncidence` (L2050-2053) -- the exact hypotheses to check,
+not paraphrases. Then read `GraphModel.lean`'s `finiteBoundary`/`finiteGlue`
+(L92-100) and the existing `terminalIncidencePushoutSpec`/
+`terminalChainComplexPushoutIncidence` construction on `Unit` (L2817-2879) as
+the one existing precedent. Then read `Peano.lean`'s
+`natIncidence_not_boundarySquareZeroEverywhere` (L368-374) as the negative
+template, and `RESEARCH_LOG.md` cycles 73 (full) and 75 (full) for the exact
+faithfulness fact and scoping claims to verify rather than trust.
+
+Checked `BoundarySquareZeroEverywhere finiteIncidence` first, since it is the
+one `Peano.lean` already proves *fails* for `natIncidence`, for an
+"unbounded chain" reason that plausibly does not apply here.
+`finiteBoundary` gives `leaf` empty boundary and `root` exactly one endpoint
+targeting `leaf`. The root file already has a general lemma exactly matching
+this shape, predating this cycle by many (`boundary_composition_zero_of_leaf_boundary`,
+cycle-10-era: "if `i`'s boundary only reaches leaves, ∂² vanishes at `i`, for
+any index set and target"). Checked its hypothesis against both elements: for
+`leaf` it holds vacuously (empty boundary, nothing to check); for `root` it
+holds directly, since `root`'s one endpoint targets `leaf`, whose own
+boundary is empty. So `BoundarySquareZeroEverywhere finiteIncidence` follows
+by applying this existing lemma uniformly -- no fresh countermodel search
+needed the way `Peano.lean` needed one for `natIncidence`'s genuinely
+unbounded chain (`boundary n` reaches `n-1`, which has its own nonempty
+boundary, so the leaf-only hypothesis never applies there).
+
+Checked `GluePushoutSpec finiteIncidence` second, expecting (per cycle 75's
+framing) this to be the harder or more instance-specific of the two.
+Re-reading `PushoutWitness`'s literal field list turned up something cycle
+75's report did not anticipate: `apex : I` is a bare field, never referenced
+by the *type* of any of `commutes`/`lift`/`lift_inl`/`lift_inr`/
+`lift_unique` -- those five depend only on `diagram.left`/`diagram.right`
+(through `inl`/`inr`), and `diagram.a`/`.b`/`.c` are likewise never read by
+any field of `PushoutWitness`. So a witness whose `commutes`/`lift(_inl/_inr)`/
+`lift_unique` obligations are satisfied by the "identity cospan"
+(`diagram i j := ⟨i, j, i, id, id⟩`, `inl := inr := id`,
+`lift := fun leftLeg _ _ => leftLeg`) discharges every structural requirement
+independent of what `i`/`j`/`k` actually are, and `apex` can then simply be
+set to whatever `k` the hypothesis `glue i j = some k` supplies -- a value
+totally free of the rest of the construction. Checked this is not a misparse
+by writing the construction out and compiling it against the literal field
+list rather than trusting the reading; `lake build` accepted it on the first
+attempt. This generalizes to any `Incidence` with `[DecidableEq I]`
+whatsoever, not just `finiteIncidence`, and retroactively explains an
+observation from the reading pass: `Peano.lean`'s existing `natIncidence`
+negative proof never touches `GluePushoutSpec` at all -- not because nobody
+got around to it, but because the obligation carries no content to fail for
+any instance in this project; `BoundarySquareZeroEverywhere` is the entire
+substantive restriction `ChainComplexPushoutIncidence` imposes.
+
+With both obligations confirmed, checked cycle 75's remaining "free" claims
+one at a time rather than trusting the prior report: (1) read
+`CountableAtomCoding.completeLogic` (`Logic.lean` L5134-5136) and confirmed
+it genuinely produces a `CompletePropositionalInternalLogic Atom` from any
+`CountableAtomCoding Atom`, so `finiteIncidenceAtomCoding.completeLogic`
+(reusing cycle 71's coding) really does supply `CoherentIncidence`'s
+`completeLogic` field with no new proof. (2) re-confirmed
+`finiteIncidence_approxBisim_iff_eq` (`GraphModel.lean`, cycle-pre-numbering)
+states exactly `approxBisim finiteIncidence i j ↔ i = j`, precisely the shape
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful` needs.
+
+Built, in order: `finiteGluePushoutSpec` (the generic witness above),
+`finiteIncidence_boundarySquareZeroEverywhere`,
+`finiteChainComplexPushoutIncidence`, `finiteCoherentIncidence` (pairing the
+above with `finiteIncidenceAtomCoding.completeLogic`),
+`finiteQuotientClassification` (the identity self-classification -- the only
+shape a `CoherentQuotient` on `finiteIncidence` can have, since faithful
+bisimulation forces any `respects`/`reflects`-compatible classifier to be
+injective, mirroring `terminalCoherentQuotient`'s pattern one carrier size
+up), `finiteCoherentQuotient`, `finiteCoherentQuotientLogicalRetract` (via
+`coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`'s `.mpr`
+applied to the faithfulness fact, then `Classical.choice`, exactly cycle 75's
+proposed route), and finally `finiteLogicalHeytingIsomorphism :
+Formula.LogicalHeytingIsomorphism FiniteIncidence FiniteIncidence` plus two
+corollaries (`_injective`/`_surjective`) exercising it.
+
+**Result**: **cycle 75's hypothesis (a) confirmed positively -- both
+obligations hold -- and the full construction goes through: 11 new
+declarations in `GraphModel.lean`, all type-check on the first `lake build`
+attempt; `./verify.sh` (clean `lake clean && lake build`, example run,
+repo-wide `axiom`/`sorry`/`sorryAx` grep) passes end to end.** New
+declarations: `finiteGluePushoutSpec`, `finiteIncidence_boundarySquareZeroEverywhere`,
+`finiteChainComplexPushoutIncidence`, `finiteCoherentIncidence`,
+`coherentIncidence_has_nontrivial_carrier_model`,
+`finiteQuotientClassification`, `finiteCoherentQuotient`,
+`finiteCoherentQuotientLogicalRetract`, `finiteLogicalHeytingIsomorphism`,
+`finiteLogicalHeytingIsomorphism_injective`,
+`finiteLogicalHeytingIsomorphism_surjective`. A scratch `lake env lean` check
+file (`import IncidenceTheory.GraphModel`, deleted after use) confirmed
+`#print axioms` on all ten substantive declarations: the seven not touching
+`Classical.choice` (`finiteGluePushoutSpec` through `finiteCoherentQuotient`)
+depend only on `[propext, Quot.sound]`; the four downstream of the retract
+(`finiteCoherentQuotientLogicalRetract`, `finiteLogicalHeytingIsomorphism`
+and its two corollaries) depend on `[propext, Classical.choice, Quot.sound]`
+-- this project's standing baseline throughout cycles 68-75, no new axiom of
+any kind.
+
+**Synthesis**: both starting obligations were checked, not assumed, and both
+held, but for asymmetric reasons worth stating precisely rather than
+collapsing into "it worked": `BoundarySquareZeroEverywhere` held for the
+*structural* reason cycle 75 anticipated (a bounded, leaf-terminated grading,
+the same shape that let cycle 41's `shapeIncidence` survive where cycles
+38-39's `Subsingleton` collapse and `Peano.lean`'s unbounded chain could not),
+confirmed by applying an existing cycle-10-era lemma rather than by a fresh
+argument. `GluePushoutSpec`, by contrast, turned out to hold for a reason
+that has nothing to do with `finiteIncidence` specifically: `PushoutWitness`'s
+`apex` field is structurally unconstrained by the rest of the record, so the
+obligation is satisfiable generically for any incidence at all via an
+"identity cospan" witness. This is a genuine, previously-unnoticed scoping
+correction in the spirit of cycle 73's own self-correction: cycle 75's
+framing treated both obligations as comparably open questions about
+`finiteIncidence`'s specific shape, but only one of them actually was --
+`GluePushoutSpec` was never the load-bearing restriction anywhere in this
+project (consistent with `Peano.lean`'s existing `natIncidence` negative
+proof never needing to touch it), only `BoundarySquareZeroEverywhere` is.
+Both of cycle 75's "free" claims about the logic/faithfulness halves also
+checked out exactly as reported, so the whole chain -- `CoherentIncidence`
+→ `CoherentQuotient` → `coherentQuotient_has_logicalRetract_iff_source_bisim_faithful`
+→ `CoherentQuotient.logicalHeytingIsomorphism` -- now has its first
+instantiation on a carrier bigger than the trivial one-point `Unit` model,
+closing the gap cycle 75 flagged as this project's most significant
+remaining scoping finding for item 7's "internal logic" leg. This does not
+by itself complete item 7's single universal interpretation theorem (the
+resonance-driven generation/composition leg and the connection to
+constructive real analysis remain as cycle 75 left them); the ADR addendum
+records this as the strongest-bridge mechanism's first non-trivial
+instantiation without moving item 7's existing percentage figures beyond
+what this genuinely closes.
+
+**Next hypothesis (cycle 77, not yet attempted)**: the `GluePushoutSpec`
+finding generalizes past `finiteIncidence` -- since the generic
+identity-cospan witness works for `[DecidableEq I]` alone, `GluePushoutSpec
+natIncidence`/`GluePushoutSpec integerIncidence`/`GluePushoutSpec
+rationalIncidence`/`GluePushoutSpec realIncidence` should all hold too (only
+`BoundarySquareZeroEverywhere` is genuinely restrictive, and `natIncidence`
+is already known to fail it; `integerIncidence`/`rationalIncidence`/
+`realIncidence` are unbounded in both directions the same "unbounded chain"
+way and have not been checked either way). Confirming `GluePushoutSpec`
+holds generically for all five instances (a small, mechanical brick reusing
+this cycle's exact witness) would sharpen item 7's remaining `CoherentIncidence`
+gap to a single precise question: does any of `integerIncidence`/
+`rationalIncidence`/`realIncidence` (unlike `natIncidence`, but possibly for
+the same unbounded reason) satisfy `BoundarySquareZeroEverywhere`, or can the
+"unbounded chain ⟹ ∂² ≠ 0" intuition be turned into one general theorem
+covering all three at once (parametrized by, e.g., a "some element has
+boundary reaching a non-leaf, transitively without limit" hypothesis) rather
+than three separate ad hoc countermodels? Either a clean general negative
+theorem or, if one of the three surprises by satisfying it, a second
+non-trivial `CoherentIncidence` instance would both be genuine progress on
+item 7's strongest bridge.
