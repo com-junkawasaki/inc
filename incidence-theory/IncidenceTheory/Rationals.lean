@@ -1657,4 +1657,123 @@ theorem rationalAtomCoding_ofQuotient_code_eq :
 theorem rationalAtomCoding_ofQuotient_eq :
     rationalAtomCoding_ofQuotient = rationalAtomCoding := rfl
 
+/- Research cycle 74 (see RESEARCH_LOG.md): cycle 73 built the project's
+first genuine non-`identity` `ResonantQuotientEquivalenceCriterion`
+(`integerNegationQuotientCriterion`, `Integers.lean`) via negation on
+`integerIncidence`, and named extending the same construction to
+`rationalIncidence`/`realIncidence` as this cycle's primary next
+hypothesis, since both are additive groups sharing `integerIncidence`'s
+shape. `rationalNeg` (defined far above via `RationalRepresentative.neg`
+lifted through `Quotient.lift`) already carries every algebraic law the
+construction needs (`rationalNeg_neg`/`rationalNeg_zero`/`rationalNeg_add`),
+so this mirrors `Integers.lean`'s five-declaration chain field-for-field,
+substituting `rationalAdd`/`rationalNeg`/`rationalIncidence_approxBisim_iff`
+for their integer counterparts -- confirming cycle 73's own prediction that
+this instance "should largely mirror" the integer construction. -/
+
+theorem rationalNeg_eq_zero_iff (value : IncRational) :
+    rationalNeg value = rationalOfInteger 0 ↔ value = rationalOfInteger 0 := by
+  constructor
+  · intro equal
+    have negated := congrArg rationalNeg equal
+    rwa [rationalNeg_neg, rationalNeg_zero] at negated
+  · intro equal
+    rw [equal, rationalNeg_zero]
+
+theorem rationalBoundary_eq_nil_iff (value : IncRational) :
+    rationalIncidence.boundary value = [] ↔ value = rationalOfInteger 0 := by
+  show rationalBoundary value = [] ↔ value = rationalOfInteger 0
+  by_cases zero : value = rationalOfInteger 0
+  · simp [rationalBoundary, zero]
+  · simp only [rationalBoundary, if_neg zero]
+    constructor
+    · intro h; exact absurd h (List.cons_ne_nil _ _)
+    · intro h; exact absurd h zero
+
+def rationalNegationBoundaryShapeTranslation :
+    TranslationPreservation.BoundaryShapeTranslation
+      rationalIncidence rationalIncidence where
+  map := rationalNeg
+  preservesReflectsNullary := by
+    intro value
+    rw [rationalBoundary_eq_nil_iff, rationalBoundary_eq_nil_iff]
+    exact (rationalNeg_eq_zero_iff value).symm
+
+def rationalNegationBehavioralTranslation :
+    TranslationPreservation.BehavioralBoundaryShapeTranslation
+      rationalIncidence rationalIncidence where
+  toBoundaryShapeTranslation := rationalNegationBoundaryShapeTranslation
+  preservesBisimulation := by
+    intro i j bisimilar
+    have hij := (rationalIncidence_approxBisim_iff i j).mp bisimilar
+    exact (rationalIncidence_approxBisim_iff (rationalNeg i) (rationalNeg j)).mpr
+      (by rw [hij])
+
+def rationalNegationResonantTranslation :
+    TranslationPreservation.ResonantBehavioralTranslation
+      rationalIncidence rationalIncidence where
+  toBehavioralBoundaryShapeTranslation := rationalNegationBehavioralTranslation
+  preservesResonance := by
+    intro i j k resonant
+    have hk : rationalAdd i j = k := by simpa [rationalIncidence] using resonant
+    have hneg : rationalAdd (rationalNeg i) (rationalNeg j) = rationalNeg k := by
+      rw [← rationalNeg_add, hk]
+    simpa [rationalIncidence] using hneg
+
+def rationalNegationEmbedding :
+    TranslationPreservation.ResonantBehavioralEmbedding
+      rationalIncidence rationalIncidence where
+  toResonantBehavioralTranslation := rationalNegationResonantTranslation
+  reflectsResonance := by
+    intro i j k resonant
+    have hk : rationalAdd (rationalNeg i) (rationalNeg j) = rationalNeg k := by
+      simpa [rationalIncidence] using resonant
+    have hpos : rationalAdd i j = k := by
+      have negated := congrArg rationalNeg hk
+      rwa [← rationalNeg_add, rationalNeg_neg, rationalNeg_neg] at negated
+    simpa [rationalIncidence] using hpos
+
+/-- The concrete, non-`identity` `ResonantQuotientEquivalenceCriterion` this
+cycle builds for the rational instance: negation as a self-equivalence of
+`rationalIncidence`, the direct analogue of `integerNegationQuotientCriterion`
+(`Integers.lean`, cycle 73). -/
+def rationalNegationQuotientCriterion :
+    TranslationPreservation.ResonantQuotientEquivalenceCriterion
+      rationalIncidence rationalIncidence where
+  embedding := rationalNegationEmbedding
+  reflectsBisimulation := by
+    intro i j bisimilar
+    have hij := (rationalIncidence_approxBisim_iff
+      (rationalNeg i) (rationalNeg j)).mp bisimilar
+    have hijEq : i = j := by
+      have negated := congrArg rationalNeg hij
+      rwa [rationalNeg_neg, rationalNeg_neg] at negated
+    exact (rationalIncidence_approxBisim_iff i j).mpr hijEq
+  essentiallySurjective := by
+    intro j
+    refine ⟨rationalNeg j, ?_⟩
+    exact (rationalIncidence_approxBisim_iff
+      (rationalNeg (rationalNeg j)) j).mpr (rationalNeg_neg j)
+
+/-- The concrete corollary: `quotientResonance_iff` instantiated against
+`rationalIncidence` (mirroring `integerQuotientResonance_neg_iff`, cycle 73).
+Quotient-level resonance on `rationalIncidence` is invariant under negating
+all three representatives. -/
+theorem rationalQuotientResonance_neg_iff (i j k : IncRational) :
+    quotientResonance rationalIncidence
+      (Quotient.mk (approxBisimSetoid rationalIncidence) (rationalNeg i))
+      (Quotient.mk (approxBisimSetoid rationalIncidence) (rationalNeg j))
+      (Quotient.mk (approxBisimSetoid rationalIncidence) (rationalNeg k)) ↔
+    quotientResonance rationalIncidence
+      (Quotient.mk (approxBisimSetoid rationalIncidence) i)
+      (Quotient.mk (approxBisimSetoid rationalIncidence) j)
+      (Quotient.mk (approxBisimSetoid rationalIncidence) k) := by
+  have h :=
+    rationalNegationQuotientCriterion.quotientResonance_iff
+      rationalQuotientResonanceCongruent
+      (qi := Quotient.mk (approxBisimSetoid rationalIncidence) i)
+      (qj := Quotient.mk (approxBisimSetoid rationalIncidence) j)
+      (qk := Quotient.mk (approxBisimSetoid rationalIncidence) k)
+  exact h
+
 end IncidenceCore

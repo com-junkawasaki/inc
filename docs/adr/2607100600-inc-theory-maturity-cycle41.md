@@ -2895,3 +2895,77 @@ essential surjectivity が構造的に成立し得ず（負の整数が像に入
 群構造を持つ近い類似）や `finiteIncidence`（非自明な自己準同型の有無自体
 が未検査）へ広げる続きと、(b) 項目7自身の普遍的解釈定理への本格着手の
 両方を判断材料つきで cycle 74 に委ねている。
+
+## 2026-07-14 追補（cycle 74: 符号反転構築を `rationalIncidence`/
+`realIncidence` へ完全拡張、`natIncidence`/`finiteIncidence` は
+非自明な自己準同型を持たないことを具体的に証明）
+
+本追補は `RESEARCH_LOG.md` cycle 74 の結果を反映する。cycle 73 自身が
+名指しした2つの継続——(a) 符号反転構築を `rationalIncidence`/
+`realIncidence` へ拡張、(b) `natIncidence`/`finiteIncidence` が非自明な
+自己準同型を持つか否かの誠実な調査——の両方に取り組んだ。
+
+(a) は cycle 73 自身の予測（「同じ加法群構造なので構築はほぼそのまま
+写せるはず」）どおり、`Integers.lean` の5件チェーン（`BoundaryShapeTranslation`
+→ `BehavioralBoundaryShapeTranslation` → `ResonantBehavioralTranslation` →
+`ResonantBehavioralEmbedding` → `ResonantQuotientEquivalenceCriterion`）を
+`Rationals.lean`/`Reals.lean` それぞれに field-for-field で移植し、
+両方とも一切のスコープ縮小なく完全に閉じた。`IncRational` が
+`Quotient rationalRepresentativeSetoid`、`IncReal` が Dedekind cut という
+異なる内部表現を持つにもかかわらず genuine な追加困難は見つからなかった
+——両インスタンスとも `rationalNeg`/`realNeg` の代数法則
+（`_neg_neg`/`_neg_zero`/`_neg_add`）が既に carrier 型そのものの上で
+（quotient や cut の内部構造に降りることなく）証明済みだったため、
+構築は内部表現の違いを一切気にする必要がなかった。新設: `Rationals.lean`
+に `rationalNegationQuotientCriterion`/`rationalQuotientResonance_neg_iff`
+等7件、`Reals.lean` に `realNegationQuotientCriterion`/
+`realQuotientResonance_neg_iff` 等7件。
+
+(b) は誠実な負の結果を2件とも具体的に証明した（単なる推測ではなく）。
+`natIncidence`（`Peano.lean`）: どんな
+`ResonantQuotientEquivalenceCriterion natIncidence natIncidence` も
+`map n = n`（全 `n`）に強制されることを証明した
+（`natQuotientCriterion_forces_identity`）。論証は初等的:
+`preservesResonance` を `resonance i j (i+j)` に適用すると `map` の加法性
+`map(i+j)=map i+map j` が出る（`Nat` 上の加法自己準同型なので `map n =
+n * map 1`——帰納法で証明）。`reflectsBisimulation`+忠実性から単射性、
+`essentiallySurjective`+忠実性から全射性が出て、全射性から `map i = 1` と
+なる `i` が存在し `i * map 1 = 1`、これが core Lean の
+`Nat.eq_one_of_mul_eq_one_left`（mathlib 不要）で `map 1 = 1` を強制、
+最終的に `map n = n` に帰着する。`finiteIncidence`（`GraphModel.lean`）は
+さらに直接的なブロックが見つかった: `TranslationPreservation.
+BoundaryShapeTranslation` 階層の最弱層（`preservesReflectsNullary`）だけで
+既に `map` が恒等に強制される（`finiteBoundaryShapeTranslation_forces_
+identity`）——`leaf` が唯一の nullary 元（空境界）、`root` が唯一の
+non-nullary 元（単一境界エントリ）なので、`boundary i = [] ↔ boundary
+(map i) = []` を `i=leaf`/`i=root` それぞれに当てはめるだけで両方とも
+`map` 自身への固定点が強制され、bisimulation・resonance・essential
+surjectivity の議論に入る前に決着する。task brief が示唆した「cycle 53の
+absorbing-unit機構と同種のブロックか」という問いへの答えは
+「機構としては異なる」——absorbing-unit ではなく境界形状（nullary/
+non-nullary）の不一致による、より原始的なブロックである。
+
+新設11件全ての `#print axioms` を scratch 検査（使用後削除）で確認:
+`rationalNeg_eq_zero_iff`/`finiteBoundaryShapeTranslation_forces_identity`
+は `[propext, Quot.sound]`（`Classical.choice` 不要）、残り9件は
+`[propext, Classical.choice, Quot.sound]`——本ファイル群の既存証明と同一の
+ベースラインで、新規公理は皆無。`./verify.sh`（`lake clean && lake build`
+を含む完全リビルド、実行例、`axiom`/`sorry`/`sorryAx` の全木 grep）は
+クリーンに通過した。
+
+この結果により、5つの具体インスタンス全てで「非自明な自己準同型
+——`ResonantQuotientEquivalenceCriterion <inc> <inc>` の非`identity`
+インスタンス化——を持つか」という問いに決着がついた:
+`integerIncidence`（cycle 73）・`rationalIncidence`・`realIncidence`
+（いずれも本cycle）の3件は符号反転という genuine な証人を持ち、
+`natIncidence`・`finiteIncidence`（いずれも本cycle）の2件は持たないこと
+が具体的に証明された。これは項目7が明示する残課題（resonance 駆動の
+生成・合成を内部論理モデルと構成実数解析の両方に一結果で結ぶ単一の
+普遍的解釈定理）には到達しない。したがって cycle 60-73 の保守的規律を
+踏襲し、項目7の記述（「部分完了」）とパーセンテージ（本文57–58行目、
+翻訳・保存層約85%）は本追補でも動かさない。`RESEARCH_LOG.md` cycle 74
+の Next hypothesis は、cycle 72 が最初に名指しした (b) ——項目7自身の
+普遍的解釈定理への本格着手——を cycle 75 に推奨している: この「自己準同型
+criterion」という具体的にスコープされた小テーマ自体は、5インスタンス
+全件について肯定・否定いずれかで決着したため、この特定のスレッド内には
+これ以上の小さな継続が残っていない。

@@ -2944,4 +2944,81 @@ example (idx : List Unit) (i k : Unit) (hi : i ∈ idx) (hk : k ∈ idx) :
     boundary_composition terminalChainComplexPushoutIncidence.inc idx i k = 0 :=
   terminalChainComplexPushoutIncidence.boundary_composition_zero idx i k hi hk
 
+/- Research cycle 74 (see RESEARCH_LOG.md): cycle 73 also named, as part of
+its part (b) open question, whether `finiteIncidence`'s two-element
+`leaf`/`root` carrier admits a non-`identity` self-map satisfying
+`TranslationPreservation.ResonantQuotientEquivalenceCriterion`'s
+obligations -- specifically asking whether swapping `leaf`/`root` works, or
+whether something about `finiteIncidence`'s actual `glue`/`boundary`
+structure blocks it the way cycle 53's absorbing-unit mechanism blocked
+similar swaps elsewhere. This cycle answers with a genuine negative, proved
+concretely, and finds the block is even more immediate than for
+`natIncidence` (Peano.lean, this cycle): it fires at the very first
+(weakest) layer of the whole hierarchy,
+`TranslationPreservation.BoundaryShapeTranslation`'s own
+`preservesReflectsNullary` obligation, before bisimulation, resonance, or
+essential surjectivity are even considered.
+
+`finiteBoundary` (above) gives `leaf` empty boundary and `root` a single
+non-empty boundary endpoint -- `leaf` is the model's only nullary element,
+`root` its only non-nullary one. `preservesReflectsNullary` demands
+`boundary i = [] ↔ boundary (map i) = []` for every `i`; instantiated at
+`i = leaf` (where the left side is true), it forces `boundary (map leaf) =
+[]`, and since `leaf` is the ONLY element with empty boundary in this
+2-element type, `map leaf = leaf`. Instantiated at `i = root` (where the
+left side is false, `finiteIncidence_root_boundary_nonempty`), it forces
+`boundary (map root) ≠ []`, and since `root` is the only element with
+non-empty boundary, `map root = root`. So ANY `BoundaryShapeTranslation
+finiteIncidence finiteIncidence` -- a fortiori any
+`ResonantQuotientEquivalenceCriterion` built on top of one -- is forced to
+be the identity map pointwise on both elements. The swap
+`leaf ↦ root, root ↦ leaf` specifically fails already at
+`preservesReflectsNullary`, before any question about `glue`/resonance
+arises at all. -/
+
+theorem finiteBoundaryShapeTranslation_map_leaf
+    (translation : TranslationPreservation.BoundaryShapeTranslation
+      finiteIncidence finiteIncidence) :
+    translation.map .leaf = .leaf := by
+  have leafNullary : finiteIncidence.boundary FiniteIncidence.leaf = [] := by
+    simp [finiteIncidence, finiteBoundary]
+  have mapNullary :
+      finiteIncidence.boundary (translation.map FiniteIncidence.leaf) = [] :=
+    (translation.preservesReflectsNullary FiniteIncidence.leaf).mp leafNullary
+  cases hcase : translation.map FiniteIncidence.leaf with
+  | leaf => rfl
+  | root =>
+      rw [hcase] at mapNullary
+      simp [finiteIncidence, finiteBoundary] at mapNullary
+
+theorem finiteBoundaryShapeTranslation_map_root
+    (translation : TranslationPreservation.BoundaryShapeTranslation
+      finiteIncidence finiteIncidence) :
+    translation.map .root = .root := by
+  cases hcase : translation.map FiniteIncidence.root with
+  | root => rfl
+  | leaf =>
+      have leafNullary : finiteIncidence.boundary FiniteIncidence.leaf = [] := by
+        simp [finiteIncidence, finiteBoundary]
+      have mapNullary :
+          finiteIncidence.boundary (translation.map FiniteIncidence.root) = [] := by
+        rw [hcase]; exact leafNullary
+      have rootNullary : finiteIncidence.boundary FiniteIncidence.root = [] :=
+        (translation.preservesReflectsNullary FiniteIncidence.root).mpr mapNullary
+      exact absurd rootNullary finiteIncidence_root_boundary_nonempty
+
+/-- The negative finding this cycle establishes for the finite instance:
+every `BoundaryShapeTranslation finiteIncidence finiteIncidence` (hence
+every `ResonantQuotientEquivalenceCriterion` built on top of one) is forced
+to have `map i = i` for both elements -- `finiteIncidence` admits no
+non-`identity` self-map satisfying even the weakest layer of the
+criterion's hierarchy, let alone the full criterion. -/
+theorem finiteBoundaryShapeTranslation_forces_identity
+    (translation : TranslationPreservation.BoundaryShapeTranslation
+      finiteIncidence finiteIncidence) (i : FiniteIncidence) :
+    translation.map i = i := by
+  cases i with
+  | leaf => exact finiteBoundaryShapeTranslation_map_leaf translation
+  | root => exact finiteBoundaryShapeTranslation_map_root translation
+
 end IncidenceCore

@@ -8512,3 +8512,216 @@ that this cycle's reading surfaced. This cycle's own reading leans toward
 (a) (specifically the rational/real repeats, since they are the closest
 structural analogues already checked to share `integerIncidence`'s
 faithfulness + additive-group shape) as the more conservative next step.
+
+## Cycle 74
+
+**Hypothesis**: this cycle claims cycle 73's own two named continuations
+in full: (a) [primary] extend cycle 73's negation-automorphism construction
+(`integerIncidence`'s non-`identity` `ResonantQuotientEquivalenceCriterion`
+via `x ↦ -x`) to `rationalIncidence`/`realIncidence`, since both are
+additive groups sharing `integerIncidence`'s shape; (b) [if time permits]
+investigate honestly whether `natIncidence`/`finiteIncidence` admit ANY
+non-`identity` self-map satisfying the criterion at all, rather than
+assuming either a positive or negative answer.
+
+**Method**: re-read cycle 73's exact `Integers.lean` construction in full
+(`integerBoundary_eq_nil_iff` → `integerNegationBoundaryShapeTranslation` →
+`integerNegationBehavioralTranslation` → `integerNegationResonantTranslation`
+→ `integerNegationEmbedding` → `integerNegationQuotientCriterion` →
+`integerQuotientResonance_neg_iff`) to fix the exact five-declaration chain
+shape and the `TranslationPreservation` structures it instantiates
+(`BoundaryShapeTranslation.preservesReflectsNullary`,
+`BehavioralBoundaryShapeTranslation.preservesBisimulation`,
+`ResonantBehavioralTranslation.preservesResonance`,
+`ResonantBehavioralEmbedding.reflectsResonance`,
+`ResonantQuotientEquivalenceCriterion.reflectsBisimulation`/
+`essentiallySurjective`), confirmed directly against
+`IncidenceTheory.lean`'s own definitions (L8304-8318, L8679-8684, L8753-8758,
+L8833-8838, L10136-10143) rather than assumed from memory.
+
+For (a): read `Rationals.lean` and `Reals.lean` in full before writing
+anything, specifically confirming the negation/subtraction API cycle 73's
+own next-hypothesis flagged as needing confirmation rather than assumption.
+Found: `Rationals.lean` already has `rationalNeg` (`RationalRepresentative.neg`
+lifted through `Quotient.lift`, L165-168) with `rationalNeg_neg` (L265-271),
+`rationalNeg_zero` (L273-280), `rationalNeg_add` (L282-296) already proved
+(predating this cycle, from cycles 43-44/69's field-structure work); and
+`rationalIncidence`'s `boundary`/`resonance` (`rationalBoundary`,
+L1290-1292; default `resonance := glue i j = some k` with `glue := fun l r
+=> some (rationalAdd l r)`, L1312) and its faithfulness theorem
+(`rationalIncidence_approxBisim_iff`, L1479-1487) all already exist and
+mirror `integerIncidence`'s shape exactly. Same check on `Reals.lean`:
+`realNeg` (L351-374, the Dedekind-cut complement reflected through rational
+zero) with `realNeg_neg` (L400-420), `realNeg_zero` (L422-424), `realNeg_add`
+(L577-591) already proved (cycles 43-44), and `realIncidence`'s
+`boundary`/`resonance`/faithfulness (`realBoundary` L624-625, default
+resonance via `glue := fun l r => some (realAdd l r)` L644,
+`realIncidence_approxBisim_iff` L729-737) mirroring `rationalIncidence`'s
+shape exactly (both built as `if value = zero then [] else [endpoint
+value]`, unlike `integerIncidence`'s inductive `Int` case split). Confirmed
+before building: neither file had any prior `*BoundaryShapeTranslation`/
+`*QuotientCriterion` construction (grepped for `TranslationPreservation.`,
+zero hits in either file).
+
+Built the identical five-declaration chain in each file, substituting
+`rationalAdd`/`rationalNeg`/`rationalIncidence_approxBisim_iff` (respectively
+`realAdd`/`realNeg`/`realIncidence_approxBisim_iff`) for their integer
+counterparts, plus two small helper lemmas per file
+(`rationalNeg_eq_zero_iff`/`rationalBoundary_eq_nil_iff`, and the `real`
+analogues) needed because — unlike `Int`'s inductive `ofNat`/`negSucc` case
+split, which cycle 73 handled with direct `cases`/`omega` — both
+`rationalBoundary`/`realBoundary` are defined via `if value = zero then …`,
+so the nullary-shape check needs an explicit `= zero ↔` lemma rather than a
+`cases` split. Hit two mechanical snags while building, both fixed
+immediately: (1) `preservesReflectsNullary`'s goal after rewriting both
+`_eq_nil_iff` lemmas came out as `value = zero ↔ neg value = zero`, the
+`.symm` of the zero-iff lemma as stated (`neg value = zero ↔ value = zero`)
+— fixed by adding `.symm`, not restating the lemma; (2) the `reflectsResonance`
+proof's `rwa [← neg_add, neg_neg, neg_neg, neg_neg] at negated` (four
+rewrites, copying cycle 73's rhythm without recounting) over-counted by one
+`neg_neg`: after `← neg_add` produces two nested `neg (neg _)` occurrences
+(one per side of the equation) each `neg_neg` call discharges exactly one,
+so only two are needed, not three — the extra fourth rewrite found no
+remaining occurrence and failed with a hard `rewrite` error (not a silent
+no-op); fixed by dropping the count to three items total (`← neg_add`,
+`neg_neg`, `neg_neg`) in both files. Both instances completed with **zero
+scope reduction** — no genuine extra difficulty from `IncRational` being a
+`Quotient` carrier or `IncReal` being Dedekind cuts materialized, because
+the negation algebra needed (`_neg_neg`/`_neg_zero`/`_neg_add`) was already
+established at the carrier-type level by prior cycles, so this cycle's
+construction never had to descend into either representation directly —
+confirming cycle 73's own prediction that this extension "should largely
+mirror" the integer construction, this time checked rather than assumed.
+
+For (b): read `Peano.lean`'s `natIncidence` (`peanoBoundary`, `natIncidence`,
+`natIncidence_approxBisim_iff`, `natQuotientResonanceCongruent`) and
+`GraphModel.lean`'s `finiteIncidence` (`FiniteIncidence`/`finiteBoundary`/
+`finiteGlue`/`finiteIncidence`, plus the pre-existing
+`finiteIncidence_root_boundary_nonempty` and
+`finiteIncidence_root_not_approxBisim_leaf`) in full before conjecturing
+either way. For `natIncidence`: noted `natIncidence.resonance i j k` unfolds
+(via the default `resonance := fun i j k => glue i j = some k` field,
+`Axioms.lean` L29-30) to `i + j = k`, since `natIncidence.glue i j = some
+(i+j)`. Reasoned that any criterion's `map` must therefore satisfy: (i)
+`preservesResonance` applied to the always-true `resonance i j (i+j)`
+forces additivity `map(i+j) = map i + map j`; (ii) `reflectsBisimulation`
+combined with `natIncidence_approxBisim_iff`'s faithfulness forces
+injectivity; (iii) `essentiallySurjective` combined with the same
+faithfulness forces surjectivity. An additive self-map of `(Nat, +)` is a
+textbook fact `map n = n * map 1` (provable by ordinary induction from
+additivity alone); combined with surjectivity, some `i` has `map i = 1`,
+i.e. `i * map 1 = 1` in `Nat` — which forces `map 1 = 1` via core Lean's
+`Nat.eq_one_of_mul_eq_one_left` (`Init/Data/Nat/Lemmas.lean`, confirmed
+present in the `v4.23.0` toolchain this project pins, no `mathlib` needed),
+hence `map n = n` for every `n`. This is a full proof that `natIncidence`
+admits no non-`identity` self-map satisfying the criterion — not merely for
+the one candidate (negation, which does not even typecheck since `Nat`
+isn't closed under it) but for every conceivable one at once.
+
+For `finiteIncidence`: checked whether the obvious candidate (swapping
+`leaf`/`root`) is blocked, and if so at which layer. `finiteBoundary leaf =
+[]`, `finiteBoundary root = [{i := leaf, …}]` (a single endpoint) — `leaf`
+is the model's only nullary element, `root` its only non-nullary one.
+`BoundaryShapeTranslation.preservesReflectsNullary` (the *weakest* layer of
+the whole hierarchy, prior to bisimulation/resonance/surjectivity) demands
+`boundary i = [] ↔ boundary (map i) = []` for every `i`; instantiated at
+`i = leaf` this forces `map leaf = leaf` (the only nullary target
+available), and at `i = root` it forces `map root = root` (the only
+non-nullary target available) via
+`finiteIncidence_root_boundary_nonempty`. So the swap fails immediately at
+the nullary-shape check, before any question about `glue`/resonance/
+bisimulation is even reached — a cleaner, more immediate block than
+`natIncidence`'s (which needed the full algebraic argument through
+resonance and surjectivity). The task brief's own framing asked whether
+this parallels cycle 53's absorbing-unit mechanism; checked directly and
+found it does not — cycle 53's block was about an absorbing algebraic unit
+interacting with `glue`, whereas this block is purely about boundary-shape
+(nullary vs. non-nullary) mismatch, one layer earlier and unrelated to
+`glue`/absorption at all.
+
+**Result**: (a) sixteen new declarations, eight each in `Rationals.lean`
+(`rationalNeg_eq_zero_iff`, `rationalBoundary_eq_nil_iff`,
+`rationalNegationBoundaryShapeTranslation`,
+`rationalNegationBehavioralTranslation`, `rationalNegationResonantTranslation`,
+`rationalNegationEmbedding`, `rationalNegationQuotientCriterion`,
+`rationalQuotientResonance_neg_iff` — one more than cycle 73's own
+seven-declaration count, the extra being the `_eq_zero_iff` helper this
+cycle's method section notes `Int`'s `cases`/`omega`-based nullary check
+didn't need) and the direct `Reals.lean` analogues (`realNeg_eq_zero_iff`,
+`realBoundary_eq_nil_iff`, `realNegationBoundaryShapeTranslation`,
+`realNegationBehavioralTranslation`, `realNegationResonantTranslation`,
+`realNegationEmbedding`, `realNegationQuotientCriterion`,
+`realQuotientResonance_neg_iff`), all type-check. (b) seven new
+declarations in `Peano.lean` (`natIncidence_resonance_iff`,
+`natQuotientCriterion_additive`, `natQuotientCriterion_map_zero`,
+`natQuotientCriterion_map_eq_mul`, `natQuotientCriterion_surjective`,
+`natQuotientCriterion_map_one`, `natQuotientCriterion_forces_identity` —
+the full additive-endomorphism argument) and three in `GraphModel.lean`
+(`finiteBoundaryShapeTranslation_map_leaf`,
+`finiteBoundaryShapeTranslation_map_root`,
+`finiteBoundaryShapeTranslation_forces_identity`). `./verify.sh` (clean
+`lake clean && lake build`, example run, repo-wide `axiom`/`sorry`/`sorryAx`
+grep) passes end to end. A scratch `lake env lean` check file (deleted
+after use) confirmed `#print axioms` on the headline declarations from each
+file: `rationalNeg_eq_zero_iff` and
+`finiteBoundaryShapeTranslation_forces_identity` depend on `[propext,
+Quot.sound]` only (no `Classical.choice`); the rest (`rationalBoundary_eq_
+nil_iff`, `rationalNegationQuotientCriterion`,
+`rationalQuotientResonance_neg_iff`, and their `real`/`nat` counterparts)
+depend on `[propext, Classical.choice, Quot.sound]` — matching this
+project's standing baseline throughout, no new axiom of any kind.
+
+**Synthesis**: both of cycle 73's named continuations are now closed, one
+positive and one negative, both proved rather than assumed. (a) confirms
+cycle 73's own hedge was right to flag but, in the event, unnecessary:
+despite `IncRational`'s `Quotient` carrier and `IncReal`'s Dedekind-cut
+representation being structurally quite different from `Int`'s inductive
+`ofNat`/`negSucc` split, the negation-automorphism construction transferred
+with zero genuine extra difficulty — only mechanical adjustments (the
+`_eq_nil_iff` helper lemma's `if`-based boundary needing an explicit iff
+rather than a `cases` split, and one over-counted `rwa` rewrite list),
+neither of which reflects anything about the underlying representation.
+This is itself worth recording precisely: the reason cycle 73's hedge
+turned out unnecessary is that the negation *algebra* (`_neg_neg`/
+`_neg_zero`/`_neg_add`) had already been established at the carrier-type
+level by prior cycles (43-44, 69), so this cycle's construction operated
+entirely at that level and never needed to reason about `Quotient.lift` or
+Dedekind-cut internals directly. (b) is a genuine negative result, proved
+concretely rather than merely asserted as this project's culture demands:
+`natIncidence` admits no non-`identity` self-map satisfying the criterion
+(proved via the additive-endomorphism argument, using only core Lean's
+`Nat.eq_one_of_mul_eq_one_left`, no `mathlib`), and `finiteIncidence`
+likewise admits none, blocked even earlier — at the weakest
+(`BoundaryShapeTranslation`) layer alone, via a boundary-shape/nullary
+mismatch rather than an absorbing-unit mechanism (the task brief's own
+hypothesis about a cycle-53-shaped block was checked and found not to be
+the actual mechanism here, a useful precise correction rather than a vague
+"yes, blocked somehow"). Combined with cycle 73's `integerIncidence`
+result, all five of this project's concrete `Incidence` instances now have
+a decided, proved answer to "does a genuine non-`identity`
+`ResonantQuotientEquivalenceCriterion <inc> <inc>` exist": yes for
+`integerIncidence`/`rationalIncidence`/`realIncidence` (all via negation),
+no for `natIncidence`/`finiteIncidence` (both proved, not merely
+conjectured). This does not touch roadmap item 7's stated remaining content
+(the single universal interpretation theorem); the ADR addendum below
+records the finding without moving item 7's existing percentage figures.
+
+**Next hypothesis (cycle 75, not yet attempted)**: with this specific
+"self-map criterion" thread now fully closed across all five concrete
+instances (three positive, two negative, all proved), this project's own
+established discipline of exhausting concretely-scoped continuations before
+attempting the harder unclaimed synthesis has run out of smaller queued
+steps in this particular thread. The standing harder target, carried
+forward unclaimed since at least cycle 68 (and named again by cycles 71-73
+as option (b) each time), is roadmap item 7's own remaining content: the
+single universal interpretation theorem connecting resonance-driven
+generation/composition to both the internal-logic model (cycles 68-71) and
+constructive real analysis (cycles 42-44) in one result. This cycle's own
+reading finds no smaller concretely-scoped piece obviously queued ahead of
+it anymore in the translation-preservation/quotient-resonance area
+specifically (cycles 60-61, 67, 72-74 have each closed a piece of that
+API-parity and instantiation work), so cycle 75 should either attempt item
+7's synthesis directly, or, if that proves too large to scope in one
+cycle, identify and name a genuinely new smaller decomposition of it rather
+than continuing to defer to "the standing harder target" without further
+progress on breaking it down.

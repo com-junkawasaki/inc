@@ -8776,4 +8776,122 @@ theorem realIncidence_internalLogic_consistent_iff_model_arbitrary
     DerivationallyConsistent context ↔ KripkeSatisfiable context :=
   realIncidence.internalLogic_consistent_iff_model_arbitrary context
 
+/- Research cycle 74 (see RESEARCH_LOG.md): completing cycle 74's primary
+hypothesis (extend cycle 73's negation-automorphism construction from
+`integerIncidence` to `rationalIncidence`/`realIncidence`) on the real
+instance. `realNeg` (defined far above as the Dedekind-cut complement
+reflected through rational zero) already carries every algebraic law the
+construction needs (`realNeg_neg`/`realNeg_zero`/`realNeg_add`), proved
+directly against the cut representation rather than through any quotient
+lift -- so despite `IncReal` being built from Dedekind cuts rather than
+`Int`'s inductive representation, the construction transfers exactly as
+cleanly as `rationalIncidence`'s did, mirroring `Integers.lean`'s
+five-declaration chain field-for-field. -/
+
+theorem realNeg_eq_zero_iff (value : IncReal) :
+    realNeg value = realZero ↔ value = realZero := by
+  constructor
+  · intro equal
+    have negated := congrArg realNeg equal
+    rwa [realNeg_neg, realNeg_zero] at negated
+  · intro equal
+    rw [equal, realNeg_zero]
+
+theorem realBoundary_eq_nil_iff (value : IncReal) :
+    realIncidence.boundary value = [] ↔ value = realZero := by
+  show realBoundary value = [] ↔ value = realZero
+  by_cases zero : value = realZero
+  · simp [realBoundary, zero]
+  · simp only [realBoundary, if_neg zero]
+    constructor
+    · intro h; exact absurd h (List.cons_ne_nil _ _)
+    · intro h; exact absurd h zero
+
+def realNegationBoundaryShapeTranslation :
+    TranslationPreservation.BoundaryShapeTranslation
+      realIncidence realIncidence where
+  map := realNeg
+  preservesReflectsNullary := by
+    intro value
+    rw [realBoundary_eq_nil_iff, realBoundary_eq_nil_iff]
+    exact (realNeg_eq_zero_iff value).symm
+
+def realNegationBehavioralTranslation :
+    TranslationPreservation.BehavioralBoundaryShapeTranslation
+      realIncidence realIncidence where
+  toBoundaryShapeTranslation := realNegationBoundaryShapeTranslation
+  preservesBisimulation := by
+    intro i j bisimilar
+    have hij := (realIncidence_approxBisim_iff i j).mp bisimilar
+    exact (realIncidence_approxBisim_iff (realNeg i) (realNeg j)).mpr
+      (by rw [hij])
+
+def realNegationResonantTranslation :
+    TranslationPreservation.ResonantBehavioralTranslation
+      realIncidence realIncidence where
+  toBehavioralBoundaryShapeTranslation := realNegationBehavioralTranslation
+  preservesResonance := by
+    intro i j k resonant
+    have hk : realAdd i j = k := by simpa [realIncidence] using resonant
+    have hneg : realAdd (realNeg i) (realNeg j) = realNeg k := by
+      rw [← realNeg_add, hk]
+    simpa [realIncidence] using hneg
+
+def realNegationEmbedding :
+    TranslationPreservation.ResonantBehavioralEmbedding
+      realIncidence realIncidence where
+  toResonantBehavioralTranslation := realNegationResonantTranslation
+  reflectsResonance := by
+    intro i j k resonant
+    have hk : realAdd (realNeg i) (realNeg j) = realNeg k := by
+      simpa [realIncidence] using resonant
+    have hpos : realAdd i j = k := by
+      have negated := congrArg realNeg hk
+      rwa [← realNeg_add, realNeg_neg, realNeg_neg] at negated
+    simpa [realIncidence] using hpos
+
+/-- The concrete, non-`identity` `ResonantQuotientEquivalenceCriterion` this
+cycle builds for the real instance: negation as a self-equivalence of
+`realIncidence`, the direct analogue of `integerNegationQuotientCriterion`
+(`Integers.lean`, cycle 73) and `rationalNegationQuotientCriterion`
+(`Rationals.lean`, this cycle). -/
+def realNegationQuotientCriterion :
+    TranslationPreservation.ResonantQuotientEquivalenceCriterion
+      realIncidence realIncidence where
+  embedding := realNegationEmbedding
+  reflectsBisimulation := by
+    intro i j bisimilar
+    have hij := (realIncidence_approxBisim_iff
+      (realNeg i) (realNeg j)).mp bisimilar
+    have hijEq : i = j := by
+      have negated := congrArg realNeg hij
+      rwa [realNeg_neg, realNeg_neg] at negated
+    exact (realIncidence_approxBisim_iff i j).mpr hijEq
+  essentiallySurjective := by
+    intro j
+    refine ⟨realNeg j, ?_⟩
+    exact (realIncidence_approxBisim_iff
+      (realNeg (realNeg j)) j).mpr (realNeg_neg j)
+
+/-- The concrete corollary: `quotientResonance_iff` instantiated against
+`realIncidence` (mirroring `integerQuotientResonance_neg_iff`, cycle 73, and
+`rationalQuotientResonance_neg_iff`, this cycle). Quotient-level resonance on
+`realIncidence` is invariant under negating all three representatives. -/
+theorem realQuotientResonance_neg_iff (i j k : IncReal) :
+    quotientResonance realIncidence
+      (Quotient.mk (approxBisimSetoid realIncidence) (realNeg i))
+      (Quotient.mk (approxBisimSetoid realIncidence) (realNeg j))
+      (Quotient.mk (approxBisimSetoid realIncidence) (realNeg k)) ↔
+    quotientResonance realIncidence
+      (Quotient.mk (approxBisimSetoid realIncidence) i)
+      (Quotient.mk (approxBisimSetoid realIncidence) j)
+      (Quotient.mk (approxBisimSetoid realIncidence) k) := by
+  have h :=
+    realNegationQuotientCriterion.quotientResonance_iff
+      realQuotientResonanceCongruent
+      (qi := Quotient.mk (approxBisimSetoid realIncidence) i)
+      (qj := Quotient.mk (approxBisimSetoid realIncidence) j)
+      (qk := Quotient.mk (approxBisimSetoid realIncidence) k)
+  exact h
+
 end IncidenceCore

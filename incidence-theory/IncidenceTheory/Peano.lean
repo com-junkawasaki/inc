@@ -487,4 +487,91 @@ theorem altIncidence_not_boundary_square_zero (n : Nat) (idx : List Nat)
     rfl rfl (by split <;> simp)
     hmem
 
+/- Research cycle 74 (see RESEARCH_LOG.md): cycle 73 named, as its part (b)
+open question, whether `natIncidence` admits ANY non-`identity` self-map
+satisfying `TranslationPreservation.ResonantQuotientEquivalenceCriterion`'s
+obligations (`Nat` is not closed under negation, so cycle 73's own
+integer-negation construction does not directly transfer). This cycle
+answers that question with a genuine negative, proved concretely rather
+than merely asserted: EVERY such criterion's underlying map is forced to be
+the identity, pointwise, for every `n : Nat`.
+
+The argument, entirely elementary: (1) `natIncidence.resonance i j k`
+unfolds to `i + j = k` (the default `resonance := fun i j k => glue i j =
+some k` instantiated at `glue i j = some (i + j)`), so instantiating
+`preservesResonance` at the always-true fact `resonance i j (i + j)` forces
+any criterion's map `f` to be additive: `f (i + j) = f i + f j` for all
+`i j : Nat`. (2) Additivity plus `f 0 = 0` (itself forced: `f 0 = f (0+0) =
+f 0 + f 0` in `Nat` forces `f 0 = 0`) gives, by ordinary induction, `f n = n
+* f 1` for every `n`. (3) `reflectsBisimulation` combined with
+`natIncidence_approxBisim_iff`'s faithfulness gives injectivity of `f`, and
+`essentiallySurjective` combined with the same faithfulness gives
+surjectivity -- so some `i` has `f i = 1`, i.e. `i * f 1 = 1` in `Nat`,
+which forces `f 1 = 1` (`Nat.eq_one_of_mul_eq_one_left`, core Lean, no
+`mathlib` needed). (4) Substituting back into `f n = n * f 1 = n * 1 = n`
+for every `n` -- `f` is forced to be the identity function, not merely on
+some elements but on the whole carrier. This rules out every candidate
+non-`identity` self-map at once, not just the specific translates cycle 73
+inspected. -/
+
+theorem natIncidence_resonance_iff (i j k : Nat) :
+    natIncidence.resonance i j k ↔ i + j = k := by
+  show natIncidence.glue i j = some k ↔ i + j = k
+  simp [natIncidence]
+
+theorem natQuotientCriterion_additive
+    (criterion : TranslationPreservation.ResonantQuotientEquivalenceCriterion
+      natIncidence natIncidence) (i j : Nat) :
+    criterion.embedding.map (i + j) =
+      criterion.embedding.map i + criterion.embedding.map j := by
+  have resonant : natIncidence.resonance i j (i + j) :=
+    (natIncidence_resonance_iff i j (i + j)).mpr rfl
+  have preserved := criterion.embedding.preservesResonance resonant
+  exact ((natIncidence_resonance_iff _ _ _).mp preserved).symm
+
+theorem natQuotientCriterion_map_zero
+    (criterion : TranslationPreservation.ResonantQuotientEquivalenceCriterion
+      natIncidence natIncidence) : criterion.embedding.map 0 = 0 := by
+  have additive := natQuotientCriterion_additive criterion 0 0
+  simp only [Nat.add_zero] at additive
+  omega
+
+theorem natQuotientCriterion_map_eq_mul
+    (criterion : TranslationPreservation.ResonantQuotientEquivalenceCriterion
+      natIncidence natIncidence) (n : Nat) :
+    criterion.embedding.map n = n * criterion.embedding.map 1 := by
+  induction n with
+  | zero => simpa using natQuotientCriterion_map_zero criterion
+  | succ n ih =>
+      have step := natQuotientCriterion_additive criterion n 1
+      rw [ih] at step
+      rw [step, Nat.add_mul, Nat.one_mul]
+
+theorem natQuotientCriterion_surjective
+    (criterion : TranslationPreservation.ResonantQuotientEquivalenceCriterion
+      natIncidence natIncidence) (target : Nat) :
+    ∃ source, criterion.embedding.map source = target := by
+  obtain ⟨source, bisimilar⟩ := criterion.essentiallySurjective target
+  exact ⟨source, (natIncidence_approxBisim_iff _ _).mp bisimilar⟩
+
+theorem natQuotientCriterion_map_one
+    (criterion : TranslationPreservation.ResonantQuotientEquivalenceCriterion
+      natIncidence natIncidence) : criterion.embedding.map 1 = 1 := by
+  obtain ⟨source, hsource⟩ := natQuotientCriterion_surjective criterion 1
+  rw [natQuotientCriterion_map_eq_mul criterion source] at hsource
+  exact Nat.eq_one_of_mul_eq_one_left hsource
+
+/-- The negative finding this cycle establishes: every
+`ResonantQuotientEquivalenceCriterion natIncidence natIncidence` is forced
+to have `map n = n` for all `n` -- `natIncidence` admits no non-`identity`
+self-map satisfying the criterion, unlike `integerIncidence`
+(cycle 73)/`rationalIncidence`/`realIncidence` (this cycle), whose additive
+groups admit negation as a genuine non-`identity` witness. -/
+theorem natQuotientCriterion_forces_identity
+    (criterion : TranslationPreservation.ResonantQuotientEquivalenceCriterion
+      natIncidence natIncidence) (n : Nat) :
+    criterion.embedding.map n = n := by
+  rw [natQuotientCriterion_map_eq_mul criterion n,
+    natQuotientCriterion_map_one criterion, Nat.mul_one]
+
 end IncidenceCore
