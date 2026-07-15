@@ -34,6 +34,8 @@ research chronology.
 | Pairs and trees | `Pairs.lean`, `Tree.lean` | [history](../history/post-cycle-41.md) |
 | Paths and simplices | `PathComplex.lean`, `Simplex.lean` | [history](../history/post-cycle-41.md) |
 | Product, sum, quotient | `Product.lean`, `Sum.lean`, `Quotient.lean` | [cycle-41 ADR](../adr/2607100600-inc-theory-maturity-cycle41.md) |
+| Exact resonance descent and quotient universal property | `IncidenceResearch.lean` | [paper-program ADR](../adr/260714-incidence-theory-paper-program.md) |
+| Finite resonance-descent obstruction classification | `IncidenceResearch.lean` (`finite_exact_resonance_descent_iff_no_obstructions`) | [paper-program ADR](../adr/260714-incidence-theory-paper-program.md) |
 | Dependent calculus | `CrossInstance.lean` | [completion audit](../inc-proof-completion-audit.md) |
 | Normalized structural preservation | `CrossInstance.lean` | [status](../status.md#structural-preservation-completion) |
 

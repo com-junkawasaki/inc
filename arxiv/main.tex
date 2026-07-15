@@ -1,391 +1,551 @@
-\documentclass{article}
+\documentclass[11pt]{article}
 \usepackage[a4paper,margin=1in]{geometry}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage{amsmath,amssymb,amsthm}
-\usepackage{graphicx}
-\usepackage{microtype}
-\usepackage{hyperref}
+\usepackage{amsmath,amssymb,amsthm,booktabs,array,microtype}
+\usepackage[hidelinks]{hyperref}
 \usepackage[nameinlink]{cleveref}
 
-\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
-
-% theorem-like environments
-\theoremstyle{plain}
-\newtheorem{theorem}{Theorem}
-\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
 \theoremstyle{definition}
-\newtheorem{definition}{Definition}
-\newtheorem{example}{Example}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
 
-\title{Theory of Incidence -- A Fourth Foundation Beyond Set, Category, and Type}
-\author{Jun Kawasaki\\ \texttt{root@junkawasaki.com}}
-\date{October 2025}
+\newcommand{\Res}{\mathsf{Res}}
+\newcommand{\Bis}{\mathrel{\sim_{\!b}}}
+\newcommand{\Quot}{I/{\sim_{\!b}}}
+\newcommand{\supp}{\operatorname{supp}}
+
+\title{Exact Descent of Ternary Relations along\\Incidence Bisimulation Quotients}
+\author{Jun Kawasaki\\\texttt{root@junkawasaki.com}}
+\date{July 2026}
 
 \begin{document}
-
 \maketitle
 
-% DOI and repository information
-This paper is available at Zenodo with DOI: \url{https://doi.org/10.5281/zenodo.17345516}. The complete formalization in Lean 4, including all proofs and examples, is available at the GitHub repository: \url{https://github.com/com-junkawasaki/inc}.
-
 \begin{abstract}
-Classical mathematical foundations—set theory, category theory, and type theory—provide distinct but compatible paradigms for representing mathematical and computational structure. Yet all share a fundamental limitation: they presuppose a separation between objects and relations. Sets collect elements, categories connect objects, and types classify terms, but none take relation itself as the primitive entity.
-
-We propose the Theory of Incidence as a fourth foundational system in which incidences—relations that may themselves relate to other incidences—are the sole primitive constituents of mathematical structure. Each incidence $i \in I$ is equipped with a boundary operator $\partial: I \to MSet(I \times R \times \Sigma \times N)$, assigning to $i$ a finite or guardedly infinite multiset of endpoint incidences, roles, orientations, and multiplicities. Composition of structures is governed by a gluing operator, subject to axioms (A1–A17) ensuring finiteness, type-consistency, compositional closure, and observational equivalence.
-
-Within this framework,
-\begin{itemize}
-\item Sets correspond to zero-ary incidences,
-\item Categories arise as incidence systems closed under gluing, and
-\item Types emerge as inductive or coinductive families over incidence configurations.
-\end{itemize}
-
-The theory admits multiple semantic realizations: a set-theoretic model (conservative over ZF), an adhesive-category model (gluing semantics), and a homotopy-type-theoretic model (via coinductive types). A linear-semantic layer—defined through boundary matrices and Laplacians—connects logical inference to spectral computation, linking proof theory with numerical analysis.
-
-The Theory of Incidence thus provides a unifying relational substrate for Set, Cat, and Type: a formalism where relations are first-class citizens, recursion and coinduction are native, and evolving or self-referential structures are expressible without additional meta-level machinery. This approach suggests a direction toward a unified foundation of mathematics and computation based purely on relational composition and equivalence.
+We study when an independently supplied, possibly multi-valued ternary relation
+on an incidence structure survives behavioral identification.  Exact descent to
+the incidence-bisimulation quotient is equivalent to coordinatewise
+representative independence; the descended relation is unique, and the
+quotient has both a kernel-pair coequalizer universal property and an abstract
+congruence-reflection formulation.  For a finite carrier of size $n$, failure
+is witnessed by one of three coordinate-tagged four-variable certificates,
+giving a $3n^4$ search rather than a six-variable search.  Support-minimal
+certificates carry an action of the resonance-bisimulation automorphism group.
+For a seven-cell simplex selector we prove, without relying on exhaustive
+cardinality computation, that there are exactly $32$ minimal obstruction
+orbits, partitioned into five structural families of sizes $8,4,4,12,4$.
+Positive examples include dimension-graded simplicial families and a small
+structural reaction-network model; a natural-number coproduct supplies an
+explicit failure.  The theorem package, categorical constructions, structural
+classification, and executable cross-checks are machine checked in Lean~4.
 \end{abstract}
 
 \section{Introduction}
-Classical foundations separate objects from relations. Incidence Theory unifies them by making relations primitive.
 
-\section{Formal Definitions}
+Quotienting a structured object is routine only after every relevant operation
+and relation has been shown independent of representatives.  This familiar
+principle becomes nontrivial when the equivalence is generated behaviorally by
+one part of a structure while another relation is supplied independently.  Our
+case has two layers: signed boundary data determines an incidence bisimulation,
+whereas a ternary relation $\Res(x,y,z)$ records a potentially multi-valued
+``resonance'' mode.  Boundary-indistinguishable cells need not be
+interchangeable in all three resonance coordinates.
+
+The central question is therefore precise:
+\begin{quote}
+When is there a ternary relation on the incidence-bisimulation quotient whose
+truth on quotient classes is exactly the original truth on every choice of
+representatives?
+\end{quote}
+The answer is the expected congruence condition, but its incidence-specific
+consequences are useful.  It yields a categorical quotient theorem, explicit
+positive and negative models, and a finite theory of compatibility
+obstructions.  The latter decomposes a global six-representative failure into
+three local four-variable failures and supports classification modulo the
+automorphisms that preserve both incidence bisimulation and resonance.
+
+Our contributions are:
+\begin{enumerate}
+\item an exact-descent iff theorem, uniqueness, universal factorization,
+kernel-pair coequalizer, reflection, and adjunction;
+\item a finite $3n^4$ obstruction criterion and support-minimal orbit theory;
+\item a structural, card-independent classification of the $32$ minimal
+obstruction orbits in a seven-cell simplex selector;
+\item generic graded and simplicial positive families, explicit negative and
+non-faithful positive examples, and a structural reaction-network instance;
+\item a Lean-to-paper index linking every stated result to checked declarations
+and their hypotheses.
+\end{enumerate}
+
+We do not claim novelty for congruence quotients, coequalizers, coalgebraic
+bisimulation, relational quotients, free algebras, or symmetry reduction in
+isolation.  These are established tools
+\cite{Rutten2000,Staton2011,Wissmann2020,BurrisSankappanavar,ChajdaLanger2010}.
+The contribution is the incidence-derived equivalence, its interaction with an
+independent ternary relation, and the resulting checked obstruction package.
+
+\section{Incidence, bisimulation, and exact descent}
+
+The Lean development uses a rich \texttt{Incidence} structure containing a
+carrier, typed signed boundary entries with positive multiplicity, a unit and
+gluing operation, structural laws, and ternary resonance.  Only the following
+reduct is needed for the main quotient theorem.
+
+\begin{definition}[Paper-facing reduct]
+An \emph{incidence--resonance system} consists of a set $I$, an equivalence
+relation $\Bis$ obtained from the boundary behavior of an incidence structure,
+and a ternary relation $\Res\subseteq I^3$.  Write $q:I\to\Quot$ for the quotient
+map.
+\end{definition}
+
+The full boundary definition matters for the examples and for how $\Bis$ is
+generated, but the descent argument depends only on the resulting equivalence.
+
+\begin{definition}[Exact descent]
+The relation $\Res$ \emph{descends exactly} if there is a relation
+$\overline{\Res}\subseteq(\Quot)^3$ such that, for all $x,y,z\in I$,
+\[
+ \overline{\Res}(q x,q y,q z)\quad\Longleftrightarrow\quad\Res(x,y,z).
+\]
+\end{definition}
+
+\begin{definition}[Resonance congruence]
+The equivalence $\Bis$ is a \emph{resonance congruence} if
+\[
+x_1\Bis x_2,\quad y_1\Bis y_2,\quad z_1\Bis z_2
+\quad\Longrightarrow\quad
+\bigl(\Res(x_1,y_1,z_1)\leftrightarrow\Res(x_2,y_2,z_2)\bigr).
+\]
+\end{definition}
+
+There is always an existential-image relation on quotient classes,
+\[
+\Res_q(X,Y,Z)\;:\!\Longleftrightarrow\;
+\exists x\in X\;\exists y\in Y\;\exists z\in Z,\ \Res(x,y,z).
+\]
+Without congruence it is a saturation rather than an exact representation.
+
+\begin{theorem}[Exact descent criterion]\label{thm:descent}
+$\Res$ descends exactly along $q$ if and only if $\Bis$ is a resonance
+congruence.  When these conditions hold, $\Res_q(qx,qy,qz)$ is equivalent to
+$\Res(x,y,z)$.
+\end{theorem}
+
+\begin{proof}
+If $\overline{\Res}$ is exact, replace representatives in each coordinate and
+use equality of quotient classes.  Conversely, congruence makes the displayed
+truth value independent of representatives; equivalently, the existential
+image $\Res_q$ reflects as well as preserves $\Res$.
+\end{proof}
+
+\begin{proposition}[Uniqueness]\label{prop:unique}
+Any relation on $(\Quot)^3$ exact on representatives equals $\Res_q$.
+\end{proposition}
+\begin{proof}
+Every quotient class has a representative.  Induction on the three quotient
+arguments reduces equality to exactness on $(qx,qy,qz)$.
+\end{proof}
+
+The criterion also admits a coalgebra-facing decomposition.  Say that resonance
+has \emph{mode transport} when replacing bisimilar left and right inputs can
+transport every output to some bisimilar resonant output, in both directions.
+Say that it is \emph{output saturated} when replacing an output by a bisimilar
+one preserves and reflects resonance.
+
+\begin{theorem}[Transport and saturation]\label{thm:transport-saturation}
+Exact descent is equivalent to mode transport along bisimilar inputs together
+with output saturation under bisimilarity.
+\end{theorem}
+The forward implication uses full three-coordinate congruence.  Conversely,
+transport supplies a suitable output representative after changing the two
+inputs, and output saturation first aligns that representative and then changes
+the requested output coordinate.
+
+\section{Universal and categorical formulations}
+
+Let a ternary resonance system be a set with a ternary relation, and let a
+morphism preserve that relation.  These systems and morphisms form a category
+$\mathbf{TRS}$.  A map $f:I\to A$ is bisimulation invariant when
+$x\Bis y$ implies $f(x)=f(y)$.
+
+\begin{theorem}[Universal factorization]\label{thm:factor}
+Every bisimulation-invariant resonance morphism $f:I\to A$ factors uniquely as
+$I\xrightarrow{q}\Quot\xrightarrow{\bar f}A$.  If
+\cref{thm:descent} holds, $\bar f$ is a resonance morphism from
+$(\Quot,\Res_q)$.
+\end{theorem}
+\begin{proof}
+Define $\bar f([x])=f(x)$.  Invariance gives well-definedness, quotient
+surjectivity gives uniqueness, and the existential definition of $\Res_q$
+reduces relation preservation to that of $f$.
+\end{proof}
+
+Form the kernel-pair carrier
+$K=\{(x,y)\in I^2\mid x\Bis y\}$, equipped componentwise with resonance, and
+let $p_1,p_2:K\rightrightarrows I$ be the projections.
+
+\begin{theorem}[Kernel-pair coequalizer]\label{thm:coeq}
+Under resonance congruence, the quotient projection is a coequalizer of
+$p_1,p_2$ in $\mathbf{TRS}$.  The Lean category-theory interface packages the
+quotient cocone as a \texttt{Cofork} carrying an \texttt{IsColimit}; the induced
+hom-set equivalence is natural under postcomposition.
+\end{theorem}
+
+The same theorem is not specific to incidence after the congruence has been
+identified.  Let $\mathbf{CTRS}$ be ternary systems bundled with a setoid that
+is a relation congruence.  Quotienting defines
+$Q:\mathbf{CTRS}\to\mathbf{TRS}$, while equipping a system with equality defines
+$E:\mathbf{TRS}\to\mathbf{CTRS}$.
+
+\begin{theorem}[Congruence reflection]\label{thm:adjunction}
+There is an adjunction $Q\dashv E$.  Its objectwise unit is the quotient
+projection and its hom-set equivalence is the factorization of
+\cref{thm:factor}.  Every resonance-congruent incidence-bisimulation quotient is
+an instance of this reflection.
+\end{theorem}
+
+These categorical results state the universal status of the quotient; they are
+not presented as a new general theorem about congruences.
+
+\section{Finite compatibility obstructions}
+
+Negating resonance congruence yields six representatives.  It is more useful to
+change one coordinate at a time.
+
+\begin{definition}[Local obstruction]
+A local obstruction consists of a tag $c\in\{L,R,O\}$, a bisimilar but distinct
+pair $a\Bis a'$, and two fixed entries $u,v$, such that replacing $a$ by $a'$ in
+coordinate $c$ changes the truth of $\Res$.  For example, a left obstruction
+satisfies
+\[
+\Res(a,u,v)\not\leftrightarrow\Res(a',u,v).
+\]
+The right and output cases are analogous.
+\end{definition}
+
+\begin{theorem}[Coordinatewise classification]\label{thm:coordinate}
+Resonance congruence is equivalent to invariance separately in the left, right,
+and output coordinates.  Hence exact descent fails if and only if a local
+obstruction exists.
+\end{theorem}
+\begin{proof}
+Global congruence immediately implies each one-coordinate condition.  For the
+converse, move from $(x_1,y_1,z_1)$ to $(x_2,y_2,z_2)$ through the three
+intermediate triples, changing one coordinate at a time.
+\end{proof}
+
+\begin{corollary}[Finite search]\label{cor:3n4}
+For a finite carrier of size $n$ with decidable equivalence and resonance,
+exact descent is equivalent to emptiness of an executable obstruction table
+with three tagged searches over four carrier entries.  The raw search space has
+size $3n^4$.
+\end{corollary}
+
+Swapping $a$ and $a'$ is a fixed-point-free involution on local obstructions, so
+every swap orbit has two elements.  More structure is obtained from
+automorphisms preserving both $\Bis$ and $\Res$.
+
+\begin{definition}[Support-minimal obstruction]
+The support of a local obstruction is the set of carrier elements appearing in
+its representative pair and fixed entries.  An obstruction is support-minimal
+when no obstruction has strictly smaller support cardinality.
+\end{definition}
+
+\begin{theorem}[Minimal orbit criterion]\label{thm:minimal-orbit}
+Every failed finite exact descent has a support-minimal local obstruction.
+Resonance-bisimulation automorphisms preserve obstruction status, support size,
+and minimality.  Exact descent is equivalent to absence of an orbit containing
+a support-minimal obstruction.  For finite decidable systems, these orbits form
+an executable table.
+\end{theorem}
+
+For graph-functional resonance, $\Res(x,y,z)$ is the graph of a selector
+$s(x,y)=z$.  Two generic mechanisms generate obstructions: selector disagreement
+on bisimilar inputs, and a selected output class containing more than one
+element.  Thus exact descent forces selector invariance and singleton selected
+output classes under the hypotheses formalized in the development.
+
+\section{The seven-cell simplex classification}
+
+The principal finite example has cells
+\[
+V=\{v_0,v_1,v_2\},\qquad
+E=\{e_{01},e_{02},e_{12}\},\qquad
+F=\{f_{012}\}.
+\]
+Boundary behavior identifies exactly cells of the same shape: the three
+vertices form one class, the three edges a second, and the face a singleton.
+An ordinary simplex selector supplies graph-functional resonance and fails
+exact descent.
+
+\begin{theorem}[Sharp support]\label{thm:support-two}
+Every local obstruction has support size at least two.  The simplex selector
+has support-minimal obstructions of size two, and every support-minimal simplex
+obstruction has support exactly two.  Its representative pair has vertex or
+edge shape, never face shape, and both fixed entries belong to that pair.
+\end{theorem}
+
+The automorphism group of the simplex resonance/bisimulation structure has
+$12$ elements.  Pair transitivity normalizes each ordered distinct edge pair to
+$(e_{01},e_{02})$ and gives the corresponding vertex normalizations.  Four
+fixed-slot patterns encode the two fixed entries drawn from a representative
+pair.  Combining coordinate, shape, distinguished-$v_0$ position, and slot
+equality yields eight structural parameter summands.
+
+\begin{theorem}[Structural orbit classification]\label{thm:32}
+The support-minimal simplex obstruction orbits are in explicit bijection with a
+$32$-element structural parameter type.  They split into five
+coordinate-and-shape families with orbit counts
+\[
+8,\quad4,\quad4,\quad12,\quad4,
+\qquad 8+4+4+12+4=32.
+\]
+The parameter map is injective by an orbit-constant normal-form signature and
+surjective by explicit automorphism normalization.  Consequently the count
+$32$ does not depend on native enumeration.
+\end{theorem}
+
+\begin{proof}[Proof architecture]
+Each parameter constructs an obstruction whose fixed slots lie in its distinct
+representative pair; a general two-support lemma proves minimality.  The
+normal-form signature separates parameter values, proving injectivity on
+orbits.  Conversely, \cref{thm:support-two} restricts an arbitrary minimal
+obstruction to a vertex or edge pair and four slot patterns.  Pair transitivity
+and coordinate-specific normalization carry it to a canonical parameter,
+proving surjectivity.  The displayed cardinal arithmetic then gives $32$.
+\end{proof}
+
+Lean also evaluates the complete finite tables, independently obtaining $12$
+automorphisms and $32$ minimal orbits.  This computation is a cross-check, not
+the proof of \cref{thm:32}.
+
+\section{Positive and negative models}
+
+\subsection{Explicit failure and success}
+
+A coproduct of two natural-number incidence systems is an explicit negative
+model: boundary behavior identifies representatives that its resonance
+distinguishes, so no exact quotient relation exists.
+
+The saturated simplex relation, by contrast, is closed across the three shape
+classes.  Its seven cells collapse non-faithfully to vertex, edge, and face,
+and resonance descends exactly.  A non-saturated geometric variant declares an
+output mode when its shape equals either input shape:
+\[
+\overline{\Res}(\ell,r,o)\quad\Longleftrightarrow\quad
+(o=\ell)\lor(o=r).
+\]
+Vertex--face interaction therefore has two output modes and is genuinely
+multi-valued.
+
+\subsection{Graded representation theorem}
+
+\begin{theorem}[Class-mode representation]\label{thm:graded}
+Let $g:I\twoheadrightarrow G$ be a surjective classifier whose kernel is
+incidence bisimulation.  Suppose the class-mode selector always chooses one of
+the two input classes and is compatible with $g$.  Then resonance descends
+exactly and the quotient relation is represented by
+\[
+\overline{\Res}(g x,g y,g z)
+\quad\Longleftrightarrow\quad
+(g z=g x)\lor(g z=g y).
+\]
+Grade-preserving maps induce resonance morphisms and respect identity and
+composition.
+\end{theorem}
+
+A bounded graded-boundary profile gives sufficient boundary hypotheses for
+$g(x)=g(y)$ iff $x\Bis y$: positive-dimensional boundaries lower grade by one,
+are nonempty, and equal-grade cells have matching boundary profiles.  This
+reconstructs the triangle grading and applies to an infinite node/edge path.
+
+\begin{corollary}[Simplicial families]
+Every downward-closed decidable family of nonempty finite vertex sets, with a
+chosen unit cell, carries the codimension-one incidence used in the Lean
+development.  Two cells are bisimilar exactly when their dimensions agree, and
+the represented dimensions give an exact class-mode quotient as in
+\cref{thm:graded}.
+\end{corollary}
+
+\subsection{Structural reaction network}
+
+Signed reactant/product boundaries encode the reversible pair $A\rightleftarrows
+B$.  A separate ternary relation records molecular modes exposed by interacting
+reaction modes.
+
+\begin{proposition}[Reaction-network instance]
+The model's bisimulation classes are exactly ``molecule'' and ``reaction''.
+Resonance descends exactly to these two classes, while the source model is
+non-faithful and genuinely multi-valued.
+\end{proposition}
+
+This is a structural Petri-net-style toy, not a kinetic semantics: it contains
+no rates, concentrations, firing semantics, mass-action dynamics,
+thermodynamics, or empirical claim.  Established compositional reaction-network
+semantics are substantially richer \cite{BaezPollard2017,CategoriesOfNets}.
+
+\section{Presentations, logic, and boundary encoding}
+
+The formal development contains three supporting extensions.
+
+First, unit-normal binary trees form a free empty-boundary incidence.  Adding
+irreflexive generator-boundary lists and ternary relation generators gives a
+presented free incidence.  Every compatible generator interpretation extends
+uniquely to a morphism preserving unit, glue, boundary membership, and
+resonance.  Term equations generate the least glue congruence; the quotient is
+an incidence exactly when boundary data is representative independent and no
+endpoint collapses to its source, and resonance descends exactly when the
+generated equation relation is a resonance congruence.  These three iff
+conditions form one quotient-admissibility certificate.  This is an objectwise
+universal property; we do not claim a proved adjunction between categories of
+presentations and incidence algebras.
+
+Second, a propositional observation language generated by one ternary atom,
+truth, falsity, conjunction, disjunction, and implication satisfies:
+\begin{theorem}[Logical necessity]
+Exact descent is equivalent to invariance of every formula under pointwise
+bisimilar valuations.  If descent fails, the atomic resonance formula already
+separates two such valuations.
+\end{theorem}
+The translation into the repository's conservative \texttt{IncProof.Formula}
+syntax commutes with its forgetful retraction and preserves semantics for
+agreeing physical interpretations.  No quotient rule for the
+\texttt{IncProof.Derives} judgment is claimed.
+
+Third, every boundary occurrence yields a three-sorted incidence hypergraph
+\[
+\mathsf{IncidencePoint}\longrightarrow\mathsf{Vertex},
+\qquad
+\mathsf{IncidencePoint}\longrightarrow\mathsf{Edge},
+\]
+where endpoint cells are vertices and boundary-source cells are edges.
+Structured incidence morphisms induce commuting maps and preserve identity and
+composition.  This encoding is deliberately forgetful: roles, signs,
+multiplicities, glue, guards, types, and resonance are not recoverable.  It is
+not an equivalence or faithful representation of the full theory.  Categorical
+incidence hypergraphs already form an established theory
+\cite{GrillietteRusnak2018}.
+
+\section{Related work and claim boundary}
+
+Congruence quotients and free algebras are standard universal algebra
+\cite{BurrisSankappanavar}.  Coalgebra supplies behavioral equivalence,
+bisimulation, minimization, and quotient reasoning
+\cite{Rutten2000,Staton2011,Wissmann2020,DorschEtAl2017}.  Bisimulation
+invariance and expressive modal languages are also established
+\cite{BakhtiariHansen2017,BakhtiariEtAl2019}; Mari\'c studies bisimulation
+quotients directly in inquisitive modal logic \cite{Maric2025}.  Quotients and
+strong homomorphisms of relational systems precede the present work
+\cite{Novotny1997,ChajdaLanger2010}, and many-sorted quotient algebra has been
+mechanized in Mizar \cite{Korolkiewicz1996}.  Isabelle's bounded-natural-functor
+development includes bisimulation and quotient-coalgebra infrastructure
+\cite{BNFOperations}.
+
+Accordingly, the exact-descent criterion is an instance of standard relational
+compatibility once the incidence equivalence is fixed.  Our novelty claim is
+limited to the combined incidence/resonance theorem package and its particular
+finite obstruction invariant.  We make no priority or formalization-first
+claim.  A scoped public and mechanized prior-art audit accompanies the source;
+subscription-database citation traversal and external specialist review remain
+requirements before asserting a stronger journal-level novelty position.
+
+\section{Mechanization and reproducibility}
+
+All results are checked with Lean~4 and mathlib v4.23.0.  The main source is
+\path{IncidenceTheory/IncidenceResearch.lean}.  The repository maintains:
 \begin{itemize}
-\item Incidence set $I$
-\item Boundary operator $\partial: I \to MSet(I \times R \times \Sigma \times N)$
+\item a completion-claim matrix mapping scoped claims to declarations;
+\item a 29-row Lean-to-paper theorem index whose boundaries are checked in CI;
+\item an axiom audit allowing only \texttt{propext},
+\texttt{Classical.choice}, and \texttt{Quot.sound} in the capstone dependency
+closure;
+\item executable finite counts as independent checks of the structural proof.
 \end{itemize}
-
-\section{Axioms (A1–A17)}
-\begin{table}[h]
-\centering
-\caption{Axioms of Incidence Theory (A1–A17)}
-\label{tab:axioms}
-\begin{tabular}{|c|l|l|}
-\hline
-Axiom & Description & Lean Implementation \\
-\hline
-A1 & Finite Endpoints & \texttt{Incidence.boundary\_finite} \\
-A2 & Type Consistency & \texttt{Incidence.type\_consistent} \\
-A3 & Sign Rules & \texttt{Incidence.boundary\_signs} \\
-A4 & Multiplicities & \texttt{Incidence.boundary\_multiplicities} \\
-A5 & Well-founded Mode & \texttt{Incidence.well\_founded} \\
-A6 & Gluing Existence & \texttt{Incidence.gluing} \\
-A7 & Unit Laws & \texttt{Incidence.gluing\_unit\_left/right} \\
-A8 & Associativity & \texttt{Incidence.gluing\_associative} \\
-A9 & Type Preservation & \texttt{Incidence.gluing\_type\_preserves} \\
-A10 & Guard Preservation & \texttt{Incidence.guard\_preservation} \\
-A11 & Observational Equivalence & \texttt{approx}, \texttt{approx\_refl/symm/trans} \\
-A12 & Congruence & \texttt{Incidence.congruence\_gluing} \\
-A13 & Normalization & \texttt{normalization\_property} \\
-A14 & Functoriality & \texttt{functoriality} \\
-A15 & Colimits & \texttt{colimits\_exist} \\
-A16 & Boundary Matrix & \texttt{boundary\_matrix\_well\_defined} \\
-A17 & Laplacian & \texttt{laplacian\_well\_defined} \\
-\hline
-\end{tabular}
-\end{table}
-
-\section{Relations to Set, Category, and Type Theories}
-
-We establish embeddings of set theory, category theory, and type theory into the Theory of Incidence.
-
-\begin{theorem}[Set Embedding]
-\label{thm:set-embedding}
-Sets can be represented as incidences containing nullary incidences as elements, with extensionality preserved through observational equivalence.
-\end{theorem}
-
-\begin{proof}
-A set $S$ is represented by an incidence $i_S$ where:
-\begin{itemize}
-\item The boundary of $i_S$ contains exactly the nullary incidences representing elements of $S$
-\item Membership $x \in S$ corresponds to $x$ appearing in the boundary of $i_S$
-\item Extensionality: Two sets are equal iff they have the same elements
-\end{itemize}
-
-This embedding is formalized in Lean as \texttt{represents\_set} and \texttt{set\_embedding\_extensionality} in \path{IncidenceTheory/Basic.lean}.
-\end{proof}
-
-\begin{theorem}[Category Embedding]
-\label{thm:category-embedding}
-Categories arise naturally from incidence structures closed under gluing operations.
-\end{theorem}
-
-\begin{proof}
-\begin{itemize}
-\item Objects are represented as incidences
-\item Morphisms are represented as incidences with appropriate boundary structure
-\item Composition is given by the gluing operation, which satisfies associativity (A8)
-\item Identity morphisms are represented by unit incidences (A7)
-\end{itemize}
-
-The associativity of composition follows directly from \texttt{gluing\_associative} in \path{IncidenceTheory/Basic.lean}.
-\end{proof}
-
-\begin{theorem}[Type Embedding]
-\label{thm:type-embedding}
-Inductive and coinductive types can be represented through recursive incidence structures.
-\end{theorem}
-
-\begin{proof}
-\begin{itemize}
-\item Inductive types are represented by incidences that may refer to themselves through boundaries
-\item Constructors are represented as incidences with appropriate argument structure
-\item Coinductive types allow infinite unfoldings controlled by observational equivalence
-\end{itemize}
-
-This is formalized through \texttt{is\_inductive\_form}, \texttt{is\_coinductive\_form}, and related theorems in \path{IncidenceTheory/Basic.lean}.
-\end{proof}
-
-\begin{theorem}[Set Operations Preservation]
-\label{thm:set-operations}
-Basic set operations (union, intersection, etc.) are preserved under the incidence embedding.
-\end{theorem}
-
-\begin{proof}
-Set operations are implemented via gluing operations on incidence structures. Union corresponds to boundary merging, intersection to boundary filtering. Formalized as \texttt{set\_operations\_preserved} in \path{IncidenceTheory/Basic.lean}.
-\end{proof}
-
-\begin{theorem}[Category Laws]
-\label{thm:category-laws}
-The incidence embedding satisfies all category laws: associativity, identity, and composition.
-\end{theorem}
-
-\begin{proof}
-Associativity follows from axiom A8 (\texttt{gluing\_associative}), identity laws from A7 (\texttt{gluing\_unit\_left/right}), and composition from the morphism structure (\texttt{morphism\_composition\_via\_gluing}).
-\end{proof}
-
-\begin{theorem}[Inductive Recursion]
-\label{thm:inductive-recursion}
-Inductive incidences support structural recursion principles.
-\end{theorem}
-
-\begin{proof}
-Recursion is implemented through boundary traversal and gluing operations, formalized as \texttt{inductive\_recursion\_principle} in \path{IncidenceTheory/Basic.lean}.
-\end{proof}
-
-\begin{theorem}[Coinductive Corecursion]
-\label{thm:coinductive-corecursion}
-Coinductive incidences support guarded corecursion via bisimulation.
-\end{theorem}
-
-\begin{proof}
-Corecursion is enabled by observational equivalence (A11) which provides the necessary bisimulation relation, formalized as \texttt{coinductive\_corecursion\_principle}.
-\end{proof}
-
-\section{Semantic Models}
-
-We provide three semantic interpretations of the Theory of Incidence, establishing its relative consistency.
-
-\begin{theorem}[ZF Set-Theoretic Model]
-\label{thm:zf-model}
-The Theory of Incidence can be consistently interpreted in ZF set theory.
-\end{theorem}
-
-\begin{proof}
-We sketch a ZF interpretation in which incidences are encoded as sets that carry
-boundary information, boundaries are represented by suitable set-theoretic
-encodings, gluing corresponds to a set-theoretic composition (e.g., union on
-encoded boundaries), and the unit corresponds to the empty set. Under this
-interpretation, the axioms (A1--A8, A11) hold by standard ZF constructions
-and properties (finite set formation, extensionality, associativity of union,
-etc.). A detailed formal development is provided in the accompanying codebase.
-\end{proof}
-
-\begin{theorem}[Adhesive Category Model]
-\label{thm:adhesive-model}
-Gluing operations correspond to pushouts in adhesive categories.
-\end{theorem}
-
-\begin{proof}
-The gluing operation satisfies the properties of pushouts in adhesive categories:
-\begin{itemize}
-\item Van Kampen squares exist for gluing operations
-\item The gluing preserves the incidence structure
-\item Type consistency ensures category-theoretic properties
-\end{itemize}
-\end{proof}
-
-\begin{theorem}[Homotopy Type Theory Model]
-\label{thm:hott-model}
-Recursive incidences correspond to coinductive types in HoTT.
-\end{theorem}
-
-\begin{proof}
-\begin{itemize}
-\item Inductive incidences model inductive types with path constructors
-\item Coinductive incidences model coinductive types with guarded recursion
-\item Observational equivalence corresponds to propositional equality in HoTT
-\end{itemize}
-\end{proof}
-
-\begin{theorem}[Type Consistency]
-\label{thm:type-consistency-semantic}
-Boundary incidences share the same type as their parent incidence.
-\end{theorem}
-
-\begin{proof}
-This follows directly from axiom A2, formalized as the \texttt{type\_consistent} property of the Incidence structure and proved as \texttt{type\_consistency} theorem in \path{IncidenceTheory/Basic.lean}.
-\end{proof}
-
-\begin{theorem}[Observational Equivalence as Bisimulation]
-\label{thm:observational-bisimulation}
-The relation $\approx$ defined by type and boundary equality forms a bisimulation.
-\end{theorem}
-
-\begin{proof}
-Observational equivalence is reflexive, symmetric, and transitive, as established by theorems \texttt{approx\_refl}, \texttt{approx\_symm}, and \texttt{approx\_trans} in \path{IncidenceTheory/Basic.lean}. The bisimulation property ensures that equivalent incidences cannot be distinguished by their observable behavior.
-\end{proof}
-
-\section{Linear Semantics}
-
-The Theory of Incidence provides a linear-algebraic layer that connects logical inference to spectral computation.
-
-\begin{theorem}[Boundary Matrix Well-Defined]
-\label{thm:boundary-matrix}
-Boundary matrices are well-defined for finite incidence systems.
-\end{theorem}
-
-\begin{proof}
-For a list of incidences, the boundary matrix $B[i,j]$ encodes the incidence coefficients between incidences $i$ and $j$. Formally defined as \texttt{boundary\_matrix} in \path{IncidenceTheory/Basic.lean}, with well-definedness established by \texttt{boundary\_matrix\_well\_defined}.
-\end{proof}
-
-\begin{theorem}[Laplacian Well-Defined]
-\label{thm:laplacian}
-The Laplacian matrix $L = B^T B$ captures combinatorial structure.
-\end{theorem}
-
-\begin{proof}
-The Laplacian is constructed from the boundary matrix and is well-defined by \texttt{laplacian\_well\_defined}. Its eigenvalues and eigenvectors encode structural properties of the incidence system.
-\end{proof}
-
-\begin{theorem}[Normalization Preserves Equivalence]
-\label{thm:normalization}
-Boundary normalization preserves observational equivalence.
-\end{theorem}
-
-\begin{proof}
-Canonical boundary representations maintain the same observable behavior, formalized as \texttt{normalization\_preserves\_equivalence}.
-\end{proof}
-
-\begin{theorem}[Incidence Category]
-\label{thm:incidence-category}
-Incidence structures form a category with functorial mappings.
-\end{theorem}
-
-\begin{proof}
-The incidence functor \texttt{incidence\_functor} preserves the incidence structure, enabling category-theoretic reasoning as shown in \texttt{incidence\_category}.
-\end{proof}
-
-\begin{theorem}[Colimits in Incidence Category]
-\label{thm:colimits}
-The category of incidence structures admits colimits.
-\end{theorem}
-
-\begin{proof}
-Gluing operations provide the pushouts necessary for colimits, established by \texttt{colimits\_exist\_in\_incidence\_category}.
-\end{proof}
-
-\section{Examples and Applications}
-
-We demonstrate the practical applicability of Incidence Theory through concrete examples in graph theory, computation, and biology.
-
-\begin{example}[Graph Theory]
-\label{ex:graph-theory}
-Consider a directed triangle graph with nodes A, B, C and edges $A\to B$, $B\to C$, $C\to A$. In Incidence Theory:
-
-\begin{itemize}
-\item Each node is represented as a nullary incidence (\texttt{make\_node})
-\item Each edge is a binary incidence connecting two nodes (\texttt{make\_edge})
-\item The entire graph is an incidence containing all nodes and edges (\texttt{triangle\_graph})
-\end{itemize}
-
-Graph isomorphism reduces to observational equivalence of the representing incidences, as shown in \texttt{graph\_isomorphism\_via\_observational\_equivalence}.
-\end{example}
-
-\begin{example}[Hypergraphs]
-\label{ex:hypergraphs}
-Hypergraphs generalize graphs by allowing edges to connect multiple vertices simultaneously. In Incidence Theory, hyperedges are naturally represented as n-ary incidences:
-
-\begin{itemize}
-\item A hyperedge connecting vertices $v_1, \\dots, v_n$ is an incidence whose boundary contains all $v_i$
-\item The \texttt{make\_hyperedge} function constructs such structures
-\item Complex graphs like the Petersen graph can be represented using hyperedges
-\end{itemize}
-
-This demonstrates how Incidence Theory extends beyond traditional graph theory.
-\end{example}
-
-\begin{example}[Self-Referential Systems]
-\label{ex:self-reference}
-Incidence Theory handles self-reference through controlled recursion:
-
-\begin{itemize}
-\item Self-referential incidences can refer to themselves in their boundaries
-\item Quine-like structures (\texttt{quine\_structure}) demonstrate self-description
-\item \texttt{self\_referential\_well\_defined} ensures such structures are well-formed
-\end{itemize}
-
-This enables modeling of reflective systems and self-modifying code.
-\end{example}
-
-\begin{example}[Process Calculus]
-\label{ex:process-calculus}
-Concurrent processes can be modeled using incidences:
-
-\begin{itemize}
-\item Each process is an incidence with input/output boundaries
-\item Parallel composition uses gluing (\texttt{parallel\_composition})
-\item Communication occurs through shared boundary incidences (\texttt{communicate})
-\end{itemize}
-
-The embedding is formalized in \texttt{process\_calculus\_embedding}, showing how $\pi$-calculus operations translate to incidence operations.
-\end{example}
-
-\begin{example}[Metabolic Networks]
-\label{ex:metabolic-networks}
-Biological pathways form natural incidence systems:
-
-\begin{itemize}
-\item Metabolites are nodes (\texttt{metabolite})
-\item Reactions are incidences transforming input to output metabolites (\texttt{make\_reaction})
-\item Complete pathways like glycolysis (\texttt{glycolysis\_pathway}) are structured incidences
-\end{itemize}
-
-This enables network analysis through the linear algebraic layer, as shown in \texttt{metabolic\_network\_structure}.
-\end{example}
-
-\begin{theorem}[Universal Applicability]
-\label{thm:universal-applicability}
-Incidence Theory provides a unified framework for modeling relational structures across domains.
-\end{theorem}
-
-\begin{proof}
-The examples above demonstrate that diverse structures—graphs, processes, metabolic networks—all embed naturally into Incidence Theory. The common pattern is representing entities as incidences and relationships as boundary connections, unified through gluing operations and observational equivalence.
-\end{proof}
-
-\section{Related Work}
-Incidence Theory builds upon and extends several established areas:
-
-- \textbf{Higher Operads and $\\infty$-Categories}: Our recursive boundary operator and gluing align with the structure of higher operads and $\\omega$-categories~\cite{LeinsterOperads}, providing a concrete realization for abstract $\\infty$-dimensional structures.
-- \textbf{Adhesive Categories and DPO Rewriting}: Gluing semantics correspond to pushouts in adhesive categories~\cite{LackAdhesive}, enabling formal model transformation.
-- \textbf{Coalgebra and Coinduction}: The coinductive mode and observational equivalence draw from bisimulation in coalgebraic systems~\cite{RuttenUniversalCoalgebra}, adapted to relational structures.
-- \textbf{Homotopy Type Theory}: Inductive/coinductive families in Inc mirror HoTT's types~\cite{HoTTBook}, with incidence boundaries as paths.
-
-Inc differs by unifying these into a single relational primitive, avoiding meta-level machinery for recursion or self-reference.
+The verification entry point is \texttt{./verify.sh}.  Source and reproducibility
+metadata are available at \url{https://github.com/com-junkawasaki/inc}.
 
 \section{Conclusion}
-The Theory of Incidence establishes a relational foundation unifying Set, Cat, and Type.
 
-\section*{Statement on the use of AI tools}
-An AI tool (Grok-4, xAI) was used for language editing, outline refinement, and copy-editing suggestions during manuscript preparation. The AI is not listed as an author and did not generate novel research content, data, proofs, or analysis. The author verified and is accountable for the accuracy, integrity, and originality of all content, and all sources are cited where appropriate, in accordance with the Cambridge University Press policy on AI contributions to research content.
+An incidence quotient preserves an independent ternary relation exactly when
+incidence bisimulation is a congruence for that relation.  Beyond this standard
+quotient mechanism, coordinate decomposition turns failure into a finite
+$3n^4$ obstruction problem, and automorphism normalization exposes a concrete
+structural classification: $32$ minimal orbits for the seven-cell simplex
+selector.  The categorical, finite, logical, simplicial, and reaction-network
+instances are checked in one Lean development, with broad foundational and
+applied claims kept outside scope.
 
 \appendix
-\section{Lean Artifacts and Reproducibility}
-The accompanying Lean4 artifacts (axioms, lemmas, and examples) are provided in
-the repository under \path{IncidenceTheory/}. For precise reproducibility, refer
-to the repository release '251014'.
+\section{Checked theorem groups}
 
-\bibliographystyle{alpha}
-\bibliography{references}
+The machine-readable theorem index contains 29 groups.  For readability they
+are summarized here; the repository's TSV theorem index is authoritative for
+exact Lean declarations and hypotheses.
 
+\begin{center}\small
+\begin{tabular}{@{}r p{0.79\linewidth}@{}}
+\toprule
+1--4 & core structures; exact descent; uniqueness; universal factorization \\
+5--6 & natural-number obstruction; saturated-simplex positive model \\
+7--11 & finite, coordinate, swap-orbit, functional, and support-minimal classifications \\
+12--14 & transport/saturation criterion; kernel-pair and standard categorical coequalizers \\
+15--16 & geometric simplex and generic class-mode representation \\
+17--21 & free, presented, equational, logical, and reference-syntax results \\
+22--24 & congruence reflection, graded functoriality, and quotient adjunction \\
+25--27 & infinite path, bounded grading, and standard simplicial families \\
+28--29 & forgetful incidence-hypergraph encoding and reversible reaction model \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{thebibliography}{99}
+\bibitem{BaezPollard2017} J.~C. Baez and B.~S. Pollard.
+  A compositional framework for reaction networks.
+  \emph{Rev. Math. Phys.} 29(9), 2017. doi:10.1142/S0129055X17500283.
+\bibitem{CategoriesOfNets} J.~C. Baez, F. Genovese, J. Master, and M. Shulman.
+  Categories of nets. arXiv:2101.04238, 2021.
+\bibitem{BakhtiariHansen2017} Z. Bakhtiari and H.~H. Hansen.
+  Bisimulation for weakly expressive coalgebraic modal logics.
+  \emph{CALCO 2017}, LIPIcs 72, 4:1--4:16.
+\bibitem{BakhtiariEtAl2019} Z. Bakhtiari, H.~H. Hansen, and A. Kurz.
+  On the logic of behavioural equivalence, 2019.
+\bibitem{BNFOperations} J.~C. Blanchette, A. Popescu, and D. Traytel.
+  Operations on bounded natural functors.
+  \emph{Archive of Formal Proofs}, 2017.
+\bibitem{BurrisSankappanavar} S. Burris and H.~P. Sankappanavar.
+  \emph{A Course in Universal Algebra}. Springer, 1981.
+\bibitem{ChajdaLanger2010} I. Chajda and H. L\"anger.
+  Quotients and homomorphisms of relational systems.
+  \emph{Acta Univ. Palacki. Olomuc., Fac. Rerum Nat., Math.} 49(2):37--47, 2010.
+\bibitem{DorschEtAl2017} U. Dorsch, S. Milius, L. Schr\"oder, and T. Wi{\ss}mann.
+  Efficient coalgebraic partition refinement.
+  \emph{CONCUR 2017}, LIPIcs 85, 32:1--32:16.
+\bibitem{GrillietteRusnak2018} J. Grilliette and L.~J. Rusnak.
+  Incidence hypergraphs: box products and the Laplacian.
+  arXiv:1805.07670, 2018.
+\bibitem{Korolkiewicz1996} M. Korolkiewicz.
+  Many sorted quotient algebra.
+  \emph{Formalized Mathematics} 5(1):79--84, 1996.
+\bibitem{Maric2025} S. Mari\'c.
+  Bisimulation quotient in inquisitive modal logic.
+  \emph{Logics} 3(3):11, 2025. doi:10.3390/logics3030011.
+\bibitem{Novotny1997} M. Novotn\'y.
+  Homomorphisms and strong homomorphisms of relational structures.
+  \emph{Archivum Mathematicum} 33(1--2):57--64, 1997.
+\bibitem{Rutten2000} J.~J.~M.~M. Rutten.
+  Universal coalgebra: a theory of systems.
+  \emph{Theor. Comput. Sci.} 249(1):3--80, 2000.
+\bibitem{Staton2011} S. Staton.
+  Relating coalgebraic notions of bisimulation.
+  \emph{Logical Methods in Computer Science} 7(1), 2011.
+\bibitem{Wissmann2020} T. Wi{\ss}mann.
+  \emph{Coalgebraic Semantics and Minimization in Sets and Beyond}.
+  PhD thesis, Friedrich-Alexander-Universit\"at Erlangen--N\"urnberg, 2020.
+\end{thebibliography}
 \end{document}

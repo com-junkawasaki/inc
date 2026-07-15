@@ -1,14 +1,23 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 type: software
-title: "Theory of Incidence — A Fourth Foundation"
-version: "260712"
-date-released: 2026-07-12
+title: "Incidence Theory: Lean 4 Formalization of Bisimulation, Quotients, and Ternary Resonance"
+version: "260715"
+date-released: 2026-07-15
 authors:
-- family-names: "Junkawasaki"
-  given-names: ""
+- family-names: "Kawasaki"
+  given-names: "Jun"
   orcid: ""
 repository-code: "https://github.com/com-junkawasaki/inc"
 url: "https://github.com/com-junkawasaki/inc"
 doi: "10.5281/zenodo.17345515"
 license: Apache-2.0
+preferred-citation:
+  type: article
+  title: "Exact Descent of Ternary Relations along Incidence Bisimulation Quotients"
+  authors:
+  - family-names: "Kawasaki"
+    given-names: "Jun"
+  year: 2026
+  month: 7
+  repository-code: "https://github.com/com-junkawasaki/inc"

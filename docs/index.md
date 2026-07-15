@@ -1,12 +1,12 @@
 ---
 layout: default
 title: Incidence Theory
-description: A Fourth Foundation for Mathematics and Computation
+description: Machine-checked incidence, bisimulation, quotient, and ternary-resonance theory
 ---
 
 # 🧮 Incidence Theory
 
-**A Fourth Foundation Beyond Set, Category, and Type**
+**Machine-checked incidence, bisimulation, quotient, and ternary-resonance theory**
 
 [![CI Status](https://github.com/com-junkawasaki/inc/actions/workflows/ci.yml/badge.svg)](https://github.com/com-junkawasaki/inc/actions/workflows/ci.yml)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17345515.svg)](https://doi.org/10.5281/zenodo.17345515)

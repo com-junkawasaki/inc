@@ -21,10 +21,8 @@ jobs:
       with:
         lake-package-directory: incidence-theory
 
-    - name: Run examples
-      run: |
-        cd incidence-theory
-        lake exe incidence-theory
+    - name: Verify proofs, examples, claims, and axiom allowlist
+      run: ./verify.sh
 
   deploy:
     runs-on: ubuntu-latest

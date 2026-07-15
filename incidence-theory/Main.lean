@@ -12,6 +12,25 @@ import IncidenceTheory.Tree
 import IncidenceTheory.Product
 import IncidenceTheory.Sum
 import IncidenceTheory.Quotient
+import IncidenceTheory.IncidenceResearch
+import IncidenceTheory.ReferenceFoundation
+import IncidenceTheory.ReferenceFoundationLogic
+import IncidenceTheory.ReferenceFoundationMetatheory
+import IncidenceTheory.ReferenceFoundationKripke
+import IncidenceTheory.ReferenceFoundationInfinity
+import IncidenceTheory.ReferenceFoundationCanonical
+import IncidenceTheory.ReferenceFoundationZFModel
+import IncidenceTheory.ReferenceFoundationEncoding
+import IncidenceTheory.ReferenceFoundationLindenbaum
+import IncidenceTheory.ReferenceFoundationHenkin
+import IncidenceTheory.ReferenceFoundationSaturation
+import IncidenceTheory.ReferenceFoundationLayered
+import IncidenceTheory.ReferenceFoundationLayeredCanonical
+import IncidenceTheory.FoundationCompletion
+import IncidenceTheory.ReferenceFoundationHFModel
+import IncidenceTheory.FoundationIncidenceWitness
+import IncidenceTheory.ReferenceFoundationConservativity
+import IncidenceTheory.CompletionCapstone
 
 /- `main`'s demo output accumulates one block of `IO.println` calls per
    research cycle (32 so far). Cycle 18 raised `maxRecDepth` when a

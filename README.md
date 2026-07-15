@@ -21,6 +21,7 @@ kept under [`docs/`](docs/).
 | Concrete consistency models | Checked |
 | Translation preservation/reflection | Checked under explicit hypotheses |
 | Propositional internal logic | Soundness and completeness checked |
+| Reference foundation | HF and Mathlib ZFSet actual-infinity models, scoped conservativity, and constant-free first-order Kripke completeness checked |
 | Dependent raw calculus | Pi, Sigma, Identity, reduction and semantics checked |
 | Structural rename/substitution preservation | Complete; certificate inhabited |
 | Quotient theory | Conditional general theory plus concrete simplex quotient |
@@ -33,8 +34,40 @@ The structural preservation completion certificate is
 It packages total formation/typing renaming, total substitution with proved
 lift, and an unconditional closed identity instance.
 
+The scoped foundational capstone is
+`ReferenceFoundation.completeFoundationCertificate`. It combines the finite
+conservative Inc interpretation and incidence witness, the actual-infinity
+ZFSet model, and varying-domain Kripke completeness for constant-free contexts
+and conclusions. It does not claim full ZF, completeness for formulas containing
+object constants, or the consistency of Lean itself.
+
 See [authoritative status](docs/status.md) for scope, evidence, and remaining
 work.
+
+## Incidence/resonance quotient paper
+
+The current mathematical preprint is
+**“Exact Descent of Ternary Relations along Incidence Bisimulation
+Quotients.”** Its main checked results are:
+
+- exact quotient descent iff incidence bisimulation is a congruence for the
+  independent ternary resonance relation;
+- uniqueness, universal factorization, kernel-pair coequalizer, congruence
+  reflection, and quotient adjunction;
+- a finite coordinatewise `3 n^4` obstruction criterion;
+- a card-independent structural classification of the 32 support-minimal
+  obstruction orbits of the seven-cell simplex selector;
+- graded simplicial-family and structural reversible-reaction examples.
+
+The generated [preprint PDF](arxiv/main.pdf), source bundle, 29-row
+[Lean-to-paper theorem index](docs/papers/incidence-theorem-index.md), scoped
+[prior-art audit](docs/papers/mechanized-prior-art-audit.md), and
+[journal gate](docs/papers/journal-submission-gate.tsv) are checked by
+`verify.sh`. The arXiv first preprint is internally ready. Journal submission is
+still externally gated on subscription-database citation traversal, a
+coalgebra/incidence specialist novelty review, and confirmation of author
+submission metadata. The project makes no “fourth foundation,” full-ZF/HoTT,
+or priority claim for this paper.
 
 ## Documentation
 
@@ -42,6 +75,9 @@ work.
 - [Proof map](docs/proofs/README.md)
 - [Verification guide](docs/verification.md)
 - [Proof-completion audit](docs/inc-proof-completion-audit.md)
+- [Gap to a complete foundational proof](docs/adr/2607141850-complete-proof-gap.md)
+- [Incidence Theory paper program and remaining gates](docs/adr/260714-incidence-theory-paper-program.md)
+- [Exact-descent paper outline](docs/papers/incidence-quotient-outline.md)
 - [Cycle-41 maturity ADR](docs/adr/2607100600-inc-theory-maturity-cycle41.md)
 - [Detailed checked history](docs/history/post-cycle-41.md)
 - [Research log](RESEARCH_LOG.md)
