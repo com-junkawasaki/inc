@@ -1,0 +1,10 @@
+gate	status	evidence
+lean_core	passed	docs/completion-claims.tsv and CompletionAudit.lean
+paper_theorem_coverage	passed	docs/papers/incidence-theorem-index.tsv and manuscript-theorem-map.tsv
+arxiv_build	passed	arxiv/main.pdf and incidence_theory_arxiv_src.tar.gz
+mechanized_prior_art	passed_scoped	docs/papers/mechanized-prior-art-audit.md
+public_database_coverage	passed_scoped	docs/papers/public-database-coverage-log.md
+subscription_database_citation_traversal	pending_external	MathSciNet, zbMATH MSC/cited-by, Scopus or Web of Science record required
+specialist_novelty_review	pending_external	completed response record from docs/papers/specialist-review-packet.md required
+author_submission_metadata	pending_author	affiliation, ORCID choice, editor/reviewer suggestions, and conflicts must be confirmed
+applied_kinetics_or_empirical_validation	not_required	outside scoped mathematical paper; required only for an applied-journal claim

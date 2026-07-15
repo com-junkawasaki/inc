@@ -1,0 +1,49 @@
+import IncidenceTheory.FoundationIncidenceWitness
+import IncidenceTheory.FoundationCompletion
+import IncidenceTheory.ReferenceFoundationConservativity
+import IncidenceTheory.CompletionCapstone
+import IncidenceTheory.ReferenceFoundationMetatheory
+import IncidenceTheory.ReferenceFoundationKripke
+import IncidenceTheory.ReferenceFoundationInfinity
+import IncidenceTheory.ReferenceFoundationCanonical
+import IncidenceTheory.ReferenceFoundationZFModel
+import IncidenceTheory.ReferenceFoundationEncoding
+import IncidenceTheory.ReferenceFoundationLindenbaum
+import IncidenceTheory.ReferenceFoundationLayeredCanonical
+import IncidenceTheory.IncidenceResearch
+
+open IncidenceCore
+open IncidenceCore.ReferenceFoundation
+open IncidenceCore.ReferenceFoundation.IncProof
+
+#print axioms derives_sound
+#print axioms IncDepCompletionModel.interpretTyping_sound
+#print axioms hfReferenceFoundation_consistent
+#print axioms hfReferenceIncidenceWitness_nontrivial
+#print axioms encode_derivation_sound
+#print axioms encode_conservative
+#print axioms conservativeIncExtension
+#print axioms finiteFoundationCertificate
+#print axioms finiteFoundation_preserves_and_reflects
+#print axioms Derives.weaken_prefix
+#print axioms Derives.cut
+#print axioms Derives.substitute
+#print axioms KripkeStructure.force_monotone
+#print axioms KripkeStructure.derives_sound
+#print axioms actualInfinity_is_not_finite_placeholder
+#print axioms Canonical.truth
+#print axioms Canonical.complete_of_countermodels
+#print axioms zfActualInfinityModel
+#print axioms zfActualInfinityFoundation_consistent
+#print axioms formulaAt_surjective
+#print axioms exists_maximalAvoiding
+#print axioms MaximalAvoiding.or_iff
+#print axioms PrimeTheory.imp_iff
+#print axioms LayeredPrimeTheory.future_counterexample_of_imp_not_mem
+#print axioms LayeredPrimeTheory.future_counterexample_of_all_not_mem
+#print axioms LayeredCanonical.truth
+#print axioms LayeredCanonical.countermodel_of_not_derives
+#print axioms LayeredCanonical.complete
+#print axioms referenceFoundation_kripke_complete
+#print axioms completeFoundationCertificate
+#print axioms incidenceTheoryPaperCapstone

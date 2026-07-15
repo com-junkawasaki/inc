@@ -41,6 +41,52 @@ if ! lake exe incidence-theory; then
     exit 1
 fi
 
+echo "📋 Verifying completion claim matrix..."
+cd ..
+bash scripts/verify-completion-claims.sh
+bash scripts/verify-paper-theorem-index.sh
+bash scripts/verify-mechanized-prior-art-audit.sh
+bash scripts/verify-arxiv-manuscript.sh
+bash scripts/verify-journal-package.sh
+cd incidence-theory
+
+echo "🧾 Auditing capstone axiom dependencies..."
+audit_output="$(mktemp)"
+trap 'rm -f "$audit_output"' EXIT
+lake env lean CompletionAudit.lean >"$audit_output" 2>&1
+if rg -n 'sorryAx|declaration uses .sorry.|unknown constant' "$audit_output"; then
+    echo "❌ Completion capstone has an unproved or missing dependency"
+    exit 1
+fi
+if ! awk '
+  /depends on axioms:/ {
+    line = $0
+    sub(/^.*\[/, "", line)
+    active = 1
+  }
+  active && $0 !~ /depends on axioms:/ { line = $0 }
+  active {
+    done = (line ~ /\]/)
+    gsub(/[\[\],]/, " ", line)
+    count = split(line, names, /[[:space:]]+/)
+    for (i = 1; i <= count; i++) {
+      name = names[i]
+      if (name != "" && name != "propext" &&
+          name != "Classical.choice" && name != "Quot.sound") {
+        print "unexpected axiom dependency: " name > "/dev/stderr"
+        bad = 1
+      }
+    }
+    if (done) active = 0
+  }
+  END { exit bad }
+' "$audit_output"; then
+    echo "❌ Completion capstone exceeds the axiom allowlist"
+    exit 1
+fi
+rm -f "$audit_output"
+trap - EXIT
+
 echo "🔎 Checking for unproved Lean declarations..."
 if rg -n '^[[:space:]]*axiom[[:space:]]|^[[:space:]]*sorry([[:space:]]|$)|:=[[:space:]]*sorry([[:space:]]|$)|by[[:space:]]+sorry([[:space:]]|$)|exact[[:space:]]+sorry([[:space:]]|$)|sorryAx' \
     . -g '*.lean' -g '!**/.lake/**'; then

@@ -1,56 +1,55 @@
-# Incidence Theory — arXiv Submission (Source Bundle)
+# Exact Descent of Ternary Relations — arXiv source bundle
 
-This directory contains the LaTeX sources for the preprint:
+This directory contains the source and generated PDF for:
 
-"Theory of Incidence — A Fourth Foundation Beyond Set, Category, and Type"
+> Jun Kawasaki, “Exact Descent of Ternary Relations along Incidence
+> Bisimulation Quotients.”
 
-## What to include in the arXiv source
+The paper studies exact quotient descent, its coequalizer/reflection universal
+property, finite compatibility obstructions, and the 32-orbit simplex
+classification. It does not claim a fourth foundation, full ZF/HoTT models, or
+universal applicability.
 
-Include only the minimal files required to build the PDF:
+## Files submitted to arXiv
 
-- `main.tex`
-- `references.bib` (and any figures if added later)
+- `main.tex` — self-contained manuscript, including its bibliography;
+- `references.bib` — machine-readable bibliography retained as metadata;
+- `README.md` — this build and scope note.
 
-Do not include the Lean/`mathlib4` codebase in the arXiv source bundle. The
-formalization and artifacts are referenced via DOI/URL instead (see below).
+The archive `incidence_theory_arxiv_src.tar.gz` must contain exactly current
+copies of those three files. The repository verifier compares the archived TeX
+and BibTeX byte-for-byte with the working sources.
 
-## Building locally
+## Build
 
-We recommend latexmk for reproducible local builds.
-
-```bash
-latexmk -pdf -interaction=nonstopmode main.tex
-```
-
-Notes:
-
-- Tested with TeX Live 2023+ and pdfLaTeX.
-- If you add figures, prefer PDF/PNG and keep file sizes small.
-
-## Create the arXiv source bundle
-
-Create a clean archive containing only TeX sources (and figures, if any):
+The checked local build uses Tectonic:
 
 ```bash
-tar -czvf incidence_theory_arxiv_src.tar.gz main.tex references.bib
+tectonic main.tex
 ```
 
-If figures are present, append them to the command (e.g., `figures/*.pdf`).
+The manuscript contains an inline `thebibliography`, so the arXiv build does not
+depend on a separate BibTeX pass. Recreate the submission bundle with:
 
-## Code and data availability
+```bash
+tar -czf incidence_theory_arxiv_src.tar.gz main.tex references.bib README.md
+```
 
-- Project overview and source repository: https://github.com/junkawasaki/theory-of-incidence
-- Archived artifacts (Zenodo DOI): https://doi.org/10.5281/zenodo.17345516
+From the repository root, validate the manuscript, PDF title, forbidden legacy
+claims, and archive synchronization with:
 
-Selected Lean theorems and definitions are provided in the repository; the arXiv
-manuscript cites the corresponding files and a commit hash in an appendix.
+```bash
+bash scripts/verify-arxiv-manuscript.sh
+```
 
-## Paper overview (short)
+## Formal evidence and identifiers
 
-The paper presents Incidence Theory as a fourth mathematical foundation that
-unifies Set, Category, and Type theories through a relational primitive. Topics
-include the axioms (A1–A17), gluing/composition, observational equivalence,
-semantic models (ZF, adhesive categories, HoTT), and a linear-algebraic layer
-via boundary/Laplacian operators. Examples cover graphs/hypergraphs, concurrent
-processes, and biological networks.
+- Source and Lean formalization: <https://github.com/com-junkawasaki/inc>
+- Stable Zenodo concept DOI: <https://doi.org/10.5281/zenodo.17345515>
+- Existing archived version DOI: <https://doi.org/10.5281/zenodo.17345516>
+- Lean-to-paper index: `docs/papers/incidence-theorem-index.tsv`
+- Scoped completion claims: `docs/completion-claims.tsv`
 
+The existing DOI record predates this rewritten manuscript. A new repository
+release must update Zenodo metadata and receive its own version DOI before that
+version DOI is inserted into the paper.

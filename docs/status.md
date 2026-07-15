@@ -87,6 +87,24 @@ The completion covers every formation and typing constructor. Dependent
 Apply/Pair/Second branches use explicit instantiate/rename or
 instantiate/substitute equalities with synchronized casts.
 
+## Scoped reference-foundation completion
+
+`ReferenceFoundation.completeFoundationCertificate` is the checked capstone
+for ADR-2607141850. It bundles:
+
+- hereditary-finite interpretation, syntactic preservation/reflection, and a
+  nontrivial incidence witness;
+- the Mathlib `ZFSet` model of the selected actual-infinity schema and its
+  relative consistency theorem;
+- layered prime/Henkin worlds, implication and universal counterworlds, a
+  varying-domain canonical model, its truth lemma, and Kripke completeness for
+  constant-free contexts and conclusions.
+
+The constant-free restriction is intentional: object-language formulas are
+separated from auxiliary Henkin constants introduced at later world levels.
+This capstone does not assert full ZF, completeness for formulas containing
+object constants, or the consistency of Lean itself.
+
 ## Conditional or unfinished layers
 
 - Most historical models currently use the default functional resonance

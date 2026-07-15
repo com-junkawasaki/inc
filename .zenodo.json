@@ -1,29 +1,29 @@
 {
-  "title": "Theory of Incidence — A Fourth Foundation",
+  "title": "Incidence Theory: Lean 4 Formalization of Bisimulation, Quotients, and Ternary Resonance",
   "upload_type": "software",
   "creators": [
-    { "name": "Junkawasaki" }
+    { "name": "Kawasaki, Jun" }
   ],
-  "description": "A Lean 4 formalization of incidence structures as a foundational framework for mathematics and computation. The checked development includes bisimulation and faithfulness, concrete consistency models, translation preservation and reflection, propositional internal-logic soundness and completeness, dependent Pi/Sigma/Identity syntax and semantics, total normalized renaming and substitution preservation, and reconstructions of Peano naturals, hereditary finite sets, pairs, trees, paths, simplices, products, sums, and conditional quotients.",
-  "version": "260712",
+  "description": "A Lean 4 development of incidence structures with an independent, possibly multi-valued ternary resonance relation. The checked research package proves the exact-descent congruence criterion for incidence-bisimulation quotients, uniqueness and categorical universal properties, finite coordinatewise obstruction classification, a structural classification of 32 support-minimal simplex obstruction orbits, graded simplicial quotient families, free and equational presentations, and scoped positive and negative models. The record makes no claim of a fourth foundation, full ZF or HoTT interpretation, or priority over general quotient and coalgebraic theory.",
+  "version": "260715",
   "license": "Apache-2.0",
   "access_right": "open",
   "language": "eng",
   "keywords": [
-    "foundations of mathematics",
     "incidence",
     "Lean4",
     "category theory",
-    "type theory",
-    "set theory",
     "bisimulation",
     "formal verification",
-    "dependent type theory"
+    "quotient",
+    "ternary relation",
+    "finite obstruction",
+    "simplicial complex"
   ],
   "related_identifiers": [
     {
       "identifier": "https://github.com/com-junkawasaki/inc",
-      "relation": "isSupplementTo",
+      "relation": "isIdenticalTo",
       "resource_type": "software"
     }
   ]
