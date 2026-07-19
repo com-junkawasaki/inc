@@ -129,6 +129,14 @@ object constants, or the consistency of Lean itself.
   and `IncDepRawNormalizedResonanceCompletion.prod` transports every completion
   field. `natIncidence × finiteIncidence` is a checked mixed functional/
   multi-valued instance.
+- Normalized resonance completion is also conditionally compositional under
+  sums. `IncDepRawNormalizedResonanceCompletion.sum` takes the exact minimal
+  quotient obligation and combines it with the checked sum resonance and
+  associativity laws; `sumOfFaithfulNoSharedLeaves` derives that obligation
+  from the stronger reusable separation criterion.
+  `natCycleSumNormalizedResonanceCompletion` is a concrete witness:
+  the left Nat factor has exact, unit-reflecting resonance and the faithful
+  fixed-cycle right factor is leafless.
 - The sum constructor was audited and corrected: its previous default
   resonance was selector-induced and erased unselected modes of multi-valued
   factors. `sumResonance` now lifts the full same-side relations and adds only
@@ -147,7 +155,29 @@ object constants, or the consistency of Lean itself.
   a sum of faithful factors with a leafless side inherits quotient congruence;
   `natIncidence ⊕ cycleIncidenceFixed` is the concrete witness. The remaining
   sum obstruction is relational associativity/unit creation, not quotient
-  descent under these separation hypotheses.
+  descent under these separation hypotheses. Conversely,
+  `incidenceSumQuotientCongruentRightFaithful` proves that quotient descent
+  forces the right factor to be bisimulation-faithful, and
+  `incidenceSumQuotientCongruentLeftUnitSeparated` forces the left unit's
+  observational class to be a singleton, while
+  `incidenceSumQuotientCongruentCrossSeparated` rules out every cross-tag
+  bisimulation. `SumQuotientControlSpec` packages these representative-control
+  laws together with left projection, and
+  `incidenceSum_quotientResonanceCongruent_of_control` transports left-factor
+  quotient congruence without requiring global left faithfulness. Conversely,
+  `incidenceSum_quotientResonanceCongruent_iff_control` proves that this
+  certificate is necessary whenever same-side sum bisimulation projects to the
+  left factor. `incidenceSum_project_left_iff_typeReflecting` proves that this
+  projection is exactly equivalent to `SumLeftTypeReflecting`, yielding the
+  carrier-independent theorem
+  `incidenceSum_quotientResonanceCongruent_iff_control_of_typeReflecting`.
+  `incidenceSum_quotientResonanceCongruent_iff_control_graphType` then
+  discharges type reflection automatically for `GraphType`. Thus the quotient
+  gap is completely characterized under the precise information-preservation
+  boundary imposed by the sum's constant type map (and left-factor quotient
+  congruence). The faithful/leafless theorem is likewise generalized to
+  arbitrary type carriers under left/right type reflection; leaflessness
+  remains one sufficient mechanism for constructing the control certificate.
 - `UnitReflectingResonanceSpec` now names the missing associativity-side law:
   a resonance producing the unit must have a unit input. Peano addition
   satisfies it; the multi-valued finite model provably does not. This exactly
@@ -155,12 +185,20 @@ object constants, or the consistency of Lean itself.
   associativity counterexample. The new general necessity theorem
   `incidenceSumAssociativeLeftUnitReflecting` proves that associativity of any
   nonempty sum forces the left factor to be unit-reflecting. A generic
-  sufficient-condition proof also needs to rule out extra modes when one input
-  is the designated unit. `ExactUnitResonanceSpec` isolates that strictly local
-  law without requiring globally functional resonance, and
-  `ExactUnitResonanceSpec.ofFunctional` proves that every functional resonance
-  supplies it. The final closure theorem still requires the full tagged
-  intermediate-mode case analysis.
+  sufficient-condition proof only needs to rule out producing the unit from a
+  unit and a non-unit input. `UnitOutputExactResonanceSpec` isolates this weaker
+  local law; full `ExactUnitResonanceSpec` and functional resonance both imply
+  it. `extraUnitModeIncidence` proves the weakening is strict: it has an
+  additional non-selected `unit × unit` mode, satisfies the new law and
+  unit-reflection, but admits no `ExactUnitResonanceSpec`. Its sum with Nat is
+  associatively resonant. `associativeResonanceSumSpec` completes the tagged
+  intermediate-mode case analysis and proves the conditional closure theorem;
+  `natSumAssociativeResonanceSpec` is a concrete checked instance. Associativity
+  also reflects to both factors. It independently forces both unit-reflection
+  and exact unit-output on the left. `incidenceSum_associative_iff` combines all
+  four necessary conditions with closure into a complete characterization
+  under only the ordinary left `ResonanceSpec`; the right incidence's
+  designated unit supplies the required witness internally.
 - Pushout preservation and generic boundary-square-zero are conditional on the
   categorical or linear hypotheses in their declarations.
 - Translation completeness is proved only for the stated fragments and

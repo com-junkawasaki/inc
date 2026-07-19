@@ -44,9 +44,25 @@ object constants, or the consistency of Lean itself.
 For the generic sum constructor, the obstruction to relational associativity
 is now a checked general necessity theorem rather than only a finite
 counterexample: associativity of any nonempty sum forces the left factor's
-resonance to be unit-reflecting. The remaining converse proof now has a named
-additional local hypothesis, `ExactUnitResonanceSpec`, which excludes extra
-unit-input modes without excluding multi-valued interactions elsewhere.
+resonance to be unit-reflecting. The converse is now checked under the weaker
+local `UnitOutputExactResonanceSpec` law, which only prevents a unit input and
+a non-unit input from producing the unit. It permits other extra unit-input
+modes; `extraUnitModeNatSumAssociativeSpec` is a checked genuinely multi-valued
+witness. `incidenceSum_associative_iff` now gives a complete characterization:
+sum associativity is equivalent to associativity of both factors together with
+left unit-reflection and exact unit-output. Both local laws are independently
+derived from sum associativity. The result is integrated into the conditional
+`IncDepRawNormalizedResonanceCompletion.sum` constructor, instantiated by
+`natIncidence ⊕ cycleIncidenceFixed`. Quotient descent additionally forces
+right-factor bisimulation faithfulness and separation of the left unit class;
+it also forbids cross-tag bisimulation. `SumQuotientControlSpec` packages the
+exact representative-control data. `SumLeftTypeReflecting` identifies exactly
+when the sum's erased type map still permits left-side bisimulation projection.
+Under this condition quotient descent is equivalent to the control certificate;
+the condition is automatic for the repository's `GraphType` incidences. The
+faithful/leafless construction is also proved for arbitrary type carriers under
+left and right type reflection, with the original `GraphType` theorem retained
+as a derived convenience result.
 
 See [authoritative status](docs/status.md) for scope, evidence, and remaining
 work.
