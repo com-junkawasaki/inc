@@ -155,7 +155,11 @@ object constants, or the consistency of Lean itself.
   associativity counterexample. The new general necessity theorem
   `incidenceSumAssociativeLeftUnitReflecting` proves that associativity of any
   nonempty sum forces the left factor to be unit-reflecting. A generic
-  sufficient-condition theorem still requires the full tagged
+  sufficient-condition proof also needs to rule out extra modes when one input
+  is the designated unit. `ExactUnitResonanceSpec` isolates that strictly local
+  law without requiring globally functional resonance, and
+  `ExactUnitResonanceSpec.ofFunctional` proves that every functional resonance
+  supplies it. The final closure theorem still requires the full tagged
   intermediate-mode case analysis.
 - Pushout preservation and generic boundary-square-zero are conditional on the
   categorical or linear hypotheses in their declarations.

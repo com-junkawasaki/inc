@@ -218,6 +218,88 @@ def resonanceSumSpec
     intro i j k resonant
     exact ⟨rfl, rfl⟩
 
+theorem incidenceSum_resonance_inl_inl_inl_iff
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (first : ResonanceSpec inc1) (i j k : I1) :
+    (incidenceSum inc1 inc2).resonance (Sum.inl i) (Sum.inl j) (Sum.inl k) ↔
+      inc1.resonance i j k := by
+  simp only [incidenceSum, sumResonance, Sum.inl.injEq]
+  constructor
+  · rintro (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | resonant)
+    · exact first.unit_left _
+    · exact first.unit_right _
+    · exact resonant
+  · exact fun resonant => Or.inr (Or.inr resonant)
+
+theorem incidenceSum_resonance_inr_inr_inr_iff
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (i j k : I2) :
+    (incidenceSum inc1 inc2).resonance (Sum.inr i) (Sum.inr j) (Sum.inr k) ↔
+      inc2.resonance i j k := by
+  simp [incidenceSum, sumResonance]
+
+theorem incidenceSum_resonance_inl_inr_inr_iff
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (i : I1) (j k : I2) :
+    (incidenceSum inc1 inc2).resonance (Sum.inl i) (Sum.inr j) (Sum.inr k) ↔
+      i = inc1.unit ∧ k = j := by
+  simp [incidenceSum, sumResonance]
+
+theorem incidenceSum_resonance_inr_inl_inr_iff
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (i : I2) (j : I1) (k : I2) :
+    (incidenceSum inc1 inc2).resonance (Sum.inr i) (Sum.inl j) (Sum.inr k) ↔
+      j = inc1.unit ∧ k = i := by
+  simp [incidenceSum, sumResonance]
+
+/-- The designated unit has no additional resonance modes.  This is weaker
+than global functional resonance: interactions away from the unit may remain
+genuinely multi-valued. -/
+structure ExactUnitResonanceSpec
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T)
+    extends ResonanceSpec inc where
+  left_exact : ∀ {i k}, inc.resonance inc.unit i k → k = i
+  right_exact : ∀ {i k}, inc.resonance i inc.unit k → k = i
+
+theorem ExactUnitResonanceSpec.left_iff
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (exactUnit : ExactUnitResonanceSpec inc) {i k : I} :
+    inc.resonance inc.unit i k ↔ k = i := by
+  constructor
+  · exact exactUnit.left_exact
+  · rintro rfl
+    exact exactUnit.unit_left _
+
+theorem ExactUnitResonanceSpec.right_iff
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (exactUnit : ExactUnitResonanceSpec inc) {i k : I} :
+    inc.resonance i inc.unit k ↔ k = i := by
+  constructor
+  · exact exactUnit.right_exact
+  · rintro rfl
+    exact exactUnit.unit_right _
+
+/-- Functional resonance is exact at the unit, although interactions away from
+the unit need not be treated through this stronger bridge. -/
+def ExactUnitResonanceSpec.ofFunctional
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (functional : FunctionalResonanceSpec inc) : ExactUnitResonanceSpec inc where
+  toResonanceSpec := functional.toResonanceSpec
+  left_exact := by
+    intro i k resonant
+    have selected := functional.selected_complete resonant
+    rw [inc.unit_left] at selected
+    exact Option.some.inj selected.symm
+  right_exact := by
+    intro i k resonant
+    have selected := functional.selected_complete resonant
+    rw [inc.unit_right] at selected
+    exact Option.some.inj selected.symm
+
 theorem finiteIncidenceSum_not_associativeResonance :
     ¬ Nonempty (AssociativeResonanceSpec
       (incidenceSum finiteIncidence finiteIncidence)) := by

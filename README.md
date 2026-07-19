@@ -44,7 +44,9 @@ object constants, or the consistency of Lean itself.
 For the generic sum constructor, the obstruction to relational associativity
 is now a checked general necessity theorem rather than only a finite
 counterexample: associativity of any nonempty sum forces the left factor's
-resonance to be unit-reflecting. The converse closure theorem remains open.
+resonance to be unit-reflecting. The remaining converse proof now has a named
+additional local hypothesis, `ExactUnitResonanceSpec`, which excludes extra
+unit-input modes without excluding multi-valued interactions elsewhere.
 
 See [authoritative status](docs/status.md) for scope, evidence, and remaining
 work.
