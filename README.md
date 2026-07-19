@@ -41,6 +41,11 @@ ZFSet model, and varying-domain Kripke completeness for constant-free contexts
 and conclusions. It does not claim full ZF, completeness for formulas containing
 object constants, or the consistency of Lean itself.
 
+For the generic sum constructor, the obstruction to relational associativity
+is now a checked general necessity theorem rather than only a finite
+counterexample: associativity of any nonempty sum forces the left factor's
+resonance to be unit-reflecting. The converse closure theorem remains open.
+
 See [authoritative status](docs/status.md) for scope, evidence, and remaining
 work.
 

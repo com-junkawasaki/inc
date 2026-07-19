@@ -240,6 +240,30 @@ theorem finiteIncidenceSum_not_associativeResonance :
   · simp [incidenceSum, sumResonance, finiteIncidence] at hjk
   · simp [incidenceSum, sumResonance, finiteIncidence] at hjk
 
+/-- Associativity of a nonempty `incidenceSum` forces the left factor to be
+unit-reflecting.  Thus the obstruction exhibited above is structural, not an
+artifact of the two-element example: a left-factor interaction cannot create
+the designated unit from two non-unit inputs in any associative sum. -/
+def incidenceSumAssociativeLeftUnitReflecting
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (rightWitness : I2)
+    (associative : AssociativeResonanceSpec (incidenceSum inc1 inc2)) :
+    UnitReflectingResonanceSpec inc1 where
+  reflects := by
+    intro i j resonant
+    have leftReachable :
+        ∃ ij,
+          (incidenceSum inc1 inc2).resonance (Sum.inl i) (Sum.inl j) ij ∧
+          (incidenceSum inc1 inc2).resonance ij (Sum.inr rightWitness)
+            (Sum.inr rightWitness) := by
+      exact ⟨Sum.inl inc1.unit, Or.inr (Or.inr resonant), Or.inl ⟨rfl, rfl⟩⟩
+    rcases associative.reassociate.mp leftReachable with ⟨jk, hjk, _⟩
+    rcases jk with jk1 | jk2
+    · simp [incidenceSum, sumResonance] at hjk
+    · simp [incidenceSum, sumResonance] at hjk
+      exact Or.inr hjk.1
+
 noncomputable def countablyPresentedIncidenceSum
     {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
     (left : CountablyPresentedIncidence I1 R1 T1)

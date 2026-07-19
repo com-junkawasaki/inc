@@ -152,8 +152,11 @@ object constants, or the consistency of Lean itself.
   a resonance producing the unit must have a unit input. Peano addition
   satisfies it; the multi-valued finite model provably does not. This exactly
   classifies the models used by the positive direction and the checked sum
-  associativity counterexample. A generic conditional sum-associativity proof
-  still requires the full tagged intermediate-mode case analysis.
+  associativity counterexample. The new general necessity theorem
+  `incidenceSumAssociativeLeftUnitReflecting` proves that associativity of any
+  nonempty sum forces the left factor to be unit-reflecting. A generic
+  sufficient-condition theorem still requires the full tagged
+  intermediate-mode case analysis.
 - Pushout preservation and generic boundary-square-zero are conditional on the
   categorical or linear hypotheses in their declarations.
 - Translation completeness is proved only for the stated fragments and
