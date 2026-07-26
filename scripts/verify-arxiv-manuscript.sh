@@ -62,8 +62,8 @@ awk -F '\t' -v tex="$tex" '
     }
   }
   END {
-    if (expected != 29) {
-      print "manuscript theorem map must contain 29 rows, got " expected > "/dev/stderr"
+    if (expected != 106) {
+      print "manuscript theorem map must contain 106 rows, got " expected > "/dev/stderr"
       failed = 1
     }
     exit failed
@@ -94,7 +94,7 @@ required_source=(
   "3n^4"
   "32"
   "We make no priority or formalization-first"
-  "29 groups"
+  "106 groups"
 )
 
 for marker in "${required_source[@]}"; do

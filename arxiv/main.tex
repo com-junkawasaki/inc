@@ -333,6 +333,15 @@ A coproduct of two natural-number incidence systems is an explicit negative
 model: boundary behavior identifies representatives that its resonance
 distinguishes, so no exact quotient relation exists.
 
+For a sum carrying the exact representative-control certificate, the
+canonical classifier instead factors uniquely through the bisimulation
+quotient.  Restricting its codomain to reachable observations produces an
+isomorphism of ternary resonance systems.  On the category whose morphisms
+preserve both sum resonance and bisimulation, quotient and reachable-image
+assignments are functors and these comparison isomorphisms form a natural
+isomorphism.  This is a conditional controlled-sum theorem, not unconditional
+closure of arbitrary incidence coproducts under quotient descent.
+
 The saturated simplex relation, by contrast, is closed across the three shape
 classes.  Its seven cells collapse non-faithfully to vertex, edge, and face,
 and resonance descends exactly.  A non-saturated geometric variant declares an
@@ -455,13 +464,619 @@ claim.  A scoped public and mechanized prior-art audit accompanies the source;
 subscription-database citation traversal and external specialist review remain
 requirements before asserting a stronger journal-level novelty position.
 
+\subsection{Canonical congruence saturation}
+
+The obstruction criterion also yields a canonical positive completion, rather
+than merely rejecting noncongruent relations.  Let a ternary relation be
+specified directly on the bisimulation quotient and pull it back along the
+three quotient projections.  If it contains every output selected by the glue
+operation, this pullback is a valid resonance on the unchanged incidence data.
+Its bisimulation relation is unchanged and exact descent holds automatically;
+the descended relation is exactly the relation originally specified on the
+quotient.
+
+Taking the specified relation to be the existential quotient image of the
+original resonance defines the \emph{canonical bisimulation-congruence
+saturation}.  It contains the original resonance and is contained in every
+three-coordinate bisimulation-congruent relation that contains the original.
+It fixes precisely the already congruent resonances and applying it twice has
+the same effect as applying it once.  Thus it is an extensive, least, and
+idempotent completion at the resonance level.  It deliberately leaves the
+carrier, boundary, type, and glue unchanged; it is not a construction of a full
+incidence object on the quotient carrier.
+
+\paragraph{Resonance-saturation reflection.}
+Fix the carrier, boundary, type, and glue data, and order all admissible
+resonance extensions pointwise.  The canonical saturation is monotone,
+extensive, and idempotent, hence defines a closure operator on this poset.  Its
+closed elements are exactly the extensions for which bisimulation is a ternary
+congruence.  Saturation and the inclusion of closed extensions form a Galois
+insertion, so this is a reflector between the associated thin categories and
+the closure is its idempotent monad.  This first statement is fiberwise over
+one fixed incidence skeleton.
+
+\paragraph{Global saturation adjunction.}
+Fix only the boundary-role type and allow carriers and cell types to vary.
+Morphisms preserve the unit, selected glue, boundary occurrences, resonance,
+and bisimulation.  These data form a category, and saturation acts
+functorially on its carrier-changing morphisms.  The extensive inclusion is a
+natural unit and the square of the saturation functor is naturally isomorphic
+to saturation itself.  Quotient-congruent objects form a structured
+subcategory, and saturation into it is left adjoint to inclusion.  Equivalently,
+every morphism into a congruent target factors uniquely through the saturation
+unit.  A checked non-surjective map from a one-point to a two-point trivial
+incidence witnesses that this category genuinely permits carrier changes.  The
+present category fixes the role type and requires only forward
+boundary preservation; role-changing or boundary-reflecting morphisms are not
+claimed in this weaker category.
+
+\paragraph{Role-changing exact-boundary adjunction.}
+A stronger category allows carrier, role, and cell-type maps simultaneously.
+Its morphisms preserve the algebraic and behavioral data above and require an
+if-and-only-if law for membership of every mapped boundary occurrence.  The
+saturation functor, natural unit, idempotence isomorphism, congruent
+subcategory, adjunction, and unique factorization all lift to this category.  A
+non-surjective map from a one-point incidence with role type
+\texttt{GraphRole} to a two-point incidence with role type \texttt{Unit}
+witnesses both carrier and role change.  Boundary exactness concerns mapped
+occurrences; essential surjectivity onto all target boundary occurrences is
+not required in this intermediate category.
+
+\paragraph{Globally boundary-surjective adjunction.}
+The strongest morphism class considered here additionally requires every
+boundary occurrence at every target cell to have a source cell and source
+occurrence mapping to it.  Identity and composition preserve this global
+coverage law.  Since saturation changes only resonance, its functor, natural
+unit, idempotence isomorphism, congruent subcategory, adjunction, and unique
+factorization all restrict to these maps.  The role-changing one-point to
+two-point example remains carrier-nonsurjective but covers all target boundary
+data.  Thus the theorem asserts essential surjectivity of boundary occurrences,
+not surjectivity onto target cells having empty boundary.
+
+\paragraph{Carrier-and-boundary-surjective adjunction.}
+Finally, imposing surjectivity on the carrier map as well gives the strongest
+morphism category formalized here.  It is closed under identity and
+composition, and saturation again has its natural unit, idempotence
+isomorphism, congruent-object adjunction, and unique factorization.  A checked
+map from a two-point incidence with role type \texttt{GraphRole} onto a
+one-point incidence with role type \texttt{Unit} is surjective but
+noninjective, showing that this category is not restricted to isomorphisms.
+
+\paragraph{Internal-logic conservativity.}
+Saturation is monotone at the level of resonance atoms.  Consequently the
+positive language generated by truth, falsity, atoms, conjunction, and
+disjunction is preserved from every incidence into its saturation.  The full
+language also contains implication and is not monotone in this sense.  Full
+preservation and reflection for every formula holds exactly when the source
+resonance is already a bisimulation congruence; equivalently, every source
+formula is bisimulation invariant.  Every formula is invariant after
+saturation.  The ordinary simplex is a strict witness: its
+\texttt{v1/face/face} observation atom is false before saturation and true
+afterwards.  These theorems transfer through the mechanized
+resonance-to-\texttt{IncProof} translation whenever the encoded atomic truth
+predicates agree with the source and saturated resonance relations.
+
+\paragraph{Dependent-calculus conservativity.}
+The normalized dependent completion for the raw $\Pi/\Sigma/\mathsf{Id}$
+calculus bundles structural renaming and substitution preservation with
+resonance symmetry, units, type compatibility, relational associativity, and
+quotient congruence.  Its congruence field makes the resonance relation a fixed
+point of saturation.  Hence the completion transfers to saturation while all
+formation and typing renaming/substitution outputs remain definitionally
+unchanged.  When paired with the public completed-typing interpreter, every
+semantic interpretation and its substitution-coherence theorem are unchanged
+as well.  The natural-number completion is a concrete instance.  This is a
+conservativity theorem for an existing normalized completion; saturation alone
+does not synthesize associativity for an arbitrary resonance.
+
+\paragraph{Associative saturation completion.}
+There is also a genuinely generative dependent result.  Saturation preserves
+resonance symmetry, units, and type compatibility unconditionally.  If source
+modes transport along bisimilar input representatives, source relational
+associativity transports to saturation: the transport law aligns the two
+representatives of each intermediate mode before applying associativity.
+Consequently structural preservation, resonance laws, associativity, and mode
+transport suffice to construct a normalized dependent completion; saturation
+supplies the missing quotient congruence.  The two-point trivial incidence is a
+strict example.  Its bisimulation is total, its functional resonance is
+associative and transports modes, but it is not output-saturated.  Saturation
+adds the \texttt{true/true/false} mode and remains associative.  No preservation
+of associativity is claimed without the mode-transport hypothesis.
+
+\paragraph{Exact quotient-associativity criterion.}
+For an arbitrary source relation, associativity can be stated directly for its
+existential relation on bisimulation classes, without assuming exact descent.
+Saturated resonance is associative if and only if this quotient relation is
+associative.  One direction descends a saturated intermediate mode to its
+class; the other chooses a representative of the quotient intermediate mode.
+Thus mode transport is a sufficient source-level proof principle, not a
+necessary condition.  Structural preservation, source resonance laws, and the
+exact quotient-associativity condition directly generate a normalized
+saturated dependent completion.
+
+\paragraph{Associativity obstruction certificates.}
+Failure of quotient associativity has a carrier-level certificate.  A
+directional candidate records four values such that one parenthesization has a
+two-step saturated resonance chain while the opposite parenthesization has no
+intermediate mode.  Such certificates are absent exactly when saturated
+resonance is associative, equivalently when the existential quotient relation
+is associative.  On a finite carrier all candidates form a finite table and
+table emptiness is the exact criterion.  The two-point strict-saturation model
+has an empty table.  This first table uses classical decidability; no native
+enumeration or automorphism-minimized classification is claimed.
+
+\paragraph{Executable associativity decision.}
+Given exact Boolean checkers for source bisimulation and resonance, nested
+finite searches compute saturated modes and the two possible two-step chains.
+A Boolean directional checker is proved correct for obstruction certificates,
+and filtering all candidates produces an executable finite table.  Its
+emptiness is equivalent to quotient associativity.  For the two-point strict-
+saturation model, table emptiness is evaluated by \texttt{native\_decide}.
+Automorphism-orbit and support-minimal compression remain optional
+optimizations, not correctness prerequisites.
+
+\paragraph{Ternary interaction representation.}
+Every small ternary relational system admits a canonical Incidence
+representation after freely adjoining a unit.  The original carrier is the
+nonunit sector, and resonance on three original elements holds exactly when
+the source ternary relation holds.  Relation-preserving maps extend
+functorially, and the resulting functor is faithful.  Restriction back to the
+nonunit sector recovers the source system up to a checked isomorphism.  This is
+a representation theorem for ternary interaction systems, not yet for
+arbitrary categories or dependent type theories; boundary and cell-type data
+are intentionally trivial in this first construction.
+
+\paragraph{Small-category composition representation.}
+For every small category, take endpoint-tagged arrows as a carrier and declare
+a ternary mode precisely when the first two arrows are composable and the
+third is their composite.  This relation recognizes ordinary composition
+exactly, is single-valued, and satisfies relational associativity.  Every
+functor induces a resonance-preserving map, compatibly with identity and
+functor composition.  Applying the preceding free-unit construction gives an
+Incidence representation and recovers the composition system from its nonunit
+sector.  The later recovery and scoped-fullness results strengthen this to
+typed categorical data and an exact morphism image. Higher categories are not
+covered.
+
+\paragraph{Internal category recovery.}
+The same representation also recovers the typed categorical data.  Objects
+embed injectively as identity arrows, and the original object type is
+equivalent to that image.  For each object pair $(X,Y)$, the hom type
+$\mathcal C(X,Y)$ is equivalent to the fiber of represented arrows with source
+$X$ and target $Y$.  Under these fiber equivalences, Incidence resonance holds
+exactly when the recovered output equals categorical composition.  The bundled
+certificate therefore recovers objects, hom types, and composition for every
+small category.  It uses the known identity embedding and endpoint
+projections; the following layers supply an intrinsic identity predicate and
+scoped fullness. Univalence and higher coherence are not claimed.
+
+\paragraph{Intrinsic identity and object recovery.}
+The external choice of the identity-arrow image can also be removed.  Define
+an arrow to be intrinsically unital when its endpoints agree and it acts as a
+left and right unit for every endpoint-compatible arrow under the ternary
+composition relation.  This relational predicate holds exactly for the
+identity arrow on its source.  Hence the original object type is equivalent to
+the subtype of intrinsically unital arrows, and the preceding hom-fiber and
+composition recovery gives an intrinsic recovery certificate.  Endpoint
+projections remain part of the predicate; the following result supplies
+scoped fullness. Univalence and higher coherence are not asserted.
+
+\paragraph{Scoped fullness and exact functor image.}
+The morphism-level comparison can also be made exact.  A functorial
+category-composition homomorphism carries object and hom actions satisfying
+the identity and composition laws, and its resonance map is the induced map
+on endpoint-tagged arrows.  Every such homomorphism is induced by a unique
+functor.  Conversely, an arbitrary ternary-resonance homomorphism belongs to
+the functor image exactly when it admits this structure.  Thus the
+representation is faithful and full on precisely characterized admissible
+morphisms.  We do not claim unrestricted fullness for bare relation maps,
+which need not preserve endpoints or identities.
+
+\paragraph{Pure relational category recovery.}
+Endpoint projections can be removed from the recovery specification.  Call an
+arrow a pure identity when every defined left or right composite with it is
+unchanged.  This predicate uses only the ternary composition relation and is
+proved equivalent to being a categorical identity.  The source identity of an
+arrow is then the unique pure identity whose left composite is that arrow, and
+the target identity is characterized dually.  The original object type is
+equivalent to the pure-identity subtype; each hom type is equivalent to the
+fiber defined by these two relational endpoint predicates; and composition is
+recovered exactly on those fibers.  This is the representation and recovery
+direction; the following result supplies an abstract recognition interface.
+It is not a univalence result.
+
+\paragraph{Relational category recognition.}
+There is also a converse construction for abstract ternary systems.  Assume
+functionality, self-composition of pure identities, unique relational source
+and target identities, existence of composition exactly when the middle
+identity matches, stability of outer endpoints, and relational associativity.  Pure
+identities then form the objects of a category; arrows with fixed relational
+endpoints form its hom types; and the unique resonant output defines
+composition.  The category laws follow from the identity, functionality, and
+associativity axioms.  Every small-category composition system satisfies this
+interface, every carrier element appears as a typed reconstructed hom, and
+resonance on typed homs holds exactly for reconstructed composition.  We do
+not claim independence or minimality of these axioms, univalence, or higher
+coherence.
+
+\paragraph{Relational category system round trip.}
+The reconstruction is exact at the ternary-system level.  Map each original
+carrier element to the endpoint-tagged arrow whose objects are its uniquely
+selected source and target identities and whose hom is the element itself;
+decode by taking the underlying hom value.  These maps are mutually inverse,
+including their dependent endpoint fields.  Moreover, original resonance
+holds exactly when the three encoded arrows satisfy reconstructed categorical
+composition.  They therefore define an isomorphism from the original ternary
+system to the composition system of its reconstructed category.  The proof
+uses classical choice for the unique endpoints and composite.  It does not
+establish an equivalence of categories of all models and morphisms, axiom
+minimality, univalence, or higher coherence.
+
+\paragraph{Functorial relational category reconstruction.}
+The reconstruction also extends to morphisms.  Bundle recognized ternary
+systems with the preceding axioms and take as morphisms the carrier maps that
+preserve resonance and pure identities.  These objects and morphisms form a
+category.  Each morphism preserves relational source and target identities and
+therefore induces a functor between the reconstructed categories.  This
+assignment preserves identity and composition exactly.  Moreover, encoding an
+element before applying the induced arrow map agrees with first applying the
+system morphism and then encoding; decoding satisfies the dual equality.  Thus
+the round trip is natural at the morphism level.  The following result packages
+this assignment as one functor; a categorical equivalence is not asserted here.
+
+\paragraph{Cat-valued reconstruction functor.}
+The reconstructed category objects and reconstructed functors assemble into a
+single universe-explicit functor from recognized ternary systems to mathlib's
+category \texttt{Cat}.  Its object action is definitionally the category of
+pure identities and relational endpoint fibers, and its morphism action is the
+preceding reconstructed functor.  The identity and composition laws are those
+already checked, while the capstone retains encoding naturality.  We do not
+The following result constructs the inverse-direction functor; natural
+isomorphisms of the resulting composites and a categorical equivalence are not
+part of this theorem.
+
+\paragraph{Category recognition inverse-direction functor.}
+Conversely, every mathlib \texttt{Cat} object is sent to its endpoint-tagged
+ternary composition system equipped with the recognition axioms, and every
+functor is sent to its map on tagged arrows.  Functors preserve resonance and
+pure identities, and the induced recognized morphisms preserve identity and
+composition exactly.  Hence these assignments form one functor from
+\texttt{Cat} to recognized ternary systems.  Together with the preceding
+reconstruction functor, both directions are now packaged.  The following
+result supplies the recognized-system-side natural isomorphism; the Cat-side
+one remains to obtain a categorical equivalence.
+
+\paragraph{Recognized-system round-trip natural isomorphism.}
+Exact relation transport shows that encoding and decoding preserve pure
+identities, not merely resonance.  They therefore define inverse morphisms in
+the category of recognized systems at every object.  The morphism naturality
+proved above assembles these component isomorphisms into a natural isomorphism
+from the identity functor to reconstruction followed by recognition.  This is
+one of the two natural isomorphisms required for a categorical equivalence; the
+Cat-side round trip is supplied objectwise by the following theorem.
+
+\paragraph{Category round-trip equivalence.}
+For every small category, send an object to its pure identity arrow in the
+reconstructed category and send a morphism to the corresponding relational
+endpoint fiber.  This canonical functor is faithful because tagged arrows
+retain their hom value.  It is full because every morphism between canonical
+identity objects has the required original endpoints, and it is essentially
+surjective because every pure identity is the identity of its recovered source
+object.  Consequently every category is equivalent to the category recovered
+from its ternary composition system.  This is an objectwise equivalence of
+categories; a Cat-valued natural isomorphism and a single global equivalence of
+the two model categories are not claimed.  The following theorem supplies the
+functor naturality of these objectwise equivalences.
+
+\paragraph{Category round-trip functor naturality.}
+For every original functor, first applying the canonical round-trip embedding
+and then its reconstructed functor agrees exactly with first applying the
+original functor and then embedding.  The two paths are equal as functors, with
+separate checked object and dependent-hom equations.  This is the naturality
+appropriate to the objectwise equivalences above.  We retain the distinction
+between equivalence of categories and isomorphism in the ordinary
+1-category \texttt{Cat}: a natural isomorphism in that 1-category would require
+strict category isomorphisms as its components.
+
+\paragraph{Relational-category comparison capstone.}
+The exact comparison level is bundled in one typed certificate: it contains
+both directional functors, the recognized-system natural isomorphism, the
+Cat-side objectwise equivalences, their canonical full, faithful, essentially
+surjective functors, and the exact naturality squares.  This package is
+deliberately not labelled a 1-categorical equivalence of model categories,
+because isomorphism in ordinary \texttt{Cat} is stricter than equivalence of
+categories.  A native bicategorical pseudonatural-equivalence package is a
+separate future strengthening.
+
+\paragraph{Dependent judgment interaction representation.}
+Fix a context of the raw dependent $\Pi/\Sigma/\mathsf{Id}$ calculus. Tagged
+raw types and terms form a ternary system in which a diagonal type interaction
+exists exactly when the type is well formed, and a term/type interaction exists
+exactly when the corresponding typing judgment is inhabited. Every
+derivation-preserving context renaming induces a resonance homomorphism; these
+maps preserve identities and composition exactly. The free-unit Incidence
+encoding preserves both judgment relations and recovers the original ternary
+system after the adjoined unit is removed. This is a representation theorem
+for the checked raw calculus, not a completeness theorem for an internal
+dependent language over arbitrary \texttt{ResonanceSpec} models.
+
+\paragraph{General resonance laws.}
+A carrier-independent propositional axiom schema expresses resonance symmetry,
+both unit laws, and the exclusion of every type-incompatible resonance atom.
+An arbitrary valuation satisfies the entire schema exactly when it is a
+symmetric, unital, type-compatible ternary relation over the fixed incidence
+signature. In particular, the physical resonance valuation satisfies the
+schema exactly when the Incidence admits a \texttt{ResonanceSpec}. Proofs from
+the possibly infinite schema remain finitary: each natural-deduction derivation
+uses a finite context of schema instances. Such derivations are sound in every
+law model. This removes finite enumeration from general axiomatization and
+soundness; strong Kripke completeness for the infinite schema is not asserted.
+
+\paragraph{General resonance-law Kripke semantics.}
+A lawful Kripke model requires its valuation to satisfy symmetry, both unit
+laws, and type compatibility at every world. Each law-schema instance is
+forced at every such world, including all future worlds quantified by
+implication and negation. Consequently every finitary derivation from the full
+schema is Kripke-sound without enumerating the carrier. Strong completeness is
+proved equivalent to one explicit remaining obligation: every nonderivable
+formula must fail at some world of a lawful Kripke model. Thus the unchecked
+part is isolated as an infinite-schema canonical-countermodel construction;
+the manuscript does not assert that this final obligation is discharged.
+
+\paragraph{Countable-schema completeness.}
+For a resonance-atom language equipped with a countable coding, the remaining
+countermodel obligation is discharged. Schema-relative derivations admit finite
+support and form a deductively closed theory. A relative avoidance chain then
+constructs a prime theory containing every law instance while excluding a
+chosen nonderivable formula. The upper cone above this theory is a lawful
+canonical Kripke model: restricting to the cone preserves the truth lemma, and
+every world satisfies symmetry, both units, and type compatibility. Thus a
+formula is forced in every lawful Kripke model exactly when it is derivable
+from finitely many instances of the full, potentially infinite schema. This
+covers finite and countably infinite carriers; no enumeration-free completeness
+claim is made for uncountable atom languages.
+
+\paragraph{Enumeration-free completeness.}
+The countability condition can be removed by a separate Zorn argument. Consider
+the sets of formulas that extend an arbitrary deductively closed theory and
+whose finite subcontexts do not derive a chosen forbidden formula. A nonempty
+inclusion chain is bounded by its union because every natural-deduction proof
+uses only a finite context. A maximal extension therefore exists; maximality
+forces deductive closure and disjunction primeness. This yields relative prime
+extensions and implication-failure future worlds without a formula schedule,
+and hence an enumeration-free canonical truth lemma. Applied to the resonance
+law schema, the construction provides a lawful countermodel for every
+nonderivable formula and proves strong Kripke completeness for arbitrary
+same-universe carriers. The proof is classical and uses choice; no predicative
+or choice-free completeness theorem is claimed.
+
+\paragraph{Dependent judgment proof-theoretic semantics.}
+The raw dependent $\Pi/\Sigma/\mathsf{Id}$ calculus admits an explicit
+inference-rule model interface: formation and typing are arbitrary predicates
+closed under every raw constructor. Mutual induction proves soundness in every
+such model. The syntactic model interprets validity as nonempty derivability;
+it is exact, least among inference-rule models, and stable under well-typed
+renaming and substitution. This is a proof-theoretic term-model completeness
+theorem, not extensional set-valued or CwF semantics, conversion,
+normalization, or higher identity coherence.
+
+\paragraph{Dependent contextual-category comprehension.}
+Well-formed raw contexts are objects and extensional well-typed substitutions
+are morphisms. Their derivation witnesses are retained propositionally but
+erased from morphism equality, yielding strict identity and associativity.
+Raw types reindex contravariantly with exact identity and composition laws;
+context extension has a display projection and generic variable. A base
+substitution and term of the reindexed display type pair uniquely into the
+extension, establishing the comprehension universal property. These results
+provide the contextual-category comprehension core beneath the existing
+set-valued family semantics. A fully bundled CwF with well-formed type and term
+presheaves is not claimed.
+
+\paragraph{Dependent type-and-term presheaves.}
+Well-formed raw types now form an explicit contravariant reindexing family over
+the context category, with strict identity and composition laws. The total
+family of typed terms has the same laws, and its projection to the type family
+is natural. The precise remaining CwF obstruction is also formalized:
+Nat-indexed substitutions into the empty context retain unconstrained irrelevant
+components, so its identity and constant-unit endomorphisms are distinct.
+Consequently the present empty context is not terminal. A finite-context
+extensional quotient or normalization of irrelevant substitution components is
+required before claiming a full CwF.
+
+\paragraph{Dependent scoped syntax.}
+Mutual depth predicates bound every de Bruijn variable in raw types and terms.
+Every lookup position lies below context length, and formation and typing
+derivations imply the corresponding scopedness judgments. Hence substitutions
+that agree on the finitely many variables of a context act identically on all
+well-formed types and well-typed terms.
+
+\paragraph{Finite-support context quotient.}
+Quotienting substitutions by this
+finite agreement is compatible with composition in both arguments and produces
+a strict corrected context category. In that quotient every map into the empty
+context is equal, so the empty context is terminal and the preceding obstruction
+is discharged. Descending the type/term presheaves and comprehension to this
+quotient remains the boundary before a full CwF package.
+
+\paragraph{Finite-support type and typed-term presheaves.}
+Well-formed types and total typed terms descend to substitution classes without
+choosing representatives: scoped substitution congruence proves both
+reindexing operations well defined. Their identity and contravariant
+composition laws hold strictly, and the typed-term projection to types is
+natural.
+
+\paragraph{Finite-support comprehension universality.}
+Context extension, display projection, and the generic variable also descend.
+A substitution and term of the reindexed type pair into the extension; both
+component equations hold, and the pairing is unique. Thus terminal context,
+type and term reindexing, and comprehension universality coexist in the same
+corrected category. A conventional dependent term-fiber bundle remains
+packaging work before exposing a standard bundled-CwF interface.
+
+\paragraph{Bundled finite syntactic category with families.}
+Terms are finally exposed as dependent fibers of the total typed-term space
+over each well-formed type. These fibers reindex along quotient substitutions;
+identity and composition are expressed by heterogeneous equality across the
+propositionally equal fibers. The generic variable inhabits the exact pullback
+of the display type, and fiber-level pairing satisfies projection, genericity,
+and uniqueness. A single certificate therefore combines terminal context,
+type and dependent-term substitution, and split comprehension. This closes the
+syntactic CwF construction; comparison with the existing set-valued semantics
+remains a separate morphism theorem.
+
+\paragraph{Completed-fragment CwF semantic comparison.}
+Every fully coherent completed typing judgment embeds conservatively into the
+finite syntactic CwF: its raw context, type, and term are unchanged. The same
+certificate supplies the existing set-valued semantic context, type, and term,
+and the interpretation commutes with semantic identity substitution through
+the certified fiber equivalence. Semantic completion is stated as an explicit
+gate on raw CwF terms. We do not claim a morphism on the whole raw CwF;
+arbitrary-substitution and comprehension naturality and completion of every raw
+judgment remain separate obligations.
+
+\paragraph{Completed-fragment substitution naturality.}
+A semantic realization of a raw substitution packages source and target
+context interpretations, the semantic substitution, and interpretations of
+all replacement variables. It induces the corresponding finite-support
+syntactic substitution, and reindexing the embedded term is exactly raw
+substitution. The general mutual dispatcher proves arbitrary-substitution
+naturality: interpretation of the substituted term agrees with semantic
+substitution of the original interpretation. Global realization coverage and
+comprehension naturality remain explicit gates before a whole-CwF morphism can
+be claimed.
+
+\paragraph{Completed-fragment comprehension naturality.}
+Each completed display type selects corresponding finite-syntactic and
+set-valued context extensions. Given a semantically realized substitution, the
+same completed term determines comprehension pairings on both sides. Projection
+and generic-variable equations hold, and the semantic generic component equals
+the fiber-transported interpretation of the syntactically substituted term.
+Hence comprehension is preserved on the completed realized fragment. Global
+judgment completion and semantic-substitution coverage remain the exact gates
+before these comparisons assemble into a whole-CwF morphism.
+
+\paragraph{Whole-CwF morphism readiness boundary.}
+Coherent telescope synthesis canonically realizes identity substitution for
+every completed judgment, including all semantic lookup replacements. The
+local judgment, arbitrary-substitution, and comprehension comparison laws are
+then bundled with an exact totality boundary: a whole-CwF morphism requires
+precisely completion of every finite-CwF term and semantic realization of every
+raw substitution into a completed judgment. Neither global coverage statement
+is claimed here.
+
+\paragraph{Completed display-projection semantics.}
+Every completed display type canonically realizes the nonidentity raw
+successor-variable projection. Its semantic map is exactly the set-valued Sigma
+projection, every replacement is the corresponding semantic lookup weakened
+along that projection, and the induced finite-support morphism is exactly the
+syntactic CwF display projection. Nonidentity coverage therefore includes the
+fundamental comprehension projection; arbitrary substitutions and global
+judgment completion remain open.
+
+\paragraph{Semantic-substitution composition and finite functoriality.}
+Well-typed raw substitutions compose by term substitution. Their semantic
+assignment maps compose as functions, while replacement interpretations compose
+by reindexing the later replacements along the earlier map. A realization into
+a fixed interpreted target context is packaged independently of any selected
+target term, so every completed realization is closed under precomposition by
+such a realization into its source. The induced finite-support morphism is
+exactly categorical composition in the syntactic context category. This is a
+closure theorem rather than a construction of realizations for all raw
+substitutions; arbitrary substitution coverage and global judgment completion
+remain open.
+
+\paragraph{Completed-term semantic pairing realization.}
+A realized base substitution and completed target term canonically determine a
+raw comprehension pairing into the extended context. Its semantic assignment
+map is the set-valued Sigma pairing, its newest replacement is the interpreted
+substituted term, and all older replacements are inherited from the base
+realization. The induced finite-support morphism is exactly the syntactic CwF
+pairing. This covers pairings generated by completed target terms; an arbitrary
+source-side head component need not be such a reindexing, so global substitution
+coverage is not claimed.
+
+\paragraph{General source-side semantic pairing realization.}
+The target-term restriction is removed by accepting the exact local semantic
+data for an arbitrary well-typed source head: a coherent target formation, its
+substitution fiber equivalence, and a source semantic term. Transporting that
+term across the equivalence extends any target-independent realized base
+substitution to the context extension. The semantic projection and generic
+equations hold, and the induced finite-support morphism is exactly the
+quotient-CwF pairing. Hence pairing shape is no longer an obstruction; global
+coverage is reduced to supplying the explicit formation and typing semantic
+data uniformly.
+
+\paragraph{Canonical raw-substitution pairing decomposition.}
+Every substitution into an extended target has a canonical tail and a newest
+component typed in the display family reindexed along that tail. Re-pairing
+recovers its term components exactly, its proof-erased extensional substitution
+exactly, and its finite-support class exactly as the CwF comprehension pairing.
+Raw substitutions retain proof-relevant typing derivations, so equality of the
+proof-relevant structures before erasure is not asserted. Together with the
+general semantic pairing theorem, this reduces global semantic-substitution
+coverage recursively to uniform formation and typing semantic data for each
+head component.
+
+\paragraph{Recursive semantic-substitution realization induction.}
+Semantic realization transports across changes of proof-relevant typing
+witnesses when the substitution term function is unchanged. Every substitution
+into the empty target has a canonical realization, while the extension step
+takes a realized canonical tail and the general formation/typing semantics of
+the actual source head and realizes the original substitution. This gives an
+exact recursive induction principle for global coverage. Uniform synthesis of
+the per-head semantic data remains the outstanding premise. The current basic
+realization record packages maps and replacement terms; a future strengthened
+interface should additionally internalize their lookup-by-lookup coherence,
+which the concrete constructors establish through their individual equations.
+
+\paragraph{Intrinsic lookup-coherent semantic substitutions.}
+The strengthened realization interface retains a target semantic tree and, for
+every target lookup, a fiber equivalence between the selected replacement
+family and the target lookup family reindexed by the semantic assignment map.
+It also requires equality between the transported replacement term and the
+reindexed target variable. Identity substitutions and completed display
+projections inhabit this interface with exact target-tree preservation.
+Strengthened pairing and composition closure remain before the recursive
+coverage induction can be promoted wholesale to this intrinsic interface.
+
+\paragraph{Lookup-coherent closure.}
+The \emph{Lookup-coherent pairing and composition closure} theorem shows that
+target-independent realizations compose generically. Intrinsic lookup
+coherence is preserved under composition by reindexing each later fiber
+equivalence along the earlier semantic map and using transport naturality for
+the term equation. General source-side pairing is coherent at the newest
+lookup by its formation equivalence and at every older lookup by inherited base
+coherence. The semantic maps remain exactly function composition and Sigma
+pairing. Uniform synthesis of formation and typing semantics for every head is
+now the remaining coverage premise for substitutions.
+
+\paragraph{Strengthened coherent whole-CwF readiness boundary.}
+Fixing a completion model anchors every target to its canonically synthesized
+semantic context and tree. The strengthened global substitution gate requires
+intrinsic lookup coherence rather than only an assignment map and replacement
+terms. Forgetting coherence recovers the previous completed-substitution and
+whole-CwF readiness gates, while strengthened readiness is equivalent exactly
+to judgment completion conjoined with canonical coherent substitution
+coverage. Neither global gate is claimed; uniform judgment completion and
+per-head semantic synthesis remain the totality obligations.
+
+\paragraph{Recursive lookup-coherent substitution induction.}
+Transport across proof-relevant substitution witnesses with the same term
+function preserves both the semantic assignment map and the exact target tree.
+Empty targets have canonical coherent realizations, and a coherent canonical
+tail plus general semantic data for the actual source head realizes the
+original substitution with every lookup equation intact. The recursive
+coverage mechanism therefore lands directly in the strengthened interface;
+uniform formation and typing semantic synthesis for every head is its sole
+remaining substitution premise.
+
 \section{Mechanization and reproducibility}
 
 All results are checked with Lean~4 and mathlib v4.23.0.  The main source is
 \path{IncidenceTheory/IncidenceResearch.lean}.  The repository maintains:
 \begin{itemize}
 \item a completion-claim matrix mapping scoped claims to declarations;
-\item a 29-row Lean-to-paper theorem index whose boundaries are checked in CI;
+\item a 106-row Lean-to-paper theorem index whose boundaries are checked in CI;
 \item an axiom audit allowing only \texttt{propext},
 \texttt{Classical.choice}, and \texttt{Quot.sound} in the capstone dependency
 closure;
@@ -484,11 +1099,11 @@ applied claims kept outside scope.
 \appendix
 \section{Checked theorem groups}
 
-The machine-readable theorem index contains 29 groups.  For readability they
+The machine-readable theorem index contains 106 groups.  For readability they
 are summarized here; the repository's TSV theorem index is authoritative for
 exact Lean declarations and hypotheses.
 
-\begin{center}\small
+\begin{center}\scriptsize
 \begin{tabular}{@{}r p{0.79\linewidth}@{}}
 \toprule
 1--4 & core structures; exact descent; uniqueness; universal factorization \\
@@ -500,6 +1115,97 @@ exact Lean declarations and hypotheses.
 22--24 & congruence reflection, graded functoriality, and quotient adjunction \\
 25--27 & infinite path, bounded grading, and standard simplicial families \\
 28--29 & forgetful incidence-hypergraph encoding and reversible reaction model \\
+30 & controlled-sum quotient/image natural isomorphism \\
+31 & canonical bisimulation-congruence saturation and closure laws \\
+32 & resonance-saturation closure operator and reflection \\
+33 & global carrier-changing saturation adjunction and factorization \\
+34 & role-changing exact-boundary saturation adjunction \\
+35 & globally boundary-surjective saturation adjunction \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{center}\scriptsize
+\begin{tabular}{@{}r p{0.79\linewidth}@{}}
+\toprule
+36 & carrier-and-boundary-surjective saturation adjunction \\
+37 & saturation internal-logic and translated-\texttt{IncProof} conservativity \\
+38 & dependent $\Pi/\Sigma/\mathsf{Id}$ saturation conservativity \\
+39 & associative saturation and generated dependent completion \\
+40 & exact quotient-associativity criterion and completion \\
+41 & saturation-associativity obstruction certificates \\
+42 & executable associativity-obstruction decision \\
+43 & faithful and recoverable representation of ternary interaction systems \\
+44 & exact, associative representation of small-category composition \\
+45 & recovery of objects, hom fibers, and composition \\
+46 & intrinsic relational characterization of identities and objects \\
+47 & scoped fullness and exact characterization of the functor image \\
+48 & endpoint-free relational recovery of objects, homs, and composition \\
+49 & relational recognition and reconstruction of categories \\
+50 & exact ternary-system round trip through reconstructed categories \\
+51 & functorial reconstruction and morphism-level round-trip naturality \\
+52 & packaged functor from recognized ternary systems to \texttt{Cat} \\
+53 & inverse-direction functor from \texttt{Cat} to recognized systems \\
+54 & recognized-system round-trip natural isomorphism \\
+55 & full, faithful, essentially-surjective category round-trip equivalence \\
+56 & naturality of the canonical category round-trip functors \\
+57 & bundled relational-category comparison data and scope boundary \\
+58 & exact, functorial, recoverable representation of dependent judgments \\
+59 & general resonance-law axiomatization, model characterization, and soundness \\
+60 & lawful Kripke semantics, schema soundness, and the exact completeness gate \\
+61 & finite-support Lindenbaum construction and countable-schema strong completeness \\
+62 & Zorn prime extension and enumeration-free resonance-law completeness \\
+63 & dependent judgment proof-theoretic soundness and term-model completeness \\
+64 & dependent contextual category, reindexing, and comprehension universality \\
+65 & dependent type/term presheaves and the exact terminal-context residual \\
+66 & scoped dependent syntax and finite-support substitution congruence \\
+67 & finite-support context quotient and terminal empty context \\
+68 & finite-support type and typed-term presheaves \\
+69 & finite-support comprehension equations and universality \\
+70 & bundled finite syntactic category with families \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{center}\scriptsize
+\begin{tabular}{@{}r p{0.79\linewidth}@{}}
+\toprule
+71 & completed-fragment CwF semantic comparison \\
+72 & completed-fragment substitution naturality \\
+73 & completed-fragment comprehension naturality \\
+74 & whole-CwF morphism readiness boundary \\
+75 & completed display-projection semantics \\
+76 & semantic-substitution composition and finite functoriality \\
+77 & completed-term semantic pairing realization \\
+78 & general source-side semantic pairing realization \\
+79 & canonical raw-substitution pairing decomposition \\
+80 & recursive semantic-substitution realization induction \\
+81 & intrinsic lookup-coherent semantic substitutions \\
+82 & lookup-coherent pairing and composition closure \\
+83 & strengthened coherent whole-CwF readiness boundary \\
+84 & recursive lookup-coherent substitution induction \\
+85 & readiness-aligned context semantic synthesis \\
+86 & exact source-head semantic coverage boundary \\
+87 & two-sided coherent semantic substitutions \\
+88 & source-head readiness and type-alignment discharge \\
+89 & global two-sided substitution realization \\
+90 & formation target-invariance boundary \\
+91 & mutual target-invariance induction motives \\
+92 & Pi/Sigma constructor target equations \\
+93 & dependent formation target packages \\
+94 & recursive Pi/Sigma target invariance \\
+95 & Identity target package and normalization boundary \\
+96 & canonical-provenance-scoped rebase \\
+97 & dispatcher-parametric target invariance \\
+98 & scoped canonical base/unit/Pi/Sigma target invariance \\
+99 & scoped typing target-invariance base and variable boundary \\
+100 & scoped Identity endpoint alignment \\
+101 & scoped Identity package equality and conditional closure \\
+102 & global scoped formation target invariance \\
+103 & scoped typing recursive normalization and Lambda boundary \\
+104 & scoped Lambda target-package invariance and conditional closure \\
+105 & scoped Refl target-package invariance and conditional closure \\
+106 & scoped Apply target package and instantiation boundary \\
 \bottomrule
 \end{tabular}
 \end{center}

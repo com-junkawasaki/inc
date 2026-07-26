@@ -1,7 +1,7 @@
 # Incidence Theory Lean-to-paper theorem index
 
 The machine-readable index is
-[`incidence-theorem-index.tsv`](incidence-theorem-index.tsv).  Its 29 rows map
+[`incidence-theorem-index.tsv`](incidence-theorem-index.tsv).  Its 106 rows map
 the numbered theorem spine in `incidence-quotient-outline.md` to checked claim
 IDs in `docs/completion-claims.tsv`.  The claim matrix in turn fixes the Lean
 source file, declaration name, and exact scope of every item.

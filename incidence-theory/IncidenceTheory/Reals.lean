@@ -7970,13 +7970,12 @@ theorem realSupApproxSequence_converges (family : IncReal → Prop)
     (rationalToReal_le_iff _ _).mpr (eventuallyLe n thresholdLe)
   exact realLE_trans distBound radiusBound
 
-/-- A nonempty sequentially compact set of reals is bounded above. If it were
+/-- A sequentially compact set of reals is bounded above. If it were
 not, the Archimedean embedding of the naturals would witness an unbounded
 sequence inside the set, but every convergent subsequence a compactness
 witness extracts is Cauchy, hence bounded -- contradiction. -/
 theorem realSequentiallyCompact_bounded_above
     {domain : IncReal → Prop}
-    (nonempty : ∃ value, domain value)
     (compact : RealSequentiallyCompact domain) :
     ∃ upper, RealUpperBound domain upper := by
   classical
@@ -8085,17 +8084,15 @@ theorem realSequentiallyCompact_negFamily
   exact ⟨indices, subsequence, limit,
     ⟨originalLimit, originalLimitMem, limitEq.symm⟩, converges⟩
 
-/-- A nonempty sequentially compact set of reals is bounded below, by
+/-- A sequentially compact set of reals is bounded below, by
 transporting boundedness-above through negation. -/
 theorem realSequentiallyCompact_bounded_below
     {domain : IncReal → Prop}
-    (nonempty : ∃ value, domain value)
     (compact : RealSequentiallyCompact domain) :
     ∃ lower, RealLowerBound domain lower := by
   have negCompact := realSequentiallyCompact_negFamily compact
-  have negNonempty := realNegFamily_nonempty nonempty
   obtain ⟨upper, isUpper⟩ :=
-    realSequentiallyCompact_bounded_above negNonempty negCompact
+    realSequentiallyCompact_bounded_above negCompact
   refine ⟨realNeg upper, ?_⟩
   intro value member
   have negValueMem : RealNegFamily domain (realNeg value) := ⟨value, member, rfl⟩
@@ -8135,7 +8132,7 @@ theorem realContinuousOn_closedInterval_attains_max
   have imageNonempty :
       ∃ value, RealImage function (RealClosedInterval lower upper) value :=
     ⟨function lower, lower, realClosedInterval_contains_lower ordered, rfl⟩
-  have imageBounded := realSequentiallyCompact_bounded_above imageNonempty imageCompact
+  have imageBounded := realSequentiallyCompact_bounded_above imageCompact
   have imageSupMem :=
     realSequentiallyCompact_sup_mem imageCompact imageNonempty imageBounded
   obtain ⟨maximizer, maximizerMem, maximizerEq⟩ := imageSupMem
@@ -8166,7 +8163,7 @@ theorem realContinuousOn_closedInterval_attains_min
       ∃ value, RealImage function (RealClosedInterval lower upper) value :=
     ⟨function lower, lower, realClosedInterval_contains_lower ordered, rfl⟩
   have imageBoundedBelow :=
-    realSequentiallyCompact_bounded_below imageNonempty imageCompact
+    realSequentiallyCompact_bounded_below imageCompact
   have imageInfMem :=
     realSequentiallyCompact_inf_mem imageCompact imageNonempty imageBoundedBelow
   obtain ⟨minimizer, minimizerMem, minimizerEq⟩ := imageInfMem

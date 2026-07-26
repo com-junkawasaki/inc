@@ -186,7 +186,7 @@ theorem SyntaxMap.instantiate_commutes (mapping : SyntaxMap) (term : Term) :
               SyntaxMap.lift, instantiateSubstitution, Term.mapSyntax,
               liftSubstitution, Term.rename_succ_instantiate]
       · simp [SyntaxMap.afterSubstitution, SyntaxMap.thenSubstitution,
-          SyntaxMap.lift, instantiateSubstitution, Term.mapSyntax,
+          SyntaxMap.lift, instantiateSubstitution,
           Term.rename_succ_instantiate]
 
 theorem Formula.mapSyntax_instantiate (body : Formula) (mapping : SyntaxMap)
@@ -477,10 +477,10 @@ theorem Formula.abstractConst_eq_rename_of_not_contains
       simp only [Formula.ContainsConst, not_or] at fresh
       exact congrArg₂ Formula.imp (ihLeft depth fresh.1) (ihRight depth fresh.2)
   | all body ih =>
-      simp only [Formula.abstractConst, Formula.rename, Formula.ContainsConst]
+      simp only [Formula.abstractConst, Formula.rename]
       rw [ih (depth + 1) fresh, liftRenaming_insertRenaming]
   | ex body ih =>
-      simp only [Formula.abstractConst, Formula.rename, Formula.ContainsConst]
+      simp only [Formula.abstractConst, Formula.rename]
       rw [ih (depth + 1) fresh, liftRenaming_insertRenaming]
 
 theorem Formula.abstractConst_zero_eq_rename_succ_of_not_contains
@@ -527,7 +527,7 @@ theorem Term.abstractConst_substitute_eliminate
       · by_cases equal : index = depth
         · subst index
           simp [Term.substitute, eliminateSubstitution,
-            Term.abstractConst, insertRenaming]
+            Term.abstractConst]
         · have above : depth < index := Nat.lt_of_le_of_ne (Nat.le_of_not_gt below)
               (Ne.symm equal)
           have notBelow : ¬ index - 1 < depth := by omega
@@ -604,10 +604,9 @@ theorem Term.abstractConst_insertRenaming (term : Term)
         simp [Term.rename, Term.abstractConst, insertRenaming, belowBinder,
           belowSlot, renamedBelowSlot]
       · by_cases belowSlot : index < depth + binderDepth
-        · have renamedNotBelowBinder : ¬ index + 1 < binderDepth := by omega
-          have renamedBelowSlot : index + 1 < depth + binderDepth + 1 := by omega
+        · have renamedBelowSlot : index + 1 < depth + binderDepth + 1 := by omega
           simp [Term.rename, Term.abstractConst, insertRenaming, belowBinder,
-            belowSlot, renamedNotBelowBinder, renamedBelowSlot]
+            belowSlot, renamedBelowSlot]
         · have renamedNotBelowBinder : ¬ index + 1 < binderDepth := by omega
           have renamedNotBelowSlot : ¬ index + 1 < depth + binderDepth + 1 := by
             omega
@@ -617,7 +616,7 @@ theorem Term.abstractConst_insertRenaming (term : Term)
       simp [Term.rename, Term.abstractConst]
       split
       · simp [Term.rename, insertRenaming]
-      · simp [Term.rename, Term.abstractConst]
+      · simp [Term.rename]
   | empty => rfl
   | pair left right ihLeft ihRight =>
       simp [Term.rename, Term.abstractConst, ihLeft, ihRight]
