@@ -1,5 +1,4 @@
-import IncidenceTheory.Quotient
-import IncidenceTheory.Sum
+import IncidenceTheory.SumQuotient
 import IncidenceTheory.ReferenceFoundationConservativity
 import Mathlib.Data.Fintype.Basic
 import Mathlib.Data.Fintype.Prod
@@ -548,6 +547,135 @@ theorem bisimulationQuotientResonance_universal
     fun _ => rfl, ?_⟩
   intro candidate factors
   exact bisimulationQuotientResonanceLift_unique hom invariant candidate factors
+
+/- The sum classifier's codomain carries the direct-image resonance. This is
+   the least ternary relation for which the canonical classifier is a
+   resonance homomorphism, so the following lift is a genuine morphism-level
+   strengthening of `SumQuotientClassifierFactorsUniquely`. -/
+def sumQuotientClassifierResonanceSystem
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) :
+    TernaryResonanceSystem where
+  Carrier := (Quotient (approxBisimSetoid inc1) × Bool) ⊕ I2
+  resonance := fun left right output =>
+    ∃ leftRep rightRep outputRep,
+      sumQuotientClassifier inc1 inc2 leftRep = left ∧
+      sumQuotientClassifier inc1 inc2 rightRep = right ∧
+      sumQuotientClassifier inc1 inc2 outputRep = output ∧
+      (incidenceSum inc1 inc2).resonance leftRep rightRep outputRep
+
+def sumQuotientClassifierResonanceHom
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) :
+    TernaryResonanceHom (incidenceSum inc1 inc2).resonanceSystem
+      (sumQuotientClassifierResonanceSystem inc1 inc2) where
+  toFun := sumQuotientClassifier inc1 inc2
+  preserves := by
+    intro left right output resonant
+    exact ⟨left, right, output, rfl, rfl, rfl, resonant⟩
+
+theorem sumQuotientControl_iff_classifier_resonanceHom_invariant
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) :
+    Nonempty (SumQuotientControlSpec inc1 inc2) ↔
+      BisimulationInvariantResonanceHom (incidenceSum inc1 inc2)
+        (sumQuotientClassifierResonanceSystem inc1 inc2)
+        (sumQuotientClassifierResonanceHom inc1 inc2) :=
+  sumQuotientControl_iff_classifier_invariant inc1 inc2
+
+/-- Morphism-level universal characterization of sum control. -/
+theorem sumQuotientControl_iff_classifier_resonanceHom_factorsUniquely
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) :
+    Nonempty (SumQuotientControlSpec inc1 inc2) ↔
+      ∃ lift : TernaryResonanceHom
+          (bisimulationQuotientResonanceSystem (incidenceSum inc1 inc2))
+          (sumQuotientClassifierResonanceSystem inc1 inc2),
+        (∀ value,
+          lift.toFun
+              (Quotient.mk
+                (approxBisimSetoid (incidenceSum inc1 inc2)) value) =
+            sumQuotientClassifier inc1 inc2 value) ∧
+        ∀ candidate : TernaryResonanceHom
+            (bisimulationQuotientResonanceSystem (incidenceSum inc1 inc2))
+            (sumQuotientClassifierResonanceSystem inc1 inc2),
+          (∀ value,
+            candidate.toFun
+                (Quotient.mk
+                  (approxBisimSetoid (incidenceSum inc1 inc2)) value) =
+              sumQuotientClassifier inc1 inc2 value) →
+          candidate = lift := by
+  rw [sumQuotientControl_iff_classifier_resonanceHom_invariant]
+  constructor
+  · intro invariant
+    exact bisimulationQuotientResonance_universal
+      (sumQuotientClassifierResonanceHom inc1 inc2) invariant
+  · rintro ⟨lift, factors, _unique⟩
+    intro first second related
+    change sumQuotientClassifier inc1 inc2 first =
+      sumQuotientClassifier inc1 inc2 second
+    rw [← factors first, ← factors second, Quotient.sound related]
+
+/-- Under the exact sum hypotheses, quotient resonance congruence is therefore
+equivalent to a universal factorization in the category of ternary resonance
+systems, not merely in `Type`. -/
+theorem incidenceSum_quotientResonanceCongruent_iff_classifier_resonanceHom_factorsUniquely
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (first : ResonanceSpec inc1)
+    (firstQuotient : QuotientResonanceCongruent inc1)
+    (typeReflecting : SumLeftTypeReflecting inc1 inc2) :
+    QuotientResonanceCongruent (incidenceSum inc1 inc2) ↔
+      ∃ lift : TernaryResonanceHom
+          (bisimulationQuotientResonanceSystem (incidenceSum inc1 inc2))
+          (sumQuotientClassifierResonanceSystem inc1 inc2),
+        (∀ value,
+          lift.toFun
+              (Quotient.mk
+                (approxBisimSetoid (incidenceSum inc1 inc2)) value) =
+            sumQuotientClassifier inc1 inc2 value) ∧
+        ∀ candidate : TernaryResonanceHom
+            (bisimulationQuotientResonanceSystem (incidenceSum inc1 inc2))
+            (sumQuotientClassifierResonanceSystem inc1 inc2),
+          (∀ value,
+            candidate.toFun
+                (Quotient.mk
+                  (approxBisimSetoid (incidenceSum inc1 inc2)) value) =
+              sumQuotientClassifier inc1 inc2 value) →
+          candidate = lift := by
+  rw [incidenceSum_quotientResonanceCongruent_iff_control_of_typeReflecting
+    inc1 inc2 first firstQuotient typeReflecting]
+  exact sumQuotientControl_iff_classifier_resonanceHom_factorsUniquely inc1 inc2
+
+theorem natCycleSumQuotientClassifierResonanceHomFactorsUniquely :
+    ∃ lift : TernaryResonanceHom
+        (bisimulationQuotientResonanceSystem
+          (incidenceSum natIncidence cycleIncidenceFixed))
+        (sumQuotientClassifierResonanceSystem
+          natIncidence cycleIncidenceFixed),
+      (∀ value,
+        lift.toFun
+            (Quotient.mk
+              (approxBisimSetoid
+                (incidenceSum natIncidence cycleIncidenceFixed)) value) =
+          sumQuotientClassifier natIncidence cycleIncidenceFixed value) ∧
+      ∀ candidate : TernaryResonanceHom
+          (bisimulationQuotientResonanceSystem
+            (incidenceSum natIncidence cycleIncidenceFixed))
+          (sumQuotientClassifierResonanceSystem
+            natIncidence cycleIncidenceFixed),
+        (∀ value,
+          candidate.toFun
+              (Quotient.mk
+                (approxBisimSetoid
+                  (incidenceSum natIncidence cycleIncidenceFixed)) value) =
+            sumQuotientClassifier natIncidence cycleIncidenceFixed value) →
+        candidate = lift :=
+  (sumQuotientControl_iff_classifier_resonanceHom_factorsUniquely
+    natIncidence cycleIncidenceFixed).mp
+    ((sumQuotientControl_iff_classifier_factorsUniquely
+      natIncidence cycleIncidenceFixed).mpr
+      natCycleSumQuotientClassifierFactorsUniquely)
 
 /- The bisimulation relation as an internal kernel-pair object. Its resonance
    relation is defined componentwise, so both projections are resonance
@@ -4757,6 +4885,235 @@ theorem shapeModeSimplex_relationalDescentSpec :
     RelationalResonanceDescentSpec shapeModeSimplexIncidence :=
   RelationalResonanceDescentSpec.ofExactDescent
     shapeModeSimplex_resonance_descends_exactly
+
+/- A quotient relation can be used as the generating rule for resonance on the
+   original carrier.  The only compatibility required by `Incidence` is that
+   every output selected by `glue` is admitted by the quotient-level relation.
+   Since boundary, type, and glue are unchanged, the behavioral quotient is
+   unchanged as well; full three-coordinate resonance congruence is then true
+   by construction rather than proved separately for each presentation. -/
+structure QuotientRelationPresentation
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) where
+  relation : IncidenceQuotient inc → IncidenceQuotient inc →
+    IncidenceQuotient inc → Prop
+  selected : ∀ {left right output}, inc.glue left right = some output →
+    relation
+      (Quotient.mk (approxBisimSetoid inc) left)
+      (Quotient.mk (approxBisimSetoid inc) right)
+      (Quotient.mk (approxBisimSetoid inc) output)
+
+def QuotientRelationPresentation.model
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (presentation : QuotientRelationPresentation inc) : Incidence I R T :=
+  { inc with
+    resonance := fun left right output =>
+      presentation.relation
+        (Quotient.mk (approxBisimSetoid inc) left)
+        (Quotient.mk (approxBisimSetoid inc) right)
+        (Quotient.mk (approxBisimSetoid inc) output)
+    selected_resonates := presentation.selected }
+
+@[simp] theorem QuotientRelationPresentation.model_boundary
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (presentation : QuotientRelationPresentation inc) :
+    presentation.model.boundary = inc.boundary := rfl
+
+@[simp] theorem QuotientRelationPresentation.model_typeFunc
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (presentation : QuotientRelationPresentation inc) :
+    presentation.model.typeFunc = inc.typeFunc := rfl
+
+@[simp] theorem QuotientRelationPresentation.model_glue
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (presentation : QuotientRelationPresentation inc) :
+    presentation.model.glue = inc.glue := rfl
+
+theorem QuotientRelationPresentation.approxBisim_iff
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (presentation : QuotientRelationPresentation inc) {first second : I} :
+    approxBisim presentation.model first second ↔
+      approxBisim inc first second :=
+  Iff.rfl
+
+theorem QuotientRelationPresentation.quotientResonanceCongruent
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (presentation : QuotientRelationPresentation inc) :
+    QuotientResonanceCongruent presentation.model := by
+  intro i₁ i₂ j₁ j₂ k₁ k₂ hi hj hk
+  change presentation.relation
+      (Quotient.mk (approxBisimSetoid inc) i₁)
+      (Quotient.mk (approxBisimSetoid inc) j₁)
+      (Quotient.mk (approxBisimSetoid inc) k₁) ↔
+    presentation.relation
+      (Quotient.mk (approxBisimSetoid inc) i₂)
+      (Quotient.mk (approxBisimSetoid inc) j₂)
+      (Quotient.mk (approxBisimSetoid inc) k₂)
+  have hi' : Quotient.mk (approxBisimSetoid inc) i₁ =
+      Quotient.mk (approxBisimSetoid inc) i₂ := Quotient.sound hi
+  have hj' : Quotient.mk (approxBisimSetoid inc) j₁ =
+      Quotient.mk (approxBisimSetoid inc) j₂ := Quotient.sound hj
+  have hk' : Quotient.mk (approxBisimSetoid inc) k₁ =
+      Quotient.mk (approxBisimSetoid inc) k₂ := Quotient.sound hk
+  rw [hi', hj', hk']
+
+theorem QuotientRelationPresentation.exactDescent
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (presentation : QuotientRelationPresentation inc) :
+    ResonanceRelationDescendsExactly presentation.model :=
+  exact_descent_of_quotientResonanceCongruent
+    presentation.quotientResonanceCongruent
+
+theorem QuotientRelationPresentation.quotientResonance_mk_iff
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (presentation : QuotientRelationPresentation inc)
+    (left right output : I) :
+    quotientResonance presentation.model
+        (Quotient.mk (approxBisimSetoid presentation.model) left)
+        (Quotient.mk (approxBisimSetoid presentation.model) right)
+        (Quotient.mk (approxBisimSetoid presentation.model) output) ↔
+      presentation.relation
+        (Quotient.mk (approxBisimSetoid inc) left)
+        (Quotient.mk (approxBisimSetoid inc) right)
+        (Quotient.mk (approxBisimSetoid inc) output) := by
+  exact IncidenceCore.quotientResonance_mk_iff
+    (inc := presentation.model) presentation.quotientResonanceCongruent
+
+theorem QuotientRelationPresentation.quotientResonance_eq
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (presentation : QuotientRelationPresentation inc) :
+    quotientResonance presentation.model = presentation.relation := by
+  funext left right output
+  induction left using Quotient.ind with
+  | _ left =>
+    induction right using Quotient.ind with
+    | _ right =>
+      induction output using Quotient.ind with
+      | _ output =>
+        exact propext (presentation.quotientResonance_mk_iff left right output)
+
+/- Pulling the existential quotient relation of an arbitrary incidence back to
+   its carrier gives its canonical bisimulation-congruence saturation. -/
+def bisimulationResonanceSaturationPresentation
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    QuotientRelationPresentation inc where
+  relation := quotientResonance inc
+  selected := fun selected =>
+    quotientResonance_of_resonance (inc.selected_resonates selected)
+
+def bisimulationResonanceSaturation
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    Incidence I R T :=
+  (bisimulationResonanceSaturationPresentation inc).model
+
+theorem resonance_implies_bisimulationResonanceSaturation
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    {left right output : I} (resonant : inc.resonance left right output) :
+    (bisimulationResonanceSaturation inc).resonance left right output :=
+  quotientResonance_of_resonance resonant
+
+theorem bisimulationResonanceSaturation_exactDescent
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    ResonanceRelationDescendsExactly
+      (bisimulationResonanceSaturation inc) :=
+  (bisimulationResonanceSaturationPresentation inc).exactDescent
+
+/- Minimality is stated without constructing another `Incidence`: every
+   ternary relation containing the source resonance and invariant under source
+   bisimulation contains the saturation. -/
+theorem bisimulationResonanceSaturation_least
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (relation : I → I → I → Prop)
+    (contains : ∀ {left right output}, inc.resonance left right output →
+      relation left right output)
+    (congruent : ∀ {i₁ i₂ j₁ j₂ k₁ k₂},
+      approxBisim inc i₁ i₂ → approxBisim inc j₁ j₂ →
+      approxBisim inc k₁ k₂ →
+      (relation i₁ j₁ k₁ ↔ relation i₂ j₂ k₂))
+    {left right output : I}
+    (saturated : (bisimulationResonanceSaturation inc).resonance
+      left right output) :
+    relation left right output := by
+  rcases saturated with
+    ⟨sourceLeft, sourceRight, sourceOutput, leftEq, rightEq, outputEq,
+      resonant⟩
+  have leftRelated : approxBisim inc sourceLeft left := Quotient.exact leftEq
+  have rightRelated : approxBisim inc sourceRight right := Quotient.exact rightEq
+  have outputRelated : approxBisim inc sourceOutput output :=
+    Quotient.exact outputEq
+  exact (congruent leftRelated rightRelated outputRelated).mp
+    (contains resonant)
+
+theorem bisimulationResonanceSaturation_eq_self_iff
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    (∀ left right output,
+      (bisimulationResonanceSaturation inc).resonance left right output ↔
+        inc.resonance left right output) ↔
+      QuotientResonanceCongruent inc := by
+  constructor
+  · intro fixedRelation
+    intro i₁ i₂ j₁ j₂ k₁ k₂ hi hj hk
+    constructor
+    · intro resonant
+      apply (fixedRelation i₂ j₂ k₂).mp
+      change quotientResonance inc
+        (Quotient.mk (approxBisimSetoid inc) i₂)
+        (Quotient.mk (approxBisimSetoid inc) j₂)
+        (Quotient.mk (approxBisimSetoid inc) k₂)
+      have hi' : Quotient.mk (approxBisimSetoid inc) i₁ =
+          Quotient.mk (approxBisimSetoid inc) i₂ := Quotient.sound hi
+      have hj' : Quotient.mk (approxBisimSetoid inc) j₁ =
+          Quotient.mk (approxBisimSetoid inc) j₂ := Quotient.sound hj
+      have hk' : Quotient.mk (approxBisimSetoid inc) k₁ =
+          Quotient.mk (approxBisimSetoid inc) k₂ := Quotient.sound hk
+      rw [← hi', ← hj', ← hk']
+      exact quotientResonance_of_resonance resonant
+    · intro resonant
+      apply (fixedRelation i₁ j₁ k₁).mp
+      change quotientResonance inc
+        (Quotient.mk (approxBisimSetoid inc) i₁)
+        (Quotient.mk (approxBisimSetoid inc) j₁)
+        (Quotient.mk (approxBisimSetoid inc) k₁)
+      have hi' : Quotient.mk (approxBisimSetoid inc) i₁ =
+          Quotient.mk (approxBisimSetoid inc) i₂ := Quotient.sound hi
+      have hj' : Quotient.mk (approxBisimSetoid inc) j₁ =
+          Quotient.mk (approxBisimSetoid inc) j₂ := Quotient.sound hj
+      have hk' : Quotient.mk (approxBisimSetoid inc) k₁ =
+          Quotient.mk (approxBisimSetoid inc) k₂ := Quotient.sound hk
+      rw [hi', hj', hk']
+      exact quotientResonance_of_resonance resonant
+  · intro congruent left right output
+    change quotientResonance inc
+      (Quotient.mk (approxBisimSetoid inc) left)
+      (Quotient.mk (approxBisimSetoid inc) right)
+      (Quotient.mk (approxBisimSetoid inc) output) ↔ _
+    exact quotientResonance_mk_iff congruent
+
+theorem bisimulationResonanceSaturation_idempotent
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T) :
+    ∀ left right output,
+      (bisimulationResonanceSaturation
+        (bisimulationResonanceSaturation inc)).resonance left right output ↔
+      (bisimulationResonanceSaturation inc).resonance left right output := by
+  apply (bisimulationResonanceSaturation_eq_self_iff
+    (bisimulationResonanceSaturation inc)).mpr
+  exact quotientResonanceCongruent_of_exact_descent
+    (bisimulationResonanceSaturation_exactDescent inc)
+
+theorem simplex_bisimulationResonanceSaturation_strict :
+    (bisimulationResonanceSaturation simplexIncidence).resonance
+        SimplexId.v1 SimplexId.face SimplexId.face ∧
+      ¬ simplexIncidence.resonance
+        SimplexId.v1 SimplexId.face SimplexId.face := by
+  constructor
+  · change quotientResonance simplexIncidence
+      (Quotient.mk (approxBisimSetoid simplexIncidence) SimplexId.v1)
+      (Quotient.mk (approxBisimSetoid simplexIncidence) SimplexId.face)
+      (Quotient.mk (approxBisimSetoid simplexIncidence) SimplexId.face)
+    refine ⟨SimplexId.v0, SimplexId.face, SimplexId.face, ?_, rfl, rfl, ?_⟩
+    · exact Quotient.sound
+        ((simplexToShape_iff_approxBisim SimplexId.v0 SimplexId.v1).mp rfl)
+    · simp [simplexIncidence]
+  · simp [simplexIncidence]
 
 /- Generic class-mode construction.  A classification may be a dimension,
    cell shape, color, orbit label, or any other behavioral invariant.  The

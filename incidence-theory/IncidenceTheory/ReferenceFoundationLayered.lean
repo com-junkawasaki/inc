@@ -159,7 +159,6 @@ theorem layerCompletionStage_localBound
 theorem layerCompletionStage_avoids
     {infinity : InfinitySchema} {base : Set Formula} {target : Formula}
     {level : Nat}
-    (baseLevel : ∀ formula ∈ base, formula.constLevelBound ≤ level)
     (baseLocal : ∀ formula ∈ base, formula.localConstBound level ≤ 0)
     (targetLevel : target.constLevelBound ≤ level)
     (baseAvoids : ¬ SetDerives infinity base target) :
@@ -259,7 +258,6 @@ theorem base_subset_layerCompletionClosure (infinity : InfinitySchema)
 theorem layerCompletionClosure_avoids
     {infinity : InfinitySchema} {base : Set Formula} {target : Formula}
     {level : Nat}
-    (baseLevel : ∀ formula ∈ base, formula.constLevelBound ≤ level)
     (baseLocal : ∀ formula ∈ base, formula.localConstBound level ≤ 0)
     (targetLevel : target.constLevelBound ≤ level)
     (baseAvoids : ¬ SetDerives infinity base target) :
@@ -272,7 +270,7 @@ theorem layerCompletionClosure_avoids
       (layerCompletionChain_isChain infinity base target level)
       (fun formula member => contextIn formula member) with
     ⟨theory, ⟨stage, rfl⟩, contextStage⟩
-  exact layerCompletionStage_avoids baseLevel baseLocal targetLevel baseAvoids stage
+  exact layerCompletionStage_avoids baseLocal targetLevel baseAvoids stage
     ⟨context, contextStage, derivation⟩
 
 theorem layerCompletionClosure_levelBound
@@ -534,7 +532,7 @@ noncomputable def layerCompletionPrimeTheory
       (baseLevel formula member)]
   have avoids : ¬ SetDerives infinity
       (layerCompletionClosure infinity base target level) target :=
-    layerCompletionClosure_avoids baseLevel baseLocal targetLevel baseAvoids
+    layerCompletionClosure_avoids baseLocal targetLevel baseAvoids
   have primeOrProof : ∀ {left right : Formula},
       max left.constLevelBound right.constLevelBound ≤ level + 1 →
       ((.or left right) ∈ layerCompletionClosure infinity base target level ↔
@@ -590,7 +588,7 @@ theorem layerCompletionPrimeTheory_target_not_mem
     intro formula inBase
     rw [formula.localConstBound_eq_zero_of_levelBound_le level
       (baseLevel formula inBase)]
-  exact (layerCompletionClosure_avoids baseLevel baseLocal targetLevel baseAvoids)
+  exact (layerCompletionClosure_avoids baseLocal targetLevel baseAvoids)
     (SetDerives.of_mem member)
 
 theorem LayeredPrimeTheory.future_counterexample_of_imp_not_mem
@@ -623,7 +621,6 @@ theorem LayeredPrimeTheory.future_counterexample_of_imp_not_mem
   · exact baseSubset (Set.mem_insert left _)
   · intro member
     exact (layerCompletionClosure_avoids
-      (baseLevel := baseLevel)
       (baseLocal := by
         intro formula inBase
         rw [formula.localConstBound_eq_zero_of_levelBound_le current.cutoff
@@ -688,7 +685,6 @@ theorem LayeredPrimeTheory.future_counterexample_of_all_not_mem
       layerCompletionPrimeTheory]
   · intro member
     exact (layerCompletionClosure_avoids
-      (baseLevel := baseLevel)
       (baseLocal := by
         intro formula inBase
         rw [formula.localConstBound_eq_zero_of_levelBound_le

@@ -53,8 +53,8 @@ awk -F '\t' '
     }
   }
   END {
-    if (expected != 29) {
-      print "paper theorem index must contain exactly 29 spine entries, got " expected > "/dev/stderr"
+    if (expected != 106) {
+      print "paper theorem index must contain exactly 106 spine entries, got " expected > "/dev/stderr"
       failed = 1
     }
     exit failed
@@ -72,8 +72,8 @@ awk '
     }
   }
   END {
-    if (expected != 29) {
-      print "paper outline must contain exactly 29 theorem-spine entries, got " expected > "/dev/stderr"
+    if (expected != 106) {
+      print "paper outline must contain exactly 106 theorem-spine entries, got " expected > "/dev/stderr"
       failed = 1
     }
     exit failed

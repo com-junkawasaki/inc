@@ -41,6 +41,44 @@ ZFSet model, and varying-domain Kripke completeness for constant-free contexts
 and conclusions. It does not claim full ZF, completeness for formulas containing
 object constants, or the consistency of Lean itself.
 
+For the generic sum constructor, the obstruction to relational associativity
+is now a checked general necessity theorem rather than only a finite
+counterexample: associativity of any nonempty sum forces the left factor's
+resonance to be unit-reflecting. The converse is now checked under the weaker
+local `UnitOutputExactResonanceSpec` law, which only prevents a unit input and
+a non-unit input from producing the unit. It permits other extra unit-input
+modes; `extraUnitModeNatSumAssociativeSpec` is a checked genuinely multi-valued
+witness. `incidenceSum_associative_iff` now gives a complete characterization:
+sum associativity is equivalent to associativity of both factors together with
+left unit-reflection and exact unit-output. Both local laws are independently
+derived from sum associativity. The result is integrated into the conditional
+`IncDepRawNormalizedResonanceCompletion.sum` constructor, instantiated by
+`natIncidence ⊕ cycleIncidenceFixed`. Quotient descent additionally forces
+right-factor bisimulation faithfulness and separation of the left unit class;
+it also forbids cross-tag bisimulation. `SumQuotientControlSpec` packages the
+exact representative-control data. `SumLeftTypeReflecting` identifies exactly
+when the sum's erased type map still permits left-side bisimulation projection.
+Under this condition quotient descent is equivalent to the control certificate;
+the condition is automatic for the repository's `GraphType` incidences. The
+faithful/leafless construction is also proved for arbitrary type carriers under
+left and right type reflection, with the original `GraphType` theorem retained
+as a derived convenience result. `SumQuotient.lean` upgrades the control laws
+to a universal statement: they are equivalent to invariance, hence unique
+factorization through the bisimulation quotient, of the canonical observable
+`(left ≈-class, left-unit bit) ⊕ exact-right-representative`. The same
+classifier is equipped with its generated ternary resonance in
+`IncidenceResearch.lean`; its factorization is proved unique among
+resonance-preserving morphisms, so the result holds in the category of ternary
+resonance systems rather than only in `Type`. Restricting the classifier to its
+reachable image strengthens this further: under control its kernel is exactly
+bisimilarity, and the induced quotient map is a ternary-resonance-system
+isomorphism with exact resonance preservation and reflection.
+Controlled sums and their resonance/bisimulation-preserving maps are bundled
+as a category in `SumQuotientNaturality.lean`. Quotient and reachable-image
+assignments are functors, and the comparison isomorphisms form a checked
+natural isomorphism; identity, composition, and representative formulas are
+proved explicitly.
+
 See [authoritative status](docs/status.md) for scope, evidence, and remaining
 work.
 
@@ -59,7 +97,7 @@ Quotients.”** Its main checked results are:
   obstruction orbits of the seven-cell simplex selector;
 - graded simplicial-family and structural reversible-reaction examples.
 
-The generated [preprint PDF](arxiv/main.pdf), source bundle, 29-row
+The generated [preprint PDF](arxiv/main.pdf), source bundle, 106-row
 [Lean-to-paper theorem index](docs/papers/incidence-theorem-index.md), scoped
 [prior-art audit](docs/papers/mechanized-prior-art-audit.md), and
 [journal gate](docs/papers/journal-submission-gate.tsv) are checked by

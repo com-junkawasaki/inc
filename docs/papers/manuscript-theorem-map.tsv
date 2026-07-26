@@ -28,3 +28,80 @@ spine	manuscript_marker
 27	Simplicial families
 28	three-sorted incidence hypergraph
 29	Reaction-network instance
+30	comparison isomorphisms form a natural
+31	Canonical congruence saturation
+32	Resonance-saturation reflection
+33	Global saturation adjunction
+34	Role-changing exact-boundary adjunction
+35	Globally boundary-surjective adjunction
+36	Carrier-and-boundary-surjective adjunction
+37	Internal-logic conservativity
+38	Dependent-calculus conservativity
+39	Associative saturation completion
+40	Exact quotient-associativity criterion
+41	Associativity obstruction certificates
+42	Executable associativity decision
+43	Ternary interaction representation
+44	Small-category composition representation
+45	Internal category recovery
+46	Intrinsic identity and object recovery
+47	Scoped fullness and exact functor image
+48	Pure relational category recovery
+49	Relational category recognition
+50	Relational category system round trip
+51	Functorial relational category reconstruction
+52	Cat-valued reconstruction functor
+53	Category recognition inverse-direction functor
+54	Recognized-system round-trip natural isomorphism
+55	Category round-trip equivalence
+56	Category round-trip functor naturality
+57	Relational-category comparison capstone
+58	Dependent judgment interaction representation
+59	General resonance laws
+60	General resonance-law Kripke semantics
+61	Countable-schema completeness
+62	Enumeration-free completeness
+63	Dependent judgment proof-theoretic semantics
+64	Dependent contextual-category comprehension
+65	Dependent type-and-term presheaves
+66	Dependent scoped syntax
+67	Finite-support context quotient
+68	Finite-support type and typed-term presheaves
+69	Finite-support comprehension universality
+70	Bundled finite syntactic category with families
+71	Completed-fragment CwF semantic comparison
+72	Completed-fragment substitution naturality
+73	Completed-fragment comprehension naturality
+74	Whole-CwF morphism readiness boundary
+75	Completed display-projection semantics
+76	Semantic-substitution composition and finite functoriality
+77	Completed-term semantic pairing realization
+78	General source-side semantic pairing realization
+79	Canonical raw-substitution pairing decomposition
+80	Recursive semantic-substitution realization induction
+81	Intrinsic lookup-coherent semantic substitutions
+82	Lookup-coherent pairing and composition closure
+83	Strengthened coherent whole-CwF readiness boundary
+84	Recursive lookup-coherent substitution induction
+85	readiness-aligned context semantic synthesis
+86	exact source-head semantic coverage boundary
+87	two-sided coherent semantic substitutions
+88	source-head readiness and type-alignment discharge
+89	global two-sided substitution realization
+90	formation target-invariance boundary
+91	mutual target-invariance induction motives
+92	Pi/Sigma constructor target equations
+93	dependent formation target packages
+94	recursive Pi/Sigma target invariance
+95	Identity target package and normalization boundary
+96	canonical-provenance-scoped rebase
+97	dispatcher-parametric target invariance
+98	scoped canonical base/unit/Pi/Sigma target invariance
+99	scoped typing target-invariance base and variable boundary
+100	scoped Identity endpoint alignment
+101	scoped Identity package equality and conditional closure
+102	global scoped formation target invariance
+103	scoped typing recursive normalization and Lambda boundary
+104	scoped Lambda target-package invariance and conditional closure
+105	scoped Refl target-package invariance and conditional closure
+106	scoped Apply target package and instantiation boundary
