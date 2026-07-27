@@ -5,6 +5,7 @@ import IncidenceTheory.Reals
 import IncidenceTheory.Pairs
 import IncidenceTheory.PathComplex
 import IncidenceTheory.Product
+import IncidenceTheory.Sum
 
 universe u v
 
@@ -8406,12 +8407,106 @@ noncomputable def IncDepRawNormalizedResonanceCompletion.prod
   quotientCongruent := quotientResonanceCongruentProd inc1 inc2
     first.quotientCongruent second.quotientCongruent
 
+noncomputable def IncDepRawNormalizedResonanceCompletion.sum
+    {I1 R1 I2 R2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    {inc1 : Incidence I1 R1 GraphType} {inc2 : Incidence I2 R2 GraphType}
+    (first : IncDepRawNormalizedResonanceCompletion inc1)
+    (second : IncDepRawNormalizedResonanceCompletion inc2)
+    (unitOutput : UnitOutputExactResonanceSpec inc1)
+    (unitReflecting : UnitReflectingResonanceSpec inc1)
+    (sumQuotientCongruent :
+      QuotientResonanceCongruent (incidenceSum inc1 inc2)) :
+    IncDepRawNormalizedResonanceCompletion (incidenceSum inc1 inc2) where
+  structural := first.structural
+  resonance := resonanceSumSpec inc1 inc2 unitOutput.toResonanceSpec
+    second.resonance
+  associative := associativeResonanceSumSpec inc1 inc2 unitOutput
+    first.associative second.associative unitReflecting
+  quotientCongruent := sumQuotientCongruent
+
+noncomputable def IncDepRawNormalizedResonanceCompletion.sumOfFaithfulNoSharedLeaves
+    {I1 R1 I2 R2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    {inc1 : Incidence I1 R1 GraphType} {inc2 : Incidence I2 R2 GraphType}
+    (first : IncDepRawNormalizedResonanceCompletion inc1)
+    (second : IncDepRawNormalizedResonanceCompletion inc2)
+    (unitOutput : UnitOutputExactResonanceSpec inc1)
+    (unitReflecting : UnitReflectingResonanceSpec inc1)
+    (faithful1 : ∀ x y : I1, approxBisim inc1 x y ↔ x = y)
+    (faithful2 : ∀ x y : I2, approxBisim inc2 x y ↔ x = y)
+    (leafless2 : ∀ b, inc2.boundary b ≠ []) :
+    IncDepRawNormalizedResonanceCompletion (incidenceSum inc1 inc2) :=
+  first.sum second unitOutput unitReflecting
+    (incidenceSum_quotientResonanceCongruent_of_control inc1 inc2
+      first.resonance first.quotientCongruent
+      (sumQuotientControlOfFaithfulNoSharedLeaves inc1 inc2
+        faithful1 faithful2 leafless2))
+
 noncomputable def natIncDepRawNormalizedResonanceCompletion :
     IncDepRawNormalizedResonanceCompletion natIncidence where
   structural := incDepRawNormalizedBasicPreservation
   resonance := natResonanceSpec.toResonanceSpec
   associative := natAssociativeResonanceSpec
   quotientCongruent := natQuotientResonanceCongruent
+
+def cycleIncidenceFixedFunctionalResonanceSpec :
+    FunctionalResonanceSpec cycleIncidenceFixed where
+  symmetric := by
+    intro i j k resonant
+    cases i <;> cases j <;> cases k <;>
+      simp [cycleIncidenceFixed, cycleAdd, cycleToNat, cycleOfNat] at resonant ⊢
+  unit_left := fun i => cycleIncidenceFixed.selected_resonates
+    (cycleIncidenceFixed.unit_left i)
+  unit_right := fun i => cycleIncidenceFixed.selected_resonates
+    (cycleIncidenceFixed.unit_right i)
+  type_compatible := by
+    intro i j k resonant
+    exact ⟨rfl, rfl⟩
+  selected_complete := by
+    intro i j k resonant
+    exact resonant
+
+def cycleIncidenceFixedAssociativeResonanceSpec :
+    AssociativeResonanceSpec cycleIncidenceFixed where
+  reassociate := by
+    intro i j k out
+    have cycleAdd_assoc : ∀ a b c,
+        cycleAdd (cycleAdd a b) c = cycleAdd a (cycleAdd b c) := by
+      intro a b c
+      cases a <;> cases b <;> cases c <;>
+        rfl
+    constructor
+    · rintro ⟨ij, hij, hout⟩
+      have hijEq : cycleAdd i j = ij := by
+        simpa [cycleIncidenceFixed] using hij
+      subst ij
+      refine ⟨cycleAdd j k, ?_, ?_⟩
+      · simp [cycleIncidenceFixed]
+      · simpa [cycleIncidenceFixed, cycleAdd_assoc] using hout
+    · rintro ⟨jk, hjk, hout⟩
+      have hjkEq : cycleAdd j k = jk := by
+        simpa [cycleIncidenceFixed] using hjk
+      subst jk
+      refine ⟨cycleAdd i j, ?_, ?_⟩
+      · simp [cycleIncidenceFixed]
+      · simpa [cycleIncidenceFixed, cycleAdd_assoc] using hout
+
+noncomputable def cycleIncidenceFixedNormalizedResonanceCompletion :
+    IncDepRawNormalizedResonanceCompletion cycleIncidenceFixed where
+  structural := incDepRawNormalizedBasicPreservation
+  resonance := cycleIncidenceFixedFunctionalResonanceSpec.toResonanceSpec
+  associative := cycleIncidenceFixedAssociativeResonanceSpec
+  quotientCongruent := quotientResonanceCongruent_of_faithful _
+    cycleIncidenceFixed_approxBisim_iff
+
+noncomputable def natCycleSumNormalizedResonanceCompletion :
+    IncDepRawNormalizedResonanceCompletion
+      (incidenceSum natIncidence cycleIncidenceFixed) :=
+  natIncDepRawNormalizedResonanceCompletion.sumOfFaithfulNoSharedLeaves
+    cycleIncidenceFixedNormalizedResonanceCompletion
+    (UnitOutputExactResonanceSpec.ofFunctional natResonanceSpec)
+    natUnitReflectingResonanceSpec natIncidence_approxBisim_iff
+    cycleIncidenceFixed_approxBisim_iff
+    (fun b => by cases b <;> simp [cycleIncidenceFixed, cycleBoundaryFixed])
 
 noncomputable def finiteIncDepRawNormalizedResonanceCompletion :
     IncDepRawNormalizedResonanceCompletion finiteIncidence where

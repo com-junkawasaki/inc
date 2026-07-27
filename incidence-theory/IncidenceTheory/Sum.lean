@@ -218,6 +218,356 @@ def resonanceSumSpec
     intro i j k resonant
     exact ⟨rfl, rfl⟩
 
+theorem incidenceSum_resonance_inl_inl_inl_iff
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (first : ResonanceSpec inc1) (i j k : I1) :
+    (incidenceSum inc1 inc2).resonance (Sum.inl i) (Sum.inl j) (Sum.inl k) ↔
+      inc1.resonance i j k := by
+  simp only [incidenceSum, sumResonance, Sum.inl.injEq]
+  constructor
+  · rintro (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | resonant)
+    · exact first.unit_left _
+    · exact first.unit_right _
+    · exact resonant
+  · exact fun resonant => Or.inr (Or.inr resonant)
+
+theorem incidenceSum_resonance_inr_inr_inr_iff
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (i j k : I2) :
+    (incidenceSum inc1 inc2).resonance (Sum.inr i) (Sum.inr j) (Sum.inr k) ↔
+      inc2.resonance i j k := by
+  simp [incidenceSum, sumResonance]
+
+theorem incidenceSum_resonance_inl_inr_inr_iff
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (i : I1) (j k : I2) :
+    (incidenceSum inc1 inc2).resonance (Sum.inl i) (Sum.inr j) (Sum.inr k) ↔
+      i = inc1.unit ∧ k = j := by
+  simp [incidenceSum, sumResonance]
+
+theorem incidenceSum_resonance_inr_inl_inr_iff
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (i : I2) (j : I1) (k : I2) :
+    (incidenceSum inc1 inc2).resonance (Sum.inr i) (Sum.inl j) (Sum.inr k) ↔
+      j = inc1.unit ∧ k = i := by
+  simp [incidenceSum, sumResonance]
+
+/-- The designated unit has no additional resonance modes.  This is weaker
+than global functional resonance: interactions away from the unit may remain
+genuinely multi-valued. -/
+structure ExactUnitResonanceSpec
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T)
+    extends ResonanceSpec inc where
+  left_exact : ∀ {i k}, inc.resonance inc.unit i k → k = i
+  right_exact : ∀ {i k}, inc.resonance i inc.unit k → k = i
+
+theorem ExactUnitResonanceSpec.left_iff
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (exactUnit : ExactUnitResonanceSpec inc) {i k : I} :
+    inc.resonance inc.unit i k ↔ k = i := by
+  constructor
+  · exact exactUnit.left_exact
+  · rintro rfl
+    exact exactUnit.unit_left _
+
+theorem ExactUnitResonanceSpec.right_iff
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (exactUnit : ExactUnitResonanceSpec inc) {i k : I} :
+    inc.resonance i inc.unit k ↔ k = i := by
+  constructor
+  · exact exactUnit.right_exact
+  · rintro rfl
+    exact exactUnit.unit_right _
+
+/-- Functional resonance is exact at the unit, although interactions away from
+the unit need not be treated through this stronger bridge. -/
+def ExactUnitResonanceSpec.ofFunctional
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (functional : FunctionalResonanceSpec inc) : ExactUnitResonanceSpec inc where
+  toResonanceSpec := functional.toResonanceSpec
+  left_exact := by
+    intro i k resonant
+    have selected := functional.selected_complete resonant
+    rw [inc.unit_left] at selected
+    exact Option.some.inj selected.symm
+  right_exact := by
+    intro i k resonant
+    have selected := functional.selected_complete resonant
+    rw [inc.unit_right] at selected
+    exact Option.some.inj selected.symm
+
+/-- No non-unit element can interact with the designated unit to produce the
+unit.  Unlike `ExactUnitResonanceSpec`, this permits additional non-unit modes
+for unit inputs and is exactly the local condition used by sum associativity. -/
+structure UnitOutputExactResonanceSpec
+    {I R T : Type u} [DecidableEq I] (inc : Incidence I R T)
+    extends ResonanceSpec inc where
+  left_output_unit : ∀ {i}, inc.resonance inc.unit i inc.unit → i = inc.unit
+  right_output_unit : ∀ {i}, inc.resonance i inc.unit inc.unit → i = inc.unit
+
+def ExactUnitResonanceSpec.toUnitOutputExact
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (exactUnit : ExactUnitResonanceSpec inc) :
+    UnitOutputExactResonanceSpec inc where
+  toResonanceSpec := exactUnit.toResonanceSpec
+  left_output_unit := fun resonant => (exactUnit.left_exact resonant).symm
+  right_output_unit := fun resonant => (exactUnit.right_exact resonant).symm
+
+def UnitOutputExactResonanceSpec.ofFunctional
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (functional : FunctionalResonanceSpec inc) :
+    UnitOutputExactResonanceSpec inc :=
+  (ExactUnitResonanceSpec.ofFunctional functional).toUnitOutputExact
+
+def extraUnitModeResonance :
+    FiniteIncidence → FiniteIncidence → FiniteIncidence → Prop :=
+  fun i j k => finiteGlue i j = some k ∨
+    (i = .leaf ∧ j = .leaf ∧ k = .root)
+
+/-- A two-point model with one additional non-selected mode at `unit × unit`.
+It separates exact unit-output behavior from full unit-input functionality. -/
+def extraUnitModeIncidence : Incidence FiniteIncidence GraphRole GraphType :=
+  { finiteIncidence with
+    resonance := extraUnitModeResonance
+    selected_resonates := fun selected => Or.inl selected }
+
+def extraUnitModeSpec : UnitOutputExactResonanceSpec extraUnitModeIncidence where
+  symmetric := by
+    intro i j k resonant
+    cases i <;> cases j <;> cases k <;>
+      simp [extraUnitModeIncidence, extraUnitModeResonance, finiteIncidence,
+        finiteGlue] at resonant ⊢
+  unit_left := by
+    intro i
+    cases i <;> simp [extraUnitModeIncidence, extraUnitModeResonance,
+      finiteIncidence, finiteGlue]
+  unit_right := by
+    intro i
+    cases i <;> simp [extraUnitModeIncidence, extraUnitModeResonance,
+      finiteIncidence, finiteGlue]
+  type_compatible := by
+    intro i j k resonant
+    exact ⟨rfl, rfl⟩
+  left_output_unit := by
+    intro i resonant
+    cases i <;> simp [extraUnitModeIncidence, extraUnitModeResonance,
+      finiteIncidence, finiteGlue] at resonant ⊢
+  right_output_unit := by
+    intro i resonant
+    cases i <;> simp [extraUnitModeIncidence, extraUnitModeResonance,
+      finiteIncidence, finiteGlue] at resonant ⊢
+
+def extraUnitModeUnitReflectingSpec :
+    UnitReflectingResonanceSpec extraUnitModeIncidence where
+  reflects := by
+    intro i j resonant
+    cases i <;> cases j <;>
+      simp [extraUnitModeIncidence, extraUnitModeResonance, finiteIncidence,
+        finiteGlue] at resonant ⊢
+
+def extraUnitModeAssociativeSpec :
+    AssociativeResonanceSpec extraUnitModeIncidence where
+  reassociate := by
+    intro i j k out
+    constructor
+    · rintro ⟨ij, hij, hout⟩
+      cases i <;> cases j <;> cases k <;> cases out <;> cases ij <;>
+        simp [extraUnitModeIncidence, extraUnitModeResonance, finiteIncidence,
+          finiteGlue] at hij hout ⊢
+      all_goals
+        first
+        | exact ⟨FiniteIncidence.leaf, by simp⟩
+        | exact ⟨FiniteIncidence.root, by
+            simp [extraUnitModeIncidence, extraUnitModeResonance,
+              finiteIncidence, finiteGlue]⟩
+    · rintro ⟨jk, hjk, hout⟩
+      cases i <;> cases j <;> cases k <;> cases out <;> cases jk <;>
+        simp [extraUnitModeIncidence, extraUnitModeResonance, finiteIncidence,
+          finiteGlue] at hjk hout ⊢
+      all_goals
+        first
+        | exact ⟨FiniteIncidence.leaf, by simp⟩
+        | exact ⟨FiniteIncidence.root, by
+            simp [extraUnitModeIncidence, extraUnitModeResonance,
+              finiteIncidence, finiteGlue]⟩
+
+theorem extraUnitModeIncidence_not_exactUnit :
+    ¬ Nonempty (ExactUnitResonanceSpec extraUnitModeIncidence) := by
+  rintro ⟨exactUnit⟩
+  have impossible := exactUnit.left_exact
+    (i := FiniteIncidence.leaf) (k := FiniteIncidence.root)
+    (Or.inr ⟨rfl, rfl, rfl⟩)
+  simp at impossible
+
+theorem UnitOutputExactResonanceSpec.output_unit_iff
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (unitOutput : UnitOutputExactResonanceSpec inc)
+    (reflecting : UnitReflectingResonanceSpec inc) {i j : I} :
+    inc.resonance i j inc.unit ↔ i = inc.unit ∧ j = inc.unit := by
+  constructor
+  · intro resonant
+    rcases reflecting.reflects resonant with hi | hj
+    · refine ⟨hi, ?_⟩
+      subst i
+      exact unitOutput.left_output_unit resonant
+    · refine ⟨?_, hj⟩
+      subst j
+      exact unitOutput.right_output_unit resonant
+  · rintro ⟨rfl, rfl⟩
+    exact unitOutput.unit_left _
+
+theorem resonance_of_unit_cases
+    {I R T : Type u} [DecidableEq I] {inc : Incidence I R T}
+    (spec : ResonanceSpec inc) {i j k : I}
+    (cases : (i = inc.unit ∧ k = j) ∨ (j = inc.unit ∧ k = i) ∨
+      inc.resonance i j k) : inc.resonance i j k := by
+  rcases cases with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | resonant
+  · exact spec.unit_left _
+  · exact spec.unit_right _
+  · exact resonant
+
+/-- The disjoint sum preserves relational associativity when the factor whose
+unit becomes the sum's global unit is associative, unit-reflecting, and exact
+at that unit, and the other factor is associative. -/
+def associativeResonanceSumSpec
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (first : UnitOutputExactResonanceSpec inc1)
+    (firstAssoc : AssociativeResonanceSpec inc1)
+    (secondAssoc : AssociativeResonanceSpec inc2)
+    (firstReflects : UnitReflectingResonanceSpec inc1) :
+    AssociativeResonanceSpec (incidenceSum inc1 inc2) where
+  reassociate := by
+    intro i j k out
+    constructor
+    · rintro ⟨ij, hij, hout⟩
+      rcases i with i1 | i2 <;> rcases j with j1 | j2 <;>
+        rcases k with k1 | k2 <;> rcases out with out1 | out2 <;>
+        rcases ij with ij1 | ij2
+      all_goals try rw [incidenceSum_resonance_inl_inl_inl_iff inc1 inc2 first] at hij
+      all_goals try rw [incidenceSum_resonance_inl_inl_inl_iff inc1 inc2 first] at hout
+      all_goals try rw [incidenceSum_resonance_inr_inr_inr_iff] at hij
+      all_goals try rw [incidenceSum_resonance_inr_inr_inr_iff] at hout
+      all_goals try rw [incidenceSum_resonance_inl_inr_inr_iff] at hij
+      all_goals try rw [incidenceSum_resonance_inl_inr_inr_iff] at hout
+      all_goals try rw [incidenceSum_resonance_inr_inl_inr_iff] at hij
+      all_goals try rw [incidenceSum_resonance_inr_inl_inr_iff] at hout
+      all_goals simp [incidenceSum, sumResonance] at hij hout ⊢
+      all_goals
+        try {
+          have hij' := resonance_of_unit_cases first.toResonanceSpec hij
+          have hout' := resonance_of_unit_cases first.toResonanceSpec hout
+          rcases (firstAssoc.reassociate).mp ⟨_, hij', hout'⟩ with ⟨jk, hjk, hiout⟩
+          exact ⟨Sum.inl jk, Or.inr (Or.inr hjk), Or.inr (Or.inr hiout)⟩ }
+      all_goals
+        try {
+          rcases (secondAssoc.reassociate).mp ⟨_, hij, hout⟩ with ⟨jk, hjk, hiout⟩
+          exact ⟨Sum.inr jk, hjk, Or.inr hiout⟩ }
+      all_goals simp_all [first.output_unit_iff firstReflects]
+      all_goals rcases hij with h | h | h <;> simp_all
+    · rintro ⟨jk, hjk, hout⟩
+      rcases i with i1 | i2 <;> rcases j with j1 | j2 <;>
+        rcases k with k1 | k2 <;> rcases out with out1 | out2 <;>
+        rcases jk with jk1 | jk2
+      all_goals try rw [incidenceSum_resonance_inl_inl_inl_iff inc1 inc2 first] at hjk
+      all_goals try rw [incidenceSum_resonance_inl_inl_inl_iff inc1 inc2 first] at hout
+      all_goals try rw [incidenceSum_resonance_inr_inr_inr_iff] at hjk
+      all_goals try rw [incidenceSum_resonance_inr_inr_inr_iff] at hout
+      all_goals try rw [incidenceSum_resonance_inl_inr_inr_iff] at hjk
+      all_goals try rw [incidenceSum_resonance_inl_inr_inr_iff] at hout
+      all_goals try rw [incidenceSum_resonance_inr_inl_inr_iff] at hjk
+      all_goals try rw [incidenceSum_resonance_inr_inl_inr_iff] at hout
+      all_goals simp [incidenceSum, sumResonance] at hjk hout ⊢
+      all_goals
+        try {
+          have hjk' := resonance_of_unit_cases first.toResonanceSpec hjk
+          have hout' := resonance_of_unit_cases first.toResonanceSpec hout
+          rcases (firstAssoc.reassociate).mpr ⟨_, hjk', hout'⟩ with ⟨ij, hij, hiout⟩
+          exact ⟨Sum.inl ij, Or.inr (Or.inr hij), Or.inr (Or.inr hiout)⟩ }
+      all_goals
+        try {
+          rcases (secondAssoc.reassociate).mpr ⟨_, hjk, hout⟩ with ⟨ij, hij, hiout⟩
+          exact ⟨Sum.inr ij, hij, Or.inr hiout⟩ }
+      all_goals simp_all [first.output_unit_iff firstReflects]
+      all_goals rcases hjk with h | h | h <;> simp_all
+
+def incidenceSumAssociativeLeftFactor
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (first : ResonanceSpec inc1)
+    (associative : AssociativeResonanceSpec (incidenceSum inc1 inc2)) :
+    AssociativeResonanceSpec inc1 where
+  reassociate := by
+    intro i j k out
+    constructor
+    · rintro ⟨ij, hij, hout⟩
+      have lifted := associative.reassociate.mp ⟨Sum.inl ij,
+        (incidenceSum_resonance_inl_inl_inl_iff inc1 inc2 first _ _ _).mpr hij,
+        (incidenceSum_resonance_inl_inl_inl_iff inc1 inc2 first _ _ _).mpr hout⟩
+      rcases lifted with ⟨jk, hjk, hiout⟩
+      rcases jk with jk | jk
+      · exact ⟨jk,
+          (incidenceSum_resonance_inl_inl_inl_iff inc1 inc2 first _ _ _).mp hjk,
+          (incidenceSum_resonance_inl_inl_inl_iff inc1 inc2 first _ _ _).mp hiout⟩
+      · simp [incidenceSum, sumResonance] at hjk
+    · rintro ⟨jk, hjk, hout⟩
+      have lifted := associative.reassociate.mpr ⟨Sum.inl jk,
+        (incidenceSum_resonance_inl_inl_inl_iff inc1 inc2 first _ _ _).mpr hjk,
+        (incidenceSum_resonance_inl_inl_inl_iff inc1 inc2 first _ _ _).mpr hout⟩
+      rcases lifted with ⟨ij, hij, hiout⟩
+      rcases ij with ij | ij
+      · exact ⟨ij,
+          (incidenceSum_resonance_inl_inl_inl_iff inc1 inc2 first _ _ _).mp hij,
+          (incidenceSum_resonance_inl_inl_inl_iff inc1 inc2 first _ _ _).mp hiout⟩
+      · simp [incidenceSum, sumResonance] at hij
+
+def incidenceSumAssociativeRightFactor
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (associative : AssociativeResonanceSpec (incidenceSum inc1 inc2)) :
+    AssociativeResonanceSpec inc2 where
+  reassociate := by
+    intro i j k out
+    constructor
+    · rintro ⟨ij, hij, hout⟩
+      have lifted := associative.reassociate.mp ⟨Sum.inr ij,
+        (incidenceSum_resonance_inr_inr_inr_iff inc1 inc2 _ _ _).mpr hij,
+        (incidenceSum_resonance_inr_inr_inr_iff inc1 inc2 _ _ _).mpr hout⟩
+      rcases lifted with ⟨jk, hjk, hiout⟩
+      rcases jk with jk | jk
+      · simp [incidenceSum, sumResonance] at hjk
+      · exact ⟨jk,
+          (incidenceSum_resonance_inr_inr_inr_iff inc1 inc2 _ _ _).mp hjk,
+          (incidenceSum_resonance_inr_inr_inr_iff inc1 inc2 _ _ _).mp hiout⟩
+    · rintro ⟨jk, hjk, hout⟩
+      have lifted := associative.reassociate.mpr ⟨Sum.inr jk,
+        (incidenceSum_resonance_inr_inr_inr_iff inc1 inc2 _ _ _).mpr hjk,
+        (incidenceSum_resonance_inr_inr_inr_iff inc1 inc2 _ _ _).mpr hout⟩
+      rcases lifted with ⟨ij, hij, hiout⟩
+      rcases ij with ij | ij
+      · simp [incidenceSum, sumResonance] at hij
+      · exact ⟨ij,
+          (incidenceSum_resonance_inr_inr_inr_iff inc1 inc2 _ _ _).mp hij,
+          (incidenceSum_resonance_inr_inr_inr_iff inc1 inc2 _ _ _).mp hiout⟩
+
+def natSumAssociativeResonanceSpec :
+    AssociativeResonanceSpec (incidenceSum natIncidence natIncidence) :=
+  associativeResonanceSumSpec natIncidence natIncidence
+    (UnitOutputExactResonanceSpec.ofFunctional natResonanceSpec)
+    natAssociativeResonanceSpec natAssociativeResonanceSpec
+    natUnitReflectingResonanceSpec
+
+def extraUnitModeNatSumAssociativeSpec :
+    AssociativeResonanceSpec
+      (incidenceSum extraUnitModeIncidence natIncidence) :=
+  associativeResonanceSumSpec extraUnitModeIncidence natIncidence
+    extraUnitModeSpec extraUnitModeAssociativeSpec
+    natAssociativeResonanceSpec extraUnitModeUnitReflectingSpec
+
 theorem finiteIncidenceSum_not_associativeResonance :
     ¬ Nonempty (AssociativeResonanceSpec
       (incidenceSum finiteIncidence finiteIncidence)) := by
@@ -239,6 +589,109 @@ theorem finiteIncidenceSum_not_associativeResonance :
   rcases jk with jk1 | jk2
   · simp [incidenceSum, sumResonance, finiteIncidence] at hjk
   · simp [incidenceSum, sumResonance, finiteIncidence] at hjk
+
+/-- Associativity of a nonempty `incidenceSum` forces the left factor to be
+unit-reflecting.  Thus the obstruction exhibited above is structural, not an
+artifact of the two-element example: a left-factor interaction cannot create
+the designated unit from two non-unit inputs in any associative sum. -/
+def incidenceSumAssociativeLeftUnitReflecting
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (rightWitness : I2)
+    (associative : AssociativeResonanceSpec (incidenceSum inc1 inc2)) :
+    UnitReflectingResonanceSpec inc1 where
+  reflects := by
+    intro i j resonant
+    have leftReachable :
+        ∃ ij,
+          (incidenceSum inc1 inc2).resonance (Sum.inl i) (Sum.inl j) ij ∧
+          (incidenceSum inc1 inc2).resonance ij (Sum.inr rightWitness)
+            (Sum.inr rightWitness) := by
+      exact ⟨Sum.inl inc1.unit, Or.inr (Or.inr resonant), Or.inl ⟨rfl, rfl⟩⟩
+    rcases associative.reassociate.mp leftReachable with ⟨jk, hjk, _⟩
+    rcases jk with jk1 | jk2
+    · simp [incidenceSum, sumResonance] at hjk
+    · simp [incidenceSum, sumResonance] at hjk
+      exact Or.inr hjk.1
+
+def incidenceSumAssociativeLeftUnitReflectingOfUnit
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (associative : AssociativeResonanceSpec (incidenceSum inc1 inc2)) :
+    UnitReflectingResonanceSpec inc1 :=
+  incidenceSumAssociativeLeftUnitReflecting inc1 inc2 inc2.unit associative
+
+/-- Associativity of a sum forces the left unit not to produce the unit with a
+non-unit partner.  The right carrier is automatically inhabited by its unit. -/
+def incidenceSumAssociativeLeftUnitOutputExact
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (first : ResonanceSpec inc1)
+    (associative : AssociativeResonanceSpec (incidenceSum inc1 inc2)) :
+    UnitOutputExactResonanceSpec inc1 := by
+  have leftStrict : ∀ {i},
+      inc1.resonance inc1.unit i inc1.unit → i = inc1.unit := by
+    intro i resonant
+    have leftReachable :
+        ∃ ij,
+          (incidenceSum inc1 inc2).resonance
+            (Sum.inl inc1.unit) (Sum.inl i) ij ∧
+          (incidenceSum inc1 inc2).resonance ij (Sum.inr inc2.unit)
+            (Sum.inr inc2.unit) := by
+      exact ⟨Sum.inl inc1.unit, Or.inr (Or.inr resonant),
+        Or.inl ⟨rfl, rfl⟩⟩
+    rcases associative.reassociate.mp leftReachable with ⟨jk, hjk, _⟩
+    rcases jk with jk | jk
+    · simp [incidenceSum, sumResonance] at hjk
+    · simp [incidenceSum, sumResonance] at hjk
+      exact hjk.1
+  exact
+    { first with
+      left_output_unit := leftStrict
+      right_output_unit := fun resonant => leftStrict (first.symmetric resonant) }
+
+/-- Conditional form useful when the exact unit-output certificate is already
+available as data. -/
+theorem incidenceSum_associative_iff_of_unitOutputExact
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (first : UnitOutputExactResonanceSpec inc1) :
+    Nonempty (AssociativeResonanceSpec (incidenceSum inc1 inc2)) ↔
+      Nonempty (AssociativeResonanceSpec inc1) ∧
+      Nonempty (AssociativeResonanceSpec inc2) ∧
+      Nonempty (UnitReflectingResonanceSpec inc1) := by
+  constructor
+  · rintro ⟨associative⟩
+    exact ⟨⟨incidenceSumAssociativeLeftFactor inc1 inc2
+      first.toResonanceSpec associative⟩,
+      ⟨incidenceSumAssociativeRightFactor inc1 inc2 associative⟩,
+      ⟨incidenceSumAssociativeLeftUnitReflectingOfUnit inc1 inc2 associative⟩⟩
+  · rintro ⟨⟨firstAssoc⟩, ⟨secondAssoc⟩, ⟨firstReflects⟩⟩
+    exact ⟨associativeResonanceSumSpec inc1 inc2 first firstAssoc
+      secondAssoc firstReflects⟩
+
+/-- Complete associativity characterization for disjoint sums.  Under the
+ordinary left `ResonanceSpec`, sum associativity is equivalent to associativity
+of both factors plus the two independently necessary unit laws. -/
+theorem incidenceSum_associative_iff
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (first : ResonanceSpec inc1) :
+    Nonempty (AssociativeResonanceSpec (incidenceSum inc1 inc2)) ↔
+      Nonempty (AssociativeResonanceSpec inc1) ∧
+      Nonempty (AssociativeResonanceSpec inc2) ∧
+      Nonempty (UnitReflectingResonanceSpec inc1) ∧
+      Nonempty (UnitOutputExactResonanceSpec inc1) := by
+  constructor
+  · rintro ⟨associative⟩
+    exact ⟨⟨incidenceSumAssociativeLeftFactor inc1 inc2 first associative⟩,
+      ⟨incidenceSumAssociativeRightFactor inc1 inc2 associative⟩,
+      ⟨incidenceSumAssociativeLeftUnitReflectingOfUnit inc1 inc2 associative⟩,
+      ⟨incidenceSumAssociativeLeftUnitOutputExact inc1 inc2 first associative⟩⟩
+  · rintro ⟨⟨firstAssoc⟩, ⟨secondAssoc⟩, ⟨firstReflects⟩,
+      ⟨unitOutput⟩⟩
+    exact ⟨associativeResonanceSumSpec inc1 inc2 unitOutput firstAssoc
+      secondAssoc firstReflects⟩
 
 noncomputable def countablyPresentedIncidenceSum
     {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
@@ -438,6 +891,23 @@ theorem incidenceSum_cross_not_bisim_of_not_leaf_right
       simp [sumInlEndpoint, sumInrEndpoint, boundaryCompatible])
     h'
 
+/- `incidenceSum` deliberately forgets the factors' type maps. These
+   predicates isolate exactly when same-side observational equivalence retains
+   enough of that information to reconstruct factor bisimulation. -/
+def SumLeftTypeReflecting
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) : Prop :=
+  ∀ {a b : I1},
+    approxBisim (incidenceSum inc1 inc2) (Sum.inl a) (Sum.inl b) →
+      inc1.typeFunc a = inc1.typeFunc b
+
+def SumRightTypeReflecting
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) : Prop :=
+  ∀ {a b : I2},
+    approxBisim (incidenceSum inc1 inc2) (Sum.inr a) (Sum.inr b) →
+      inc2.typeFunc a = inc2.typeFunc b
+
 /- Same-side `≈` in the sum reduces to `≈` in `inc1` alone -- the
    `incidenceProd_project`-style projection (cycle 32), simpler here
    since there's nothing to combine, only to isolate. One genuine
@@ -515,18 +985,64 @@ theorem incidenceSum_project_right
     refine ⟨e2, he2, ⟨(Sum.inr.injEq _ _).mp hcompat.1, hcompat.2⟩, hrel', ?_⟩
     rw [inc2.type_consistent x e2 he2, inc2.type_consistent y e' he', htype']
 
-/- The payoff: full faithfulness for the sum whenever both factors are
-   individually faithful AND at least one side has no leaves at all.
-   Restricted to `GraphType`-typed instances (every concrete instance in
-   this project, matching the design tension noted above) so `htype`
-   discharges trivially via `rfl` at the call sites. -/
-theorem incidenceSum_faithful_of_faithful_no_shared_leaves
-  {I1 R1 I2 R2 : Type u} [DecidableEq I1] [DecidableEq I2]
-  (inc1 : Incidence I1 R1 GraphType) (inc2 : Incidence I2 R2 GraphType)
-  (hf1 : ∀ x y : I1, approxBisim inc1 x y ↔ x = y)
-  (hf2 : ∀ x y : I2, approxBisim inc2 x y ↔ x = y)
-  (hleafless2 : ∀ b, inc2.boundary b ≠ []) :
-  ∀ p q : I1 ⊕ I2, approxBisim (incidenceSum inc1 inc2) p q ↔ p = q := by
+/-- Left type reflection is not merely sufficient for projection: because a
+    factor bisimulation preserves `typeFunc`, it is exactly equivalent to the
+    availability of same-side left projection. -/
+theorem incidenceSum_project_left_iff_typeReflecting
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) :
+    (∀ {a b : I1},
+      approxBisim (incidenceSum inc1 inc2) (Sum.inl a) (Sum.inl b) →
+        approxBisim inc1 a b) ↔
+      SumLeftTypeReflecting inc1 inc2 := by
+  constructor
+  · intro project a b h
+    rcases project h with ⟨rel, bisimulation, related⟩
+    exact (bisimulation a b related).left
+  · intro reflects a b h
+    exact incidenceSum_project_left inc1 inc2 h (reflects h)
+
+/-- Symmetric exact characterization for the right factor. -/
+theorem incidenceSum_project_right_iff_typeReflecting
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) :
+    (∀ {a b : I2},
+      approxBisim (incidenceSum inc1 inc2) (Sum.inr a) (Sum.inr b) →
+        approxBisim inc2 a b) ↔
+      SumRightTypeReflecting inc1 inc2 := by
+  constructor
+  · intro project a b h
+    rcases project h with ⟨rel, bisimulation, related⟩
+    exact (bisimulation a b related).left
+  · intro reflects a b h
+    exact incidenceSum_project_right inc1 inc2 h (reflects h)
+
+theorem incidenceSum_leftTypeReflecting_graphType
+    {I1 R1 I2 R2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 GraphType) (inc2 : Incidence I2 R2 GraphType) :
+    SumLeftTypeReflecting inc1 inc2 := by
+  intro a b _
+  cases inc1.typeFunc a <;> cases inc1.typeFunc b <;> rfl
+
+theorem incidenceSum_rightTypeReflecting_graphType
+    {I1 R1 I2 R2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 GraphType) (inc2 : Incidence I2 R2 GraphType) :
+    SumRightTypeReflecting inc1 inc2 := by
+  intro a b _
+  cases inc2.typeFunc a <;> cases inc2.typeFunc b <;> rfl
+
+/-- The faithful/leafless criterion works for arbitrary type carriers once the
+    sum is known not to erase distinctions between types of bisimilar
+    same-side objects. -/
+theorem incidenceSum_faithful_of_faithful_no_shared_leaves_of_typeReflecting
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (reflectsLeft : SumLeftTypeReflecting inc1 inc2)
+    (reflectsRight : SumRightTypeReflecting inc1 inc2)
+    (hf1 : ∀ x y : I1, approxBisim inc1 x y ↔ x = y)
+    (hf2 : ∀ x y : I2, approxBisim inc2 x y ↔ x = y)
+    (hleafless2 : ∀ b, inc2.boundary b ≠ []) :
+    ∀ p q : I1 ⊕ I2, approxBisim (incidenceSum inc1 inc2) p q ↔ p = q := by
   intro p q
   cases p with
   | inl a =>
@@ -534,16 +1050,17 @@ theorem incidenceSum_faithful_of_faithful_no_shared_leaves
     | inl b =>
       constructor
       · intro h
-        have := incidenceSum_project_left inc1 inc2 h rfl
-        rw [hf1] at this
-        rw [this]
-      · rintro h
+        have projected := incidenceSum_project_left inc1 inc2 h (reflectsLeft h)
+        rw [hf1] at projected
+        rw [projected]
+      · intro h
         cases h
         exact approxBisim_refl _ _
     | inr b =>
       constructor
       · intro h
-        exact absurd h (incidenceSum_cross_not_bisim_of_not_leaf_right inc1 inc2 (hleafless2 b))
+        exact absurd h
+          (incidenceSum_cross_not_bisim_of_not_leaf_right inc1 inc2 (hleafless2 b))
       · intro h
         cases h
   | inr a =>
@@ -558,12 +1075,30 @@ theorem incidenceSum_faithful_of_faithful_no_shared_leaves
     | inr b =>
       constructor
       · intro h
-        have := incidenceSum_project_right inc1 inc2 h rfl
-        rw [hf2] at this
-        rw [this]
-      · rintro h
+        have projected := incidenceSum_project_right inc1 inc2 h (reflectsRight h)
+        rw [hf2] at projected
+        rw [projected]
+      · intro h
         cases h
         exact approxBisim_refl _ _
+
+/- The payoff: full faithfulness for the sum whenever both factors are
+   individually faithful AND at least one side has no leaves at all.
+   Restricted to `GraphType`-typed instances (every concrete instance in
+   this project, matching the design tension noted above) so `htype`
+   discharges trivially via `rfl` at the call sites. -/
+theorem incidenceSum_faithful_of_faithful_no_shared_leaves
+  {I1 R1 I2 R2 : Type u} [DecidableEq I1] [DecidableEq I2]
+  (inc1 : Incidence I1 R1 GraphType) (inc2 : Incidence I2 R2 GraphType)
+  (hf1 : ∀ x y : I1, approxBisim inc1 x y ↔ x = y)
+  (hf2 : ∀ x y : I2, approxBisim inc2 x y ↔ x = y)
+  (hleafless2 : ∀ b, inc2.boundary b ≠ []) :
+  ∀ p q : I1 ⊕ I2, approxBisim (incidenceSum inc1 inc2) p q ↔ p = q :=
+  incidenceSum_faithful_of_faithful_no_shared_leaves_of_typeReflecting
+    inc1 inc2
+    (incidenceSum_leftTypeReflecting_graphType inc1 inc2)
+    (incidenceSum_rightTypeReflecting_graphType inc1 inc2)
+    hf1 hf2 hleafless2
 
 theorem incidenceSum_quotientResonanceCongruent_of_faithful_no_shared_leaves
     {I1 R1 I2 R2 : Type u} [DecidableEq I1] [DecidableEq I2]
@@ -706,6 +1241,191 @@ theorem incidenceSum_lift_right
           ⟨congrArg Sum.inr hcompat.1, hcompat.2⟩, hrel'⟩
     | inl y1 => simp at hr
   | inl x1 => simp at hr
+
+/-- Quotient-congruent sum resonance forces observational equivalence on the
+right factor to be equality.  Cross-side unit absorption exposes the right
+representative directly, so this is a structural necessity rather than an
+artifact of the faithful/leafless sufficient condition. -/
+theorem incidenceSumQuotientCongruentRightFaithful
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (congruent : QuotientResonanceCongruent (incidenceSum inc1 inc2)) :
+    ∀ a b : I2, approxBisim inc2 a b ↔ a = b := by
+  intro a b
+  constructor
+  · intro hab
+    have preserved := (congruent
+      (approxBisim_refl _ (Sum.inl inc1.unit))
+      (incidenceSum_lift_right inc1 inc2 hab)
+      (approxBisim_refl _ (Sum.inr a))).mp
+      (show (incidenceSum inc1 inc2).resonance
+        (Sum.inl inc1.unit) (Sum.inr a) (Sum.inr a) from
+        Or.inl ⟨rfl, rfl⟩)
+    simpa [incidenceSum, sumResonance] using preserved
+  · rintro rfl
+    exact approxBisim_refl inc2 a
+
+/-- Quotient-congruent sum resonance also forces the left factor's designated
+unit to form a singleton observational class. -/
+theorem incidenceSumQuotientCongruentLeftUnitSeparated
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (congruent : QuotientResonanceCongruent (incidenceSum inc1 inc2)) :
+    ∀ a : I1, approxBisim inc1 a inc1.unit → a = inc1.unit := by
+  intro a ha
+  have preserved := (congruent
+    (incidenceSum_lift_left inc1 inc2 (approxBisim_symm ha))
+    (approxBisim_refl _ (Sum.inr inc2.unit))
+    (approxBisim_refl _ (Sum.inr inc2.unit))).mp
+    (show (incidenceSum inc1 inc2).resonance
+      (Sum.inl inc1.unit) (Sum.inr inc2.unit) (Sum.inr inc2.unit) from
+      Or.inl ⟨rfl, rfl⟩)
+  simpa [incidenceSum, sumResonance] using preserved
+
+/-- The exact observational information needed to transport sum resonance to
+bisimulation classes: left observations project and preserve unit membership,
+right observations are faithful, and cross-tag observations are impossible. -/
+structure SumQuotientControlSpec
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2) where
+  classify : ∀ {x y : I1 ⊕ I2},
+    approxBisim (incidenceSum inc1 inc2) x y →
+      match x, y with
+      | .inl a, .inl b =>
+          approxBisim inc1 a b ∧ (a = inc1.unit ↔ b = inc1.unit)
+      | .inr a, .inr b => a = b
+      | _, _ => False
+
+theorem incidenceSum_quotientResonanceCongruent_of_control
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (first : ResonanceSpec inc1)
+    (firstQuotient : QuotientResonanceCongruent inc1)
+    (control : SumQuotientControlSpec inc1 inc2) :
+    QuotientResonanceCongruent (incidenceSum inc1 inc2) := by
+  intro i₁ i₂ j₁ j₂ k₁ k₂ hi hj hk
+  have ci := control.classify hi
+  have cj := control.classify hj
+  have ck := control.classify hk
+  rcases i₁ with i₁ | i₁ <;> rcases i₂ with i₂ | i₂ <;>
+    rcases j₁ with j₁ | j₁ <;> rcases j₂ with j₂ | j₂ <;>
+    rcases k₁ with k₁ | k₁ <;> rcases k₂ with k₂ | k₂
+  all_goals simp only at ci cj ck
+  all_goals
+    try {
+      rw [incidenceSum_resonance_inl_inl_inl_iff inc1 inc2 first,
+        incidenceSum_resonance_inl_inl_inl_iff inc1 inc2 first]
+      exact firstQuotient ci.1 cj.1 ck.1 }
+  all_goals simp [incidenceSum, sumResonance] at ⊢
+  all_goals simp_all
+
+def sumQuotientControlOfFaithfulNoSharedLeaves
+    {I1 R1 I2 R2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 GraphType) (inc2 : Incidence I2 R2 GraphType)
+    (faithful1 : ∀ x y : I1, approxBisim inc1 x y ↔ x = y)
+    (faithful2 : ∀ x y : I2, approxBisim inc2 x y ↔ x = y)
+    (leafless2 : ∀ b, inc2.boundary b ≠ []) :
+    SumQuotientControlSpec inc1 inc2 where
+  classify := by
+    intro x y h
+    have hEq := (incidenceSum_faithful_of_faithful_no_shared_leaves
+      inc1 inc2 faithful1 faithful2 leafless2 x y).mp h
+    subst y
+    rcases x with x | x
+    · exact ⟨approxBisim_refl inc1 x, Iff.rfl⟩
+    · rfl
+
+/-- Cross-tag bisimulation is incompatible with quotient-congruent sum
+resonance, independently of any leaflessness presentation. -/
+theorem incidenceSumQuotientCongruentCrossSeparated
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (congruent : QuotientResonanceCongruent (incidenceSum inc1 inc2)) :
+    ∀ a b, ¬ approxBisim (incidenceSum inc1 inc2) (Sum.inl a) (Sum.inr b) := by
+  intro a b cross
+  have preserved := (congruent
+    (approxBisim_refl _ (Sum.inl inc1.unit)) cross
+    (approxBisim_refl _ (Sum.inl a))).mp
+    (show (incidenceSum inc1 inc2).resonance
+      (Sum.inl inc1.unit) (Sum.inl a) (Sum.inl a) from
+      Or.inl ⟨rfl, rfl⟩)
+  simp [incidenceSum, sumResonance] at preserved
+
+theorem incidenceSum_quotientResonanceCongruent_iff_control
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (first : ResonanceSpec inc1)
+    (firstQuotient : QuotientResonanceCongruent inc1)
+    (leftProject : ∀ {a b : I1},
+      approxBisim (incidenceSum inc1 inc2) (Sum.inl a) (Sum.inl b) →
+        approxBisim inc1 a b) :
+    QuotientResonanceCongruent (incidenceSum inc1 inc2) ↔
+      Nonempty (SumQuotientControlSpec inc1 inc2) := by
+  constructor
+  · intro congruent
+    refine ⟨⟨?_⟩⟩
+    intro x y h
+    rcases x with a | a <;> rcases y with b | b
+    · have hab := leftProject h
+      refine ⟨hab, ?_⟩
+      constructor
+      · intro ha
+        subst a
+        exact incidenceSumQuotientCongruentLeftUnitSeparated inc1 inc2
+          congruent b (approxBisim_symm hab)
+      · intro hb
+        subst b
+        exact incidenceSumQuotientCongruentLeftUnitSeparated inc1 inc2
+          congruent a hab
+    · exact incidenceSumQuotientCongruentCrossSeparated inc1 inc2
+        congruent a b h
+    · exact incidenceSumQuotientCongruentCrossSeparated inc1 inc2
+        congruent b a (approxBisim_symm h)
+    · have preserved := (congruent
+        (approxBisim_refl _ (Sum.inl inc1.unit)) h
+        (approxBisim_refl _ (Sum.inr a))).mp
+        (show (incidenceSum inc1 inc2).resonance
+          (Sum.inl inc1.unit) (Sum.inr a) (Sum.inr a) from
+          Or.inl ⟨rfl, rfl⟩)
+      simpa [incidenceSum, sumResonance] using preserved
+  · rintro ⟨control⟩
+    exact incidenceSum_quotientResonanceCongruent_of_control inc1 inc2
+      first firstQuotient control
+
+/-- Type reflection is the precise extra observation needed to turn the raw
+    left-projection premise above into a structural, carrier-independent sum
+    theorem. -/
+theorem incidenceSum_quotientResonanceCongruent_iff_control_of_typeReflecting
+    {I1 R1 T1 I2 R2 T2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 T1) (inc2 : Incidence I2 R2 T2)
+    (first : ResonanceSpec inc1)
+    (firstQuotient : QuotientResonanceCongruent inc1)
+    (typeReflecting : SumLeftTypeReflecting inc1 inc2) :
+    QuotientResonanceCongruent (incidenceSum inc1 inc2) ↔
+      Nonempty (SumQuotientControlSpec inc1 inc2) :=
+  incidenceSum_quotientResonanceCongruent_iff_control inc1 inc2 first
+    firstQuotient
+    ((incidenceSum_project_left_iff_typeReflecting inc1 inc2).mpr typeReflecting)
+
+theorem incidenceSum_project_left_graphType
+    {I1 R1 I2 R2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 GraphType) (inc2 : Incidence I2 R2 GraphType)
+    {a b : I1}
+    (h : approxBisim (incidenceSum inc1 inc2) (Sum.inl a) (Sum.inl b)) :
+    approxBisim inc1 a b :=
+  incidenceSum_project_left inc1 inc2 h (by
+    cases inc1.typeFunc a <;> cases inc1.typeFunc b <;> rfl)
+
+theorem incidenceSum_quotientResonanceCongruent_iff_control_graphType
+    {I1 R1 I2 R2 : Type u} [DecidableEq I1] [DecidableEq I2]
+    (inc1 : Incidence I1 R1 GraphType) (inc2 : Incidence I2 R2 GraphType)
+    (first : ResonanceSpec inc1)
+    (firstQuotient : QuotientResonanceCongruent inc1) :
+    QuotientResonanceCongruent (incidenceSum inc1 inc2) ↔
+      Nonempty (SumQuotientControlSpec inc1 inc2) :=
+  incidenceSum_quotientResonanceCongruent_iff_control_of_typeReflecting
+    inc1 inc2 first firstQuotient
+    (incidenceSum_leftTypeReflecting_graphType inc1 inc2)
 
 /- The main pairing result, combining both lifts with the cross-side
    impossibility argument: `Sum.map`-translate-equality reflects to `≈`
